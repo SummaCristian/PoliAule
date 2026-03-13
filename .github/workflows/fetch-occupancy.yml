@@ -1,0 +1,34 @@
+name: Fetch Occupancy Data
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Every day at 3am UTC (4am Italian time)
+  workflow_dispatch:      # Allow manual runs from the GitHub Actions tab
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install httpx
+
+      - name: Run fetch script
+        run: python scripts/fetch.py
+
+      - name: Commit and push fetched data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add occupancy/
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: update occupancy data $(date -u '+%Y-%m-%d')"
+          git push

@@ -16,8 +16,7 @@
           { "name": "2.2.1", "id": 1303 },
           { "name": "2.2.2", "id": 41 },
           { "name": "2.2.3", "id": 961 },
-          { "name": "2.2.4", "id": 4726 },
-          { "name": "2.2.5 - VIRTUAL LAB", "id": 2328 }
+          { "name": "2.2.4", "id": 4726 }
         ]
       },
       {
@@ -26,7 +25,6 @@
           { "name": "3.0.1", "id": 42 },
           { "name": "3.0.2", "id": 58 },
           { "name": "3.0.3", "id": 57 },
-          { "name": "OSVALDO DE DONATO", "id": 4513 },
           { "name": "3.1.1", "id": 63 },
           { "name": "3.1.11", "id": 5101 },
           { "name": "3.1.12", "id": 5102 },
@@ -51,19 +49,12 @@
         ]
       },
       {
-        "name": "Edificio 4A",
-        "classrooms": [
-          { "name": "AULA FASSO'", "id": 5076 }
-        ]
-      },
-      {
         "name": "Edificio 5",
         "classrooms": [
           { "name": "5.0.1", "id": 2 },
           { "name": "5.0.2", "id": 4738 },
           { "name": "5.0.3", "id": 4739 },
           { "name": "BELTRAMI", "id": 2350 },
-          { "name": "CASTIGLIANO", "id": 2351 },
           { "name": "5.1.1", "id": 3 }
         ]
       },
@@ -103,7 +94,6 @@
         "name": "Edificio 11",
         "classrooms": [
           { "name": "IV", "id": 741 },
-          { "name": "ROGERS", "id": 2320 },
           { "name": "A - ALDO ROSSI", "id": 721 },
           { "name": "B", "id": 722 },
           { "name": "C", "id": 723 },
@@ -127,8 +117,7 @@
           { "name": "Z.2", "id": 1960 },
           { "name": "G.1", "id": 726 },
           { "name": "G.2", "id": 2012 },
-          { "name": "G.3", "id": 4791 },
-          { "name": "G.4", "id": 4790 }
+          { "name": "G.3", "id": 4791 }
         ]
       },
       {

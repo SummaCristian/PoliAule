@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 3 * * *'  # Every day at 3am UTC (4am Italian time)
   workflow_dispatch:      # Allow manual runs from the GitHub Actions tab
+    inputs:
+      no_delay:
+        description: 'Skip delay between API calls'
+        type: boolean
+        default: false
 
 jobs:
   fetch:
@@ -22,7 +27,7 @@ jobs:
         run: pip install httpx
 
       - name: Run fetch script
-        run: python scripts/fetch.py
+        run: python scripts/fetch.py ${{ inputs.no_delay == 'true' && '--no-delay' || '' }}
 
       - name: Commit and push fetched data
         run: |

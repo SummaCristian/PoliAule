@@ -27,6 +27,8 @@ jobs:
         run: pip install httpx
 
       - name: Run fetch script
+        env:
+          PYTHONUNBUFFERED: 1
         run: python scripts/fetch.py ${{ inputs.no_delay == 'true' && '--no-delay' || '' }}
 
       - name: Commit and push fetched data

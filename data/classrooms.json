@@ -1,0 +1,277 @@
+[
+  {
+    "name": "SEDE LEONARDO",
+    "buildings": [
+      {
+        "name": "Edificio 2",
+        "classrooms": [
+          { "name": "2.0.1", "id": 32 },
+          { "name": "2.0.2", "id": 33 },
+          { "name": "2.1.1", "id": 34 },
+          { "name": "2.1.2", "id": 35 },
+          { "name": "2.1.3", "id": 36 },
+          { "name": "2.1.4", "id": 39 },
+          { "name": "2.1.5", "id": 38 },
+          { "name": "2.2.1", "id": 1303 },
+          { "name": "2.2.2", "id": 41 },
+          { "name": "2.2.3", "id": 961 },
+          { "name": "2.2.4", "id": 4726 },
+          { "name": "2.2.5 - VIRTUAL LAB", "id": 2328 }
+        ]
+      },
+      {
+        "name": "Edificio 3",
+        "classrooms": [
+          { "name": "3.0.1", "id": 42 },
+          { "name": "3.0.2", "id": 58 },
+          { "name": "3.0.3", "id": 57 },
+          { "name": "OSVALDO DE DONATO", "id": 4513 },
+          { "name": "3.1.1", "id": 63 },
+          { "name": "3.1.11", "id": 5101 },
+          { "name": "3.1.12", "id": 5102 },
+          { "name": "3.1.2", "id": 44 },
+          { "name": "3.1.3", "id": 45 },
+          { "name": "3.1.4", "id": 46 },
+          { "name": "3.1.5", "id": 47 },
+          { "name": "3.1.6", "id": 48 },
+          { "name": "3.1.7", "id": 43 },
+          { "name": "3.1.8", "id": 4734 },
+          { "name": "3.1.9", "id": 4733 },
+          { "name": "3.2.1", "id": 4630 },
+          { "name": "3.2.2", "id": 4631 },
+          { "name": "3.2.3", "id": 4632 },
+          { "name": "3.2.4", "id": 4633 }
+        ]
+      },
+      {
+        "name": "Edificio 4",
+        "classrooms": [
+          { "name": "4.0.1", "id": 75 }
+        ]
+      },
+      {
+        "name": "Edificio 4A",
+        "classrooms": [
+          { "name": "AULA FASSO'", "id": 5076 }
+        ]
+      },
+      {
+        "name": "Edificio 5",
+        "classrooms": [
+          { "name": "5.0.1", "id": 2 },
+          { "name": "5.0.2", "id": 4738 },
+          { "name": "5.0.3", "id": 4739 },
+          { "name": "BELTRAMI", "id": 2350 },
+          { "name": "CASTIGLIANO", "id": 2351 },
+          { "name": "5.1.1", "id": 3 }
+        ]
+      },
+      {
+        "name": "Edificio 6",
+        "classrooms": [
+          { "name": "6.0.1", "id": 10 }
+        ]
+      },
+      {
+        "name": "Edificio 7",
+        "classrooms": [
+          { "name": "7.1.1", "id": 4 },
+          { "name": "7.1.2", "id": 5 },
+          { "name": "7.1.3", "id": 6 },
+          { "name": "7.0.1", "id": 4589 }
+        ]
+      },
+      {
+        "name": "Edificio 8",
+        "classrooms": [
+          { "name": "8.0.1", "id": 27 },
+          { "name": "8.1.1", "id": 28 }
+        ]
+      },
+      {
+        "name": "Edificio 9",
+        "classrooms": [
+          { "name": "9.0.1", "id": 7 },
+          { "name": "9.0.2", "id": 8 },
+          { "name": "9.0.3", "id": 4740 },
+          { "name": "9.0.4", "id": 4765 },
+          { "name": "9.1.2", "id": 9 }
+        ]
+      },
+      {
+        "name": "Edificio 11",
+        "classrooms": [
+          { "name": "IV", "id": 741 },
+          { "name": "ROGERS", "id": 2320 },
+          { "name": "A - ALDO ROSSI", "id": 721 },
+          { "name": "B", "id": 722 },
+          { "name": "C", "id": 723 },
+          { "name": "D", "id": 724 },
+          { "name": "E/F", "id": 1941 },
+          { "name": "III.A", "id": 732 },
+          { "name": "III.B", "id": 733 },
+          { "name": "III.C", "id": 734 },
+          { "name": "III.D", "id": 736 },
+          { "name": "O.1", "id": 4684 },
+          { "name": "Q.1", "id": 730 },
+          { "name": "R.1", "id": 731 },
+          { "name": "U.1", "id": 737 },
+          { "name": "Y.1", "id": 5038 },
+          { "name": "Z.1 D.I.", "id": 5039 },
+          { "name": "J.2", "id": 728 },
+          { "name": "O.2", "id": 729 },
+          { "name": "O.2.1", "id": 1942 },
+          { "name": "R.2", "id": 4682 },
+          { "name": "U.2", "id": 738 },
+          { "name": "Z.2", "id": 1960 },
+          { "name": "G.1", "id": 726 },
+          { "name": "G.2", "id": 2012 },
+          { "name": "G.3", "id": 4791 },
+          { "name": "G.4", "id": 4790 }
+        ]
+      },
+      {
+        "name": "Edificio 13 (Trifoglio)",
+        "classrooms": [
+          { "name": "T.1.1", "id": 53 },
+          { "name": "T.1.2", "id": 71 },
+          { "name": "T.1.3", "id": 72 },
+          { "name": "T.2.1", "id": 54 },
+          { "name": "T.2.2", "id": 55 },
+          { "name": "T.2.3", "id": 56 },
+          { "name": "T.0.1", "id": 65 },
+          { "name": "T.0.2", "id": 52 },
+          { "name": "T.0.3", "id": 1081 },
+          { "name": "T.0.4", "id": 261 }
+        ]
+      },
+      {
+        "name": "Edificio 14 (Nave)",
+        "classrooms": [
+          { "name": "B.2.1", "id": 20 },
+          { "name": "B.2.2", "id": 31 },
+          { "name": "B.2.3", "id": 2000 },
+          { "name": "B.2.4", "id": 2001 },
+          { "name": "B.3.1", "id": 73 },
+          { "name": "B.3.2", "id": 74 },
+          { "name": "B.3.3", "id": 2002 },
+          { "name": "B.3.4", "id": 2003 },
+          { "name": "B.4.1", "id": 101 },
+          { "name": "B.4.2", "id": 1226 },
+          { "name": "B.4.3", "id": 4590 },
+          { "name": "B.4.4", "id": 4725 },
+          { "name": "B.5.1", "id": 1221 },
+          { "name": "B.5.2", "id": 1222 },
+          { "name": "B.5.3", "id": 1223 },
+          { "name": "B.5.4", "id": 1224 },
+          { "name": "B.6.1", "id": 962 },
+          { "name": "B.6.2", "id": 964 },
+          { "name": "B.6.3", "id": 965 },
+          { "name": "B.6.4", "id": 1225 }
+        ]
+      },
+      {
+        "name": "Edificio 16B",
+        "classrooms": [
+          { "name": "16B.1.1", "id": 4991 },
+          { "name": "16B.2.1", "id": 4992 },
+          { "name": "16B.3.1", "id": 4993 },
+          { "name": "16B.0.1", "id": 4990 }
+        ]
+      },
+      {
+        "name": "Edificio 16C",
+        "classrooms": [
+          { "name": "16C.0.1", "id": 5011 },
+          { "name": "16C.0.2", "id": 5012 },
+          { "name": "16C.0.3", "id": 5013 }
+        ]
+      },
+      {
+        "name": "Edificio 19",
+        "classrooms": [
+          { "name": "19.0.1", "id": 161 }
+        ]
+      },
+      {
+        "name": "Edificio 20",
+        "classrooms": [
+          { "name": "20.S.1", "id": 282 }
+        ]
+      },
+      {
+        "name": "Edificio 21",
+        "classrooms": [
+          { "name": "21.0.1", "id": 67 },
+          { "name": "21.0.2", "id": 1541 },
+          { "name": "21.0.3", "id": 25 },
+          { "name": "21.S.1", "id": 21 },
+          { "name": "21.S.2", "id": 19 },
+          { "name": "21.S.3", "id": 22 },
+          { "name": "21.S.4", "id": 23 }
+        ]
+      },
+      {
+        "name": "Edificio 23",
+        "classrooms": [
+          { "name": "G.0.1", "id": 1661 },
+          { "name": "G.0.2", "id": 1662 }
+        ]
+      },
+      {
+        "name": "Edificio 25",
+        "classrooms": [
+          { "name": "25.0.1", "id": 945 },
+          { "name": "25.0.2", "id": 946 },
+          { "name": "25.1.1", "id": 947 },
+          { "name": "25.1.2", "id": 948 },
+          { "name": "25.1.3", "id": 949 },
+          { "name": "25.1.4", "id": 950 },
+          { "name": "25.1.5", "id": 951 },
+          { "name": "25.1.6", "id": 952 },
+          { "name": "25.2.1", "id": 1305 },
+          { "name": "25.2.2", "id": 1306 },
+          { "name": "25.2.3", "id": 1307 },
+          { "name": "25.S.1", "id": 941 },
+          { "name": "25.S.2", "id": 942 },
+          { "name": "25.S.3", "id": 944 }
+        ]
+      },
+      {
+        "name": "Edificio 26",
+        "classrooms": [
+          { "name": "26.0.1", "id": 4666 },
+          { "name": "26.0.2", "id": 4599 },
+          { "name": "26.0.3", "id": 4600 },
+          { "name": "26.0.4", "id": 4628 },
+          { "name": "26.1.1", "id": 4601 },
+          { "name": "26.1.2", "id": 4602 },
+          { "name": "26.1.3", "id": 4603 },
+          { "name": "26.1.4", "id": 4604 },
+          { "name": "26.1.5", "id": 4605 },
+          { "name": "16.1.6", "id": 4606 }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "SEDE VIA COLOMBO 40",
+    "buildings": [
+      {
+        "name": "Edificio 32.1",
+        "classrooms": [
+          { "name": "E.P.6", "id": 5098 },
+          { "name": "E.P.7", "id": 5099 }
+        ]
+      },
+      {
+        "name": "Edificio 32.3",
+        "classrooms": [
+          { "name": "E.P.1", "id": 4596 },
+          { "name": "E.P.2", "id": 4752 },
+          { "name": "E.P.3", "id": 4766 }
+        ]
+      }
+    ]
+  }
+]

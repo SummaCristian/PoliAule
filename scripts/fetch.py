@@ -46,7 +46,7 @@ def fetch_days() -> list[date]:
     while len(days) < NEXT_DAYS_WINDOW:
         d = today + timedelta(days=i)
         if is_holiday(d):
-            break # If we hit a holiday, we stop fetching further days, as they are likely to be holidays too.
+            break  # If we hit a holiday, we stop fetching further days, as they are likely to be holidays too.
         if d.weekday() not in SKIP_WEEKDAYS:
             days.append(d)
         i += 1

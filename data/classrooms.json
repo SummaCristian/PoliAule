@@ -1,6 +1,7 @@
 [
   {
     "name": "SEDE LEONARDO",
+    "id": "MIA01",
     "buildings": [
       {
         "name": "Edificio 2",
@@ -256,6 +257,7 @@
   },
   {
     "name": "SEDE VIA COLOMBO 40",
+    "id": "MIA06",
     "buildings": [
       {
         "name": "Edificio 32.1",
@@ -273,5 +275,35 @@
         ]
       }
     ]
+  },
+  {
+    "name": "SEDE BOVISA - Via Durando",
+    "id": "MIB02",
+    "buildings": []
+  },
+  {
+    "name": "SEDE BOVISA - Via La Masa",
+    "id": "MIB01",
+    "buildings": []
+  },
+  {
+    "name": "SEDE CREMONA - Via Bissolati",
+    "id": "CRG02",
+    "buildings": []
+  },
+  {
+    "name": "SEDE CREMONA - Via Pontevico",
+    "id": "CRG01",
+    "buildings": []
+  },
+  {
+    "name": "SEDE LECCO",
+    "id": "LCF04",
+    "buildings": []
+  },
+  {
+    "name": "SEDE MANTOVA",
+    "id": "MNG01",
+    "buildings": []
   }
 ]

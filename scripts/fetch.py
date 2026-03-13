@@ -1,3 +1,4 @@
+import argparse
 import json
 import time
 import httpx
@@ -18,6 +19,7 @@ RETRY_DELAY = 2  # seconds between retries
 
 # Fetch settings
 NEXT_DAYS_WINDOW = 7  # Number of days to fetch starting from today
+DELAY_BETWEEN_CALLS = 1  # seconds to wait between API calls
 
 # Days to skip entirely (0 = Monday, 6 = Sunday)
 SKIP_WEEKDAYS = {6}  # PoliMi is mostly closed on Sundays anyway.
@@ -74,7 +76,7 @@ def fetch_occupancy(client: httpx.Client, room_id: int, d: date) -> list[dict] |
     return None  # Failed to fetch even after MAX_RETRIES attempts
 
 
-def build_output(campuses: list[dict], client: httpx.Client, d: date) -> dict:
+def build_output(campuses: list[dict], client: httpx.Client, d: date, no_delay: bool) -> dict:
     """Build the output JSON file, mirroring the classrooms structure, plus occupancy in each classroom."""
     result = []
     for campus in campuses:
@@ -93,6 +95,11 @@ def build_output(campuses: list[dict], client: httpx.Client, d: date) -> dict:
                         else [],  # If fetch failed, set occupancy to empty list
                     }
                 )
+
+                # Wait before the next API call to avoid overwhelming the server
+                if not no_delay:
+                    time.sleep(DELAY_BETWEEN_CALLS)
+                    
             campus_out["buildings"].append(building_out)
         result.append(campus_out)
 
@@ -125,6 +132,10 @@ def cleanup_old_files():
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--no-delay", action="store_true", help="Skip delay between API calls")
+    args = parser.parse_args()
+    
     # Load classrooms
     with open(CLASSROOMS_FILE, encoding="utf-8") as f:
         campuses = json.load(f)
@@ -153,7 +164,7 @@ def main():
             print(f"\n--- {d.isoformat()} ---")
 
             # Build output for this day
-            output = build_output(campuses, client, d)
+            output = build_output(campuses, client, d, args.no_delay)
 
             # Create output file and write JSON
             out_path = OUTPUT_DIR / f"occupation_{d.strftime('%Y%m%d')}.json"

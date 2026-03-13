@@ -3,7 +3,7 @@ const fs = require("fs");
 const API_URL = "https://onlineservices.polimi.it/maps_rest/rest/ricerca/aula/occupazione";
 
 async function main() {
-  const raw = fs.readFileSync("classrooms.json", "utf-8");
+  const raw = fs.readFileSync("data/classrooms.json", "utf-8");
   const data = JSON.parse(raw);
 
   const leonardo = data.find((campus) => campus.name === "SEDE LEONARDO");

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-03-14T04:44:05.986664",
-  "date": "20260314",
+  "generated_at": "2026-03-14T05:01:30.410566",
+  "date": "20260321",
   "campuses": [
     {
       "name": "SEDE LEONARDO",
@@ -82,7 +82,12 @@
             {
               "name": "3.0.3",
               "id": 57,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "10:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "3.1.1",
@@ -277,7 +282,12 @@
             {
               "name": "9.0.4",
               "id": 4765,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "9.1.2",
@@ -312,7 +322,12 @@
             {
               "name": "D",
               "id": 724,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "10:15",
+                  "fine": "16:15"
+                }
+              ]
             },
             {
               "name": "E/F",
@@ -324,7 +339,7 @@
               "id": 732,
               "occupancy": [
                 {
-                  "inizio": "14:00",
+                  "inizio": "09:30",
                   "fine": "19:00"
                 }
               ]
@@ -622,32 +637,17 @@
             {
               "name": "16C.0.1",
               "id": 5011,
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "17:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "16C.0.2",
               "id": 5012,
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "17:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "16C.0.3",
               "id": 5013,
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "17:00"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -677,12 +677,22 @@
             {
               "name": "21.0.1",
               "id": 67,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "21.0.2",
               "id": 1541,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "21.0.3",
@@ -888,7 +898,12 @@
             {
               "name": "E.P.2",
               "id": 4752,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:00",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "E.P.3",

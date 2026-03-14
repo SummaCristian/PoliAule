@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -24,21 +25,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 
   <!-- JS -->
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
 
 </head>
+
 <body>
   <!-- Header -->
   <header class="header">
-    <div class="header-title-container">
-      <!-- TODO: logo -->
-      <h2>A</h2>
+    <div class="header-top-line-container">
+      <div class="header-title-container">
+        <!-- TODO: logo -->
+        <h2>A</h2>
 
-      <h2 class="header-title">PoliAule</h2>
+        <h2 class="header-title">PoliAule</h2>
+      </div>
+
+      <!-- TODO: menu -->
+      <h2>B</h2>
+
     </div>
 
-    <!-- TODO: menu -->
-    <h2>B</h2>
+    <div class="tabbar">
+      <div class="tab-indicator"></div>
+
+      <button class="tab active">
+        <span class="material-symbols-outlined">event_available</span>
+        Available
+      </button>
+      <button class="tab">
+        <span class="material-symbols-outlined">search</span>
+        Search
+      </button>
+    </div>
+
   </header>
 
   <div style="min-height: 200dvh;">
@@ -47,4 +66,5 @@
   </div>
 
 </body>
+
 </html>

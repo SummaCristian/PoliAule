@@ -48,11 +48,11 @@
     <div class="tabbar slide-in-top">
       <div class="tab-indicator"></div>
 
-      <button class="tab active">
+      <button class="tab active" data-target="available-classrooms-container">
         <span class="material-symbols-outlined">event_available</span>
         Available
       </button>
-      <button class="tab">
+      <button class="tab" data-target="search-classrooms-container">
         <span class="material-symbols-outlined">search</span>
         Search
       </button>
@@ -60,9 +60,51 @@
 
   </header>
 
-  <div style="min-height: 200dvh;">
-    <h1>PoliAule</h1>
-    <p class="secondary">Work in Progress</p>
+  <!-- Rest of the UI under the header -->
+  <div class="body-container">
+
+    <!-- Available Classrooms -->
+    <div id="available-classrooms-container" class="tab-content visible">
+
+      <div class="section-header">
+        <h3 class="section-header-title">Available Classrooms</h2>
+          <p class="section-header-subtitle secondary">
+            Find which classrooms are available right now or at any other
+            moment throughout the day.
+          </p>
+
+          <!-- Campus Picker -->
+          <div class="section-header">
+            <h4 class="subsection-header-title">Select Campus</h4>
+            <p class="subsection-header-subtitle secondary">
+              Where do you want to find an available classroom?
+          </div>
+
+          <select id="campus-picker">
+            <option value="MIA01">Milano Leonardo - Città Studi</option>
+            <option value="MIA06">Milano Via Colombo</option>
+            <option value="MIB02">Milano Bovisa - Via Durando</option>
+            <option value="MIB01">Milano Bovisa - Via La Masa</option>
+            <option value="CRG02">Cremona - Via Bissolati</option>
+            <option value="CRG01">Cremona - Via Pontevico</option>
+            <option value="LCF04">Lecco</option>
+            <option value="MNG01">Mantova</option>
+          </select>
+      </div>
+
+    </div>
+
+    <!-- Search Classroom -->
+    <div id="search-classrooms-container" class="tab-content">
+      <div class="section-header">
+        <h3 class="section-header-title">Search Classroom</h2>
+          <p class="section-header-subtitle secondary">
+            Look up any classroom to see its availability throughout the day, or check
+            when it will be available next.
+          </p>
+      </div>
+    </div>
+
   </div>
 
 </body>

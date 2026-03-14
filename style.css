@@ -195,6 +195,7 @@ label {
 
   box-shadow:
     inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px rgba(255, 255, 255, 0.1),
     0 1px 2px rgba(0, 0, 0, 0.06),
     0 4px 12px rgba(0, 0, 0, 0.08);
 
@@ -230,6 +231,8 @@ label {
   align-items: center;
   justify-content: center;
   gap: 6px;
+
+  will-change: color;
 }
 
 .material-symbols-outlined {
@@ -254,9 +257,12 @@ label {
   border-radius: 999px;
 
   box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px rgba(255, 255, 255, 0.1),
     0 1px 2px rgba(0, 0, 0, 0.12),
     0 0 0 0.5px rgba(0, 0, 0, 0.04);
 
+  will-change: transform, width;
   transition:
     transform 0.28s cubic-bezier(.2, .8, .2, 1),
     width 0.28s cubic-bezier(.2, .8, .2, 1);
@@ -297,4 +303,101 @@ label {
 
 .slide-in-top {
   animation: slide-in-top 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Tab content */
+.body-container {
+  padding-top:2rem;
+}
+
+.tab-content {
+  padding: 0 1rem;
+
+  animation: disappear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.tab-content.visible {
+  animation: appear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+@keyframes disappear {
+  from {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(0.95);
+  }
+}
+
+.section-header {
+  display: flex;
+  flex-direction: column;
+  
+  justify-content: flex-start;
+  text-align: start;
+
+  padding: 1rem 0;
+}
+
+.section-header-title, 
+.section-header-subtitle,
+.subsection-header-title,
+.subsection-header-subtitle {
+  margin: 0;
+  padding: 0;
+}
+
+.section-header-title {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.section-header-subtitle {
+  font-size: 1.35rem;
+}
+
+@media (max-width: 600px) {
+  .section-header-title {
+    font-size: 1.75rem;
+  }
+
+  .section-header-subtitle {
+    font-size: 1rem;
+  }
+}
+
+.subsection-header-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.subsection-header-subtitle {
+  font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .subsection-header-title {
+    font-size: 1.25rem;
+  }
+
+  .subsection-header-subtitle {
+    font-size: 0.75rem;
+  }
 }

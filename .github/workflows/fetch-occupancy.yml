@@ -31,7 +31,13 @@ jobs:
       - name: Run fetch script
         env:
           PYTHONUNBUFFERED: 1
-        run: python scripts/fetch.py ${{ inputs.no_delay == 'true' && '--no-delay' || '' }}
+          NO_DELAY: ${{ inputs.no_delay }}
+        run: |
+          if [ "$NO_DELAY" = "true" ]; then
+            python scripts/fetch.py --no-delay
+          else
+            python scripts/fetch.py
+          fi
 
       - name: Commit and push fetched data
         run: |

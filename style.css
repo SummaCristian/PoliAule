@@ -191,7 +191,7 @@ label {
 
   padding: 0.2rem;
   border-radius: 999px;
-  width: calc((100% / var(--tabs)) - 4px);
+  width: calc((70% / var(--tabs)) - 4px);
 
   box-shadow:
     inset 1px 1px 0 rgba(255, 255, 255, 0.3),
@@ -199,6 +199,12 @@ label {
     0 4px 12px rgba(0, 0, 0, 0.08);
 
   backdrop-filter: blur(12px);
+}
+
+@media (max-width: 800px) {
+  .tabbar {
+    width: calc((100% / var(--tabs)) - 4px);
+  }
 }
 
 .tab {

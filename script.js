@@ -1,4 +1,9 @@
-import { classroomsData, findAvailableClassrooms } from './available-rooms-script.js';
+import {
+  classroomsData,
+  findAvailableClassrooms,
+  fetchClassroomsData,
+  SKIP_DAYS
+} from './available-rooms-script.js';
 
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
@@ -55,6 +60,22 @@ tabs.forEach((tab, index) => {
   });
 });
 
+// ---------- DATA FETCHING ----------
+
+// Triggers the fetching of data as soon as the page loads
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await fetchClassroomsData();
+    console.log('All data loaded:', classroomsData);
+
+    // After fetching, use the data to set the only 
+    // valid dates into the date picker
+    setupDatePicker(classroomsData);
+  } catch (error) {
+    console.error('Error fetching classrooms data:', error);
+  }
+});
+
 // ---------- FORM 1: AVAILABLE CLASSROOMS ----------
 // Setup the 'Available Classrooms' form
 document.getElementById('available-classrooms-form').addEventListener('submit', (e) => {
@@ -99,7 +120,7 @@ function renderAvailableClassroomsResults(results) {
   results.forEach(building => {
     const buildingItem = document.createElement('li');
     buildingItem.innerHTML = `<h3>${building.building.name}</h3>`;
-    
+
     const roomsList = document.createElement('ul');
     building.rooms.forEach(room => {
       const roomItem = document.createElement('li');
@@ -112,4 +133,26 @@ function renderAvailableClassroomsResults(results) {
   });
 
   container.appendChild(list);
+}
+
+// Sets the allowed dates into the date picker,
+// and setups the handling of SKIP DAYS (e.g. Sunday)
+function setupDatePicker() {
+  const datePicker = document.getElementById('date-picker');
+  const availableDates = classroomsData.map(day => day.date);
+  const toInputFormat = d => `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
+
+  datePicker.min = toInputFormat(availableDates.at(0)); // First day in array
+  datePicker.max = toInputFormat(availableDates.at(-1)); // Last day in array
+
+  // Handle skip days (e.g. Sunday)
+  // If the user selects a date that is a skip day, 
+  // clear the selection and show a warning
+  datePicker.addEventListener('input', () => {
+    const selected = new Date(datePicker.value);
+    if (SKIP_DAYS.includes(selected.getDay())) {
+      datePicker.value = ''; // clear the invalid selection
+      alert('Selected date is a skip day. Please choose another date.');
+    }
+  });
 }

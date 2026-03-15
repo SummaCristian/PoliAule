@@ -11,8 +11,9 @@ export const SKIP_DAYS = [0] // Sunday
 
 // ----------  FETCHING LOGIC ----------
 
-// Automatically fetch data for today as soon as the page loads
-document.addEventListener('DOMContentLoaded', async () => {
+// Fetches the classrooms data from the server and 
+// stores it in classroomsData.
+export async function fetchClassroomsData() { 
   // Days to fetch (today + next 6 days)
   const dates = [];
   const cursor = new Date(); // Today
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
   }
-});
+}
 
 // ---------- LOGIC ----------
 

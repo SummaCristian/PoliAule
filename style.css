@@ -132,6 +132,55 @@ label {
   color: color-mix(in srgb, var(--text-color-primary) 70%, transparent);
 }
 
+.info-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+
+  background: color-mix(in srgb, #f5a623 15%, transparent);
+  border: 1px solid color-mix(in srgb, #f5a623 30%, transparent);
+
+  mix-blend-mode: multiply;
+
+  width: fit-content;
+  align-self: center;
+  margin: 0 auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  .info-box {
+    mix-blend-mode: screen;
+  }
+}
+
+.info-box-icon {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.info-box-title {
+  margin: 0;
+  color: #d4820a;
+  font-weight: bold;
+}
+
+@media (prefers-color-scheme: dark) {
+  .info-box-title {
+    color: #f5a623;
+  }
+}
+
+.info-box-content {
+  margin: 0;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, #d4820a 80%, var(--text-color-primary));
+  font-weight: 600;
+}
+
 /* --- Styles --- */
 
 /* Header */

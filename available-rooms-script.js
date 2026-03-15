@@ -55,10 +55,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 // useful to return relevant data, 
 // especially when full availability is not possible.
 export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
+  const formattedDate = formatDateYYYYMMDD(new Date(date));
+
   // Find the day's data
-  const dayData = classroomsData.find(day => day.date === date);
+  const dayData = classroomsData.find(day => day.date === formattedDate);
   if (!dayData) {
-    console.warn(`No data found for date ${date}`);
+    console.warn(`No data found for date ${formattedDate}`);
     return [];
   }
 
@@ -135,7 +137,3 @@ function getFreeSlots(occupancy, fromTime, toTime) {
 
   return freeSlots;
 }
-
-setTimeout(() => {
-  console.log(findAvailableClassrooms('MIA01', '20260316', '10:15', '12:15'));
-}, 1000);

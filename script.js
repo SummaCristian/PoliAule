@@ -1,3 +1,5 @@
+import { classroomsData, findAvailableClassrooms } from './available-rooms-script.js';
+
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
 const darkMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]');
@@ -59,6 +61,12 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   // Skip default submit behavior since we will handle it with JavaScript
   e.preventDefault();
 
+  // Check if data was already fetched
+  if (!classroomsData.length) {
+    console.warn('Data not yet loaded, please wait...');
+    return;
+  }
+
   // Read input data
   const data = new FormData(e.target);
   const campus = data.get('campus');
@@ -66,5 +74,42 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   const from = data.get('from');
   const to = data.get('to');
 
-  // TODO: Call the function to find available classrooms based on the input data
+  console.log('Form submitted with:', { campus, date, from, to });
+
+  // Compute results
+  const results = findAvailableClassrooms(campus, date, from, to);
+  console.log(results);
+
+  // Render results
+  renderAvailableClassroomsResults(results);
 });
+
+// Builds the UI to show the results of the 'Available Classrooms' form submission,
+function renderAvailableClassroomsResults(results) {
+  const container = document.getElementById('available-classrooms-results');
+  container.innerHTML = ''; // Clear previous results
+
+  if (results.length === 0) {
+    container.textContent = 'No available classrooms found for the selected criteria.';
+    return;
+  }
+
+  const list = document.createElement('ul');
+
+  results.forEach(building => {
+    const buildingItem = document.createElement('li');
+    buildingItem.innerHTML = `<h3>${building.building.name}</h3>`;
+    
+    const roomsList = document.createElement('ul');
+    building.rooms.forEach(room => {
+      const roomItem = document.createElement('li');
+      roomItem.innerHTML = `<p>${room.name} - Available from ${room.slots[0].start} to ${room.slots[0].end}</p>`;
+      roomsList.appendChild(roomItem);
+    });
+
+    buildingItem.appendChild(roomsList);
+    list.appendChild(buildingItem);
+  });
+
+  container.appendChild(list);
+}

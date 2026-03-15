@@ -25,7 +25,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 
   <!-- JS -->
-  <script src="script.js" defer></script>
+  <script type="module" src="script.js" defer></script>
   <script type="module" src="available-rooms-script.js" defer></script> 
 
 </head>
@@ -86,7 +86,7 @@
               </div>
             </label>
 
-            <select id="campus-picker" name="campus-selection">
+            <select id="campus-picker" name="campus">
               <option value="MIA01">Milano Leonardo - Città Studi</option>
               <option value="MIA06">Milano Via Colombo</option>
               <option value="MIB02">Milano Bovisa - Via Durando</option>
@@ -108,7 +108,7 @@
                 </div>
               </label>
 
-              <input type="date" id="date-picker" />
+              <input type="date" id="date-picker" name="date"/>
             </div>
 
             <!-- From time picker -->
@@ -122,7 +122,7 @@
                 </div>
               </label>
 
-              <input type="time" id="from-time-picker" />
+              <input type="time" id="from-time-picker" name="from"/>
             </div>
 
             <!-- To time picker -->
@@ -136,13 +136,17 @@
                 </div>
               </label>
 
-              <input type="time" id="to-time-picker" />
+              <input type="time" id="to-time-picker" name="to"/>
             </div>
 
             <!-- Submit button -->
             <button type="submit">Search</button>
 
           </form>
+
+          <div id="available-classrooms-results">
+            <p>Search a room first</p>
+          </div>
           
       </div>
 

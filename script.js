@@ -164,15 +164,24 @@ function setupTimePickers() {
   const fromPicker = document.getElementById('from-time-picker');
   const toPicker = document.getElementById('to-time-picker');
 
+  function toMinutes(timeStr) {
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  function formatTime(date) {
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
   fromPicker.addEventListener('input', () => {
     if (!fromPicker.value) return;
 
     const [hours, minutes] = fromPicker.value.split(':').map(Number);
     const minTo = new Date();
     minTo.setHours(hours + 1, minutes);
-    toPicker.min = `${String(minTo.getHours()).padStart(2, '0')}:${String(minTo.getMinutes()).padStart(2, '0')}`;
+    toPicker.min = formatTime(minTo);
 
-    if (toPicker.value && toPicker.value < toPicker.min) {
+    if (toPicker.value && toMinutes(toPicker.value) < toMinutes(toPicker.min)) {
       toPicker.value = toPicker.min;
     }
   });
@@ -180,23 +189,25 @@ function setupTimePickers() {
   toPicker.addEventListener('input', () => {
     if (!toPicker.value || !fromPicker.value) return;
 
-    const [fromHours, fromMinutes] = fromPicker.value.split(':').map(Number);
-    const [toHours, toMinutes] = toPicker.value.split(':').map(Number);
-    const diffMinutes = (toHours * 60 + toMinutes) - (fromHours * 60 + fromMinutes);
+    const diffMinutes = toMinutes(toPicker.value) - toMinutes(fromPicker.value);
 
     if (diffMinutes < 60) {
+      const [fromHours, fromMinutes] = fromPicker.value.split(':').map(Number);
       const corrected = new Date();
       corrected.setHours(fromHours + 1, fromMinutes);
-      toPicker.value = `${String(corrected.getHours()).padStart(2, '0')}:${String(corrected.getMinutes()).padStart(2, '0')}`;
+      toPicker.value = formatTime(corrected);
     }
   });
 
   // Set initial values
   const now = new Date();
+  now.setMinutes(15, 0, 0);
+  if (new Date().getMinutes() >= 15) now.setHours(now.getHours() + 1);
+
   const later = new Date(now);
   later.setHours(now.getHours() + 1);
 
-  fromPicker.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  toPicker.value = `${String(later.getHours()).padStart(2, '0')}:${String(later.getMinutes()).padStart(2, '0')}`;
-  toPicker.min = toPicker.value;
+  fromPicker.value = formatTime(now);
+  toPicker.value = formatTime(later);
+  toPicker.min = formatTime(later);
 }

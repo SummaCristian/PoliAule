@@ -71,6 +71,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // After fetching, use the data to set the only 
     // valid dates into the date picker
     setupDatePicker(classroomsData);
+    // Setup the time pickers to ensure valid time ranges
+    setupTimePickers();
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
   }
@@ -140,7 +142,7 @@ function renderAvailableClassroomsResults(results) {
 function setupDatePicker() {
   const datePicker = document.getElementById('date-picker');
   const availableDates = classroomsData.map(day => day.date);
-  const toInputFormat = d => `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
+  const toInputFormat = d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
 
   datePicker.min = toInputFormat(availableDates.at(0)); // First day in array
   datePicker.max = toInputFormat(availableDates.at(-1)); // Last day in array
@@ -155,4 +157,51 @@ function setupDatePicker() {
       alert('Selected date is a skip day. Please choose another date.');
     }
   });
+}
+// Sets up the time pickers to ensure that the 'to' time 
+// is always at least 1 hour after the 'from' time
+function setupTimePickers() {
+  const fromPicker = document.getElementById('from-time-picker');
+  const toPicker = document.getElementById('to-time-picker');
+
+  fromPicker.addEventListener('input', () => {
+    if (!fromPicker.value) return;
+
+    const [hours, minutes] = fromPicker.value.split(':').map(Number);
+    const minTo = new Date();
+    minTo.setHours(hours + 1, minutes);
+    toPicker.min = `${String(minTo.getHours()).padStart(2, '0')}:${String(minTo.getMinutes()).padStart(2, '0')}`;
+
+    if (toPicker.value && toPicker.value < toPicker.min) {
+      toPicker.value = toPicker.min;
+    }
+  });
+
+  toPicker.addEventListener('input', () => {
+    if (!toPicker.value || !fromPicker.value) return;
+
+    const [fromHours, fromMinutes] = fromPicker.value.split(':').map(Number);
+    const [toHours, toMinutes] = toPicker.value.split(':').map(Number);
+    const diffMinutes = (toHours * 60 + toMinutes) - (fromHours * 60 + fromMinutes);
+
+    if (diffMinutes < 60) {
+      const corrected = new Date();
+      corrected.setHours(fromHours + 1, fromMinutes);
+      toPicker.value = `${String(corrected.getHours()).padStart(2, '0')}:${String(corrected.getMinutes()).padStart(2, '0')}`;
+    }
+  });
+
+  // Set initial values
+  const now = new Date();
+  const later = new Date(now);
+  later.setHours(now.getHours() + 1);
+
+  fromPicker.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  toPicker.value = `${String(later.getHours()).padStart(2, '0')}:${String(later.getMinutes()).padStart(2, '0')}`;
+  toPicker.min = toPicker.value;
+}
+
+function roundToNearest15(date) {
+  date.setMinutes(Math.ceil(date.getMinutes() / 15) * 15, 0, 0);
+  return date;
 }

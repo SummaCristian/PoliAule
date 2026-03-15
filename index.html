@@ -26,7 +26,7 @@
 
   <!-- JS -->
   <script type="module" src="script.js" defer></script>
-  <script type="module" src="available-rooms-script.js" defer></script> 
+  <script type="module" src="available-rooms-script.js" defer></script>
 
 </head>
 
@@ -84,80 +84,92 @@
             moment throughout the day.
           </p>
 
-          <form id="available-classrooms-form">
+      </div>
 
-            <!-- Campus Picker -->
-            <label for="campus-selection">
-              <div class="section-header">
-                <h4 class="subsection-header-title">Select Campus</h4>
-                <p class="subsection-header-subtitle secondary">
-                  Where do you want to find an available classroom?
-                </p>
-              </div>
-            </label>
+      <form id="available-classrooms-form" class="form">
 
-            <select id="campus-picker" name="campus">
-              <option value="MIA01">Milano Leonardo - Città Studi</option>
-              <option value="MIA06">Milano Via Colombo</option>
-              <option value="MIB02">Milano Bovisa - Via Durando</option>
-              <option value="MIB01">Milano Bovisa - Via La Masa</option>
-              <option value="CRG02">Cremona - Via Bissolati</option>
-              <option value="CRG01">Cremona - Via Pontevico</option>
-              <option value="LCF04">Lecco</option>
-              <option value="MNG01">Mantova</option>
-            </select>
-
-            <!-- Date picker -->
-            <div class="date-picker">
-              <label for="date-picker">
-                <div class="section-header">
-                  <h4 class="subsection-header-title">Select Date</h4>
-                  <p class="subsection-header-subtitle secondary">
-                    For which day do you want to find an available classroom?
-                  </p>
-                </div>
-              </label>
-
-              <input type="date" id="date-picker" name="date"/>
-            </div>
-
-            <!-- From time picker -->
-            <div class="time-picker">
-              <label for="from-time-picker">
-                <div class="section-header">
-                  <h4 class="subsection-header-title">From:</h4>
-                  <p class="subsection-header-subtitle secondary">
-                    From which time do you need a classroom?
-                  </p>
-                </div>
-              </label>
-
-              <input type="time" id="from-time-picker" name="from"/>
-            </div>
-
-            <!-- To time picker -->
-            <div class="time-picker">
-              <label for="to-time-picker">
-                <div class="section-header">
-                  <h4 class="subsection-header-title">To:</h4>
-                  <p class="subsection-header-subtitle secondary">
-                    Until which time do you need a classroom?
-                  </p>
-                </div>
-              </label>
-
-              <input type="time" id="to-time-picker" name="to"/>
-            </div>
-
-            <!-- Submit button -->
-            <button type="submit">Search</button>
-
-          </form>
-
-          <div id="available-classrooms-results">
-            <p>Search a room first</p>
+        <!-- Campus Picker -->
+        <label for="campus-selection">
+          <div class="section-header">
+            <h4 class="subsection-header-title">Select Campus</h4>
+            <p class="subsection-header-subtitle secondary">
+              Where do you want to find an available classroom?
+            </p>
           </div>
-          
+        </label>
+
+        <select id="campus-picker" name="campus">
+          <option value="MIA01">Milano Leonardo - Città Studi</option>
+          <option value="MIA06">Milano Via Colombo</option>
+          <option value="MIB02">Milano Bovisa - Via Durando</option>
+          <option value="MIB01">Milano Bovisa - Via La Masa</option>
+          <option value="CRG02">Cremona - Via Bissolati</option>
+          <option value="CRG01">Cremona - Via Pontevico</option>
+          <option value="LCF04">Lecco</option>
+          <option value="MNG01">Mantova</option>
+        </select>
+
+        <!-- Date picker -->
+        <div class="date-picker">
+          <label for="date-picker">
+            <div class="section-header">
+              <h4 class="subsection-header-title">Select Date</h4>
+              <p class="subsection-header-subtitle secondary">
+                For which day do you want to find an available classroom?
+              </p>
+            </div>
+          </label>
+
+          <input type="date" id="date-picker" name="date" />
+        </div>
+
+        <!-- From time picker -->
+        <div class="time-picker">
+          <label for="from-time-picker">
+            <div class="section-header">
+              <h4 class="subsection-header-title">From:</h4>
+              <p class="subsection-header-subtitle secondary">
+                From which time do you need a classroom?
+              </p>
+            </div>
+          </label>
+
+          <input type="time" id="from-time-picker" name="from" />
+        </div>
+
+        <!-- To time picker -->
+        <div class="time-picker">
+          <label for="to-time-picker">
+            <div class="section-header">
+              <h4 class="subsection-header-title">To:</h4>
+              <p class="subsection-header-subtitle secondary">
+                Until which time do you need a classroom?
+              </p>
+            </div>
+          </label>
+
+          <input type="time" id="to-time-picker" name="to" />
+        </div>
+
+        <!-- Submit button -->
+        <button type="submit">Search</button>
+
+      </form>
+
+      <div id="available-classrooms-results">
+        <p>Search a room first</p>
+      </div>
+
+      <div class="info-box">
+        <h3 class="info-box-icon">🚧</h3>
+        <h3 class="info-box-title">Work in Progress</h3>
+        <p class="info-box-content">
+          I know it's ugly...
+          <br>
+          You should be happy it works at least!
+          <br>
+          I swear I'll make it look decent 🙌
+        </p>
       </div>
 
     </div>
@@ -181,7 +193,7 @@
           It's coming, just hang in there! (or, you know, check back later)
         </p>
       </div>
-      
+
     </div>
 
   </div>

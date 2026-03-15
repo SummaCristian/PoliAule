@@ -73,23 +73,76 @@
             moment throughout the day.
           </p>
 
-          <!-- Campus Picker -->
-          <div class="section-header">
-            <h4 class="subsection-header-title">Select Campus</h4>
-            <p class="subsection-header-subtitle secondary">
-              Where do you want to find an available classroom?
-          </div>
+          <form id="available-classrooms-form">
 
-          <select id="campus-picker">
-            <option value="MIA01">Milano Leonardo - Città Studi</option>
-            <option value="MIA06">Milano Via Colombo</option>
-            <option value="MIB02">Milano Bovisa - Via Durando</option>
-            <option value="MIB01">Milano Bovisa - Via La Masa</option>
-            <option value="CRG02">Cremona - Via Bissolati</option>
-            <option value="CRG01">Cremona - Via Pontevico</option>
-            <option value="LCF04">Lecco</option>
-            <option value="MNG01">Mantova</option>
-          </select>
+            <!-- Campus Picker -->
+            <label for="campus-selection">
+              <div class="section-header">
+                <h4 class="subsection-header-title">Select Campus</h4>
+                <p class="subsection-header-subtitle secondary">
+                  Where do you want to find an available classroom?
+                </p>
+              </div>
+            </label>
+
+            <select id="campus-picker" name="campus-selection">
+              <option value="MIA01">Milano Leonardo - Città Studi</option>
+              <option value="MIA06">Milano Via Colombo</option>
+              <option value="MIB02">Milano Bovisa - Via Durando</option>
+              <option value="MIB01">Milano Bovisa - Via La Masa</option>
+              <option value="CRG02">Cremona - Via Bissolati</option>
+              <option value="CRG01">Cremona - Via Pontevico</option>
+              <option value="LCF04">Lecco</option>
+              <option value="MNG01">Mantova</option>
+            </select>
+
+            <!-- Date picker -->
+            <div class="date-picker">
+              <label for="date-picker">
+                <div class="section-header">
+                  <h4 class="subsection-header-title">Select Date</h4>
+                  <p class="subsection-header-subtitle secondary">
+                    For which day do you want to find an available classroom?
+                  </p>
+                </div>
+              </label>
+
+              <input type="date" id="date-picker" />
+            </div>
+
+            <!-- From time picker -->
+            <div class="time-picker">
+              <label for="from-time-picker">
+                <div class="section-header">
+                  <h4 class="subsection-header-title">From:</h4>
+                  <p class="subsection-header-subtitle secondary">
+                    From which time do you need a classroom?
+                  </p>
+                </div>
+              </label>
+
+              <input type="time" id="from-time-picker" />
+            </div>
+
+            <!-- To time picker -->
+            <div class="time-picker">
+              <label for="to-time-picker">
+                <div class="section-header">
+                  <h4 class="subsection-header-title">To:</h4>
+                  <p class="subsection-header-subtitle secondary">
+                    Until which time do you need a classroom?
+                  </p>
+                </div>
+              </label>
+
+              <input type="time" id="to-time-picker" />
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit">Search</button>
+
+          </form>
+          
       </div>
 
     </div>

@@ -132,29 +132,8 @@ label {
 
   position: sticky;
   top: 0;
-  z-index: 100;
-
-  background: transparent;
-}
-
-.header::before {
-  content: '';
-  position: absolute;
-  inset: calc(-1 * env(safe-area-inset-top)) 0 0 0;
-  /* extend upward into status bar */
-  top: calc(-1 * env(safe-area-inset-top));
-
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-
-  background: linear-gradient(to bottom,
-      var(--background-color) 0%,
-      transparent 100%);
-
-  -webkit-mask-image: linear-gradient(to bottom, var(--background-color) 60%, transparent 100%);
-  mask-image: linear-gradient(to bottom, var(--background-color) 60%, transparent 100%);
-
-  z-index: -1;
+  z-index: 1000;
+  background: var(--background-color);
 }
 
 .header-top-line-container {

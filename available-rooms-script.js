@@ -54,8 +54,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 // This allows to define 'partial availability', which is 
 // useful to return relevant data, 
 // especially when full availability is not possible.
-export function findAvailableClassrooms(campus, date, fromTime, toTime) {
-  // TODO
+export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
+  // Find the day's data
+  const dayData = classroomsData.find(day => day.date === date);
+  if (!dayData) {
+    console.warn(`No data found for date ${date}`);
+    return [];
+  }
+
+  // Find the campus
+  const campusData = dayData.campuses.find(c => c.id === campusId);
+  if (!campusData) {
+    console.warn(`No data found for campus ${campusId} on date ${date}`);
+    return [];
+  }
+
+  const results = [];
+
+  for (const building of campusData.buildings) {
+    const availableRooms = [];
+
+    for (const classroom of building.classrooms) {
+      const freeSlots = getFreeSlots(classroom.occupancy, fromTime, toTime);
+      if (freeSlots.length > 0) {
+        availableRooms.push({
+          id: classroom.id,
+          name: classroom.name,
+          slots: freeSlots,
+        });
+      }
+    }
+
+    if (availableRooms.length > 0) {
+      results.push({
+        building: { id: building.name, name: building.name },
+        rooms: availableRooms,
+      });
+    }
+  }
+
+  return results;
 }
 
 // ---------- HELPERS ----------
@@ -67,3 +105,37 @@ function formatDateYYYYMMDD(date) {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}${month}${day}`;
 }
+
+// Returns the free time slots within [fromTime, toTime]
+// given an array of occupancy slots from the JSON.
+function getFreeSlots(occupancy, fromTime, toTime) {
+  const freeSlots = [];
+  let cursor = fromTime;
+
+  // Sort occupancy just in case it isn't already
+  const sorted = [...occupancy]
+    .map(s => ({ start: s.inizio, end: s.fine }))
+    .sort((a, b) => a.start.localeCompare(b.start));
+
+  for (const slot of sorted) {
+    if (slot.end <= cursor) continue;      // slot entirely before our window
+    if (slot.start >= toTime) break;       // slot entirely after our window
+
+    if (slot.start > cursor) {
+      // free gap before this occupied slot
+      freeSlots.push({ start: cursor, end: slot.start });
+    }
+    cursor = slot.end > cursor ? slot.end : cursor;
+  }
+
+  // free gap after the last occupied slot
+  if (cursor < toTime) {
+    freeSlots.push({ start: cursor, end: toTime });
+  }
+
+  return freeSlots;
+}
+
+setTimeout(() => {
+  console.log(findAvailableClassrooms('MIA01', '20260316', '10:15', '12:15'));
+}, 1000);

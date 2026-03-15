@@ -200,8 +200,3 @@ function setupTimePickers() {
   toPicker.value = `${String(later.getHours()).padStart(2, '0')}:${String(later.getMinutes()).padStart(2, '0')}`;
   toPicker.min = toPicker.value;
 }
-
-function roundToNearest15(date) {
-  date.setMinutes(Math.ceil(date.getMinutes() / 15) * 15, 0, 0);
-  return date;
-}

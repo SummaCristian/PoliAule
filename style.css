@@ -123,8 +123,8 @@ label {
 
 /* Header */
 .header {
-  padding: 0.2rem 1rem;
-  padding-top: calc(0.2rem + env(safe-area-inset-top));
+  padding: 0 1rem;
+  padding-top: calc(env(safe-area-inset-top));
 
   display: flex;
   flex-direction: column;
@@ -132,8 +132,9 @@ label {
 
   position: sticky;
   top: 0;
+  left: 0;
+  right: 0; 
   z-index: 1000;
-  background: var(--background-color);
 }
 
 .header-top-line-container {
@@ -143,6 +144,8 @@ label {
   justify-content: space-between;
 
   line-height: 1rem;
+  
+  background: var(--background-color);
 }
 
 .header-title-container {

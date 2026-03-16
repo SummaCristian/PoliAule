@@ -6,7 +6,7 @@
   /* Text colors */
   --text-color-primary: #1A1A1A;
   --text-color-secondary: #333333;
-  --text-color-accent: #34C759;
+  --text-color-accent: #2a9e47;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -346,6 +346,13 @@ label {
   100% { transform: translate(-50%, -50%) scale(1); }
 }
 
+.data-fetch-popover-container {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0;
+}
+
 .tabbar {
   position: relative;
   align-self: center;
@@ -662,6 +669,27 @@ ul li::marker {
   .popover-title {
     mix-blend-mode: normal;
   }
+}
+
+.popover-title.green {
+  background: linear-gradient(135deg, #0d7a30, #2ecc5a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.popover-title.yellow {
+  background: linear-gradient(135deg, #b07d00, #f0b429);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.popover-title.red {
+  background: linear-gradient(135deg, #a01010, #e53935);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .popover-subtitle {

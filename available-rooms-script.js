@@ -28,7 +28,7 @@ export async function fetchClassroomsData() {
 
   // Fetch all days in parallel and store the results in classroomsData
   try {
-    classroomsData = await Promise.all(
+    classroomsData = (await Promise.allSettled(
       dates.map(date =>
         fetch(`/occupancy/occupation_${formatDateYYYYMMDD(date)}.json`)
           .then(res => {
@@ -36,7 +36,9 @@ export async function fetchClassroomsData() {
             return res.json();
           })
       )
-    );
+    ))
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
     console.log('All data loaded:', classroomsData);
   } catch (error) {
     console.error('Error fetching classrooms data:', error);

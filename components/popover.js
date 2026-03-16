@@ -54,9 +54,21 @@ export class Popover {
       const staticSide = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }[placement.split('-')[0]];
       Object.assign(this.arrowEl.style, {
         left: arrowX != null ? `${arrowX}px` : '',
-        top:  arrowY != null ? `${arrowY}px` : '',
+        top: arrowY != null ? `${arrowY}px` : '',
         [staticSide]: '-5px',
       });
+
+      // Set transform-origin to point at the arrow
+      const side = placement.split('-')[0];
+      if (side === 'bottom' || side === 'top') {
+        const originX = arrowX != null ? `${arrowX + 5}px` : '50%'; // +5 = half arrow width
+        const originY = side === 'bottom' ? 'top' : 'bottom';
+        this.popover.style.transformOrigin = `${originX} ${originY}`;
+      } else {
+        const originX = side === 'right' ? 'left' : 'right';
+        const originY = arrowY != null ? `${arrowY + 5}px` : '50%';
+        this.popover.style.transformOrigin = `${originX} ${originY}`;
+      }
     }
   }
 
@@ -78,9 +90,9 @@ export class Popover {
     }
   }
 
-  open()  { this.popover.setAttribute('data-show', ''); this._updatePosition(); }
+  open() { this.popover.setAttribute('data-show', ''); this._updatePosition(); }
   close() { this.popover.removeAttribute('data-show'); }
-  toggle(){ this.popover.hasAttribute('data-show') ? this.close() : this.open(); }
+  toggle() { this.popover.hasAttribute('data-show') ? this.close() : this.open(); }
 
   destroy() {
     this.trigger.removeEventListener('click', this._onClick);

@@ -3,6 +3,8 @@
   --background-color: #ECECEC;
   --background-color-secondary: #F5F5F5;
 
+  --popup-background: rgba(230, 230, 230, 0.5);
+
   /* Text colors */
   --text-color-primary: #1A1A1A;
   --text-color-secondary: #333333;
@@ -17,6 +19,8 @@
   :root {
     --background-color: #1E1E1E;
     --background-color-secondary: #2A2A2A;
+
+    --popup-background: rgba(100, 100, 100, 0.75);
 
     /* Text colors */
     --text-color-primary: #EAEAEA;
@@ -62,7 +66,7 @@ body {
   z-index: 9999;
 
   background: var(--background-color);
-  
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -202,7 +206,7 @@ label {
   position: sticky;
   top: 0;
   left: 0;
-  right: 0; 
+  right: 0;
   z-index: 1000;
 }
 
@@ -215,7 +219,7 @@ label {
   justify-content: space-between;
 
   line-height: 1rem;
-  
+
   background: var(--background-color);
 
   box-shadow: var(--shadow);
@@ -230,7 +234,7 @@ label {
   gap: 0.5rem;
 }
 
-.header-title-beta-container > h4 {
+.header-title-beta-container>h4 {
   margin: 0;
   padding: 0;
 
@@ -390,7 +394,7 @@ label {
 
 /* Tab content */
 .body-container {
-  padding-top:2rem;
+  padding-top: 2rem;
 
   flex: 1;
 }
@@ -411,6 +415,7 @@ label {
     filter: blur(8px);
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     filter: blur(0);
@@ -424,6 +429,7 @@ label {
     filter: blur(0);
     transform: scale(1);
   }
+
   to {
     opacity: 0;
     filter: blur(8px);
@@ -434,14 +440,14 @@ label {
 .section-header {
   display: flex;
   flex-direction: column;
-  
+
   justify-content: flex-start;
   text-align: start;
 
   padding: 1rem 0;
 }
 
-.section-header-title, 
+.section-header-title,
 .section-header-subtitle,
 .subsection-header-title,
 .subsection-header-subtitle {
@@ -497,4 +503,49 @@ label {
 
 ul li::marker {
   color: var(--text-color-accent);
+}
+
+.popover {
+  position: absolute;
+
+  max-width: 35%;
+  overflow: hidden;
+  word-wrap: break-word;
+
+  padding: 12px 16px;
+
+  background: var(--background-color-secondary);
+  color: var(--text-color-primary);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+
+  opacity: 0;
+  transform: scale(0);
+  transform-origin: top center;
+
+  pointer-events: none;
+
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.popover[data-show] {
+  opacity: 1;
+  transform: scale(1);
+
+  pointer-events: auto;
+}
+
+.arrow {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+
+  background: inherit;
+  transform: rotate(45deg);
 }

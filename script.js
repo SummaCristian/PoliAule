@@ -157,6 +157,9 @@ function setupDatePicker() {
       alert('Selected date is a skip day. Please choose another date.');
     }
   });
+
+  // Auto-select the first day
+  datePicker.value = datePicker.min;
 }
 // Sets up the time pickers to ensure that the 'to' time 
 // is always at least 1 hour after the 'from' time

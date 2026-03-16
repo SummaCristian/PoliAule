@@ -7,6 +7,10 @@
   --text-color-primary: #1A1A1A;
   --text-color-secondary: #333333;
   --text-color-accent: #2a9e47;
+
+  --shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -18,6 +22,10 @@
     --text-color-primary: #EAEAEA;
     --text-color-secondary: #CCCCCC;
     --text-color-accent: #3ce065;
+
+    --shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 4px 12px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -185,12 +193,11 @@ label {
 
 /* Header */
 .header {
-  padding: 0 1rem;
   padding-top: calc(env(safe-area-inset-top));
 
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 0.5REM;
 
   position: sticky;
   top: 0;
@@ -200,6 +207,8 @@ label {
 }
 
 .header-top-line-container {
+  padding: 0 1rem;
+
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -208,6 +217,8 @@ label {
   line-height: 1rem;
   
   background: var(--background-color);
+
+  box-shadow: var(--shadow);
 }
 
 .header-title-container {
@@ -255,8 +266,7 @@ label {
   box-shadow:
     inset 1px 1px 0 rgba(255, 255, 255, 0.3),
     inset -1px -1px rgba(255, 255, 255, 0.1),
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 4px 12px rgba(0, 0, 0, 0.08);
+    var(--shadow);
 
   backdrop-filter: blur(12px);
 }

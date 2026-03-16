@@ -360,6 +360,20 @@ label {
   }
 }
 
+/* Footer */
+.footer {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  padding: 1rem;
+}
+
+.info-label {
+  text-align: end;
+}
+
 .slide-in-top {
   animation: slide-in-top 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

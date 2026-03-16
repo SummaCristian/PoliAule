@@ -546,7 +546,10 @@ ul li::marker {
   -webkit-backdrop-filter: blur(12px);
 
   border-radius: 12px;
-  box-shadow: var(--shadow);
+  box-shadow: 
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px rgba(255, 255, 255, 0.1),
+    var(--shadow);
 
   opacity: 0;
   transform: scale(0);

@@ -255,6 +255,24 @@ label {
   color: var(--text-color-primary);
 }
 
+.header-button {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: transparent;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-color: transparent;
+
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px rgba(255, 255, 255, 0.1),
+    var(--shadow);
+}
+
 .tabbar {
   position: relative;
   align-self: center;
@@ -507,6 +525,7 @@ ul li::marker {
 
 .popover {
   position: absolute;
+  z-index: 1000;
 
   max-width: 35%;
   overflow: hidden;

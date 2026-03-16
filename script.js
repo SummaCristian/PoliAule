@@ -73,6 +73,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupDatePicker(classroomsData);
     // Setup the time pickers to ensure valid time ranges
     setupTimePickers();
+
+    // Setup the data fetch indicator
+    setupDataFetchIndicator();
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
   }
@@ -243,4 +246,25 @@ function setupTimePickers() {
   fromPicker.value = formatTime(now);
   toPicker.value = formatTime(later);
   toPicker.min = formatTime(later);
+}
+
+function setupDataFetchIndicator() {
+  const indicator = document.getElementById('data-fetch-indicator');
+
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`; // "20260316"
+
+  const firstDate = classroomsData[0].date;
+  const allDates = classroomsData.map(day => day.date);
+
+  if (firstDate === todayKey) {
+    // Data starts from today — fresh
+    indicator.classList.add('green');
+  } else if (allDates.includes(todayKey)) {
+    // Today is in the array but not first — partial/stale
+    indicator.classList.add('yellow');
+  } else {
+    // Today is not in the array at all — outdated
+    indicator.classList.add('red');
+  }
 }

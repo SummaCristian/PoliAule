@@ -279,8 +279,8 @@ label {
 }
 
 .header-button {
-  width: 4rem;
-  height: 4rem;
+  width: 3rem;
+  height: 3rem;
   border-radius: 50%;
   background: transparent;
 
@@ -294,6 +294,56 @@ label {
     inset 1px 1px 0 rgba(255, 255, 255, 0.3),
     inset -1px -1px rgba(255, 255, 255, 0.1),
     var(--shadow);
+}
+
+.pulse-indicator {
+  --pulse-color: var(--text-color-secondary);
+}
+
+.pulse-indicator.green  { --pulse-color: var(--text-color-accent); }
+.pulse-indicator.yellow { --pulse-color: #f0b429; }
+.pulse-indicator.red    { --pulse-color: #e53935; }
+
+.pulse-indicator {
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+}
+
+.pulse-indicator::before,
+.pulse-indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.pulse-indicator::before {
+  width: 100%;
+  height: 100%;
+  background: var(--pulse-color);
+  animation: pulse-dot 2s ease-out infinite;
+}
+
+.pulse-indicator::after {
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--pulse-color);
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.8; }
+  70%  { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}
+
+@keyframes pulse-dot {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  70%  { transform: translate(-50%, -50%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
 }
 
 .tabbar {

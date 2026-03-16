@@ -140,6 +140,13 @@ label {
   color: var(--text-color-primary);
 }
 
+.transparent-button {
+  background-color: transparent;
+  border-color: transparent;
+
+  cursor: pointer;
+}
+
 .secondary {
   color: color-mix(in srgb, var(--text-color-primary) 70%, transparent);
 }
@@ -549,6 +556,8 @@ ul li::marker {
   transition:
     opacity 120ms ease,
     transform 120ms ease;
+
+  will-change: opacity, transform;
 }
 
 .popover[data-show] {

@@ -622,6 +622,9 @@ ul li::marker {
 
 .changelog-container {
   text-align: start;
+
+  display: flex;
+  flex-direction: column;
 }
 
 .popover ul {
@@ -652,4 +655,53 @@ ul li::marker {
   height: 4px;
   border-radius: 50%;
   background: var(--text-color-secondary);
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  align-self: center;
+
+  padding: 0.6rem 1rem;
+  margin: 0.5rem;
+
+  background-color: rgba(30, 30, 30, 0.08);
+  border-radius: 9999px;
+  text-decoration: none;
+  font-weight: 600;
+  color: #24292f;
+
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-badge:hover {
+  transform: scale(1.1);
+  background-color: rgba(30, 30, 30, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.hero-icon {
+    width: 1.4rem;
+    height: 1.4rem;
+    color: #24292f;
+}
+
+.hero-text {
+    font-size: 0.9rem;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .hero-badge {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+    .hero-badge:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+    .hero-icon {
+        color: #fff;
+    }
 }

@@ -104,16 +104,46 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   console.log(results);
 
   // Render results
-  renderAvailableClassroomsResults(results);
+  renderAvailableClassroomsResults(results, date);
 });
 
 // Builds the UI to show the results of the 'Available Classrooms' form submission,
-function renderAvailableClassroomsResults(results) {
+function renderAvailableClassroomsResults(results, date) {
   const container = document.getElementById('available-classrooms-results');
   container.innerHTML = ''; // Clear previous results
 
+  // Find the day entry matching the selected date
+  const dateKey = date.replace(/-/g, ''); // "2026-03-16" → "20260316"
+  const dayData = classroomsData.find(day => day.date === dateKey) ?? classroomsData[0];
+
+  // Add data generation time info
+  const dataInfoMsg = document.createElement('label');
+  dataInfoMsg.className = 'secondary';
+
+  const generationDate = new Date(classroomsData[0].generated_at + 'Z');
+
+  const formattedGenerationDate = generationDate.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Europe/Rome', // UTC+1 (or +2 in DST)
+  }) + ' at ' + generationDate.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Europe/Rome', // UTC+1 (or +2 in DST)
+  });
+
+  // "16 Mar 2026 at 05:14"
+  dataInfoMsg.textContent = `Data fetched on ${formattedGenerationDate}`;
+  container.appendChild(dataInfoMsg);
+
   if (results.length === 0) {
-    container.textContent = 'No available classrooms found for the selected criteria.';
+    const errorMsg = document.createElement('p');
+    errorMsg.className = 'secondary';
+    errorMsg.textContent = 'No available classrooms found for the selected criteria.';
+    
+    container.appendChild(errorMsg);
     return;
   }
 

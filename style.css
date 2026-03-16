@@ -381,6 +381,8 @@ label {
 /* Tab content */
 .body-container {
   padding-top:2rem;
+
+  flex: 1;
 }
 
 .tab-content {

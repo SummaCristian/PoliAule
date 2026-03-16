@@ -636,6 +636,12 @@ ul li::marker {
   will-change: opacity, transform;
 }
 
+@media (max-widht: 600px)
+  .popover {
+    max-width: 45%;
+  }
+}
+
 .popover[data-show] {
   opacity: 1;
   transform: scale(1);

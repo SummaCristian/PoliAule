@@ -6,7 +6,7 @@
   /* Text colors */
   --text-color-primary: #1A1A1A;
   --text-color-secondary: #333333;
-  --text-color-accent: #1a4ba3;
+  --text-color-accent: #34C759;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,7 +17,7 @@
     /* Text colors */
     --text-color-primary: #EAEAEA;
     --text-color-secondary: #CCCCCC;
-    --text-color-accent: #4DA6FF;
+    --text-color-accent: #3ce065;
   }
 }
 
@@ -479,4 +479,12 @@ label {
 
 .form {
   text-align: center;
+}
+
+.available-classroom-results {
+  color: var(--text-color-primary);
+}
+
+ul li::marker {
+  color: var(--text-color-accent);
 }

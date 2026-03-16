@@ -10,6 +10,8 @@
   --text-color-secondary: #333333;
   --text-color-accent: #2a9e47;
 
+  --accent-gradient: linear-gradient(135deg, #0d7a30, #2ecc5a);
+
   --shadow:
     0 1px 2px rgba(0, 0, 0, 0.06),
     0 4px 12px rgba(0, 0, 0, 0.08);
@@ -26,6 +28,8 @@
     --text-color-primary: #EAEAEA;
     --text-color-secondary: #CCCCCC;
     --text-color-accent: #3ce065;
+
+    --accent-gradient: linear-gradient(135deg, #1fa840, #90ffb8);
 
     --shadow:
       0 1px 2px rgba(0, 0, 0, 0.3),
@@ -225,7 +229,7 @@ label {
   align-items: center;
   justify-content: space-between;
 
-  line-height: 1rem;
+  line-height: 2rem;
 
   background: var(--background-color);
 
@@ -259,7 +263,19 @@ label {
 .header-title {
   font-size: 2rem;
   font-weight: bold;
-  color: var(--text-color-primary);
+
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  mix-blend-mode: multiply;
+}
+
+@media (prefers-color-scheme: dark) {
+  .header-title {
+    mix-blend-mode: normal;
+  }
 }
 
 .header-button {
@@ -267,7 +283,7 @@ label {
   height: 4rem;
   border-radius: 50%;
   background: transparent;
-  
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -546,7 +562,7 @@ ul li::marker {
   -webkit-backdrop-filter: blur(12px);
 
   border-radius: 12px;
-  box-shadow: 
+  box-shadow:
     inset 1px 1px 0 rgba(255, 255, 255, 0.3),
     inset -1px -1px rgba(255, 255, 255, 0.1),
     var(--shadow);
@@ -576,4 +592,64 @@ ul li::marker {
   height: 10px;
   background: inherit;
   transform: rotate(45deg);
+}
+
+.popover-title {
+  font-size: 1.65rem;
+
+  margin: 0;
+  align-self: center;
+
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  mix-blend-mode: multiply;
+}
+
+@media (prefers-color-scheme: dark) {
+  .popover-title {
+    mix-blend-mode: normal;
+  }
+}
+
+.popover-subtitle {
+  font-size: 1.2rem;
+
+  margin: 0 0 0.5rem 0;
+}
+
+.changelog-container {
+  text-align: start;
+}
+
+.popover ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  text-align: start;
+}
+
+.popover ul li {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+  padding-left: 16px;
+  position: relative;
+}
+
+.popover ul li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-color-secondary);
 }

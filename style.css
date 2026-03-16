@@ -528,7 +528,7 @@ ul li::marker {
   z-index: 1000;
 
   max-width: 35%;
-  overflow: hidden;
+  /* overflow: hidden; */
   word-wrap: break-word;
 
   padding: 12px 16px;
@@ -564,7 +564,6 @@ ul li::marker {
   position: absolute;
   width: 10px;
   height: 10px;
-
   background: inherit;
   transform: rotate(45deg);
 }

@@ -1,15 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>PoliAule</title>
+  <meta name="description" content="A website to find available classrooms around Politecnico di Milano" />
+
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <meta name="theme-color" content="#ECECEC" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1E1E1E" media="(prefers-color-scheme: dark)">
+
+  <!-- Favicon -->
+  <!-- TODO -->
+
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Nunito font -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+  <!-- JS -->
+  <script type="module" src="script.js" defer></script>
+  <script type="module" src="available-rooms-script.js" defer></script>
+
 </head>
+
 <body>
-  <div class="card">
-    <h1>PoliAule</h1>
-    <p>Work in Progress</p>
+  <!-- NoScript Overlay (clients with JS disabled) -->
+  <noscript>
+    <div class="noscript-overlay">
+      <p>PoliAule requires JavaScript to work. Please enable it in your browser settings.</p>
+    </div>
+  </noscript>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top-line-container">
+      <div class="header-title-container">
+        <!-- TODO: logo -->
+        <h2 hidden>A</h2>
+
+        <div class="header-title-beta-container">
+          <h2 class="header-title">PoliAule</h2>
+          <h4 class="secondary">Beta</h4>
+        </div>
+      </div>
+
+      <!-- TODO: menu -->
+      <h2 hidden>B</h2>
+
+    </div>
+
+    <div class="tabbar slide-in-top">
+      <div class="tab-indicator"></div>
+
+      <button class="tab active" data-target="available-classrooms-container">
+        <span class="material-symbols-outlined">event_available</span>
+        Available
+      </button>
+      <button class="tab" data-target="search-classrooms-container">
+        <span class="material-symbols-outlined">search</span>
+        Search
+      </button>
+    </div>
+
+  </header>
+
+  <!-- Rest of the UI under the header -->
+  <div class="body-container">
+
+    <!-- Available Classrooms -->
+    <div id="available-classrooms-container" class="tab-content visible">
+
+      <div class="section-header">
+        <h3 class="section-header-title">Available Classrooms</h2>
+          <p class="section-header-subtitle secondary">
+            Find which classrooms are available right now or at any other
+            moment throughout the day.
+          </p>
+
+      </div>
+
+      <form id="available-classrooms-form" class="form">
+
+        <!-- Campus Picker -->
+        <label for="campus-selection">
+          <div class="section-header">
+            <h4 class="subsection-header-title">Select Campus</h4>
+            <p class="subsection-header-subtitle secondary">
+              Where do you want to find an available classroom?
+            </p>
+          </div>
+        </label>
+
+        <select id="campus-picker" name="campus">
+          <option value="MIA01">Milano Leonardo - Città Studi</option>
+          <option value="MIA06">Milano Via Colombo</option>
+          <!-- Not supported yet -->
+          <!-- <option value="MIB02">Milano Bovisa - Via Durando</option>
+          <option value="MIB01">Milano Bovisa - Via La Masa</option>
+          <option value="CRG02">Cremona - Via Bissolati</option>
+          <option value="CRG01">Cremona - Via Pontevico</option>
+          <option value="LCF04">Lecco</option>
+          <option value="MNG01">Mantova</option> -->
+        </select>
+
+        <!-- Date picker -->
+        <div class="date-picker">
+          <label for="date-picker">
+            <div class="section-header">
+              <h4 class="subsection-header-title">Select Date</h4>
+              <p class="subsection-header-subtitle secondary">
+                For which day do you want to find an available classroom?
+              </p>
+            </div>
+          </label>
+
+          <input type="date" id="date-picker" name="date" />
+        </div>
+
+        <!-- From time picker -->
+        <div class="time-picker">
+          <label for="from-time-picker">
+            <div class="section-header">
+              <h4 class="subsection-header-title">From:</h4>
+              <p class="subsection-header-subtitle secondary">
+                From which time do you need a classroom?
+              </p>
+            </div>
+          </label>
+
+          <input type="time" id="from-time-picker" name="from" />
+        </div>
+
+        <!-- To time picker -->
+        <div class="time-picker">
+          <label for="to-time-picker">
+            <div class="section-header">
+              <h4 class="subsection-header-title">To:</h4>
+              <p class="subsection-header-subtitle secondary">
+                Until which time do you need a classroom?
+              </p>
+            </div>
+          </label>
+
+          <input type="time" id="to-time-picker" name="to" />
+        </div>
+
+        <!-- Submit button -->
+        <button type="submit">Search</button>
+
+      </form>
+
+      <div id="available-classrooms-results">
+        <p>Search a room first</p>
+      </div>
+
+      <div class="info-box">
+        <h3 class="info-box-icon">🚧</h3>
+        <h3 class="info-box-title">Work in Progress</h3>
+        <p class="info-box-content">
+          I know it's ugly...
+          <br>
+          You should be happy it works at least!
+          <br>
+          I swear I'll make it look decent 🙌
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Search Classroom -->
+    <div id="search-classrooms-container" class="tab-content">
+      <div class="section-header">
+        <h3 class="section-header-title">Search Classroom</h2>
+          <p class="section-header-subtitle secondary">
+            Look up any classroom to see its availability throughout the day, or check
+            when it will be available next.
+          </p>
+      </div>
+
+      <div class="info-box">
+        <h3 class="info-box-icon">🚧</h3>
+        <h3 class="info-box-title">Work in Progress</h3>
+        <p class="info-box-content">
+          I haven't actually made it this far yet...
+          <br>
+          It's coming, just hang in there! (or, you know, check back later)
+        </p>
+      </div>
+
+    </div>
+
   </div>
+
+  <footer class="footer">
+    <a href="https://github.com/SummaCristian/poliaule" class="secondary">
+      <label class="secondary">Version 0.1.0 (beta)</label>
+    </a>
+
+    <label class="secondary info-label">
+      Non-definite version, stuff can and will change.
+      <br>
+      Use at your own risk. 
+      <br>
+      If you find any error, please open an 
+      <a class="secondary" href="https://github.com/SummaCristian/poliaule/issues">Issue</a>
+       on GitHub.
+      <br>
+      <strong>Not affiliated to Politecnico di Milano.</strong>
+    </label>
+  </footer>
+
 </body>
+
 </html>

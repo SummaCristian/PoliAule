@@ -757,13 +757,14 @@ ul li::marker {
   font-weight: 600;
   color: #24292f;
 
-  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow);
+
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .hero-badge:hover {
   transform: scale(1.1);
   background-color: rgba(30, 30, 30, 0.15);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .hero-icon {

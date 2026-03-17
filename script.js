@@ -68,11 +68,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchClassroomsData();
     console.log('All data loaded:', classroomsData);
 
+    // Setup the campus picker with the available ones
+    setupCampusPicker();
+
     // After fetching, use the data to set the only 
     // valid dates into the date picker
     setupDatePicker(classroomsData);
     // Setup the time pickers to ensure valid time ranges
     setupTimePickers();
+
+    // Setup the data fetch indicator
+    setupDataFetchIndicator();
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
   }
@@ -142,7 +148,7 @@ function renderAvailableClassroomsResults(results, date) {
     const errorMsg = document.createElement('p');
     errorMsg.className = 'secondary';
     errorMsg.textContent = 'No available classrooms found for the selected criteria.';
-    
+
     container.appendChild(errorMsg);
     return;
   }
@@ -243,4 +249,105 @@ function setupTimePickers() {
   fromPicker.value = formatTime(now);
   toPicker.value = formatTime(later);
   toPicker.min = formatTime(later);
+}
+
+function setupDataFetchIndicator() {
+  const indicator = document.getElementById('data-fetch-indicator');
+
+  if (!classroomsData.length) {
+    indicator.classList.add('red');
+    return;
+  }
+
+  const today = new Date();
+  const todayKey = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0')
+  ].join('');
+
+  const firstDate = classroomsData[0].date;
+  const generationDate = new Date(classroomsData[0].generated_at + 'Z');
+  const generationKey = [
+    generationDate.getFullYear(),
+    String(generationDate.getMonth() + 1).padStart(2, '0'),
+    String(generationDate.getDate()).padStart(2, '0')
+  ].join('');
+
+  if (firstDate === todayKey && generationKey === todayKey) {
+    // Data starts today and was generated today — fresh
+    indicator.classList.add('green');
+  } else if (firstDate === todayKey) {
+    // Data starts today but was generated on a previous day — stale
+    indicator.classList.add('yellow');
+  } else {
+    // Data doesn't even start from today — outdated
+    indicator.classList.add('red');
+  }
+
+  setupDataFetchIndicatorText();
+}
+
+// Setups the text inside the popover shown in the Data Fetch Indicator
+function setupDataFetchIndicatorText() {
+  const container = document.getElementById('data-fetch-indicator-popover-container');
+
+  const states = {
+    green: {
+      title: 'Data is up to date',
+      description: 'Classroom availability was fetched today and is currently updated.',
+    },
+    yellow: {
+      title: 'Data may be stale',
+      description: 'Classroom availability covers today but was generated on a previous day.',
+    },
+    red: {
+      title: 'Data is outdated',
+      description: 'No availability data found for today. Results may not reflect the current schedule.',
+    },
+  };
+
+  // Derive current status from the indicator's classes
+  const indicator = document.getElementById('data-fetch-indicator');
+  const status = ['green', 'yellow', 'red'].find(s => indicator.classList.contains(s)) ?? 'red';
+  const { title, description } = states[status];
+
+  // Last fetch time
+  const generationDate = classroomsData[0]
+    ? new Date(classroomsData[0].generated_at + 'Z')
+    : null;
+
+  const formattedTime = generationDate
+    ? generationDate.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Europe/Rome',
+    }) + ' at ' + generationDate.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'Europe/Rome',
+    })
+    : 'Unknown';
+
+  container.innerHTML = `
+    <h1 class="popover-title ${status}">${title}</h1>
+    <p class="data-status-description secondary">${description}</p>
+    <label class="data-status-time secondary">Last fetched: ${formattedTime}</label>
+  `;
+}
+
+// Initializes the Campus picker, allowing to select only the options actually available
+function setupCampusPicker() {
+  const campuses = classroomsData[0].campuses;
+  const picker = document.getElementById('campus-picker');
+
+  campuses.forEach(campus => {
+    if (campus.buildings.length > 0) {
+      picker.insertAdjacentHTML('beforeend',
+        `<option value="${campus.id}">${campus.name}</option>`
+      );
+    }
+  });
 }

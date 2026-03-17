@@ -1,4 +1,4 @@
-# Poliaule
+# PoliAule
 
 Find available classrooms at Politecnico di Milano.
 

@@ -3,9 +3,9 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1 />
   <title>PoliAule</title>
-  <meta name="description" content="A website to find available classrooms around Politecnico di Milano" />
+  <meta name=" description" content="A website to find available classrooms around Politecnico di Milano" />
 
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -27,6 +27,7 @@
   <!-- JS -->
   <script type="module" src="script.js" defer></script>
   <script type="module" src="available-rooms-script.js" defer></script>
+  <script type="module" src="./components/popover.js" defer></script>
 
 </head>
 
@@ -52,7 +53,15 @@
       </div>
 
       <!-- TODO: menu -->
-      <h2 hidden>B</h2>
+      <button class="header-button" data-popover="data-fetch-indicator-popover">
+        <div id="data-fetch-indicator" class="pulse-indicator"></div>
+      </button>
+      <div id="data-fetch-indicator-popover" class="popover">
+        <div class="arrow" data-arrow></div>
+        
+        <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
+      </div>
+
 
     </div>
 
@@ -70,6 +79,7 @@
     </div>
 
   </header>
+
 
   <!-- Rest of the UI under the header -->
   <div class="body-container">
@@ -98,17 +108,7 @@
           </div>
         </label>
 
-        <select id="campus-picker" name="campus">
-          <option value="MIA01">Milano Leonardo - Città Studi</option>
-          <option value="MIA06">Milano Via Colombo</option>
-          <!-- Not supported yet -->
-          <!-- <option value="MIB02">Milano Bovisa - Via Durando</option>
-          <option value="MIB01">Milano Bovisa - Via La Masa</option>
-          <option value="CRG02">Cremona - Via Bissolati</option>
-          <option value="CRG01">Cremona - Via Pontevico</option>
-          <option value="LCF04">Lecco</option>
-          <option value="MNG01">Mantova</option> -->
-        </select>
+        <select id="campus-picker" name="campus"></select>
 
         <!-- Date picker -->
         <div class="date-picker">
@@ -200,18 +200,60 @@
   </div>
 
   <footer class="footer">
-    <a href="https://github.com/SummaCristian/poliaule" class="secondary">
-      <label class="secondary">Version 0.1.0 (beta)</label>
+    <button class="transparent-button version-info-button" data-popover="version-info-popover">
+      <label class="secondary">Version 0.2.0 (beta)</label>
+    </button>
+    <div id="version-info-popover" class="popover">
+      <div class="arrow" data-arrow></div>
+
+      <h1 class="popover-title">Version 0.2.0 (Beta)</h1>
+      <div class="changelog-container">
+        <h2 class="popover-subtitle">What's new?</h2>
+
+        <ul>
+          <li>Refreshed the UI a bit (hope you like it)</li>
+          <li>Updated data refresh info</li>
+          <li>Added Bovisa (Durando) Campus</li>
+          <li>Added Bovisa (La Masa) Campus</li>
+          <li>Added Cremona Campus</li>
+          <li>Added Lecco Campus</li>
+          <li>Added Mantova Campus</li>
+        </ul>
+
+        <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">
+          <svg class="hero-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M12 0.297c-6.627 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.387 
+                0.6 0.113 0.82-0.26 0.82-0.577 0-0.285-0.01-1.04-0.015-2.04 
+                -3.338 0.724-4.042-1.61-4.042-1.61-0.546-1.387-1.333-1.756-1.333-1.756 
+                -1.09-0.745 0.083-0.729 0.083-0.729 1.205 0.084 1.838 1.237 1.838 1.237 
+                1.07 1.834 2.807 1.304 3.492 0.997 0.108-0.775 0.418-1.304 0.762-1.604 
+                -2.665-0.303-5.467-1.334-5.467-5.932 0-1.31 0.468-2.38 1.236-3.22 
+                -0.124-0.303-0.536-1.523 0.117-3.176 0 0 1.008-0.322 3.3 1.23 
+                0.957-0.266 1.983-0.399 3.003-0.404 1.02 0.005 2.047 0.138 3.006 0.404 
+                2.289-1.552 3.295-1.23 3.295-1.23 0.655 1.653 0.243 2.873 0.12 3.176 
+                0.77 0.84 1.235 1.91 1.235 3.22 0 4.61-2.807 5.625-5.48 5.921 
+                0.43 0.37 0.823 1.096 0.823 2.21 0 1.595-0.015 2.877-0.015 3.267 
+                0 0.32 0.216 0.694 0.825 0.576C20.565 22.092 24 17.592 24 12.297 
+                24 5.67 18.627 0.297 12 0.297z" />
+          </svg>
+          <span class="hero-text">Check on GitHub</span>
+        </a>
+
+      </div>
+    </div>
+
+    <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="secondary">
+
     </a>
 
     <label class="secondary info-label">
       Non-definite version, stuff can and will change.
       <br>
-      Use at your own risk. 
+      Use at your own risk.
       <br>
-      If you find any error, please open an 
-      <a class="secondary" href="https://github.com/SummaCristian/poliaule/issues">Issue</a>
-       on GitHub.
+      If you find any error, please open an
+      <a class="secondary" target="_blank" href="https://github.com/SummaCristian/poliaule/issues">Issue</a>
+      on GitHub.
       <br>
       <strong>Not affiliated to Politecnico di Milano.</strong>
     </label>

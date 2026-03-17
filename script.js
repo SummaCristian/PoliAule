@@ -292,7 +292,7 @@ function setupDataFetchIndicatorText() {
   const states = {
     green: {
       title: 'Data is up to date',
-      description: 'Classroom availability was fetched today and is current.',
+      description: 'Classroom availability was fetched today and is currently updated.',
     },
     yellow: {
       title: 'Data may be stale',

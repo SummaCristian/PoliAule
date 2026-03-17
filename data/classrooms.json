@@ -1185,14 +1185,84 @@
     ]
   },
   {
-    "name": "Cremona - Via Bissolatii",
+    "name": "Cremona - Via Bissolati",
     "id": "CRG02",
-    "buildings": []
-  },
-  {
-    "name": "Cremona - Via Pontevico",
-    "id": "CRG01",
-    "buildings": []
+    "buildings": [
+      {
+        "name": "Edificio CR03",
+        "classrooms": [
+          {
+            "name": "CR03.0.1",
+            "id": 5150
+          },
+          {
+            "name": "CR03.0.2",
+            "id": 5152
+          },
+          {
+            "name": "CR03.0.3",
+            "id": 5155
+          }
+        ]
+      },
+      {
+        "name": "Edificio CR04",
+        "classrooms": [
+          {
+            "name": "CR04.0.1",
+            "id": 5147
+          },
+          {
+            "name": "CR04.0.2",
+            "id": 5146
+          },
+          {
+            "name": "CR04.0.3",
+            "id": 5148
+          },
+          {
+            "name": "CR04.1.1",
+            "id": 5149
+          },
+          {
+            "name": "CR04.1.2",
+            "id": 5151
+          },
+          {
+            "name": "CR04.1.3",
+            "id": 5153
+          },
+          {
+            "name": "CR04.1.4",
+            "id": 5154
+          },
+          {
+            "name": "CR04.2.1",
+            "id": 5156
+          },
+          {
+            "name": "CR04.2.2",
+            "id": 5157
+          },
+          {
+            "name": "CR04.2.3",
+            "id": 5158
+          },
+          {
+            "name": "CR04.2.4",
+            "id": 5159
+          },
+          {
+            "name": "CR04.2.5",
+            "id": 5160
+          },
+          {
+            "name": "CR04.2.6",
+            "id": 5161
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "Lecco",

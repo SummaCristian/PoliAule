@@ -482,6 +482,10 @@ label {
   padding: 1rem;
 }
 
+.version-info-button > label {
+  text-decoration: underline;
+}
+
 .info-label {
   text-align: end;
 }

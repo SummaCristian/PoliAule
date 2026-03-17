@@ -993,7 +993,196 @@
   {
     "name": "Milano Bovisa - Via La Masa",
     "id": "MIB01",
-    "buildings": []
+    "buildings": [
+      {
+        "name": "Edificio B12",
+        "classrooms": [
+          {
+            "name": "L.01",
+            "id": 79
+          },
+          {
+            "name": "L.02",
+            "id": 80
+          },
+          {
+            "name": "L.03",
+            "id": 81
+          },
+          {
+            "name": "L.04 - VIRTUAL LAB",
+            "id": 82
+          },
+          {
+            "name": "L.05 - D.I.",
+            "id": 83
+          },
+          {
+            "name": "L.06",
+            "id": 84
+          },
+          
+          {
+            "name": "L.07",
+            "id": 85
+          },
+          
+          {
+            "name": "L.08",
+            "id": 87
+          },
+          
+          {
+            "name": "L.09",
+            "id": 86
+          },
+          
+          {
+            "name": "L.11",
+            "id": 89
+          },
+          
+          {
+            "name": "L.12",
+            "id": 1781
+          },
+          
+          {
+            "name": "L.13",
+            "id": 1782
+          },
+          
+          {
+            "name": "L.14",
+            "id": 641
+          },
+          
+          {
+            "name": "L.15",
+            "id": 1862
+          }
+        ]
+      },
+      {
+        "name": "Edificio B15",
+        "classrooms": [
+          {
+            "name": "LM.1",
+            "id": 1783
+          },
+          {
+            "name": "LM.3",
+            "id": 628
+          },
+          {
+            "name": "LM.4",
+            "id": 629
+          },
+          {
+            "name": "LM.5",
+            "id": 630
+          },
+          {
+            "name": "LM.6",
+            "id": 631
+          }
+        ]
+      },
+      {
+        "name": "Edificio BL27",
+        "classrooms": [
+          {
+            "name": "BL.27.0.1",
+            "id": 4546
+          },
+          {
+            "name": "BL.27.0.2",
+            "id": 4547
+          },
+          {
+            "name": "BL.27.0.3",
+            "id": 4548
+          },
+          {
+            "name": "BL.27.0.4",
+            "id": 4549
+          },
+          {
+            "name": "BL.27.0.5",
+            "id": 4550
+          },
+          {
+            "name": "BL.27.0.6",
+            "id": 4551
+          },
+          {
+            "name": "BL.27.0.7",
+            "id": 4552
+          },
+          {
+            "name": "BL.27.0.8",
+            "id": 4553
+          },
+          {
+            "name": "BL.27.1.1",
+            "id": 4554
+          },
+          {
+            "name": "BL.27.1.2",
+            "id": 4556
+          },
+          {
+            "name": "BL.27.1.3",
+            "id": 4557
+          },
+          {
+            "name": "BL.27.1.4",
+            "id": 4558
+          },
+          {
+            "name": "BL.27.1.5",
+            "id": 4559
+          },
+          {
+            "name": "BL.27.1.6",
+            "id": 4560
+          },
+          {
+            "name": "BL.27.1.7",
+            "id": 4561
+          },
+          {
+            "name": "BL.27.1.8",
+            "id": 4562
+          }
+        ]
+      },
+      {
+        "name": "Edificio BL28",
+        "classrooms": [
+          {
+            "name": "AULA CARASSA E DADDA",
+            "id": 4745
+          },
+          {
+            "name": "BL.28.1.1",
+            "id": 4741
+          },
+          {
+            "name": "BL.28.1.2",
+            "id": 4742
+          },
+          {
+            "name": "BL.28.2.1",
+            "id": 4743
+          },
+          {
+            "name": "BL.28.2.2",
+            "id": 4744
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "Cremona - Via Bissolatii",

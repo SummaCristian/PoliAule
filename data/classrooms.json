@@ -1,6 +1,6 @@
 [
   {
-    "name": "SEDE LEONARDO",
+    "name": "Milano Leonardo - Città Studi",
     "id": "MIA01",
     "buildings": [
       {
@@ -677,7 +677,7 @@
     ]
   },
   {
-    "name": "SEDE VIA COLOMBO 40",
+    "name": "Milano Via Colombo",
     "id": "MIA06",
     "buildings": [
       {
@@ -713,7 +713,7 @@
     ]
   },
   {
-    "name": "SEDE BOVISA - Via Durando",
+    "name": "Milano Bovisa - Via Durando",
     "id": "MIB02",
     "buildings": [
       {
@@ -991,27 +991,27 @@
     ]
   },
   {
-    "name": "SEDE BOVISA - Via La Masa",
+    "name": "Milano Bovisa - Via La Masa",
     "id": "MIB01",
     "buildings": []
   },
   {
-    "name": "SEDE CREMONA - Via Bissolati",
+    "name": "Cremona - Via Bissolatii",
     "id": "CRG02",
     "buildings": []
   },
   {
-    "name": "SEDE CREMONA - Via Pontevico",
+    "name": "Cremona - Via Pontevico",
     "id": "CRG01",
     "buildings": []
   },
   {
-    "name": "SEDE LECCO",
+    "name": "Lecco",
     "id": "LCF04",
     "buildings": []
   },
   {
-    "name": "SEDE MANTOVA",
+    "name": "Mantova",
     "id": "MNG01",
     "buildings": []
   }

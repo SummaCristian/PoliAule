@@ -68,6 +68,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchClassroomsData();
     console.log('All data loaded:', classroomsData);
 
+    // Setup the campus picker with the available ones
+    setupCampusPicker();
+
     // After fetching, use the data to set the only 
     // valid dates into the date picker
     setupDatePicker(classroomsData);
@@ -316,16 +319,16 @@ function setupDataFetchIndicatorText() {
 
   const formattedTime = generationDate
     ? generationDate.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        timeZone: 'Europe/Rome',
-      }) + ' at ' + generationDate.toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'Europe/Rome',
-      })
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Europe/Rome',
+    }) + ' at ' + generationDate.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'Europe/Rome',
+    })
     : 'Unknown';
 
   container.innerHTML = `
@@ -333,4 +336,18 @@ function setupDataFetchIndicatorText() {
     <p class="data-status-description secondary">${description}</p>
     <label class="data-status-time secondary">Last fetched: ${formattedTime}</label>
   `;
+}
+
+// Initializes the Campus picker, allowing to select only the options actually available
+function setupCampusPicker() {
+  const campuses = classroomsData[0].campuses;
+  const picker = document.getElementById('campus-picker');
+
+  campuses.forEach(campus => {
+    if (campus.buildings.length > 0) {
+      picker.insertAdjacentHTML('beforeend',
+        `<option value="${campus.id}">${campus.name}</option>`
+      );
+    }
+  });
 }

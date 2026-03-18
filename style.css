@@ -219,6 +219,8 @@ label {
   left: 0;
   right: 0;
   z-index: 1000;
+
+  user-select: none;
 }
 
 .header-top-line-container {
@@ -300,9 +302,17 @@ label {
   --pulse-color: var(--text-color-secondary);
 }
 
-.pulse-indicator.green  { --pulse-color: var(--text-color-accent); }
-.pulse-indicator.yellow { --pulse-color: #f0b429; }
-.pulse-indicator.red    { --pulse-color: #e53935; }
+.pulse-indicator.green {
+  --pulse-color: var(--text-color-accent);
+}
+
+.pulse-indicator.yellow {
+  --pulse-color: #f0b429;
+}
+
+.pulse-indicator.red {
+  --pulse-color: #e53935;
+}
 
 .pulse-indicator {
   position: relative;
@@ -335,15 +345,34 @@ label {
 }
 
 @keyframes pulse-ring {
-  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.8; }
-  70%  { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
-  100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+
+  70% {
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0;
+  }
 }
 
 @keyframes pulse-dot {
-  0%   { transform: translate(-50%, -50%) scale(1); }
-  70%  { transform: translate(-50%, -50%) scale(1.1); }
-  100% { transform: translate(-50%, -50%) scale(1); }
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  70% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .data-fetch-popover-container {
@@ -482,7 +511,7 @@ label {
   padding: 1rem;
 }
 
-.version-info-button > label {
+.version-info-button>label {
   text-decoration: underline;
 }
 
@@ -596,7 +625,13 @@ label {
 }
 
 .form {
+  display: flex;
+  flex-direction: column;
+
   text-align: center;
+  justify-content: center;
+
+  gap: 1rem;
 }
 
 .available-classroom-results {
@@ -772,25 +807,127 @@ ul li::marker {
 }
 
 .hero-icon {
-    width: 1.4rem;
-    height: 1.4rem;
-    color: #24292f;
+  width: 1.4rem;
+  height: 1.4rem;
+  color: #24292f;
 }
 
 .hero-text {
-    font-size: 0.9rem;
+  font-size: 0.9rem;
 }
 
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
-    .hero-badge {
-        background-color: rgba(255, 255, 255, 0.08);
-        color: #fff;
-    }
-    .hero-badge:hover {
-        background-color: rgba(255, 255, 255, 0.15);
-    }
-    .hero-icon {
-        color: #fff;
-    }
+  .hero-badge {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  .hero-badge:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .hero-icon {
+    color: #fff;
+  }
+}
+
+.date-picker {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-picker-container {
+  position: relative; /* needed for absolute indicator */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  max-width: 50rem;
+  align-self: center;
+
+  background-color: var(--background-color-secondary);
+  border-radius: 999px;
+  padding: 0.5rem 0.75rem;
+
+  cursor: pointer;
+  user-select: none;
+
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px rgba(255, 255, 255, 0.1),
+    var(--shadow);
+}
+
+.date-indicator {
+  position: absolute;
+
+  background: rgba(218, 218, 218, 0.821);
+  border-radius: 999px;
+
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px rgba(255, 255, 255, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    0 0 0 0.5px rgba(0, 0, 0, 0.04);
+
+  will-change: transform, width;
+  transition:
+    transform 0.28s cubic-bezier(.2, .8, .2, 1),
+    width 0.28s cubic-bezier(.2, .8, .2, 1);
+
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .date-indicator {
+    background: #5e5e5e70;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.date-element-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  aspect-ratio: 1;
+  width: 2.5rem;
+
+  padding: 0.4rem;
+
+  z-index: 1; /* sit above the indicator */
+
+  will-change: color;
+  transition: color 0.2s ease;
+}
+
+.date-element-container.date-skipped {
+  cursor: not-allowed;
+}
+
+.date-element-container.active .date-day-of-week,
+.date-element-container.active .date-number {
+  color: var(--text-color-accent);
+  font-weight: bold;
+}
+
+.date-day-of-week {
+  font-weight: bold;
+  color: var(--text-color-primary);
+}
+
+.date-sunday {
+  color: #e53935;
+}
+
+@media (prefers-color-scheme: dark) {
+  .date-sunday {
+    color: #cc3535;
+  }
+}
+
+.date-number {
+  color: var(--text-color-secondary);
+  opacity: 0.5;
 }

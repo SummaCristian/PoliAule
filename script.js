@@ -21,6 +21,13 @@ function updateThemeColor(e) {
 
 mq.addEventListener('change', updateThemeColor);
 
+document.addEventListener('DOMContentLoaded', () => {
+  const isSamsungBrowser = /SamsungBrowser/i.test(navigator.userAgent);
+  if (isSamsungBrowser) {
+    document.documentElement.classList.add('samsung');
+  }
+})
+
 // ---------- TAB BAR ----------
 // Setup the Tab bar to switch between tabs
 const tabbar = document.querySelector(".tabbar");

@@ -858,6 +858,12 @@ ul li::marker {
     var(--shadow);
 }
 
+@media (max-width: 600px) {
+  .date-picker-container {
+    max-width: 90%;
+  }
+}
+
 .date-indicator {
   position: absolute;
 

@@ -400,6 +400,7 @@ label {
     var(--shadow);
 
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 @media (max-width: 800px) {

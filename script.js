@@ -229,22 +229,30 @@ function setupDatePicker() {
   const elements = container.querySelectorAll('.date-element-container');
 
   function selectDateElement(el) {
-    if (el.classList.contains('date-skipped')) return;
+    if (el.classList.contains('date-skipped')) {
+      // Shake the indicator in place
+      indicator.classList.remove('shake');
+      void indicator.offsetWidth; // force reflow to restart animation
+      indicator.classList.add('shake');
+      indicator.addEventListener('animationend', () => indicator.classList.remove('shake'), { once: true });
+      return;
+    }
 
-    // Update active state
     elements.forEach(e => e.classList.remove('active'));
     el.classList.add('active');
 
-    // Move indicator to align with this element
     const containerRect = container.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
     const paddingLeft = parseFloat(getComputedStyle(container).paddingLeft);
 
+    const x = elRect.left - containerRect.left - paddingLeft;
+
+    // Store x as a CSS variable so the shake keyframe can reference it
+    indicator.style.setProperty('--indicator-x', `${x}px`);
     indicator.style.width = `${elRect.width}px`;
     indicator.style.height = `${elRect.height}px`;
-    indicator.style.transform = `translateX(${elRect.left - containerRect.left - paddingLeft}px)`;
+    indicator.style.transform = `translateX(${x}px)`;
 
-    // Sync the hidden select
     datePicker.value = el.dataset.date;
   }
 

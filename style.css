@@ -839,7 +839,8 @@ ul li::marker {
 }
 
 .date-picker-container {
-  position: relative; /* needed for absolute indicator */
+  position: relative;
+  /* needed for absolute indicator */
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -892,6 +893,36 @@ ul li::marker {
   }
 }
 
+@keyframes date-indicator-shake {
+  0% {
+    transform: translateX(var(--indicator-x)) rotate(0deg);
+  }
+
+  20% {
+    transform: translateX(calc(var(--indicator-x) - 6px)) rotate(-4deg);
+  }
+
+  40% {
+    transform: translateX(calc(var(--indicator-x) + 6px)) rotate(4deg);
+  }
+
+  60% {
+    transform: translateX(calc(var(--indicator-x) - 4px)) rotate(-2deg);
+  }
+
+  80% {
+    transform: translateX(calc(var(--indicator-x) + 4px)) rotate(2deg);
+  }
+
+  100% {
+    transform: translateX(var(--indicator-x)) rotate(0deg);
+  }
+}
+
+.date-indicator.shake {
+  animation: date-indicator-shake 0.4s cubic-bezier(.2, .8, .2, 1) forwards;
+}
+
 .date-element-container {
   display: flex;
   flex-direction: column;
@@ -903,11 +934,12 @@ ul li::marker {
 
   padding: 0.4rem;
 
-  z-index: 1; /* sit above the indicator */
+  z-index: 1;
+  /* sit above the indicator */
 
   will-change: color;
   transition: color 0.2s ease;
-  
+
   -webkit-tap-highlight-color: transparent;
 }
 

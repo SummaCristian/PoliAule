@@ -906,6 +906,8 @@ ul li::marker {
 
   will-change: color;
   transition: color 0.2s ease;
+  
+  -webkit-tap-highlight-color: transparent;
 }
 
 .date-element-container.date-skipped {

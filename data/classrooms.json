@@ -757,7 +757,7 @@
             "id": 983
           },
           {
-            "nam": "B2.1.9",
+            "name": "B2.1.9",
             "id": 1899
           },
           {
@@ -1185,7 +1185,7 @@
     ]
   },
   {
-    "name": "Cremona - Via Bissolati",
+    "name": "Cremona",
     "id": "CRG02",
     "buildings": [
       {

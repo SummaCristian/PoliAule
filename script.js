@@ -267,14 +267,44 @@ function setupDatePicker() {
     el.addEventListener('click', () => selectDateElement(el));
   });
 
+  // Position the "Today" popover above the today cell
+  function positionTodayIndicator() {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
+    const todayIndicator = document.getElementById('today-indicator');
+
+    if (!todayEl || todayEl.classList.contains('date-skipped')) {
+      todayIndicator.classList.add('hidden');
+      return;
+    }
+
+    todayIndicator.classList.remove('hidden');
+
+    const pickerRect = container.closest('.date-picker').getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const elRect = todayEl.getBoundingClientRect();
+
+    const cellCenterX = elRect.left - pickerRect.left + elRect.width / 2;
+    const topOffset = containerRect.top - pickerRect.top - todayIndicator.offsetHeight - 8;
+
+    todayIndicator.style.left = `${cellCenterX}px`;
+    todayIndicator.style.top = `${topOffset}px`;
+  }
+
+  window.addEventListener('resize', positionTodayIndicator);
+
   // Auto-select today if available, otherwise fall back to the first available date
   // Uses setTimeout to ensure layout is fully painted before measuring element positions
   setTimeout(() => {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
-    const fallback = container.querySelector('.date-element-container:not(.date-skipped)');
-    selectDateElement(todayEl ?? fallback);
-  }, 0);
+    requestAnimationFrame(() => {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
+      const fallback = container.querySelector('.date-element-container:not(.date-skipped)');
+      selectDateElement(todayEl ?? fallback);
+
+      positionTodayIndicator(); // ← add this line
+    });
+  }, 10);
 }
 
 // Sets up the time pickers to ensure that the 'to' time

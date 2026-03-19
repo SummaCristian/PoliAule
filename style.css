@@ -852,6 +852,8 @@ ul li::marker {
 .date-picker {
   display: flex;
   flex-direction: column;
+
+  position: relative;
 }
 
 .date-picker-container {
@@ -866,6 +868,8 @@ ul li::marker {
   background-color: var(--background-color-secondary);
   border-radius: 999px;
   padding: 0.5rem 0.75rem;
+
+  margin-top: 2rem;
 
   cursor: pointer;
   user-select: none;
@@ -939,6 +943,70 @@ ul li::marker {
   animation: date-indicator-shake 0.4s cubic-bezier(.2, .8, .2, 1) forwards;
 }
 
+#today-indicator {
+  position: absolute;
+  transform: translateX(-50%);
+
+  background: color-mix(in srgb, var(--background-color-secondary) 50%, var(--text-color-accent) 50%);
+  color: var(--text-color-primary);
+  border: 1px solid color-mix(in srgb, var(--text-color-accent) 15%, transparent);
+  border-radius: 0.5rem;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--shadow);
+  transform-origin: bottom center;
+
+  opacity: 0;
+  /* hidden before animation fires */
+  animation:
+    today-indicator-fade  0.2s ease          0.15s forwards,
+    today-indicator-slide 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards,
+    today-indicator-pop   0.25s cubic-bezier(0.34, 1.6, 0.64, 1) 0.55s forwards;
+  animation-delay: 0.35s;
+
+  will-change: transform;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: color-mix(in srgb, var(--background-color-secondary) 50%, var(--text-color-accent) 50%);
+  }
+
+  &.hidden {
+    display: none;
+  }
+}
+
+@keyframes today-indicator-slide {
+  from {
+    transform: translateX(-50%) translateY(82px) scale(0, 0);
+  }
+  to {
+    transform: translateX(-50%) translateY(0) scale(0.25, 0.85);
+  }
+}
+
+@keyframes today-indicator-pop {
+  from {
+    transform: translateX(-50%) translateY(0) scale(0.25, 0.85);
+  }
+  to {
+    transform: translateX(-50%) translateY(0) scale(1, 1);
+  }
+}
+
+@keyframes today-indicator-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 .date-element-container {
   display: flex;
   flex-direction: column;
@@ -1007,7 +1075,8 @@ are rendered as solid colors
 .samsung .header-title,
 .samsung .popover-title {
   mix-blend-mode: normal;
-  -webkit-text-fill-color: unset; /* fallback to plain color */
+  -webkit-text-fill-color: unset;
+  /* fallback to plain color */
   background: none;
   color: var(--text-color-accent);
 }
@@ -1017,5 +1086,6 @@ are rendered as solid colors
 }
 
 .samsung .arrow {
-  display: none; /* background: inherit is broken, just hide it */
+  display: none;
+  /* background: inherit is broken, just hide it */
 }

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-03-19T05:08:51.857591",
-  "date": "20260321",
+  "generated_at": "2026-03-19T05:32:15.947107",
+  "date": "20260326",
   "campuses": [
     {
       "name": "Milano Leonardo - Città Studi",
@@ -12,42 +12,106 @@
             {
               "name": "2.0.1",
               "id": 32,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "2.0.2",
               "id": 33,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "2.1.1",
               "id": 34,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "2.1.2",
               "id": 35,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "2.1.3",
               "id": 36,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "18:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "2.1.4",
               "id": 39,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "2.1.5",
               "id": 38,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "2.2.1",
               "id": 1303,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "2.2.2",
@@ -62,7 +126,12 @@
             {
               "name": "2.2.4",
               "id": 4726,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             }
           ]
         },
@@ -77,22 +146,44 @@
             {
               "name": "3.0.2",
               "id": 58,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "3.0.3",
               "id": 57,
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
                 }
               ]
             },
             {
               "name": "3.1.1",
               "id": 63,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "3.1.11",
@@ -102,17 +193,44 @@
             {
               "name": "3.1.12",
               "id": 5102,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "3.1.2",
               "id": 44,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "3.1.3",
               "id": 45,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "3.1.4",
@@ -127,22 +245,44 @@
             {
               "name": "3.1.6",
               "id": 48,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "3.1.7",
               "id": 43,
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "18:15"
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
                 }
               ]
             },
             {
               "name": "3.1.8",
               "id": 4734,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "3.1.9",
@@ -152,22 +292,42 @@
             {
               "name": "3.2.1",
               "id": 4630,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "3.2.2",
               "id": 4631,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "3.2.3",
               "id": 4632,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "3.2.4",
               "id": 4633,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             }
           ]
         },
@@ -177,7 +337,16 @@
             {
               "name": "4.0.1",
               "id": 75,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             }
           ]
         },
@@ -187,27 +356,72 @@
             {
               "name": "5.0.1",
               "id": 2,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "5.0.2",
               "id": 4738,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "5.0.3",
               "id": 4739,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "BELTRAMI",
               "id": 2350,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "13:30",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "5.1.1",
               "id": 3,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             }
           ]
         },
@@ -217,7 +431,16 @@
             {
               "name": "6.0.1",
               "id": 10,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             }
           ]
         },
@@ -237,7 +460,16 @@
             {
               "name": "7.1.3",
               "id": 6,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "7.0.1",
@@ -252,12 +484,26 @@
             {
               "name": "8.0.1",
               "id": 27,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "8.1.1",
               "id": 28,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             }
           ]
         },
@@ -267,7 +513,16 @@
             {
               "name": "9.0.1",
               "id": 7,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "9.0.2",
@@ -284,7 +539,7 @@
               "id": 4765,
               "occupancy": [
                 {
-                  "inizio": "08:15",
+                  "inizio": "08:00",
                   "fine": "19:15"
                 }
               ]
@@ -292,7 +547,16 @@
             {
               "name": "9.1.2",
               "id": 9,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             }
           ]
         },
@@ -307,12 +571,22 @@
             {
               "name": "A - ALDO ROSSI",
               "id": 721,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B",
               "id": 722,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "C",
@@ -322,37 +596,47 @@
             {
               "name": "D",
               "id": 724,
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "E/F",
               "id": 1941,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "18:15",
+                  "fine": "21:00"
+                }
+              ]
             },
             {
               "name": "III.A",
               "id": 732,
               "occupancy": [
                 {
-                  "inizio": "09:30",
-                  "fine": "19:00"
+                  "inizio": "08:15",
+                  "fine": "20:15"
                 }
               ]
             },
             {
               "name": "III.B",
               "id": 733,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                }
+              ]
             },
             {
               "name": "III.C",
               "id": 734,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "III.D",
@@ -362,20 +646,30 @@
             {
               "name": "O.1",
               "id": 4684,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "18:15",
+                  "fine": "20:45"
+                }
+              ]
             },
             {
               "name": "Q.1",
               "id": 730,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "13:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "R.1",
               "id": 731,
               "occupancy": [
                 {
-                  "inizio": "08:45",
-                  "fine": "17:30"
+                  "inizio": "08:15",
+                  "fine": "20:15"
                 }
               ]
             },
@@ -384,15 +678,20 @@
               "id": 737,
               "occupancy": [
                 {
-                  "inizio": "08:45",
-                  "fine": "17:30"
+                  "inizio": "08:15",
+                  "fine": "20:15"
                 }
               ]
             },
             {
               "name": "Y.1",
               "id": 5038,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "Z.1 D.I.",
@@ -402,12 +701,22 @@
             {
               "name": "J.2",
               "id": 728,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "O.2",
               "id": 729,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "O.2.1",
@@ -417,17 +726,32 @@
             {
               "name": "R.2",
               "id": 4682,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "U.2",
               "id": 738,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "Z.2",
               "id": 1960,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "G.1",
@@ -452,42 +776,114 @@
             {
               "name": "T.1.1",
               "id": 53,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "T.1.2",
               "id": 71,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "T.1.3",
               "id": 72,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "T.2.1",
               "id": 54,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "T.2.2",
               "id": 55,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "T.2.3",
               "id": 56,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "T.0.1",
               "id": 65,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "T.0.2",
               "id": 52,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "T.0.3",
@@ -497,7 +893,12 @@
             {
               "name": "T.0.4",
               "id": 261,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "17:15",
+                  "fine": "20:15"
+                }
+              ]
             }
           ]
         },
@@ -507,62 +908,130 @@
             {
               "name": "B.2.1",
               "id": 20,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.2.2",
               "id": 31,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.2.3",
               "id": 2000,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.2.4",
               "id": 2001,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "B.3.1",
               "id": 73,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.3.2",
               "id": 74,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.3.3",
               "id": 2002,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.3.4",
               "id": 2003,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.4.1",
               "id": 101,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.4.2",
               "id": 1226,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.4.3",
               "id": 4590,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.4.4",
               "id": 4725,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:00",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.5.1",
@@ -572,7 +1041,12 @@
             {
               "name": "B.5.2",
               "id": 1222,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.5.3",
@@ -592,12 +1066,22 @@
             {
               "name": "B.6.2",
               "id": 964,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.6.3",
               "id": 965,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.6.4",
@@ -612,22 +1096,42 @@
             {
               "name": "16B.1.1",
               "id": 4991,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "16B.2.1",
               "id": 4992,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "16B.3.1",
               "id": 4993,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "16B.0.1",
               "id": 4990,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             }
           ]
         },
@@ -637,17 +1141,32 @@
             {
               "name": "16C.0.1",
               "id": 5011,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "16C.0.2",
               "id": 5012,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "16C.0.3",
               "id": 5013,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             }
           ]
         },
@@ -667,7 +1186,16 @@
             {
               "name": "20.S.1",
               "id": 282,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             }
           ]
         },
@@ -677,27 +1205,31 @@
             {
               "name": "21.0.1",
               "id": 67,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "21.0.2",
               "id": 1541,
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "19:15"
+                  "inizio": "09:15",
+                  "fine": "18:15"
                 }
               ]
             },
             {
               "name": "21.0.3",
               "id": 25,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "21.S.1",
@@ -742,17 +1274,40 @@
             {
               "name": "25.0.1",
               "id": 945,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "25.0.2",
               "id": 946,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "25.1.1",
               "id": 947,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                }
+              ]
             },
             {
               "name": "25.1.2",
@@ -762,7 +1317,16 @@
             {
               "name": "25.1.3",
               "id": 949,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "10:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "16:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "25.1.4",
@@ -782,32 +1346,82 @@
             {
               "name": "25.2.1",
               "id": 1305,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "25.2.2",
               "id": 1306,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "25.2.3",
               "id": 1307,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "25.S.1",
               "id": 941,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "25.S.2",
               "id": 943,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "25.S.3",
               "id": 944,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             }
           ]
         },
@@ -832,37 +1446,100 @@
             {
               "name": "26.0.4",
               "id": 4628,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "26.1.1",
               "id": 4601,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "26.1.2",
               "id": 4602,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "26.1.3",
               "id": 4603,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "26.1.4",
               "id": 4604,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "26.1.5",
               "id": 4605,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "16.1.6",
               "id": 4606,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "18:30"
+                }
+              ]
             }
           ]
         }
@@ -898,12 +1575,7 @@
             {
               "name": "E.P.2",
               "id": 4752,
-              "occupancy": [
-                {
-                  "inizio": "09:00",
-                  "fine": "13:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "E.P.3",
@@ -934,12 +1606,7 @@
             {
               "name": "B2.0.1 - D.I.",
               "id": 2092,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "20:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.1",
@@ -1094,7 +1761,12 @@
             {
               "name": "B2.3.2",
               "id": 1955,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B2.3.3",
@@ -1114,52 +1786,27 @@
             {
               "name": "B6.2.1",
               "id": 4693,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.2",
               "id": 4694,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.3",
               "id": 4855,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.4",
               "id": 4856,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.5",
               "id": 4699,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.6",
@@ -1167,6 +1814,10 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
+                  "fine": "12:15"
+                },
+                {
+                  "inizio": "12:15",
                   "fine": "19:15"
                 }
               ]
@@ -1174,19 +1825,14 @@
             {
               "name": "B6.3.1",
               "id": 4701,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.3.2",
               "id": 4703,
               "occupancy": [
                 {
-                  "inizio": "08:15",
+                  "inizio": "12:15",
                   "fine": "19:15"
                 }
               ]
@@ -1194,12 +1840,7 @@
             {
               "name": "B6.3.3",
               "id": 4861,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -1209,7 +1850,12 @@
             {
               "name": "B8.0.1",
               "id": 4778,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "18:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B8.0.2",
@@ -1256,30 +1902,24 @@
               "id": 4862,
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "19:15"
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
                 }
               ]
             },
             {
               "name": "B8.0.11",
               "id": 4863,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.0.12",
               "id": 4864,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.1.1",
@@ -1294,7 +1934,12 @@
             {
               "name": "B8.1.3",
               "id": 4786,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "15:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B8.1.4",
@@ -1335,20 +1980,15 @@
             {
               "name": "L.02",
               "id": 80,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "20:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.03",
               "id": 81,
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "20:15"
+                  "inizio": "10:15",
+                  "fine": "14:15"
                 }
               ]
             },
@@ -1360,22 +2000,12 @@
             {
               "name": "L.05 - D.I.",
               "id": 83,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "20:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.06",
               "id": 84,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "20:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.07",
@@ -1400,7 +2030,12 @@
             {
               "name": "L.12",
               "id": 1781,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "10:15",
+                  "fine": "12:15"
+                }
+              ]
             },
             {
               "name": "L.13",
@@ -1530,7 +2165,12 @@
             {
               "name": "BL.27.1.8",
               "id": 4562,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "18:15",
+                  "fine": "20:15"
+                }
+              ]
             }
           ]
         },
@@ -1540,7 +2180,12 @@
             {
               "name": "AULA CARASSA E DADDA",
               "id": 4745,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.28.1.1",
@@ -1702,12 +2347,30 @@
             {
               "name": "B.0.2",
               "id": 4640,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.0.3",
               "id": 4641,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.0.4",
@@ -1722,17 +2385,44 @@
             {
               "name": "B.0.6",
               "id": 4644,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.0.7",
               "id": 4645,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.1.1",
               "id": 4646,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.1.2",
@@ -1742,12 +2432,7 @@
             {
               "name": "B.1.3",
               "id": 4648,
-              "occupancy": [
-                {
-                  "inizio": "13:00",
-                  "fine": "17:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.1.4",
@@ -1757,17 +2442,36 @@
             {
               "name": "B.1.5",
               "id": 4650,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "14:15"
+                }
+              ]
             },
             {
               "name": "B.2.1",
               "id": 4651,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "13:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.2.2",
               "id": 4652,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.2.3",
@@ -1779,20 +2483,30 @@
               "id": 4654,
               "occupancy": [
                 {
-                  "inizio": "13:00",
-                  "fine": "17:00"
+                  "inizio": "09:15",
+                  "fine": "13:15"
                 }
               ]
             },
             {
               "name": "B.2.5",
               "id": 4655,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "11:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "B.2.6",
               "id": 4656,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                }
+              ]
             }
           ]
         },
@@ -1817,12 +2531,26 @@
             {
               "name": "A.1.2",
               "id": 4660,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "16:15"
+                }
+              ]
             },
             {
               "name": "A.1.3",
               "id": 4661,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             }
           ]
         },
@@ -1837,7 +2565,16 @@
             {
               "name": "M.2",
               "id": 5017,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             }
           ]
         }
@@ -1858,22 +2595,46 @@
             {
               "name": "A.0.2",
               "id": 2078,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:15",
+                  "fine": "17:15"
+                }
+              ]
             },
             {
               "name": "A.0.3",
               "id": 2074,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "12:15"
+                }
+              ]
             },
             {
               "name": "A.0.4",
               "id": 2077,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "A.1.1",
               "id": 2071,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "17:15"
+                }
+              ]
             },
             {
               "name": "A.1.2",
@@ -1883,7 +2644,16 @@
             {
               "name": "A.1.3",
               "id": 2065,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "A.1.4",
@@ -1893,7 +2663,16 @@
             {
               "name": "A.1.5",
               "id": 2073,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "17:15"
+                }
+              ]
             },
             {
               "name": "A.1.8",

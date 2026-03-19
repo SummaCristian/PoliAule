@@ -961,10 +961,7 @@ ul li::marker {
 
   opacity: 0;
   /* hidden before animation fires */
-  animation:
-    today-indicator-fade  0.2s ease          0.15s forwards,
-    today-indicator-slide 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards,
-    today-indicator-pop   0.25s cubic-bezier(0.34, 1.6, 0.64, 1) 0.55s forwards;
+  animation: today-indicator-appear 0.65s linear 0.15s forwards;
   animation-delay: 0.35s;
 
   will-change: transform;
@@ -984,27 +981,23 @@ ul li::marker {
   }
 }
 
-@keyframes today-indicator-slide {
-  from {
+@keyframes today-indicator-appear {
+  0% {
+    opacity: 0;
     transform: translateX(-50%) translateY(82px) scale(0, 0);
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
-  to {
-    transform: translateX(-50%) translateY(0) scale(0.25, 0.85);
-  }
-}
 
-@keyframes today-indicator-pop {
-  from {
+  25% {
+    opacity: 1;
     transform: translateX(-50%) translateY(0) scale(0.25, 0.85);
+    animation-timing-function: cubic-bezier(0.34, 1.6, 0.64, 1);
   }
-  to {
+
+  100% {
+    opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1, 1);
   }
-}
-
-@keyframes today-indicator-fade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
 }
 
 .date-element-container {

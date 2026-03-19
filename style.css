@@ -992,7 +992,14 @@ ul li::marker {
   25% {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(0.25, 0.85);
-    animation-timing-function: cubic-bezier(0.34, 1.6, 0.64, 1);
+    filter: blur(2px);
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  75% {
+    transform: translateX(-50%) translateY(0) scale(1.08, 1.06);
+    filter: blur(0);
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   100% {

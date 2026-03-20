@@ -58,7 +58,7 @@
       </button>
       <div id="data-fetch-indicator-popover" class="popover">
         <div class="arrow" data-arrow></div>
-        
+
         <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
       </div>
 
@@ -121,7 +121,12 @@
             </div>
           </label>
 
-          <input type="date" id="date-picker" name="date" />
+          <select id="date-picker" name="date" hidden></select>
+
+          <div id="today-indicator" aria-hidden="true">Today</div>
+          <div class="date-picker-container">
+            <div class="date-indicator"></div>
+          </div>
         </div>
 
         <!-- From time picker -->
@@ -153,7 +158,10 @@
         </div>
 
         <!-- Submit button -->
-        <button type="submit">Search</button>
+        <button class="button-primary" type="submit">
+          <span class="material-symbols-outlined">search</span>
+          Find classrooms
+        </button>
 
       </form>
 
@@ -201,23 +209,19 @@
 
   <footer class="footer">
     <button class="transparent-button version-info-button" data-popover="version-info-popover">
-      <label class="secondary">Version 0.2.0 (beta)</label>
+      <label class="secondary">Version 0.3.0 (beta)</label>
     </button>
     <div id="version-info-popover" class="popover">
       <div class="arrow" data-arrow></div>
 
-      <h1 class="popover-title">Version 0.2.0 (Beta)</h1>
+      <h1 class="popover-title">Version 0.3.0 (Beta)</h1>
       <div class="changelog-container">
         <h2 class="popover-subtitle">What's new?</h2>
 
         <ul>
-          <li>Refreshed the UI a bit (hope you like it)</li>
-          <li>Updated data refresh info</li>
-          <li>Added Bovisa (Durando) Campus</li>
-          <li>Added Bovisa (La Masa) Campus</li>
-          <li>Added Cremona Campus</li>
-          <li>Added Lecco Campus</li>
-          <li>Added Mantova Campus</li>
+          <li>Redesigned the Date picker</li>
+          <li>Fixed the blur in the Tab bar on Android</li>
+          <li>Redesigned the Search button</li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">
@@ -247,7 +251,7 @@
     </a>
 
     <label class="secondary info-label">
-      Non-definite version, stuff can and will change.
+      Non-definitive version, stuff can and will change.
       <br>
       Use at your own risk.
       <br>

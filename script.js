@@ -21,6 +21,17 @@ function updateThemeColor(e) {
 
 mq.addEventListener('change', updateThemeColor);
 
+document.addEventListener('DOMContentLoaded', () => {
+  const isSamsungBrowser = /SamsungBrowser/i.test(navigator.userAgent);
+  if (isSamsungBrowser) {
+    document.documentElement.classList.add('samsung');
+  }
+})
+
+document.querySelectorAll('.button-primary').forEach(btn => {
+  btn.addEventListener('touchend', () => {}, { passive: true });
+});
+
 // ---------- TAB BAR ----------
 // Setup the Tab bar to switch between tabs
 const tabbar = document.querySelector(".tabbar");
@@ -71,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup the campus picker with the available ones
     setupCampusPicker();
 
-    // After fetching, use the data to set the only 
+    // After fetching, use the data to set the only
     // valid dates into the date picker
     setupDatePicker(classroomsData);
     // Setup the time pickers to ensure valid time ranges
@@ -99,7 +110,7 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   // Read input data
   const data = new FormData(e.target);
   const campus = data.get('campus');
-  const date = data.get('date');
+  const date = data.get('date'); // comes from the hidden select
   const from = data.get('from');
   const to = data.get('to');
 
@@ -174,30 +185,133 @@ function renderAvailableClassroomsResults(results, date) {
 }
 
 // Sets the allowed dates into the date picker,
-// and setups the handling of SKIP DAYS (e.g. Sunday)
+// and populates the custom UI and the hidden select with the available dates
 function setupDatePicker() {
   const datePicker = document.getElementById('date-picker');
   const availableDates = classroomsData.map(day => day.date);
   const toInputFormat = d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
 
-  datePicker.min = toInputFormat(availableDates.at(0)); // First day in array
-  datePicker.max = toInputFormat(availableDates.at(-1)); // Last day in array
+  // --- Populate the date picker UI ---
+  const container = document.querySelector('.date-picker-container');
+  const indicator = container.querySelector('.date-indicator');
 
-  // Handle skip days (e.g. Sunday)
-  // If the user selects a date that is a skip day, 
-  // clear the selection and show a warning
-  datePicker.addEventListener('input', () => {
-    const selected = new Date(datePicker.value);
-    if (SKIP_DAYS.includes(selected.getDay())) {
-      datePicker.value = ''; // clear the invalid selection
-      alert('Selected date is a skip day. Please choose another date.');
+  const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+  // Clear any hardcoded elements, keep only the indicator
+  container.querySelectorAll('.date-element-container').forEach(el => el.remove());
+
+  // Generate every day from min to max, including skipped ones
+  const allDates = [];
+  const cursor = new Date(toInputFormat(availableDates.at(0)));
+  const end = new Date(toInputFormat(availableDates.at(-1)));
+
+  while (cursor <= end) {
+    allDates.push(cursor.toISOString().slice(0, 10));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  allDates.forEach((dateStr, index) => {
+    const date = new Date(dateStr);
+    const dayOfWeek = DAY_NAMES[date.getDay()];
+    const dayNumber = date.getDate();
+    const isSunday = date.getDay() === 0;
+    const isSkipped = !availableDates.includes(dateStr.replace(/-/g, ''));
+
+    // Only add valid dates to the hidden select
+    if (!isSkipped) {
+      datePicker.insertAdjacentHTML('beforeend',
+        `<option value="${dateStr}">${dateStr}</option>`
+      );
     }
+
+    // Add the visual element regardless, dimming skipped days
+    const el = document.createElement('div');
+    el.className = `date-element-container${isSkipped ? ' date-skipped' : ''}`;
+    el.dataset.date = dateStr;
+    el.dataset.index = index;
+    el.innerHTML = `
+      <span class="date-day-of-week ${isSunday ? 'date-sunday' : ''}">${dayOfWeek}</span>
+      <span class="date-number">${dayNumber}</span>
+    `;
+    container.appendChild(el);
   });
 
-  // Auto-select the first day
-  datePicker.value = datePicker.min;
+  // --- Indicator logic ---
+  const elements = container.querySelectorAll('.date-element-container');
+
+  function selectDateElement(el) {
+    if (el.classList.contains('date-skipped')) {
+      // Shake the indicator in place
+      indicator.classList.remove('shake');
+      void indicator.offsetWidth; // force reflow to restart animation
+      indicator.classList.add('shake');
+      indicator.addEventListener('animationend', () => indicator.classList.remove('shake'), { once: true });
+      return;
+    }
+
+    elements.forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const paddingLeft = parseFloat(getComputedStyle(container).paddingLeft);
+
+    const x = elRect.left - containerRect.left - paddingLeft;
+
+    // Store x as a CSS variable so the shake keyframe can reference it
+    indicator.style.setProperty('--indicator-x', `${x}px`);
+    indicator.style.width = `${elRect.width}px`;
+    indicator.style.height = `${elRect.height}px`;
+    indicator.style.transform = `translateX(${x}px)`;
+
+    datePicker.value = el.dataset.date;
+  }
+
+  elements.forEach(el => {
+    el.addEventListener('click', () => selectDateElement(el));
+  });
+
+  // Position the "Today" popover above the today cell
+  function positionTodayIndicator() {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
+    const todayIndicator = document.getElementById('today-indicator');
+
+    if (!todayEl || todayEl.classList.contains('date-skipped')) {
+      todayIndicator.classList.add('hidden');
+      return;
+    }
+
+    todayIndicator.classList.remove('hidden');
+
+    const pickerRect = container.closest('.date-picker').getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const elRect = todayEl.getBoundingClientRect();
+
+    const cellCenterX = elRect.left - pickerRect.left + elRect.width / 2;
+    const topOffset = containerRect.top - pickerRect.top - todayIndicator.offsetHeight - 8;
+
+    todayIndicator.style.left = `${cellCenterX}px`;
+    todayIndicator.style.top = `${topOffset}px`;
+  }
+
+  window.addEventListener('resize', positionTodayIndicator);
+
+  // Auto-select today if available, otherwise fall back to the first available date
+  // Uses setTimeout to ensure layout is fully painted before measuring element positions
+  setTimeout(() => {
+    requestAnimationFrame(() => {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
+      const fallback = container.querySelector('.date-element-container:not(.date-skipped)');
+      selectDateElement(todayEl ?? fallback);
+
+      positionTodayIndicator(); // ← add this line
+    });
+  }, 10);
 }
-// Sets up the time pickers to ensure that the 'to' time 
+
+// Sets up the time pickers to ensure that the 'to' time
 // is always at least 1 hour after the 'from' time
 function setupTimePickers() {
   const fromPicker = document.getElementById('from-time-picker');

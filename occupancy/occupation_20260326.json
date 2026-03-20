@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-19T05:32:15.947107",
+  "generated_at": "2026-03-20T05:19:24.784414",
   "date": "20260326",
   "campuses": [
     {
@@ -399,10 +399,6 @@
               "name": "BELTRAMI",
               "id": 2350,
               "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
                 {
                   "inizio": "13:30",
                   "fine": "18:15"
@@ -1771,7 +1767,12 @@
             {
               "name": "B2.3.3",
               "id": 1954,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:00",
+                  "fine": "18:00"
+                }
+              ]
             },
             {
               "name": "B2.3.4",

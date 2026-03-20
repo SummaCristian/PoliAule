@@ -109,6 +109,9 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   // Skip default submit behavior since we will handle it with JavaScript
   e.preventDefault();
 
+  // Haptic feedback
+  haptics.trigger(defaultPatterns.success);
+
   // Check if data was already fetched
   if (!classroomsData.length) {
     console.warn('Data not yet loaded, please wait...');

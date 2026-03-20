@@ -1094,6 +1094,8 @@ ul li::marker {
     background-color 0.2s ease;
 
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  cursor: pointer;
 }
 
 @media (hover: hover) {

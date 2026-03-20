@@ -5,6 +5,11 @@ import {
   SKIP_DAYS
 } from './available-rooms-script.js';
 
+import { WebHaptics, defaultPatterns } from 'https://esm.sh/web-haptics';
+
+const haptics = new WebHaptics();
+export default haptics;
+
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
 const darkMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]');
@@ -29,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 document.querySelectorAll('.button-primary').forEach(btn => {
-  btn.addEventListener('touchend', () => {}, { passive: true });
+  btn.addEventListener('touchend', () => { }, { passive: true });
 });
 
 // ---------- TAB BAR ----------
@@ -246,6 +251,10 @@ function setupDatePicker() {
       void indicator.offsetWidth; // force reflow to restart animation
       indicator.classList.add('shake');
       indicator.addEventListener('animationend', () => indicator.classList.remove('shake'), { once: true });
+
+      // Haptic feedback
+      haptics.trigger(defaultPatterns.error);
+
       return;
     }
 
@@ -265,6 +274,13 @@ function setupDatePicker() {
     indicator.style.transform = `translateX(${x}px)`;
 
     datePicker.value = el.dataset.date;
+
+    // Haptic feedback
+    haptics.trigger([
+      { duration: 30 },
+      { delay: 60, duration: 40, intensity: 1 },
+    ])
+
   }
 
   elements.forEach(el => {

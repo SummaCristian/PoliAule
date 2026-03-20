@@ -5,10 +5,7 @@ import {
   SKIP_DAYS
 } from './available-rooms-script.js';
 
-import { WebHaptics, defaultPatterns } from 'https://esm.sh/web-haptics';
-
-const haptics = new WebHaptics();
-export default haptics;
+import { haptics, defaultPatterns } from './components/haptics.js';
 
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');

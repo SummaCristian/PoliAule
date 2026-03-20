@@ -8,6 +8,8 @@ import {
   arrow
 } from "https://cdn.jsdelivr.net/npm/@floating-ui/dom@1/+esm";
 
+import { haptics, defaultPatterns } from './haptics.js';
+
 // All Popovers currently in the page
 const allPopovers = [];
 
@@ -81,6 +83,9 @@ export class Popover {
 
     // Toggle this one
     isOpen ? this.close() : this.open();
+
+    // Haptic Feedback
+    haptics.trigger(defaultPatterns.success)
   }
 
   // Hides the popover when clicking outside of it

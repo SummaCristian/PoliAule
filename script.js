@@ -290,6 +290,14 @@ function setupDatePicker() {
     el.addEventListener('click', () => selectDateElement(el));
   });
 
+
+  document.getElementById('today-indicator').addEventListener('click', () => {
+    console.log('today-indicator clicked');
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
+    if (todayEl) selectDateElement(todayEl);
+  });
+
   // Position the "Today" popover above the today cell
   function positionTodayIndicator() {
     const todayStr = new Date().toISOString().slice(0, 10);

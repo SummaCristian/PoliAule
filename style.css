@@ -958,7 +958,7 @@ ul li::marker {
   font-size: 0.75rem;
   font-weight: bold;
   white-space: nowrap;
-  pointer-events: none;
+  cursor: pointer;
   box-shadow: var(--shadow);
   transform-origin: bottom center;
 
@@ -967,7 +967,8 @@ ul li::marker {
   animation: today-indicator-appear 0.65s linear 0.15s forwards;
   animation-delay: 0.35s;
 
-  will-change: transform;
+  will-change: transform scale;
+  transition: scale 0.15s ease;
 
   &::after {
     content: '';
@@ -981,6 +982,10 @@ ul li::marker {
 
   &.hidden {
     display: none;
+  }
+
+  &:hover {
+    scale: 1.05;
   }
 }
 

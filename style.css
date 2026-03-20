@@ -1092,16 +1092,20 @@ ul li::marker {
     scale 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.2s ease,
     background-color 0.2s ease;
+
+  -webkit-tap-highlight-color: transparent;
 }
 
-.button-primary:hover {
-  scale: 1.05;
-  background-color: color-mix(in srgb, var(--text-color-accent) 38%, var(--background-color-secondary));
-  box-shadow:
-    inset 1px 2px 0 rgba(255, 255, 255, 0.4),
-    inset -1px -1px 0 rgba(255, 255, 255, 0.15),
-    0 4px 20px color-mix(in srgb, var(--text-color-accent) 35%, transparent),
-    var(--shadow);
+@media (hover: hover) {
+  .button-primary:hover {
+    scale: 1.05;
+    background-color: color-mix(in srgb, var(--text-color-accent) 38%, var(--background-color-secondary));
+    box-shadow:
+      inset 1px 2px 0 rgba(255, 255, 255, 0.4),
+      inset -1px -1px 0 rgba(255, 255, 255, 0.15),
+      0 4px 20px color-mix(in srgb, var(--text-color-accent) 35%, transparent),
+      var(--shadow);
+  }
 }
 
 .button-primary:active {

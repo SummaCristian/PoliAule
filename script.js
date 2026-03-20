@@ -68,6 +68,9 @@ tabs.forEach((tab, index) => {
     const targetId = tab.dataset.target;
     showContent(targetId);
 
+    // Haptic feedback
+    haptics.trigger(defaultPatterns.success)
+
     // Update active tab and indicator
     document.querySelector(".tab.active")?.classList.remove("active");
     tab.classList.add("active");

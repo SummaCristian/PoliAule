@@ -28,6 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
+document.querySelectorAll('.button-primary').forEach(btn => {
+  btn.addEventListener('touchend', () => {}, { passive: true });
+});
+
 // ---------- TAB BAR ----------
 // Setup the Tab bar to switch between tabs
 const tabbar = document.querySelector(".tabbar");

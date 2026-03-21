@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-20T05:13:31.947424",
+  "generated_at": "2026-03-21T04:49:02.588737",
   "date": "20260325",
   "campuses": [
     {
@@ -846,10 +846,6 @@
               "id": 28,
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
                   "inizio": "11:15",
                   "fine": "13:15"
                 },
@@ -974,6 +970,10 @@
                 {
                   "inizio": "09:15",
                   "fine": "14:15"
+                },
+                {
+                  "inizio": "15:15",
+                  "fine": "17:15"
                 },
                 {
                   "inizio": "19:20",
@@ -1655,6 +1655,10 @@
               "name": "B.4.1",
               "id": 101,
               "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "11:15"
+                },
                 {
                   "inizio": "11:15",
                   "fine": "18:15"
@@ -4065,10 +4069,6 @@
                 {
                   "inizio": "15:15",
                   "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
                 }
               ]
             },
@@ -4537,7 +4537,12 @@
             {
               "name": "T.2",
               "id": 4636,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:30",
+                  "fine": "16:30"
+                }
+              ]
             },
             {
               "name": "T.3",
@@ -4562,7 +4567,12 @@
             {
               "name": "B.0.2",
               "id": 4640,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "15:00",
+                  "fine": "18:00"
+                }
+              ]
             },
             {
               "name": "B.0.3",
@@ -4572,7 +4582,12 @@
             {
               "name": "B.0.4",
               "id": 4642,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.0.5",
@@ -4587,12 +4602,22 @@
             {
               "name": "B.0.7",
               "id": 4645,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:30",
+                  "fine": "14:00"
+                }
+              ]
             },
             {
               "name": "B.1.1",
               "id": 4646,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:30",
+                  "fine": "14:00"
+                }
+              ]
             },
             {
               "name": "B.1.2",
@@ -4607,17 +4632,32 @@
             {
               "name": "B.1.4",
               "id": 4649,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:30",
+                  "fine": "14:00"
+                }
+              ]
             },
             {
               "name": "B.1.5",
               "id": 4650,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.2.1",
               "id": 4651,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:30",
+                  "fine": "14:00"
+                }
+              ]
             },
             {
               "name": "B.2.2",
@@ -4627,7 +4667,12 @@
             {
               "name": "B.2.3",
               "id": 4653,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:30",
+                  "fine": "14:00"
+                }
+              ]
             },
             {
               "name": "B.2.4",
@@ -4637,12 +4682,22 @@
             {
               "name": "B.2.5",
               "id": 4655,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:30",
+                  "fine": "14:00"
+                }
+              ]
             },
             {
               "name": "B.2.6",
               "id": 4656,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "13:15",
+                  "fine": "17:15"
+                }
+              ]
             }
           ]
         },
@@ -4657,7 +4712,12 @@
             {
               "name": "A.0.2",
               "id": 4658,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:30",
+                  "fine": "14:00"
+                }
+              ]
             },
             {
               "name": "A.1.1",
@@ -4669,15 +4729,20 @@
               "id": 4660,
               "occupancy": [
                 {
-                  "inizio": "13:15",
-                  "fine": "17:15"
+                  "inizio": "09:30",
+                  "fine": "14:00"
                 }
               ]
             },
             {
               "name": "A.1.3",
               "id": 4661,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:30",
+                  "fine": "14:00"
+                }
+              ]
             }
           ]
         },
@@ -4687,7 +4752,16 @@
             {
               "name": "M.1",
               "id": 5018,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:00",
+                  "fine": "12:30"
+                },
+                {
+                  "inizio": "13:30",
+                  "fine": "18:00"
+                }
+              ]
             },
             {
               "name": "M.2",

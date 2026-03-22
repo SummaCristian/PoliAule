@@ -5,6 +5,8 @@ import {
   SKIP_DAYS
 } from './available-rooms-script.js';
 
+import { initTimePickers } from './components/time-picker.js';
+
 import { haptics, defaultPatterns } from './components/haptics.js';
 
 // ---------- THEME COLOR META TAGS ----------
@@ -92,6 +94,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupDatePicker(classroomsData);
     // Setup the time pickers to ensure valid time ranges
     setupTimePickers();
+
+    initTimePickers();
 
     // Setup the data fetch indicator
     setupDataFetchIndicator();

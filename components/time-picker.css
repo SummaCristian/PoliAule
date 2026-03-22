@@ -1,0 +1,241 @@
+/* ── Time Picker Component ─────────────────────────────────────────────────── */
+
+/* Shadow used by the expanded popup (card reuses --shadow from the system) */
+:root {
+  --tp-shadow-lg:
+    0 8px 32px rgba(0, 0, 0, 0.14),
+    0 2px 8px  rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tp-shadow-lg:
+      0 8px 40px rgba(0, 0, 0, 0.55),
+      0 2px 8px  rgba(0, 0, 0, 0.40);
+  }
+}
+
+/* ── Overlay ───────────────────────────────────────────────────────────────── */
+
+.tp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  z-index: 1100;
+  pointer-events: none;
+  transition:
+    background      0.35s ease,
+    backdrop-filter 0.35s ease,
+    -webkit-backdrop-filter 0.35s ease;
+}
+
+.tp-overlay--active {
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+/* Samsung Internet: no backdrop-filter */
+.samsung .tp-overlay--active {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* ── Card (collapsed state) ────────────────────────────────────────────────── */
+
+.tp-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 18px;
+
+  background: var(--background-color-secondary);
+  border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 20%, transparent);
+  color: var(--text-color-primary);
+
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.1),
+    var(--shadow);
+
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  transition:
+    scale       0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow  0.2s ease,
+    background  0.2s ease;
+}
+
+@media (hover: hover) {
+  .tp-card:hover {
+    scale: 1.02;
+    background: color-mix(in srgb, var(--text-color-accent) 8%, var(--background-color-secondary));
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+      inset -1px -1px 0 rgba(255, 255, 255, 0.1),
+      0 4px 20px color-mix(in srgb, var(--text-color-accent) 20%, transparent),
+      var(--shadow);
+  }
+}
+
+.tp-card:active {
+  scale: 0.97;
+}
+
+/* Card is hidden behind the popup while morphing */
+.tp-card--morphing {
+  visibility: hidden;
+}
+
+.tp-card__icon-wrap {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-color-accent) 15%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-color-accent);
+}
+
+.tp-card__icon-wrap .material-symbols-outlined {
+  font-size: 20px !important;
+}
+
+.tp-card__info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  flex: 1;
+}
+
+.tp-card__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+}
+
+.tp-card__time {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-color-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.tp-card__chevron {
+  font-size: 20px !important;
+  color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
+  flex-shrink: 0;
+}
+
+/* ── Popup (expanded state) ────────────────────────────────────────────────── */
+
+.tp-popup {
+  position: fixed;
+  z-index: 1200;
+  background: var(--background-color-secondary);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  flex-direction: column; /* display:flex set via JS */
+
+  transition:
+    top           0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    left          0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    width         0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    height        0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow    0.42s ease;
+
+  will-change: top, left, width, height;
+}
+
+.tp-popup__inner {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem;
+  height: 100%;
+}
+
+.tp-popup--open .tp-popup__inner {
+  opacity: 1;
+  transition-delay: 0.28s;
+}
+
+.tp-popup__title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
+  margin: 0;
+  align-self: flex-start;
+}
+
+.tp-popup__input-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.tp-popup__clock {
+  font-size: 22px !important;
+  color: var(--text-color-accent);
+  flex-shrink: 0;
+}
+
+/* Native time input — styled to match the design system */
+.tp-popup__time-input {
+  flex: 1;
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--text-color-primary);
+  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 25%, transparent);
+  border-radius: 12px;
+  padding: 0.35rem 0.6rem;
+  text-align: center;
+  outline: none;
+
+  /* Remove browser chrome where possible */
+  -webkit-appearance: none;
+  appearance: none;
+
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.tp-popup__time-input:focus {
+  border-color: color-mix(in srgb, var(--text-color-accent) 70%, transparent);
+  background: color-mix(in srgb, var(--text-color-accent) 10%, transparent);
+}
+
+/* Done button sits below — reuses .button-primary from style.css */
+.tp-popup__done {
+  /* .button-primary already handles everything; just ensure full-width feel */
+  min-width: 8rem;
+}

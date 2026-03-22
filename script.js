@@ -198,6 +198,11 @@ function setupDatePicker() {
   const datePicker = document.getElementById('date-picker');
   const availableDates = classroomsData.map(day => day.date);
   const toInputFormat = d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+  const formatLocal = d => [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0')
+  ].join('-');
 
   // --- Populate the date picker UI ---
   const container = document.querySelector('.date-picker-container');
@@ -210,11 +215,20 @@ function setupDatePicker() {
 
   // Generate every day from min to max, including skipped ones
   const allDates = [];
-  const cursor = new Date(toInputFormat(availableDates.at(0)));
-  const end = new Date(toInputFormat(availableDates.at(-1)));
+  const parseLocalFromKey = key => {
+    const [y, m, d] = [key.slice(0, 4), key.slice(4, 6), key.slice(6, 8)].map(Number);
+    return new Date(y, m - 1, d);
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const dataStart = parseLocalFromKey(availableDates.at(0));
+  const cursor = today < dataStart ? today : dataStart;
+  const end = parseLocalFromKey(availableDates.at(-1));
 
   while (cursor <= end) {
-    allDates.push(cursor.toISOString().slice(0, 10));
+    allDates.push(formatLocal(cursor));
     cursor.setDate(cursor.getDate() + 1);
   }
 
@@ -300,11 +314,12 @@ function setupDatePicker() {
 
   // Position the "Today" popover above the today cell
   function positionTodayIndicator() {
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const today = new Date();
+    const todayStr = formatLocal(today);
     const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
     const todayIndicator = document.getElementById('today-indicator');
 
-    if (!todayEl || todayEl.classList.contains('date-skipped')) {
+    if (!todayEl) {
       todayIndicator.classList.add('hidden');
       return;
     }
@@ -328,12 +343,11 @@ function setupDatePicker() {
   // Uses setTimeout to ensure layout is fully painted before measuring element positions
   setTimeout(() => {
     requestAnimationFrame(() => {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
-      const fallback = container.querySelector('.date-element-container:not(.date-skipped)');
-      selectDateElement(todayEl ?? fallback);
+      // Auto-select the first available (non-skipped) date
+      const firstAvailable = [...elements].find(el => !el.classList.contains('date-skipped'));
+      if (firstAvailable) selectDateElement(firstAvailable);
 
-      positionTodayIndicator(); // ← add this line
+      positionTodayIndicator();
     });
   }, 10);
 }
@@ -407,7 +421,6 @@ function setupDataFetchIndicator() {
     String(today.getDate()).padStart(2, '0')
   ].join('');
 
-  const firstDate = classroomsData[0].date;
   const generationDate = new Date(classroomsData[0].generated_at + 'Z');
   const generationKey = [
     generationDate.getFullYear(),
@@ -415,14 +428,16 @@ function setupDataFetchIndicator() {
     String(generationDate.getDate()).padStart(2, '0')
   ].join('');
 
-  if (firstDate === todayKey && generationKey === todayKey) {
-    // Data starts today and was generated today — fresh
+  const hasFutureData = classroomsData.some(entry => entry.date > todayKey);
+
+  if (generationKey === todayKey) {
+    // Generated today — fresh
     indicator.classList.add('green');
-  } else if (firstDate === todayKey) {
-    // Data starts today but was generated on a previous day — stale
+  } else if (hasFutureData) {
+    // Not generated today but still has upcoming days — tolerable
     indicator.classList.add('yellow');
   } else {
-    // Data doesn't even start from today — outdated
+    // No future data at all — outdated
     indicator.classList.add('red');
   }
 

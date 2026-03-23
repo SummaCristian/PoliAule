@@ -6,12 +6,6 @@ import { haptics, defaultPatterns } from './haptics.js';
 
 const TRANSITION_DURATION = 420; // ms — must match CSS
 
-// ── Overlay (shared, created once) ──────────────────────────────────────────
-
-const overlay = document.createElement('div');
-overlay.className = 'tp-overlay';
-document.body.appendChild(overlay);
-
 // ── State ────────────────────────────────────────────────────────────────────
 
 let activeCard = null;
@@ -76,7 +70,7 @@ function openPicker(cardEl) {
     applyGeometry(popup, getPopupTarget());
     popup.style.boxShadow = 'var(--tp-shadow-lg)';
     popup.classList.add('tp-popup--open');
-    overlay.classList.add('tp-overlay--active');
+    getOverlay().classList.add('tp-overlay--active');
   });
 
   popup.addEventListener('transitionend', () => {
@@ -96,7 +90,7 @@ function closePicker() {
 
   cardEl._input.blur();
   popup.classList.remove('tp-popup--open');
-  overlay.classList.remove('tp-overlay--active');
+  getOverlay().classList.remove('tp-overlay--active');
 
   requestAnimationFrame(() => {
     applyGeometry(popup, {
@@ -119,6 +113,27 @@ function closePicker() {
     unlockScroll();
 
   }, { once: true });
+}
+
+// ── Overlay (created on open, removed on close) ──────────────────────────────
+
+let overlay = null;
+
+function getOverlay() {
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'tp-overlay';
+    overlay.addEventListener('click', () => { haptics.trigger(defaultPatterns.success); closePicker(); });
+    overlay.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    overlay.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+    document.body.appendChild(overlay);
+  }
+  return overlay;
+}
+
+function removeOverlay() {
+  overlay?.remove();
+  overlay = null;
 }
 
 // ── Build one time-picker instance ───────────────────────────────────────────
@@ -242,7 +257,7 @@ window.addEventListener('resize', () => {
 
 // ── Overlay click → close ────────────────────────────────────────────────────
 
-overlay.addEventListener('click', () => {
+getOverlay().addEventListener('click', () => {
   haptics.trigger(defaultPatterns.success);
   closePicker();
 });

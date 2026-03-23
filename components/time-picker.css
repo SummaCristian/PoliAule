@@ -32,8 +32,8 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0);
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
+  /* backdrop-filter: blur(0px); */
+  /* -webkit-backdrop-filter: blur(0px); */
   z-index: 1100;
   pointer-events: none;
   transition:
@@ -44,8 +44,8 @@
 
 .tp-overlay--active {
   background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  /* backdrop-filter: blur(6px); */
+  /* -webkit-backdrop-filter: blur(6px); */
   pointer-events: auto;
 }
 

@@ -52,8 +52,7 @@ function openPicker(cardEl) {
   const rect = cardEl.getBoundingClientRect();
 
   // Block scrolling
-  document.documentElement.style.overflow = 'hidden';
-  document.body.style.overflow = 'hidden';
+  lockScroll();
 
   // Snap popup over the card (no transition)
   popup.style.transition = 'none';
@@ -117,8 +116,8 @@ function closePicker() {
     isAnimating = false;
 
     // Re-enable scrolling
-    document.documentElement.style.overflow = '';
-    document.body.style.overflow = '';
+    unlockScroll();
+
   }, { once: true });
 }
 
@@ -253,6 +252,26 @@ overlay.addEventListener('click', () => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closePicker();
 });
+
+// ── Scroll lock ───────────────────────────────────────────────────────────────
+
+let _scrollTop = 0;
+
+function lockScroll() {
+  _scrollTop = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${_scrollTop}px`;
+  document.body.style.width = '100%';
+  overlay.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  overlay.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+}
+
+function unlockScroll() {
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+  window.scrollTo(0, _scrollTop);
+}
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 

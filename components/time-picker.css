@@ -80,6 +80,8 @@
     scale 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.2s ease,
     background 0.2s ease;
+
+  touch-action: manipulation;
 }
 
 @media (hover: hover) {
@@ -227,7 +229,8 @@
   flex: 1;
   font-family: 'DS-Digital', 'Courier New', monospace;
   font-size: 4rem;
-  font-weight: normal; /* DS-Digital has its own weight baked in */
+  font-weight: normal;
+  /* DS-Digital has its own weight baked in */
   color: var(--text-color-accent);
   letter-spacing: 0.06em;
   line-height: 1;
@@ -244,9 +247,17 @@
 }
 
 /* Webkit: hide the spinner arrows and calendar icon */
-.tp-popup__time-input::-webkit-calendar-picker-indicator { display: none; }
-.tp-popup__time-input::-webkit-inner-spin-button         { display: none; }
-.tp-popup__time-input::-webkit-datetime-edit-fields-wrapper { padding: 0; }
+.tp-popup__time-input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.tp-popup__time-input::-webkit-inner-spin-button {
+  display: none;
+}
+
+.tp-popup__time-input::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
 
 /* Highlight the active segment with the accent color instead of blue */
 .tp-popup__time-input::-webkit-datetime-edit-hour-field:focus,

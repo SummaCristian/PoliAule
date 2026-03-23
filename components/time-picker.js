@@ -17,7 +17,7 @@ function getPopupTarget() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const w = Math.min(340, vw - 40);
-  const h = 400; // fixed height — accounts for display + quick/step buttons
+  const h = 340; // slightly shorter — display span is gone
   return {
     left: (vw - w) / 2,
     top:  (vh - h) / 2,
@@ -200,8 +200,8 @@ function buildTimePicker(wrapperEl) {
     <div class="tp-popup__inner">
       <p class="tp-popup__title">${labelText}</p>
 
-      <div class="tp-popup__display">
-        <span class="tp-popup__display-time">--:--</span>
+      <div class="tp-popup__input-wrap">
+        <span class="material-symbols-outlined tp-popup__clock">schedule</span>
       </div>
 
       <div class="tp-popup__quick-btns">
@@ -225,10 +225,6 @@ function buildTimePicker(wrapperEl) {
           <span class="material-symbols-outlined">add</span>
           +1h
         </button>
-      </div>
-
-      <div class="tp-popup__input-wrap">
-        <span class="material-symbols-outlined tp-popup__clock">schedule</span>
       </div>
 
       <button type="button" class="tp-popup__done button-primary">
@@ -284,24 +280,12 @@ function buildTimePicker(wrapperEl) {
     configurable: true,
   });
 
-  // ── Display element ───────────────────────────────────────────────────────
-
-  const displayEl = popup.querySelector('.tp-popup__display-time');
-
-  function updateDisplay(val) {
-    displayEl.textContent = val || '--:--';
-  }
-
-  popupInput.addEventListener('input', () => updateDisplay(popupInput.value));
-  updateDisplay(popupInput.value);
-
   // ── Preset buttons ────────────────────────────────────────────────────────
 
   function applyPreset(h, m) {
     const val = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
-    updateDisplay(val);
     haptics.trigger(defaultPatterns.success);
   }
 
@@ -339,13 +323,12 @@ function buildTimePicker(wrapperEl) {
     const val  = `${String(next).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
-    updateDisplay(val);
     haptics.trigger(defaultPatterns.success);
   }
 
   popup.querySelector('.tp-step-minus').addEventListener('click', () => stepHour(-1));
   popup.querySelector('.tp-step-plus').addEventListener('click', () => stepHour(+1));
-  
+
   // ── Update 'To' button label with actual computed time ────────────────────
 
   const quickLabelEl = popup.querySelector('.tp-quick-label');
@@ -357,7 +340,7 @@ function buildTimePicker(wrapperEl) {
       const [fh, fm] = fromInput.value.split(':').map(Number);
       const h = (fh + 1) % 24;
       const val = `${String(h).padStart(2, '0')}:${String(fm).padStart(2, '0')}`;
-      quickLabelEl.textContent = `${val}`;
+      quickLabelEl.textContent = val;
     } else {
       quickLabelEl.textContent = 'From +1h';
     }

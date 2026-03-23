@@ -214,44 +214,6 @@
   flex-shrink: 0;
 }
 
-/* Native time input — styled to match the design system */
-.tp-popup__time-input {
-  flex: 1;
-  font-size: 2rem;
-  font-weight: 700;
-  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  color: var(--text-color-primary);
-  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
-  border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 25%, transparent);
-  border-radius: 12px;
-  padding: 0.35rem 0.6rem;
-  text-align: center;
-  outline: none;
-
-  /* Remove browser chrome where possible */
-  -webkit-appearance: none;
-  appearance: none;
-
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.tp-popup__time-input:focus {
-  border-color: color-mix(in srgb, var(--text-color-accent) 70%, transparent);
-  background: color-mix(in srgb, var(--text-color-accent) 10%, transparent);
-}
-
-/* Done button sits below — reuses .button-primary from style.css */
-.tp-popup__done {
-  /* .button-primary already handles everything; just ensure full-width feel */
-  min-width: 8rem;
-}
-
-.tp-popup__display {
-  width: 100%;
-  text-align: center;
-  padding: 0.25rem 0;
-}
-
 @font-face {
   font-family: 'DS-Digital';
   src: url('/fonts/DS-DIGIB.TTF') format('truetype');
@@ -260,13 +222,44 @@
   font-display: swap;
 }
 
-.tp-popup__display-time {
+/* Native time input — styled to match the old display span */
+.tp-popup__time-input {
+  flex: 1;
   font-family: 'DS-Digital', 'Courier New', monospace;
-  font-size: 5rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 4rem;
+  font-weight: normal; /* DS-Digital has its own weight baked in */
   color: var(--text-color-accent);
+  letter-spacing: 0.06em;
   line-height: 1;
+
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: center;
+  width: 100%;
+
+  /* Kill browser chrome */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Webkit: hide the spinner arrows and calendar icon */
+.tp-popup__time-input::-webkit-calendar-picker-indicator { display: none; }
+.tp-popup__time-input::-webkit-inner-spin-button         { display: none; }
+.tp-popup__time-input::-webkit-datetime-edit-fields-wrapper { padding: 0; }
+
+/* Highlight the active segment with the accent color instead of blue */
+.tp-popup__time-input::-webkit-datetime-edit-hour-field:focus,
+.tp-popup__time-input::-webkit-datetime-edit-minute-field:focus {
+  background: color-mix(in srgb, var(--text-color-accent) 25%, transparent);
+  border-radius: 4px;
+  color: var(--text-color-accent);
+  outline: none;
+}
+
+/* Done button sits below — reuses .button-primary from style.css */
+.tp-popup__done {
+  min-width: 8rem;
 }
 
 .tp-popup__quick-btns {

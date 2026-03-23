@@ -90,7 +90,10 @@ function closePicker() {
 
   cardEl._input.blur();
   popup.classList.remove('tp-popup--open');
-  getOverlay().classList.remove('tp-overlay--active');
+  
+  const ov = getOverlay();
+  ov.classList.remove('tp-overlay--active');
+  removeOverlay();
 
   requestAnimationFrame(() => {
     applyGeometry(popup, {
@@ -132,8 +135,11 @@ function getOverlay() {
 }
 
 function removeOverlay() {
-  overlay?.remove();
-  overlay = null;
+  if (!overlay) return;
+  overlay.addEventListener('transitionend', () => {
+    overlay.remove();
+    overlay = null;
+  }, { once: true });
 }
 
 // ── Build one time-picker instance ───────────────────────────────────────────
@@ -270,23 +276,18 @@ document.addEventListener('keydown', e => {
 
 // ── Scroll lock ───────────────────────────────────────────────────────────────
 
-let _scrollTop = 0;
+function preventScroll(e) { e.preventDefault(); }
 
 function lockScroll() {
-  _scrollTop = window.scrollY;
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${_scrollTop}px`;
-  document.body.style.width = '100%';
-  overlay.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-  overlay.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+  window.addEventListener('wheel',     preventScroll, { passive: false });
+  window.addEventListener('touchmove', preventScroll, { passive: false });
 }
 
 function unlockScroll() {
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.width = '';
-  window.scrollTo(0, _scrollTop);
+  window.removeEventListener('wheel',     preventScroll);
+  window.removeEventListener('touchmove', preventScroll);
 }
+
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 

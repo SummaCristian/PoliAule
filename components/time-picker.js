@@ -22,22 +22,22 @@ let isAnimating = false;
 function getPopupTarget() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const w  = Math.min(340, vw - 40);
-  const h  = 220; // fixed height — content is compact
+  const w = Math.min(340, vw - 40);
+  const h = 220; // fixed height — content is compact
   return {
-    left:         (vw - w) / 2,
-    top:          (vh - h) / 2,
-    width:        w,
-    height:       h,
+    left: (vw - w) / 2,
+    top: (vh - h) / 2,
+    width: w,
+    height: h,
     borderRadius: '22px',
   };
 }
 
 function applyGeometry(el, { left, top, width, height, borderRadius }) {
-  el.style.left         = left         + 'px';
-  el.style.top          = top          + 'px';
-  el.style.width        = width        + 'px';
-  el.style.height       = height       + 'px';
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
+  el.style.width = width + 'px';
+  el.style.height = height + 'px';
   el.style.borderRadius = borderRadius;
 }
 
@@ -46,22 +46,26 @@ function applyGeometry(el, { left, top, width, height, borderRadius }) {
 function openPicker(cardEl) {
   if (isAnimating) return;
   isAnimating = true;
-  activeCard  = cardEl;
+  activeCard = cardEl;
 
   const popup = cardEl._popup;
-  const rect  = cardEl.getBoundingClientRect();
+  const rect = cardEl.getBoundingClientRect();
+
+  // Block scrolling
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
 
   // Snap popup over the card (no transition)
   popup.style.transition = 'none';
   applyGeometry(popup, {
-    left:         rect.left,
-    top:          rect.top,
-    width:        rect.width,
-    height:       rect.height,
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
     borderRadius: '18px',
   });
   popup.style.boxShadow = 'var(--shadow)';
-  popup.style.display   = 'flex';
+  popup.style.display = 'flex';
 
   cardEl.classList.add('tp-card--morphing');
 
@@ -88,8 +92,8 @@ function closePicker() {
   isAnimating = true;
 
   const cardEl = activeCard;
-  const popup  = cardEl._popup;
-  const rect   = cardEl.getBoundingClientRect();
+  const popup = cardEl._popup;
+  const rect = cardEl.getBoundingClientRect();
 
   cardEl._input.blur();
   popup.classList.remove('tp-popup--open');
@@ -97,10 +101,10 @@ function closePicker() {
 
   requestAnimationFrame(() => {
     applyGeometry(popup, {
-      left:         rect.left,
-      top:          rect.top,
-      width:        rect.width,
-      height:       rect.height,
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
       borderRadius: '18px',
     });
     popup.style.boxShadow = 'var(--shadow)';
@@ -109,8 +113,12 @@ function closePicker() {
   popup.addEventListener('transitionend', () => {
     popup.style.display = 'none';
     cardEl.classList.remove('tp-card--morphing');
-    activeCard  = null;
+    activeCard = null;
     isAnimating = false;
+
+    // Re-enable scrolling
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
   }, { once: true });
 }
 
@@ -130,7 +138,7 @@ function buildTimePicker(wrapperEl) {
   // ── Card ────────────────────────────────────────────────────────────────
 
   const card = document.createElement('button');
-  card.type      = 'button';
+  card.type = 'button';
   card.className = 'tp-card';
   card.innerHTML = `
     <div class="tp-card__icon-wrap">
@@ -181,7 +189,7 @@ function buildTimePicker(wrapperEl) {
   // ── Sync: popup input → original input + card display ──────────────────
 
   function syncValue(val) {
-    inputEl.value           = val;
+    inputEl.value = val;
     card._timeDisplay.textContent = val || '--:--';
     // Dispatch 'input' on the original so setupTimePickers() constraints still fire
     inputEl.dispatchEvent(new Event('input', { bubbles: true }));

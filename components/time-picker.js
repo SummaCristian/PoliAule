@@ -90,7 +90,7 @@ function closePicker() {
 
   cardEl._input.blur();
   popup.classList.remove('tp-popup--open');
-  
+
   const ov = getOverlay();
   ov.classList.remove('tp-overlay--active');
   removeOverlay();
@@ -279,12 +279,12 @@ document.addEventListener('keydown', e => {
 function preventScroll(e) { e.preventDefault(); }
 
 function lockScroll() {
-  window.addEventListener('wheel',     preventScroll, { passive: false });
+  window.addEventListener('wheel', preventScroll, { passive: false });
   window.addEventListener('touchmove', preventScroll, { passive: false });
 }
 
 function unlockScroll() {
-  window.removeEventListener('wheel',     preventScroll);
+  window.removeEventListener('wheel', preventScroll);
   window.removeEventListener('touchmove', preventScroll);
 }
 

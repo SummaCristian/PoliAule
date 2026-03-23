@@ -205,9 +205,14 @@ function buildTimePicker(wrapperEl) {
       </div>
 
       <div class="tp-popup__quick-btns">
+        ${labelText === 'From' ? `
+        <button type="button" class="tp-popup__quick button-primary tp-quick-now">
+          <span class="material-symbols-outlined">near_me</span>
+          Now
+        </button>` : ''}
         <button type="button" class="tp-popup__quick button-primary tp-quick-preset">
           <span class="material-symbols-outlined">schedule</span>
-          ${labelText === 'From' ? 'Now' : 'From + 1h'}
+          <span class="tp-quick-label">${labelText === 'From' ? 'Current slot' : 'From +1h'}</span>
         </button>
       </div>
 
@@ -290,30 +295,40 @@ function buildTimePicker(wrapperEl) {
   popupInput.addEventListener('input', () => updateDisplay(popupInput.value));
   updateDisplay(popupInput.value);
 
-  // ── Preset button: Now (From) / From+1h (To) ─────────────────────────────
+  // ── Preset buttons ────────────────────────────────────────────────────────
 
-  popup.querySelector('.tp-quick-preset').addEventListener('click', () => {
-    const now = new Date();
-    let h, m;
-    if (labelText === 'From') {
-      h = now.getHours();
-      m = now.getMinutes();
-    } else {
-      const fromInput = document.querySelector('.time-picker input[type="time"]');
-      if (fromInput?.value) {
-        const [fh, fm] = fromInput.value.split(':').map(Number);
-        h = (fh + 1) % 24;
-        m = fm;
-      } else {
-        h = (now.getHours() + 1) % 24;
-        m = now.getMinutes();
-      }
-    }
+  function applyPreset(h, m) {
     const val = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
     updateDisplay(val);
     haptics.trigger(defaultPatterns.success);
+  }
+
+  // "Now" — raw current time, From only
+  popup.querySelector('.tp-quick-now')?.addEventListener('click', () => {
+    const now = new Date();
+    applyPreset(now.getHours(), now.getMinutes());
+  });
+
+  // "Current slot" (From) — snaps to current or next hour slot
+  // "From +1h" (To) — one hour after the From value
+  popup.querySelector('.tp-quick-preset').addEventListener('click', () => {
+    const now = new Date();
+    if (labelText === 'From') {
+      const h = now.getMinutes() >= 45
+        ? (now.getHours() + 1) % 24  // < 15 min left → next slot
+        : now.getHours();             // enough time left → current slot
+      applyPreset(h, 15);
+    } else {
+      const fromInput = document.querySelector('.time-picker input[type="time"]');
+      if (fromInput?.value) {
+        const [fh, fm] = fromInput.value.split(':').map(Number);
+        applyPreset((fh + 1) % 24, fm);
+      } else {
+        applyPreset((now.getHours() + 1) % 24, now.getMinutes());
+      }
+    }
   });
 
   // ── ±1h step buttons ──────────────────────────────────────────────────────
@@ -329,7 +344,31 @@ function buildTimePicker(wrapperEl) {
   }
 
   popup.querySelector('.tp-step-minus').addEventListener('click', () => stepHour(-1));
-  popup.querySelector('.tp-step-plus').addEventListener('click',  () => stepHour(+1));
+  popup.querySelector('.tp-step-plus').addEventListener('click', () => stepHour(+1));
+  
+  // ── Update 'To' button label with actual computed time ────────────────────
+
+  const quickLabelEl = popup.querySelector('.tp-quick-label');
+
+  function updateQuickLabel() {
+    if (labelText === 'From') return; // 'Now' is always current
+    const fromInput = document.querySelector('.time-picker input[type="time"]');
+    if (fromInput?.value) {
+      const [fh, fm] = fromInput.value.split(':').map(Number);
+      const h = (fh + 1) % 24;
+      const val = `${String(h).padStart(2, '0')}:${String(fm).padStart(2, '0')}`;
+      quickLabelEl.textContent = `${val}`;
+    } else {
+      quickLabelEl.textContent = 'From +1h';
+    }
+  }
+
+  if (labelText !== 'From') {
+    // Update whenever the From value changes
+    const fromInput = document.querySelector('.time-picker input[type="time"]');
+    if (fromInput) fromInput.addEventListener('input', updateQuickLabel);
+    updateQuickLabel(); // set initial label
+  }
 
   // ── Done button ───────────────────────────────────────────────────────────
 

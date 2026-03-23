@@ -252,8 +252,16 @@
   padding: 0.25rem 0;
 }
 
+@font-face {
+  font-family: 'DS-Digital';
+  src: url('/fonts/DS-DIGIB.TTF') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .tp-popup__display-time {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'DS-Digital', 'Courier New', monospace;
   font-size: 3.5rem;
   font-weight: 700;
   letter-spacing: 0.06em;

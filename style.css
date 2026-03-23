@@ -38,6 +38,11 @@
 }
 
 /* Base Styles */
+html,
+body {
+  touch-action: manipulation;
+}
+
 html {
   height: 100%;
 

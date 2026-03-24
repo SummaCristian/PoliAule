@@ -1138,6 +1138,23 @@ ul li::marker {
     background-color 0.3s ease;
 }
 
+.button-primary.button-secondary {
+  background: color-mix(in srgb, var(--text-color-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--text-color-accent) 25%, transparent);
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  .button-primary.button-secondary:hover {
+    background: color-mix(in srgb, var(--text-color-accent) 20%, transparent);
+    box-shadow: none;
+  }
+}
+
+.button-secondary:active {
+  scale: 0.93;
+}
+
 /* 
 Variants for Samsung Internet,
 since it doesn't support many features

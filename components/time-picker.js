@@ -39,6 +39,21 @@ function applyGeometry(el, { left, top, width, height, borderRadius }) {
   el.style.borderRadius = borderRadius;
 }
 
+// ── Time display formatter ────────────────────────────────────────────────────
+
+const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  hour: 'numeric',
+  minute: '2-digit',
+});
+
+function formatTimeDisplay(val) {
+  if (!val) return '--:--';
+  const [h, m] = val.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return TIME_FORMATTER.format(d);
+}
+
 // ── Overlay (created on open, removed on close) ──────────────────────────────
 
 let overlay = null;
@@ -188,7 +203,7 @@ function buildTimePicker(wrapperEl) {
     </div>
     <div class="tp-card__info">
       <span class="tp-card__label">${labelText}</span>
-      <span class="tp-card__time">${inputEl.value || '--:--'}</span>
+      <span class="tp-card__time">${formatTimeDisplay(inputEl.value)}</span>
     </div>
     <span class="material-symbols-outlined tp-card__chevron">chevron_right</span>
   `;
@@ -202,10 +217,22 @@ function buildTimePicker(wrapperEl) {
   popup.style.display = 'none';
   popup.innerHTML = `
     <div class="tp-popup__inner">
-      <p class="tp-popup__title">${labelText}</p>
+      <div class="tp-popup__header">
+        <h4 class="subsection-header-title">${labelEl?.querySelector('h4')?.textContent?.trim() ?? labelText}</h4>
+        <p class="subsection-header-subtitle secondary">${labelEl?.querySelector('p')?.textContent?.trim() ?? ''}</p>
+      </div>
 
       <div class="tp-popup__input-wrap">
         <span class="material-symbols-outlined tp-popup__clock">schedule</span>
+      </div>
+
+      <div class="tp-popup__step-btns">
+        <button type="button" class="tp-popup__step button-primary button-secondary tp-step-minus">
+          <span class="material-symbols-outlined">remove</span>
+        </button>
+        <button type="button" class="tp-popup__step button-primary button-secondary tp-step-plus">
+          <span class="material-symbols-outlined">add</span>
+        </button>
       </div>
 
       <div class="tp-popup__quick-btns">
@@ -217,17 +244,6 @@ function buildTimePicker(wrapperEl) {
         <button type="button" class="tp-popup__quick button-primary tp-quick-preset">
           <span class="material-symbols-outlined">schedule</span>
           <span class="tp-quick-label">${labelText === 'From' ? 'Current slot' : 'From +1h'}</span>
-        </button>
-      </div>
-
-      <div class="tp-popup__step-btns">
-        <button type="button" class="tp-popup__step button-primary tp-step-minus">
-          <span class="material-symbols-outlined">remove</span>
-          −1h
-        </button>
-        <button type="button" class="tp-popup__step button-primary tp-step-plus">
-          <span class="material-symbols-outlined">add</span>
-          +1h
         </button>
       </div>
 
@@ -257,7 +273,7 @@ function buildTimePicker(wrapperEl) {
 
   function syncValue(val) {
     inputEl.value = val;
-    card._timeDisplay.textContent = val || '--:--';
+    card._timeDisplay.textContent = formatTimeDisplay(val);
     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
@@ -265,7 +281,7 @@ function buildTimePicker(wrapperEl) {
 
   const observer = new MutationObserver(() => {
     if (popupInput.value !== inputEl.value) popupInput.value = inputEl.value;
-    card._timeDisplay.textContent = inputEl.value || '--:--';
+    card._timeDisplay.textContent = formatTimeDisplay(inputEl.value);
   });
   observer.observe(inputEl, { attributes: true, attributeFilter: ['value'] });
 
@@ -275,7 +291,7 @@ function buildTimePicker(wrapperEl) {
     set(val) {
       originalDescriptor.set.call(this, val);
       popupInput.value = val;
-      card._timeDisplay.textContent = val || '--:--';
+      card._timeDisplay.textContent = formatTimeDisplay(val);
     },
     configurable: true,
   });
@@ -416,14 +432,14 @@ function buildTimePicker(wrapperEl) {
 
 // ── Resize: keep open popup centred ─────────────────────────────────────────
 
-// window.addEventListener('resize', () => {
-//   if (!activeCard || isAnimating) return;
-//   const popup = activeCard._popup;
-//   popup.style.transition = 'none';
-//   applyGeometry(popup, getPopupTarget());
-//   popup.getBoundingClientRect();
-//   popup.style.transition = '';
-// });
+window.addEventListener('resize', () => {
+  if (!activeCard || isAnimating) return;
+  const popup = activeCard._popup;
+  popup.style.transition = 'none';
+  applyGeometry(popup, getPopupTarget());
+  popup.getBoundingClientRect();
+  popup.style.transition = '';
+});
 
 // ── Escape → close ───────────────────────────────────────────────────────────
 

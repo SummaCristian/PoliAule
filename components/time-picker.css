@@ -100,6 +100,37 @@
   scale: 0.97;
 }
 
+@media (min-width: 768px) {
+  .tp-card {
+    display: none;
+  }
+}
+
+/* ── Desktop inline mode ─────────────────────────────────────────────── */
+
+.tp-card--inline {
+  /* In inline mode the card becomes a non-interactive header row */
+  cursor: default;
+  pointer-events: none; /* quick buttons inside popup handle interaction */
+}
+
+/* The popup sits in normal flow, no fixed geometry */
+.tp-popup--inline {
+  position: static !important;
+  display: flex !important;
+  width: 100% !important;
+  height: auto !important;
+  box-shadow: none !important;
+  border-radius: var(--radius-card, 18px) !important;
+  /* Suppress the morph transition entirely */
+  transition: none !important;
+}
+
+/* Hide the Done button on desktop — there's nothing to dismiss */
+.tp-popup--inline .tp-popup__done {
+  display: none;
+}
+
 /* Card is hidden behind the popup while morphing */
 .tp-card--morphing {
   visibility: hidden;

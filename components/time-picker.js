@@ -6,6 +6,10 @@ import { haptics, defaultPatterns } from './haptics.js';
 
 const TRANSITION_DURATION = 420; // ms — must match CSS
 
+// ── Breakpoint ────────────────────────────────────────────────────────────────
+
+const DESKTOP_MQ = window.matchMedia('(min-width: 768px)');
+
 // ── State ────────────────────────────────────────────────────────────────────
 
 let activeCard = null;
@@ -20,7 +24,7 @@ function getPopupTarget() {
   const h = 340; // slightly shorter — display span is gone
   return {
     left: (vw - w) / 2,
-    top:  (vh - h) / 2,
+    top: (vh - h) / 2,
     width: w,
     height: h,
     borderRadius: '22px',
@@ -28,10 +32,10 @@ function getPopupTarget() {
 }
 
 function applyGeometry(el, { left, top, width, height, borderRadius }) {
-  el.style.left         = left         + 'px';
-  el.style.top          = top          + 'px';
-  el.style.width        = width        + 'px';
-  el.style.height       = height       + 'px';
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
+  el.style.width = width + 'px';
+  el.style.height = height + 'px';
   el.style.borderRadius = borderRadius;
 }
 
@@ -45,7 +49,7 @@ function getOverlay() {
     overlay.className = 'tp-overlay';
     overlay.addEventListener('click', () => { haptics.trigger(defaultPatterns.success); closePicker(); });
     overlay.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-    overlay.addEventListener('wheel',     e => e.preventDefault(), { passive: false });
+    overlay.addEventListener('wheel', e => e.preventDefault(), { passive: false });
     document.body.appendChild(overlay);
   }
   return overlay;
@@ -64,12 +68,12 @@ function removeOverlay() {
 function preventScroll(e) { e.preventDefault(); }
 
 function lockScroll() {
-  window.addEventListener('wheel',     preventScroll, { passive: false });
+  window.addEventListener('wheel', preventScroll, { passive: false });
   window.addEventListener('touchmove', preventScroll, { passive: false });
 }
 
 function unlockScroll() {
-  window.removeEventListener('wheel',     preventScroll);
+  window.removeEventListener('wheel', preventScroll);
   window.removeEventListener('touchmove', preventScroll);
 }
 
@@ -91,21 +95,21 @@ function openPicker(cardEl) {
   activeCard = cardEl;
 
   const popup = cardEl._popup;
-  const rect  = cardEl.getBoundingClientRect();
+  const rect = cardEl.getBoundingClientRect();
 
   lockScroll();
 
   // Snap popup over the card (no transition)
   popup.style.transition = 'none';
   applyGeometry(popup, {
-    left:         rect.left,
-    top:          rect.top,
-    width:        rect.width,
-    height:       rect.height,
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
     borderRadius: '18px',
   });
   popup.style.boxShadow = 'var(--shadow)';
-  popup.style.display   = 'flex';
+  popup.style.display = 'flex';
 
   cardEl.classList.add('tp-card--morphing');
 
@@ -131,8 +135,8 @@ function closePicker() {
   isAnimating = true;
 
   const cardEl = activeCard;
-  const popup  = cardEl._popup;
-  const rect   = cardEl.getBoundingClientRect();
+  const popup = cardEl._popup;
+  const rect = cardEl.getBoundingClientRect();
 
   cardEl._input.blur();
   popup.classList.remove('tp-popup--open');
@@ -142,10 +146,10 @@ function closePicker() {
 
   requestAnimationFrame(() => {
     applyGeometry(popup, {
-      left:         rect.left,
-      top:          rect.top,
-      width:        rect.width,
-      height:       rect.height,
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
       borderRadius: '18px',
     });
     popup.style.boxShadow = 'var(--shadow)';
@@ -154,7 +158,7 @@ function closePicker() {
   onTransitionEnd(popup, () => {
     popup.style.display = 'none';
     cardEl.classList.remove('tp-card--morphing');
-    activeCard  = null;
+    activeCard = null;
     isAnimating = false;
     unlockScroll();
   });
@@ -176,7 +180,7 @@ function buildTimePicker(wrapperEl) {
   // ── Card ────────────────────────────────────────────────────────────────
 
   const card = document.createElement('button');
-  card.type      = 'button';
+  card.type = 'button';
   card.className = 'tp-card';
   card.innerHTML = `
     <div class="tp-card__icon-wrap">
@@ -194,7 +198,7 @@ function buildTimePicker(wrapperEl) {
   // ── Popup ────────────────────────────────────────────────────────────────
 
   const popup = document.createElement('div');
-  popup.className     = 'tp-popup';
+  popup.className = 'tp-popup';
   popup.style.display = 'none';
   popup.innerHTML = `
     <div class="tp-popup__inner">
@@ -235,18 +239,18 @@ function buildTimePicker(wrapperEl) {
   `;
 
   // Mount the native input inside the popup's input area
-  const inputWrap  = popup.querySelector('.tp-popup__input-wrap');
+  const inputWrap = popup.querySelector('.tp-popup__input-wrap');
   const popupInput = inputEl.cloneNode(true);
   popupInput.style.display = '';
-  popupInput.className     = 'tp-popup__time-input';
+  popupInput.className = 'tp-popup__time-input';
   inputWrap.appendChild(popupInput);
   document.body.appendChild(popup);
 
-  // ── Cross-references ────────────────────────────────────────────────────
+  // ── // ── Cross-references ────────────────────────────────────────────────────
 
-  card._popup       = popup;
-  card._input       = popupInput;  // input inside popup
-  card._original    = inputEl;     // original hidden input (form reads this)
+  card._popup = popup;
+  card._input = popupInput;
+  card._original = inputEl;
   card._timeDisplay = card.querySelector('.tp-card__time');
 
   // ── Sync: popup input → original input + card display ──────────────────
@@ -254,21 +258,17 @@ function buildTimePicker(wrapperEl) {
   function syncValue(val) {
     inputEl.value = val;
     card._timeDisplay.textContent = val || '--:--';
-    // Dispatch 'input' on the original so setupTimePickers() constraints still fire
     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   popupInput.addEventListener('input', () => syncValue(popupInput.value));
 
-  // Keep popup input in sync whenever the original is updated externally
-  // (e.g. setupTimePickers adjusting the 'to' value)
   const observer = new MutationObserver(() => {
     if (popupInput.value !== inputEl.value) popupInput.value = inputEl.value;
     card._timeDisplay.textContent = inputEl.value || '--:--';
   });
   observer.observe(inputEl, { attributes: true, attributeFilter: ['value'] });
 
-  // Also watch via a plain setter shim so programmatic .value = '...' is caught
   const originalDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
   Object.defineProperty(inputEl, 'value', {
     get() { return originalDescriptor.get.call(this); },
@@ -289,20 +289,17 @@ function buildTimePicker(wrapperEl) {
     haptics.trigger(defaultPatterns.success);
   }
 
-  // "Now" — raw current time, From only
   popup.querySelector('.tp-quick-now')?.addEventListener('click', () => {
     const now = new Date();
     applyPreset(now.getHours(), now.getMinutes());
   });
 
-  // "Current slot" (From) — snaps to current or next hour slot
-  // "From +1h" (To) — one hour after the From value
   popup.querySelector('.tp-quick-preset').addEventListener('click', () => {
     const now = new Date();
     if (labelText === 'From') {
       const h = now.getMinutes() >= 45
-        ? (now.getHours() + 1) % 24  // < 15 min left → next slot
-        : now.getHours();             // enough time left → current slot
+        ? (now.getHours() + 1) % 24
+        : now.getHours();
       applyPreset(h, 15);
     } else {
       const fromInput = document.querySelector('.time-picker input[type="time"]');
@@ -320,7 +317,7 @@ function buildTimePicker(wrapperEl) {
   function stepHour(delta) {
     const [h, m] = (popupInput.value || '00:00').split(':').map(Number);
     const next = ((h + delta) + 24) % 24;
-    const val  = `${String(next).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const val = `${String(next).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
     haptics.trigger(defaultPatterns.success);
@@ -329,28 +326,27 @@ function buildTimePicker(wrapperEl) {
   popup.querySelector('.tp-step-minus').addEventListener('click', () => stepHour(-1));
   popup.querySelector('.tp-step-plus').addEventListener('click', () => stepHour(+1));
 
-  // ── Update 'To' button label with actual computed time ────────────────────
+  // ── 'To' quick label ──────────────────────────────────────────────────────
 
   const quickLabelEl = popup.querySelector('.tp-quick-label');
 
   function updateQuickLabel() {
-    if (labelText === 'From') return; // 'Now' is always current
+    if (labelText === 'From') return;
     const fromInput = document.querySelector('.time-picker input[type="time"]');
     if (fromInput?.value) {
       const [fh, fm] = fromInput.value.split(':').map(Number);
       const h = (fh + 1) % 24;
-      const val = `${String(h).padStart(2, '0')}:${String(fm).padStart(2, '0')}`;
-      quickLabelEl.textContent = val;
+      quickLabelEl.textContent =
+        `${String(h).padStart(2, '0')}:${String(fm).padStart(2, '0')}`;
     } else {
       quickLabelEl.textContent = 'From +1h';
     }
   }
 
   if (labelText !== 'From') {
-    // Update whenever the From value changes
     const fromInput = document.querySelector('.time-picker input[type="time"]');
     if (fromInput) fromInput.addEventListener('input', updateQuickLabel);
-    updateQuickLabel(); // set initial label
+    updateQuickLabel();
   }
 
   // ── Done button ───────────────────────────────────────────────────────────
@@ -360,24 +356,74 @@ function buildTimePicker(wrapperEl) {
     closePicker();
   });
 
-  // ── Card click ────────────────────────────────────────────────────────────
+  // ── Card click (mobile only) ──────────────────────────────────────────────
 
   card.addEventListener('click', () => {
+    if (DESKTOP_MQ.matches) return; // inline on desktop — card is not a trigger
     haptics.trigger(defaultPatterns.success);
     openPicker(card);
   });
+
+  // ── Desktop inline mode ───────────────────────────────────────────────────
+
+  function enterInlineMode() {
+    // If a morph popup is open for this card, close it first
+    if (activeCard === card) closePicker();
+
+    popup.style.display = '';   // let CSS/flex take over
+    popup.style.position = 'static';
+    popup.style.width = '';
+    popup.style.height = '';
+    popup.style.top = '';
+    popup.style.left = '';
+    popup.style.boxShadow = 'none';
+    popup.style.borderRadius = '';
+    popup.style.transition = 'none';
+    popup.classList.add('tp-popup--inline');
+    popup.classList.add('tp-popup--open');  // keeps inner content visible
+
+    card.classList.add('tp-card--inline');
+
+    // Move popup into the wrapper so it participates in normal flow
+    wrapperEl.appendChild(popup);
+  }
+
+  function exitInlineMode() {
+    popup.classList.remove('tp-popup--inline');
+    popup.classList.remove('tp-popup--open');
+    popup.style.display = 'none';
+    popup.style.position = '';
+    popup.style.transition = '';
+    card.classList.remove('tp-card--inline');
+
+    // Return popup to body for morph positioning
+    document.body.appendChild(popup);
+  }
+
+  function handleBreakpoint(e) {
+    if (e.matches) {
+      enterInlineMode();
+    } else {
+      exitInlineMode();
+    }
+  }
+
+  DESKTOP_MQ.addEventListener('change', handleBreakpoint);
+
+  // Set initial state
+  if (DESKTOP_MQ.matches) enterInlineMode();
 }
 
 // ── Resize: keep open popup centred ─────────────────────────────────────────
 
-window.addEventListener('resize', () => {
-  if (!activeCard || isAnimating) return;
-  const popup = activeCard._popup;
-  popup.style.transition = 'none';
-  applyGeometry(popup, getPopupTarget());
-  popup.getBoundingClientRect();
-  popup.style.transition = '';
-});
+// window.addEventListener('resize', () => {
+//   if (!activeCard || isAnimating) return;
+//   const popup = activeCard._popup;
+//   popup.style.transition = 'none';
+//   applyGeometry(popup, getPopupTarget());
+//   popup.getBoundingClientRect();
+//   popup.style.transition = '';
+// });
 
 // ── Escape → close ───────────────────────────────────────────────────────────
 

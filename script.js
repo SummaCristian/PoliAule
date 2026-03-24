@@ -5,6 +5,10 @@ import {
   SKIP_DAYS
 } from './available-rooms-script.js';
 
+import { initTimePickers } from './components/time-picker.js';
+
+import { haptics, defaultPatterns } from './components/haptics.js';
+
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
 const darkMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]');
@@ -63,6 +67,9 @@ tabs.forEach((tab, index) => {
     const targetId = tab.dataset.target;
     showContent(targetId);
 
+    // Haptic feedback
+    haptics.trigger(defaultPatterns.success)
+
     // Update active tab and indicator
     document.querySelector(".tab.active")?.classList.remove("active");
     tab.classList.add("active");
@@ -88,6 +95,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup the time pickers to ensure valid time ranges
     setupTimePickers();
 
+    initTimePickers();
+
     // Setup the data fetch indicator
     setupDataFetchIndicator();
   } catch (error) {
@@ -100,6 +109,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 document.getElementById('available-classrooms-form').addEventListener('submit', (e) => {
   // Skip default submit behavior since we will handle it with JavaScript
   e.preventDefault();
+
+  // Haptic feedback
+  haptics.trigger(defaultPatterns.success);
 
   // Check if data was already fetched
   if (!classroomsData.length) {
@@ -260,6 +272,10 @@ function setupDatePicker() {
       void indicator.offsetWidth; // force reflow to restart animation
       indicator.classList.add('shake');
       indicator.addEventListener('animationend', () => indicator.classList.remove('shake'), { once: true });
+
+      // Haptic feedback
+      haptics.trigger(defaultPatterns.error);
+
       return;
     }
 
@@ -279,10 +295,25 @@ function setupDatePicker() {
     indicator.style.transform = `translateX(${x}px)`;
 
     datePicker.value = el.dataset.date;
+
+    // Haptic feedback
+    haptics.trigger([
+      { duration: 30 },
+      { delay: 60, duration: 40, intensity: 1 },
+    ])
+
   }
 
   elements.forEach(el => {
     el.addEventListener('click', () => selectDateElement(el));
+  });
+
+
+  document.getElementById('today-indicator').addEventListener('click', () => {
+    console.log('today-indicator clicked');
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
+    if (todayEl) selectDateElement(todayEl);
   });
 
   // Position the "Today" popover above the today cell

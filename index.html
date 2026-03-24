@@ -17,6 +17,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./components/time-picker.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -28,6 +29,8 @@
   <script type="module" src="script.js" defer></script>
   <script type="module" src="available-rooms-script.js" defer></script>
   <script type="module" src="./components/popover.js" defer></script>
+  <script type="module" src="./components/haptics.js" defer></script>
+  <script type="module" src="./components/time-picker.js" defer></script>
 
 </head>
 
@@ -129,32 +132,35 @@
           </div>
         </div>
 
-        <!-- From time picker -->
-        <div class="time-picker">
-          <label for="from-time-picker">
-            <div class="section-header">
-              <h4 class="subsection-header-title">From:</h4>
-              <p class="subsection-header-subtitle secondary">
-                From which time do you need a classroom?
-              </p>
-            </div>
-          </label>
+        <div class="time-pickers-container">
+          <!-- From time picker -->
+          <div class="time-picker">
+            <label for="from-time-picker">
+              <div class="section-header">
+                <h4 class="subsection-header-title">From</h4>
+                <p class="subsection-header-subtitle secondary">
+                  From which time do you need a classroom?
+                </p>
+              </div>
+            </label>
 
-          <input type="time" id="from-time-picker" name="from" />
-        </div>
+            <input type="time" id="from-time-picker" name="from" />
+          </div>
 
-        <!-- To time picker -->
-        <div class="time-picker">
-          <label for="to-time-picker">
-            <div class="section-header">
-              <h4 class="subsection-header-title">To:</h4>
-              <p class="subsection-header-subtitle secondary">
-                Until which time do you need a classroom?
-              </p>
-            </div>
-          </label>
+          <!-- To time picker -->
+          <div class="time-picker">
+            <label for="to-time-picker">
+              <div class="section-header">
+                <h4 class="subsection-header-title">To:</h4>
+                <p class="subsection-header-subtitle secondary">
+                  Until which time do you need a classroom?
+                </p>
+              </div>
+            </label>
 
-          <input type="time" id="to-time-picker" name="to" />
+            <input type="time" id="to-time-picker" name="to" />
+          </div>
+
         </div>
 
         <!-- Submit button -->
@@ -209,17 +215,18 @@
 
   <footer class="footer">
     <button class="transparent-button version-info-button" data-popover="version-info-popover">
-      <label class="secondary">Version 0.3.1 (beta)</label>
+      <label class="secondary">Version 0.4.0 (beta)</label>
     </button>
     <div id="version-info-popover" class="popover">
       <div class="arrow" data-arrow></div>
 
-      <h1 class="popover-title">Version 0.3.1 (Beta)</h1>
+      <h1 class="popover-title">Version 0.4.0 (Beta)</h1>
       <div class="changelog-container">
         <h2 class="popover-subtitle">What's new?</h2>
 
         <ul>
-          <li>Fixed a bug with Date picker when rendered on Sunday</li>
+          <li>Added Haptic Feedback to certain UI elements</li>
+          <li>Redesigned Time pickers</li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">

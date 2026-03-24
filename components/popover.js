@@ -8,6 +8,8 @@ import {
   arrow
 } from "https://cdn.jsdelivr.net/npm/@floating-ui/dom@1/+esm";
 
+import { haptics, defaultPatterns } from './haptics.js';
+
 // All Popovers currently in the page
 const allPopovers = [];
 

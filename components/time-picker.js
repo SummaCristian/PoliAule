@@ -21,7 +21,7 @@ function getPopupTarget() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const w = Math.min(340, vw - 40);
-  const h = 340; // slightly shorter — display span is gone
+  const h = 400;
   return {
     left: (vw - w) / 2,
     top: (vh - h) / 2,

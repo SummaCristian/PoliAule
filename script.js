@@ -95,6 +95,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTimePickers();
 
     initTimePickers();
+    document.fonts.ready.then(() => {
+      document.querySelector('.time-pickers-container').style.opacity = '1';
+    });
 
     // Setup the data fetch indicator
     setupDataFetchIndicator();
@@ -294,6 +297,7 @@ function setupDatePicker() {
     indicator.style.width = `${elRect.width}px`;
     indicator.style.height = `${elRect.height}px`;
     indicator.style.transform = `translateX(${x}px)`;
+    indicator.style.opacity = '1';
 
     datePicker.value = el.dataset.date;
 
@@ -344,16 +348,19 @@ function setupDatePicker() {
   window.addEventListener('resize', positionTodayIndicator);
 
   // Auto-select today if available, otherwise fall back to the first available date
-  // Uses setTimeout to ensure layout is fully painted before measuring element positions
-  setTimeout(() => {
+  // Wait for fonts to load to ensure accurate element measurements
+  document.fonts.ready.then(() => {
     requestAnimationFrame(() => {
       // Auto-select the first available (non-skipped) date
       const firstAvailable = [...elements].find(el => !el.classList.contains('date-skipped'));
       if (firstAvailable) selectDateElement(firstAvailable);
 
       positionTodayIndicator();
+
+      // Show the container now that dates are populated and positioned
+      container.style.opacity = '1';
     });
-  }, 10);
+  });
 }
 
 // Sets up the time pickers to ensure that the 'to' time

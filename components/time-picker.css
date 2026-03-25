@@ -1,5 +1,10 @@
 /* ── Time Picker Component ─────────────────────────────────────────────────── */
 
+/* Hide native inputs until JS transforms them into custom components */
+.time-picker > input[type="time"] {
+  display: none;
+}
+
 /* Shadow used by the expanded popup (card reuses --shadow from the system) */
 :root {
   --tp-shadow-lg:
@@ -24,6 +29,8 @@
 
   align-items: center;
   justify-content: center;
+
+  opacity: 0; /* Hidden until JS initializes components */
 }
 
 /* ── Overlay ───────────────────────────────────────────────────────────────── */

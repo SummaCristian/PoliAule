@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
+  <link rel="stylesheet" href="./components/classroom-list.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -172,8 +173,10 @@
 
       </form>
 
-      <div id="available-classrooms-results">
-        <p>Search a room first</p>
+      <div id="available-classrooms-results" class="available-classrooms-container empty">
+        <span class="material-symbols-outlined empty-container-icon">search</span>
+        <p class="empty-container-title">Search a room first</p>
+        <p class="empty-container-subtitle">Tell me what time you need a classroom for and I'll take care of the rest</p>
       </div>
 
       <div class="info-box">

@@ -1,0 +1,46 @@
+.available-classrooms-container {
+  margin: 1rem;
+  padding: 0.5rem;
+
+  background-color: var(--background-color-secondary);
+
+  border-radius: 1.5rem;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.available-classrooms-container.empty {
+  padding: 4rem 0;
+  gap: 1.5rem;
+}
+
+.empty-container-icon {
+  color: var(--text-color-secondary);
+  opacity: 0.75;
+
+  font-size: 7rem !important;
+}
+
+.empty-container-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+
+  color: var(--text-color-secondary);
+  opacity: 0.75;
+
+  margin: 0;
+}
+
+.empty-container-subtitle {
+  font-size: 0.9rem;
+  font-weight: 630;
+
+  color: var(--text-color-secondary);
+  opacity: 0.60;
+
+  margin: 0 3rem;
+}

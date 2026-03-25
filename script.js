@@ -84,7 +84,6 @@ tabs.forEach((tab, index) => {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     await fetchClassroomsData();
-    console.log('All data loaded:', classroomsData);
 
     // Setup the campus picker with the available ones
     setupCampusPicker();
@@ -126,11 +125,8 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   const from = data.get('from');
   const to = data.get('to');
 
-  console.log('Form submitted with:', { campus, date, from, to });
-
   // Compute results
   const results = findAvailableClassrooms(campus, date, from, to);
-  console.log(results);
 
   // Render results
   renderAvailableClassroomsResults(results, date);
@@ -168,11 +164,7 @@ function renderAvailableClassroomsResults(results, date) {
   container.appendChild(dataInfoMsg);
 
   if (results.length === 0) {
-    const errorMsg = document.createElement('p');
-    errorMsg.className = 'secondary';
-    errorMsg.textContent = 'No available classrooms found for the selected criteria.';
-
-    container.appendChild(errorMsg);
+    renderNoResultsClassroomsContainer(container);
     return;
   }
 
@@ -194,6 +186,15 @@ function renderAvailableClassroomsResults(results, date) {
   });
 
   container.appendChild(list);
+}
+
+// Render the error state for the Available Classrooms results container
+function renderNoResultsClassroomsContainer(container) {
+  container.innerHTML = ```
+    <span class="material-symbols-outlined empty-container-icon">search_off</span>
+    <p class="empty-container-title">No results</p>
+    <p class="empty-container-subtitle">Looks like you are out of luck, there is no classroom available between the times you requested...</p>
+  ```
 }
 
 // Sets the allowed dates into the date picker,
@@ -310,7 +311,6 @@ function setupDatePicker() {
 
 
   document.getElementById('today-indicator').addEventListener('click', () => {
-    console.log('today-indicator clicked');
     const todayStr = new Date().toISOString().slice(0, 10);
     const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
     if (todayEl) selectDateElement(todayEl);

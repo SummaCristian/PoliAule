@@ -8,6 +8,7 @@ import {
 import { initTimePickers } from './components/time-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
+import { buildCardForClassroom } from './components/classroom-list.js';
 
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
@@ -144,43 +145,26 @@ function renderAvailableClassroomsResults(results, date) {
   const dateKey = date.replace(/-/g, ''); // "2026-03-16" → "20260316"
   const dayData = classroomsData.find(day => day.date === dateKey) ?? classroomsData[0];
 
-  // Add data generation time info
-  const dataInfoMsg = document.createElement('label');
-  dataInfoMsg.className = 'secondary';
-
-  const generationDate = new Date(classroomsData[0].generated_at + 'Z');
-
-  const formattedGenerationDate = generationDate.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'Europe/Rome', // UTC+1 (or +2 in DST)
-  }) + ' at ' + generationDate.toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'Europe/Rome', // UTC+1 (or +2 in DST)
-  });
-
-  // "16 Mar 2026 at 05:14"
-  dataInfoMsg.textContent = `Data fetched on ${formattedGenerationDate}`;
-  container.appendChild(dataInfoMsg);
-
   if (results.length === 0) {
     renderNoResultsClassroomsContainer(container);
     return;
   }
 
+  container.classList.remove('empty');
+
   const list = document.createElement('ul');
+  list.className = 'list-outer-container';
 
   results.forEach(building => {
     const buildingItem = document.createElement('li');
     buildingItem.innerHTML = `<h3>${building.building.name}</h3>`;
 
     const roomsList = document.createElement('ul');
+    roomsList.className = 'list-outer-container';
     building.rooms.forEach(room => {
       const roomItem = document.createElement('li');
-      roomItem.innerHTML = `<p>${room.name} - Available from ${room.slots[0].start} to ${room.slots[0].end}</p>`;
+      roomItem.className = 'classroom-list-item-container';
+      roomItem.innerHTML = buildCardForClassroom(room);
       roomsList.appendChild(roomItem);
     });
 
@@ -193,6 +177,8 @@ function renderAvailableClassroomsResults(results, date) {
 
 // Render the error state for the Available Classrooms results container
 function renderNoResultsClassroomsContainer(container) {
+  container.classList.add('empty');
+
   container.innerHTML = ```
     <span class="material-symbols-outlined empty-container-icon">search_off</span>
     <p class="empty-container-title">No results</p>

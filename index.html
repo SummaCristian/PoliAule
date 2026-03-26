@@ -33,6 +33,7 @@
   <script type="module" src="./components/popover.js" defer></script>
   <script type="module" src="./components/haptics.js" defer></script>
   <script type="module" src="./components/time-picker.js" defer></script>
+  <script type="module" src="./components/classroom-list.js" defer></script>
 
 </head>
 
@@ -175,8 +176,26 @@
 
       <div id="available-classrooms-results" class="available-classrooms-container empty">
         <span class="material-symbols-outlined empty-container-icon">search</span>
-        <p class="empty-container-title">Search a room first</p>
-        <p class="empty-container-subtitle">Tell me what time you need a classroom for and I'll take care of the rest</p>
+        <p class="empty-container-title">Need a classroom?</p>
+        <p class="empty-container-subtitle">Tell me when you need it and I’ll show you what’s available</p>
+      </div>
+
+      <div class="available-classrooms-container">
+        <ul class="list-outer-container">
+          <li class="building-list-item-container">
+            <h3>Edificio 13 (Trifoglio)</h3>
+            <ul class="list-outer-container">
+              <li class="classroom-list-item-container">
+                <h4 class="classroom-name">T.1.1</h4>
+                <p>T.1.1 - Available from 08:15 to 10:15</p>;
+              </li>
+
+              <li class="classroom-list-item-container">
+                <p>T.1.1 - Available from 08:15 to 10:15</p>;
+              </li>
+            </ul>
+          </li>
+        </ul>
       </div>
 
       <div class="info-box">

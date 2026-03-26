@@ -9,13 +9,13 @@
   display: flex;
   flex-direction: column;
 
-  align-items: center;
   justify-content: space-evenly;
 }
 
 .available-classrooms-container.empty {
   padding: 4rem 0;
   gap: 1.5rem;
+  align-items: center;
 }
 
 .empty-container-icon {
@@ -43,4 +43,35 @@
   opacity: 0.60;
 
   margin: 0 3rem;
+}
+
+.list-outer-container {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.building-list-item-container {
+  
+}
+
+.classroom-list-item-container {
+  padding: 1rem;
+
+  border-radius: 1rem;
+
+  background-color: var(--background-color);
+
+  box-shadow: var(--shadow);
+}
+
+.classroom-name {
+  font-weight: bold;
+  text-align: start;
+
+  margin: 0;
 }

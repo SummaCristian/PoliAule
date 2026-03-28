@@ -133,11 +133,11 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   const results = findAvailableClassrooms(campus, date, from, to);
 
   // Render results
-  renderAvailableClassroomsResults(results, date);
+  renderAvailableClassroomsResults(results, date, from, to);
 });
 
 // Builds the UI to show the results of the 'Available Classrooms' form submission,
-function renderAvailableClassroomsResults(results, date) {
+function renderAvailableClassroomsResults(results, date, from, to) {
   const container = document.getElementById('available-classrooms-results');
   container.innerHTML = ''; // Clear previous results
 
@@ -164,7 +164,7 @@ function renderAvailableClassroomsResults(results, date) {
     building.rooms.forEach(room => {
       const roomItem = document.createElement('li');
       roomItem.className = 'classroom-list-item-container';
-      roomItem.innerHTML = buildCardForClassroom(room);
+      roomItem.innerHTML = buildCardForClassroom(room, from, to);
       roomsList.appendChild(roomItem);
     });
 

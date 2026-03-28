@@ -90,6 +90,7 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
           name: classroom.name,
           status: isFree ? 'free' : 'partially-free',
           features: classroom.features ?? [],
+          occupancy: classroom.occupancy ?? [],
           slots: freeSlots,
         });
       }

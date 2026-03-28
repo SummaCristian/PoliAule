@@ -127,6 +127,37 @@
   gap: 0.2rem;
 }
 
+.timeline-bar-wrapper {
+  position: relative;
+  padding-top: 30px;
+}
+
+.timeline-time-indicator {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+
+  background: color-mix(in srgb, var(--background-color-secondary) 50%, var(--text-color-accent) 50%);
+  color: var(--text-color-primary);
+  border: 1px solid color-mix(in srgb, var(--text-color-accent) 15%, transparent);
+  border-radius: 0.5rem;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+}
+
+.timeline-time-indicator::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: color-mix(in srgb, var(--background-color-secondary) 50%, var(--text-color-accent) 50%);
+}
+
 .timeline-bar {
   position: relative;
   height: 18px;

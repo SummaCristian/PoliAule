@@ -55,11 +55,18 @@ function buildTimeline(occupancy, fromTime, toTime) {
     labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span>${minutesToTime(t)}</span></div>`);
   }
 
+  const indicatorFrom = `<div class="timeline-time-indicator" style="left:${pct(fromMin)}">${fromTime}</div>`;
+  const indicatorTo   = `<div class="timeline-time-indicator" style="left:${pct(toMin)}">${toTime}</div>`;
+
   return `
     <div class="classroom-timeline">
-      <div class="timeline-bar">
-        ${queryHtml}
-        ${blocksHtml}
+      <div class="timeline-bar-wrapper">
+        ${indicatorFrom}
+        ${indicatorTo}
+        <div class="timeline-bar">
+          ${queryHtml}
+          ${blocksHtml}
+        </div>
       </div>
       <div class="timeline-ticks">${labelsHtml.join('')}</div>
     </div>

@@ -47,12 +47,40 @@ function buildTimeline(occupancy, fromTime, toTime) {
     return `<div class="timeline-block ${isConflict ? 'timeline-block--busy' : 'timeline-block--context'}" style="left:${pct(s)};width:${wPct(s, e)}"></div>`;
   }).join('');
 
-  // Time labels at every :15 mark within display range
-  const offset = ((15 - (displayStart % 60)) + 60) % 60;
-  const firstTick = displayStart + offset;
+  // Collect occupation boundary times within the display range
+  const rawBoundaries = [];
+  for (const slot of (occupancy ?? [])) {
+    const s = timeToMinutes(slot.inizio);
+    const e = timeToMinutes(slot.fine);
+    if (s > displayStart && s < displayEnd) rawBoundaries.push(s);
+    if (e > displayStart && e < displayEnd) rawBoundaries.push(e);
+  }
+  const boundaries = [...new Set(rawBoundaries)].sort((a, b) => a - b);
+
+  // For gaps > 2h, fill with :15-mark labels every 2h (with 1h margins from each edge)
+  const candidateTimes = new Set(boundaries);
+  const anchors = [displayStart, ...boundaries, displayEnd];
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const gapStart = anchors[i];
+    const gapEnd = anchors[i + 1];
+    if (gapEnd - gapStart > 120) {
+      const fillStart = gapStart + 60;
+      const fillEnd = gapEnd - 60;
+      const off = ((15 - (fillStart % 60)) + 60) % 60;
+      for (let t = fillStart + off; t <= fillEnd; t += 120) {
+        candidateTimes.add(t);
+      }
+    }
+  }
+
+  // Sort and enforce 1h minimum spacing to prevent overlap
   const labelsHtml = [];
-  for (let t = firstTick; t <= displayEnd; t += 60) {
-    labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span>${minutesToTime(t)}</span></div>`);
+  let lastAdded = -Infinity;
+  for (const t of [...candidateTimes].sort((a, b) => a - b)) {
+    if (t - lastAdded >= 60) {
+      labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span>${minutesToTime(t)}</span></div>`);
+      lastAdded = t;
+    }
   }
 
   const indicatorFrom = `<div class="timeline-time-indicator" style="left:${pct(fromMin)}">${fromTime}</div>`;

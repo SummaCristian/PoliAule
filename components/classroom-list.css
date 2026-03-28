@@ -52,9 +52,11 @@
 }
 
 .available-classrooms-container.empty {
+  flex: 1;
   padding: 4rem 0;
   gap: 1.5rem;
   align-items: center;
+  justify-content: center;
 }
 
 .empty-container-icon {

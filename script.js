@@ -51,7 +51,7 @@ tabbar.style.setProperty("--tabs", tabs.length);
 function showContent(targetId) {
   contentContainers.forEach(container => {
     if (container.id === targetId) {
-      container.style.display = 'block';
+      container.style.display = 'flex';
       requestAnimationFrame(() => container.classList.add('visible'));
     } else {
       container.classList.remove('visible');

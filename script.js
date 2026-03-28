@@ -220,6 +220,24 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   container.classList.remove('empty');
 
+  // Filter toggle
+  const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
+  if (hasPartial) {
+    const filterRow = document.createElement('div');
+    filterRow.className = 'results-filter-row';
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'results-filter-btn active';
+    toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> Partially Free`;
+    toggleBtn.addEventListener('click', () => {
+      const isActive = toggleBtn.classList.toggle('active');
+      container.classList.toggle('hide-partial', !isActive);
+    });
+
+    filterRow.appendChild(toggleBtn);
+    container.appendChild(filterRow);
+  }
+
   const list = document.createElement('ul');
   list.className = 'list-outer-container';
 
@@ -232,6 +250,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     building.rooms.forEach(room => {
       const roomItem = document.createElement('li');
       roomItem.className = 'classroom-list-item-container';
+      roomItem.dataset.status = room.status;
       roomItem.innerHTML = buildCardForClassroom(room, from, to);
       roomsList.appendChild(roomItem);
     });

@@ -12,6 +12,45 @@
   justify-content: space-evenly;
 }
 
+.results-filter-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  padding: 0.25rem 0.5rem 0;
+}
+
+.results-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--text-color-accent) 15%, transparent);
+  color: var(--text-color-accent);
+
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.results-filter-btn:not(.active) {
+  background: transparent;
+  opacity: 0.45;
+}
+
+.results-filter-btn .material-symbols-outlined {
+  font-size: 1rem !important;
+}
+
+.available-classrooms-container.hide-partial [data-status="partially-free"] {
+  display: none;
+}
+
 .available-classrooms-container.empty {
   padding: 4rem 0;
   gap: 1.5rem;

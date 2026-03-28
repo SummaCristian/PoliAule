@@ -23,7 +23,7 @@ function minutesToTime(minutes) {
   return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 }
 
-function buildTimeline(occupancy, fromTime, toTime) {
+function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
   const fromMin = timeToMinutes(fromTime);
   const toMin = timeToMinutes(toTime);
 
@@ -86,11 +86,21 @@ function buildTimeline(occupancy, fromTime, toTime) {
   const indicatorFrom = `<div class="timeline-time-indicator" style="left:${pct(fromMin)}">${fromTime}</div>`;
   const indicatorTo   = `<div class="timeline-time-indicator" style="left:${pct(toMin)}">${toTime}</div>`;
 
+  let indicatorNow = '';
+  if (isToday) {
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    if (nowMin > displayStart && nowMin < displayEnd) {
+      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now" style="left:${pct(nowMin)}">Now</div>`;
+    }
+  }
+
   return `
     <div class="classroom-timeline">
       <div class="timeline-bar-wrapper">
         ${indicatorFrom}
         ${indicatorTo}
+        ${indicatorNow}
         <div class="timeline-bar">
           ${queryHtml}
           ${blocksHtml}
@@ -104,7 +114,7 @@ function buildTimeline(occupancy, fromTime, toTime) {
 // ---------- CARD ----------
 
 // Builds and returns a Card UI element for the classroom passed as parameter
-export function buildCardForClassroom(classroom, fromTime, toTime) {
+export function buildCardForClassroom(classroom, fromTime, toTime, isToday = false) {
   const featuresHtml = (classroom.features ?? [])
     .filter(f => FEATURE_ICONS[f.id])
     .map(f => {
@@ -119,7 +129,7 @@ export function buildCardForClassroom(classroom, fromTime, toTime) {
         <h4 class="classroom-name">${classroom.name}</h4>
         <h4 class="classroom-status-txt ${classroom.status}">${STATUS_LABELS[classroom.status]}</h4>
       </div>
-      ${buildTimeline(classroom.occupancy, fromTime, toTime)}
+      ${buildTimeline(classroom.occupancy, fromTime, toTime, isToday)}
       ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}
     </div>
   `;

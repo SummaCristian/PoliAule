@@ -309,6 +309,19 @@
   border-top-color: color-mix(in srgb, var(--background-color-secondary) 50%, var(--text-color-accent) 50%);
 }
 
+.timeline-time-indicator--now {
+  background: color-mix(in srgb, var(--background-color-secondary) 50%, #2196F3 50%);
+  border-color: color-mix(in srgb, #2196F3 30%, transparent);
+
+  opacity: 0;
+  transform-origin: bottom center;
+  animation: today-indicator-appear 0.65s linear 0.35s forwards;
+}
+
+.timeline-time-indicator--now::after {
+  border-top-color: color-mix(in srgb, var(--background-color-secondary) 50%, #2196F3 50%);
+}
+
 .timeline-bar {
   position: relative;
   height: 2.5rem;

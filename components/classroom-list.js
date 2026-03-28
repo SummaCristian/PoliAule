@@ -44,7 +44,7 @@ function buildTimeline(occupancy, fromTime, toTime) {
     const e = Math.min(timeToMinutes(slot.fine), displayEnd);
     if (e <= s) return '';
     const isConflict = s < toMin && e > fromMin;
-    return `<div class="timeline-block ${isConflict ? 'timeline-block--busy' : 'timeline-block--context'}" style="left:${pct(s)};width:${wPct(s, e)}"></div>`;
+    return `<div class="timeline-block ${isConflict ? 'timeline-block--busy' : 'timeline-block--context'}" style="left:calc(${pct(s)} + 2px);width:calc(${wPct(s, e)} - 4px)"></div>`;
   }).join('');
 
   // Collect occupation boundary times within the display range

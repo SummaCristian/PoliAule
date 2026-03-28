@@ -69,9 +69,80 @@
   box-shadow: var(--shadow);
 }
 
-.classroom-name {
-  font-weight: bold;
+.classroom-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   text-align: start;
+}
 
+.classroom-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.classroom-features {
+  display: flex;
+  flex-direction: row;
+  gap: 0.1rem;
+  flex-shrink: 0;
+}
+
+.classroom-feature-icon {
+  font-size: 1.1rem !important;
+  color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
+}
+
+.classroom-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: start;
   margin: 0;
+}
+
+.classroom-status-txt {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.classroom-status-txt.free {
+  color: var(--text-color-accent);
+}
+
+.classroom-status-txt.partially-free {
+  color: #f0b429;
+}
+
+.classroom-status-txt.not-free {
+  color: #e53935;
+}
+
+.classroom-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.classroom-slot-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-color-accent);
+
+  background: color-mix(in srgb, var(--text-color-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-color-accent) 30%, transparent);
+}
+
+.classroom-slot-icon {
+  font-size: 0.95rem !important;
 }

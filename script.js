@@ -179,11 +179,11 @@ function renderAvailableClassroomsResults(results, date) {
 function renderNoResultsClassroomsContainer(container) {
   container.classList.add('empty');
 
-  container.innerHTML = ```
+  container.innerHTML = `
     <span class="material-symbols-outlined empty-container-icon">search_off</span>
     <p class="empty-container-title">No results</p>
     <p class="empty-container-subtitle">Looks like you are out of luck, there is no classroom available between the times you requested...</p>
-  ```
+  `;
 }
 
 // Sets the allowed dates into the date picker,

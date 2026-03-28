@@ -82,9 +82,14 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
     for (const classroom of building.classrooms) {
       const freeSlots = getFreeSlots(classroom.occupancy, fromTime, toTime);
       if (freeSlots.length > 0) {
+        const isFree = freeSlots.length === 1
+          && freeSlots[0].start === fromTime
+          && freeSlots[0].end === toTime;
         availableRooms.push({
           id: classroom.id,
           name: classroom.name,
+          status: isFree ? 'free' : 'partially-free',
+          features: classroom.features ?? [],
           slots: freeSlots,
         });
       }

@@ -96,6 +96,9 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
       }
     }
 
+    const STATUS_ORDER = { 'free': 0, 'partially-free': 1, 'not-free': 2 };
+    availableRooms.sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
+
     if (availableRooms.length > 0) {
       results.push({
         building: { id: building.name, name: building.name },

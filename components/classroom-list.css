@@ -117,10 +117,24 @@
 
 .building-card-header {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.25rem 0.5rem 0.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  cursor: pointer;
+  user-select: none;
+}
+
+.building-card.collapsed .building-card-header {
+  border-bottom-color: transparent;
+}
+
+.building-card-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
   text-align: start;
 }
 
@@ -149,6 +163,31 @@
 .building-count-sep {
   font-size: 0.65rem;
   color: color-mix(in srgb, var(--text-color-primary) 25%, transparent);
+}
+
+.building-chevron {
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.building-card.collapsed .building-chevron {
+  transform: rotate(-90deg);
+}
+
+.building-card-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.building-card.collapsed .building-card-body {
+  grid-template-rows: 0fr;
+}
+
+.building-card-body > .list-inner-container {
+  overflow: hidden;
+  min-height: 0;
 }
 
 .classroom-list-item-container {

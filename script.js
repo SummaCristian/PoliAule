@@ -97,10 +97,16 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0) {
   buildingCard.className = 'building-card';
   buildingCard.innerHTML = `
     <div class="building-card-header">
-      <h3 class="building-name">${buildingName}</h3>
-      <div class="building-counts">${countParts}</div>
+      <div class="building-card-header-text">
+        <h3 class="building-name">${buildingName}</h3>
+        <div class="building-counts">${countParts}</div>
+      </div>
+      <span class="material-symbols-outlined building-chevron">expand_more</span>
     </div>
   `;
+
+  const body = document.createElement('div');
+  body.className = 'building-card-body';
 
   const roomsList = document.createElement('ul');
   roomsList.className = 'list-inner-container';
@@ -114,7 +120,13 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0) {
     roomsList.appendChild(roomItem);
   });
 
-  buildingCard.appendChild(roomsList);
+  body.appendChild(roomsList);
+  buildingCard.appendChild(body);
+
+  buildingCard.querySelector('.building-card-header').addEventListener('click', () => {
+    buildingCard.classList.toggle('collapsed');
+    haptics.trigger(defaultPatterns.success);
+  });
 
   const li = document.createElement('li');
   li.appendChild(buildingCard);

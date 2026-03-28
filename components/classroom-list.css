@@ -122,14 +122,12 @@
 }
 
 .classroom-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+  padding: 1rem;
 }
 
 .timeline-bar-wrapper {
   position: relative;
-  padding-top: 30px;
+  padding-top: 2rem;
 }
 
 .timeline-time-indicator {
@@ -146,6 +144,8 @@
   font-weight: bold;
   white-space: nowrap;
   box-shadow: var(--shadow);
+
+  user-select: none;
 }
 
 .timeline-time-indicator::after {
@@ -160,7 +160,7 @@
 
 .timeline-bar {
   position: relative;
-  height: 18px;
+  height: 2.5rem;
   border-radius: 4px;
   background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
   overflow: hidden;
@@ -190,6 +190,7 @@
 .timeline-ticks {
   position: relative;
   height: 1.2rem;
+  margin-top: 0.2rem;
 }
 
 .timeline-tick-label {
@@ -199,6 +200,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1px;
+  user-select: none;
 }
 
 .timeline-tick-label::before {

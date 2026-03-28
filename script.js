@@ -79,10 +79,78 @@ tabs.forEach((tab, index) => {
   });
 });
 
+// ---------- PREVIEW CARDS ----------
+
+function renderPreviewCards() {
+  const container = document.getElementById('preview-cards-container');
+  if (!container) return;
+
+  const from = '08:15';
+  const to = '16:00';
+
+  const previewBuildings = [
+    {
+      name: 'Edificio 13 (Trifoglio)',
+      rooms: [
+        {
+          id: 0,
+          name: 'T.1.1',
+          status: 'free',
+          features: [
+            { id: 4, en: 'Video projector' },
+            { id: 5, en: 'Radio microphone' },
+            { id: 142, en: 'Seats with electric socket' },
+          ],
+          occupancy: [{ inizio: '10:15', fine: '18:15' }],
+          slots: [{ start: from, end: to }],
+        },
+        {
+          id: 1,
+          name: 'T.1.2',
+          status: 'partially-free',
+          features: [
+            { id: 4, en: 'Video projector' },
+            { id: 223, en: 'Videoconference - meeting' },
+          ],
+          occupancy: [{ inizio: '10:15', fine: '14:00' }],
+          slots: [
+            { start: from, end: '10:15' },
+            { start: '14:00', end: to },
+          ],
+        },
+      ],
+    },
+  ];
+
+  const list = document.createElement('ul');
+  list.className = 'list-outer-container';
+
+  previewBuildings.forEach(building => {
+    const buildingItem = document.createElement('li');
+    buildingItem.innerHTML = `<h3>${building.name}</h3>`;
+
+    const roomsList = document.createElement('ul');
+    roomsList.className = 'list-outer-container';
+    building.rooms.forEach(room => {
+      const roomItem = document.createElement('li');
+      roomItem.className = 'classroom-list-item-container';
+      roomItem.innerHTML = buildCardForClassroom(room, from, to);
+      roomsList.appendChild(roomItem);
+    });
+
+    buildingItem.appendChild(roomsList);
+    list.appendChild(buildingItem);
+  });
+
+  container.appendChild(list);
+}
+
 // ---------- DATA FETCHING ----------
 
 // Triggers the fetching of data as soon as the page loads
 document.addEventListener('DOMContentLoaded', async () => {
+  renderPreviewCards();
+
   try {
     await fetchClassroomsData();
 

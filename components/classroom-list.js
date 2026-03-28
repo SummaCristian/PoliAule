@@ -67,8 +67,8 @@ function buildTimeline(occupancy, fromTime, toTime) {
           ${queryHtml}
           ${blocksHtml}
         </div>
+        <div class="timeline-ticks">${labelsHtml.join('')}</div>
       </div>
-      <div class="timeline-ticks">${labelsHtml.join('')}</div>
     </div>
   `;
 }

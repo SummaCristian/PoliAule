@@ -241,6 +241,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   const list = document.createElement('ul');
   list.className = 'list-outer-container';
 
+  let cardIndex = 0;
   results.forEach(building => {
     const buildingItem = document.createElement('li');
     buildingItem.innerHTML = `<h3>${building.building.name}</h3>`;
@@ -251,7 +252,9 @@ function renderAvailableClassroomsResults(results, date, from, to) {
       const roomItem = document.createElement('li');
       roomItem.className = 'classroom-list-item-container';
       roomItem.dataset.status = room.status;
+      roomItem.style.animationDelay = `${cardIndex * 60}ms`;
       roomItem.innerHTML = buildCardForClassroom(room, from, to);
+      cardIndex++;
       roomsList.appendChild(roomItem);
     });
 

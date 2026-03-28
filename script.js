@@ -79,6 +79,48 @@ tabs.forEach((tab, index) => {
   });
 });
 
+// ---------- BUILDING CARD ----------
+
+// Builds a <li> containing a building card with its room cards inside.
+// Returns the element and the next cardIndex for stagger sequencing.
+function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0) {
+  const counts = { free: 0, 'partially-free': 0, 'not-free': 0 };
+  rooms.forEach(r => { if (r.status in counts) counts[r.status]++; });
+
+  const countParts = [
+    counts['free']           ? `<span class="building-count free">${counts['free']} Free</span>` : '',
+    counts['partially-free'] ? `<span class="building-count partially-free">${counts['partially-free']} Partial</span>` : '',
+    counts['not-free']       ? `<span class="building-count not-free">${counts['not-free']} Occupied</span>` : '',
+  ].filter(Boolean).join('<span class="building-count-sep">·</span>');
+
+  const buildingCard = document.createElement('div');
+  buildingCard.className = 'building-card';
+  buildingCard.innerHTML = `
+    <div class="building-card-header">
+      <h3 class="building-name">${buildingName}</h3>
+      <div class="building-counts">${countParts}</div>
+    </div>
+  `;
+
+  const roomsList = document.createElement('ul');
+  roomsList.className = 'list-inner-container';
+  rooms.forEach(room => {
+    const roomItem = document.createElement('li');
+    roomItem.className = 'classroom-list-item-container';
+    roomItem.dataset.status = room.status;
+    roomItem.style.animationDelay = `${cardIndex * 60}ms`;
+    roomItem.innerHTML = buildCardForClassroom(room, from, to);
+    cardIndex++;
+    roomsList.appendChild(roomItem);
+  });
+
+  buildingCard.appendChild(roomsList);
+
+  const li = document.createElement('li');
+  li.appendChild(buildingCard);
+  return { li, cardIndex };
+}
+
 // ---------- PREVIEW CARDS ----------
 
 function renderPreviewCards() {
@@ -125,21 +167,11 @@ function renderPreviewCards() {
   const list = document.createElement('ul');
   list.className = 'list-outer-container';
 
+  let cardIndex = 0;
   previewBuildings.forEach(building => {
-    const buildingItem = document.createElement('li');
-    buildingItem.innerHTML = `<h3>${building.name}</h3>`;
-
-    const roomsList = document.createElement('ul');
-    roomsList.className = 'list-outer-container';
-    building.rooms.forEach(room => {
-      const roomItem = document.createElement('li');
-      roomItem.className = 'classroom-list-item-container';
-      roomItem.innerHTML = buildCardForClassroom(room, from, to);
-      roomsList.appendChild(roomItem);
-    });
-
-    buildingItem.appendChild(roomsList);
-    list.appendChild(buildingItem);
+    const { li, cardIndex: next } = createBuildingItem(building.name, building.rooms, from, to, cardIndex);
+    cardIndex = next;
+    list.appendChild(li);
   });
 
   container.appendChild(list);
@@ -243,23 +275,9 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   let cardIndex = 0;
   results.forEach(building => {
-    const buildingItem = document.createElement('li');
-    buildingItem.innerHTML = `<h3>${building.building.name}</h3>`;
-
-    const roomsList = document.createElement('ul');
-    roomsList.className = 'list-outer-container';
-    building.rooms.forEach(room => {
-      const roomItem = document.createElement('li');
-      roomItem.className = 'classroom-list-item-container';
-      roomItem.dataset.status = room.status;
-      roomItem.style.animationDelay = `${cardIndex * 60}ms`;
-      roomItem.innerHTML = buildCardForClassroom(room, from, to);
-      cardIndex++;
-      roomsList.appendChild(roomItem);
-    });
-
-    buildingItem.appendChild(roomsList);
-    list.appendChild(buildingItem);
+    const { li, cardIndex: next } = createBuildingItem(building.building.name, building.rooms, from, to, cardIndex);
+    cardIndex = next;
+    list.appendChild(li);
   });
 
   container.appendChild(list);

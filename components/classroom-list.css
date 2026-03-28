@@ -94,8 +94,61 @@
   gap: 1rem;
 }
 
-.building-list-item-container {
-  
+.list-inner-container {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.25rem 0.25rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.building-card {
+  background-color: var(--background-color);
+  border-radius: 1.5rem;
+  padding: 0.75rem;
+  box-shadow: var(--shadow);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.building-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.25rem 0.5rem 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  text-align: start;
+}
+
+.building-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.building-counts {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.building-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.building-count.free          { color: var(--text-color-accent); }
+.building-count.partially-free { color: #f0b429; }
+.building-count.not-free       { color: #e53935; }
+
+.building-count-sep {
+  font-size: 0.65rem;
+  color: color-mix(in srgb, var(--text-color-primary) 25%, transparent);
 }
 
 .classroom-list-item-container {
@@ -103,7 +156,7 @@
 
   border-radius: 1rem;
 
-  background-color: var(--background-color);
+  background-color: var(--background-color-secondary);
 
   box-shadow: var(--shadow);
 

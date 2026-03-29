@@ -271,7 +271,7 @@
 
 /* Native time input — styled to match the old display span */
 .tp-popup__time-input {
-  flex: 1;
+  flex: 0 0 auto;
   font-family: 'DS-Digital', 'Courier New', monospace;
   font-size: 4rem;
   font-weight: normal;
@@ -279,12 +279,15 @@
   color: var(--text-color-accent);
   letter-spacing: 0.06em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+
+  /* Fixed width for HH:MM — prevents layout shift as digits change */
+  width: 5ch;
 
   background: transparent;
   border: none;
   outline: none;
   text-align: center;
-  width: 100%;
 
   /* Kill browser chrome */
   -webkit-appearance: none;

@@ -574,13 +574,11 @@ label {
 @keyframes appear {
   from {
     opacity: 0;
-    filter: blur(8px);
     transform: scale(0.95);
   }
 
   to {
     opacity: 1;
-    filter: blur(0);
     transform: scale(1);
   }
 }

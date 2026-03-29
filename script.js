@@ -112,7 +112,7 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
     const roomItem = document.createElement('li');
     roomItem.className = 'classroom-list-item-container';
     roomItem.dataset.status = room.status;
-    roomItem.style.animationDelay = `${cardIndex * 60}ms`;
+    roomItem.style.animationDelay = `${Math.min(cardIndex * 40, 300)}ms`;
     roomItem.innerHTML = buildCardForClassroom(room, from, to, isToday);
     cardIndex++;
     roomsList.appendChild(roomItem);

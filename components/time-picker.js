@@ -301,6 +301,16 @@ function buildTimePicker(wrapperEl) {
     configurable: true,
   });
 
+  const originalMinDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'min');
+  Object.defineProperty(inputEl, 'min', {
+    get() { return originalMinDescriptor.get.call(this); },
+    set(val) {
+      originalMinDescriptor.set.call(this, val);
+      popupInput.min = val;
+    },
+    configurable: true,
+  });
+
   // ── Preset buttons ────────────────────────────────────────────────────────
 
   function applyPreset(h, m) {

@@ -19,8 +19,13 @@ function timeToMinutes(time) {
   return h * 60 + m;
 }
 
-function minutesToTime(minutes) {
-  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+
+const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+
+function minutesToTimeDisplay(minutes) {
+  const d = new Date();
+  d.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
+  return TIME_FORMATTER.format(d);
 }
 
 function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
@@ -74,13 +79,13 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
   let lastAdded = -Infinity;
   for (const t of [...candidateTimes].sort((a, b) => a - b)) {
     if (t - lastAdded >= minSpacing) {
-      labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span>${minutesToTime(t)}</span></div>`);
+      labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span>${minutesToTimeDisplay(t)}</span></div>`);
       lastAdded = t;
     }
   }
 
-  const indicatorFrom = `<div class="timeline-time-indicator" style="left:${pct(fromMin)}">${fromTime}</div>`;
-  const indicatorTo   = `<div class="timeline-time-indicator" style="left:${pct(toMin)}">${toTime}</div>`;
+  const indicatorFrom = `<div class="timeline-time-indicator" style="left:${pct(fromMin)}">${minutesToTimeDisplay(fromMin)}</div>`;
+  const indicatorTo   = `<div class="timeline-time-indicator" style="left:${pct(toMin)}">${minutesToTimeDisplay(toMin)}</div>`;
 
   let indicatorNow = '';
   if (isToday) {

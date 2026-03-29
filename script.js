@@ -128,6 +128,7 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
 
   const li = document.createElement('li');
   li.appendChild(buildingCard);
+  if (rooms.every(r => r.status === 'partially-free')) li.dataset.allPartial = 'true';
   return { li, cardIndex };
 }
 
@@ -226,6 +227,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   // Partial-free filter toggle
   const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
+  let originalBuildingOrder = [];
   if (hasPartial) {
     const toggleBtn = document.createElement('button');
     toggleBtn.className = 'results-filter-btn active';
@@ -233,6 +235,11 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     toggleBtn.addEventListener('click', () => {
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
+      if (!isActive) {
+        list.querySelectorAll('li[data-all-partial]').forEach(item => list.appendChild(item));
+      } else {
+        originalBuildingOrder.forEach(item => list.appendChild(item));
+      }
     });
     filterRow.appendChild(toggleBtn);
   }
@@ -252,6 +259,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     cardIndex = next;
     list.appendChild(li);
   });
+  originalBuildingOrder = [...list.children];
 
   container.appendChild(list);
 }

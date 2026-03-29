@@ -550,7 +550,7 @@ label {
 
 /* Tab content */
 .body-container {
-  padding-top: 2rem;
+  padding-top: 1rem;
 
   flex: 1;
   display: flex;

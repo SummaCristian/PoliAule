@@ -281,8 +281,7 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
 
-  /* Fixed width for HH:MM — prevents layout shift as digits change */
-  width: 5ch;
+  /* Width is set by JS based on locale (24h vs 12h AM/PM) */
 
   background: transparent;
   border: none;

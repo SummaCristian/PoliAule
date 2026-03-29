@@ -259,6 +259,11 @@ function buildTimePicker(wrapperEl) {
   const popupInput = inputEl.cloneNode(true);
   popupInput.style.display = '';
   popupInput.className = 'tp-popup__time-input';
+
+  // Fix width to the widest possible time string for this locale (prevents layout shift)
+  const widestSample = TIME_FORMATTER.format(new Date(2000, 0, 1, 12, 0)); // "12:00 PM" or "12:00"
+  popupInput.style.width = `${widestSample.length}ch`;
+
   inputWrap.appendChild(popupInput);
   document.body.appendChild(popup);
 
@@ -342,28 +347,34 @@ function buildTimePicker(wrapperEl) {
   popup.querySelector('.tp-step-minus').addEventListener('click', () => stepHour(-1));
   popup.querySelector('.tp-step-plus').addEventListener('click', () => stepHour(+1));
 
-  // ── 'To' quick label ──────────────────────────────────────────────────────
+  // ── Quick preset label ────────────────────────────────────────────────────
 
   const quickLabelEl = popup.querySelector('.tp-quick-label');
 
   function updateQuickLabel() {
-    if (labelText === 'From') return;
-    const fromInput = document.querySelector('.time-picker input[type="time"]');
-    if (fromInput?.value) {
-      const [fh, fm] = fromInput.value.split(':').map(Number);
-      const h = (fh + 1) % 24;
+    if (labelText === 'From') {
+      const now = new Date();
+      const h = now.getMinutes() >= 45 ? (now.getHours() + 1) % 24 : now.getHours();
       quickLabelEl.textContent =
-        `${String(h).padStart(2, '0')}:${String(fm).padStart(2, '0')}`;
+        formatTimeDisplay(`${String(h).padStart(2, '0')}:15`);
     } else {
-      quickLabelEl.textContent = 'From +1h';
+      const fromInput = document.querySelector('.time-picker input[type="time"]');
+      if (fromInput?.value) {
+        const [fh, fm] = fromInput.value.split(':').map(Number);
+        const h = (fh + 1) % 24;
+        quickLabelEl.textContent =
+          formatTimeDisplay(`${String(h).padStart(2, '0')}:${String(fm).padStart(2, '0')}`);
+      } else {
+        quickLabelEl.textContent = 'From +1h';
+      }
     }
   }
 
   if (labelText !== 'From') {
     const fromInput = document.querySelector('.time-picker input[type="time"]');
     if (fromInput) fromInput.addEventListener('input', updateQuickLabel);
-    updateQuickLabel();
   }
+  updateQuickLabel();
 
   // ── Done button ───────────────────────────────────────────────────────────
 
@@ -377,6 +388,7 @@ function buildTimePicker(wrapperEl) {
   card.addEventListener('click', () => {
     if (DESKTOP_MQ.matches) return; // inline on desktop — card is not a trigger
     haptics.trigger(defaultPatterns.success);
+    updateQuickLabel();
     openPicker(card);
   });
 

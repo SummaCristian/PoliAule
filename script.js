@@ -51,11 +51,9 @@ tabbar.style.setProperty("--tabs", tabs.length);
 function showContent(targetId) {
   contentContainers.forEach(container => {
     if (container.id === targetId) {
-      container.style.display = 'flex';
       requestAnimationFrame(() => container.classList.add('visible'));
     } else {
       container.classList.remove('visible');
-      container.style.display = 'none'; // hide immediately, no waiting for animationend
     }
   });
 }
@@ -398,6 +396,7 @@ function setupDatePicker() {
   }
 
   window.addEventListener('resize', positionTodayIndicator);
+  new ResizeObserver(positionTodayIndicator).observe(container.closest('.date-picker'));
 
   // Auto-select today if available, otherwise fall back to the first available date
   // Wait for fonts to load to ensure accurate element measurements

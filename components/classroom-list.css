@@ -17,6 +17,7 @@
   flex-direction: row;
   justify-content: flex-end;
   padding: 0.25rem 0.5rem 0;
+  gap: 1rem;
 }
 
 .results-filter-btn {

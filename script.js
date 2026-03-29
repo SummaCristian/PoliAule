@@ -204,12 +204,29 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   container.classList.remove('empty');
 
-  // Filter toggle
+  // Filter row (always rendered)
+  const filterRow = document.createElement('div');
+  filterRow.className = 'results-filter-row';
+
+  // Collapse-all toggle
+  const collapseBtn = document.createElement('button');
+  collapseBtn.className = 'results-filter-btn active';
+  collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> Collapse All`;
+  collapseBtn.addEventListener('click', () => {
+    const allCollapsed = collapseBtn.dataset.state === 'collapsed';
+    container.querySelectorAll('.building-card').forEach(card => {
+      card.classList.toggle('collapsed', !allCollapsed);
+    });
+    collapseBtn.dataset.state = allCollapsed ? '' : 'collapsed';
+    collapseBtn.innerHTML = allCollapsed
+      ? `<span class="material-symbols-outlined">unfold_less</span> Collapse All`
+      : `<span class="material-symbols-outlined">unfold_more</span> Expand All`;
+  });
+  filterRow.appendChild(collapseBtn);
+
+  // Partial-free filter toggle
   const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
   if (hasPartial) {
-    const filterRow = document.createElement('div');
-    filterRow.className = 'results-filter-row';
-
     const toggleBtn = document.createElement('button');
     toggleBtn.className = 'results-filter-btn active';
     toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> Partially Free`;
@@ -217,10 +234,10 @@ function renderAvailableClassroomsResults(results, date, from, to) {
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
     });
-
     filterRow.appendChild(toggleBtn);
-    container.appendChild(filterRow);
   }
+
+  container.appendChild(filterRow);
 
   const list = document.createElement('ul');
   list.className = 'list-outer-container';

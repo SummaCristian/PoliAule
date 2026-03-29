@@ -57,27 +57,23 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
   }
   const boundaries = [...new Set(rawBoundaries)].sort((a, b) => a - b);
 
-  // For gaps > 2h, fill with :15-mark labels every 2h (with 1h margins from each edge)
+  // Pick a tick interval that yields ~4–6 labels across the display range
+  const niceDivisions = [15, 20, 30, 45, 60, 90, 120, 180, 240];
+  const tickInterval = niceDivisions.find(d => d >= total / 5) ?? 240;
+
+  // Generate candidates at HH:15 marks (one per hour), plus occupation boundaries
   const candidateTimes = new Set(boundaries);
-  const anchors = [displayStart, ...boundaries, displayEnd];
-  for (let i = 0; i < anchors.length - 1; i++) {
-    const gapStart = anchors[i];
-    const gapEnd = anchors[i + 1];
-    if (gapEnd - gapStart > 120) {
-      const fillStart = gapStart + 60;
-      const fillEnd = gapEnd - 60;
-      const off = ((15 - (fillStart % 60)) + 60) % 60;
-      for (let t = fillStart + off; t <= fillEnd; t += 120) {
-        candidateTimes.add(t);
-      }
-    }
+  const firstMark = Math.ceil((displayStart - 15) / 60) * 60 + 15;
+  for (let t = firstMark; t <= displayEnd; t += 60) {
+    candidateTimes.add(t);
   }
 
-  // Sort and enforce 1h minimum spacing to prevent overlap
+  // Sort and enforce minimum spacing to prevent label overlap
+  const minSpacing = Math.round(tickInterval * 0.75);
   const labelsHtml = [];
   let lastAdded = -Infinity;
   for (const t of [...candidateTimes].sort((a, b) => a - b)) {
-    if (t - lastAdded >= 60) {
+    if (t - lastAdded >= minSpacing) {
       labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span>${minutesToTime(t)}</span></div>`);
       lastAdded = t;
     }

@@ -90,6 +90,7 @@ def build_output(campuses: list[dict], client: httpx.Client, d: date, no_delay: 
                     {
                         "name": classroom["name"],
                         "id": classroom["id"],
+                        "features": classroom.get("features"),
                         "occupancy": occupancy
                         if occupancy is not None
                         else [],  # If fetch failed, set occupancy to empty list

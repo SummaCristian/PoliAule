@@ -8,6 +8,7 @@ import {
 import { initTimePickers } from './components/time-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
+import { buildCardForClassroom } from './components/classroom-list.js';
 
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
@@ -50,11 +51,9 @@ tabbar.style.setProperty("--tabs", tabs.length);
 function showContent(targetId) {
   contentContainers.forEach(container => {
     if (container.id === targetId) {
-      container.style.display = 'block';
       requestAnimationFrame(() => container.classList.add('visible'));
     } else {
       container.classList.remove('visible');
-      container.style.display = 'none'; // hide immediately, no waiting for animationend
     }
   });
 }
@@ -78,13 +77,66 @@ tabs.forEach((tab, index) => {
   });
 });
 
+// ---------- BUILDING CARD ----------
+
+// Builds a <li> containing a building card with its room cards inside.
+// Returns the element and the next cardIndex for stagger sequencing.
+function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToday = false) {
+  const counts = { free: 0, 'partially-free': 0, 'not-free': 0 };
+  rooms.forEach(r => { if (r.status in counts) counts[r.status]++; });
+
+  const countParts = [
+    counts['free']           ? `<span class="building-count free">${counts['free']} Free</span>` : '',
+    counts['partially-free'] ? `<span class="building-count partially-free">${counts['partially-free']} Partial</span>` : '',
+    counts['not-free']       ? `<span class="building-count not-free">${counts['not-free']} Occupied</span>` : '',
+  ].filter(Boolean).join('<span class="building-count-sep">·</span>');
+
+  const buildingCard = document.createElement('div');
+  buildingCard.className = 'building-card';
+  buildingCard.innerHTML = `
+    <div class="building-card-header">
+      <div class="building-card-header-text">
+        <h3 class="building-name">${buildingName}</h3>
+        <div class="building-counts">${countParts}</div>
+      </div>
+      <span class="material-symbols-outlined building-chevron">expand_more</span>
+    </div>
+  `;
+
+  const body = document.createElement('div');
+  body.className = 'building-card-body';
+
+  const roomsList = document.createElement('ul');
+  roomsList.className = 'list-inner-container';
+  rooms.forEach(room => {
+    const roomItem = document.createElement('li');
+    roomItem.className = 'classroom-list-item-container';
+    roomItem.dataset.status = room.status;
+    roomItem.style.animationDelay = `${Math.min(cardIndex * 40, 300)}ms`;
+    roomItem.innerHTML = buildCardForClassroom(room, from, to, isToday);
+    cardIndex++;
+    roomsList.appendChild(roomItem);
+  });
+
+  body.appendChild(roomsList);
+  buildingCard.appendChild(body);
+
+  buildingCard.querySelector('.building-card-header').addEventListener('click', () => {
+    buildingCard.classList.toggle('collapsed');
+    haptics.trigger(defaultPatterns.success);
+  });
+
+  const li = document.createElement('li');
+  li.appendChild(buildingCard);
+  return { li, cardIndex };
+}
+
 // ---------- DATA FETCHING ----------
 
 // Triggers the fetching of data as soon as the page loads
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     await fetchClassroomsData();
-    console.log('All data loaded:', classroomsData);
 
     // Setup the campus picker with the available ones
     setupCampusPicker();
@@ -96,6 +148,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTimePickers();
 
     initTimePickers();
+    document.fonts.ready.then(() => {
+      document.querySelector('.time-pickers-container').style.opacity = '1';
+    });
 
     // Setup the data fetch indicator
     setupDataFetchIndicator();
@@ -126,18 +181,15 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   const from = data.get('from');
   const to = data.get('to');
 
-  console.log('Form submitted with:', { campus, date, from, to });
-
   // Compute results
   const results = findAvailableClassrooms(campus, date, from, to);
-  console.log(results);
 
   // Render results
-  renderAvailableClassroomsResults(results, date);
+  renderAvailableClassroomsResults(results, date, from, to);
 });
 
 // Builds the UI to show the results of the 'Available Classrooms' form submission,
-function renderAvailableClassroomsResults(results, date) {
+function renderAvailableClassroomsResults(results, date, from, to) {
   const container = document.getElementById('available-classrooms-results');
   container.innerHTML = ''; // Clear previous results
 
@@ -145,55 +197,74 @@ function renderAvailableClassroomsResults(results, date) {
   const dateKey = date.replace(/-/g, ''); // "2026-03-16" → "20260316"
   const dayData = classroomsData.find(day => day.date === dateKey) ?? classroomsData[0];
 
-  // Add data generation time info
-  const dataInfoMsg = document.createElement('label');
-  dataInfoMsg.className = 'secondary';
-
-  const generationDate = new Date(classroomsData[0].generated_at + 'Z');
-
-  const formattedGenerationDate = generationDate.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'Europe/Rome', // UTC+1 (or +2 in DST)
-  }) + ' at ' + generationDate.toLocaleTimeString('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: 'Europe/Rome', // UTC+1 (or +2 in DST)
-  });
-
-  // "16 Mar 2026 at 05:14"
-  dataInfoMsg.textContent = `Data fetched on ${formattedGenerationDate}`;
-  container.appendChild(dataInfoMsg);
-
   if (results.length === 0) {
-    const errorMsg = document.createElement('p');
-    errorMsg.className = 'secondary';
-    errorMsg.textContent = 'No available classrooms found for the selected criteria.';
-
-    container.appendChild(errorMsg);
+    renderNoResultsClassroomsContainer(container);
     return;
   }
 
-  const list = document.createElement('ul');
+  container.classList.remove('empty');
 
-  results.forEach(building => {
-    const buildingItem = document.createElement('li');
-    buildingItem.innerHTML = `<h3>${building.building.name}</h3>`;
+  // Filter row (always rendered)
+  const filterRow = document.createElement('div');
+  filterRow.className = 'results-filter-row';
 
-    const roomsList = document.createElement('ul');
-    building.rooms.forEach(room => {
-      const roomItem = document.createElement('li');
-      roomItem.innerHTML = `<p>${room.name} - Available from ${room.slots[0].start} to ${room.slots[0].end}</p>`;
-      roomsList.appendChild(roomItem);
+  // Collapse-all toggle
+  const collapseBtn = document.createElement('button');
+  collapseBtn.className = 'results-filter-btn active';
+  collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> Collapse All`;
+  collapseBtn.addEventListener('click', () => {
+    const allCollapsed = collapseBtn.dataset.state === 'collapsed';
+    container.querySelectorAll('.building-card').forEach(card => {
+      card.classList.toggle('collapsed', !allCollapsed);
     });
+    collapseBtn.dataset.state = allCollapsed ? '' : 'collapsed';
+    collapseBtn.innerHTML = allCollapsed
+      ? `<span class="material-symbols-outlined">unfold_less</span> Collapse All`
+      : `<span class="material-symbols-outlined">unfold_more</span> Expand All`;
+  });
+  filterRow.appendChild(collapseBtn);
 
-    buildingItem.appendChild(roomsList);
-    list.appendChild(buildingItem);
+  // Partial-free filter toggle
+  const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
+  if (hasPartial) {
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'results-filter-btn active';
+    toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> Partially Free`;
+    toggleBtn.addEventListener('click', () => {
+      const isActive = toggleBtn.classList.toggle('active');
+      container.classList.toggle('hide-partial', !isActive);
+    });
+    filterRow.appendChild(toggleBtn);
+  }
+
+  container.appendChild(filterRow);
+
+  const list = document.createElement('ul');
+  list.className = 'list-outer-container';
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const isToday = date === todayStr;
+
+  let cardIndex = 0;
+  results.forEach(building => {
+    const { li, cardIndex: next } = createBuildingItem(building.building.name, building.rooms, from, to, cardIndex, isToday);
+    cardIndex = next;
+    list.appendChild(li);
   });
 
   container.appendChild(list);
+}
+
+// Render the error state for the Available Classrooms results container
+function renderNoResultsClassroomsContainer(container) {
+  container.classList.add('empty');
+
+  container.innerHTML = `
+    <span class="material-symbols-outlined empty-container-icon">search_off</span>
+    <p class="empty-container-title">No results</p>
+    <p class="empty-container-subtitle">Looks like you are out of luck, there is no classroom available between the times you requested...</p>
+  `;
 }
 
 // Sets the allowed dates into the date picker,
@@ -293,6 +364,7 @@ function setupDatePicker() {
     indicator.style.width = `${elRect.width}px`;
     indicator.style.height = `${elRect.height}px`;
     indicator.style.transform = `translateX(${x}px)`;
+    indicator.style.opacity = '1';
 
     datePicker.value = el.dataset.date;
 
@@ -310,7 +382,6 @@ function setupDatePicker() {
 
 
   document.getElementById('today-indicator').addEventListener('click', () => {
-    console.log('today-indicator clicked');
     const todayStr = new Date().toISOString().slice(0, 10);
     const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
     if (todayEl) selectDateElement(todayEl);
@@ -342,18 +413,22 @@ function setupDatePicker() {
   }
 
   window.addEventListener('resize', positionTodayIndicator);
+  new ResizeObserver(positionTodayIndicator).observe(container.closest('.date-picker'));
 
   // Auto-select today if available, otherwise fall back to the first available date
-  // Uses setTimeout to ensure layout is fully painted before measuring element positions
-  setTimeout(() => {
+  // Wait for fonts to load to ensure accurate element measurements
+  document.fonts.ready.then(() => {
     requestAnimationFrame(() => {
       // Auto-select the first available (non-skipped) date
       const firstAvailable = [...elements].find(el => !el.classList.contains('date-skipped'));
       if (firstAvailable) selectDateElement(firstAvailable);
 
       positionTodayIndicator();
+
+      // Show the container now that dates are populated and positioned
+      container.style.opacity = '1';
     });
-  }, 10);
+  });
 }
 
 // Sets up the time pickers to ensure that the 'to' time

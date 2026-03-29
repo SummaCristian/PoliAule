@@ -1,0 +1,412 @@
+.available-classrooms-container {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+
+  background-color: var(--background-color-secondary);
+
+  border-radius: 1.5rem;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: space-evenly;
+}
+
+.results-filter-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  padding: 0.25rem 0.5rem 0;
+  gap: 1rem;
+}
+
+.results-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--text-color-accent) 15%, transparent);
+  color: var(--text-color-accent);
+
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.results-filter-btn:not(.active) {
+  background: transparent;
+  opacity: 0.45;
+}
+
+.results-filter-btn .material-symbols-outlined {
+  font-size: 1rem !important;
+}
+
+.available-classrooms-container.hide-partial [data-status="partially-free"] {
+  display: none;
+}
+
+.available-classrooms-container.empty {
+  flex: 1;
+  padding: 4rem 0;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-container-icon {
+  color: var(--text-color-secondary);
+  opacity: 0.75;
+
+  font-size: 7rem !important;
+}
+
+.empty-container-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+
+  color: var(--text-color-secondary);
+  opacity: 0.75;
+
+  margin: 0;
+}
+
+.empty-container-subtitle {
+  font-size: 0.9rem;
+  font-weight: 630;
+
+  color: var(--text-color-secondary);
+  opacity: 0.60;
+
+  margin: 0 3rem;
+}
+
+.list-outer-container {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.list-inner-container {
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 0.5rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.building-card {
+  background-color: var(--background-color);
+  border-radius: 1.5rem;
+  padding: 0.75rem;
+  box-shadow: var(--shadow);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.building-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  cursor: pointer;
+  user-select: none;
+}
+
+.building-card.collapsed .building-card-header {
+  border-bottom-color: transparent;
+}
+
+.building-card-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: start;
+}
+
+.building-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.building-counts {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.building-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.building-count.free          { color: var(--text-color-accent); }
+.building-count.partially-free { color: #f0b429; }
+.building-count.not-free       { color: #e53935; }
+
+.building-count-sep {
+  font-size: 0.65rem;
+  color: color-mix(in srgb, var(--text-color-primary) 25%, transparent);
+}
+
+.building-chevron {
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.building-card.collapsed .building-chevron {
+  transform: rotate(-90deg);
+}
+
+.building-card-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.building-card.collapsed .building-card-body {
+  grid-template-rows: 0fr;
+}
+
+.building-card-body > .list-inner-container {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.classroom-list-item-container {
+  padding: 1rem;
+
+  border-radius: 1rem;
+
+  background-color: var(--background-color-secondary);
+
+  box-shadow: var(--shadow);
+
+  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: scale 0.15s ease;
+
+  &:hover {
+    scale: 1.025;
+  }
+}
+
+@keyframes card-appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.classroom-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: start;
+}
+
+.classroom-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.classroom-features {
+  display: flex;
+  flex-direction: row;
+  gap: 0.1rem;
+  flex-shrink: 0;
+}
+
+.classroom-feature-icon {
+  font-size: 1.1rem !important;
+  color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
+}
+
+.classroom-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: start;
+  margin: 0;
+}
+
+.classroom-status-txt {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.classroom-status-txt.free {
+  color: var(--text-color-accent);
+}
+
+.classroom-status-txt.partially-free {
+  color: #f0b429;
+}
+
+.classroom-status-txt.not-free {
+  color: #e53935;
+}
+
+.classroom-timeline {
+  padding: 1rem;
+}
+
+.timeline-bar-wrapper {
+  position: relative;
+  padding-top: 2rem;
+}
+
+.timeline-time-indicator {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+
+  background: color-mix(in srgb, var(--background-color-secondary) 50%, var(--text-color-accent) 50%);
+  color: var(--text-color-primary);
+  border: 1px solid color-mix(in srgb, var(--text-color-accent) 15%, transparent);
+  border-radius: 0.5rem;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+
+  user-select: none;
+}
+
+.timeline-time-indicator::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: color-mix(in srgb, var(--background-color-secondary) 50%, var(--text-color-accent) 50%);
+}
+
+.timeline-time-indicator--now {
+  background: color-mix(in srgb, var(--background-color-secondary) 50%, #2196F3 50%);
+  border-color: color-mix(in srgb, #2196F3 30%, transparent);
+
+  opacity: 0;
+  transform-origin: bottom center;
+  animation: today-indicator-appear 0.65s linear 0.35s forwards;
+}
+
+.timeline-time-indicator--now::after {
+  border-top-color: color-mix(in srgb, var(--background-color-secondary) 50%, #2196F3 50%);
+}
+
+.timeline-bar {
+  position: relative;
+  height: 2.5rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+  overflow: hidden;
+}
+
+.timeline-query-region {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--text-color-accent) 22%, transparent);
+}
+
+.timeline-block {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.timeline-block--busy {
+  background: color-mix(in srgb, #e53935 70%, transparent);
+}
+
+.timeline-block--context {
+  background: color-mix(in srgb, var(--text-color-primary) 22%, transparent);
+}
+
+.timeline-ticks {
+  position: relative;
+  height: 1.2rem;
+  margin-top: 0.2rem;
+}
+
+.timeline-tick-label {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  user-select: none;
+}
+
+.timeline-tick-label::before {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 3px;
+  background: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
+}
+
+.timeline-tick-label span {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
+  white-space: nowrap;
+}
+
+.classroom-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.classroom-slot-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-color-accent);
+
+  background: color-mix(in srgb, var(--text-color-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-color-accent) 30%, transparent);
+}
+
+.classroom-slot-icon {
+  font-size: 0.95rem !important;
+}

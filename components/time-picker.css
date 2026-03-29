@@ -1,5 +1,10 @@
 /* ── Time Picker Component ─────────────────────────────────────────────────── */
 
+/* Hide native inputs until JS transforms them into custom components */
+.time-picker > input[type="time"] {
+  display: none;
+}
+
 /* Shadow used by the expanded popup (card reuses --shadow from the system) */
 :root {
   --tp-shadow-lg:
@@ -24,6 +29,8 @@
 
   align-items: center;
   justify-content: center;
+
+  opacity: 0; /* Hidden until JS initializes components */
 }
 
 /* ── Overlay ───────────────────────────────────────────────────────────────── */
@@ -264,7 +271,7 @@
 
 /* Native time input — styled to match the old display span */
 .tp-popup__time-input {
-  flex: 1;
+  flex: 0 0 auto;
   font-family: 'DS-Digital', 'Courier New', monospace;
   font-size: 4rem;
   font-weight: normal;
@@ -272,12 +279,14 @@
   color: var(--text-color-accent);
   letter-spacing: 0.06em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+
+  /* Width is set by JS based on locale (24h vs 12h AM/PM) */
 
   background: transparent;
   border: none;
   outline: none;
   text-align: center;
-  width: 100%;
 
   /* Kill browser chrome */
   -webkit-appearance: none;

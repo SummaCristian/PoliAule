@@ -17,7 +17,9 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./components/date-picker.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
+  <link rel="stylesheet" href="./components/classroom-list.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -31,6 +33,7 @@
   <script type="module" src="./components/popover.js" defer></script>
   <script type="module" src="./components/haptics.js" defer></script>
   <script type="module" src="./components/time-picker.js" defer></script>
+  <script type="module" src="./components/classroom-list.js" defer></script>
 
 </head>
 
@@ -117,16 +120,16 @@
         <div class="date-picker">
           <label for="date-picker">
             <div class="section-header">
-              <h4 class="subsection-header-title">Select Date</h4>
+              <h4 class="subsection-header-title">Select Date and Time</h4>
               <p class="subsection-header-subtitle secondary">
-                For which day do you want to find an available classroom?
+                For which day and between what times do you want to find an available classroom?
               </p>
             </div>
           </label>
 
           <select id="date-picker" name="date" hidden></select>
 
-          <div id="today-indicator" aria-hidden="true">Today</div>
+          <div id="today-indicator" class="hidden" aria-hidden="true">Today</div>
           <div class="date-picker-container">
             <div class="date-indicator"></div>
           </div>
@@ -171,20 +174,10 @@
 
       </form>
 
-      <div id="available-classrooms-results">
-        <p>Search a room first</p>
-      </div>
-
-      <div class="info-box">
-        <h3 class="info-box-icon">🚧</h3>
-        <h3 class="info-box-title">Work in Progress</h3>
-        <p class="info-box-content">
-          I know it's ugly...
-          <br>
-          You should be happy it works at least!
-          <br>
-          I swear I'll make it look decent 🙌
-        </p>
+      <div id="available-classrooms-results" class="available-classrooms-container empty">
+        <span class="material-symbols-outlined empty-container-icon">search</span>
+        <p class="empty-container-title">Need a classroom?</p>
+        <p class="empty-container-subtitle">Tell me when you need it and I’ll show you what’s available</p>
       </div>
 
     </div>
@@ -215,18 +208,19 @@
 
   <footer class="footer">
     <button class="transparent-button version-info-button" data-popover="version-info-popover">
-      <label class="secondary">Version 0.4.0 (beta)</label>
+      <label class="secondary">Version 0.5.0 (beta)</label>
     </button>
     <div id="version-info-popover" class="popover">
       <div class="arrow" data-arrow></div>
 
-      <h1 class="popover-title">Version 0.4.0 (Beta)</h1>
+      <h1 class="popover-title">Version 0.5.0 (Beta)</h1>
       <div class="changelog-container">
         <h2 class="popover-subtitle">What's new?</h2>
 
         <ul>
-          <li>Added Haptic Feedback to certain UI elements</li>
-          <li>Redesigned Time pickers</li>
+          <li>Redesigned the available classroom results</li>
+          <li>Updated the desktop layout into a dual-panel design</li>
+          <li>Added classroom features (power sockets, ethernet, projector, etc.)</li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">

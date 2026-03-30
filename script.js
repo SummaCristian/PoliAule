@@ -32,6 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (isSamsungBrowser) {
     document.documentElement.classList.add('samsung');
   }
+
+  const header = document.querySelector('.header');
+  const setHeaderHeight = () =>
+    document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
+  setHeaderHeight();
+  new ResizeObserver(setHeaderHeight).observe(header);
 })
 
 document.querySelectorAll('.button-primary').forEach(btn => {

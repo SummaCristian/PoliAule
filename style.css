@@ -1016,6 +1016,20 @@ are rendered as solid colors
   #available-classrooms-results {
     grid-column: 2;
     grid-row: 1 / span 2;
+    align-self: start;
+
+    position: sticky;
+    top: calc(var(--header-height, 80px) + 1rem);
+
+    max-height: calc(100dvh - var(--header-height, 80px) - 2rem);
+    overflow-y: auto;
+
     margin: 1rem 0;
+  }
+
+  #available-classrooms-results.empty {
+    position: static;
+    align-self: stretch;
+    max-height: none;
   }
 }

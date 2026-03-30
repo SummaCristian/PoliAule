@@ -6,6 +6,7 @@ import {
 } from './available-rooms-script.js';
 
 import { initTimePickers } from './components/time-picker.js';
+import { setupCampusPicker } from './components/campus-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
@@ -581,16 +582,3 @@ function setupDataFetchIndicatorText() {
   `;
 }
 
-// Initializes the Campus picker, allowing to select only the options actually available
-function setupCampusPicker() {
-  const campuses = classroomsData[0].campuses;
-  const picker = document.getElementById('campus-picker');
-
-  campuses.forEach(campus => {
-    if (campus.buildings.length > 0) {
-      picker.insertAdjacentHTML('beforeend',
-        `<option value="${campus.id}">${campus.name}</option>`
-      );
-    }
-  });
-}

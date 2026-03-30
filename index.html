@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="./components/date-picker.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
+  <link rel="stylesheet" href="./components/campus-picker.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -114,7 +115,8 @@
           </div>
         </label>
 
-        <select id="campus-picker" name="campus"></select>
+        <input type="hidden" id="campus-picker" name="campus" />
+        <div id="campus-chips" class="campus-chips"></div>
 
         <!-- Date picker -->
         <div class="date-picker">

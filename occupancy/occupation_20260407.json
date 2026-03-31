@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-03-30T05:26:37.699692",
-  "date": "20260330",
+  "generated_at": "2026-03-31T05:47:00.193561",
+  "date": "20260407",
   "campuses": [
     {
       "name": "Milano Leonardo - Città Studi",
@@ -44,20 +44,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.0.2",
@@ -89,12 +76,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "17:15",
-                  "fine": "19:45"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.1.1",
@@ -131,20 +113,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.1.2",
@@ -181,24 +150,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.1.3",
@@ -235,24 +187,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.1.4",
@@ -284,24 +219,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.1.5",
@@ -333,24 +251,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.2.1",
@@ -377,12 +278,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.2.2",
@@ -414,12 +310,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.2.3",
@@ -451,16 +342,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.2.4",
@@ -487,12 +369,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -534,12 +411,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.0.2",
@@ -581,24 +453,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.0.3",
@@ -640,24 +495,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.1",
@@ -699,12 +537,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.11",
@@ -731,12 +564,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.12",
@@ -763,20 +591,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.2",
@@ -818,24 +633,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.3",
@@ -877,20 +675,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.4",
@@ -932,20 +717,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.5",
@@ -987,24 +759,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.6",
@@ -1046,20 +801,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.7",
@@ -1101,12 +843,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.8",
@@ -1135,19 +872,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
+                  "inizio": "13:15",
                   "fine": "18:15"
                 }
               ]
@@ -1174,16 +899,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "14:15"
-                },
-                {
                   "inizio": "14:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
+                  "fine": "18:15"
                 }
               ]
             },
@@ -1227,12 +944,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.2.2",
@@ -1274,12 +986,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.2.3",
@@ -1321,12 +1028,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.2.4",
@@ -1368,12 +1070,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -1410,24 +1107,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -1464,24 +1144,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "5.0.2",
@@ -1518,24 +1181,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "5.0.3",
@@ -1572,24 +1218,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BELTRAMI",
@@ -1606,12 +1235,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "14:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "5.1.1",
@@ -1643,20 +1267,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -1688,16 +1299,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -1734,20 +1336,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "7.1.2",
@@ -1769,24 +1358,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "7.1.3",
@@ -1818,24 +1390,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "7.0.1",
@@ -1877,12 +1432,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -1924,20 +1474,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "8.1.1",
@@ -1964,16 +1501,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -2015,20 +1543,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "9.0.2",
@@ -2050,20 +1565,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "9.0.3",
@@ -2100,28 +1602,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:16"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "9.0.4",
@@ -2169,20 +1650,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -2219,12 +1687,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A - ALDO ROSSI",
@@ -2256,16 +1719,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B",
@@ -2297,20 +1751,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "C",
@@ -2342,20 +1783,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "D",
@@ -2392,24 +1820,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "E/F",
@@ -2431,16 +1842,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "III.A",
@@ -2472,16 +1874,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "21:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "III.B",
@@ -2513,12 +1906,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "III.C",
@@ -2550,16 +1938,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "III.D",
@@ -2591,16 +1970,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:16"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "O.1",
@@ -2622,12 +1992,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "Q.1",
@@ -2659,12 +2024,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "R.1",
@@ -2696,12 +2056,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "U.1",
@@ -2733,16 +2088,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "21:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "Y.1",
@@ -2759,12 +2105,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "Z.1 D.I.",
@@ -2786,12 +2127,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "J.2",
@@ -2823,12 +2159,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "O.2",
@@ -2862,8 +2193,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "17:15"
+                  "inizio": "17:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -2897,12 +2228,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "R.2",
@@ -2924,12 +2250,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "U.2",
@@ -2961,12 +2282,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "Z.2",
@@ -2993,12 +2309,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "G.1",
@@ -3074,12 +2385,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "12:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -3121,24 +2427,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.1.2",
@@ -3175,20 +2464,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.1.3",
@@ -3220,20 +2496,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.2.1",
@@ -3265,20 +2528,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.2.2",
@@ -3310,20 +2560,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.2.3",
@@ -3355,24 +2592,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.0.1",
@@ -3399,20 +2619,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.0.2",
@@ -3444,24 +2651,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.0.3",
@@ -3493,20 +2683,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.0.4",
@@ -3538,24 +2715,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -3592,16 +2752,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.2.2",
@@ -3633,16 +2784,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.2.3",
@@ -3674,20 +2816,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.2.4",
@@ -3719,24 +2848,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.3.1",
@@ -3768,12 +2880,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.3.2",
@@ -3805,12 +2912,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.3.3",
@@ -3842,12 +2944,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.3.4",
@@ -3879,24 +2976,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.4.1",
@@ -3923,12 +3003,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.4.2",
@@ -3960,12 +3035,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.4.3",
@@ -3997,12 +3067,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.4.4",
@@ -4034,24 +3099,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.5.1",
@@ -4078,24 +3126,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.5.2",
@@ -4124,20 +3155,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
                   "inizio": "12:15",
                   "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
                 }
               ]
             },
@@ -4166,20 +3185,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.5.4",
@@ -4211,24 +3217,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.6.1",
@@ -4255,20 +3244,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.6.2",
@@ -4300,12 +3276,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.6.3",
@@ -4337,12 +3308,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.6.4",
@@ -4374,24 +3340,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -4433,16 +3382,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "16B.2.1",
@@ -4479,12 +3419,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "16B.3.1",
@@ -4521,16 +3456,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "16B.0.1",
@@ -4567,16 +3493,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -4608,12 +3525,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "16C.0.2",
@@ -4640,16 +3552,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "16C.0.3",
@@ -4676,12 +3579,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -4703,24 +3601,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -4752,20 +3633,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -4854,12 +3722,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "13:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "21.0.3",
@@ -4891,16 +3754,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "21.S.1",
@@ -4942,24 +3796,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "21.S.2",
@@ -4991,16 +3828,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "21.S.3",
@@ -5032,20 +3860,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "21.S.4",
@@ -5077,20 +3892,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -5171,24 +3973,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.0.2",
@@ -5225,24 +4010,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.1.1",
@@ -5274,20 +4042,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.1.2",
@@ -5319,24 +4074,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.1.3",
@@ -5370,16 +4108,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
+                  "inizio": "13:15",
+                  "fine": "16:15"
                 },
                 {
                   "inizio": "16:15",
-                  "fine": "19:15"
+                  "fine": "18:15"
                 }
               ]
             },
@@ -5415,12 +4149,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "17:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -5454,20 +4184,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.1.6",
@@ -5499,20 +4216,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.2.1",
@@ -5549,20 +4253,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.2.2",
@@ -5599,20 +4290,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.2.3",
@@ -5649,20 +4327,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.S.1",
@@ -5694,20 +4359,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.S.2",
@@ -5744,16 +4396,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.S.3",
@@ -5790,12 +4433,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "12:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -5822,20 +4460,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "26.0.2",
@@ -5862,20 +4487,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "26.0.3",
@@ -5902,20 +4514,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "26.0.4",
@@ -5952,16 +4551,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "26.1.1",
@@ -5988,20 +4578,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "26.1.2",
@@ -6033,24 +4610,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "26.1.3",
@@ -6087,16 +4647,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "26.1.4",
@@ -6133,20 +4684,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "26.1.5",
@@ -6173,16 +4711,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "16.1.6",
@@ -6214,20 +4743,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         }
@@ -6265,12 +4781,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "E.P.7",
@@ -6297,16 +4808,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -6343,16 +4845,7 @@
                   "en": "Slide projector"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "E.P.2",
@@ -6413,12 +4906,7 @@
                   "en": "Microphone"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -6457,8 +4945,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "18:15"
+                  "inizio": "14:30",
+                  "fine": "19:30"
                 }
               ]
             },
@@ -6487,20 +4975,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "17:30",
-                  "fine": "20:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.2",
@@ -6517,12 +4992,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.3",
@@ -6539,12 +5009,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.5",
@@ -6566,16 +5031,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "13:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.6",
@@ -6597,12 +5053,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.8",
@@ -6619,12 +5070,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.9",
@@ -6651,16 +5097,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.10",
@@ -6677,12 +5114,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.11",
@@ -6704,12 +5136,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.12",
@@ -6731,12 +5158,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.13",
@@ -6753,12 +5175,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.14",
@@ -6780,12 +5197,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.15",
@@ -6802,12 +5214,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.16",
@@ -6839,12 +5246,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.1",
@@ -6866,20 +5268,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.2",
@@ -6906,12 +5295,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.3",
@@ -6928,12 +5312,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.4",
@@ -6960,12 +5339,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.5",
@@ -6997,16 +5371,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.6",
@@ -7033,12 +5398,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.7",
@@ -7055,12 +5415,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "15:00",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.8",
@@ -7087,16 +5442,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.9",
@@ -7128,16 +5474,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.10",
@@ -7154,12 +5491,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.11",
@@ -7186,12 +5518,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.12",
@@ -7223,16 +5550,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.13",
@@ -7257,7 +5575,7 @@
               "occupancy": [
                 {
                   "inizio": "14:15",
-                  "fine": "16:15"
+                  "fine": "18:15"
                 }
               ]
             },
@@ -7276,12 +5594,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.15",
@@ -7313,12 +5626,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.3.1",
@@ -7335,12 +5643,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.3.2",
@@ -7357,12 +5660,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.3.3",
@@ -7379,12 +5677,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.3.4",
@@ -7404,7 +5697,7 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "18:15"
+                  "fine": "13:15"
                 }
               ]
             }
@@ -7417,12 +5710,7 @@
               "name": "B6.2.1",
               "id": 4693,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.2",
@@ -7449,34 +5737,19 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.3",
               "id": 4855,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.4",
               "id": 4856,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.5",
@@ -7508,16 +5781,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.6",
@@ -7549,16 +5813,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.3.1",
@@ -7615,22 +5870,6 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                },
-                {
                   "inizio": "18:15",
                   "fine": "20:15"
                 }
@@ -7666,28 +5905,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.0.3",
@@ -7719,20 +5937,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.0.4",
@@ -7764,24 +5969,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.0.5",
@@ -7813,20 +6001,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.0.6",
@@ -7858,43 +6033,13 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.0.7",
               "id": 5072,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.0.8",
@@ -7926,20 +6071,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.0.9",
@@ -7947,8 +6079,8 @@
               "features": [],
               "occupancy": [
                 {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "inizio": "08:15",
+                  "fine": "10:15"
                 }
               ]
             },
@@ -7968,12 +6100,7 @@
               "name": "B8.0.12",
               "id": 4864,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.1.1",
@@ -8010,39 +6137,13 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.1.2",
               "id": 5074,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.1.3",
@@ -8079,24 +6180,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.1.4",
@@ -8106,10 +6190,6 @@
                 {
                   "inizio": "08:15",
                   "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
                 },
                 {
                   "inizio": "14:15",
@@ -8152,20 +6232,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.2.2",
@@ -8202,24 +6269,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.2.3",
@@ -8246,12 +6296,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         }
@@ -8294,24 +6339,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "19:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.02",
@@ -8348,24 +6376,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.03",
@@ -8397,20 +6408,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.04 - VIRTUAL LAB",
@@ -8474,16 +6472,7 @@
                   "en": "Innovative teaching"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.06",
@@ -8520,24 +6509,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.07",
@@ -8574,20 +6546,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.08",
@@ -8619,24 +6578,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.09",
@@ -8668,24 +6610,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.11",
@@ -8717,20 +6642,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.12",
@@ -8762,24 +6674,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.13",
@@ -8843,24 +6738,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.15",
@@ -8892,24 +6770,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -8951,24 +6812,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "LM.3",
@@ -9000,24 +6844,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "LM.4",
@@ -9049,20 +6876,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "LM.5",
@@ -9098,14 +6912,6 @@
                 {
                   "inizio": "08:15",
                   "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
                 }
               ]
             },
@@ -9139,20 +6945,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -9189,20 +6982,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.0.2",
@@ -9234,16 +7014,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.0.3",
@@ -9275,20 +7046,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.0.4",
@@ -9352,20 +7110,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.0.6",
@@ -9399,16 +7144,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "18:15",
+                  "fine": "19:45"
                 }
               ]
             },
@@ -9444,8 +7181,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
+                  "inizio": "17:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -9481,20 +7218,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:15"
+                  "inizio": "15:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -9533,24 +7258,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.1.2",
@@ -9585,11 +7293,7 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "fine": "10:15"
                 }
               ]
             },
@@ -9628,20 +7332,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.1.4",
@@ -9678,24 +7369,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.1.5",
@@ -9732,12 +7406,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "12:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.1.6",
@@ -9774,28 +7443,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.1.7",
@@ -9832,20 +7480,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.1.8",
@@ -9884,22 +7519,6 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                },
-                {
                   "inizio": "18:15",
                   "fine": "20:15"
                 }
@@ -9914,16 +7533,7 @@
               "name": "AULA CARASSA E DADDA",
               "id": 4745,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "12:00"
-                },
-                {
-                  "inizio": "14:00",
-                  "fine": "19:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.28.1.1",
@@ -9977,20 +7587,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.28.2.1",
@@ -10022,24 +7619,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.28.2.2",
@@ -10061,16 +7641,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         }
@@ -10110,35 +7681,13 @@
               "name": "CR04.0.1",
               "id": 5147,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.0.2",
               "id": 5146,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.0.3",
@@ -10150,12 +7699,7 @@
               "name": "CR04.1.1",
               "id": 5149,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.1.2",
@@ -10167,16 +7711,7 @@
               "name": "CR04.1.3",
               "id": 5153,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.1.4",
@@ -10188,31 +7723,13 @@
               "name": "CR04.2.1",
               "id": 5156,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.2.2",
               "id": 5157,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.2.3",
@@ -10274,16 +7791,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.2",
@@ -10310,12 +7818,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:30",
-                  "fine": "16:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "T.3",
@@ -10438,16 +7941,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.0.3",
@@ -10479,12 +7973,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.0.4",
@@ -10516,16 +8005,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.0.5",
@@ -10594,12 +8074,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.0.7",
@@ -10631,16 +8106,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.1.1",
@@ -10672,16 +8138,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.1.2",
@@ -10713,16 +8170,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.1.3",
@@ -10786,16 +8234,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.1.5",
@@ -10859,16 +8298,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.2.2",
@@ -10895,12 +8325,7 @@
                   "en": "Microphone"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "14:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.2.3",
@@ -10937,16 +8362,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.2.4",
@@ -11005,16 +8421,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.2.6",
@@ -11051,16 +8458,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -11161,12 +8559,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.1.2",
@@ -11230,16 +8623,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -11272,12 +8656,7 @@
                   "en": "Environmental microphone"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:30",
-                  "fine": "16:30"
-                }
-              ]
+              "occupancy": []
             }
           ]
         }
@@ -11320,16 +8699,7 @@
                   "en": "Slide projector"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.0.2",
@@ -11383,12 +8753,7 @@
                   "en": "Video projector with PC"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.0.4",
@@ -11410,16 +8775,7 @@
                   "en": "Dimmable"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.1.1",
@@ -11446,12 +8802,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.1.2",
@@ -11494,12 +8845,7 @@
                   "en": "Video projector with PC"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.1.4",

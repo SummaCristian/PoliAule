@@ -42,7 +42,7 @@ function applyGeometry(el, { left, top, width, height, borderRadius }) {
 // ── Time display formatter ────────────────────────────────────────────────────
 
 const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
-  hour: 'numeric',
+  hour: '2-digit',
   minute: '2-digit',
 });
 
@@ -52,6 +52,22 @@ function formatTimeDisplay(val) {
   const d = new Date();
   d.setHours(h, m, 0, 0);
   return TIME_FORMATTER.format(d);
+}
+
+// Measure the rendered pixel width of `text` as if styled like `referenceEl`.
+function measureTextWidth(text, referenceEl) {
+  const probe = document.createElement('span');
+  const cs = getComputedStyle(referenceEl);
+  probe.style.cssText = `
+    position:absolute; visibility:hidden; white-space:nowrap; pointer-events:none;
+    font-family:${cs.fontFamily}; font-size:${cs.fontSize};
+    font-weight:${cs.fontWeight}; letter-spacing:${cs.letterSpacing};
+  `;
+  probe.textContent = text;
+  document.body.appendChild(probe);
+  const w = probe.getBoundingClientRect().width;
+  probe.remove();
+  return w;
 }
 
 // ── Overlay (created on open, removed on close) ──────────────────────────────
@@ -262,7 +278,6 @@ function buildTimePicker(wrapperEl) {
 
   // Fix width to the widest possible time string for this locale (prevents layout shift)
   const widestSample = TIME_FORMATTER.format(new Date(2000, 0, 1, 12, 0)); // "12:00 PM" or "12:00"
-  popupInput.style.width = `${widestSample.length}ch`;
 
   inputWrap.appendChild(popupInput);
   document.body.appendChild(popup);
@@ -273,6 +288,13 @@ function buildTimePicker(wrapperEl) {
   card._input = popupInput;
   card._original = inputEl;
   card._timeDisplay = card.querySelector('.tp-card__time');
+  // Defer measurement until fonts are loaded so DS-Digital is available
+  document.fonts.ready.then(() => {
+    const w = measureTextWidth(widestSample, card._timeDisplay);
+    card._timeDisplay.style.minWidth = `${Math.ceil(w)}px`;
+    const pw = measureTextWidth(widestSample, popupInput);
+    popupInput.style.width = `${Math.ceil(pw)}px`;
+  });
 
   // ── Sync: popup input → original input + card display ──────────────────
 

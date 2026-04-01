@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-31T05:47:00.193561",
+  "generated_at": "2026-04-01T05:56:51.785138",
   "date": "20260407",
   "campuses": [
     {
@@ -5572,12 +5572,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.14",
@@ -8559,7 +8554,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "07:00",
+                  "fine": "09:30"
+                }
+              ]
             },
             {
               "name": "A.1.2",

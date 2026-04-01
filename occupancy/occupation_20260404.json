@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-31T05:35:12.227596",
+  "generated_at": "2026-04-01T05:44:59.885205",
   "date": "20260404",
   "campuses": [
     {
@@ -6919,7 +6919,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.0.2",
@@ -6951,7 +6956,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.0.3",
@@ -6983,7 +6993,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.0.4",
@@ -7015,7 +7030,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.0.5",
@@ -7047,7 +7067,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.0.6",
@@ -7079,7 +7104,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.0.7",
@@ -7111,7 +7141,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.0.8",
@@ -7143,7 +7178,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.1.1",
@@ -7180,7 +7220,12 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.1.2",
@@ -7212,7 +7257,12 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.1.3",
@@ -7249,7 +7299,12 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.1.4",
@@ -7286,7 +7341,12 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.1.5",
@@ -7323,7 +7383,12 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.1.6",
@@ -7360,7 +7425,12 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.1.7",
@@ -7397,7 +7467,12 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.27.1.8",
@@ -7434,7 +7509,12 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             }
           ]
         },
@@ -7477,7 +7557,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.28.1.2",
@@ -7499,7 +7584,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.28.2.1",
@@ -7531,7 +7621,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             },
             {
               "name": "BL.28.2.2",
@@ -7553,7 +7648,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:00"
+                }
+              ]
             }
           ]
         }

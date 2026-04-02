@@ -33,6 +33,7 @@
   opacity: 0; /* Hidden until JS initializes components */
 }
 
+
 /* ── Overlay ───────────────────────────────────────────────────────────────── */
 
 .tp-overlay {
@@ -121,6 +122,14 @@
 }
 
 /* ── Desktop inline mode ─────────────────────────────────────────────── */
+
+@media (min-width: 768px) {
+  .time-pickers-container > .time-picker {
+    flex: 0 0 20rem
+    ;
+    overflow: hidden;
+  }
+}
 
 .tp-card--inline {
   /* In inline mode the card becomes a non-interactive header row */

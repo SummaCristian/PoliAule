@@ -94,7 +94,7 @@ export function setupCampusPicker() {
     subCampuses.forEach(bc => {
       const shortName = nameMap
         ? (nameMap[bc.id] ?? bc.name)
-        : (bc.name.split(' - ')[1] ?? bc.name);
+        : (bc.name.split(' - ')[1] ?? bc.name).replace(/^Via\s+/i, '');
       const subChip = document.createElement('button');
       subChip.type = 'button';
       subChip.className = 'campus-subchip';

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-01T05:56:51.785138",
+  "generated_at": "2026-04-02T05:30:20.510175",
   "date": "20260407",
   "campuses": [
     {
@@ -7174,12 +7174,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.0.8",

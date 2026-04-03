@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-02T05:18:05.434483",
+  "generated_at": "2026-04-03T05:12:56.873675",
   "date": "20260404",
   "campuses": [
     {
@@ -1598,12 +1598,7 @@
               "name": "9.0.4",
               "id": 4765,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "9.1.2",
@@ -3660,12 +3655,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "21.0.2",
@@ -3707,12 +3697,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "21.0.3",

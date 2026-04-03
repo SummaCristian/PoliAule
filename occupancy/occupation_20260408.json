@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-02T05:36:28.421667",
+  "generated_at": "2026-04-03T05:30:33.720991",
   "date": "20260408",
   "campuses": [
     {
@@ -8851,7 +8851,12 @@
                   "en": "Oculus Quest 2 VR headsets"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "11:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "L.05 - D.I.",

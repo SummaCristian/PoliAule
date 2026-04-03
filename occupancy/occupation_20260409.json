@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-02T05:42:36.588248",
+  "generated_at": "2026-04-03T05:36:26.153602",
   "date": "20260409",
   "campuses": [
     {
@@ -2875,7 +2875,12 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "13:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "O.2",
@@ -5904,7 +5909,12 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "10:15"
+                }
+              ]
             }
           ]
         },
@@ -6390,6 +6400,10 @@
                 {
                   "inizio": "10:15",
                   "fine": "13:15"
+                },
+                {
+                  "inizio": "15:15",
+                  "fine": "18:15"
                 }
               ]
             },

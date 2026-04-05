@@ -47,8 +47,8 @@ export function setupCampusPicker() {
     if (!animate) {
       indicator.style.transition = 'none';
     }
-    indicator.style.left  = activeSubChip.offsetLeft  + 'px';
-    indicator.style.width = activeSubChip.offsetWidth + 'px';
+    indicator.style.transform = `translateX(${activeSubChip.offsetLeft}px)`;
+    indicator.style.width     = activeSubChip.offsetWidth + 'px';
     if (!animate) {
       indicator.getBoundingClientRect(); // force reflow to apply snap
       indicator.style.transition = '';

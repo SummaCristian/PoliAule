@@ -190,14 +190,16 @@
 /* Sliding indicator — absolutely positioned behind sub-chips */
 .campus-subchip-indicator {
   position: absolute;
+  left: 0; /* anchor; visual position driven by translateX */
   inset-block: 0;
   border-radius: 999px;
   background: color-mix(in srgb, var(--text-color-accent) 18%, transparent);
   border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 40%, transparent);
   pointer-events: none;
+  will-change: transform, width;
   transition:
-    left  0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-    width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    width     0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .campus-subchip {

@@ -288,6 +288,11 @@ label {
   }
 }
 
+.header-logo {
+  width: 2rem;
+  height: 2rem;
+}
+
 .header-button {
   width: 3rem;
   height: 3rem;

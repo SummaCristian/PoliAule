@@ -291,6 +291,9 @@ label {
 .header-logo {
   width: 2rem;
   height: 2rem;
+
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .header-button {
@@ -789,6 +792,14 @@ ul li::marker {
   font-size: 1.2rem;
 
   margin: 0 0 0.5rem 0;
+}
+
+.changelog-logo {
+  height: 4rem; 
+  margin-bottom: 0.5rem;
+
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .changelog-container {

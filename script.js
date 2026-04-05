@@ -416,12 +416,11 @@ function setupDatePicker() {
 
     todayIndicator.classList.remove('hidden');
 
-    const pickerRect = container.closest('.date-picker').getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const elRect = todayEl.getBoundingClientRect();
-
-    const cellCenterX = elRect.left - pickerRect.left + elRect.width / 2;
-    const topOffset = containerRect.top - pickerRect.top - todayIndicator.offsetHeight - 8;
+    // Use offsetTop/offsetLeft (layout values) instead of getBoundingClientRect()
+    // so that CSS transform animations on ancestor elements (e.g. the tab appear
+    // animation's scale(0.95)) don't skew the measurements.
+    const cellCenterX = container.offsetLeft + todayEl.offsetLeft + todayEl.offsetWidth / 2;
+    const topOffset = container.offsetTop - todayIndicator.offsetHeight - 8;
 
     todayIndicator.style.left = `${cellCenterX}px`;
     todayIndicator.style.top = `${topOffset}px`;

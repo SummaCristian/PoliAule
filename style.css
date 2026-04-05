@@ -289,7 +289,6 @@ label {
 }
 
 .header-logo {
-  width: 2rem;
   height: 2rem;
 
   filter: drop-shadow(0 2px 6px rgba(50, 84, 47, 0.3));

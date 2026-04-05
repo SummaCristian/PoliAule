@@ -125,8 +125,7 @@
 
 @media (min-width: 768px) {
   .time-pickers-container > .time-picker {
-    flex: 0 0 20rem
-    ;
+    flex: 0 0 22rem;
     overflow: hidden;
   }
 }

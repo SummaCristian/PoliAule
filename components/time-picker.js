@@ -289,11 +289,12 @@ function buildTimePicker(wrapperEl) {
   card._original = inputEl;
   card._timeDisplay = card.querySelector('.tp-card__time');
   // Defer measurement until fonts are loaded so DS-Digital is available
+  // Only fix the card display width (prevents layout shift as hours change 1→2 digits).
+  // The popup input is left unsized so the browser can accommodate locale-specific
+  // chrome (e.g. Firefox's AM/PM toggle) without clipping.
   document.fonts.ready.then(() => {
     const w = measureTextWidth(widestSample, card._timeDisplay);
     card._timeDisplay.style.minWidth = `${Math.ceil(w)}px`;
-    const pw = measureTextWidth(widestSample, popupInput);
-    popupInput.style.width = `${Math.ceil(pw)}px`;
   });
 
   // ── Sync: popup input → original input + card display ──────────────────

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-02T05:30:20.510175",
+  "generated_at": "2026-04-05T05:20:50.803392",
   "date": "20260407",
   "campuses": [
     {
@@ -4106,16 +4106,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "25.1.4",
@@ -4943,12 +4934,7 @@
                   "en": "Innovative teaching"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:30",
-                  "fine": "19:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.1",
@@ -5689,12 +5675,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -5863,12 +5844,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "18:15",
-                  "fine": "20:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.0.2",
@@ -7137,12 +7113,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "18:15",
-                  "fine": "19:45"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.0.7",
@@ -7507,12 +7478,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "18:15",
-                  "fine": "20:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },

@@ -6,6 +6,7 @@ import {
 } from './available-rooms-script.js';
 
 import { initTimePickers } from './components/time-picker.js';
+import { setupCampusPicker } from './components/campus-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
@@ -31,6 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (isSamsungBrowser) {
     document.documentElement.classList.add('samsung');
   }
+
+  const header = document.querySelector('.header');
+  const setHeaderHeight = () =>
+    document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
+  setHeaderHeight();
+  new ResizeObserver(setHeaderHeight).observe(header);
 })
 
 document.querySelectorAll('.button-primary').forEach(btn => {
@@ -128,6 +135,7 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
 
   const li = document.createElement('li');
   li.appendChild(buildingCard);
+  if (rooms.every(r => r.status === 'partially-free')) li.dataset.allPartial = 'true';
   return { li, cardIndex };
 }
 
@@ -226,6 +234,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   // Partial-free filter toggle
   const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
+  let originalBuildingOrder = [];
   if (hasPartial) {
     const toggleBtn = document.createElement('button');
     toggleBtn.className = 'results-filter-btn active';
@@ -233,6 +242,11 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     toggleBtn.addEventListener('click', () => {
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
+      if (!isActive) {
+        list.querySelectorAll('li[data-all-partial]').forEach(item => list.appendChild(item));
+      } else {
+        originalBuildingOrder.forEach(item => list.appendChild(item));
+      }
     });
     filterRow.appendChild(toggleBtn);
   }
@@ -252,6 +266,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     cardIndex = next;
     list.appendChild(li);
   });
+  originalBuildingOrder = [...list.children];
 
   container.appendChild(list);
 }
@@ -401,12 +416,11 @@ function setupDatePicker() {
 
     todayIndicator.classList.remove('hidden');
 
-    const pickerRect = container.closest('.date-picker').getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const elRect = todayEl.getBoundingClientRect();
-
-    const cellCenterX = elRect.left - pickerRect.left + elRect.width / 2;
-    const topOffset = containerRect.top - pickerRect.top - todayIndicator.offsetHeight - 8;
+    // Use offsetTop/offsetLeft (layout values) instead of getBoundingClientRect()
+    // so that CSS transform animations on ancestor elements (e.g. the tab appear
+    // animation's scale(0.95)) don't skew the measurements.
+    const cellCenterX = container.offsetLeft + todayEl.offsetLeft + todayEl.offsetWidth / 2;
+    const topOffset = container.offsetTop - todayIndicator.offsetHeight - 8;
 
     todayIndicator.style.left = `${cellCenterX}px`;
     todayIndicator.style.top = `${topOffset}px`;
@@ -573,16 +587,3 @@ function setupDataFetchIndicatorText() {
   `;
 }
 
-// Initializes the Campus picker, allowing to select only the options actually available
-function setupCampusPicker() {
-  const campuses = classroomsData[0].campuses;
-  const picker = document.getElementById('campus-picker');
-
-  campuses.forEach(campus => {
-    if (campus.buildings.length > 0) {
-      picker.insertAdjacentHTML('beforeend',
-        `<option value="${campus.id}">${campus.name}</option>`
-      );
-    }
-  });
-}

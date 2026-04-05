@@ -3,6 +3,7 @@
   padding: 0.5rem;
 
   background-color: var(--background-color-secondary);
+  border: 4px solid var(--background-color-secondary);
 
   border-radius: 1.5rem;
 

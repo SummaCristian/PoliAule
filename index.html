@@ -13,13 +13,19 @@
   <meta name="theme-color" content="#1E1E1E" media="(prefers-color-scheme: dark)">
 
   <!-- Favicon -->
-  <!-- TODO -->
+  <link rel="icon" type="image/png" href="/favicons/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg" />
+  <link rel="shortcut icon" href="/favicons/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="PoliAule" />
+  <link rel="manifest" href="/site.webmanifest" />
 
   <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
+  <link rel="stylesheet" href="./components/campus-picker.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -49,8 +55,7 @@
   <header class="header">
     <div class="header-top-line-container">
       <div class="header-title-container">
-        <!-- TODO: logo -->
-        <h2 hidden>A</h2>
+        <img src="/favicons/favicon.svg" class="header-logo">
 
         <div class="header-title-beta-container">
           <h2 class="header-title">PoliAule</h2>
@@ -114,7 +119,8 @@
           </div>
         </label>
 
-        <select id="campus-picker" name="campus"></select>
+        <input type="hidden" id="campus-picker" name="campus" />
+        <div id="campus-chips" class="campus-chips"></div>
 
         <!-- Date picker -->
         <div class="date-picker">
@@ -208,19 +214,19 @@
 
   <footer class="footer">
     <button class="transparent-button version-info-button" data-popover="version-info-popover">
-      <label class="secondary">Version 0.5.0 (beta)</label>
+      <label class="secondary">Version 0.6.0 (beta)</label>
     </button>
     <div id="version-info-popover" class="popover">
       <div class="arrow" data-arrow></div>
 
-      <h1 class="popover-title">Version 0.5.0 (Beta)</h1>
+      <img src="/favicons/favicon.svg" class="changelog-logo"/>
+      <h1 class="popover-title">Version 0.6.0 (Beta)</h1>
       <div class="changelog-container">
         <h2 class="popover-subtitle">What's new?</h2>
 
         <ul>
-          <li>Redesigned the available classroom results</li>
-          <li>Updated the desktop layout into a dual-panel design</li>
-          <li>Added classroom features (power sockets, ethernet, projector, etc.)</li>
+          <li>Added a logo for PoliAule: <img src="/favicons/favicon.svg" style="height: 1rem;"/></li>
+          <li>Fixed a bug with the desktop UI not allowing to scroll on small screens</li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">

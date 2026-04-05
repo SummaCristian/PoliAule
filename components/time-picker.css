@@ -33,6 +33,7 @@
   opacity: 0; /* Hidden until JS initializes components */
 }
 
+
 /* ── Overlay ───────────────────────────────────────────────────────────────── */
 
 .tp-overlay {
@@ -122,6 +123,13 @@
 
 /* ── Desktop inline mode ─────────────────────────────────────────────── */
 
+@media (min-width: 768px) {
+  .time-pickers-container > .time-picker {
+    flex: 0 0 22rem;
+    overflow: hidden;
+  }
+}
+
 .tp-card--inline {
   /* In inline mode the card becomes a non-interactive header row */
   cursor: default;
@@ -183,11 +191,13 @@
 }
 
 .tp-card__time {
+  font-family: 'DS-Digital', 'Courier New', monospace;
   font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--text-color-primary);
-  letter-spacing: -0.01em;
+  font-weight: bold;
+  color: var(--text-color-accent);
+  letter-spacing: 0.04em;
   line-height: 1.1;
+  display: inline-block;
 }
 
 .tp-card__chevron {

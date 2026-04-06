@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./favicons/icon-shadow.png" width="150">
+  <img src="./favicons/icon-border.png" width="150">
   <h1>PoliAule</h1>
 
   [![Visit poliaule.com](https://img.shields.io/badge/%F0%9F%8C%90_Visit-poliaule.com-2ecc5a?style=for-the-badge)](https://poliaule.com)

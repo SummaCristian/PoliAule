@@ -11,6 +11,8 @@ import { setupCampusPicker } from './components/campus-picker.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
+import { initI18n, t, getLocale, applyTranslations, setLocale, onLanguageSwitch } from './i18n.js';
+
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
 const darkMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]');
@@ -93,9 +95,9 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
   rooms.forEach(r => { if (r.status in counts) counts[r.status]++; });
 
   const countParts = [
-    counts['free']           ? `<span class="building-count free">${counts['free']} Free</span>` : '',
-    counts['partially-free'] ? `<span class="building-count partially-free">${counts['partially-free']} Partial</span>` : '',
-    counts['not-free']       ? `<span class="building-count not-free">${counts['not-free']} Occupied</span>` : '',
+    counts['free']           ? `<span class="building-count free">${counts['free']} ${t('status.free')}</span>` : '',
+    counts['partially-free'] ? `<span class="building-count partially-free">${counts['partially-free']} ${t('status.partial')}</span>` : '',
+    counts['not-free']       ? `<span class="building-count not-free">${counts['not-free']} ${t('status.occupied')}</span>` : '',
   ].filter(Boolean).join('<span class="building-count-sep">·</span>');
 
   const buildingCard = document.createElement('div');
@@ -144,6 +146,19 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
 // Triggers the fetching of data as soon as the page loads
 document.addEventListener('DOMContentLoaded', async () => {
   try {
+    await initI18n();
+    applyTranslations();
+
+    // Wire up the language toggle button
+    const langToggleLabel = document.getElementById('lang-toggle-label');
+    langToggleLabel.textContent = getLocale() === 'en' ? 'IT' : 'EN';
+    document.getElementById('lang-toggle').addEventListener('click', async () => {
+      const next = getLocale() === 'en' ? 'it' : 'en';
+      await setLocale(next);
+      langToggleLabel.textContent = next === 'en' ? 'IT' : 'EN';
+      haptics.trigger(defaultPatterns.success);
+    });
+
     await fetchClassroomsData();
 
     // Setup the campus picker with the available ones
@@ -162,6 +177,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Setup the data fetch indicator
     setupDataFetchIndicator();
+
+    // Re-render dynamic content when the language is switched
+    onLanguageSwitch(() => {
+      setupDataFetchIndicatorText();
+      const container = document.getElementById('available-classrooms-results');
+      if (!container.classList.contains('empty')) {
+        document.getElementById('available-classrooms-form').dispatchEvent(
+          new Event('submit', { cancelable: true, bubbles: true })
+        );
+      }
+    });
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
   }
@@ -219,7 +245,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   // Collapse-all toggle
   const collapseBtn = document.createElement('button');
   collapseBtn.className = 'results-filter-btn active';
-  collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> Collapse All`;
+  collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`;
   collapseBtn.addEventListener('click', () => {
     const allCollapsed = collapseBtn.dataset.state === 'collapsed';
     container.querySelectorAll('.building-card').forEach(card => {
@@ -227,8 +253,8 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     });
     collapseBtn.dataset.state = allCollapsed ? '' : 'collapsed';
     collapseBtn.innerHTML = allCollapsed
-      ? `<span class="material-symbols-outlined">unfold_less</span> Collapse All`
-      : `<span class="material-symbols-outlined">unfold_more</span> Expand All`;
+      ? `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`
+      : `<span class="material-symbols-outlined">unfold_more</span> ${t('results.expandAll')}`;
   });
   filterRow.appendChild(collapseBtn);
 
@@ -238,7 +264,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   if (hasPartial) {
     const toggleBtn = document.createElement('button');
     toggleBtn.className = 'results-filter-btn active';
-    toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> Partially Free`;
+    toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> ${t('results.filterPartial')}`;
     toggleBtn.addEventListener('click', () => {
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
@@ -277,8 +303,8 @@ function renderNoResultsClassroomsContainer(container) {
 
   container.innerHTML = `
     <span class="material-symbols-outlined empty-container-icon">search_off</span>
-    <p class="empty-container-title">No results</p>
-    <p class="empty-container-subtitle">Looks like you are out of luck, there is no classroom available between the times you requested...</p>
+    <p class="empty-container-title">${t('results.noResultsTitle')}</p>
+    <p class="empty-container-subtitle">${t('results.noResultsSubtitle')}</p>
   `;
 }
 
@@ -543,16 +569,16 @@ function setupDataFetchIndicatorText() {
 
   const states = {
     green: {
-      title: 'Data is up to date',
-      description: 'Classroom availability was fetched today and is currently updated.',
+      title: t('data.greenTitle'),
+      description: t('data.greenDesc'),
     },
     yellow: {
-      title: 'Data may be stale',
-      description: 'Classroom availability covers today but was generated on a previous day.',
+      title: t('data.yellowTitle'),
+      description: t('data.yellowDesc'),
     },
     red: {
-      title: 'Data is outdated',
-      description: 'No availability data found for today. Results may not reflect the current schedule.',
+      title: t('data.redTitle'),
+      description: t('data.redDesc'),
     },
   };
 
@@ -566,24 +592,23 @@ function setupDataFetchIndicatorText() {
     ? new Date(classroomsData[0].generated_at + 'Z')
     : null;
 
+  const dateLocale = getLocale() === 'it' ? 'it-IT' : 'en-GB';
   const formattedTime = generationDate
-    ? generationDate.toLocaleDateString('en-GB', {
+    ? generationDate.toLocaleString(dateLocale, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
-      timeZone: 'Europe/Rome',
-    }) + ' at ' + generationDate.toLocaleTimeString('en-GB', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
       timeZone: 'Europe/Rome',
     })
-    : 'Unknown';
+    : '—';
 
   container.innerHTML = `
     <h1 class="popover-title ${status}">${title}</h1>
     <p class="data-status-description secondary">${description}</p>
-    <label class="data-status-time secondary">Last fetched: ${formattedTime}</label>
+    <label class="data-status-time secondary">${t('data.lastFetched')}: ${formattedTime}</label>
   `;
 }
 

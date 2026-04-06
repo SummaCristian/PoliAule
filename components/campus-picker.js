@@ -1,5 +1,6 @@
 import { classroomsData } from '../available-rooms-script.js';
 import { haptics, defaultPatterns } from './haptics.js';
+import { t } from '../i18n.js';
 
 // Initializes the Campus picker, allowing to select only the options actually available
 export function setupCampusPicker() {
@@ -25,7 +26,8 @@ export function setupCampusPicker() {
   const milanoSection = document.createElement('div');
   milanoSection.className = 'campus-chips-section';
   const milanoLabel = document.createElement('label');
-  milanoLabel.textContent = 'Milano';
+  milanoLabel.textContent = t('campus.milanLabel');
+  milanoLabel.dataset.i18n = 'campus.milanLabel';
   milanoSection.appendChild(milanoLabel);
   milanoSection.appendChild(milanoRow);
   container.appendChild(milanoSection);
@@ -33,7 +35,8 @@ export function setupCampusPicker() {
   const otherSection = document.createElement('div');
   otherSection.className = 'campus-chips-section';
   const otherLabel = document.createElement('label');
-  otherLabel.textContent = 'Other cities';
+  otherLabel.textContent = t('campus.otherLabel');
+  otherLabel.dataset.i18n = 'campus.otherLabel';
   otherSection.appendChild(otherLabel);
   otherSection.appendChild(otherRow);
 

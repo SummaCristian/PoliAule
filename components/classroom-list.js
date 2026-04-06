@@ -1,15 +1,12 @@
-const FEATURE_ICONS = {
-  4: { icon: 'videocam', label: 'Video projector' },
-  5: { icon: 'mic', label: 'Radio microphone' },
-  6: { icon: 'blinds', label: 'Dimmable' },
-  7: { icon: 'cable', label: 'Wired desk' },
-  142: { icon: 'electrical_services', label: 'Power outlets' },
-  223: { icon: 'video_call', label: 'Videoconference' },
-};
+import { t } from '../i18n.js';
 
-const STATUS_LABELS = {
-  'free': 'Free',
-  'partially-free': 'Partially Free',
+const FEATURE_ICONS = {
+  4: { icon: 'videocam', key: 'features.videoProjector' },
+  5: { icon: 'mic', key: 'features.radioMic' },
+  6: { icon: 'blinds', key: 'features.dimmable' },
+  7: { icon: 'cable', key: 'features.wiredDesk' },
+  142: { icon: 'electrical_services', key: 'features.powerOutlets' },
+  223: { icon: 'video_call', key: 'features.videoconf' },
 };
 
 // ---------- TIMELINE HELPERS ----------
@@ -92,7 +89,7 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
     if (nowMin > displayStart && nowMin < displayEnd) {
-      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now" style="left:${pct(nowMin)}">Now</div>`;
+      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now" style="left:${pct(nowMin)}">${t('timepicker.now')}</div>`;
     }
   }
 
@@ -119,8 +116,8 @@ export function buildCardForClassroom(classroom, fromTime, toTime, isToday = fal
   const featuresHtml = (classroom.features ?? [])
     .filter(f => FEATURE_ICONS[f.id])
     .map(f => {
-      const { icon, label } = FEATURE_ICONS[f.id];
-      return `<span class="material-symbols-outlined classroom-feature-icon" title="${label}">${icon}</span>`;
+      const { icon, key } = FEATURE_ICONS[f.id];
+      return `<span class="material-symbols-outlined classroom-feature-icon" title="${t(key)}">${icon}</span>`;
     })
     .join('');
 
@@ -128,7 +125,7 @@ export function buildCardForClassroom(classroom, fromTime, toTime, isToday = fal
     <div class="classroom-card">
       <div class="classroom-card-header">
         <h4 class="classroom-name">${classroom.name}</h4>
-        <h4 class="classroom-status-txt ${classroom.status}">${STATUS_LABELS[classroom.status]}</h4>
+        <h4 class="classroom-status-txt ${classroom.status}">${classroom.status === 'free' ? t('status.free') : t('status.partiallyFree')}</h4>
       </div>
       ${buildTimeline(classroom.occupancy, fromTime, toTime, isToday)}
       ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}

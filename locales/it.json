@@ -1,0 +1,72 @@
+{
+  "tabs.available": "Disponibili",
+  "tabs.search": "Cerca",
+
+  "available.title": "Aule Disponibili",
+  "available.subtitle": "Trova quali aule sono disponibili adesso o in qualsiasi altro momento della giornata.",
+
+  "form.campusTitle": "Seleziona Campus",
+  "form.campusSubtitle": "Dove vuoi trovare un'aula disponibile?",
+  "form.datetimeTitle": "Seleziona Data e Ora",
+  "form.datetimeSubtitle": "Per quale giorno e tra quali orari vuoi trovare un'aula disponibile?",
+  "form.fromTitle": "Dalle",
+  "form.fromSubtitle": "Da che ora hai bisogno di un'aula?",
+  "form.toTitle": "Alle:",
+  "form.toSubtitle": "Fino a che ora hai bisogno di un'aula?",
+  "form.findButton": "Trova aule",
+
+  "results.emptyTitle": "Hai bisogno di un'aula?",
+  "results.emptySubtitle": "Dimmi quando ne hai bisogno e ti mostro le aule disponibili",
+  "results.noResultsTitle": "Nessun risultato",
+  "results.noResultsSubtitle": "Niente da fare, non c'è nessuna aula disponibile negli orari richiesti...",
+  "results.collapseAll": "Comprimi tutto",
+  "results.expandAll": "Espandi tutto",
+  "results.filterPartial": "Parzialmente libere",
+
+  "status.free": "Libera",
+  "status.partial": "Parziale",
+  "status.occupied": "Occupata",
+  "status.partiallyFree": "Parzialmente libera",
+
+  "search.title": "Cerca Aula",
+  "search.subtitle": "Cerca qualsiasi aula per vedere la sua disponibilità durante la giornata, o controlla quando sarà disponibile.",
+
+  "wip.title": "Lavori in corso",
+  "wip.line1": "Non sono ancora arrivato fin qui...",
+  "wip.line2": "Arriverà, porta ancora un po' di pazienza! (o se preferisci, ritorna più tardi)",
+
+  "datepicker.today": "Oggi",
+
+  "campus.milanLabel": "Milano",
+  "campus.otherLabel": "Altre città",
+
+  "features.videoProjector": "Videoproiettore",
+  "features.radioMic": "Microfono radio",
+  "features.dimmable": "Oscurabile",
+  "features.wiredDesk": "Presa cablata",
+  "features.powerOutlets": "Prese di corrente",
+  "features.videoconf": "Videoconferenza",
+
+  "timepicker.now": "Ora",
+  "timepicker.currentSlot": "Slot corrente",
+  "timepicker.fromPlusOne": "Dalle +1h",
+  "timepicker.done": "Fatto",
+  "timepicker.timeLabel": "Orario",
+
+  "data.greenTitle": "Dati aggiornati",
+  "data.greenDesc": "La disponibilità delle aule è stata aggiornata oggi",
+  "data.yellowTitle": "I dati potrebbero non essere aggiornati",
+  "data.yellowDesc": "Sono presenti dati relativi ad oggi ma sono stati generati in un giorno precedente.",
+  "data.redTitle": "Dati obsoleti",
+  "data.redDesc": "Nessun dato trovato per oggi. I risultati potrebbero non riflettere l'orario attuale.",
+  "data.lastFetched": "Ultimo aggiornamento",
+
+  "footer.whatsNew": "Cosa c'è di nuovo?",
+  "footer.checkOnGitHub": "Vedi su GitHub",
+  "footer.disclaimer1": "Versione non definitiva, le cose possono cambiare e cambieranno.",
+  "footer.disclaimer2": "Usala a tuo rischio e pericolo.",
+  "footer.disclaimer3": "Se trovi un errore, apri un",
+  "footer.issueLinkText": "Issue",
+  "footer.disclaimer4": "su GitHub.",
+  "footer.disclaimer5": "Non affiliato al Politecnico di Milano."
+}

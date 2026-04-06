@@ -1,0 +1,72 @@
+{
+  "tabs.available": "Available",
+  "tabs.search": "Search",
+
+  "available.title": "Available Classrooms",
+  "available.subtitle": "Find which classrooms are available right now or at any other moment throughout the day.",
+
+  "form.campusTitle": "Select Campus",
+  "form.campusSubtitle": "Where do you want to find an available classroom?",
+  "form.datetimeTitle": "Select Date and Time",
+  "form.datetimeSubtitle": "For which day and between what times do you want to find an available classroom?",
+  "form.fromTitle": "From",
+  "form.fromSubtitle": "From which time do you need a classroom?",
+  "form.toTitle": "To:",
+  "form.toSubtitle": "Until which time do you need a classroom?",
+  "form.findButton": "Find classrooms",
+
+  "results.emptyTitle": "Need a classroom?",
+  "results.emptySubtitle": "Tell me when you need it and I'll show you what's available",
+  "results.noResultsTitle": "No results",
+  "results.noResultsSubtitle": "Looks like you are out of luck, there is no classroom available between the times you requested...",
+  "results.collapseAll": "Collapse All",
+  "results.expandAll": "Expand All",
+  "results.filterPartial": "Partially Free",
+
+  "status.free": "Free",
+  "status.partial": "Partial",
+  "status.occupied": "Occupied",
+  "status.partiallyFree": "Partially Free",
+
+  "search.title": "Search Classroom",
+  "search.subtitle": "Look up any classroom to see its availability throughout the day, or check when it will be available next.",
+
+  "wip.title": "Work in Progress",
+  "wip.line1": "I haven't actually made it this far yet...",
+  "wip.line2": "It's coming, just hang in there! (or, you know, check back later)",
+
+  "datepicker.today": "Today",
+
+  "campus.milanLabel": "Milano",
+  "campus.otherLabel": "Other cities",
+
+  "features.videoProjector": "Video projector",
+  "features.radioMic": "Radio microphone",
+  "features.dimmable": "Dimmable",
+  "features.wiredDesk": "Wired desk",
+  "features.powerOutlets": "Power outlets",
+  "features.videoconf": "Videoconference",
+
+  "timepicker.now": "Now",
+  "timepicker.currentSlot": "Current slot",
+  "timepicker.fromPlusOne": "From +1h",
+  "timepicker.done": "Done",
+  "timepicker.timeLabel": "Time",
+
+  "data.greenTitle": "Data is up to date",
+  "data.greenDesc": "Classroom availability was fetched today and is currently updated.",
+  "data.yellowTitle": "Data may be stale",
+  "data.yellowDesc": "Classroom availability covers today but was generated on a previous day.",
+  "data.redTitle": "Data is outdated",
+  "data.redDesc": "No availability data found for today. Results may not reflect the current schedule.",
+  "data.lastFetched": "Last fetched",
+
+  "footer.whatsNew": "What's new?",
+  "footer.checkOnGitHub": "Check on GitHub",
+  "footer.disclaimer1": "Non-definitive version, stuff can and will change.",
+  "footer.disclaimer2": "Use at your own risk.",
+  "footer.disclaimer3": "If you find any error, please open an",
+  "footer.issueLinkText": "Issue",
+  "footer.disclaimer4": "on GitHub.",
+  "footer.disclaimer5": "Not affiliated to Politecnico di Milano."
+}

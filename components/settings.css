@@ -251,6 +251,8 @@
   flex-direction: column;
   gap: 0.15rem;
   flex: 1;
+
+  text-align: left;
 }
 
 .settings-row__sublabel {

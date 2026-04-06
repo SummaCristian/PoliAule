@@ -360,8 +360,9 @@ function buildCampusSection() {
       autoLocateSublabel.textContent = t('settings.autoLocateDesc');
       haptics.trigger(defaultPatterns.success);
     } else {
-      // Request permission — maximumAge:Infinity accepts any cached fix,
-      // resolving immediately after the user grants access without waiting for GPS.
+      // No maximumAge here — we need a real position request to trigger
+      // the browser's permission prompt (Safari ignores the prompt if only
+      // a cached position is acceptable and none exists yet).
       navigator.geolocation.getCurrentPosition(
         ({ coords }) => {
           autoLocateEnabled = true;
@@ -385,7 +386,7 @@ function buildCampusSection() {
             : t('settings.autoLocateDesc');
           if (denied) haptics.trigger(defaultPatterns.error ?? defaultPatterns.success);
         },
-        { maximumAge: Infinity, timeout: 30000 }
+        { timeout: 30000 }
       );
     }
   });

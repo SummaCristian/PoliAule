@@ -2,6 +2,31 @@ import { classroomsData } from '../available-rooms-script.js';
 import { haptics, defaultPatterns } from './haptics.js';
 import { t } from '../i18n.js';
 
+// Programmatically selects a campus chip by campus ID.
+// Works for both plain chips and subchips inside group chips.
+export function selectCampusById(id, animate = true) {
+  const container = document.getElementById('campus-chips');
+  if (!container) return;
+
+  // Try plain chip first
+  const plainChip = container.querySelector(`.campus-chip[data-value="${id}"]`);
+  if (plainChip) {
+    plainChip.click();
+    return;
+  }
+
+  // Try subchip inside a group
+  const subChip = container.querySelector(`.campus-subchip[data-value="${id}"]`);
+  if (subChip) {
+    const groupEl = subChip.closest('.campus-chip-group');
+    // Activate the group first if not already active
+    if (groupEl && !groupEl.classList.contains('active')) {
+      groupEl.querySelector('.campus-chip-group-trigger')?.click();
+    }
+    subChip.click();
+  }
+}
+
 // Initializes the Campus picker, allowing to select only the options actually available
 export function setupCampusPicker() {
   const campuses = classroomsData[0].campuses;

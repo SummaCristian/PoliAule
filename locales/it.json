@@ -63,6 +63,13 @@
 
   "settings.title": "Impostazioni",
   "settings.language": "Lingua",
+  "settings.sectionCampus": "Campus",
+  "settings.preferredCampus": "Campus Preferito",
+  "settings.autoLocate": "Suggerisci in base alla posizione",
+  "settings.autoLocateDesc": "Seleziona automaticamente il campus più vicino",
+  "settings.locationDenied": "Accesso alla posizione negato",
+  "settings.locationUnavailable": "Posizione non disponibile su questo dispositivo",
+  "settings.noCampusData": "Apri l'app per caricare i campus",
 
   "footer.whatsNew": "Cosa c'è di nuovo?",
   "footer.checkOnGitHub": "Vedi su GitHub",

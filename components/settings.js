@@ -4,8 +4,35 @@
 
 import { haptics, defaultPatterns } from './haptics.js';
 import { t, getLocale, setLocale, onLanguageSwitch } from '../i18n.js';
+import { classroomsData } from '../available-rooms-script.js';
+import { selectCampusById } from './campus-picker.js';
 
 const TRANSITION_DURATION = 420;
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function findNearestCampusId(lat, lon) {
+  const available = classroomsData[0]?.campuses?.filter(c => c.buildings.length > 0) ?? [];
+  let best = null;
+  let bestDist = Infinity;
+  for (const campus of available) {
+    if (campus.lat == null || campus.lon == null) continue;
+    const dist = haversineKm(lat, lon, campus.lat, campus.lon);
+    if (dist < bestDist) { bestDist = dist; best = campus.id; }
+  }
+  return best;
+}
+
+const PREFERRED_CAMPUS_ENABLED_KEY = 'poliAule_preferredCampusEnabled';
+const PREFERRED_CAMPUS_ID_KEY      = 'poliAule_preferredCampusId';
+const AUTO_LOCATE_KEY              = 'poliAule_autoLocate';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -24,7 +51,7 @@ function getPopupTarget() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const w = Math.min(340, vw - 40);
-  const h = 260;
+  const h = Math.min(440, vh - 60);
   return {
     left: (vw - w) / 2,
     top: (vh - h) / 2,
@@ -156,6 +183,237 @@ function closeSettings() {
   });
 }
 
+// ── Auto-locate ───────────────────────────────────────────────────────────────
+
+// Called from script.js after setupCampusPicker() to auto-select on startup.
+export function autoSelectCampusByLocationIfEnabled() {
+  if (localStorage.getItem(AUTO_LOCATE_KEY) !== 'true') return;
+  if (!('geolocation' in navigator)) return;
+  navigator.geolocation.getCurrentPosition(
+    ({ coords }) => {
+      const id = findNearestCampusId(coords.latitude, coords.longitude);
+      if (id) selectCampusById(id);
+    },
+    () => { /* silently ignore on startup */ },
+    { maximumAge: 60000, timeout: 10000 }
+  );
+}
+
+// ── Toggle helpers ────────────────────────────────────────────────────────────
+
+function buildToggle(isOn) {
+  const btn = document.createElement('button');
+  btn.className = 'settings-toggle' + (isOn ? ' on' : '');
+  btn.setAttribute('role', 'switch');
+  btn.setAttribute('aria-checked', String(isOn));
+  const thumb = document.createElement('span');
+  thumb.className = 'settings-toggle__thumb';
+  btn.appendChild(thumb);
+  return btn;
+}
+
+function setToggleState(btn, isOn) {
+  btn.classList.toggle('on', isOn);
+  btn.setAttribute('aria-checked', String(isOn));
+}
+
+// ── Campus section ────────────────────────────────────────────────────────────
+
+function buildCampusSection() {
+  const section = document.createElement('div');
+  section.className = 'settings-section';
+
+  // ── Section header
+  section.innerHTML = `
+    <div class="settings-section__header">
+      <div class="settings-section__icon-badge">
+        <span class="material-symbols-outlined">location_on</span>
+      </div>
+      <span class="settings-section__header-label" data-campus-label></span>
+    </div>
+  `;
+  const headerLabel = section.querySelector('[data-campus-label]');
+
+  const group = document.createElement('div');
+  group.className = 'settings-group';
+  section.appendChild(group);
+
+  // ── Row 1: Preferred Campus toggle
+  const preferredRow = document.createElement('div');
+  preferredRow.className = 'settings-row';
+
+  const preferredIconTitle = document.createElement('div');
+  preferredIconTitle.className = 'settings-row__icon-title-container';
+  preferredIconTitle.innerHTML = `
+    <div class="settings-row__icon-badge" style="--badge-color: #FF9500">
+      <span class="material-symbols-outlined">school</span>
+    </div>
+    <div class="settings-row__label-group">
+      <span class="settings-row__label" data-preferred-label></span>
+    </div>
+  `;
+  const preferredLabel = preferredIconTitle.querySelector('[data-preferred-label]');
+
+  let preferredEnabled = localStorage.getItem(PREFERRED_CAMPUS_ENABLED_KEY) === 'true';
+  const preferredToggle = buildToggle(preferredEnabled);
+  preferredRow.appendChild(preferredIconTitle);
+  preferredRow.appendChild(preferredToggle);
+  group.appendChild(preferredRow);
+
+  // ── Row 2: Campus select (conditionally shown)
+  const pickerRow = document.createElement('div');
+  pickerRow.className = 'settings-row settings-row--campus-picker';
+  const campusSelect = document.createElement('select');
+  campusSelect.className = 'settings-campus-select';
+
+  function populateCampusSelect() {
+    campusSelect.innerHTML = '';
+    const campuses = classroomsData[0]?.campuses?.filter(c => c.buildings.length > 0) ?? [];
+    if (campuses.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = t('settings.noCampusData');
+      campusSelect.appendChild(opt);
+      campusSelect.disabled = true;
+    } else {
+      campusSelect.disabled = false;
+      campuses.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        campusSelect.appendChild(opt);
+      });
+      const saved = localStorage.getItem(PREFERRED_CAMPUS_ID_KEY);
+      if (saved && campusSelect.querySelector(`option[value="${saved}"]`)) {
+        campusSelect.value = saved;
+      }
+    }
+  }
+
+  pickerRow.appendChild(campusSelect);
+
+  function showPickerRow(show) {
+    if (show) {
+      if (!pickerRow.parentElement) {
+        group.insertBefore(pickerRow, autoLocateRow);
+      }
+    } else {
+      pickerRow.remove();
+    }
+  }
+
+  campusSelect.addEventListener('change', () => {
+    localStorage.setItem(PREFERRED_CAMPUS_ID_KEY, campusSelect.value);
+  });
+
+  preferredToggle.addEventListener('click', () => {
+    preferredEnabled = !preferredEnabled;
+    localStorage.setItem(PREFERRED_CAMPUS_ENABLED_KEY, String(preferredEnabled));
+    setToggleState(preferredToggle, preferredEnabled);
+    if (preferredEnabled) populateCampusSelect();
+    showPickerRow(preferredEnabled);
+    haptics.trigger(defaultPatterns.success);
+  });
+
+  // ── Row 3: Auto-locate toggle
+  const autoLocateRow = document.createElement('div');
+  autoLocateRow.className = 'settings-row';
+
+  const autoLocateIconTitle = document.createElement('div');
+  autoLocateIconTitle.className = 'settings-row__icon-title-container';
+  autoLocateIconTitle.innerHTML = `
+    <div class="settings-row__icon-badge" style="--badge-color: #007AFF">
+      <span class="material-symbols-outlined">my_location</span>
+    </div>
+    <div class="settings-row__label-group">
+      <span class="settings-row__label" data-autolocate-label></span>
+      <span class="settings-row__sublabel" data-autolocate-sublabel></span>
+    </div>
+  `;
+  const autoLocateLabel = autoLocateIconTitle.querySelector('[data-autolocate-label]');
+  const autoLocateSublabel = autoLocateIconTitle.querySelector('[data-autolocate-sublabel]');
+
+  let autoLocateEnabled = localStorage.getItem(AUTO_LOCATE_KEY) === 'true';
+  let autoLocateDenied = false;
+  const autoLocateToggle = buildToggle(autoLocateEnabled);
+
+  autoLocateRow.appendChild(autoLocateIconTitle);
+  autoLocateRow.appendChild(autoLocateToggle);
+  group.appendChild(autoLocateRow);
+
+  const geoAvailable = 'geolocation' in navigator;
+  if (!geoAvailable) {
+    autoLocateToggle.disabled = true;
+    autoLocateToggle.style.opacity = '0.4';
+    autoLocateToggle.style.cursor = 'default';
+  }
+
+  autoLocateToggle.addEventListener('click', () => {
+    if (!geoAvailable) return;
+
+    if (autoLocateEnabled) {
+      // Turn off
+      autoLocateEnabled = false;
+      autoLocateDenied = false;
+      localStorage.setItem(AUTO_LOCATE_KEY, 'false');
+      setToggleState(autoLocateToggle, false);
+      autoLocateSublabel.textContent = t('settings.autoLocateDesc');
+      haptics.trigger(defaultPatterns.success);
+    } else {
+      // Request permission — maximumAge:Infinity accepts any cached fix,
+      // resolving immediately after the user grants access without waiting for GPS.
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          autoLocateEnabled = true;
+          autoLocateDenied = false;
+          localStorage.setItem(AUTO_LOCATE_KEY, 'true');
+          setToggleState(autoLocateToggle, true);
+          autoLocateSublabel.textContent = t('settings.autoLocateDesc');
+          haptics.trigger(defaultPatterns.success);
+          // Immediately auto-select the nearest campus
+          const id = findNearestCampusId(coords.latitude, coords.longitude);
+          if (id) selectCampusById(id);
+        },
+        (err) => {
+          const denied = err.code === 1; // GeolocationPositionError.PERMISSION_DENIED
+          autoLocateEnabled = false;
+          autoLocateDenied = denied;
+          localStorage.setItem(AUTO_LOCATE_KEY, 'false');
+          setToggleState(autoLocateToggle, false);
+          autoLocateSublabel.textContent = denied
+            ? t('settings.locationDenied')
+            : t('settings.autoLocateDesc');
+          if (denied) haptics.trigger(defaultPatterns.error ?? defaultPatterns.success);
+        },
+        { maximumAge: Infinity, timeout: 30000 }
+      );
+    }
+  });
+
+  // Show picker row if already enabled
+  if (preferredEnabled) {
+    populateCampusSelect();
+    showPickerRow(true);
+  }
+
+  // Retranslate all text nodes in this section
+  function retranslate() {
+    headerLabel.textContent       = t('settings.sectionCampus');
+    preferredLabel.textContent    = t('settings.preferredCampus');
+    autoLocateLabel.textContent   = t('settings.autoLocate');
+    autoLocateSublabel.textContent = autoLocateDenied
+      ? t('settings.locationDenied')
+      : t('settings.autoLocateDesc');
+    if (preferredEnabled && campusSelect.disabled && campusSelect.options[0]) {
+      campusSelect.options[0].textContent = t('settings.noCampusData');
+    }
+  }
+
+  retranslate();
+
+  return { sectionEl: section, retranslate };
+}
+
 // ── Popup content ─────────────────────────────────────────────────────────────
 
 function buildPopup() {
@@ -199,6 +457,11 @@ function buildPopup() {
     </div>
   `;
 
+  // Append campus section
+  const inner = popup.querySelector('.settings-popup__inner');
+  const { sectionEl: campusSectionEl, retranslate: retranslateCampus } = buildCampusSection();
+  inner.appendChild(campusSectionEl);
+
   // Wire language buttons and sliding indicator
   const toggle = popup.querySelector('.settings-lang-toggle');
   const indicator = toggle.querySelector('.settings-lang-indicator');
@@ -229,7 +492,7 @@ function buildPopup() {
   // Expose so openSettings() can snap after first display
   positionIndicatorFn = positionIndicator;
 
-  return { popup, positionIndicator };
+  return { popup, positionIndicator, retranslateCampus };
 }
 
 function updateLangButtons(popup, positionIndicator) {
@@ -245,7 +508,7 @@ export function initSettings() {
   triggerEl = document.getElementById('settings-btn');
   if (!triggerEl) return;
 
-  const { popup, positionIndicator } = buildPopup();
+  const { popup, positionIndicator, retranslateCampus } = buildPopup();
   popupEl = popup;
   document.body.appendChild(popupEl);
 
@@ -262,6 +525,7 @@ export function initSettings() {
     titleEl.textContent = t('settings.title');
     sectionHeaderLabelEl.textContent = t('settings.language');
     updateLangButtons(popupEl, positionIndicator);
+    retranslateCampus();
   });
 
   // Escape closes the popup

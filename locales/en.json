@@ -63,6 +63,13 @@
 
   "settings.title": "Settings",
   "settings.language": "Language",
+  "settings.sectionCampus": "Campus",
+  "settings.preferredCampus": "Preferred Campus",
+  "settings.autoLocate": "Auto-suggest based on location",
+  "settings.autoLocateDesc": "Automatically select the nearest campus",
+  "settings.locationDenied": "Location access denied",
+  "settings.locationUnavailable": "Location not available on this device",
+  "settings.noCampusData": "Open the app first to load campuses",
 
   "footer.whatsNew": "What's new?",
   "footer.checkOnGitHub": "Check on GitHub",

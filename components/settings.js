@@ -188,7 +188,7 @@ function closeSettings() {
 // Called from script.js after setupCampusPicker() to auto-select on startup.
 export function autoSelectCampusByLocationIfEnabled() {
   if (localStorage.getItem(AUTO_LOCATE_KEY) !== 'true') return;
-  if (!('geolocation' in navigator)) return;
+  if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
     ({ coords }) => {
       const id = findNearestCampusId(coords.latitude, coords.longitude);
@@ -341,7 +341,7 @@ function buildCampusSection() {
   autoLocateRow.appendChild(autoLocateToggle);
   group.appendChild(autoLocateRow);
 
-  const geoAvailable = 'geolocation' in navigator;
+  const geoAvailable = !!navigator.geolocation;
   if (!geoAvailable) {
     autoLocateToggle.disabled = true;
     autoLocateToggle.style.opacity = '0.4';

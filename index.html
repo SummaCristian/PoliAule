@@ -63,17 +63,23 @@
         </div>
       </div>
 
-      <button id="lang-toggle" class="header-button" aria-label="Switch language">
-        <span id="lang-toggle-label">IT</span>
-      </button>
+      <div class="header-buttons-container">
 
-      <button class="header-button" data-popover="data-fetch-indicator-popover">
-        <div id="data-fetch-indicator" class="pulse-indicator"></div>
-      </button>
-      <div id="data-fetch-indicator-popover" class="popover">
-        <div class="arrow" data-arrow></div>
+        <!-- Data Fetch Indicator -->
+        <button class="header-button" data-popover="data-fetch-indicator-popover">
+          <div id="data-fetch-indicator" class="pulse-indicator"></div>
+        </button>
+        <div id="data-fetch-indicator-popover" class="popover">
+          <div class="arrow" data-arrow></div>
 
-        <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
+          <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
+        </div>
+
+        <!-- Settings button -->
+        <button id="lang-toggle" class="header-button" aria-label="Switch language">
+          <span id="lang-toggle-label">IT</span>
+        </button>
+
       </div>
 
 
@@ -103,10 +109,10 @@
 
       <div class="section-header">
         <h3 class="section-header-title" data-i18n="available.title">Available Classrooms</h3>
-          <p class="section-header-subtitle secondary" data-i18n="available.subtitle">
-            Find which classrooms are available right now or at any other
-            moment throughout the day.
-          </p>
+        <p class="section-header-subtitle secondary" data-i18n="available.subtitle">
+          Find which classrooms are available right now or at any other
+          moment throughout the day.
+        </p>
 
       </div>
 
@@ -186,7 +192,8 @@
       <div id="available-classrooms-results" class="available-classrooms-container empty">
         <span class="material-symbols-outlined empty-container-icon">search</span>
         <p class="empty-container-title" data-i18n="results.emptyTitle">Need a classroom?</p>
-        <p class="empty-container-subtitle" data-i18n="results.emptySubtitle">Tell me when you need it and I’ll show you what’s available</p>
+        <p class="empty-container-subtitle" data-i18n="results.emptySubtitle">Tell me when you need it and I’ll show you
+          what’s available</p>
       </div>
 
     </div>
@@ -195,17 +202,18 @@
     <div id="search-classrooms-container" class="tab-content">
       <div class="section-header">
         <h3 class="section-header-title" data-i18n="search.title">Search Classroom</h3>
-          <p class="section-header-subtitle secondary" data-i18n="search.subtitle">
-            Look up any classroom to see its availability throughout the day, or check
-            when it will be available next.
-          </p>
+        <p class="section-header-subtitle secondary" data-i18n="search.subtitle">
+          Look up any classroom to see its availability throughout the day, or check
+          when it will be available next.
+        </p>
       </div>
 
       <div class="info-box">
         <h3 class="info-box-icon">🚧</h3>
         <h3 class="info-box-title" data-i18n="wip.title">Work in Progress</h3>
         <p class="info-box-content" data-i18n="wip.line1">I haven't actually made it this far yet...</p>
-        <p class="info-box-content" data-i18n="wip.line2">It's coming, just hang in there! (or, you know, check back later)</p>
+        <p class="info-box-content" data-i18n="wip.line2">It's coming, just hang in there! (or, you know, check back
+          later)</p>
       </div>
 
     </div>
@@ -219,7 +227,7 @@
     <div id="version-info-popover" class="popover">
       <div class="arrow" data-arrow></div>
 
-      <img src="/favicons/logo.png" class="changelog-logo"/>
+      <img src="/favicons/logo.png" class="changelog-logo" />
       <h1 class="popover-title">Version 0.7.0 (Beta)</h1>
       <div class="changelog-container">
         <h2 class="popover-subtitle" data-i18n="footer.whatsNew">What's new?</h2>
@@ -260,7 +268,8 @@
       <span data-i18n="footer.disclaimer2">Use at your own risk.</span>
       <br>
       <span data-i18n="footer.disclaimer3">If you find any error, please open an</span>
-      <a class="secondary" target="_blank" href="https://github.com/SummaCristian/poliaule/issues"><span data-i18n="footer.issueLinkText">Issue</span></a>
+      <a class="secondary" target="_blank" href="https://github.com/SummaCristian/poliaule/issues"><span
+          data-i18n="footer.issueLinkText">Issue</span></a>
       <span data-i18n="footer.disclaimer4">on GitHub.</span>
       <br>
       <strong><span data-i18n="footer.disclaimer5">Not affiliated to Politecnico di Milano.</span></strong>

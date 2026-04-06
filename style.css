@@ -295,6 +295,14 @@ label {
   -webkit-user-drag: none;
 }
 
+.header-buttons-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
 .header-button {
   width: 3rem;
   height: 3rem;

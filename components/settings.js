@@ -49,6 +49,20 @@ function onTransitionEnd(el, cb) {
   }, { once: true });
 }
 
+// ── Scroll lock ───────────────────────────────────────────────────────────────
+
+function preventScroll(e) { e.preventDefault(); }
+
+function lockScroll() {
+  window.addEventListener('wheel', preventScroll, { passive: false });
+  window.addEventListener('touchmove', preventScroll, { passive: false });
+}
+
+function unlockScroll() {
+  window.removeEventListener('wheel', preventScroll);
+  window.removeEventListener('touchmove', preventScroll);
+}
+
 // ── Overlay ───────────────────────────────────────────────────────────────────
 
 function getOverlay() {
@@ -56,6 +70,8 @@ function getOverlay() {
     overlay = document.createElement('div');
     overlay.className = 'settings-overlay';
     overlay.addEventListener('click', closeSettings);
+    overlay.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+    overlay.addEventListener('wheel', e => e.preventDefault(), { passive: false });
     document.body.appendChild(overlay);
   }
   return overlay;
@@ -74,6 +90,8 @@ function removeOverlay() {
 function openSettings() {
   if (isAnimating || isOpen) return;
   isAnimating = true;
+
+  lockScroll();
 
   const rect = triggerEl.getBoundingClientRect();
 
@@ -132,6 +150,7 @@ function closeSettings() {
     triggerEl.classList.remove('settings-btn--morphing');
     isOpen = false;
     isAnimating = false;
+    unlockScroll();
   });
 }
 

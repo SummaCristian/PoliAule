@@ -2,6 +2,8 @@
   {
     "name": "Milano Leonardo - Città Studi",
     "id": "MIA01",
+    "lat": 45.4787,
+    "long": 9.2280,
     "buildings": [
       {
         "name": "Edificio 2",
@@ -4566,6 +4568,8 @@
   {
     "name": "Milano Via Colombo",
     "id": "MIA06",
+    "lat": 45.4719,
+    "lon": 9.2269,
     "buildings": [
       {
         "name": "Edificio 32.1",
@@ -4681,6 +4685,8 @@
   {
     "name": "Milano Bovisa - Via Durando",
     "id": "MIB02",
+    "lat": 45.5044,
+    "lon": 9.1640,
     "buildings": [
       {
         "name": "Edificio B1",
@@ -6017,6 +6023,8 @@
   {
     "name": "Milano Bovisa - Via La Masa",
     "id": "MIB01",
+    "lat": 45.5029,
+    "lon": 9.1563,
     "buildings": [
       {
         "name": "Edificio B12",
@@ -7292,6 +7300,8 @@
   {
     "name": "Cremona",
     "id": "CRG02",
+    "lat": 45.1349,
+    "lon": 10.0154,
     "buildings": [
       {
         "name": "Edificio CR03",
@@ -7388,6 +7398,8 @@
   {
     "name": "Lecco",
     "id": "LCF04",
+    "lat": 45.8492,
+    "lon": 9.3970,
     "buildings": [
       {
         "name": "Edificio 8",
@@ -8262,6 +8274,8 @@
   {
     "name": "Mantova",
     "id": "MNG01",
+    "lat": 45.1603,
+    "lon": 10.7889,
     "buildings": [
       {
         "name": "Edificio 1",

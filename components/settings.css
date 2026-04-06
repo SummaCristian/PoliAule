@@ -1,0 +1,140 @@
+/* ── Settings Component ────────────────────────────────────────────────────── */
+
+/* Overlay */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  display: none;
+  z-index: 1100;
+  transition: opacity 0.35s ease;
+}
+
+.settings-overlay--active {
+  opacity: 1;
+  pointer-events: auto;
+  display: block;
+}
+
+.samsung .settings-overlay--active {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* Popup shell — morphs from the header button */
+.settings-popup {
+  position: fixed;
+  z-index: 1200;
+  background: var(--background-color-secondary);
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  flex-direction: column;
+  /* display:flex set via JS */
+
+  transition:
+    top    0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    left   0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    width  0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 0.42s ease;
+
+  will-change: top, left, width, height;
+}
+
+/* Inner content fades in after the morph completes */
+.settings-popup__inner {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  height: 100%;
+  overflow: hidden;
+}
+
+.settings-popup--open .settings-popup__inner {
+  opacity: 1;
+  transition-delay: 0.28s;
+}
+
+/* Hide the trigger while the popup is morphing */
+.settings-btn--morphing {
+  visibility: hidden;
+}
+
+/* Header row */
+.settings-popup__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-popup__title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
+  margin: 0;
+}
+
+/* Individual settings section */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.settings-section__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text-color-primary) 60%, transparent);
+}
+
+/* Language toggle — two pill buttons */
+.settings-lang-toggle {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  border-radius: 14px;
+  padding: 4px;
+}
+
+.settings-lang-btn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.settings-lang-btn.active {
+  background: var(--background-color-secondary);
+  color: var(--text-color-primary);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+@media (hover: hover) {
+  .settings-lang-btn:not(.active):hover {
+    background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+    color: var(--text-color-primary);
+  }
+}

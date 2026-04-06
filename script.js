@@ -11,7 +11,8 @@ import { setupCampusPicker } from './components/campus-picker.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
-import { initI18n, t, getLocale, applyTranslations, setLocale, onLanguageSwitch } from './i18n.js';
+import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch } from './i18n.js';
+import { initSettings } from './components/settings.js';
 
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
@@ -149,15 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initI18n();
     applyTranslations();
 
-    // Wire up the language toggle button
-    const langToggleLabel = document.getElementById('lang-toggle-label');
-    langToggleLabel.textContent = getLocale() === 'en' ? 'IT' : 'EN';
-    document.getElementById('lang-toggle').addEventListener('click', async () => {
-      const next = getLocale() === 'en' ? 'it' : 'en';
-      await setLocale(next);
-      langToggleLabel.textContent = next === 'en' ? 'IT' : 'EN';
-      haptics.trigger(defaultPatterns.success);
-    });
+    initSettings();
 
     await fetchClassroomsData();
 

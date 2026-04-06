@@ -61,6 +61,9 @@
   "data.redDesc": "No availability data found for today. Results may not reflect the current schedule.",
   "data.lastFetched": "Last fetched",
 
+  "settings.title": "Settings",
+  "settings.language": "Language",
+
   "footer.whatsNew": "What's new?",
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer1": "Non-definitive version, stuff can and will change.",

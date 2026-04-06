@@ -61,6 +61,9 @@
   "data.redDesc": "Nessun dato trovato per oggi. I risultati potrebbero non riflettere l'orario attuale.",
   "data.lastFetched": "Ultimo aggiornamento",
 
+  "settings.title": "Impostazioni",
+  "settings.language": "Lingua",
+
   "footer.whatsNew": "Cosa c'è di nuovo?",
   "footer.checkOnGitHub": "Vedi su GitHub",
   "footer.disclaimer1": "Versione non definitiva, le cose possono cambiare e cambieranno.",

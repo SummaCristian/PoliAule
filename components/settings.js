@@ -44,6 +44,7 @@ let overlay = null;
 let triggerEl = null;
 let popupEl = null;
 let positionIndicatorFn = null;
+let refreshCampusSelectFn = null; // set by buildCampusSection, called on every open
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
 
@@ -138,6 +139,7 @@ function openSettings() {
 
   popupEl.getBoundingClientRect(); // force reflow — buttons now have real dimensions
   positionIndicatorFn?.(false);   // snap indicator before morph animation starts
+  refreshCampusSelectFn?.();      // re-populate campus select now that data may be loaded
   popupEl.style.transition = '';
 
   requestAnimationFrame(() => {
@@ -184,6 +186,13 @@ function closeSettings() {
 }
 
 // ── Auto-locate ───────────────────────────────────────────────────────────────
+
+// Called from script.js after setupCampusPicker() to apply the saved preferred campus.
+export function applyPreferredCampusIfEnabled() {
+  if (localStorage.getItem(PREFERRED_CAMPUS_ENABLED_KEY) !== 'true') return;
+  const id = localStorage.getItem(PREFERRED_CAMPUS_ID_KEY);
+  if (id) selectCampusById(id);
+}
 
 // Called from script.js after setupCampusPicker() to auto-select on startup.
 export function autoSelectCampusByLocationIfEnabled() {
@@ -412,7 +421,12 @@ function buildCampusSection() {
 
   retranslate();
 
-  return { sectionEl: section, retranslate };
+  // Called each time the popup opens so the select is populated with live data
+  function refreshIfNeeded() {
+    if (preferredEnabled) populateCampusSelect();
+  }
+
+  return { sectionEl: section, retranslate, refreshIfNeeded };
 }
 
 // ── Popup content ─────────────────────────────────────────────────────────────
@@ -423,7 +437,12 @@ function buildPopup() {
   popup.style.display = 'none';
   popup.innerHTML = `
     <div class="settings-popup__inner">
-      <h2 class="settings-popup__title">${t('settings.title')}</h2>
+      <div class="settings-popup__title-row">
+        <h2 class="settings-popup__title">${t('settings.title')}</h2>
+        <button class="settings-close-btn" aria-label="Close settings">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
 
       <div class="settings-section">
         <div class="settings-section__header">
@@ -458,9 +477,12 @@ function buildPopup() {
     </div>
   `;
 
+  popup.querySelector('.settings-close-btn').addEventListener('click', () => closeSettings());
+
   // Append campus section
   const inner = popup.querySelector('.settings-popup__inner');
-  const { sectionEl: campusSectionEl, retranslate: retranslateCampus } = buildCampusSection();
+  const { sectionEl: campusSectionEl, retranslate: retranslateCampus, refreshIfNeeded } = buildCampusSection();
+  refreshCampusSelectFn = refreshIfNeeded;
   inner.appendChild(campusSectionEl);
 
   // Wire language buttons and sliding indicator

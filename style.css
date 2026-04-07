@@ -321,7 +321,7 @@ label {
     inset 1px 1px 0 rgba(255, 255, 255, 0.3),
     inset -1px -1px rgba(255, 255, 255, 0.1),
     var(--shadow);
-  
+
   cursor: pointer;
 
   transition:
@@ -804,7 +804,7 @@ ul li::marker {
 }
 
 .changelog-logo {
-  height: 4rem; 
+  height: 4rem;
   margin-bottom: 0.5rem;
 
   user-select: none;
@@ -1047,8 +1047,16 @@ are rendered as solid colors
     padding: 0 2rem;
   }
 
-  #available-classrooms-container > .section-header { grid-column: 1; grid-row: 1; }
-  #available-classrooms-form                        { grid-column: 1; grid-row: 2; align-self: start; }
+  #available-classrooms-container>.section-header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  #available-classrooms-form {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
 
   #available-classrooms-results {
     grid-column: 2;

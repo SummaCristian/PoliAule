@@ -106,6 +106,12 @@ export class Popover {
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('[data-popover]').forEach(trigger => {
     const popoverEl = document.getElementById(trigger.dataset.popover);
-    if (popoverEl) new Popover(trigger, popoverEl);
+    if (!popoverEl) return;
+    const options = {};
+    if (trigger.dataset.popoverShiftPadding !== undefined)
+      options.shiftPadding = Number(trigger.dataset.popoverShiftPadding);
+    if (trigger.dataset.popoverPlacement !== undefined)
+      options.placement = trigger.dataset.popoverPlacement;
+    new Popover(trigger, popoverEl, options);
   });
 });

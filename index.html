@@ -67,14 +67,9 @@
       <div class="header-buttons-container">
 
         <!-- Data Fetch Indicator -->
-        <button class="header-button" data-popover="data-fetch-indicator-popover">
+        <button class="header-button" data-popover="data-fetch-indicator-popover" data-popover-shift-padding="16">
           <div id="data-fetch-indicator" class="pulse-indicator"></div>
         </button>
-        <div id="data-fetch-indicator-popover" class="popover">
-          <div class="arrow" data-arrow></div>
-
-          <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
-        </div>
 
         <!-- Settings button -->
         <button id="settings-btn" class="header-button" aria-label="Settings">
@@ -276,6 +271,12 @@
       <strong><span data-i18n="footer.disclaimer5">Not affiliated to Politecnico di Milano.</span></strong>
     </label>
   </footer>
+
+  <!-- Popovers that need viewport-relative positioning live here, outside any positioned ancestor -->
+  <div id="data-fetch-indicator-popover" class="popover">
+    <div class="arrow" data-arrow></div>
+    <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
+  </div>
 
 </body>
 

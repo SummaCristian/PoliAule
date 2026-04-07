@@ -102,6 +102,11 @@ export class Popover {
   }
 }
 
+// Close all popovers on any scroll
+window.addEventListener('scroll', () => {
+  allPopovers.forEach(p => p.close());
+}, { capture: true, passive: true });
+
 // On page load finds all popover components and initializes them
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('[data-popover]').forEach(trigger => {

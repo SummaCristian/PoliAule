@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-08T05:13:50.647312",
-  "date": "20260408",
+  "generated_at": "2026-04-09T05:46:56.800914",
+  "date": "20260416",
   "campuses": [
     {
       "name": "Milano Leonardo - Città Studi",
@@ -46,20 +46,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "08:00",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "11:30",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -93,16 +85,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.1.1",
@@ -141,24 +124,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
+                  "inizio": "17:45",
+                  "fine": "19:30"
                 }
               ]
             },
@@ -199,20 +166,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
                   "inizio": "15:15",
-                  "fine": "18:15"
+                  "fine": "17:15"
+                },
+                {
+                  "inizio": "17:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -258,11 +217,15 @@
                 },
                 {
                   "inizio": "11:15",
-                  "fine": "13:15"
+                  "fine": "14:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "16:15",
+                  "fine": "18:15"
+                },
+                {
+                  "inizio": "18:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -298,20 +261,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
+                  "inizio": "12:15",
                   "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
                 }
               ]
             },
@@ -347,20 +298,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
+                  "inizio": "08:30",
+                  "fine": "11:30"
                 },
                 {
                   "inizio": "13:15",
                   "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
                 }
               ]
             },
@@ -392,11 +335,7 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "19:15"
+                  "fine": "18:15"
                 }
               ]
             },
@@ -432,15 +371,11 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
+                  "inizio": "08:15",
+                  "fine": "12:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
                   "fine": "18:15"
                 }
               ]
@@ -477,12 +412,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "09:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -519,10 +450,6 @@
                 {
                   "inizio": "14:15",
                   "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
                 }
               ]
             }
@@ -569,7 +496,11 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "17:15"
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -613,28 +544,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.0.3",
@@ -678,20 +588,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -737,20 +639,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
+                  "inizio": "09:15",
+                  "fine": "13:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "18:15"
+                  "fine": "19:15"
                 }
               ]
             },
@@ -786,7 +680,7 @@
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "17:15"
+                  "fine": "18:15"
                 }
               ]
             },
@@ -817,16 +711,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
+                  "inizio": "09:15",
+                  "fine": "13:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "13:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -870,24 +760,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.3",
@@ -931,16 +804,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "11:15",
+                  "fine": "13:15"
                 }
               ]
             },
@@ -991,14 +856,10 @@
                 },
                 {
                   "inizio": "10:15",
-                  "fine": "12:15"
+                  "fine": "14:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
+                  "inizio": "14:15",
                   "fine": "18:15"
                 }
               ]
@@ -1046,15 +907,19 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "11:15"
+                  "fine": "10:15"
                 },
                 {
-                  "inizio": "11:15",
+                  "inizio": "10:15",
                   "fine": "13:15"
                 },
                 {
                   "inizio": "13:15",
                   "fine": "15:15"
+                },
+                {
+                  "inizio": "15:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -1105,15 +970,7 @@
                 },
                 {
                   "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "fine": "13:15"
                 }
               ]
             },
@@ -1159,16 +1016,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "17:15"
+                  "inizio": "08:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -1199,20 +1048,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
                   "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "fine": "15:15"
                 }
               ]
             },
@@ -1238,15 +1075,19 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
+                  "inizio": "08:15",
+                  "fine": "10:15"
+                },
+                {
+                  "inizio": "10:15",
                   "fine": "12:15"
                 },
                 {
                   "inizio": "12:15",
-                  "fine": "14:15"
+                  "fine": "15:15"
                 },
                 {
-                  "inizio": "14:15",
+                  "inizio": "15:15",
                   "fine": "18:15"
                 }
               ]
@@ -1293,15 +1134,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
+                  "inizio": "08:15",
                   "fine": "19:15"
                 }
               ]
@@ -1348,15 +1181,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
+                  "inizio": "08:15",
                   "fine": "19:15"
                 }
               ]
@@ -1404,11 +1229,7 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "fine": "18:15"
                 }
               ]
             },
@@ -1454,12 +1275,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "18:15"
+                  "inizio": "08:15",
+                  "fine": "19:15"
                 }
               ]
             }
@@ -1500,7 +1317,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
+                  "inizio": "10:00",
                   "fine": "11:15"
                 },
                 {
@@ -1550,20 +1367,16 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "09:30",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -1604,19 +1417,11 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
                   "inizio": "10:15",
                   "fine": "13:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
+                  "inizio": "13:15",
                   "fine": "18:15"
                 }
               ]
@@ -1658,20 +1463,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "15:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -1692,8 +1489,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:00",
-                  "fine": "13:15"
+                  "inizio": "09:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -1729,24 +1526,16 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "09:30",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "19:15"
                 }
               ]
             }
@@ -1782,20 +1571,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:45"
+                  "inizio": "16:15",
+                  "fine": "19:15"
                 }
               ]
             }
@@ -1836,16 +1613,12 @@
               ],
               "occupancy": [
                 {
+                  "inizio": "08:15",
+                  "fine": "10:15"
+                },
+                {
                   "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "fine": "14:15"
                 }
               ]
             },
@@ -1872,19 +1645,15 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "11:15"
+                  "fine": "10:15"
                 },
                 {
-                  "inizio": "11:15",
-                  "fine": "13:15"
+                  "inizio": "10:15",
+                  "fine": "12:15"
                 },
                 {
                   "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
+                  "fine": "16:15"
                 }
               ]
             },
@@ -1924,20 +1693,8 @@
                   "fine": "10:15"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
                   "inizio": "14:15",
                   "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
                 }
               ]
             },
@@ -1984,15 +1741,15 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
+                  "fine": "10:15"
+                },
+                {
+                  "inizio": "10:15",
                   "fine": "13:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "fine": "19:15"
                 }
               ]
             }
@@ -2038,24 +1795,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "09:30",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "11:30",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -2086,12 +1831,16 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "11:15",
-                  "fine": "13:15"
+                  "inizio": "08:15",
+                  "fine": "12:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "18:15"
+                  "fine": "16:15"
+                },
+                {
+                  "inizio": "18:15",
+                  "fine": "20:45"
                 }
               ]
             }
@@ -2137,20 +1886,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "09:30",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "11:30",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -2176,20 +1917,16 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
                   "inizio": "10:15",
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "15:15"
+                  "inizio": "12:15",
+                  "fine": "14:15"
                 },
                 {
-                  "inizio": "15:15",
-                  "fine": "17:15"
+                  "inizio": "14:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -2230,20 +1967,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
                   "inizio": "12:15",
-                  "fine": "16:15"
+                  "fine": "15:15"
                 },
                 {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "15:15",
+                  "fine": "17:15"
                 },
                 {
                   "inizio": "18:15",
@@ -2299,20 +2028,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "09:30",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "11:30",
+                  "fine": "18:30"
                 }
               ]
             }
@@ -2353,8 +2074,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "14:15"
+                  "inizio": "15:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -2390,12 +2111,16 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
+                  "inizio": "09:15",
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "19:15"
+                  "inizio": "13:15",
+                  "fine": "16:15"
+                },
+                {
+                  "inizio": "17:45",
+                  "fine": "19:30"
                 }
               ]
             },
@@ -2432,6 +2157,10 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
+                  "fine": "12:15"
+                },
+                {
+                  "inizio": "13:15",
                   "fine": "16:15"
                 }
               ]
@@ -2469,11 +2198,11 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "14:15"
+                  "fine": "11:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "17:15"
+                  "fine": "18:15"
                 }
               ]
             },
@@ -2514,12 +2243,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "12:15"
+                  "inizio": "09:15",
+                  "fine": "11:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "12:15",
+                  "fine": "16:15"
                 }
               ]
             },
@@ -2545,12 +2274,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
+                  "inizio": "08:15",
                   "fine": "13:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "16:15"
+                  "inizio": "15:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -2586,16 +2315,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "21:00"
+                  "inizio": "08:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -2631,12 +2352,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "12:15"
+                  "inizio": "09:15",
+                  "fine": "13:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "17:15"
+                  "fine": "19:15"
                 }
               ]
             },
@@ -2672,11 +2393,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
+                  "inizio": "08:15",
                   "fine": "19:15"
                 }
               ]
@@ -2718,7 +2435,7 @@
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "16:15"
+                  "fine": "18:15"
                 },
                 {
                   "inizio": "18:15",
@@ -2749,11 +2466,15 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "13:15"
+                  "fine": "14:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "16:15"
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                },
+                {
+                  "inizio": "18:15",
+                  "fine": "20:45"
                 }
               ]
             },
@@ -2789,161 +2510,14 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "13:15",
+                  "fine": "19:15"
                 }
               ]
             },
             {
               "name": "R.1",
               "id": 731,
-              "features": [
-                {
-                  "id": 4,
-                  "it": "Video proiettore",
-                  "en": "Video projector"
-                },
-                {
-                  "id": 5,
-                  "it": "Radio microfono",
-                  "en": "Radio microphone"
-                },
-                {
-                  "id": 6,
-                  "it": "Oscurabile",
-                  "en": "Dimmable"
-                },
-                {
-                  "id": 7,
-                  "it": "Cattedra cablata",
-                  "en": "Wired chair"
-                },
-                {
-                  "id": 223,
-                  "it": "DAD - riunione",
-                  "en": "Videoconference - meeting"
-                }
-              ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
-            },
-            {
-              "name": "U.1",
-              "id": 737,
-              "features": [
-                {
-                  "id": 4,
-                  "it": "Video proiettore",
-                  "en": "Video projector"
-                },
-                {
-                  "id": 5,
-                  "it": "Radio microfono",
-                  "en": "Radio microphone"
-                },
-                {
-                  "id": 6,
-                  "it": "Oscurabile",
-                  "en": "Dimmable"
-                },
-                {
-                  "id": 7,
-                  "it": "Cattedra cablata",
-                  "en": "Wired chair"
-                },
-                {
-                  "id": 223,
-                  "it": "DAD - riunione",
-                  "en": "Videoconference - meeting"
-                }
-              ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "20:15"
-                }
-              ]
-            },
-            {
-              "name": "Y.1",
-              "id": 5038,
-              "features": [
-                {
-                  "id": 4,
-                  "it": "Video proiettore",
-                  "en": "Video projector"
-                },
-                {
-                  "id": 223,
-                  "it": "DAD - riunione",
-                  "en": "Videoconference - meeting"
-                }
-              ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "21:00"
-                }
-              ]
-            },
-            {
-              "name": "Z.1 D.I.",
-              "id": 5039,
-              "features": [
-                {
-                  "id": 4,
-                  "it": "Video proiettore",
-                  "en": "Video projector"
-                },
-                {
-                  "id": 202,
-                  "it": "Didattica Innovativa",
-                  "en": "Innovative teaching"
-                },
-                {
-                  "id": 223,
-                  "it": "DAD - riunione",
-                  "en": "Videoconference - meeting"
-                }
-              ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
-            },
-            {
-              "name": "J.2",
-              "id": 728,
               "features": [
                 {
                   "id": 4,
@@ -2981,6 +2555,128 @@
                   "fine": "18:15"
                 }
               ]
+            },
+            {
+              "name": "U.1",
+              "id": 737,
+              "features": [
+                {
+                  "id": 4,
+                  "it": "Video proiettore",
+                  "en": "Video projector"
+                },
+                {
+                  "id": 5,
+                  "it": "Radio microfono",
+                  "en": "Radio microphone"
+                },
+                {
+                  "id": 6,
+                  "it": "Oscurabile",
+                  "en": "Dimmable"
+                },
+                {
+                  "id": 7,
+                  "it": "Cattedra cablata",
+                  "en": "Wired chair"
+                },
+                {
+                  "id": 223,
+                  "it": "DAD - riunione",
+                  "en": "Videoconference - meeting"
+                }
+              ],
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "17:15"
+                },
+                {
+                  "inizio": "18:15",
+                  "fine": "21:00"
+                }
+              ]
+            },
+            {
+              "name": "Y.1",
+              "id": 5038,
+              "features": [
+                {
+                  "id": 4,
+                  "it": "Video proiettore",
+                  "en": "Video projector"
+                },
+                {
+                  "id": 223,
+                  "it": "DAD - riunione",
+                  "en": "Videoconference - meeting"
+                }
+              ],
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "14:15"
+                }
+              ]
+            },
+            {
+              "name": "Z.1 D.I.",
+              "id": 5039,
+              "features": [
+                {
+                  "id": 4,
+                  "it": "Video proiettore",
+                  "en": "Video projector"
+                },
+                {
+                  "id": 202,
+                  "it": "Didattica Innovativa",
+                  "en": "Innovative teaching"
+                },
+                {
+                  "id": 223,
+                  "it": "DAD - riunione",
+                  "en": "Videoconference - meeting"
+                }
+              ],
+              "occupancy": [
+                {
+                  "inizio": "13:15",
+                  "fine": "19:15"
+                }
+              ]
+            },
+            {
+              "name": "J.2",
+              "id": 728,
+              "features": [
+                {
+                  "id": 4,
+                  "it": "Video proiettore",
+                  "en": "Video projector"
+                },
+                {
+                  "id": 5,
+                  "it": "Radio microfono",
+                  "en": "Radio microphone"
+                },
+                {
+                  "id": 6,
+                  "it": "Oscurabile",
+                  "en": "Dimmable"
+                },
+                {
+                  "id": 7,
+                  "it": "Cattedra cablata",
+                  "en": "Wired chair"
+                },
+                {
+                  "id": 223,
+                  "it": "DAD - riunione",
+                  "en": "Videoconference - meeting"
+                }
+              ],
+              "occupancy": []
             },
             {
               "name": "O.2",
@@ -3051,8 +2747,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "18:15"
+                  "inizio": "08:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -3078,8 +2774,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "19:15"
+                  "inizio": "09:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -3115,8 +2811,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "19:15"
+                  "inizio": "09:15",
+                  "fine": "14:15"
+                },
+                {
+                  "inizio": "17:15",
+                  "fine": "19:45"
                 }
               ]
             },
@@ -3147,11 +2847,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
+                  "inizio": "08:15",
                   "fine": "19:15"
                 }
               ]
@@ -3183,8 +2879,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "12:15"
+                  "inizio": "11:15",
+                  "fine": "13:15"
                 },
                 {
                   "inizio": "14:15",
@@ -3217,12 +2913,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "11:15",
-                  "fine": "15:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "G.3",
@@ -3246,12 +2937,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "17:00",
+                  "fine": "17:30"
                 }
               ]
             }
@@ -3297,20 +2984,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "08:30",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 }
               ]
             },
@@ -3351,20 +3030,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "11:15"
+                  "inizio": "08:30",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "11:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 }
               ]
             },
@@ -3400,11 +3071,11 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
+                  "inizio": "08:15",
+                  "fine": "11:15"
                 },
                 {
-                  "inizio": "12:15",
+                  "inizio": "11:15",
                   "fine": "14:15"
                 },
                 {
@@ -3445,20 +3116,16 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "09:30",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -3494,16 +3161,16 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
+                  "inizio": "09:30",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -3539,20 +3206,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "09:30",
+                  "fine": "11:30"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 }
               ]
             },
@@ -3583,12 +3242,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
+                  "inizio": "11:15",
+                  "fine": "13:15"
                 },
                 {
                   "inizio": "14:15",
@@ -3640,8 +3295,12 @@
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "17:15"
+                  "inizio": "14:15",
+                  "fine": "16:15"
+                },
+                {
+                  "inizio": "16:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -3678,19 +3337,11 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
                   "fine": "13:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
+                  "inizio": "14:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -3734,12 +3385,8 @@
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "12:15",
+                  "fine": "14:15"
                 }
               ]
             }
@@ -3780,16 +3427,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "08:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -3825,16 +3464,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
+                  "inizio": "10:15",
+                  "fine": "12:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
+                  "fine": "18:15"
                 }
               ]
             },
@@ -3870,7 +3505,11 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
+                  "inizio": "08:15",
+                  "fine": "10:15"
+                },
+                {
+                  "inizio": "14:15",
                   "fine": "18:15"
                 }
               ]
@@ -3913,18 +3552,6 @@
                 {
                   "inizio": "10:15",
                   "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
                 }
               ]
             },
@@ -3966,6 +3593,10 @@
                 {
                   "inizio": "14:15",
                   "fine": "16:15"
+                },
+                {
+                  "inizio": "16:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -4001,136 +3632,18 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "19:15"
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
                 }
               ]
             },
             {
               "name": "B.3.3",
               "id": 2002,
-              "features": [
-                {
-                  "id": 4,
-                  "it": "Video proiettore",
-                  "en": "Video projector"
-                },
-                {
-                  "id": 5,
-                  "it": "Radio microfono",
-                  "en": "Radio microphone"
-                },
-                {
-                  "id": 6,
-                  "it": "Oscurabile",
-                  "en": "Dimmable"
-                },
-                {
-                  "id": 7,
-                  "it": "Cattedra cablata",
-                  "en": "Wired chair"
-                },
-                {
-                  "id": 142,
-                  "it": "Postazioni dotate di presa elettrica",
-                  "en": "Seats with electric socket"
-                }
-              ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "18:15"
-                }
-              ]
-            },
-            {
-              "name": "B.3.4",
-              "id": 2003,
-              "features": [
-                {
-                  "id": 4,
-                  "it": "Video proiettore",
-                  "en": "Video projector"
-                },
-                {
-                  "id": 5,
-                  "it": "Radio microfono",
-                  "en": "Radio microphone"
-                },
-                {
-                  "id": 6,
-                  "it": "Oscurabile",
-                  "en": "Dimmable"
-                },
-                {
-                  "id": 7,
-                  "it": "Cattedra cablata",
-                  "en": "Wired chair"
-                },
-                {
-                  "id": 142,
-                  "it": "Postazioni dotate di presa elettrica",
-                  "en": "Seats with electric socket"
-                }
-              ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                }
-              ]
-            },
-            {
-              "name": "B.4.1",
-              "id": 101,
-              "features": [
-                {
-                  "id": 4,
-                  "it": "Video proiettore",
-                  "en": "Video projector"
-                },
-                {
-                  "id": 5,
-                  "it": "Radio microfono",
-                  "en": "Radio microphone"
-                },
-                {
-                  "id": 6,
-                  "it": "Oscurabile",
-                  "en": "Dimmable"
-                },
-                {
-                  "id": 142,
-                  "it": "Postazioni dotate di presa elettrica",
-                  "en": "Seats with electric socket"
-                }
-              ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "18:15"
-                }
-              ]
-            },
-            {
-              "name": "B.4.2",
-              "id": 1226,
               "features": [
                 {
                   "id": 4,
@@ -4170,6 +3683,120 @@
               ]
             },
             {
+              "name": "B.3.4",
+              "id": 2003,
+              "features": [
+                {
+                  "id": 4,
+                  "it": "Video proiettore",
+                  "en": "Video projector"
+                },
+                {
+                  "id": 5,
+                  "it": "Radio microfono",
+                  "en": "Radio microphone"
+                },
+                {
+                  "id": 6,
+                  "it": "Oscurabile",
+                  "en": "Dimmable"
+                },
+                {
+                  "id": 7,
+                  "it": "Cattedra cablata",
+                  "en": "Wired chair"
+                },
+                {
+                  "id": 142,
+                  "it": "Postazioni dotate di presa elettrica",
+                  "en": "Seats with electric socket"
+                }
+              ],
+              "occupancy": [
+                {
+                  "inizio": "11:30",
+                  "fine": "15:00"
+                }
+              ]
+            },
+            {
+              "name": "B.4.1",
+              "id": 101,
+              "features": [
+                {
+                  "id": 4,
+                  "it": "Video proiettore",
+                  "en": "Video projector"
+                },
+                {
+                  "id": 5,
+                  "it": "Radio microfono",
+                  "en": "Radio microphone"
+                },
+                {
+                  "id": 6,
+                  "it": "Oscurabile",
+                  "en": "Dimmable"
+                },
+                {
+                  "id": 142,
+                  "it": "Postazioni dotate di presa elettrica",
+                  "en": "Seats with electric socket"
+                }
+              ],
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
+            },
+            {
+              "name": "B.4.2",
+              "id": 1226,
+              "features": [
+                {
+                  "id": 4,
+                  "it": "Video proiettore",
+                  "en": "Video projector"
+                },
+                {
+                  "id": 5,
+                  "it": "Radio microfono",
+                  "en": "Radio microphone"
+                },
+                {
+                  "id": 6,
+                  "it": "Oscurabile",
+                  "en": "Dimmable"
+                },
+                {
+                  "id": 7,
+                  "it": "Cattedra cablata",
+                  "en": "Wired chair"
+                },
+                {
+                  "id": 142,
+                  "it": "Postazioni dotate di presa elettrica",
+                  "en": "Seats with electric socket"
+                }
+              ],
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "14:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
+            },
+            {
               "name": "B.4.3",
               "id": 4590,
               "features": [
@@ -4205,8 +3832,8 @@
                   "fine": "13:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "17:15"
+                  "inizio": "14:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -4242,26 +3869,94 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 }
               ]
             },
             {
               "name": "B.5.1",
               "id": 1221,
+              "features": [
+                {
+                  "id": 4,
+                  "it": "Video proiettore",
+                  "en": "Video projector"
+                },
+                {
+                  "id": 6,
+                  "it": "Oscurabile",
+                  "en": "Dimmable"
+                },
+                {
+                  "id": 7,
+                  "it": "Cattedra cablata",
+                  "en": "Wired chair"
+                },
+                {
+                  "id": 142,
+                  "it": "Postazioni dotate di presa elettrica",
+                  "en": "Seats with electric socket"
+                }
+              ],
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "11:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "16:15"
+                },
+                {
+                  "inizio": "16:15",
+                  "fine": "18:15"
+                }
+              ]
+            },
+            {
+              "name": "B.5.2",
+              "id": 1222,
+              "features": [
+                {
+                  "id": 4,
+                  "it": "Video proiettore",
+                  "en": "Video projector"
+                },
+                {
+                  "id": 6,
+                  "it": "Oscurabile",
+                  "en": "Dimmable"
+                },
+                {
+                  "id": 7,
+                  "it": "Cattedra cablata",
+                  "en": "Wired chair"
+                },
+                {
+                  "id": 142,
+                  "it": "Postazioni dotate di presa elettrica",
+                  "en": "Seats with electric socket"
+                }
+              ],
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "11:15"
+                },
+                {
+                  "inizio": "11:15",
+                  "fine": "14:15"
+                },
+                {
+                  "inizio": "16:15",
+                  "fine": "18:15"
+                }
+              ]
+            },
+            {
+              "name": "B.5.3",
+              "id": 1223,
               "features": [
                 {
                   "id": 4,
@@ -4304,86 +3999,6 @@
               ]
             },
             {
-              "name": "B.5.2",
-              "id": 1222,
-              "features": [
-                {
-                  "id": 4,
-                  "it": "Video proiettore",
-                  "en": "Video projector"
-                },
-                {
-                  "id": 6,
-                  "it": "Oscurabile",
-                  "en": "Dimmable"
-                },
-                {
-                  "id": 7,
-                  "it": "Cattedra cablata",
-                  "en": "Wired chair"
-                },
-                {
-                  "id": 142,
-                  "it": "Postazioni dotate di presa elettrica",
-                  "en": "Seats with electric socket"
-                }
-              ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                }
-              ]
-            },
-            {
-              "name": "B.5.3",
-              "id": 1223,
-              "features": [
-                {
-                  "id": 4,
-                  "it": "Video proiettore",
-                  "en": "Video projector"
-                },
-                {
-                  "id": 6,
-                  "it": "Oscurabile",
-                  "en": "Dimmable"
-                },
-                {
-                  "id": 7,
-                  "it": "Cattedra cablata",
-                  "en": "Wired chair"
-                },
-                {
-                  "id": 142,
-                  "it": "Postazioni dotate di presa elettrica",
-                  "en": "Seats with electric socket"
-                }
-              ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
-                }
-              ]
-            },
-            {
               "name": "B.5.4",
               "id": 1224,
               "features": [
@@ -4415,20 +4030,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
                   "inizio": "10:15",
                   "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
                 }
               ]
             },
@@ -4459,16 +4062,20 @@
               ],
               "occupancy": [
                 {
+                  "inizio": "08:15",
+                  "fine": "10:15"
+                },
+                {
                   "inizio": "10:15",
                   "fine": "12:15"
                 },
                 {
                   "inizio": "13:15",
-                  "fine": "16:15"
+                  "fine": "15:15"
                 },
                 {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "15:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -4504,12 +4111,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "08:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -4545,12 +4148,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
+                  "inizio": "08:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -4587,19 +4186,11 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "10:15"
+                  "fine": "13:15"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
+                  "inizio": "14:15",
+                  "fine": "16:15"
                 }
               ]
             }
@@ -4645,12 +4236,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
+                  "inizio": "10:15",
                   "fine": "12:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "17:15"
+                  "fine": "19:15"
                 }
               ]
             },
@@ -4691,8 +4282,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "19:15"
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "15:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -4733,8 +4328,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "19:15"
+                  "inizio": "09:15",
+                  "fine": "12:15"
+                },
+                {
+                  "inizio": "15:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -4780,7 +4379,7 @@
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "17:15"
+                  "fine": "18:15"
                 }
               ]
             }
@@ -4816,12 +4415,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "08:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -4852,12 +4447,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "08:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -4888,12 +4479,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "08:15",
+                  "fine": "19:15"
                 }
               ]
             }
@@ -4919,20 +4506,16 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "11:15"
+                  "inizio": "09:15",
+                  "fine": "10:15"
                 },
                 {
-                  "inizio": "11:15",
+                  "inizio": "10:15",
                   "fine": "13:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
+                  "inizio": "13:15",
+                  "fine": "15:15"
                 }
               ]
             }
@@ -4968,20 +4551,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "08:00",
+                  "fine": "11:30"
                 }
               ]
             }
@@ -5032,12 +4603,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
+                  "inizio": "10:15",
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "13:15",
+                  "fine": "15:15"
                 }
               ]
             },
@@ -5083,12 +4654,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
+                  "inizio": "08:30",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -5122,24 +4689,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "21.S.1",
@@ -5191,12 +4741,12 @@
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "15:15"
+                  "inizio": "12:15",
+                  "fine": "14:15"
                 },
                 {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "14:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -5232,16 +4782,12 @@
               ],
               "occupancy": [
                 {
+                  "inizio": "08:15",
+                  "fine": "10:15"
+                },
+                {
                   "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "fine": "13:15"
                 }
               ]
             },
@@ -5277,16 +4823,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
+                  "inizio": "08:15",
+                  "fine": "10:15"
                 },
                 {
                   "inizio": "15:15",
-                  "fine": "18:15"
+                  "fine": "17:15"
                 }
               ]
             },
@@ -5320,24 +4862,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -5421,19 +4946,11 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "11:15"
+                  "fine": "10:15"
                 },
                 {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "10:15",
+                  "fine": "12:15"
                 }
               ]
             },
@@ -5475,19 +4992,11 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
+                  "fine": "11:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "fine": "17:15"
                 }
               ]
             },
@@ -5524,15 +5033,19 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "12:15"
+                  "fine": "10:15"
                 },
                 {
-                  "inizio": "14:15",
+                  "inizio": "10:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "13:15",
+                  "fine": "15:15"
+                },
+                {
+                  "inizio": "15:15",
                   "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
                 }
               ]
             },
@@ -5576,8 +5089,12 @@
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "17:15"
+                  "inizio": "12:15",
+                  "fine": "14:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "16:15"
                 }
               ]
             },
@@ -5613,16 +5130,16 @@
               ],
               "occupancy": [
                 {
+                  "inizio": "08:15",
+                  "fine": "10:15"
+                },
+                {
                   "inizio": "10:15",
                   "fine": "13:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "18:15"
+                  "inizio": "16:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -5666,11 +5183,11 @@
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "12:15",
+                  "fine": "15:15"
                 },
                 {
-                  "inizio": "16:15",
+                  "inizio": "15:15",
                   "fine": "18:15"
                 }
               ]
@@ -5708,10 +5225,10 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "10:15"
+                  "fine": "11:15"
                 },
                 {
-                  "inizio": "10:15",
+                  "inizio": "11:15",
                   "fine": "13:15"
                 },
                 {
@@ -5760,12 +5277,20 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "12:15",
+                  "inizio": "08:15",
+                  "fine": "10:15"
+                },
+                {
+                  "inizio": "10:15",
+                  "fine": "12:15"
+                },
+                {
+                  "inizio": "13:15",
                   "fine": "15:15"
                 },
                 {
                   "inizio": "15:15",
-                  "fine": "19:15"
+                  "fine": "17:15"
                 }
               ]
             },
@@ -5806,12 +5331,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "inizio": "12:15",
+                  "fine": "14:15"
                 }
               ]
             },
@@ -5852,12 +5373,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "08:15",
+                  "fine": "10:15"
                 }
               ]
             },
@@ -5898,16 +5415,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "14:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -5943,20 +5452,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "19:15"
+                  "inizio": "08:15",
+                  "fine": "14:15"
                 }
               ]
             },
@@ -5998,15 +5495,7 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "fine": "10:15"
                 }
               ]
             },
@@ -6045,16 +5534,7 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -6091,8 +5571,16 @@
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "15:15",
+                  "inizio": "12:15",
+                  "fine": "14:15"
+                },
+                {
+                  "inizio": "14:15",
                   "fine": "17:15"
+                },
+                {
+                  "inizio": "17:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -6128,15 +5616,11 @@
                 },
                 {
                   "inizio": "10:15",
-                  "fine": "14:15"
+                  "fine": "12:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "fine": "17:15"
                 }
               ]
             },
@@ -6167,20 +5651,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "12:15",
+                  "fine": "16:15"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
+                  "inizio": "16:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -6221,19 +5697,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
+                  "inizio": "15:15",
                   "fine": "18:15"
                 }
               ]
@@ -6265,20 +5729,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "09:30",
+                  "fine": "20:30"
                 }
               ]
             },
@@ -6315,11 +5767,7 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "19:15"
+                  "fine": "13:15"
                 }
               ]
             },
@@ -6360,8 +5808,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "18:15"
+                  "inizio": "08:30",
+                  "fine": "12:30"
                 }
               ]
             },
@@ -6402,12 +5850,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
+                  "inizio": "08:15",
+                  "fine": "11:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "15:15"
+                  "inizio": "11:15",
+                  "fine": "14:15"
                 }
               ]
             },
@@ -6438,20 +5886,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
                   "inizio": "10:15",
                   "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "19:15"
                 }
               ]
             },
@@ -6487,20 +5923,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 }
               ]
             }
@@ -6547,10 +5971,10 @@
                 },
                 {
                   "inizio": "10:15",
-                  "fine": "12:15"
+                  "fine": "13:15"
                 },
                 {
-                  "inizio": "13:15",
+                  "inizio": "15:15",
                   "fine": "18:15"
                 }
               ]
@@ -6582,15 +6006,11 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
+                  "inizio": "09:15",
                   "fine": "13:15"
                 },
                 {
-                  "inizio": "14:15",
+                  "inizio": "13:15",
                   "fine": "16:15"
                 }
               ]
@@ -6630,16 +6050,7 @@
                   "en": "Slide projector"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "E.P.2",
@@ -6647,12 +6058,8 @@
               "features": [],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
+                  "inizio": "14:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -6712,15 +6119,7 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:30",
-                  "fine": "16:00"
-                },
-                {
-                  "inizio": "17:00",
-                  "fine": "19:15"
+                  "fine": "18:15"
                 }
               ]
             }
@@ -6762,10 +6161,6 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
                   "fine": "18:15"
                 }
               ]
@@ -6797,12 +6192,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
+                  "inizio": "09:15",
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -6824,10 +6219,6 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
                   "fine": "18:15"
                 }
               ]
@@ -6877,7 +6268,11 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "18:15"
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "13:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -6961,11 +6356,11 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "14:15",
+                  "inizio": "15:15",
                   "fine": "18:15"
                 }
               ]
@@ -6988,10 +6383,6 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
                   "fine": "18:15"
                 }
               ]
@@ -7019,15 +6410,7 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
                   "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:45"
                 }
               ]
             },
@@ -7054,6 +6437,10 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
                   "fine": "18:15"
                 }
               ]
@@ -7075,8 +6462,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "12:15"
+                  "inizio": "09:15",
+                  "fine": "14:15"
                 },
                 {
                   "inizio": "14:15",
@@ -7165,12 +6552,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
+                  "inizio": "11:15",
                   "fine": "13:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "inizio": "15:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -7196,24 +6583,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:30",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -7245,6 +6620,10 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
                   "fine": "18:15"
                 }
               ]
@@ -7264,12 +6643,7 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.4",
@@ -7344,7 +6718,7 @@
                 },
                 {
                   "inizio": "16:15",
-                  "fine": "18:15"
+                  "fine": "19:15"
                 }
               ]
             },
@@ -7397,12 +6771,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "inizio": "09:00",
+                  "fine": "13:00"
                 }
               ]
             },
@@ -7433,16 +6803,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
+                  "inizio": "10:15",
                   "fine": "13:15"
                 },
                 {
                   "inizio": "14:15",
                   "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
                 }
               ]
             },
@@ -7478,12 +6844,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
+                  "inizio": "14:15",
+                  "fine": "18:15"
                 },
                 {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "18:15",
+                  "fine": "20:30"
                 }
               ]
             },
@@ -7537,10 +6903,6 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
                   "fine": "18:15"
                 }
               ]
@@ -7577,14 +6939,6 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
                   "inizio": "14:15",
                   "fine": "18:15"
                 }
@@ -7611,10 +6965,6 @@
                 }
               ],
               "occupancy": [
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
                 {
                   "inizio": "14:15",
                   "fine": "18:15"
@@ -7675,6 +7025,14 @@
               ],
               "occupancy": [
                 {
+                  "inizio": "08:15",
+                  "fine": "12:15"
+                },
+                {
+                  "inizio": "13:15",
+                  "fine": "14:15"
+                },
+                {
                   "inizio": "14:15",
                   "fine": "18:15"
                 }
@@ -7719,12 +7077,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "17:15"
+                  "inizio": "09:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -7769,7 +7123,12 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "18:15"
+                }
+              ]
             }
           ]
         },
@@ -7782,8 +7141,8 @@
               "features": [],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "15:15"
+                  "inizio": "09:15",
+                  "fine": "12:15"
                 }
               ]
             },
@@ -7812,42 +7171,19 @@
                   "en": "Wired chair"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.3",
               "id": 4855,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.4",
               "id": 4856,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.5",
@@ -7879,16 +7215,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.6",
@@ -7926,12 +7253,8 @@
                   "fine": "12:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "12:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -7939,7 +7262,12 @@
               "name": "B6.3.1",
               "id": 4701,
               "features": [],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "16:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B6.3.2",
@@ -7947,8 +7275,8 @@
               "features": [],
               "occupancy": [
                 {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "12:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -7956,12 +7284,7 @@
               "name": "B6.3.3",
               "id": 4861,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -8001,15 +7324,7 @@
               "occupancy": [
                 {
                   "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "fine": "13:15"
                 },
                 {
                   "inizio": "18:15",
@@ -8049,20 +7364,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -8098,16 +7401,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "12:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -8143,23 +7442,11 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
+                  "inizio": "16:15",
                   "fine": "18:15"
                 }
               ]
@@ -8196,16 +7483,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "14:15",
+                  "fine": "16:15"
                 }
               ]
             },
@@ -8241,20 +7520,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "18:15",
+                  "fine": "20:15"
                 }
               ]
             },
@@ -8264,19 +7535,7 @@
               "features": [],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
+                  "inizio": "14:15",
                   "fine": "18:15"
                 }
               ]
@@ -8313,16 +7572,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "11:15",
-                  "fine": "13:15"
+                  "inizio": "10:15",
+                  "fine": "12:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "14:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -8332,20 +7587,8 @@
               "features": [],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "14:15",
+                  "fine": "16:15"
                 }
               ]
             },
@@ -8353,7 +7596,12 @@
               "name": "B8.0.10",
               "id": 4862,
               "features": [],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "B8.0.11",
@@ -8365,12 +7613,7 @@
               "name": "B8.0.12",
               "id": 4864,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.1.1",
@@ -8409,16 +7652,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
                   "inizio": "10:15",
-                  "fine": "12:15"
+                  "fine": "13:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "17:15"
+                  "inizio": "16:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -8429,15 +7668,11 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "12:15"
+                  "fine": "10:15"
                 },
                 {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "10:15",
+                  "fine": "13:15"
                 }
               ]
             },
@@ -8478,23 +7713,11 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
                   "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
+                  "fine": "13:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
                   "fine": "18:15"
                 }
               ]
@@ -8505,16 +7728,8 @@
               "features": [],
               "occupancy": [
                 {
-                  "inizio": "10:15",
+                  "inizio": "08:15",
                   "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
                 }
               ]
             },
@@ -8555,24 +7770,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -8613,24 +7816,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
+                  "inizio": "11:30",
+                  "fine": "15:00"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -8709,16 +7900,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "11:30",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -8759,20 +7942,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
                   "inizio": "10:15",
-                  "fine": "14:15"
+                  "fine": "13:15"
                 },
                 {
-                  "inizio": "15:15",
-                  "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:15"
+                  "inizio": "13:15",
+                  "fine": "15:15"
                 }
               ]
             },
@@ -8809,15 +7984,19 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "12:15"
+                  "fine": "10:15"
                 },
                 {
-                  "inizio": "12:15",
+                  "inizio": "10:15",
                   "fine": "14:15"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "17:15"
+                  "fine": "18:15"
+                },
+                {
+                  "inizio": "18:15",
+                  "fine": "20:15"
                 }
               ]
             },
@@ -8856,12 +8035,7 @@
                   "en": "Oculus Quest 2 VR headsets"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "11:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.05 - D.I.",
@@ -8891,11 +8065,7 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "fine": "19:15"
                 }
               ]
             },
@@ -8936,16 +8106,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
+                  "inizio": "11:00",
+                  "fine": "14:00"
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "17:15"
+                  "fine": "16:15"
                 }
               ]
             },
@@ -8986,20 +8152,20 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
                   "inizio": "10:15",
-                  "fine": "13:15"
+                  "fine": "12:15"
                 },
                 {
                   "inizio": "13:15",
-                  "fine": "14:15"
+                  "fine": "15:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "15:15",
+                  "fine": "18:15"
+                },
+                {
+                  "inizio": "18:15",
+                  "fine": "20:15"
                 }
               ]
             },
@@ -9035,20 +8201,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "11:30",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -9088,16 +8242,8 @@
                   "fine": "10:15"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "inizio": "13:15",
+                  "fine": "16:15"
                 }
               ]
             },
@@ -9141,8 +8287,12 @@
                   "fine": "13:15"
                 },
                 {
-                  "inizio": "15:15",
-                  "fine": "17:15"
+                  "inizio": "13:15",
+                  "fine": "15:15"
+                },
+                {
+                  "inizio": "17:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -9178,16 +8328,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
                   "inizio": "12:15",
-                  "fine": "15:15"
+                  "fine": "16:15"
                 },
                 {
                   "inizio": "16:15",
@@ -9225,7 +8367,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "11:30",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "L.14",
@@ -9260,11 +8407,11 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "12:15"
+                  "fine": "10:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "14:15"
+                  "inizio": "11:00",
+                  "fine": "14:00"
                 },
                 {
                   "inizio": "14:15",
@@ -9304,20 +8451,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "11:30",
+                  "fine": "18:30"
                 }
               ]
             }
@@ -9363,16 +8498,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
-                  "fine": "18:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -9409,7 +8536,7 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "12:15"
+                  "fine": "10:15"
                 },
                 {
                   "inizio": "12:15",
@@ -9417,10 +8544,6 @@
                 },
                 {
                   "inizio": "14:15",
-                  "fine": "16:15"
-                },
-                {
-                  "inizio": "16:15",
                   "fine": "18:15"
                 }
               ]
@@ -9457,20 +8580,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "16:15",
+                  "fine": "19:15"
                 }
               ]
             },
@@ -9506,12 +8617,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -9546,14 +8653,6 @@
                 }
               ],
               "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "14:15"
-                },
                 {
                   "inizio": "14:15",
                   "fine": "18:15"
@@ -9602,15 +8701,7 @@
                 },
                 {
                   "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "fine": "13:15"
                 },
                 {
                   "inizio": "16:15",
@@ -9650,16 +8741,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "09:00",
+                  "fine": "16:00"
                 }
               ]
             },
@@ -9695,20 +8778,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "12:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
+                  "inizio": "09:00",
+                  "fine": "16:00"
                 },
                 {
                   "inizio": "16:15",
@@ -9748,12 +8819,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
+                  "inizio": "09:00",
+                  "fine": "18:00"
                 }
               ]
             },
@@ -9789,15 +8856,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
+                  "inizio": "14:15",
                   "fine": "18:15"
                 }
               ]
@@ -9835,15 +8894,7 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "fine": "12:15"
                 }
               ]
             },
@@ -9879,12 +8930,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "08:15",
+                  "fine": "12:15"
                 }
               ]
             },
@@ -9921,11 +8968,11 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "12:15"
+                  "fine": "10:15"
                 },
                 {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "inizio": "10:15",
+                  "fine": "14:15"
                 }
               ]
             },
@@ -9966,11 +9013,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
-                  "inizio": "10:15",
+                  "inizio": "09:15",
                   "fine": "13:15"
                 },
                 {
@@ -10019,12 +9062,16 @@
                   "fine": "10:15"
                 },
                 {
-                  "inizio": "11:15",
-                  "fine": "13:15"
+                  "inizio": "10:15",
+                  "fine": "12:15"
+                },
+                {
+                  "inizio": "12:15",
+                  "fine": "16:15"
                 },
                 {
                   "inizio": "16:15",
-                  "fine": "19:15"
+                  "fine": "18:15"
                 }
               ]
             },
@@ -10074,11 +9121,7 @@
                 },
                 {
                   "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "19:15"
+                  "fine": "16:15"
                 }
               ]
             },
@@ -10119,8 +9162,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "12:15",
-                  "fine": "14:15"
+                  "inizio": "10:15",
+                  "fine": "13:15"
                 },
                 {
                   "inizio": "14:15",
@@ -10129,10 +9172,6 @@
                 {
                   "inizio": "16:15",
                   "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:15"
                 }
               ]
             },
@@ -10173,12 +9212,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "12:15"
+                  "inizio": "08:15",
+                  "fine": "14:15"
                 },
                 {
-                  "inizio": "15:00",
-                  "fine": "16:30"
+                  "inizio": "14:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -10220,19 +9259,15 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "10:15"
+                  "fine": "12:15"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
+                  "inizio": "12:15",
+                  "fine": "14:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "15:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "18:15"
+                  "inizio": "14:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -10274,19 +9309,15 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "12:15"
+                  "fine": "10:15"
                 },
                 {
-                  "inizio": "13:15",
-                  "fine": "15:15"
+                  "inizio": "10:15",
+                  "fine": "14:15"
                 },
                 {
-                  "inizio": "15:15",
+                  "inizio": "14:15",
                   "fine": "18:15"
-                },
-                {
-                  "inizio": "18:15",
-                  "fine": "20:15"
                 }
               ]
             },
@@ -10331,7 +9362,15 @@
                   "fine": "10:15"
                 },
                 {
-                  "inizio": "14:15",
+                  "inizio": "10:15",
+                  "fine": "12:15"
+                },
+                {
+                  "inizio": "13:15",
+                  "fine": "15:15"
+                },
+                {
+                  "inizio": "15:15",
                   "fine": "18:15"
                 },
                 {
@@ -10349,7 +9388,12 @@
               "name": "AULA CARASSA E DADDA",
               "id": 4745,
               "features": [],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:00",
+                  "fine": "20:00"
+                }
+              ]
             },
             {
               "name": "BL.28.1.1",
@@ -10381,7 +9425,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:15",
+                  "fine": "17:15"
+                }
+              ]
             },
             {
               "name": "BL.28.1.2",
@@ -10405,15 +9454,15 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "10:15"
-                },
-                {
                   "inizio": "10:15",
                   "fine": "14:15"
                 },
                 {
                   "inizio": "14:15",
+                  "fine": "16:15"
+                },
+                {
+                  "inizio": "16:15",
                   "fine": "18:15"
                 }
               ]
@@ -10450,16 +9499,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
-                },
-                {
-                  "inizio": "17:15",
-                  "fine": "19:15"
+                  "inizio": "09:00",
+                  "fine": "18:00"
                 }
               ]
             },
@@ -10489,12 +9530,8 @@
                   "fine": "10:15"
                 },
                 {
-                  "inizio": "10:15",
-                  "fine": "12:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
+                  "inizio": "11:15",
+                  "fine": "13:15"
                 }
               ]
             }
@@ -10536,27 +9573,13 @@
               "name": "CR04.0.1",
               "id": 5147,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "12:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.0.2",
               "id": 5146,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.0.3",
@@ -10568,16 +9591,7 @@
               "name": "CR04.1.1",
               "id": 5149,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.1.2",
@@ -10589,12 +9603,7 @@
               "name": "CR04.1.3",
               "id": 5153,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.1.4",
@@ -10609,11 +9618,7 @@
               "occupancy": [
                 {
                   "inizio": "10:15",
-                  "fine": "14:15"
-                },
-                {
-                  "inizio": "15:15",
-                  "fine": "17:15"
+                  "fine": "13:15"
                 }
               ]
             },
@@ -10623,8 +9628,12 @@
               "features": [],
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
+                  "inizio": "10:15",
+                  "fine": "12:15"
+                },
+                {
+                  "inizio": "13:15",
+                  "fine": "15:15"
                 }
               ]
             },
@@ -10632,12 +9641,7 @@
               "name": "CR04.2.3",
               "id": 5158,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "15:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "CR04.2.4",
@@ -10811,12 +9815,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "18:15",
-                  "fine": "20:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.0.2",
@@ -10850,8 +9849,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "13:15",
-                  "fine": "18:15"
+                  "inizio": "09:15",
+                  "fine": "13:15"
                 }
               ]
             },
@@ -10995,7 +9994,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "B.0.7",
@@ -11027,16 +10031,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.1.1",
@@ -11068,20 +10063,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "11:15"
-                },
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.1.2",
@@ -11113,16 +10095,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.1.3",
@@ -11149,12 +10122,7 @@
                   "en": "Microphone"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "14:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.1.4",
@@ -11191,16 +10159,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "11:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.1.5",
@@ -11235,7 +10194,7 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "13:15"
+                  "fine": "14:15"
                 }
               ]
             },
@@ -11272,7 +10231,7 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "12:15"
+                  "fine": "13:15"
                 },
                 {
                   "inizio": "13:15",
@@ -11306,10 +10265,6 @@
                 }
               ],
               "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
                 {
                   "inizio": "14:15",
                   "fine": "18:15"
@@ -11351,16 +10306,7 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B.2.4",
@@ -11389,8 +10335,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "14:30",
-                  "fine": "16:30"
+                  "inizio": "09:15",
+                  "fine": "13:15"
                 }
               ]
             },
@@ -11461,7 +10407,12 @@
                   "en": "Seats with network socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                }
+              ]
             }
           ]
         },
@@ -11498,12 +10449,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "20:30",
-                  "fine": "23:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.0.2",
@@ -11535,12 +10481,7 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "20:30",
-                  "fine": "23:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.1.1",
@@ -11606,12 +10547,12 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "13:15",
-                  "fine": "17:15"
+                  "inizio": "09:15",
+                  "fine": "13:15"
                 },
                 {
-                  "inizio": "20:30",
-                  "fine": "23:00"
+                  "inizio": "14:15",
+                  "fine": "16:15"
                 }
               ]
             },
@@ -11647,16 +10588,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
                   "inizio": "14:15",
                   "fine": "18:15"
-                },
-                {
-                  "inizio": "20:30",
-                  "fine": "23:00"
                 }
               ]
             }
@@ -11691,7 +10624,16 @@
                   "en": "Environmental microphone"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "18:15"
+                }
+              ]
             }
           ]
         }
@@ -11734,12 +10676,7 @@
                   "en": "Slide projector"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.0.2",
@@ -11793,7 +10730,16 @@
                   "en": "Video projector with PC"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "12:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "17:15"
+                }
+              ]
             },
             {
               "name": "A.0.4",
@@ -11815,16 +10761,7 @@
                   "en": "Dimmable"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.1.1",
@@ -11853,8 +10790,12 @@
               ],
               "occupancy": [
                 {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
                   "inizio": "14:15",
-                  "fine": "18:15"
+                  "fine": "17:15"
                 }
               ]
             },
@@ -11899,16 +10840,7 @@
                   "en": "Video projector with PC"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.1.4",
@@ -11930,16 +10862,7 @@
                   "en": "Dimmable"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "18:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.1.5",
@@ -11963,8 +10886,12 @@
               ],
               "occupancy": [
                 {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
                   "inizio": "14:15",
-                  "fine": "18:15"
+                  "fine": "17:15"
                 }
               ]
             },
@@ -11983,16 +10910,7 @@
                   "en": "Video projector with PC"
                 }
               ],
-              "occupancy": [
-                {
-                  "inizio": "10:45",
-                  "fine": "13:45"
-                },
-                {
-                  "inizio": "14:15",
-                  "fine": "16:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         }

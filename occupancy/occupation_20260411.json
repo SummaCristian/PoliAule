@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-08T05:31:41.396514",
+  "generated_at": "2026-04-09T05:23:33.224429",
   "date": "20260411",
   "campuses": [
     {
@@ -278,7 +278,12 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:45",
+                  "fine": "17:30"
+                }
+              ]
             },
             {
               "name": "2.2.2",
@@ -369,7 +374,12 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:45",
+                  "fine": "17:30"
+                }
+              ]
             }
           ]
         },
@@ -2000,7 +2010,12 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "O.1",
@@ -2022,7 +2037,12 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "Q.1",
@@ -2054,7 +2074,12 @@
                   "en": "Videoconference - meeting"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "R.1",
@@ -2088,8 +2113,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:45",
-                  "fine": "17:30"
+                  "inizio": "08:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -2125,8 +2150,8 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:45",
-                  "fine": "17:30"
+                  "inizio": "08:15",
+                  "fine": "18:15"
                 }
               ]
             },

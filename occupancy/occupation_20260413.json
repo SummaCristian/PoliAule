@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-08T05:37:38.153574",
+  "generated_at": "2026-04-09T05:29:23.928488",
   "date": "20260413",
   "campuses": [
     {
@@ -9904,12 +9904,7 @@
               "name": "AULA CARASSA E DADDA",
               "id": 4745,
               "features": [],
-              "occupancy": [
-                {
-                  "inizio": "12:00",
-                  "fine": "18:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.28.1.1",

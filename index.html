@@ -126,6 +126,23 @@
 
         <input type="hidden" id="campus-picker" name="campus" />
         <div id="campus-chips" class="campus-chips"></div>
+        <div class="campus-chips-skeleton" aria-hidden="true">
+          <div class="campus-section-sk">
+            <div class="campus-label-sk"></div>
+            <div class="campus-row-sk">
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+          <div class="campus-section-sk">
+            <div class="campus-label-sk"></div>
+            <div class="campus-row-sk">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        </div>
 
         <!-- Date picker -->
         <div class="date-picker">
@@ -144,7 +161,9 @@
           <div class="date-picker-container">
             <div class="date-indicator"></div>
           </div>
-          <div class="date-picker-skeleton" aria-hidden="true"></div>
+          <div class="date-picker-skeleton" aria-hidden="true">
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+          </div>
         </div>
 
         <div class="time-pickers-skeleton" aria-hidden="true">

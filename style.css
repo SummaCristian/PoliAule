@@ -448,6 +448,7 @@ label {
   }
 }
 
+
 /* Fallback for browsers that don't support backdrop-filter (Samsung Internet) */
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .tabbar {
@@ -464,6 +465,8 @@ label {
 
 .tab {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 
   border: none;
   background: none;
@@ -491,6 +494,13 @@ label {
 
 .material-symbols-outlined {
   font-size: 22px !important;
+}
+
+.tab span:not(.material-symbols-outlined) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .tab.active {

@@ -94,20 +94,61 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
   }
 
   return `
-    <div class="classroom-timeline">
+    <div class="classroom-timeline" data-display-start="${displayStart}" data-display-end="${displayEnd}">
       <div class="timeline-bar-wrapper">
         ${indicatorFrom}
         ${indicatorTo}
         ${indicatorNow}
+        <div class="timeline-hover-cursor" hidden></div>
         <div class="timeline-bar">
           ${queryHtml}
           ${blocksHtml}
+          <div class="timeline-hover-line" hidden></div>
         </div>
         <div class="timeline-ticks">${labelsHtml.join('')}</div>
       </div>
     </div>
   `;
 }
+
+// ---------- TIMELINE HOVER ----------
+
+let _activeBar = null;
+
+document.addEventListener('mousemove', e => {
+  const bar = e.target.closest?.('.timeline-bar');
+
+  if (_activeBar && _activeBar !== bar) {
+    const wrapper = _activeBar.closest('.timeline-bar-wrapper');
+    if (wrapper) wrapper.querySelector('.timeline-hover-cursor').hidden = true;
+    _activeBar.querySelector('.timeline-hover-line').hidden = true;
+    _activeBar = null;
+  }
+
+  if (!bar) return;
+  _activeBar = bar;
+
+  const wrapper = bar.closest('.timeline-bar-wrapper');
+  const cursor = wrapper?.querySelector('.timeline-hover-cursor');
+  const line = bar.querySelector('.timeline-hover-line');
+  const timeline = bar.closest('.classroom-timeline');
+  if (!cursor || !line || !timeline) return;
+
+  const displayStart = +timeline.dataset.displayStart;
+  const displayEnd = +timeline.dataset.displayEnd;
+
+  const rect = bar.getBoundingClientRect();
+  const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const minutes = Math.round(displayStart + fraction * (displayEnd - displayStart));
+  const pct = `${(fraction * 100).toFixed(2)}%`;
+
+  cursor.style.left = pct;
+  cursor.textContent = minutesToTimeDisplay(minutes);
+  cursor.hidden = false;
+
+  line.style.left = pct;
+  line.hidden = false;
+});
 
 // ---------- CARD ----------
 

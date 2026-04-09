@@ -355,6 +355,47 @@
   background: color-mix(in srgb, var(--text-color-primary) 22%, transparent);
 }
 
+.timeline-hover-cursor {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+
+  background: var(--background-color);
+  color: var(--text-color-primary);
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 18%, transparent);
+  border-radius: 0.5rem;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+
+  pointer-events: none;
+  user-select: none;
+  z-index: 10;
+}
+
+.timeline-hover-cursor::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--background-color);
+}
+
+.timeline-hover-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
+  pointer-events: none;
+  z-index: 5;
+}
+
 .timeline-ticks {
   position: relative;
   height: 1.2rem;

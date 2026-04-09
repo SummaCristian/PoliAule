@@ -65,7 +65,10 @@
   "settings.language": "Lingua",
   "settings.sectionCampus": "Campus",
   "settings.preferredCampus": "Campus Preferito",
+  "settings.preferredCampusDesc": "Scegli quale campus vuoi vedere di default quando apri PoliAule.",
   "settings.rememberLastCampus": "Ricorda l'Ultimo Usato",
+  "settings.rememberLastCampusDesc": "Ricorda l'ultimo campus che hai scelto e aprilo automaticamente la prossima volta.",
+  "settings.languageDesc": "Cambia la lingua dell'app.",
   "settings.noCampusData": "Apri l'app per caricare i campus",
 
   "footer.whatsNew": "Cosa c'è di nuovo?",

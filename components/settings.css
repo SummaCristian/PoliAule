@@ -304,6 +304,10 @@
   letter-spacing: -0.01em;
 }
 
+.settings-row__sublabel:empty {
+  display: none;
+}
+
 /* ── iOS-style toggle switch ────────────────────────────────────────────────── */
 
 .settings-toggle {

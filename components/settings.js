@@ -31,8 +31,15 @@ let refreshCampusSelectFn = null; // set by buildCampusSection, called on every 
 function getPopupTarget() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const w = Math.min(340, vw - 40);
-  const h = Math.min(440, vh - 60);
+  const w = Math.min(400, vw - 32);
+
+  // Measure natural content height at the target width
+  popupEl.style.width = w + 'px';
+  popupEl.style.height = 'auto';
+  const naturalH = popupEl.scrollHeight;
+  popupEl.style.height = ''; // applyGeometry sets the final value immediately after
+
+  const h = Math.min(naturalH, vh - 60);
   return {
     left: (vw - w) / 2,
     top: (vh - h) / 2,
@@ -241,9 +248,11 @@ function buildCampusSection() {
     </div>
     <div class="settings-row__label-group">
       <span class="settings-row__label" data-preferred-label></span>
+      <span class="settings-row__sublabel" data-preferred-sublabel></span>
     </div>
   `;
-  const preferredLabel = preferredIconTitle.querySelector('[data-preferred-label]');
+  const preferredLabel    = preferredIconTitle.querySelector('[data-preferred-label]');
+  const preferredSublabel = preferredIconTitle.querySelector('[data-preferred-sublabel]');
 
   let preferredEnabled = localStorage.getItem(PREFERRED_CAMPUS_ENABLED_KEY) === 'true';
   const preferredToggle = buildToggle(preferredEnabled);
@@ -325,9 +334,11 @@ function buildCampusSection() {
     </div>
     <div class="settings-row__label-group">
       <span class="settings-row__label" data-rememberlast-label></span>
+      <span class="settings-row__sublabel" data-rememberlast-sublabel></span>
     </div>
   `;
-  const rememberLastLabel = rememberLastIconTitle.querySelector('[data-rememberlast-label]');
+  const rememberLastLabel    = rememberLastIconTitle.querySelector('[data-rememberlast-label]');
+  const rememberLastSublabel = rememberLastIconTitle.querySelector('[data-rememberlast-sublabel]');
 
   let rememberLastEnabled = localStorage.getItem(REMEMBER_LAST_CAMPUS_KEY) === 'true';
   const rememberLastToggle = buildToggle(rememberLastEnabled);
@@ -368,8 +379,12 @@ function buildCampusSection() {
     animateI18nElement(headerLabel);
     preferredLabel.textContent     = t('settings.preferredCampus');
     animateI18nElement(preferredLabel);
+    preferredSublabel.textContent  = t('settings.preferredCampusDesc');
+    animateI18nElement(preferredSublabel);
     rememberLastLabel.textContent  = t('settings.rememberLastCampus');
     animateI18nElement(rememberLastLabel);
+    rememberLastSublabel.textContent = t('settings.rememberLastCampusDesc');
+    animateI18nElement(rememberLastSublabel);
     if (preferredEnabled && campusSelect.disabled && campusSelect.options[0]) {
       campusSelect.options[0].textContent = t('settings.noCampusData');
     }
@@ -413,7 +428,10 @@ function buildPopup() {
               <div class="settings-row__icon-badge" style="--badge-color: var(--text-color-accent)">
                 <span class="material-symbols-outlined">language</span>
               </div>
-              <span class="settings-row__label" data-i18n="settings.language">${t('settings.language')}</span>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.language">${t('settings.language')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.languageDesc">${t('settings.languageDesc')}</span>
+              </div>
             </div>
             <div class="settings-lang-toggle">
               <div class="settings-lang-indicator"></div>

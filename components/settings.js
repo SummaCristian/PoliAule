@@ -112,31 +112,39 @@ function openSettings() {
   const rect = triggerEl.getBoundingClientRect();
 
   popupEl.style.transition = 'none';
-  applyGeometry(popupEl, {
-    left: rect.left,
-    top: rect.top,
-    width: rect.width,
-    height: rect.height,
-    borderRadius: '50%',
-  });
+  popupEl.style.display = 'flex'; // must be visible before getPopupTarget() measures scrollHeight
+
+  const target = getPopupTarget(); // measures scrollHeight — needs display:flex
+
+  // Place popup at its final position/size instantly — only transform animates
+  applyGeometry(popupEl, target);
   popupEl.style.boxShadow = 'var(--shadow)';
-  popupEl.style.display = 'flex';
+
+  // Pin transform-origin to the button's center so the popup grows from there
+  const originX = rect.left + rect.width  / 2 - target.left;
+  const originY = rect.top  + rect.height / 2 - target.top;
+  popupEl.style.transformOrigin = `${originX}px ${originY}px`;
+  popupEl.style.transform       = `scale(${(rect.width / target.width).toFixed(4)})`;
+  popupEl.style.borderRadius    = '50%';
 
   triggerEl.classList.add('settings-btn--morphing');
 
-  popupEl.getBoundingClientRect(); // force reflow — buttons now have real dimensions
+  popupEl.getBoundingClientRect(); // force reflow
   positionIndicatorFn?.(false);   // snap indicator before morph animation starts
   refreshCampusSelectFn?.();      // re-populate campus select now that data may be loaded
   popupEl.style.transition = '';
 
   requestAnimationFrame(() => {
-    applyGeometry(popupEl, getPopupTarget());
-    popupEl.style.boxShadow = 'var(--tp-shadow-lg)';
+    popupEl.style.transform    = 'scale(1)';
+    popupEl.style.borderRadius = '22px';
+    popupEl.style.boxShadow    = 'var(--tp-shadow-lg)';
     popupEl.classList.add('settings-popup--open');
     getOverlay().classList.add('settings-overlay--active');
   });
 
   onTransitionEnd(popupEl, () => {
+    popupEl.style.transform       = '';
+    popupEl.style.transformOrigin = '';
     isAnimating = false;
     isOpen = true;
   });
@@ -146,25 +154,29 @@ function closeSettings() {
   if (isAnimating || !isOpen) return;
   isAnimating = true;
 
-  const rect = triggerEl.getBoundingClientRect();
+  const rect      = triggerEl.getBoundingClientRect();
+  const popupRect = popupEl.getBoundingClientRect();
+
+  // Pin transform-origin to the button's center relative to the popup's current position
+  const originX = rect.left + rect.width  / 2 - popupRect.left;
+  const originY = rect.top  + rect.height / 2 - popupRect.top;
+  popupEl.style.transformOrigin = `${originX}px ${originY}px`;
 
   popupEl.classList.remove('settings-popup--open');
   getOverlay().classList.remove('settings-overlay--active');
   removeOverlay();
 
   requestAnimationFrame(() => {
-    applyGeometry(popupEl, {
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
-      borderRadius: '50%',
-    });
-    popupEl.style.boxShadow = 'var(--shadow)';
+    popupEl.style.transform    = `scale(${(rect.width / popupRect.width).toFixed(4)})`;
+    popupEl.style.borderRadius = '50%';
+    popupEl.style.boxShadow    = 'var(--shadow)';
   });
 
   onTransitionEnd(popupEl, () => {
-    popupEl.style.display = 'none';
+    popupEl.style.display         = 'none';
+    popupEl.style.transform       = '';
+    popupEl.style.transformOrigin = '';
+    popupEl.style.borderRadius    = '';
     triggerEl.classList.remove('settings-btn--morphing');
     isOpen = false;
     isAnimating = false;

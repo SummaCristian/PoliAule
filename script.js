@@ -11,7 +11,7 @@ import { setupCampusPicker } from './components/campus-picker.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
-import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch } from './i18n.js';
+import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled } from './components/settings.js';
 
 // ---------- THEME COLOR META TAGS ----------
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Re-render dynamic content when the language is switched
     onLanguageSwitch(() => {
-      setupDataFetchIndicatorText();
+      setupDataFetchIndicatorText(true);
       const container = document.getElementById('available-classrooms-results');
       if (!container.classList.contains('empty')) {
         document.getElementById('available-classrooms-form').dispatchEvent(
@@ -569,7 +569,7 @@ function setupDataFetchIndicator() {
 }
 
 // Setups the text inside the popover shown in the Data Fetch Indicator
-function setupDataFetchIndicatorText() {
+function setupDataFetchIndicatorText(animate = false) {
   const container = document.getElementById('data-fetch-indicator-popover-container');
 
   const states = {
@@ -615,5 +615,6 @@ function setupDataFetchIndicatorText() {
     <p class="data-status-description secondary">${description}</p>
     <label class="data-status-time secondary">${t('data.lastFetched')}: ${formattedTime}</label>
   `;
+  if (animate) animateI18nElement(container);
 }
 

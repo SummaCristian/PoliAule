@@ -3,7 +3,7 @@
 // Contains the language switcher and any future settings.
 
 import { haptics, defaultPatterns } from './haptics.js';
-import { t, getLocale, setLocale, onLanguageSwitch } from '../i18n.js';
+import { t, getLocale, setLocale, onLanguageSwitch, animateI18nElement } from '../i18n.js';
 import { classroomsData } from '../available-rooms-script.js';
 import { selectCampusById } from './campus-picker.js';
 
@@ -365,8 +365,11 @@ function buildCampusSection() {
   // Retranslate all text nodes in this section
   function retranslate() {
     headerLabel.textContent        = t('settings.sectionCampus');
+    animateI18nElement(headerLabel);
     preferredLabel.textContent     = t('settings.preferredCampus');
+    animateI18nElement(preferredLabel);
     rememberLastLabel.textContent  = t('settings.rememberLastCampus');
+    animateI18nElement(rememberLastLabel);
     if (preferredEnabled && campusSelect.disabled && campusSelect.options[0]) {
       campusSelect.options[0].textContent = t('settings.noCampusData');
     }
@@ -499,7 +502,9 @@ export function initSettings() {
 
   onLanguageSwitch(() => {
     titleEl.textContent = t('settings.title');
+    animateI18nElement(titleEl);
     sectionHeaderLabelEl.textContent = t('settings.language');
+    animateI18nElement(sectionHeaderLabelEl);
     updateLangButtons(popupEl, positionIndicator);
     retranslateCampus();
   });

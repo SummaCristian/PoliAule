@@ -3,7 +3,7 @@
 // Replaces each .time-picker wrapper with a card that morphs into a popup.
 
 import { haptics, defaultPatterns } from './haptics.js';
-import { t, onLanguageSwitch } from '../i18n.js';
+import { t, onLanguageSwitch, animateI18nElement } from '../i18n.js';
 
 const TRANSITION_DURATION = 420; // ms — must match CSS
 
@@ -431,10 +431,17 @@ function buildTimePicker(wrapperEl) {
 
   onLanguageSwitch(() => {
     cardLabelEl.textContent = t(labelKey);
+    animateI18nElement(cardLabelEl);
     popupHeaderH4.textContent = t(labelKey);
+    animateI18nElement(popupHeaderH4);
     popupHeaderP.textContent = t(subtitleKey);
-    if (nowBtnText) nowBtnText.textContent = t('timepicker.now');
+    animateI18nElement(popupHeaderP);
+    if (nowBtnText) {
+      nowBtnText.textContent = t('timepicker.now');
+      animateI18nElement(nowBtnText);
+    }
     doneBtnText.textContent = t('timepicker.done');
+    animateI18nElement(doneBtnText);
     updateQuickLabel();
   });
 

@@ -24,6 +24,7 @@
 .time-pickers-container {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
 
   gap: 1rem;
 
@@ -32,6 +33,7 @@
 
   opacity: 0; /* Hidden until JS initializes components */
 }
+
 
 
 /* ── Overlay ───────────────────────────────────────────────────────────────── */

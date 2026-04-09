@@ -413,7 +413,7 @@ function buildPopup() {
               <div class="settings-row__icon-badge" style="--badge-color: var(--text-color-accent)">
                 <span class="material-symbols-outlined">language</span>
               </div>
-              <span class="settings-row__label">Language</span>
+              <span class="settings-row__label" data-i18n="settings.language">${t('settings.language')}</span>
             </div>
             <div class="settings-lang-toggle">
               <div class="settings-lang-indicator"></div>

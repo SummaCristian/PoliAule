@@ -372,6 +372,20 @@ function setupDatePicker() {
   // --- Indicator logic ---
   const elements = container.querySelectorAll('.date-element-container');
 
+  function placeIndicator(el) {
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const paddingLeft = parseFloat(getComputedStyle(container).paddingLeft);
+    const x = elRect.left - containerRect.left - paddingLeft;
+
+    // Store x as a CSS variable so the shake keyframe can reference it
+    indicator.style.setProperty('--indicator-x', `${x}px`);
+    indicator.style.width = `${elRect.width}px`;
+    indicator.style.height = `${elRect.height}px`;
+    indicator.style.transform = `translateX(${x}px)`;
+    indicator.style.opacity = '1';
+  }
+
   function selectDateElement(el) {
     if (el.classList.contains('date-skipped')) {
       // Shake the indicator in place
@@ -389,18 +403,7 @@ function setupDatePicker() {
     elements.forEach(e => e.classList.remove('active'));
     el.classList.add('active');
 
-    const containerRect = container.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    const paddingLeft = parseFloat(getComputedStyle(container).paddingLeft);
-
-    const x = elRect.left - containerRect.left - paddingLeft;
-
-    // Store x as a CSS variable so the shake keyframe can reference it
-    indicator.style.setProperty('--indicator-x', `${x}px`);
-    indicator.style.width = `${elRect.width}px`;
-    indicator.style.height = `${elRect.height}px`;
-    indicator.style.transform = `translateX(${x}px)`;
-    indicator.style.opacity = '1';
+    placeIndicator(el);
 
     datePicker.value = el.dataset.date;
 
@@ -447,8 +450,14 @@ function setupDatePicker() {
     todayIndicator.style.top = `${topOffset}px`;
   }
 
-  window.addEventListener('resize', positionTodayIndicator);
-  new ResizeObserver(positionTodayIndicator).observe(container.closest('.date-picker'));
+  function repositionAll() {
+    const activeEl = container.querySelector('.date-element-container.active');
+    if (activeEl) placeIndicator(activeEl);
+    positionTodayIndicator();
+  }
+
+  window.addEventListener('resize', repositionAll);
+  new ResizeObserver(repositionAll).observe(container.closest('.date-picker'));
 
   // Auto-select today if available, otherwise fall back to the first available date
   // Wait for fonts to load to ensure accurate element measurements

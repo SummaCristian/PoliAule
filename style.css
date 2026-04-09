@@ -708,6 +708,55 @@ label {
   color: var(--text-color-primary);
 }
 
+/* ── Skeleton loading states ──────────────────────────────────── */
+
+@keyframes skeleton-shimmer {
+  from { background-position: 200% center; }
+  to   { background-position: -200% center; }
+}
+
+.date-picker-skeleton,
+.time-pickers-skeleton {
+  display: none;
+}
+
+form[data-loading] .date-picker-skeleton {
+  display: block;
+  height: 3.3rem;
+  border-radius: 999px;
+  margin-top: 2rem;
+  align-self: center;
+  width: 100%;
+  max-width: 50rem;
+}
+
+form[data-loading] .time-pickers-skeleton {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+form[data-loading] .time-pickers-skeleton > div {
+  height: 4.5rem;
+  border-radius: 18px;
+  flex: 1 1 14rem;
+  max-width: 22rem;
+}
+
+form[data-loading] .date-picker-skeleton,
+form[data-loading] .time-pickers-skeleton > div {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--text-color-primary) 6%, transparent) 25%,
+    color-mix(in srgb, var(--text-color-primary) 12%, transparent) 50%,
+    color-mix(in srgb, var(--text-color-primary) 6%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s linear infinite;
+}
+
 ul li::marker {
   color: var(--text-color-accent);
 }

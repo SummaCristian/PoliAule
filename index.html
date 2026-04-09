@@ -112,7 +112,7 @@
 
       </div>
 
-      <form id="available-classrooms-form" class="form">
+      <form id="available-classrooms-form" class="form" data-loading>
 
         <!-- Campus Picker -->
         <label for="campus-selection">
@@ -144,8 +144,13 @@
           <div class="date-picker-container">
             <div class="date-indicator"></div>
           </div>
+          <div class="date-picker-skeleton" aria-hidden="true"></div>
         </div>
 
+        <div class="time-pickers-skeleton" aria-hidden="true">
+          <div></div>
+          <div></div>
+        </div>
         <div class="time-pickers-container">
           <!-- From time picker -->
           <div class="time-picker">

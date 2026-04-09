@@ -168,6 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTimePickers();
     document.fonts.ready.then(() => {
       document.querySelector('.time-pickers-container').style.opacity = '1';
+      document.getElementById('available-classrooms-form').removeAttribute('data-loading');
     });
 
     // Setup the data fetch indicator

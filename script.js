@@ -12,7 +12,7 @@ import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch } from './i18n.js';
-import { initSettings, applyPreferredCampusIfEnabled, autoSelectCampusByLocationIfEnabled } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled } from './components/settings.js';
 
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup the campus picker with the available ones
     setupCampusPicker();
     applyPreferredCampusIfEnabled();
-    autoSelectCampusByLocationIfEnabled();
+    applyRememberLastCampusIfEnabled();
 
     // After fetching, use the data to set the only
     // valid dates into the date picker

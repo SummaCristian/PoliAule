@@ -33,6 +33,11 @@ export function setupCampusPicker() {
   const hiddenInput = document.getElementById('campus-picker');
   const container = document.getElementById('campus-chips');
 
+  function setSelectedCampus(id) {
+    hiddenInput.value = id;
+    document.dispatchEvent(new CustomEvent('campuschange', { detail: { id } }));
+  }
+
   const BOVISA_IDS = new Set(['MIB01', 'MIB02']);
   const CITTA_STUDI_IDS = new Set(['MIA01', 'MIA06']);
   const CITTA_STUDI_NAMES = { MIA01: 'Leonardo', MIA06: 'Colombo' };
@@ -106,6 +111,7 @@ export function setupCampusPicker() {
     trigger.textContent = label;
     trigger.addEventListener('click', () => {
       activateGroupChip(groupEl);
+      setSelectedCampus(hiddenInput.value);
       haptics.trigger(defaultPatterns.success);
     });
 
@@ -132,7 +138,7 @@ export function setupCampusPicker() {
       subChip.addEventListener('click', () => {
         groupEl.querySelectorAll('.campus-subchip').forEach(s => s.classList.remove('active'));
         subChip.classList.add('active');
-        hiddenInput.value = bc.id;
+        setSelectedCampus(bc.id);
         positionIndicator(subOptions, subChip, true);
         haptics.trigger(defaultPatterns.success);
       });
@@ -183,7 +189,7 @@ export function setupCampusPicker() {
     chip.addEventListener('click', () => {
       deactivateAll();
       chip.classList.add('active');
-      hiddenInput.value = campus.id;
+      setSelectedCampus(campus.id);
       haptics.trigger(defaultPatterns.success);
     });
 

@@ -125,7 +125,7 @@
 
 @media (min-width: 52rem) {
   .time-pickers-container > .time-picker {
-    flex: 0 0 22rem;
+    flex: 0 0 17rem;
     overflow: hidden;
   }
 }
@@ -151,6 +151,15 @@
 /* Hide the Done button on desktop — there's nothing to dismiss */
 .tp-popup--inline .tp-popup__done {
   display: none;
+}
+
+/* Compact sizing for the inline variant */
+.tp-popup--inline .tp-popup__inner {
+  padding: 1rem 1.25rem;
+}
+
+.tp-popup--inline .tp-popup__time-input {
+  font-size: 2.75rem;
 }
 
 /* Card is hidden behind the popup while morphing */

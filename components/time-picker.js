@@ -9,7 +9,7 @@ const TRANSITION_DURATION = 420; // ms — must match CSS
 
 // ── Breakpoint ────────────────────────────────────────────────────────────────
 
-const DESKTOP_MQ = window.matchMedia('(min-width: 768px)');
+const DESKTOP_MQ = window.matchMedia('(min-width: 52rem)');
 
 // ── State ────────────────────────────────────────────────────────────────────
 

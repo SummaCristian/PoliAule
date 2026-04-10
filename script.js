@@ -12,7 +12,7 @@ import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, AUTO_COLLAPSE_KEY, SHOW_PARTIAL_KEY } from './components/settings.js';
 
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
@@ -102,7 +102,8 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
   ].filter(Boolean).join('<span class="building-count-sep">·</span>');
 
   const buildingCard = document.createElement('div');
-  buildingCard.className = 'building-card';
+  const autoCollapse = localStorage.getItem(AUTO_COLLAPSE_KEY) === 'true';
+  buildingCard.className = autoCollapse ? 'building-card collapsed' : 'building-card';
   buildingCard.innerHTML = `
     <div class="building-card-header">
       <div class="building-card-header-text">
@@ -238,10 +239,16 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   const filterRow = document.createElement('div');
   filterRow.className = 'results-filter-row';
 
-  // Collapse-all toggle
+  // Collapse-all toggle — initial state driven by Auto Collapse setting
+  const autoCollapse = localStorage.getItem(AUTO_COLLAPSE_KEY) === 'true';
   const collapseBtn = document.createElement('button');
   collapseBtn.className = 'results-filter-btn active';
-  collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`;
+  if (autoCollapse) {
+    collapseBtn.dataset.state = 'collapsed';
+    collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_more</span> ${t('results.expandAll')}`;
+  } else {
+    collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`;
+  }
   collapseBtn.addEventListener('click', () => {
     const allCollapsed = collapseBtn.dataset.state === 'collapsed';
     container.querySelectorAll('.building-card').forEach(card => {
@@ -254,13 +261,16 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   });
   filterRow.appendChild(collapseBtn);
 
-  // Partial-free filter toggle
+  // Partial-free filter toggle — initial state driven by Show Partially Free setting
+  const showPartialSaved = localStorage.getItem(SHOW_PARTIAL_KEY);
+  const showPartialDefault = showPartialSaved === null ? true : showPartialSaved === 'true';
   const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
   let originalBuildingOrder = [];
   if (hasPartial) {
     const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'results-filter-btn active';
+    toggleBtn.className = showPartialDefault ? 'results-filter-btn active' : 'results-filter-btn';
     toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> ${t('results.filterPartial')}`;
+    if (!showPartialDefault) container.classList.add('hide-partial');
     toggleBtn.addEventListener('click', () => {
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);

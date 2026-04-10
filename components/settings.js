@@ -15,6 +15,8 @@ const PREFERRED_CAMPUS_ID_KEY      = 'poliAule_preferredCampusId';
 const REMEMBER_LAST_CAMPUS_KEY     = 'poliAule_rememberLastCampus';
 const LAST_CAMPUS_ID_KEY           = 'poliAule_lastCampusId';
 const HIDE_SUNDAYS_KEY             = 'poliAule_hideSundays';
+export const AUTO_COLLAPSE_KEY     = 'poliAule_autoCollapse';
+export const SHOW_PARTIAL_KEY      = 'poliAule_showPartial';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -509,6 +511,39 @@ function buildPopup() {
         </div>
       </div>
 
+      <div class="settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__icon-badge">
+            <span class="material-symbols-outlined">search</span>
+          </div>
+          <span class="settings-section__header-label" data-i18n="settings.sectionResults">${t('settings.sectionResults')}</span>
+        </div>
+        <div class="settings-group">
+          <div class="settings-row" data-auto-collapse-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #5856D6">
+                <span class="material-symbols-outlined">unfold_less</span>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.autoCollapse">${t('settings.autoCollapse')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.autoCollapseDesc">${t('settings.autoCollapseDesc')}</span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-row" data-show-partial-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #34C759">
+                <span class="material-symbols-outlined">filter_alt</span>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.showPartial">${t('settings.showPartial')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.showPartialDesc">${t('settings.showPartialDesc')}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   `;
 
@@ -594,6 +629,29 @@ function buildPopup() {
     localStorage.setItem(HIDE_SUNDAYS_KEY, String(isOn));
     haptics.trigger(defaultPatterns.success);
     window.dispatchEvent(new CustomEvent('hidesundayschange', { detail: { hidden: isOn } }));
+  });
+
+  // Wire Auto Collapse toggle
+  const autoCollapseRow = popup.querySelector('[data-auto-collapse-row]');
+  const autoCollapseToggle = buildToggle(localStorage.getItem(AUTO_COLLAPSE_KEY) === 'true');
+  autoCollapseRow.appendChild(autoCollapseToggle);
+  autoCollapseToggle.addEventListener('click', () => {
+    const isOn = !autoCollapseToggle.classList.contains('on');
+    setToggleState(autoCollapseToggle, isOn);
+    localStorage.setItem(AUTO_COLLAPSE_KEY, String(isOn));
+    haptics.trigger(defaultPatterns.success);
+  });
+
+  // Wire Show Partially Free toggle (default: true)
+  const showPartialRow = popup.querySelector('[data-show-partial-row]');
+  const showPartialSaved = localStorage.getItem(SHOW_PARTIAL_KEY);
+  const showPartialToggle = buildToggle(showPartialSaved === null ? true : showPartialSaved === 'true');
+  showPartialRow.appendChild(showPartialToggle);
+  showPartialToggle.addEventListener('click', () => {
+    const isOn = !showPartialToggle.classList.contains('on');
+    setToggleState(showPartialToggle, isOn);
+    localStorage.setItem(SHOW_PARTIAL_KEY, String(isOn));
+    haptics.trigger(defaultPatterns.success);
   });
 
   return { popup, positionIndicator, positionTimeFmtIndicator, retranslateCampus };

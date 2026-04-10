@@ -65,10 +65,13 @@ function applyGeometry(el, { left, top, width, height, borderRadius }) {
 
 function onTransitionEnd(el, cb) {
   const fallback = setTimeout(cb, TRANSITION_DURATION + 50);
-  el.addEventListener('transitionend', () => {
+  const handler = e => {
+    if (e.propertyName !== 'transform') return;
     clearTimeout(fallback);
+    el.removeEventListener('transitionend', handler);
     cb();
-  }, { once: true });
+  };
+  el.addEventListener('transitionend', handler);
 }
 
 // ── Scroll lock ───────────────────────────────────────────────────────────────
@@ -133,11 +136,15 @@ function openSettings() {
   applyGeometry(popupEl, target);
   popupEl.style.boxShadow = 'var(--shadow)';
 
-  // Pin transform-origin to the button's center so the popup grows from there
-  const originX = rect.left + rect.width  / 2 - target.left;
-  const originY = rect.top  + rect.height / 2 - target.top;
-  popupEl.style.transformOrigin = `${originX}px ${originY}px`;
-  popupEl.style.transform       = `scale(${(rect.width / target.width).toFixed(4)})`;
+  // Start with the popup visually sitting on the button:
+  // translate its center to the button's center, then scale each axis independently
+  // so the popup exactly matches the button's dimensions (preserving its circle shape).
+  const scaleX = rect.width  / target.width;
+  const scaleY = rect.height / target.height;
+  const tx = (rect.left + rect.width  / 2) - (target.left + target.width  / 2);
+  const ty = (rect.top  + rect.height / 2) - (target.top  + target.height / 2);
+  popupEl.style.transformOrigin = '50% 50%';
+  popupEl.style.transform       = `translate(${tx}px, ${ty}px) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`;
   popupEl.style.borderRadius    = '50%';
 
   triggerEl.classList.add('settings-btn--morphing');
@@ -149,7 +156,7 @@ function openSettings() {
   popupEl.style.transition = '';
 
   requestAnimationFrame(() => {
-    popupEl.style.transform    = 'scale(1)';
+    popupEl.style.transform    = 'translate(0px, 0px) scale(1)';
     popupEl.style.borderRadius = '22px';
     popupEl.style.boxShadow    = 'var(--tp-shadow-lg)';
     popupEl.classList.add('settings-popup--open');
@@ -171,17 +178,21 @@ function closeSettings() {
   const rect      = triggerEl.getBoundingClientRect();
   const popupRect = popupEl.getBoundingClientRect();
 
-  // Pin transform-origin to the button's center relative to the popup's current position
-  const originX = rect.left + rect.width  / 2 - popupRect.left;
-  const originY = rect.top  + rect.height / 2 - popupRect.top;
-  popupEl.style.transformOrigin = `${originX}px ${originY}px`;
+  // Translate the popup's center to the button's center, then scale each axis
+  // independently so the popup's final visual size exactly matches the button's
+  // dimensions — ensuring a circle, not a vertical oval on tall popups.
+  const scaleX = rect.width  / popupRect.width;
+  const scaleY = rect.height / popupRect.height;
+  const tx = (rect.left + rect.width  / 2) - (popupRect.left + popupRect.width  / 2);
+  const ty = (rect.top  + rect.height / 2) - (popupRect.top  + popupRect.height / 2);
 
   popupEl.classList.remove('settings-popup--open');
   getOverlay().classList.remove('settings-overlay--active');
   removeOverlay();
 
   requestAnimationFrame(() => {
-    popupEl.style.transform    = `scale(${(rect.width / popupRect.width).toFixed(4)})`;
+    popupEl.style.transformOrigin = '50% 50%';
+    popupEl.style.transform    = `translate(${tx}px, ${ty}px) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`;
     popupEl.style.borderRadius = '50%';
     popupEl.style.boxShadow    = 'var(--shadow)';
   });

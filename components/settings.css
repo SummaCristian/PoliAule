@@ -48,7 +48,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
-  padding: 1.25rem 1.25rem 1.5rem;
+  padding: 0 1.25rem 1.5rem; /* top padding lives in the sticky title row */
   height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -60,11 +60,33 @@
   transition-delay: 0.28s;
 }
 
-/* Title row: large title + close button side by side */
+/* Title row: sticky header with gradient blur + color fade */
 .settings-popup__title-row {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* Extend edge-to-edge, cancelling the inner's horizontal padding */
+  margin: 0 -1.25rem;
+  padding: 1.25rem 1.25rem 0.875rem;
+}
+
+/* The blur+color gradient lives on ::before so mask-image can fade both
+   simultaneously — the mask affects backdrop-filter output too. */
+.settings-popup__title-row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  bottom: -2.5rem; /* extend into the gap below the row */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: var(--background-color-secondary);
+  -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* Close button — flush with inner padding, vertically aligned to title */

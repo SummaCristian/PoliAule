@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-09T05:23:33.224429",
+  "generated_at": "2026-04-10T05:33:16.814732",
   "date": "20260411",
   "campuses": [
     {
@@ -1635,7 +1635,7 @@
               "features": [],
               "occupancy": [
                 {
-                  "inizio": "08:15",
+                  "inizio": "12:15",
                   "fine": "19:15"
                 }
               ]
@@ -3742,7 +3742,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
+                  "inizio": "12:15",
                   "fine": "19:15"
                 }
               ]
@@ -3789,7 +3789,7 @@
               ],
               "occupancy": [
                 {
-                  "inizio": "08:15",
+                  "inizio": "12:15",
                   "fine": "19:15"
                 }
               ]
@@ -5525,7 +5525,12 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:30",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B2.2.10",
@@ -6188,7 +6193,7 @@
               "features": [],
               "occupancy": [
                 {
-                  "inizio": "08:15",
+                  "inizio": "12:15",
                   "fine": "19:15"
                 }
               ]

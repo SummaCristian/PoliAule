@@ -14,6 +14,7 @@ const PREFERRED_CAMPUS_ENABLED_KEY = 'poliAule_preferredCampusEnabled';
 const PREFERRED_CAMPUS_ID_KEY      = 'poliAule_preferredCampusId';
 const REMEMBER_LAST_CAMPUS_KEY     = 'poliAule_rememberLastCampus';
 const LAST_CAMPUS_ID_KEY           = 'poliAule_lastCampusId';
+const HIDE_SUNDAYS_KEY             = 'poliAule_hideSundays';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -440,7 +441,7 @@ function buildPopup() {
         <div class="settings-group">
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
-              <div class="settings-row__icon-badge" style="--badge-color: var(--text-color-accent)">
+              <div class="settings-row__icon-badge" style="--badge-color: #007AFF">
                 <span class="material-symbols-outlined">language</span>
               </div>
               <div class="settings-row__label-group">
@@ -466,14 +467,14 @@ function buildPopup() {
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">schedule</span>
+            <span class="material-symbols-outlined">calendar_today</span>
           </div>
-          <span class="settings-section__header-label" data-timefmt-section-header>${t('settings.timeFormat')}</span>
+          <span class="settings-section__header-label" data-timefmt-section-header>${t('settings.sectionDateTime')}</span>
         </div>
         <div class="settings-group">
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
-              <div class="settings-row__icon-badge" style="--badge-color: var(--text-color-accent)">
+              <div class="settings-row__icon-badge" style="--badge-color: #FF9500">
                 <span class="material-symbols-outlined">schedule</span>
               </div>
               <div class="settings-row__label-group">
@@ -492,6 +493,17 @@ function buildPopup() {
               <button class="settings-lang-btn" data-timefmt="24">
                 <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.24h">${t('settings.timeFormat.24h')}</span>
               </button>
+            </div>
+          </div>
+          <div class="settings-row" data-hide-sundays-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #FF3B30">
+                <span class="material-symbols-outlined">event_busy</span>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.hideSundays">${t('settings.hideSundays')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.hideSundaysDesc">${t('settings.hideSundaysDesc')}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -572,6 +584,18 @@ function buildPopup() {
 
   positionTimeFmtIndicatorFn = positionTimeFmtIndicator;
 
+  // Wire Hide Sundays toggle
+  const hideSundaysRow = popup.querySelector('[data-hide-sundays-row]');
+  const hideSundaysToggle = buildToggle(localStorage.getItem(HIDE_SUNDAYS_KEY) === 'true');
+  hideSundaysRow.appendChild(hideSundaysToggle);
+  hideSundaysToggle.addEventListener('click', () => {
+    const isOn = !hideSundaysToggle.classList.contains('on');
+    setToggleState(hideSundaysToggle, isOn);
+    localStorage.setItem(HIDE_SUNDAYS_KEY, String(isOn));
+    haptics.trigger(defaultPatterns.success);
+    window.dispatchEvent(new CustomEvent('hidesundayschange', { detail: { hidden: isOn } }));
+  });
+
   return { popup, positionIndicator, positionTimeFmtIndicator, retranslateCampus };
 }
 
@@ -608,7 +632,7 @@ export function initSettings() {
     sectionHeaderLabelEl.textContent = t('settings.language');
     animateI18nElement(sectionHeaderLabelEl);
     if (timeFmtHeaderLabelEl) {
-      timeFmtHeaderLabelEl.textContent = t('settings.timeFormat');
+      timeFmtHeaderLabelEl.textContent = t('settings.sectionDateTime');
       animateI18nElement(timeFmtHeaderLabelEl);
     }
     popupEl.querySelectorAll('[data-i18n]').forEach(el => {

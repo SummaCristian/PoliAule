@@ -193,6 +193,10 @@
   cursor: not-allowed;
 }
 
+.date-picker--hide-sundays .date-element-container:has(.date-sunday) {
+  display: none;
+}
+
 .date-element-container.active .date-day-of-week,
 .date-element-container.active .date-number {
   color: var(--text-color-accent);

@@ -460,6 +460,16 @@ function setupDatePicker() {
   window.addEventListener('resize', repositionAll);
   new ResizeObserver(repositionAll).observe(container.closest('.date-picker'));
 
+  // Apply initial hide-sundays state
+  const hideSundaysContainer = container.closest('.date-picker');
+  if (localStorage.getItem('poliAule_hideSundays') === 'true') {
+    hideSundaysContainer.classList.add('date-picker--hide-sundays');
+  }
+  window.addEventListener('hidesundayschange', e => {
+    hideSundaysContainer.classList.toggle('date-picker--hide-sundays', e.detail.hidden);
+    repositionAll();
+  });
+
   // Auto-select today if available, otherwise fall back to the first available date
   // Wait for fonts to load to ensure accurate element measurements
   document.fonts.ready.then(() => {

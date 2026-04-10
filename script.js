@@ -178,6 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Re-render dynamic content when the language is switched
     onLanguageSwitch(() => {
       setupDataFetchIndicatorText(true);
+      setupDatePicker();
       const container = document.getElementById('available-classrooms-results');
       if (!container.classList.contains('empty')) {
         document.getElementById('available-classrooms-form').dispatchEvent(
@@ -330,7 +331,11 @@ function setupDatePicker() {
   const container = document.querySelector('.date-picker-container');
   const indicator = container.querySelector('.date-indicator');
 
-  const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  // Derive single-letter day names from the current locale (Sun=0 … Sat=6).
+  const dayFormatter = new Intl.DateTimeFormat(getLocale(), { weekday: 'narrow' });
+  const DAY_NAMES = Array.from({ length: 7 }, (_, i) =>
+    dayFormatter.format(new Date(2000, 0, 2 + i)) // Jan 2 2000 = Sunday
+  );
 
   // Clear any hardcoded elements, keep only the indicator
   container.querySelectorAll('.date-element-container').forEach(el => el.remove());

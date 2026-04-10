@@ -67,6 +67,7 @@ window.addEventListener('timeformatchange', () => {
         card._timeDisplay.style.minWidth = `${Math.ceil(w)}px`;
       });
     }
+    card._updateQuickLabel?.();
   }
 });
 
@@ -429,6 +430,7 @@ function buildTimePicker(wrapperEl) {
     if (fromInput) fromInput.addEventListener('input', updateQuickLabel);
   }
   updateQuickLabel();
+  card._updateQuickLabel = updateQuickLabel;
 
   // ── Done button ───────────────────────────────────────────────────────────
 

@@ -229,27 +229,28 @@ function makeDropdownSegment(label, isCurrent, onOpen) {
 function updateBreadcrumb() {
   const { level, campus, building } = hierarchyState;
   const breadcrumb = document.getElementById('search-breadcrumb');
+  const inner = breadcrumb.querySelector('.search-breadcrumb-inner');
 
   closeActiveDropdown();
 
   if (level === 0) {
     breadcrumb.classList.add('hidden');
-    breadcrumb.innerHTML = '';
+    inner.innerHTML = '';
     return;
   }
 
   breadcrumb.classList.remove('hidden');
-  breadcrumb.innerHTML = '';
+  inner.innerHTML = '';
 
   // "All campuses" — plain navigation button, no siblings dropdown
   const allBtn = document.createElement('button');
   allBtn.className = 'breadcrumb-btn';
   allBtn.textContent = t('search.allCampuses');
   allBtn.addEventListener('click', () => renderCampuses());
-  breadcrumb.appendChild(allBtn);
+  inner.appendChild(allBtn);
 
   if (campus) {
-    breadcrumb.appendChild(makeSep());
+    inner.appendChild(makeSep());
 
     const campusSegment = makeDropdownSegment(getCampusDisplayName(campus), level === 1, (e) => {
       e.stopPropagation();
@@ -263,11 +264,11 @@ function updateBreadcrumb() {
         }))
       );
     });
-    breadcrumb.appendChild(campusSegment);
+    inner.appendChild(campusSegment);
   }
 
   if (building && level >= 2) {
-    breadcrumb.appendChild(makeSep());
+    inner.appendChild(makeSep());
 
     const buildingSegment = makeDropdownSegment(building.name, true, (e) => {
       e.stopPropagation();
@@ -278,8 +279,18 @@ function updateBreadcrumb() {
         onSelect: () => renderClassrooms(campus, b),
       })));
     });
-    breadcrumb.appendChild(buildingSegment);
+    inner.appendChild(buildingSegment);
   }
+}
+
+// ---------- LEVEL HEADER ----------
+
+function setLevelHeader(icon, labelKey) {
+  const header = document.getElementById('search-level-header');
+  header.innerHTML = `
+    <span class="material-symbols-outlined search-level-header-icon">${icon}</span>
+    <span class="search-level-header-text">${t(labelKey)}</span>
+  `;
 }
 
 // ---------- RENDER FUNCTIONS ----------
@@ -287,6 +298,7 @@ function updateBreadcrumb() {
 function renderCampuses() {
   hierarchyState = { level: 0, campus: null, building: null };
   updateBreadcrumb();
+  setLevelHeader('location_city', 'search.headerCampuses');
 
   const container = document.getElementById('search-results-container');
   const grid = document.createElement('div');
@@ -307,6 +319,7 @@ function renderCampuses() {
 function renderBuildings(campus) {
   hierarchyState = { level: 1, campus, building: null };
   updateBreadcrumb();
+  setLevelHeader('domain', 'search.headerBuildings');
 
   const container = document.getElementById('search-results-container');
   const grid = document.createElement('div');
@@ -325,6 +338,7 @@ function renderBuildings(campus) {
 function renderClassrooms(campus, building) {
   hierarchyState = { level: 2, campus, building };
   updateBreadcrumb();
+  setLevelHeader('meeting_room', 'search.headerClassrooms');
 
   const container = document.getElementById('search-results-container');
   const grid = document.createElement('div');
@@ -341,6 +355,7 @@ function renderClassrooms(campus, building) {
 
 function renderSearchResults(query) {
   closeActiveDropdown();
+  setLevelHeader('meeting_room', 'search.headerClassrooms');
   if (!searchIndex) searchIndex = buildSearchIndex();
 
   const q = query.trim().toLowerCase();
@@ -386,6 +401,12 @@ export async function initSearchTab() {
   renderCampuses();
 
   const searchInput = document.getElementById('classroom-search-input');
+
+  document.getElementById('classroom-search-clear').addEventListener('click', () => {
+    searchInput.value = '';
+    searchInput.dispatchEvent(new Event('input'));
+    searchInput.focus();
+  });
 
   searchInput.addEventListener('input', () => {
     clearTimeout(searchDebounce);

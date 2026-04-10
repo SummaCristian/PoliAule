@@ -34,6 +34,9 @@
   "search.allCampuses": "Tutti i campus",
   "search.buildings": "{n} edifici",
   "search.classrooms": "{n} aule",
+  "search.headerCampuses": "Campus",
+  "search.headerBuildings": "Edifici",
+  "search.headerClassrooms": "Aule",
   "search.emptyTitle": "Nessuna aula trovata",
   "search.emptySubtitle": "Prova con un nome o una grafia diversa",
 

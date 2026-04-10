@@ -241,11 +241,17 @@
           autocomplete="off"
           spellcheck="false"
         />
+        <button id="classroom-search-clear" class="search-clear-btn" type="button" tabindex="-1" aria-label="Clear search">
+          <span class="material-symbols-outlined">close</span>
+        </button>
       </div>
 
       <!-- Results box: breadcrumb + card grid -->
       <div class="search-results-box">
-        <nav id="search-breadcrumb" class="search-breadcrumb hidden" aria-label="breadcrumb"></nav>
+        <nav id="search-breadcrumb" class="search-breadcrumb hidden" aria-label="breadcrumb">
+          <div class="search-breadcrumb-inner"></div>
+        </nav>
+        <div id="search-level-header" class="search-level-header"></div>
         <div id="search-results-container"></div>
       </div>
 

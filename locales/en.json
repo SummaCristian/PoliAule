@@ -34,6 +34,9 @@
   "search.allCampuses": "All campuses",
   "search.buildings": "{n} buildings",
   "search.classrooms": "{n} classrooms",
+  "search.headerCampuses": "Campuses",
+  "search.headerBuildings": "Buildings",
+  "search.headerClassrooms": "Classrooms",
   "search.emptyTitle": "No classrooms found",
   "search.emptySubtitle": "Try a different name or spelling",
 

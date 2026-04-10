@@ -9,6 +9,27 @@ const FEATURE_ICONS = {
   223: { icon: 'video_call',          key: 'features.videoconf' },
 };
 
+// ---------- CAMPUS NAME HELPERS ----------
+// Mirror the exact naming logic from components/campus-picker.js so the
+// names shown here always match what appears in the Available-tab picker.
+
+const CITTA_STUDI_IDS   = new Set(['MIA01', 'MIA06']);
+const BOVISA_IDS        = new Set(['MIB01', 'MIB02']);
+const CITTA_STUDI_NAMES = { MIA01: 'Leonardo', MIA06: 'Colombo' };
+
+function getCampusDisplayName(campus) {
+  if (CITTA_STUDI_IDS.has(campus.id)) return CITTA_STUDI_NAMES[campus.id] ?? campus.name;
+  if (BOVISA_IDS.has(campus.id))
+    return (campus.name.split(' - ')[1] ?? campus.name).replace(/^Via\s+/i, '');
+  return campus.name;
+}
+
+function getCampusGroupName(campus) {
+  if (CITTA_STUDI_IDS.has(campus.id)) return 'Città Studi';
+  if (BOVISA_IDS.has(campus.id))      return 'Bovisa';
+  return null;
+}
+
 let classroomsData = null;
 let searchIndex = null;
 
@@ -29,10 +50,10 @@ async function loadData() {
 function buildSearchIndex() {
   const index = [];
   for (const campus of classroomsData) {
-    const shortName = campus.name.includes(' - ') ? campus.name.split(' - ')[0] : campus.name;
+    const campusShortName = getCampusDisplayName(campus);
     for (const building of campus.buildings) {
       for (const room of building.classrooms) {
-        index.push({ ...room, buildingName: building.name, campusShortName: shortName });
+        index.push({ ...room, buildingName: building.name, campusShortName });
       }
     }
   }
@@ -59,15 +80,14 @@ function highlight(text, query) {
 // ---------- CARD BUILDERS ----------
 
 function buildCampusCard(campus) {
-  const [shortName, subtitle] = campus.name.includes(' - ')
-    ? campus.name.split(' - ')
-    : [campus.name, ''];
+  const displayName = getCampusDisplayName(campus);
+  const groupName   = getCampusGroupName(campus);
   const n = campus.buildings.length;
   const btn = document.createElement('button');
   btn.className = 'search-card search-card--campus';
   btn.innerHTML = `
-    <span class="search-card-name">${shortName}</span>
-    ${subtitle ? `<span class="search-card-subtitle secondary">${subtitle}</span>` : ''}
+    <span class="search-card-name">${escapeHtml(displayName)}</span>
+    ${groupName ? `<span class="search-card-subtitle secondary">${escapeHtml(groupName)}</span>` : ''}
     <span class="search-card-meta secondary">${t('search.buildings').replace('{n}', n)}</span>
   `;
   return btn;
@@ -231,15 +251,16 @@ function updateBreadcrumb() {
   if (campus) {
     breadcrumb.appendChild(makeSep());
 
-    const shortName = campus.name.includes(' - ') ? campus.name.split(' - ')[0] : campus.name;
-    const campusSegment = makeDropdownSegment(shortName, level === 1, (e) => {
+    const campusSegment = makeDropdownSegment(getCampusDisplayName(campus), level === 1, (e) => {
       e.stopPropagation();
       openBreadcrumbDropdown(campusSegment, classroomsData
         .filter(c => c.buildings.length > 0)
-        .map(c => {
-          const [cShort, cSub] = c.name.includes(' - ') ? c.name.split(' - ') : [c.name, ''];
-          return { label: cShort, sublabel: cSub, active: c.id === campus.id, onSelect: () => renderBuildings(c) };
-        })
+        .map(c => ({
+          label:    getCampusDisplayName(c),
+          sublabel: getCampusGroupName(c),
+          active:   c.id === campus.id,
+          onSelect: () => renderBuildings(c),
+        }))
       );
     });
     breadcrumb.appendChild(campusSegment);

@@ -63,6 +63,11 @@
 
   "settings.title": "Settings",
   "settings.language": "Language",
+  "settings.timeFormat": "Time Format",
+  "settings.timeFormatDesc": "Choose between 12-hour and 24-hour time display.",
+  "settings.timeFormat.system": "System",
+  "settings.timeFormat.12h": "12H",
+  "settings.timeFormat.24h": "24H",
   "settings.sectionCampus": "Campus",
   "settings.preferredCampus": "Preferred Campus",
   "settings.preferredCampusDesc": "Pick which campus you want to see by default when opening PoliAule.",

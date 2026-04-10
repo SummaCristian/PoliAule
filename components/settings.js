@@ -6,6 +6,7 @@ import { haptics, defaultPatterns } from './haptics.js';
 import { t, getLocale, setLocale, onLanguageSwitch, animateI18nElement } from '../i18n.js';
 import { classroomsData } from '../available-rooms-script.js';
 import { selectCampusById } from './campus-picker.js';
+import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 
 const TRANSITION_DURATION = 420;
 
@@ -24,6 +25,7 @@ let overlay = null;
 let triggerEl = null;
 let popupEl = null;
 let positionIndicatorFn = null;
+let positionTimeFmtIndicatorFn = null;
 let refreshCampusSelectFn = null; // set by buildCampusSection, called on every open
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
@@ -130,8 +132,9 @@ function openSettings() {
   triggerEl.classList.add('settings-btn--morphing');
 
   popupEl.getBoundingClientRect(); // force reflow
-  positionIndicatorFn?.(false);   // snap indicator before morph animation starts
-  refreshCampusSelectFn?.();      // re-populate campus select now that data may be loaded
+  positionIndicatorFn?.(false);         // snap lang indicator before morph animation starts
+  positionTimeFmtIndicatorFn?.(false);  // snap time format indicator before morph animation starts
+  refreshCampusSelectFn?.();            // re-populate campus select now that data may be loaded
   popupEl.style.transition = '';
 
   requestAnimationFrame(() => {
@@ -460,6 +463,40 @@ function buildPopup() {
         </div>
       </div>
 
+      <div class="settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__icon-badge">
+            <span class="material-symbols-outlined">schedule</span>
+          </div>
+          <span class="settings-section__header-label" data-timefmt-section-header>${t('settings.timeFormat')}</span>
+        </div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: var(--text-color-accent)">
+                <span class="material-symbols-outlined">schedule</span>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.timeFormat">${t('settings.timeFormat')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.timeFormatDesc">${t('settings.timeFormatDesc')}</span>
+              </div>
+            </div>
+            <div class="settings-lang-toggle" data-timefmt-toggle>
+              <div class="settings-lang-indicator"></div>
+              <button class="settings-lang-btn" data-timefmt="system">
+                <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.system">${t('settings.timeFormat.system')}</span>
+              </button>
+              <button class="settings-lang-btn" data-timefmt="12">
+                <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.12h">${t('settings.timeFormat.12h')}</span>
+              </button>
+              <button class="settings-lang-btn" data-timefmt="24">
+                <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.24h">${t('settings.timeFormat.24h')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   `;
 
@@ -488,7 +525,7 @@ function buildPopup() {
     }
   }
 
-  popup.querySelectorAll('.settings-lang-btn').forEach(btn => {
+  popup.querySelectorAll('.settings-lang-btn[data-lang]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const lang = btn.dataset.lang;
       if (lang === getLocale()) return;
@@ -501,11 +538,45 @@ function buildPopup() {
   // Expose so openSettings() can snap after first display
   positionIndicatorFn = positionIndicator;
 
-  return { popup, positionIndicator, retranslateCampus };
+  // Wire time format buttons and sliding indicator
+  const timeFmtToggle = popup.querySelector('[data-timefmt-toggle]');
+  const timeFmtIndicator = timeFmtToggle.querySelector('.settings-lang-indicator');
+  const savedTimeFmt = localStorage.getItem(TIME_FORMAT_KEY) ?? 'system';
+  timeFmtToggle.querySelector(`[data-timefmt="${savedTimeFmt}"]`)?.classList.add('active');
+
+  function positionTimeFmtIndicator(animate) {
+    const activeBtn = timeFmtToggle.querySelector('.settings-lang-btn.active');
+    if (!activeBtn) return;
+    if (!animate) timeFmtIndicator.style.transition = 'none';
+    timeFmtIndicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
+    timeFmtIndicator.style.width = `${activeBtn.offsetWidth}px`;
+    timeFmtIndicator.style.height = `${activeBtn.offsetHeight}px`;
+    if (!animate) {
+      timeFmtIndicator.getBoundingClientRect(); // force reflow
+      timeFmtIndicator.style.transition = '';
+    }
+  }
+
+  timeFmtToggle.querySelectorAll('.settings-lang-btn[data-timefmt]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const fmt = btn.dataset.timefmt;
+      if (timeFmtToggle.querySelector('.settings-lang-btn.active') === btn) return;
+      localStorage.setItem(TIME_FORMAT_KEY, fmt);
+      timeFmtToggle.querySelectorAll('.settings-lang-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      positionTimeFmtIndicator(true);
+      haptics.trigger(defaultPatterns.success);
+      window.dispatchEvent(new CustomEvent('timeformatchange'));
+    });
+  });
+
+  positionTimeFmtIndicatorFn = positionTimeFmtIndicator;
+
+  return { popup, positionIndicator, positionTimeFmtIndicator, retranslateCampus };
 }
 
 function updateLangButtons(popup, positionIndicator) {
-  popup.querySelectorAll('.settings-lang-btn').forEach(btn => {
+  popup.querySelectorAll('.settings-lang-btn[data-lang]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === getLocale());
   });
   positionIndicator?.(true);
@@ -517,7 +588,7 @@ export function initSettings() {
   triggerEl = document.getElementById('settings-btn');
   if (!triggerEl) return;
 
-  const { popup, positionIndicator, retranslateCampus } = buildPopup();
+  const { popup, positionIndicator, positionTimeFmtIndicator, retranslateCampus } = buildPopup();
   popupEl = popup;
   document.body.appendChild(popupEl);
 
@@ -526,16 +597,25 @@ export function initSettings() {
     openSettings();
   });
 
-  // Keep title and section header in sync when the language changes
+  // Keep title and section headers in sync when the language changes
   const titleEl = popupEl.querySelector('.settings-popup__title');
   const sectionHeaderLabelEl = popupEl.querySelector('.settings-section__header-label');
+  const timeFmtHeaderLabelEl = popupEl.querySelector('[data-timefmt-section-header]');
 
   onLanguageSwitch(() => {
     titleEl.textContent = t('settings.title');
     animateI18nElement(titleEl);
     sectionHeaderLabelEl.textContent = t('settings.language');
     animateI18nElement(sectionHeaderLabelEl);
+    if (timeFmtHeaderLabelEl) {
+      timeFmtHeaderLabelEl.textContent = t('settings.timeFormat');
+      animateI18nElement(timeFmtHeaderLabelEl);
+    }
+    popupEl.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.dataset.i18n);
+    });
     updateLangButtons(popupEl, positionIndicator);
+    positionTimeFmtIndicator?.(false);
     retranslateCampus();
   });
 

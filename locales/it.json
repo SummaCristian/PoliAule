@@ -63,6 +63,11 @@
 
   "settings.title": "Impostazioni",
   "settings.language": "Lingua",
+  "settings.timeFormat": "Formato orario",
+  "settings.timeFormatDesc": "Scegli tra la visualizzazione in formato 12 ore e 24 ore.",
+  "settings.timeFormat.system": "Sistema",
+  "settings.timeFormat.12h": "12H",
+  "settings.timeFormat.24h": "24H",
   "settings.sectionCampus": "Campus",
   "settings.preferredCampus": "Campus Preferito",
   "settings.preferredCampusDesc": "Scegli quale campus vuoi vedere di default quando apri PoliAule.",

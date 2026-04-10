@@ -1,4 +1,5 @@
 import { t } from '../i18n.js';
+import { createTimeFormatter } from '../utils/time-format.js';
 
 const FEATURE_ICONS = {
   4: { icon: 'videocam', key: 'features.videoProjector' },
@@ -17,13 +18,18 @@ function timeToMinutes(time) {
 }
 
 
-const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
-
 function minutesToTimeDisplay(minutes) {
   const d = new Date();
   d.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
-  return TIME_FORMATTER.format(d);
+  return createTimeFormatter({ hour: 'numeric', minute: '2-digit' }).format(d);
 }
+
+// Re-format all rendered timeline labels when the user changes the time format setting.
+window.addEventListener('timeformatchange', () => {
+  document.querySelectorAll('[data-time-minutes]').forEach(el => {
+    el.textContent = minutesToTimeDisplay(+el.dataset.timeMinutes);
+  });
+});
 
 function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
   const fromMin = timeToMinutes(fromTime);
@@ -76,13 +82,13 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
   let lastAdded = -Infinity;
   for (const t of [...candidateTimes].sort((a, b) => a - b)) {
     if (t - lastAdded >= minSpacing) {
-      labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span>${minutesToTimeDisplay(t)}</span></div>`);
+      labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span data-time-minutes="${t}">${minutesToTimeDisplay(t)}</span></div>`);
       lastAdded = t;
     }
   }
 
-  const indicatorFrom = `<div class="timeline-time-indicator" style="left:${pct(fromMin)}">${minutesToTimeDisplay(fromMin)}</div>`;
-  const indicatorTo   = `<div class="timeline-time-indicator" style="left:${pct(toMin)}">${minutesToTimeDisplay(toMin)}</div>`;
+  const indicatorFrom = `<div class="timeline-time-indicator" data-time-minutes="${fromMin}" style="left:${pct(fromMin)}">${minutesToTimeDisplay(fromMin)}</div>`;
+  const indicatorTo   = `<div class="timeline-time-indicator" data-time-minutes="${toMin}" style="left:${pct(toMin)}">${minutesToTimeDisplay(toMin)}</div>`;
 
   let indicatorNow = '';
   if (isToday) {

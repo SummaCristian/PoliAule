@@ -4,6 +4,7 @@
 
 import { haptics, defaultPatterns } from './haptics.js';
 import { t, onLanguageSwitch, animateI18nElement } from '../i18n.js';
+import { createTimeFormatter } from '../utils/time-format.js';
 
 const TRANSITION_DURATION = 420; // ms — must match CSS
 
@@ -42,18 +43,32 @@ function applyGeometry(el, { left, top, width, height, borderRadius }) {
 
 // ── Time display formatter ────────────────────────────────────────────────────
 
-const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
-  hour: '2-digit',
-  minute: '2-digit',
-});
+// Track all active picker cards so they can be refreshed when the format changes.
+const _allCards = new Set();
 
 function formatTimeDisplay(val) {
   if (!val) return '--:--';
   const [h, m] = val.split(':').map(Number);
   const d = new Date();
   d.setHours(h, m, 0, 0);
-  return TIME_FORMATTER.format(d);
+  return createTimeFormatter().format(d);
 }
+
+// Re-render all active card displays when the user changes the time format setting.
+window.addEventListener('timeformatchange', () => {
+  for (const card of _allCards) {
+    const val = card._original?.value;
+    if (card._timeDisplay) {
+      card._timeDisplay.textContent = formatTimeDisplay(val);
+      // Recalculate min-width for the new format (e.g. AM/PM may be wider).
+      document.fonts.ready.then(() => {
+        const sample = createTimeFormatter().format(new Date(2000, 0, 1, 12, 0));
+        const w = measureTextWidth(sample, card._timeDisplay);
+        card._timeDisplay.style.minWidth = `${Math.ceil(w)}px`;
+      });
+    }
+  }
+});
 
 // Measure the rendered pixel width of `text` as if styled like `referenceEl`.
 function measureTextWidth(text, referenceEl) {
@@ -282,7 +297,7 @@ function buildTimePicker(wrapperEl) {
   popupInput.className = 'tp-popup__time-input';
 
   // Fix width to the widest possible time string for this locale (prevents layout shift)
-  const widestSample = TIME_FORMATTER.format(new Date(2000, 0, 1, 12, 0)); // "12:00 PM" or "12:00"
+  const widestSample = createTimeFormatter().format(new Date(2000, 0, 1, 12, 0)); // "12:00 PM" or "12:00"
 
   inputWrap.appendChild(popupInput);
   document.body.appendChild(popup);
@@ -293,6 +308,7 @@ function buildTimePicker(wrapperEl) {
   card._input = popupInput;
   card._original = inputEl;
   card._timeDisplay = card.querySelector('.tp-card__time');
+  _allCards.add(card);
   // Defer measurement until fonts are loaded so DS-Digital is available
   // Only fix the card display width (prevents layout shift as hours change 1→2 digits).
   // The popup input is left unsized so the browser can accommodate locale-specific

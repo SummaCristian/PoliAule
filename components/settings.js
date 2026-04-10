@@ -73,7 +73,14 @@ function onTransitionEnd(el, cb) {
 
 // ── Scroll lock ───────────────────────────────────────────────────────────────
 
-function preventScroll(e) { e.preventDefault(); }
+function preventScroll(e) {
+  const inner = e.target.closest('.settings-popup__inner');
+  // Only hand off to native scroll when the inner actually overflows —
+  // otherwise overscroll-behavior: contain has no scroll context to contain
+  // and the event would fall through to the page behind.
+  if (inner && inner.scrollHeight > inner.clientHeight) return;
+  e.preventDefault();
+}
 
 function lockScroll() {
   window.addEventListener('wheel', preventScroll, { passive: false });

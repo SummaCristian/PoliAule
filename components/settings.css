@@ -29,7 +29,7 @@
   background: var(--background-color-secondary);
   border-radius: 50%;
   box-shadow: var(--shadow);
-  overflow: hidden;
+  overflow: clip;
   flex-direction: column;
   /* display:flex set via JS */
 
@@ -51,6 +51,7 @@
   padding: 1.25rem 1.25rem 1.5rem;
   height: 100%;
   overflow-y: auto;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
 

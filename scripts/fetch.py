@@ -80,7 +80,7 @@ def build_output(campuses: list[dict], client: httpx.Client, d: date, no_delay: 
     """Build the output JSON file, mirroring the classrooms structure, plus occupancy in each classroom."""
     result = []
     for campus in campuses:
-        campus_out = {"name": campus["name"], "id": campus["id"], "buildings": []}
+        campus_out = {"name": campus["name"], "id": campus["id"], "lat": campus.get("lat"), "lon": campus.get("lon"), "buildings": []}
         for building in campus["buildings"]:
             building_out = {"name": building["name"], "classrooms": []}
             for classroom in building["classrooms"]:
@@ -90,6 +90,8 @@ def build_output(campuses: list[dict], client: httpx.Client, d: date, no_delay: 
                     {
                         "name": classroom["name"],
                         "id": classroom["id"],
+                        "lat": classroom.get("lat"),
+                        "lon": classroom.get("lon"),
                         "features": classroom.get("features"),
                         "occupancy": occupancy
                         if occupancy is not None

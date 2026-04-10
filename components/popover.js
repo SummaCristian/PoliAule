@@ -102,10 +102,21 @@ export class Popover {
   }
 }
 
+// Close all popovers on any scroll
+window.addEventListener('scroll', () => {
+  allPopovers.forEach(p => p.close());
+}, { capture: true, passive: true });
+
 // On page load finds all popover components and initializes them
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('[data-popover]').forEach(trigger => {
     const popoverEl = document.getElementById(trigger.dataset.popover);
-    if (popoverEl) new Popover(trigger, popoverEl);
+    if (!popoverEl) return;
+    const options = {};
+    if (trigger.dataset.popoverShiftPadding !== undefined)
+      options.shiftPadding = Number(trigger.dataset.popoverShiftPadding);
+    if (trigger.dataset.popoverPlacement !== undefined)
+      options.placement = trigger.dataset.popoverPlacement;
+    new Popover(trigger, popoverEl, options);
   });
 });

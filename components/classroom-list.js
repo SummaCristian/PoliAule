@@ -1,15 +1,13 @@
-const FEATURE_ICONS = {
-  4: { icon: 'videocam', label: 'Video projector' },
-  5: { icon: 'mic', label: 'Radio microphone' },
-  6: { icon: 'blinds', label: 'Dimmable' },
-  7: { icon: 'cable', label: 'Wired desk' },
-  142: { icon: 'electrical_services', label: 'Power outlets' },
-  223: { icon: 'video_call', label: 'Videoconference' },
-};
+import { t } from '../i18n.js';
+import { createTimeFormatter } from '../utils/time-format.js';
 
-const STATUS_LABELS = {
-  'free': 'Free',
-  'partially-free': 'Partially Free',
+const FEATURE_ICONS = {
+  4: { icon: 'videocam', key: 'features.videoProjector' },
+  5: { icon: 'mic', key: 'features.radioMic' },
+  6: { icon: 'blinds', key: 'features.dimmable' },
+  7: { icon: 'cable', key: 'features.wiredDesk' },
+  142: { icon: 'electrical_services', key: 'features.powerOutlets' },
+  223: { icon: 'video_call', key: 'features.videoconf' },
 };
 
 // ---------- TIMELINE HELPERS ----------
@@ -20,13 +18,18 @@ function timeToMinutes(time) {
 }
 
 
-const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
-
 function minutesToTimeDisplay(minutes) {
   const d = new Date();
   d.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
-  return TIME_FORMATTER.format(d);
+  return createTimeFormatter({ hour: 'numeric', minute: '2-digit' }).format(d);
 }
+
+// Re-format all rendered timeline labels when the user changes the time format setting.
+window.addEventListener('timeformatchange', () => {
+  document.querySelectorAll('[data-time-minutes]').forEach(el => {
+    el.textContent = minutesToTimeDisplay(+el.dataset.timeMinutes);
+  });
+});
 
 function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
   const fromMin = timeToMinutes(fromTime);
@@ -79,38 +82,79 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
   let lastAdded = -Infinity;
   for (const t of [...candidateTimes].sort((a, b) => a - b)) {
     if (t - lastAdded >= minSpacing) {
-      labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span>${minutesToTimeDisplay(t)}</span></div>`);
+      labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span data-time-minutes="${t}">${minutesToTimeDisplay(t)}</span></div>`);
       lastAdded = t;
     }
   }
 
-  const indicatorFrom = `<div class="timeline-time-indicator" style="left:${pct(fromMin)}">${minutesToTimeDisplay(fromMin)}</div>`;
-  const indicatorTo   = `<div class="timeline-time-indicator" style="left:${pct(toMin)}">${minutesToTimeDisplay(toMin)}</div>`;
+  const indicatorFrom = `<div class="timeline-time-indicator" data-time-minutes="${fromMin}" style="left:${pct(fromMin)}">${minutesToTimeDisplay(fromMin)}</div>`;
+  const indicatorTo   = `<div class="timeline-time-indicator" data-time-minutes="${toMin}" style="left:${pct(toMin)}">${minutesToTimeDisplay(toMin)}</div>`;
 
   let indicatorNow = '';
   if (isToday) {
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
     if (nowMin > displayStart && nowMin < displayEnd) {
-      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now" style="left:${pct(nowMin)}">Now</div>`;
+      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now" style="left:${pct(nowMin)}">${t('timepicker.now')}</div>`;
     }
   }
 
   return `
-    <div class="classroom-timeline">
+    <div class="classroom-timeline" data-display-start="${displayStart}" data-display-end="${displayEnd}">
       <div class="timeline-bar-wrapper">
         ${indicatorFrom}
         ${indicatorTo}
         ${indicatorNow}
+        <div class="timeline-hover-cursor" hidden></div>
         <div class="timeline-bar">
           ${queryHtml}
           ${blocksHtml}
+          <div class="timeline-hover-line" hidden></div>
         </div>
         <div class="timeline-ticks">${labelsHtml.join('')}</div>
       </div>
     </div>
   `;
 }
+
+// ---------- TIMELINE HOVER ----------
+
+let _activeBar = null;
+
+document.addEventListener('mousemove', e => {
+  const bar = e.target.closest?.('.timeline-bar');
+
+  if (_activeBar && _activeBar !== bar) {
+    const wrapper = _activeBar.closest('.timeline-bar-wrapper');
+    if (wrapper) wrapper.querySelector('.timeline-hover-cursor').hidden = true;
+    _activeBar.querySelector('.timeline-hover-line').hidden = true;
+    _activeBar = null;
+  }
+
+  if (!bar) return;
+  _activeBar = bar;
+
+  const wrapper = bar.closest('.timeline-bar-wrapper');
+  const cursor = wrapper?.querySelector('.timeline-hover-cursor');
+  const line = bar.querySelector('.timeline-hover-line');
+  const timeline = bar.closest('.classroom-timeline');
+  if (!cursor || !line || !timeline) return;
+
+  const displayStart = +timeline.dataset.displayStart;
+  const displayEnd = +timeline.dataset.displayEnd;
+
+  const rect = bar.getBoundingClientRect();
+  const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const minutes = Math.round(displayStart + fraction * (displayEnd - displayStart));
+  const pct = `${(fraction * 100).toFixed(2)}%`;
+
+  cursor.style.left = pct;
+  cursor.textContent = minutesToTimeDisplay(minutes);
+  cursor.hidden = false;
+
+  line.style.left = pct;
+  line.hidden = false;
+});
 
 // ---------- CARD ----------
 
@@ -119,8 +163,8 @@ export function buildCardForClassroom(classroom, fromTime, toTime, isToday = fal
   const featuresHtml = (classroom.features ?? [])
     .filter(f => FEATURE_ICONS[f.id])
     .map(f => {
-      const { icon, label } = FEATURE_ICONS[f.id];
-      return `<span class="material-symbols-outlined classroom-feature-icon" title="${label}">${icon}</span>`;
+      const { icon, key } = FEATURE_ICONS[f.id];
+      return `<span class="material-symbols-outlined classroom-feature-icon" title="${t(key)}">${icon}</span>`;
     })
     .join('');
 
@@ -128,7 +172,7 @@ export function buildCardForClassroom(classroom, fromTime, toTime, isToday = fal
     <div class="classroom-card">
       <div class="classroom-card-header">
         <h4 class="classroom-name">${classroom.name}</h4>
-        <h4 class="classroom-status-txt ${classroom.status}">${STATUS_LABELS[classroom.status]}</h4>
+        <h4 class="classroom-status-txt ${classroom.status}">${classroom.status === 'free' ? t('status.free') : t('status.partiallyFree')}</h4>
       </div>
       ${buildTimeline(classroom.occupancy, fromTime, toTime, isToday)}
       ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}

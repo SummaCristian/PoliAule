@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="./components/time-picker.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
   <link rel="stylesheet" href="./components/campus-picker.css" />
+  <link rel="stylesheet" href="./components/settings.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -63,14 +64,18 @@
         </div>
       </div>
 
-      <!-- TODO: menu -->
-      <button class="header-button" data-popover="data-fetch-indicator-popover">
-        <div id="data-fetch-indicator" class="pulse-indicator"></div>
-      </button>
-      <div id="data-fetch-indicator-popover" class="popover">
-        <div class="arrow" data-arrow></div>
+      <div class="header-buttons-container">
 
-        <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
+        <!-- Data Fetch Indicator -->
+        <button class="header-button" data-popover="data-fetch-indicator-popover" data-popover-shift-padding="16">
+          <div id="data-fetch-indicator" class="pulse-indicator"></div>
+        </button>
+
+        <!-- Settings button -->
+        <button id="settings-btn" class="header-button" aria-label="Settings">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+
       </div>
 
 
@@ -81,11 +86,11 @@
 
       <button class="tab active" data-target="available-classrooms-container">
         <span class="material-symbols-outlined">event_available</span>
-        Available
+        <span data-i18n="tabs.available">Available</span>
       </button>
       <button class="tab" data-target="search-classrooms-container">
         <span class="material-symbols-outlined">search</span>
-        Search
+        <span data-i18n="tabs.search">Search</span>
       </button>
     </div>
 
@@ -99,21 +104,21 @@
     <div id="available-classrooms-container" class="tab-content visible">
 
       <div class="section-header">
-        <h3 class="section-header-title">Available Classrooms</h2>
-          <p class="section-header-subtitle secondary">
-            Find which classrooms are available right now or at any other
-            moment throughout the day.
-          </p>
+        <h3 class="section-header-title" data-i18n="available.title">Available Classrooms</h3>
+        <p class="section-header-subtitle secondary" data-i18n="available.subtitle">
+          Find which classrooms are available right now or at any other
+          moment throughout the day.
+        </p>
 
       </div>
 
-      <form id="available-classrooms-form" class="form">
+      <form id="available-classrooms-form" class="form" data-loading>
 
         <!-- Campus Picker -->
         <label for="campus-selection">
           <div class="section-header">
-            <h4 class="subsection-header-title">Select Campus</h4>
-            <p class="subsection-header-subtitle secondary">
+            <h4 class="subsection-header-title" data-i18n="form.campusTitle">Select Campus</h4>
+            <p class="subsection-header-subtitle secondary" data-i18n="form.campusSubtitle">
               Where do you want to find an available classroom?
             </p>
           </div>
@@ -121,13 +126,30 @@
 
         <input type="hidden" id="campus-picker" name="campus" />
         <div id="campus-chips" class="campus-chips"></div>
+        <div class="campus-chips-skeleton" aria-hidden="true">
+          <div class="campus-section-sk">
+            <div class="campus-label-sk"></div>
+            <div class="campus-row-sk">
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+          <div class="campus-section-sk">
+            <div class="campus-label-sk"></div>
+            <div class="campus-row-sk">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        </div>
 
         <!-- Date picker -->
         <div class="date-picker">
           <label for="date-picker">
             <div class="section-header">
-              <h4 class="subsection-header-title">Select Date and Time</h4>
-              <p class="subsection-header-subtitle secondary">
+              <h4 class="subsection-header-title" data-i18n="form.datetimeTitle">Select Date and Time</h4>
+              <p class="subsection-header-subtitle secondary" data-i18n="form.datetimeSubtitle">
                 For which day and between what times do you want to find an available classroom?
               </p>
             </div>
@@ -135,19 +157,26 @@
 
           <select id="date-picker" name="date" hidden></select>
 
-          <div id="today-indicator" class="hidden" aria-hidden="true">Today</div>
+          <div id="today-indicator" class="hidden" aria-hidden="true" data-i18n="datepicker.today">Today</div>
           <div class="date-picker-container">
             <div class="date-indicator"></div>
           </div>
+          <div class="date-picker-skeleton" aria-hidden="true">
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+          </div>
         </div>
 
+        <div class="time-pickers-skeleton" aria-hidden="true">
+          <div></div>
+          <div></div>
+        </div>
         <div class="time-pickers-container">
           <!-- From time picker -->
           <div class="time-picker">
             <label for="from-time-picker">
               <div class="section-header">
-                <h4 class="subsection-header-title">From</h4>
-                <p class="subsection-header-subtitle secondary">
+                <h4 class="subsection-header-title" data-i18n="form.fromTitle">From</h4>
+                <p class="subsection-header-subtitle secondary" data-i18n="form.fromSubtitle">
                   From which time do you need a classroom?
                 </p>
               </div>
@@ -160,8 +189,8 @@
           <div class="time-picker">
             <label for="to-time-picker">
               <div class="section-header">
-                <h4 class="subsection-header-title">To:</h4>
-                <p class="subsection-header-subtitle secondary">
+                <h4 class="subsection-header-title" data-i18n="form.toTitle">To:</h4>
+                <p class="subsection-header-subtitle secondary" data-i18n="form.toSubtitle">
                   Until which time do you need a classroom?
                 </p>
               </div>
@@ -175,15 +204,16 @@
         <!-- Submit button -->
         <button class="button-primary" type="submit">
           <span class="material-symbols-outlined">search</span>
-          Find classrooms
+          <span data-i18n="form.findButton">Find classrooms</span>
         </button>
 
       </form>
 
       <div id="available-classrooms-results" class="available-classrooms-container empty">
         <span class="material-symbols-outlined empty-container-icon">search</span>
-        <p class="empty-container-title">Need a classroom?</p>
-        <p class="empty-container-subtitle">Tell me when you need it and I’ll show you what’s available</p>
+        <p class="empty-container-title" data-i18n="results.emptyTitle">Need a classroom?</p>
+        <p class="empty-container-subtitle" data-i18n="results.emptySubtitle">Tell me when you need it and I’ll show you
+          what’s available</p>
       </div>
 
     </div>
@@ -191,21 +221,19 @@
     <!-- Search Classroom -->
     <div id="search-classrooms-container" class="tab-content">
       <div class="section-header">
-        <h3 class="section-header-title">Search Classroom</h2>
-          <p class="section-header-subtitle secondary">
-            Look up any classroom to see its availability throughout the day, or check
-            when it will be available next.
-          </p>
+        <h3 class="section-header-title" data-i18n="search.title">Search Classroom</h3>
+        <p class="section-header-subtitle secondary" data-i18n="search.subtitle">
+          Look up any classroom to see its availability throughout the day, or check
+          when it will be available next.
+        </p>
       </div>
 
       <div class="info-box">
         <h3 class="info-box-icon">🚧</h3>
-        <h3 class="info-box-title">Work in Progress</h3>
-        <p class="info-box-content">
-          I haven't actually made it this far yet...
-          <br>
-          It's coming, just hang in there! (or, you know, check back later)
-        </p>
+        <h3 class="info-box-title" data-i18n="wip.title">Work in Progress</h3>
+        <p class="info-box-content" data-i18n="wip.line1">I haven't actually made it this far yet...</p>
+        <p class="info-box-content" data-i18n="wip.line2">It's coming, just hang in there! (or, you know, check back
+          later)</p>
       </div>
 
     </div>
@@ -214,19 +242,20 @@
 
   <footer class="footer">
     <button class="transparent-button version-info-button" data-popover="version-info-popover">
-      <label class="secondary">Version 0.6.0 (beta)</label>
+      <label class="secondary">Version 0.7.0 (beta)</label>
     </button>
     <div id="version-info-popover" class="popover">
       <div class="arrow" data-arrow></div>
 
-      <img src="/favicons/logo.png" class="changelog-logo"/>
-      <h1 class="popover-title">Version 0.6.0 (Beta)</h1>
+      <img src="/favicons/logo.png" class="changelog-logo" />
+      <h1 class="popover-title">Version 0.7.0 (Beta)</h1>
       <div class="changelog-container">
-        <h2 class="popover-subtitle">What's new?</h2>
+        <h2 class="popover-subtitle" data-i18n="footer.whatsNew">What's new?</h2>
 
         <ul>
-          <li>Added a logo for PoliAule: <img src="/favicons/favicon.svg" style="height: 1rem;"/></li>
-          <li>Fixed a bug with the desktop UI not allowing to scroll on small screens</li>
+          <li>Added localization support!<br>PoliAule now supports both English and <strong>Italian</strong>!</li>
+          <li>Added an hover indicator inside classroom's timelines to show more detailed informations at any specific time in the graph</li>
+          <li>Added <strong>Settings</strong>!<br>Explore all the new possibilities and customize PoliAule to your liking!</li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">
@@ -245,7 +274,7 @@
                 0 0.32 0.216 0.694 0.825 0.576C20.565 22.092 24 17.592 24 12.297 
                 24 5.67 18.627 0.297 12 0.297z" />
           </svg>
-          <span class="hero-text">Check on GitHub</span>
+          <span class="hero-text" data-i18n="footer.checkOnGitHub">Check on GitHub</span>
         </a>
 
       </div>
@@ -256,17 +285,24 @@
     </a>
 
     <label class="secondary info-label">
-      Non-definitive version, stuff can and will change.
+      <span data-i18n="footer.disclaimer1">Non-definitive version, stuff can and will change.</span>
       <br>
-      Use at your own risk.
+      <span data-i18n="footer.disclaimer2">Use at your own risk.</span>
       <br>
-      If you find any error, please open an
-      <a class="secondary" target="_blank" href="https://github.com/SummaCristian/poliaule/issues">Issue</a>
-      on GitHub.
+      <span data-i18n="footer.disclaimer3">If you find any error, please open an</span>
+      <a class="secondary" target="_blank" href="https://github.com/SummaCristian/poliaule/issues"><span
+          data-i18n="footer.issueLinkText">Issue</span></a>
+      <span data-i18n="footer.disclaimer4">on GitHub.</span>
       <br>
-      <strong>Not affiliated to Politecnico di Milano.</strong>
+      <strong><span data-i18n="footer.disclaimer5">Not affiliated to Politecnico di Milano.</span></strong>
     </label>
   </footer>
+
+  <!-- Popovers that need viewport-relative positioning live here, outside any positioned ancestor -->
+  <div id="data-fetch-indicator-popover" class="popover">
+    <div class="arrow" data-arrow></div>
+    <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
+  </div>
 
 </body>
 

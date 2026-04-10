@@ -295,11 +295,21 @@ label {
   -webkit-user-drag: none;
 }
 
+.header-buttons-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
 .header-button {
   width: 3rem;
   height: 3rem;
   border-radius: 50%;
   background: transparent;
+
+  color: var(--text-color-secondary);
 
   display: flex;
   align-items: center;
@@ -311,7 +321,7 @@ label {
     inset 1px 1px 0 rgba(255, 255, 255, 0.3),
     inset -1px -1px rgba(255, 255, 255, 0.1),
     var(--shadow);
-  
+
   cursor: pointer;
 
   transition:
@@ -438,6 +448,7 @@ label {
   }
 }
 
+
 /* Fallback for browsers that don't support backdrop-filter (Samsung Internet) */
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .tabbar {
@@ -454,6 +465,8 @@ label {
 
 .tab {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 
   border: none;
   background: none;
@@ -481,6 +494,13 @@ label {
 
 .material-symbols-outlined {
   font-size: 22px !important;
+}
+
+.tab span:not(.material-symbols-outlined) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .tab.active {
@@ -618,6 +638,23 @@ label {
   }
 }
 
+@keyframes i18n-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.i18n-animate {
+  animation: i18n-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .section-header {
   display: flex;
   flex-direction: column;
@@ -686,6 +723,118 @@ label {
 
 .available-classroom-results {
   color: var(--text-color-primary);
+}
+
+/* ── Skeleton loading states ──────────────────────────────────── */
+
+@keyframes skeleton-shimmer {
+  from { background-position: 200% center; }
+  to   { background-position: -200% center; }
+}
+
+.campus-chips-skeleton,
+.date-picker-skeleton,
+.time-pickers-skeleton {
+  display: none;
+}
+
+form[data-loading] .campus-chips-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.campus-section-sk {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.campus-label-sk {
+  height: 0.9rem;
+  border-radius: 4px;
+}
+
+.campus-section-sk:nth-child(1) .campus-label-sk { width: 3rem; }
+.campus-section-sk:nth-child(2) .campus-label-sk { width: 4rem; }
+
+.campus-row-sk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.campus-row-sk > div {
+  height: 2.3rem;
+  border-radius: 999px;
+}
+
+/* Milan row: Città Studi, Bovisa */
+.campus-section-sk:nth-child(1) .campus-row-sk > div:nth-child(1) { width: 7rem; }
+.campus-section-sk:nth-child(1) .campus-row-sk > div:nth-child(2) { width: 4.5rem; }
+
+/* Other row: Cremona, Lecco, Mantova */
+.campus-section-sk:nth-child(2) .campus-row-sk > div:nth-child(1) { width: 5.5rem; }
+.campus-section-sk:nth-child(2) .campus-row-sk > div:nth-child(2) { width: 4.5rem; }
+.campus-section-sk:nth-child(2) .campus-row-sk > div:nth-child(3) { width: 5.5rem; }
+
+form[data-loading] .date-picker-skeleton {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  margin-top: 2rem;
+  align-self: center;
+  background-color: var(--background-color-secondary);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px rgba(255, 255, 255, 0.1),
+    var(--shadow);
+}
+
+form[data-loading] .date-picker-skeleton > div {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+form[data-loading] .time-pickers-skeleton {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+form[data-loading] .time-pickers-skeleton > div {
+  height: 3.9rem;
+  border-radius: 18px;
+  flex: 1;
+}
+
+@media (min-width: 52rem) {
+  form[data-loading] .time-pickers-skeleton > div {
+    flex: 0 0 17rem;
+    height: 17rem;
+  }
+}
+
+form[data-loading] .campus-label-sk,
+form[data-loading] .campus-row-sk > div,
+form[data-loading] .date-picker-skeleton > div,
+form[data-loading] .time-pickers-skeleton > div {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--text-color-primary) 6%, transparent) 25%,
+    color-mix(in srgb, var(--text-color-primary) 12%, transparent) 50%,
+    color-mix(in srgb, var(--text-color-primary) 6%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s linear infinite;
 }
 
 ul li::marker {
@@ -794,7 +943,7 @@ ul li::marker {
 }
 
 .changelog-logo {
-  height: 4rem; 
+  height: 4rem;
   margin-bottom: 0.5rem;
 
   user-select: none;
@@ -830,8 +979,7 @@ ul li::marker {
   content: '';
   position: absolute;
   left: 4px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0.45em;
   width: 4px;
   height: 4px;
   border-radius: 50%;
@@ -1037,8 +1185,16 @@ are rendered as solid colors
     padding: 0 2rem;
   }
 
-  #available-classrooms-container > .section-header { grid-column: 1; grid-row: 1; }
-  #available-classrooms-form                        { grid-column: 1; grid-row: 2; align-self: start; }
+  #available-classrooms-container>.section-header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  #available-classrooms-form {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
 
   #available-classrooms-results {
     grid-column: 2;

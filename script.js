@@ -11,6 +11,9 @@ import { setupCampusPicker } from './components/campus-picker.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
+import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, AUTO_COLLAPSE_KEY, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY } from './components/settings.js';
+
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
 const darkMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]');
@@ -93,13 +96,14 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
   rooms.forEach(r => { if (r.status in counts) counts[r.status]++; });
 
   const countParts = [
-    counts['free']           ? `<span class="building-count free">${counts['free']} Free</span>` : '',
-    counts['partially-free'] ? `<span class="building-count partially-free">${counts['partially-free']} Partial</span>` : '',
-    counts['not-free']       ? `<span class="building-count not-free">${counts['not-free']} Occupied</span>` : '',
+    counts['free']           ? `<span class="building-count free">${counts['free']} ${t('status.free')}</span>` : '',
+    counts['partially-free'] ? `<span class="building-count partially-free">${counts['partially-free']} ${t('status.partial')}</span>` : '',
+    counts['not-free']       ? `<span class="building-count not-free">${counts['not-free']} ${t('status.occupied')}</span>` : '',
   ].filter(Boolean).join('<span class="building-count-sep">·</span>');
 
   const buildingCard = document.createElement('div');
-  buildingCard.className = 'building-card';
+  const autoCollapse = localStorage.getItem(AUTO_COLLAPSE_KEY) === 'true';
+  buildingCard.className = autoCollapse ? 'building-card collapsed' : 'building-card';
   buildingCard.innerHTML = `
     <div class="building-card-header">
       <div class="building-card-header-text">
@@ -144,10 +148,17 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
 // Triggers the fetching of data as soon as the page loads
 document.addEventListener('DOMContentLoaded', async () => {
   try {
+    await initI18n();
+    applyTranslations();
+
+    initSettings();
+
     await fetchClassroomsData();
 
     // Setup the campus picker with the available ones
     setupCampusPicker();
+    applyPreferredCampusIfEnabled();
+    applyRememberLastCampusIfEnabled();
 
     // After fetching, use the data to set the only
     // valid dates into the date picker
@@ -158,10 +169,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTimePickers();
     document.fonts.ready.then(() => {
       document.querySelector('.time-pickers-container').style.opacity = '1';
+      document.getElementById('available-classrooms-form').removeAttribute('data-loading');
     });
 
     // Setup the data fetch indicator
     setupDataFetchIndicator();
+
+    // Re-render dynamic content when the language is switched
+    onLanguageSwitch(() => {
+      setupDataFetchIndicatorText(true);
+      setupDatePicker();
+      const container = document.getElementById('available-classrooms-results');
+      if (!container.classList.contains('empty')) {
+        document.getElementById('available-classrooms-form').dispatchEvent(
+          new Event('submit', { cancelable: true, bubbles: true })
+        );
+      }
+    });
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
   }
@@ -216,10 +240,16 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   const filterRow = document.createElement('div');
   filterRow.className = 'results-filter-row';
 
-  // Collapse-all toggle
+  // Collapse-all toggle — initial state driven by Auto Collapse setting
+  const autoCollapse = localStorage.getItem(AUTO_COLLAPSE_KEY) === 'true';
   const collapseBtn = document.createElement('button');
   collapseBtn.className = 'results-filter-btn active';
-  collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> Collapse All`;
+  if (autoCollapse) {
+    collapseBtn.dataset.state = 'collapsed';
+    collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_more</span> ${t('results.expandAll')}`;
+  } else {
+    collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`;
+  }
   collapseBtn.addEventListener('click', () => {
     const allCollapsed = collapseBtn.dataset.state === 'collapsed';
     container.querySelectorAll('.building-card').forEach(card => {
@@ -227,18 +257,21 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     });
     collapseBtn.dataset.state = allCollapsed ? '' : 'collapsed';
     collapseBtn.innerHTML = allCollapsed
-      ? `<span class="material-symbols-outlined">unfold_less</span> Collapse All`
-      : `<span class="material-symbols-outlined">unfold_more</span> Expand All`;
+      ? `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`
+      : `<span class="material-symbols-outlined">unfold_more</span> ${t('results.expandAll')}`;
   });
   filterRow.appendChild(collapseBtn);
 
-  // Partial-free filter toggle
+  // Partial-free filter toggle — initial state driven by Show Partially Free setting
+  const showPartialSaved = localStorage.getItem(SHOW_PARTIAL_KEY);
+  const showPartialDefault = showPartialSaved === null ? true : showPartialSaved === 'true';
   const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
   let originalBuildingOrder = [];
   if (hasPartial) {
     const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'results-filter-btn active';
-    toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> Partially Free`;
+    toggleBtn.className = showPartialDefault ? 'results-filter-btn active' : 'results-filter-btn';
+    toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> ${t('results.filterPartial')}`;
+    if (!showPartialDefault) container.classList.add('hide-partial');
     toggleBtn.addEventListener('click', () => {
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
@@ -277,8 +310,8 @@ function renderNoResultsClassroomsContainer(container) {
 
   container.innerHTML = `
     <span class="material-symbols-outlined empty-container-icon">search_off</span>
-    <p class="empty-container-title">No results</p>
-    <p class="empty-container-subtitle">Looks like you are out of luck, there is no classroom available between the times you requested...</p>
+    <p class="empty-container-title">${t('results.noResultsTitle')}</p>
+    <p class="empty-container-subtitle">${t('results.noResultsSubtitle')}</p>
   `;
 }
 
@@ -298,7 +331,11 @@ function setupDatePicker() {
   const container = document.querySelector('.date-picker-container');
   const indicator = container.querySelector('.date-indicator');
 
-  const DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  // Derive single-letter day names from the current locale (Sun=0 … Sat=6).
+  const dayFormatter = new Intl.DateTimeFormat(getLocale(), { weekday: 'narrow' });
+  const DAY_NAMES = Array.from({ length: 7 }, (_, i) =>
+    dayFormatter.format(new Date(2000, 0, 2 + i)) // Jan 2 2000 = Sunday
+  );
 
   // Clear any hardcoded elements, keep only the indicator
   container.querySelectorAll('.date-element-container').forEach(el => el.remove());
@@ -351,6 +388,20 @@ function setupDatePicker() {
   // --- Indicator logic ---
   const elements = container.querySelectorAll('.date-element-container');
 
+  function placeIndicator(el) {
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const paddingLeft = parseFloat(getComputedStyle(container).paddingLeft);
+    const x = elRect.left - containerRect.left - paddingLeft;
+
+    // Store x as a CSS variable so the shake keyframe can reference it
+    indicator.style.setProperty('--indicator-x', `${x}px`);
+    indicator.style.width = `${elRect.width}px`;
+    indicator.style.height = `${elRect.height}px`;
+    indicator.style.transform = `translateX(${x}px)`;
+    indicator.style.opacity = '1';
+  }
+
   function selectDateElement(el) {
     if (el.classList.contains('date-skipped')) {
       // Shake the indicator in place
@@ -368,18 +419,7 @@ function setupDatePicker() {
     elements.forEach(e => e.classList.remove('active'));
     el.classList.add('active');
 
-    const containerRect = container.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    const paddingLeft = parseFloat(getComputedStyle(container).paddingLeft);
-
-    const x = elRect.left - containerRect.left - paddingLeft;
-
-    // Store x as a CSS variable so the shake keyframe can reference it
-    indicator.style.setProperty('--indicator-x', `${x}px`);
-    indicator.style.width = `${elRect.width}px`;
-    indicator.style.height = `${elRect.height}px`;
-    indicator.style.transform = `translateX(${x}px)`;
-    indicator.style.opacity = '1';
+    placeIndicator(el);
 
     datePicker.value = el.dataset.date;
 
@@ -426,8 +466,24 @@ function setupDatePicker() {
     todayIndicator.style.top = `${topOffset}px`;
   }
 
-  window.addEventListener('resize', positionTodayIndicator);
-  new ResizeObserver(positionTodayIndicator).observe(container.closest('.date-picker'));
+  function repositionAll() {
+    const activeEl = container.querySelector('.date-element-container.active');
+    if (activeEl) placeIndicator(activeEl);
+    positionTodayIndicator();
+  }
+
+  window.addEventListener('resize', repositionAll);
+  new ResizeObserver(repositionAll).observe(container.closest('.date-picker'));
+
+  // Apply initial hide-sundays state
+  const hideSundaysContainer = container.closest('.date-picker');
+  if (localStorage.getItem('poliAule_hideSundays') === 'true') {
+    hideSundaysContainer.classList.add('date-picker--hide-sundays');
+  }
+  window.addEventListener('hidesundayschange', e => {
+    hideSundaysContainer.classList.toggle('date-picker--hide-sundays', e.detail.hidden);
+    repositionAll();
+  });
 
   // Auto-select today if available, otherwise fall back to the first available date
   // Wait for fonts to load to ensure accurate element measurements
@@ -487,16 +543,20 @@ function setupTimePickers() {
   });
 
   // Set initial values
+  const intervalHours = parseInt(localStorage.getItem(INTERVAL_HOURS_KEY), 10) || 1;
   const now = new Date();
   now.setMinutes(15, 0, 0);
   if (new Date().getMinutes() >= 15) now.setHours(now.getHours() + 1);
 
+  const minTo = new Date(now);
+  minTo.setHours(now.getHours() + 1);
+
   const later = new Date(now);
-  later.setHours(now.getHours() + 1);
+  later.setHours(now.getHours() + intervalHours);
 
   fromPicker.value = formatTime(now);
   toPicker.value = formatTime(later);
-  toPicker.min = formatTime(later);
+  toPicker.min = formatTime(minTo);
 }
 
 function setupDataFetchIndicator() {
@@ -538,21 +598,21 @@ function setupDataFetchIndicator() {
 }
 
 // Setups the text inside the popover shown in the Data Fetch Indicator
-function setupDataFetchIndicatorText() {
+function setupDataFetchIndicatorText(animate = false) {
   const container = document.getElementById('data-fetch-indicator-popover-container');
 
   const states = {
     green: {
-      title: 'Data is up to date',
-      description: 'Classroom availability was fetched today and is currently updated.',
+      title: t('data.greenTitle'),
+      description: t('data.greenDesc'),
     },
     yellow: {
-      title: 'Data may be stale',
-      description: 'Classroom availability covers today but was generated on a previous day.',
+      title: t('data.yellowTitle'),
+      description: t('data.yellowDesc'),
     },
     red: {
-      title: 'Data is outdated',
-      description: 'No availability data found for today. Results may not reflect the current schedule.',
+      title: t('data.redTitle'),
+      description: t('data.redDesc'),
     },
   };
 
@@ -566,24 +626,24 @@ function setupDataFetchIndicatorText() {
     ? new Date(classroomsData[0].generated_at + 'Z')
     : null;
 
+  const dateLocale = getLocale() === 'it' ? 'it-IT' : 'en-GB';
   const formattedTime = generationDate
-    ? generationDate.toLocaleDateString('en-GB', {
+    ? generationDate.toLocaleString(dateLocale, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
-      timeZone: 'Europe/Rome',
-    }) + ' at ' + generationDate.toLocaleTimeString('en-GB', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
       timeZone: 'Europe/Rome',
     })
-    : 'Unknown';
+    : '—';
 
   container.innerHTML = `
     <h1 class="popover-title ${status}">${title}</h1>
     <p class="data-status-description secondary">${description}</p>
-    <label class="data-status-time secondary">Last fetched: ${formattedTime}</label>
+    <label class="data-status-time secondary">${t('data.lastFetched')}: ${formattedTime}</label>
   `;
+  if (animate) animateI18nElement(container);
 }
 

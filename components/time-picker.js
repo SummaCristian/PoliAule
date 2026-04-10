@@ -3,12 +3,14 @@
 // Replaces each .time-picker wrapper with a card that morphs into a popup.
 
 import { haptics, defaultPatterns } from './haptics.js';
+import { t, onLanguageSwitch, animateI18nElement } from '../i18n.js';
+import { createTimeFormatter } from '../utils/time-format.js';
 
 const TRANSITION_DURATION = 420; // ms — must match CSS
 
 // ── Breakpoint ────────────────────────────────────────────────────────────────
 
-const DESKTOP_MQ = window.matchMedia('(min-width: 768px)');
+const DESKTOP_MQ = window.matchMedia('(min-width: 52rem)');
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -41,18 +43,33 @@ function applyGeometry(el, { left, top, width, height, borderRadius }) {
 
 // ── Time display formatter ────────────────────────────────────────────────────
 
-const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
-  hour: '2-digit',
-  minute: '2-digit',
-});
+// Track all active picker cards so they can be refreshed when the format changes.
+const _allCards = new Set();
 
 function formatTimeDisplay(val) {
   if (!val) return '--:--';
   const [h, m] = val.split(':').map(Number);
   const d = new Date();
   d.setHours(h, m, 0, 0);
-  return TIME_FORMATTER.format(d);
+  return createTimeFormatter().format(d);
 }
+
+// Re-render all active card displays when the user changes the time format setting.
+window.addEventListener('timeformatchange', () => {
+  for (const card of _allCards) {
+    const val = card._original?.value;
+    if (card._timeDisplay) {
+      card._timeDisplay.textContent = formatTimeDisplay(val);
+      // Recalculate min-width for the new format (e.g. AM/PM may be wider).
+      document.fonts.ready.then(() => {
+        const sample = createTimeFormatter().format(new Date(2000, 0, 1, 12, 0));
+        const w = measureTextWidth(sample, card._timeDisplay);
+        card._timeDisplay.style.minWidth = `${Math.ceil(w)}px`;
+      });
+    }
+    card._updateQuickLabel?.();
+  }
+});
 
 // Measure the rendered pixel width of `text` as if styled like `referenceEl`.
 function measureTextWidth(text, referenceEl) {
@@ -203,7 +220,11 @@ function buildTimePicker(wrapperEl) {
   const inputEl = wrapperEl.querySelector('input[type="time"]');
   if (!inputEl) return;
 
-  const labelText = labelEl?.querySelector('h4')?.textContent?.trim() ?? 'Time';
+  // Use the input's id to determine which picker this is — locale-safe.
+  const isFrom = inputEl.id === 'from-time-picker';
+  const labelKey = isFrom ? 'form.fromTitle' : 'form.toTitle';
+  const subtitleKey = isFrom ? 'form.fromSubtitle' : 'form.toSubtitle';
+
   // Hide original label + input (we still keep the input for form submission)
   if (labelEl) labelEl.hidden = true;
   inputEl.style.display = 'none';
@@ -218,7 +239,7 @@ function buildTimePicker(wrapperEl) {
       <span class="material-symbols-outlined">schedule</span>
     </div>
     <div class="tp-card__info">
-      <span class="tp-card__label">${labelText}</span>
+      <span class="tp-card__label">${t(labelKey)}</span>
       <span class="tp-card__time">${formatTimeDisplay(inputEl.value)}</span>
     </div>
     <span class="material-symbols-outlined tp-card__chevron">chevron_right</span>
@@ -234,8 +255,8 @@ function buildTimePicker(wrapperEl) {
   popup.innerHTML = `
     <div class="tp-popup__inner">
       <div class="tp-popup__header">
-        <h4 class="subsection-header-title">${labelEl?.querySelector('h4')?.textContent?.trim() ?? labelText}</h4>
-        <p class="subsection-header-subtitle secondary">${labelEl?.querySelector('p')?.textContent?.trim() ?? ''}</p>
+        <h4 class="subsection-header-title">${t(labelKey)}</h4>
+        <p class="subsection-header-subtitle secondary">${t(subtitleKey)}</p>
       </div>
 
       <div class="tp-popup__input-wrap">
@@ -252,20 +273,20 @@ function buildTimePicker(wrapperEl) {
       </div>
 
       <div class="tp-popup__quick-btns">
-        ${labelText === 'From' ? `
+        ${isFrom ? `
         <button type="button" class="tp-popup__quick button-primary tp-quick-now">
           <span class="material-symbols-outlined">near_me</span>
-          Now
+          <span class="tp-text-node">${t('timepicker.now')}</span>
         </button>` : ''}
         <button type="button" class="tp-popup__quick button-primary tp-quick-preset">
           <span class="material-symbols-outlined">schedule</span>
-          <span class="tp-quick-label">${labelText === 'From' ? 'Current slot' : 'From +1h'}</span>
+          <span class="tp-quick-label">${isFrom ? t('timepicker.currentSlot') : t('timepicker.fromPlusOne')}</span>
         </button>
       </div>
 
       <button type="button" class="tp-popup__done button-primary">
         <span class="material-symbols-outlined">check</span>
-        Done
+        <span class="tp-text-node">${t('timepicker.done')}</span>
       </button>
     </div>
   `;
@@ -277,7 +298,7 @@ function buildTimePicker(wrapperEl) {
   popupInput.className = 'tp-popup__time-input';
 
   // Fix width to the widest possible time string for this locale (prevents layout shift)
-  const widestSample = TIME_FORMATTER.format(new Date(2000, 0, 1, 12, 0)); // "12:00 PM" or "12:00"
+  const widestSample = createTimeFormatter().format(new Date(2000, 0, 1, 12, 0)); // "12:00 PM" or "12:00"
 
   inputWrap.appendChild(popupInput);
   document.body.appendChild(popup);
@@ -288,6 +309,7 @@ function buildTimePicker(wrapperEl) {
   card._input = popupInput;
   card._original = inputEl;
   card._timeDisplay = card.querySelector('.tp-card__time');
+  _allCards.add(card);
   // Defer measurement until fonts are loaded so DS-Digital is available
   // Only fix the card display width (prevents layout shift as hours change 1→2 digits).
   // The popup input is left unsized so the browser can accommodate locale-specific
@@ -350,7 +372,7 @@ function buildTimePicker(wrapperEl) {
 
   popup.querySelector('.tp-quick-preset').addEventListener('click', () => {
     const now = new Date();
-    if (labelText === 'From') {
+    if (isFrom) {
       const h = now.getMinutes() >= 45
         ? (now.getHours() + 1) % 24
         : now.getHours();
@@ -385,7 +407,7 @@ function buildTimePicker(wrapperEl) {
   const quickLabelEl = popup.querySelector('.tp-quick-label');
 
   function updateQuickLabel() {
-    if (labelText === 'From') {
+    if (isFrom) {
       const now = new Date();
       const h = now.getMinutes() >= 45 ? (now.getHours() + 1) % 24 : now.getHours();
       quickLabelEl.textContent =
@@ -398,22 +420,47 @@ function buildTimePicker(wrapperEl) {
         quickLabelEl.textContent =
           formatTimeDisplay(`${String(h).padStart(2, '0')}:${String(fm).padStart(2, '0')}`);
       } else {
-        quickLabelEl.textContent = 'From +1h';
+        quickLabelEl.textContent = t('timepicker.fromPlusOne');
       }
     }
   }
 
-  if (labelText !== 'From') {
+  if (!isFrom) {
     const fromInput = document.querySelector('.time-picker input[type="time"]');
     if (fromInput) fromInput.addEventListener('input', updateQuickLabel);
   }
   updateQuickLabel();
+  card._updateQuickLabel = updateQuickLabel;
 
   // ── Done button ───────────────────────────────────────────────────────────
 
   popup.querySelector('.tp-popup__done').addEventListener('click', () => {
     haptics.trigger(defaultPatterns.success);
     closePicker();
+  });
+
+  // ── Retranslate on language switch ────────────────────────────────────────
+
+  const cardLabelEl = card.querySelector('.tp-card__label');
+  const popupHeaderH4 = popup.querySelector('.tp-popup__header h4');
+  const popupHeaderP = popup.querySelector('.tp-popup__header p');
+  const nowBtnText = popup.querySelector('.tp-quick-now .tp-text-node');
+  const doneBtnText = popup.querySelector('.tp-popup__done .tp-text-node');
+
+  onLanguageSwitch(() => {
+    cardLabelEl.textContent = t(labelKey);
+    animateI18nElement(cardLabelEl);
+    popupHeaderH4.textContent = t(labelKey);
+    animateI18nElement(popupHeaderH4);
+    popupHeaderP.textContent = t(subtitleKey);
+    animateI18nElement(popupHeaderP);
+    if (nowBtnText) {
+      nowBtnText.textContent = t('timepicker.now');
+      animateI18nElement(nowBtnText);
+    }
+    doneBtnText.textContent = t('timepicker.done');
+    animateI18nElement(doneBtnText);
+    updateQuickLabel();
   });
 
   // ── Card click (mobile only) ──────────────────────────────────────────────

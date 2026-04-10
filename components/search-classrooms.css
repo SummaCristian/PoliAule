@@ -1,0 +1,258 @@
+/* ── Search highlight ────────────────────────────────────── */
+
+mark {
+  background: rgba(255, 194, 0, 0.45);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+@media (prefers-color-scheme: dark) {
+  mark {
+    background: rgba(255, 194, 0, 0.3);
+  }
+}
+
+/* ── Search bar ──────────────────────────────────────────── */
+
+.search-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  background-color: var(--background-color-secondary);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  box-shadow: var(--shadow);
+
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto 0.75rem;
+  box-sizing: border-box;
+}
+
+.search-bar-wrapper .material-symbols-outlined {
+  color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
+  font-size: 1.25rem !important;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color-primary);
+}
+
+.search-input::placeholder {
+  color: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
+}
+
+/* ── Results box ─────────────────────────────────────────── */
+
+.search-results-box {
+  margin: 0 0 0.5rem;
+  padding: 0.25rem 0.5rem 0.75rem;
+
+  background-color: var(--background-color-secondary);
+  border: 4px solid var(--background-color-secondary);
+  border-radius: 1.5rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  flex: 1;
+}
+
+/* ── Breadcrumb ──────────────────────────────────────────── */
+
+.search-breadcrumb {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.15rem;
+  flex-wrap: wrap;
+
+  padding: 0.25rem 0.25rem 0;
+}
+
+.search-breadcrumb.hidden {
+  display: none;
+}
+
+.breadcrumb-btn {
+  background: none;
+  border: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-color-accent);
+  cursor: pointer;
+
+  transition: background 0.15s ease;
+}
+
+.breadcrumb-btn:hover {
+  background: color-mix(in srgb, var(--text-color-accent) 12%, transparent);
+}
+
+.breadcrumb-sep {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
+  user-select: none;
+  padding: 0 0.1rem;
+}
+
+.breadcrumb-current {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text-color-primary) 60%, transparent);
+  padding: 0.2rem 0.5rem;
+}
+
+/* ── Grid ────────────────────────────────────────────────── */
+
+.search-grid {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.25rem;
+
+  animation: appear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.search-grid--campus {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.search-grid--building {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.search-grid--classroom {
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+}
+
+/* ── Cards ───────────────────────────────────────────────── */
+
+.search-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-align: start;
+
+  padding: 1rem;
+  border-radius: 1rem;
+
+  background-color: var(--background-color);
+  box-shadow: var(--shadow);
+  border: none;
+}
+
+.search-card:is(button) {
+  cursor: pointer;
+  transition: scale 0.15s ease;
+}
+
+.search-card:is(button):hover {
+  scale: 1.03;
+}
+
+.search-card--campus {
+  min-height: 90px;
+  justify-content: center;
+}
+
+.search-card--building {
+  min-height: 72px;
+  justify-content: center;
+}
+
+.search-card-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-color-primary);
+  line-height: 1.2;
+}
+
+.search-card--campus .search-card-name {
+  font-size: 1.2rem;
+}
+
+.search-card-subtitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.search-card-meta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: auto;
+}
+
+.search-card-meta.small {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.search-card-features {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.1rem;
+  margin-top: 0.3rem;
+}
+
+.search-card-feature-icon {
+  font-size: 1rem !important;
+  color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
+}
+
+/* ── Empty / no-results state ────────────────────────────── */
+
+.search-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .search-grid--campus {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .search-grid--building {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+
+  .search-grid--classroom {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Desktop ─────────────────────────────────────────────── */
+
+@media (min-width: 1100px) {
+  #search-classrooms-container.visible {
+    padding: 0 2rem;
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}

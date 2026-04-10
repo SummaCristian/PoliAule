@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="./components/classroom-list.css" />
   <link rel="stylesheet" href="./components/campus-picker.css" />
   <link rel="stylesheet" href="./components/settings.css" />
+  <link rel="stylesheet" href="./components/search-classrooms.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -228,12 +229,24 @@
         </p>
       </div>
 
-      <div class="info-box">
-        <h3 class="info-box-icon">🚧</h3>
-        <h3 class="info-box-title" data-i18n="wip.title">Work in Progress</h3>
-        <p class="info-box-content" data-i18n="wip.line1">I haven't actually made it this far yet...</p>
-        <p class="info-box-content" data-i18n="wip.line2">It's coming, just hang in there! (or, you know, check back
-          later)</p>
+      <!-- Search bar -->
+      <div class="search-bar-wrapper">
+        <span class="material-symbols-outlined">search</span>
+        <input
+          type="text"
+          id="classroom-search-input"
+          class="search-input"
+          data-i18n-attr="placeholder:search.inputPlaceholder"
+          placeholder="e.g. 2.0.1, Aula Rogers..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <!-- Results box: breadcrumb + card grid -->
+      <div class="search-results-box">
+        <nav id="search-breadcrumb" class="search-breadcrumb hidden" aria-label="breadcrumb"></nav>
+        <div id="search-results-container"></div>
       </div>
 
     </div>

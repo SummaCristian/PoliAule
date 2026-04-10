@@ -5,6 +5,8 @@ import {
   SKIP_DAYS
 } from './available-rooms-script.js';
 
+import { initSearchTab } from './search-classrooms-script.js';
+
 import { initTimePickers } from './components/time-picker.js';
 import { setupCampusPicker } from './components/campus-picker.js';
 
@@ -153,7 +155,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initSettings();
 
-    await fetchClassroomsData();
+    // Fetch occupancy data and classroom directory in parallel
+    await Promise.all([
+      fetchClassroomsData(),
+      initSearchTab(),
+    ]);
 
     // Setup the campus picker with the available ones
     setupCampusPicker();

@@ -29,7 +29,13 @@
   "status.partiallyFree": "Parzialmente libera",
 
   "search.title": "Cerca Aula",
-  "search.subtitle": "Cerca qualsiasi aula per vedere la sua disponibilità durante la giornata, o controlla quando sarà disponibile.",
+  "search.subtitle": "Naviga tra campus ed edifici, o digita un nome per trovare un'aula.",
+  "search.inputPlaceholder": "es. 2.0.1, Aula Rogers...",
+  "search.allCampuses": "Tutti i campus",
+  "search.buildings": "{n} edifici",
+  "search.classrooms": "{n} aule",
+  "search.emptyTitle": "Nessuna aula trovata",
+  "search.emptySubtitle": "Prova con un nome o una grafia diversa",
 
   "wip.title": "Lavori in corso",
   "wip.line1": "Non sono ancora arrivato fin qui...",

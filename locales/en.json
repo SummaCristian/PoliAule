@@ -29,7 +29,13 @@
   "status.partiallyFree": "Partially Free",
 
   "search.title": "Search Classroom",
-  "search.subtitle": "Look up any classroom to see its availability throughout the day, or check when it will be available next.",
+  "search.subtitle": "Browse campuses and buildings, or type a name to find any classroom.",
+  "search.inputPlaceholder": "e.g. 2.0.1, Aula Rogers...",
+  "search.allCampuses": "All campuses",
+  "search.buildings": "{n} buildings",
+  "search.classrooms": "{n} classrooms",
+  "search.emptyTitle": "No classrooms found",
+  "search.emptySubtitle": "Try a different name or spelling",
 
   "wip.title": "Work in Progress",
   "wip.line1": "I haven't actually made it this far yet...",

@@ -88,9 +88,13 @@ mark {
 }
 
 .breadcrumb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+
   background: none;
   border: none;
-  padding: 0.2rem 0.5rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 0.5rem;
   font-family: inherit;
   font-size: 0.85rem;
@@ -105,6 +109,26 @@ mark {
   background: color-mix(in srgb, var(--text-color-accent) 12%, transparent);
 }
 
+/* Segment that represents the current level — slightly muted but still interactive */
+.breadcrumb-btn--current {
+  color: color-mix(in srgb, var(--text-color-primary) 65%, transparent);
+}
+
+.breadcrumb-btn--current:hover {
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+}
+
+/* Dropdown indicator chevron */
+.breadcrumb-chevron {
+  font-size: 0.85rem !important;
+  opacity: 0.6;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.breadcrumb-btn[aria-expanded="true"] .breadcrumb-chevron {
+  transform: rotate(180deg);
+}
+
 .breadcrumb-sep {
   font-size: 0.85rem;
   font-weight: 600;
@@ -113,11 +137,102 @@ mark {
   padding: 0 0.1rem;
 }
 
-.breadcrumb-current {
-  font-size: 0.85rem;
+/* ── Breadcrumb dropdown ──────────────────────────────────── */
+
+@keyframes dropdown-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.breadcrumb-dropdown {
+  position: fixed;
+  z-index: 2000;
+
+  min-width: 160px;
+  max-width: 260px;
+  max-height: 60dvh;
+  overflow-y: auto;
+
+  background-color: var(--background-color-secondary);
+  border-radius: 0.875rem;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.07),
+    0 12px 28px rgba(0, 0, 0, 0.14);
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+
+  padding: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  animation: dropdown-appear 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.breadcrumb-dropdown-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: start;
+
+  transition: background 0.1s ease;
+}
+
+.breadcrumb-dropdown-item:hover {
+  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+}
+
+.breadcrumb-dropdown-item.active {
+  background: color-mix(in srgb, var(--text-color-accent) 10%, transparent);
+}
+
+.breadcrumb-dropdown-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.breadcrumb-dropdown-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-color-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breadcrumb-dropdown-item.active .breadcrumb-dropdown-label {
+  color: var(--text-color-accent);
+}
+
+.breadcrumb-dropdown-sublabel {
+  font-size: 0.72rem;
   font-weight: 600;
-  color: color-mix(in srgb, var(--text-color-primary) 60%, transparent);
-  padding: 0.2rem 0.5rem;
+  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
+}
+
+.breadcrumb-dropdown-check {
+  font-size: 1rem !important;
+  color: var(--text-color-accent);
+  flex-shrink: 0;
 }
 
 /* ── Grid ────────────────────────────────────────────────── */

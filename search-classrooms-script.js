@@ -16,6 +16,7 @@ let searchIndex = null;
 let hierarchyState = { level: 0, campus: null, building: null };
 let isSearchActive = false;
 let searchDebounce = null;
+let activeDropdown = null;
 
 // ---------- DATA ----------
 
@@ -100,11 +101,116 @@ function buildClassroomCard(room, query = '') {
   return el;
 }
 
+// ---------- BREADCRUMB DROPDOWN ----------
+
+function openBreadcrumbDropdown(anchor, items) {
+  // Toggle: clicking the same anchor again closes the dropdown
+  if (activeDropdown?._anchor === anchor) {
+    closeActiveDropdown();
+    return;
+  }
+  closeActiveDropdown();
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'breadcrumb-dropdown';
+  dropdown._anchor = anchor;
+
+  items.forEach(({ label, sublabel, active, onSelect }) => {
+    const btn = document.createElement('button');
+    btn.className = `breadcrumb-dropdown-item${active ? ' active' : ''}`;
+
+    const textCol = document.createElement('div');
+    textCol.className = 'breadcrumb-dropdown-text';
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'breadcrumb-dropdown-label';
+    labelEl.textContent = label;
+    textCol.appendChild(labelEl);
+
+    if (sublabel) {
+      const subEl = document.createElement('span');
+      subEl.className = 'breadcrumb-dropdown-sublabel';
+      subEl.textContent = sublabel;
+      textCol.appendChild(subEl);
+    }
+
+    btn.appendChild(textCol);
+
+    if (active) {
+      const check = document.createElement('span');
+      check.className = 'material-symbols-outlined breadcrumb-dropdown-check';
+      check.textContent = 'check';
+      btn.appendChild(check);
+    }
+
+    btn.addEventListener('click', () => {
+      closeActiveDropdown();
+      onSelect();
+    });
+    dropdown.appendChild(btn);
+  });
+
+  document.body.appendChild(dropdown);
+  activeDropdown = dropdown;
+  anchor.setAttribute('aria-expanded', 'true');
+
+  // Position below the anchor button, flush-left, clamped to viewport
+  const rect = anchor.getBoundingClientRect();
+  dropdown.style.left = `${rect.left}px`;
+  dropdown.style.top = `${rect.bottom + 6}px`;
+
+  requestAnimationFrame(() => {
+    if (!activeDropdown) return;
+    const ddRect = dropdown.getBoundingClientRect();
+    if (ddRect.right > window.innerWidth - 8) {
+      dropdown.style.left = `${Math.max(8, window.innerWidth - ddRect.width - 8)}px`;
+    }
+  });
+
+  // Dismiss on outside click (deferred so this very click doesn't close it)
+  const onOutsideClick = (e) => {
+    if (!dropdown.contains(e.target) && e.target !== anchor) {
+      closeActiveDropdown();
+    }
+  };
+  dropdown._onOutsideClick = onOutsideClick;
+  setTimeout(() => document.addEventListener('click', onOutsideClick), 0);
+}
+
+function closeActiveDropdown() {
+  if (!activeDropdown) return;
+  if (activeDropdown._onOutsideClick) {
+    document.removeEventListener('click', activeDropdown._onOutsideClick);
+  }
+  activeDropdown._anchor?.removeAttribute('aria-expanded');
+  activeDropdown.remove();
+  activeDropdown = null;
+}
+
 // ---------- BREADCRUMB ----------
+
+function makeSep() {
+  const sep = document.createElement('span');
+  sep.className = 'breadcrumb-sep';
+  sep.textContent = '›';
+  return sep;
+}
+
+// Returns a button that opens a siblings dropdown when clicked.
+// `isCurrent` adds the --current modifier (slightly muted, still interactive).
+function makeDropdownSegment(label, isCurrent, onOpen) {
+  const btn = document.createElement('button');
+  btn.className = `breadcrumb-btn breadcrumb-btn--has-dropdown${isCurrent ? ' breadcrumb-btn--current' : ''}`;
+  btn.innerHTML = `${escapeHtml(label)}<span class="material-symbols-outlined breadcrumb-chevron" aria-hidden="true">expand_more</span>`;
+  btn.addEventListener('click', onOpen);
+  return btn;
+}
 
 function updateBreadcrumb() {
   const { level, campus, building } = hierarchyState;
   const breadcrumb = document.getElementById('search-breadcrumb');
+
+  closeActiveDropdown();
 
   if (level === 0) {
     breadcrumb.classList.add('hidden');
@@ -115,6 +221,7 @@ function updateBreadcrumb() {
   breadcrumb.classList.remove('hidden');
   breadcrumb.innerHTML = '';
 
+  // "All campuses" — plain navigation button, no siblings dropdown
   const allBtn = document.createElement('button');
   allBtn.className = 'breadcrumb-btn';
   allBtn.textContent = t('search.allCampuses');
@@ -122,37 +229,35 @@ function updateBreadcrumb() {
   breadcrumb.appendChild(allBtn);
 
   if (campus) {
-    const sep1 = document.createElement('span');
-    sep1.className = 'breadcrumb-sep';
-    sep1.textContent = '›';
-    breadcrumb.appendChild(sep1);
+    breadcrumb.appendChild(makeSep());
 
     const shortName = campus.name.includes(' - ') ? campus.name.split(' - ')[0] : campus.name;
-
-    if (level === 1) {
-      const cur = document.createElement('span');
-      cur.className = 'breadcrumb-current';
-      cur.textContent = shortName;
-      breadcrumb.appendChild(cur);
-    } else {
-      const campusBtn = document.createElement('button');
-      campusBtn.className = 'breadcrumb-btn';
-      campusBtn.textContent = shortName;
-      campusBtn.addEventListener('click', () => renderBuildings(campus));
-      breadcrumb.appendChild(campusBtn);
-    }
+    const campusSegment = makeDropdownSegment(shortName, level === 1, (e) => {
+      e.stopPropagation();
+      openBreadcrumbDropdown(campusSegment, classroomsData
+        .filter(c => c.buildings.length > 0)
+        .map(c => {
+          const [cShort, cSub] = c.name.includes(' - ') ? c.name.split(' - ') : [c.name, ''];
+          return { label: cShort, sublabel: cSub, active: c.id === campus.id, onSelect: () => renderBuildings(c) };
+        })
+      );
+    });
+    breadcrumb.appendChild(campusSegment);
   }
 
   if (building && level >= 2) {
-    const sep2 = document.createElement('span');
-    sep2.className = 'breadcrumb-sep';
-    sep2.textContent = '›';
-    breadcrumb.appendChild(sep2);
+    breadcrumb.appendChild(makeSep());
 
-    const cur = document.createElement('span');
-    cur.className = 'breadcrumb-current';
-    cur.textContent = building.name;
-    breadcrumb.appendChild(cur);
+    const buildingSegment = makeDropdownSegment(building.name, true, (e) => {
+      e.stopPropagation();
+      openBreadcrumbDropdown(buildingSegment, campus.buildings.map(b => ({
+        label: b.name,
+        sublabel: t('search.classrooms').replace('{n}', b.classrooms.length),
+        active: b.name === building.name,
+        onSelect: () => renderClassrooms(campus, b),
+      })));
+    });
+    breadcrumb.appendChild(buildingSegment);
   }
 }
 
@@ -214,6 +319,7 @@ function renderClassrooms(campus, building) {
 }
 
 function renderSearchResults(query) {
+  closeActiveDropdown();
   if (!searchIndex) searchIndex = buildSearchIndex();
 
   const q = query.trim().toLowerCase();
@@ -270,6 +376,7 @@ export async function initSearchTab() {
     }
 
     isSearchActive = true;
+    closeActiveDropdown();
     document.getElementById('search-breadcrumb').classList.add('hidden');
     searchDebounce = setTimeout(() => renderSearchResults(query), 200);
   });

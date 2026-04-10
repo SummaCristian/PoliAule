@@ -83,6 +83,57 @@ body {
   padding: 2rem;
 }
 
+/* ── Splash Screen ────────────────────────────────────────────── */
+.splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splash-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--background-color);
+  transition: opacity 0.65s ease-out;
+  pointer-events: none;
+}
+
+.splash-overlay.splash-hiding::before {
+  opacity: 0;
+}
+
+.splash-logo {
+  width: 10rem;
+  height: 10rem;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+}
+
+.splash-logo.splash-logo-flying {
+  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.splash-header-item {
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.splash-header-item.splash-revealed {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo.splash-logo-flying {
+    transition: transform 0s;
+  }
+}
+
 /* Generic HTML Elements */
 h1 {
   font-size: 3rem;

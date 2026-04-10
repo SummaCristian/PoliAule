@@ -46,6 +46,11 @@
 </head>
 
 <body>
+  <!-- Splash Screen -->
+  <div id="splash-overlay" class="splash-overlay" aria-hidden="true">
+    <img src="/favicons/logo.png" class="splash-logo" alt="" draggable="false" />
+  </div>
+
   <!-- NoScript Overlay (clients with JS disabled) -->
   <noscript>
     <div class="noscript-overlay">
@@ -59,13 +64,13 @@
       <div class="header-title-container">
         <img src="/favicons/logo.png" class="header-logo">
 
-        <div class="header-title-beta-container">
+        <div class="header-title-beta-container splash-header-item">
           <h2 class="header-title">PoliAule</h2>
           <h4 class="secondary">Beta</h4>
         </div>
       </div>
 
-      <div class="header-buttons-container">
+      <div class="header-buttons-container splash-header-item">
 
         <!-- Data Fetch Indicator -->
         <button class="header-button" data-popover="data-fetch-indicator-popover" data-popover-shift-padding="16">

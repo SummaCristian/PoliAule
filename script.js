@@ -16,6 +16,49 @@ import { buildCardForClassroom } from './components/classroom-list.js';
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, AUTO_COLLAPSE_KEY, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY } from './components/settings.js';
 
+// ---------- SPLASH SCREEN ----------
+const _splashStartTime = Date.now();
+const _SPLASH_MIN_MS = 300;
+
+function dismissSplash() {
+  const overlay = document.getElementById('splash-overlay');
+  if (!overlay) return;
+
+  const splashLogo = overlay.querySelector('.splash-logo');
+  const realLogo = document.querySelector('.header-logo');
+
+  // FLIP: measure First (splash, centered) and Last (header) positions
+  const firstRect = splashLogo.getBoundingClientRect();
+  const lastRect = realLogo.getBoundingClientRect();
+
+  // FLIP: center-to-center translation (transform-origin is center by default)
+  const dx = (lastRect.left + lastRect.width / 2) - (firstRect.left + firstRect.width / 2);
+  const dy = (lastRect.top + lastRect.height / 2) - (firstRect.top + firstRect.height / 2);
+  const scale = lastRect.height / firstRect.height;
+
+  // Hide the real header logo so the flying one appears to be it
+  realLogo.style.opacity = '0';
+
+  // Allow interaction with the UI underneath while the logo is flying
+  overlay.style.pointerEvents = 'none';
+
+  // Force a style flush so the transition is active when we set the transform
+  splashLogo.classList.add('splash-logo-flying');
+  void splashLogo.offsetWidth;
+
+  // Start everything simultaneously: logo flies, background fades, header reveals
+  splashLogo.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+  overlay.classList.add('splash-hiding');
+  document.querySelectorAll('.splash-header-item')
+    .forEach(el => el.classList.add('splash-revealed'));
+
+  // The moment the logo lands: restore the real header logo and remove the overlay
+  splashLogo.addEventListener('transitionend', () => {
+    realLogo.style.opacity = '';
+    overlay.remove();
+  }, { once: true });
+}
+
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
 const darkMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]');
@@ -173,15 +216,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTimePickers();
 
     initTimePickers();
-    document.fonts.ready.then(() => {
-      document.querySelector('.time-pickers-container').style.opacity = '1';
-      document.getElementById('available-classrooms-form').removeAttribute('data-loading');
-    });
 
-    // Setup the data fetch indicator
+    // Setup the data fetch indicator and language switch handler immediately —
+    // these don't depend on fonts and shouldn't wait for the splash to dismiss
     setupDataFetchIndicator();
-
-    // Re-render dynamic content when the language is switched
     onLanguageSwitch(() => {
       setupDataFetchIndicatorText(true);
       setupDatePicker();
@@ -192,6 +230,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
       }
     });
+
+    // Wait for fonts so time pickers render correctly, then dismiss splash.
+    // By this point all data is fetched and every component is populated.
+    await document.fonts.ready;
+    document.querySelector('.time-pickers-container').style.opacity = '1';
+    document.getElementById('available-classrooms-form').removeAttribute('data-loading');
+
+    const elapsed = Date.now() - _splashStartTime;
+    const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
+    setTimeout(dismissSplash, remaining);
+
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
   }

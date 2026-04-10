@@ -12,7 +12,7 @@ import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, AUTO_COLLAPSE_KEY, SHOW_PARTIAL_KEY } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, AUTO_COLLAPSE_KEY, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY } from './components/settings.js';
 
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
@@ -538,16 +538,20 @@ function setupTimePickers() {
   });
 
   // Set initial values
+  const intervalHours = parseInt(localStorage.getItem(INTERVAL_HOURS_KEY), 10) || 1;
   const now = new Date();
   now.setMinutes(15, 0, 0);
   if (new Date().getMinutes() >= 15) now.setHours(now.getHours() + 1);
 
+  const minTo = new Date(now);
+  minTo.setHours(now.getHours() + 1);
+
   const later = new Date(now);
-  later.setHours(now.getHours() + 1);
+  later.setHours(now.getHours() + intervalHours);
 
   fromPicker.value = formatTime(now);
   toPicker.value = formatTime(later);
-  toPicker.min = formatTime(later);
+  toPicker.min = formatTime(minTo);
 }
 
 function setupDataFetchIndicator() {

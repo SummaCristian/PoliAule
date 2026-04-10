@@ -17,6 +17,7 @@ const LAST_CAMPUS_ID_KEY           = 'poliAule_lastCampusId';
 const HIDE_SUNDAYS_KEY             = 'poliAule_hideSundays';
 export const AUTO_COLLAPSE_KEY     = 'poliAule_autoCollapse';
 export const SHOW_PARTIAL_KEY      = 'poliAule_showPartial';
+export const INTERVAL_HOURS_KEY    = 'poliAule_intervalHours';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -207,6 +208,54 @@ export function applyRememberLastCampusIfEnabled() {
 }
 
 // ── Toggle helpers ────────────────────────────────────────────────────────────
+
+function buildStepper(value, min, max, format, onChange) {
+  let current = Math.max(min, Math.min(max, value));
+
+  const el = document.createElement('div');
+  el.className = 'settings-stepper';
+
+  const minusBtn = document.createElement('button');
+  minusBtn.type = 'button';
+  minusBtn.className = 'settings-stepper__btn';
+  minusBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
+
+  const valueEl = document.createElement('span');
+  valueEl.className = 'settings-stepper__value';
+
+  const plusBtn = document.createElement('button');
+  plusBtn.type = 'button';
+  plusBtn.className = 'settings-stepper__btn';
+  plusBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+
+  function refresh() {
+    valueEl.textContent = format(current);
+    minusBtn.disabled = current <= min;
+    plusBtn.disabled = current >= max;
+  }
+
+  minusBtn.addEventListener('click', () => {
+    if (current <= min) return;
+    current--;
+    refresh();
+    haptics.trigger(defaultPatterns.success);
+    onChange(current);
+  });
+
+  plusBtn.addEventListener('click', () => {
+    if (current >= max) return;
+    current++;
+    refresh();
+    haptics.trigger(defaultPatterns.success);
+    onChange(current);
+  });
+
+  refresh();
+  el.appendChild(minusBtn);
+  el.appendChild(valueEl);
+  el.appendChild(plusBtn);
+  return el;
+}
 
 function buildToggle(isOn) {
   const btn = document.createElement('button');
@@ -508,6 +557,17 @@ function buildPopup() {
               </div>
             </div>
           </div>
+          <div class="settings-row" data-interval-hours-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #007AFF">
+                <span class="material-symbols-outlined">timelapse</span>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.intervalHours">${t('settings.intervalHours')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.intervalHoursDesc">${t('settings.intervalHoursDesc')}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -630,6 +690,14 @@ function buildPopup() {
     haptics.trigger(defaultPatterns.success);
     window.dispatchEvent(new CustomEvent('hidesundayschange', { detail: { hidden: isOn } }));
   });
+
+  // Wire Interval Hours stepper
+  const intervalHoursRow = popup.querySelector('[data-interval-hours-row]');
+  const savedHours = parseInt(localStorage.getItem(INTERVAL_HOURS_KEY), 10) || 1;
+  const intervalStepper = buildStepper(savedHours, 1, 12, v => `${v}h`, v => {
+    localStorage.setItem(INTERVAL_HOURS_KEY, String(v));
+  });
+  intervalHoursRow.appendChild(intervalStepper);
 
   // Wire Auto Collapse toggle
   const autoCollapseRow = popup.querySelector('[data-auto-collapse-row]');

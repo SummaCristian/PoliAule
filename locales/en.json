@@ -72,6 +72,8 @@
   "settings.hideSundays": "Hide Sundays",
   "settings.hideSundaysDesc": "Don't show Sundays in the date picker.",
   "settings.sectionResults": "Results",
+  "settings.intervalHours": "Default Interval",
+  "settings.intervalHoursDesc": "How many hours to pre-select as the search window on load.",
   "settings.autoCollapse": "Auto Collapse",
   "settings.autoCollapseDesc": "Start with building sections collapsed when results load.",
   "settings.showPartial": "Show Partially Free",

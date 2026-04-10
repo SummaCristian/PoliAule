@@ -72,6 +72,8 @@
   "settings.hideSundays": "Nascondi domeniche",
   "settings.hideSundaysDesc": "Non mostrare le domeniche nel selettore data.",
   "settings.sectionResults": "Risultati",
+  "settings.intervalHours": "Intervallo predefinito",
+  "settings.intervalHoursDesc": "Quante ore pre-selezionare come finestra di ricerca al caricamento.",
   "settings.autoCollapse": "Comprimi automaticamente",
   "settings.autoCollapseDesc": "Comprimi le sezioni edificio al caricamento dei risultati.",
   "settings.showPartial": "Mostra parzialmente libere",

@@ -113,6 +113,16 @@ body {
   user-select: none;
   -webkit-user-drag: none;
   will-change: transform;
+  opacity: 0;
+  scale: 0.75;
+  animation: splash-logo-fade-in 0.5s ease-out 0.1s forwards;
+}
+
+@keyframes splash-logo-fade-in {
+  to {
+    opacity: 1;
+    scale: 1;
+  }
 }
 
 .splash-logo.splash-logo-flying {
@@ -129,6 +139,11 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .splash-logo {
+    animation: none;
+    opacity: 1;
+  }
+
   .splash-logo.splash-logo-flying {
     transition: transform 0s;
   }
@@ -695,6 +710,7 @@ label {
     transform: translateY(4px) scale(0.96);
     filter: blur(3px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -779,8 +795,13 @@ label {
 /* ── Skeleton loading states ──────────────────────────────────── */
 
 @keyframes skeleton-shimmer {
-  from { background-position: 200% center; }
-  to   { background-position: -200% center; }
+  from {
+    background-position: 200% center;
+  }
+
+  to {
+    background-position: -200% center;
+  }
 }
 
 .campus-chips-skeleton,
@@ -807,8 +828,13 @@ form[data-loading] .campus-chips-skeleton {
   border-radius: 4px;
 }
 
-.campus-section-sk:nth-child(1) .campus-label-sk { width: 3rem; }
-.campus-section-sk:nth-child(2) .campus-label-sk { width: 4rem; }
+.campus-section-sk:nth-child(1) .campus-label-sk {
+  width: 3rem;
+}
+
+.campus-section-sk:nth-child(2) .campus-label-sk {
+  width: 4rem;
+}
 
 .campus-row-sk {
   display: flex;
@@ -816,19 +842,32 @@ form[data-loading] .campus-chips-skeleton {
   gap: 0.5rem;
 }
 
-.campus-row-sk > div {
+.campus-row-sk>div {
   height: 2.3rem;
   border-radius: 999px;
 }
 
 /* Milan row: Città Studi, Bovisa */
-.campus-section-sk:nth-child(1) .campus-row-sk > div:nth-child(1) { width: 7rem; }
-.campus-section-sk:nth-child(1) .campus-row-sk > div:nth-child(2) { width: 4.5rem; }
+.campus-section-sk:nth-child(1) .campus-row-sk>div:nth-child(1) {
+  width: 7rem;
+}
+
+.campus-section-sk:nth-child(1) .campus-row-sk>div:nth-child(2) {
+  width: 4.5rem;
+}
 
 /* Other row: Cremona, Lecco, Mantova */
-.campus-section-sk:nth-child(2) .campus-row-sk > div:nth-child(1) { width: 5.5rem; }
-.campus-section-sk:nth-child(2) .campus-row-sk > div:nth-child(2) { width: 4.5rem; }
-.campus-section-sk:nth-child(2) .campus-row-sk > div:nth-child(3) { width: 5.5rem; }
+.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(1) {
+  width: 5.5rem;
+}
+
+.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(2) {
+  width: 4.5rem;
+}
+
+.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(3) {
+  width: 5.5rem;
+}
 
 form[data-loading] .date-picker-skeleton {
   display: flex;
@@ -845,7 +884,7 @@ form[data-loading] .date-picker-skeleton {
     var(--shadow);
 }
 
-form[data-loading] .date-picker-skeleton > div {
+form[data-loading] .date-picker-skeleton>div {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 8px;
@@ -861,29 +900,27 @@ form[data-loading] .time-pickers-skeleton {
   justify-content: center;
 }
 
-form[data-loading] .time-pickers-skeleton > div {
+form[data-loading] .time-pickers-skeleton>div {
   height: 3.9rem;
   border-radius: 18px;
   flex: 1;
 }
 
 @media (min-width: 52rem) {
-  form[data-loading] .time-pickers-skeleton > div {
+  form[data-loading] .time-pickers-skeleton>div {
     flex: 0 0 17rem;
     height: 17rem;
   }
 }
 
 form[data-loading] .campus-label-sk,
-form[data-loading] .campus-row-sk > div,
-form[data-loading] .date-picker-skeleton > div,
-form[data-loading] .time-pickers-skeleton > div {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--text-color-primary) 6%, transparent) 25%,
-    color-mix(in srgb, var(--text-color-primary) 12%, transparent) 50%,
-    color-mix(in srgb, var(--text-color-primary) 6%, transparent) 75%
-  );
+form[data-loading] .campus-row-sk>div,
+form[data-loading] .date-picker-skeleton>div,
+form[data-loading] .time-pickers-skeleton>div {
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--text-color-primary) 6%, transparent) 25%,
+      color-mix(in srgb, var(--text-color-primary) 12%, transparent) 50%,
+      color-mix(in srgb, var(--text-color-primary) 6%, transparent) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.6s linear infinite;
 }

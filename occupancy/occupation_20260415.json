@@ -1,10 +1,12 @@
 {
-  "generated_at": "2026-04-10T05:50:55.203398",
+  "generated_at": "2026-04-11T05:15:00.277865",
   "date": "20260415",
   "campuses": [
     {
       "name": "Milano Leonardo - Città Studi",
       "id": "MIA01",
+      "lat": 45.4787,
+      "lon": null,
       "buildings": [
         {
           "name": "Edificio 2",
@@ -12,6 +14,8 @@
             {
               "name": "2.0.1",
               "id": 32,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -58,6 +62,8 @@
             {
               "name": "2.0.2",
               "id": 33,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -99,6 +105,8 @@
             {
               "name": "2.1.1",
               "id": 34,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -145,6 +153,8 @@
             {
               "name": "2.1.2",
               "id": 35,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -187,6 +197,8 @@
             {
               "name": "2.1.3",
               "id": 36,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -237,6 +249,8 @@
             {
               "name": "2.1.4",
               "id": 39,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -282,6 +296,8 @@
             {
               "name": "2.1.5",
               "id": 38,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -323,6 +339,8 @@
             {
               "name": "2.2.1",
               "id": 1303,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -359,6 +377,8 @@
             {
               "name": "2.2.2",
               "id": 41,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -400,6 +420,8 @@
             {
               "name": "2.2.3",
               "id": 961,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -441,6 +463,8 @@
             {
               "name": "2.2.4",
               "id": 4726,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -486,6 +510,8 @@
             {
               "name": "3.0.1",
               "id": 42,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -528,6 +554,8 @@
             {
               "name": "3.0.2",
               "id": 58,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -583,6 +611,8 @@
             {
               "name": "3.0.3",
               "id": 57,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -634,6 +664,8 @@
             {
               "name": "3.1.1",
               "id": 63,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -681,6 +713,8 @@
             {
               "name": "3.1.11",
               "id": 5101,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -717,6 +751,8 @@
             {
               "name": "3.1.12",
               "id": 5102,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -749,6 +785,8 @@
             {
               "name": "3.1.2",
               "id": 44,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -804,6 +842,8 @@
             {
               "name": "3.1.3",
               "id": 45,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -855,6 +895,8 @@
             {
               "name": "3.1.4",
               "id": 46,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -914,6 +956,8 @@
             {
               "name": "3.1.5",
               "id": 47,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -969,6 +1013,8 @@
             {
               "name": "3.1.6",
               "id": 48,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1020,6 +1066,8 @@
             {
               "name": "3.1.7",
               "id": 43,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1071,6 +1119,8 @@
             {
               "name": "3.1.8",
               "id": 4734,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1115,6 +1165,8 @@
             {
               "name": "3.1.9",
               "id": 4733,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1150,6 +1202,8 @@
             {
               "name": "3.2.1",
               "id": 4630,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1205,6 +1259,8 @@
             {
               "name": "3.2.2",
               "id": 4631,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1260,6 +1316,8 @@
             {
               "name": "3.2.3",
               "id": 4632,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1311,6 +1369,8 @@
             {
               "name": "3.2.4",
               "id": 4633,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1367,6 +1427,8 @@
             {
               "name": "4.0.1",
               "id": 75,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1417,6 +1479,8 @@
             {
               "name": "5.0.1",
               "id": 2,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1458,6 +1522,8 @@
             {
               "name": "5.0.2",
               "id": 4738,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1508,6 +1574,8 @@
             {
               "name": "5.0.3",
               "id": 4739,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1554,6 +1622,8 @@
             {
               "name": "BELTRAMI",
               "id": 2350,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1580,6 +1650,8 @@
             {
               "name": "5.1.1",
               "id": 3,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1626,6 +1698,8 @@
             {
               "name": "6.0.1",
               "id": 10,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1667,6 +1741,8 @@
             {
               "name": "7.1.1",
               "id": 4,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1704,6 +1780,8 @@
             {
               "name": "7.1.2",
               "id": 5,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -1739,6 +1817,8 @@
             {
               "name": "7.1.3",
               "id": 6,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1780,6 +1860,8 @@
             {
               "name": "7.0.1",
               "id": 4589,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1840,6 +1922,8 @@
             {
               "name": "8.0.1",
               "id": 27,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1886,6 +1970,8 @@
             {
               "name": "8.1.1",
               "id": 28,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1912,6 +1998,10 @@
                 {
                   "inizio": "11:15",
                   "fine": "13:15"
+                },
+                {
+                  "inizio": "15:30",
+                  "fine": "18:00"
                 }
               ]
             }
@@ -1923,6 +2013,8 @@
             {
               "name": "9.0.1",
               "id": 7,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -1973,6 +2065,8 @@
             {
               "name": "9.0.2",
               "id": 8,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2004,6 +2098,8 @@
             {
               "name": "9.0.3",
               "id": 4740,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2054,6 +2150,8 @@
             {
               "name": "9.0.4",
               "id": 4765,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -2065,6 +2163,8 @@
             {
               "name": "9.1.2",
               "id": 9,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2120,6 +2220,8 @@
             {
               "name": "IV",
               "id": 741,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2157,6 +2259,8 @@
             {
               "name": "A - ALDO ROSSI",
               "id": 721,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2194,6 +2298,8 @@
             {
               "name": "B",
               "id": 722,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2231,6 +2337,8 @@
             {
               "name": "C",
               "id": 723,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2272,6 +2380,8 @@
             {
               "name": "D",
               "id": 724,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2318,6 +2428,8 @@
             {
               "name": "E/F",
               "id": 1941,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2349,6 +2461,8 @@
             {
               "name": "III.A",
               "id": 732,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2390,6 +2504,8 @@
             {
               "name": "III.B",
               "id": 733,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2431,6 +2547,8 @@
             {
               "name": "III.C",
               "id": 734,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2472,6 +2590,8 @@
             {
               "name": "III.D",
               "id": 736,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2517,6 +2637,8 @@
             {
               "name": "O.1",
               "id": 4684,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2548,6 +2670,8 @@
             {
               "name": "Q.1",
               "id": 730,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2589,6 +2713,8 @@
             {
               "name": "R.1",
               "id": 731,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2626,6 +2752,8 @@
             {
               "name": "U.1",
               "id": 737,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2667,6 +2795,8 @@
             {
               "name": "Y.1",
               "id": 5038,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2697,6 +2827,8 @@
             {
               "name": "Z.1 D.I.",
               "id": 5039,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2728,6 +2860,8 @@
             {
               "name": "J.2",
               "id": 728,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2769,6 +2903,8 @@
             {
               "name": "O.2",
               "id": 729,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2806,6 +2942,8 @@
             {
               "name": "O.2.1",
               "id": 1942,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2843,6 +2981,8 @@
             {
               "name": "R.2",
               "id": 4682,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2870,6 +3010,8 @@
             {
               "name": "U.2",
               "id": 738,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2907,6 +3049,8 @@
             {
               "name": "Z.2",
               "id": 1960,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2943,6 +3087,8 @@
             {
               "name": "G.1",
               "id": 726,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -2979,6 +3125,8 @@
             {
               "name": "G.2",
               "id": 2012,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3011,6 +3159,8 @@
             {
               "name": "G.3",
               "id": 4791,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3043,6 +3193,8 @@
             {
               "name": "T.1.1",
               "id": 53,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3093,6 +3245,8 @@
             {
               "name": "T.1.2",
               "id": 71,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3147,6 +3301,8 @@
             {
               "name": "T.1.3",
               "id": 72,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3188,6 +3344,8 @@
             {
               "name": "T.2.1",
               "id": 54,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3233,6 +3391,8 @@
             {
               "name": "T.2.2",
               "id": 55,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3278,6 +3438,8 @@
             {
               "name": "T.2.3",
               "id": 56,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3323,6 +3485,8 @@
             {
               "name": "T.0.1",
               "id": 65,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3363,6 +3527,8 @@
             {
               "name": "T.0.2",
               "id": 52,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3408,6 +3574,8 @@
             {
               "name": "T.0.3",
               "id": 1081,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3457,6 +3625,8 @@
             {
               "name": "T.0.4",
               "id": 261,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3511,6 +3681,8 @@
             {
               "name": "B.2.1",
               "id": 20,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3556,6 +3728,8 @@
             {
               "name": "B.2.2",
               "id": 31,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3601,6 +3775,8 @@
             {
               "name": "B.2.3",
               "id": 2000,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3638,6 +3814,8 @@
             {
               "name": "B.2.4",
               "id": 2001,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3679,6 +3857,8 @@
             {
               "name": "B.3.1",
               "id": 73,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3720,6 +3900,8 @@
             {
               "name": "B.3.2",
               "id": 74,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3757,6 +3939,8 @@
             {
               "name": "B.3.3",
               "id": 2002,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3794,6 +3978,8 @@
             {
               "name": "B.3.4",
               "id": 2003,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3835,6 +4021,8 @@
             {
               "name": "B.4.1",
               "id": 101,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3871,6 +4059,8 @@
             {
               "name": "B.4.2",
               "id": 1226,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3912,6 +4102,8 @@
             {
               "name": "B.4.3",
               "id": 4590,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3953,6 +4145,8 @@
             {
               "name": "B.4.4",
               "id": 4725,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -3994,6 +4188,8 @@
             {
               "name": "B.5.1",
               "id": 1221,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4030,6 +4226,8 @@
             {
               "name": "B.5.2",
               "id": 1222,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4066,6 +4264,8 @@
             {
               "name": "B.5.3",
               "id": 1223,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4098,6 +4298,8 @@
             {
               "name": "B.5.4",
               "id": 1224,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4147,6 +4349,8 @@
             {
               "name": "B.6.1",
               "id": 962,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4187,6 +4391,8 @@
             {
               "name": "B.6.2",
               "id": 964,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4228,6 +4434,8 @@
             {
               "name": "B.6.3",
               "id": 965,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4269,6 +4477,8 @@
             {
               "name": "B.6.4",
               "id": 1225,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4323,6 +4533,8 @@
             {
               "name": "16B.1.1",
               "id": 4991,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4369,6 +4581,8 @@
             {
               "name": "16B.2.1",
               "id": 4992,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4411,6 +4625,8 @@
             {
               "name": "16B.3.1",
               "id": 4993,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4453,6 +4669,8 @@
             {
               "name": "16B.0.1",
               "id": 4990,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4504,6 +4722,8 @@
             {
               "name": "16C.0.1",
               "id": 5011,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4540,6 +4760,8 @@
             {
               "name": "16C.0.2",
               "id": 5012,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4576,6 +4798,8 @@
             {
               "name": "16C.0.3",
               "id": 5013,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4617,6 +4841,8 @@
             {
               "name": "19.0.1",
               "id": 161,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -4656,6 +4882,8 @@
             {
               "name": "20.S.1",
               "id": 282,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4693,6 +4921,8 @@
             {
               "name": "21.0.1",
               "id": 67,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4744,6 +4974,8 @@
             {
               "name": "21.0.2",
               "id": 1541,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4791,6 +5023,8 @@
             {
               "name": "21.0.3",
               "id": 25,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4832,6 +5066,8 @@
             {
               "name": "21.S.1",
               "id": 21,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4879,6 +5115,8 @@
             {
               "name": "21.S.2",
               "id": 19,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4916,6 +5154,8 @@
             {
               "name": "21.S.3",
               "id": 22,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4953,6 +5193,8 @@
             {
               "name": "21.S.4",
               "id": 23,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -4995,6 +5237,8 @@
             {
               "name": "G.0.1",
               "id": 1661,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5012,6 +5256,8 @@
             {
               "name": "G.0.2",
               "id": 1662,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5034,6 +5280,8 @@
             {
               "name": "25.0.1",
               "id": 945,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5080,6 +5328,8 @@
             {
               "name": "25.0.2",
               "id": 946,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5126,6 +5376,8 @@
             {
               "name": "25.1.1",
               "id": 947,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5171,6 +5423,8 @@
             {
               "name": "25.1.2",
               "id": 948,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5216,6 +5470,8 @@
             {
               "name": "25.1.3",
               "id": 949,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5257,6 +5513,8 @@
             {
               "name": "25.1.4",
               "id": 950,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5306,6 +5564,8 @@
             {
               "name": "25.1.5",
               "id": 951,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5359,6 +5619,8 @@
             {
               "name": "25.1.6",
               "id": 952,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5400,6 +5662,8 @@
             {
               "name": "25.2.1",
               "id": 1305,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5446,6 +5710,8 @@
             {
               "name": "25.2.2",
               "id": 1306,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5492,6 +5758,8 @@
             {
               "name": "25.2.3",
               "id": 1307,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5534,6 +5802,8 @@
             {
               "name": "25.S.1",
               "id": 941,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5579,6 +5849,8 @@
             {
               "name": "25.S.2",
               "id": 943,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5629,6 +5901,8 @@
             {
               "name": "25.S.3",
               "id": 944,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5676,6 +5950,8 @@
             {
               "name": "26.0.1",
               "id": 4666,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5711,6 +5987,8 @@
             {
               "name": "26.0.2",
               "id": 4599,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5755,6 +6033,8 @@
             {
               "name": "26.0.3",
               "id": 4600,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5799,6 +6079,8 @@
             {
               "name": "26.0.4",
               "id": 4628,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5853,6 +6135,8 @@
             {
               "name": "26.1.1",
               "id": 4601,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5889,6 +6173,8 @@
             {
               "name": "26.1.2",
               "id": 4602,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5930,6 +6216,8 @@
             {
               "name": "26.1.3",
               "id": 4603,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -5972,6 +6260,8 @@
             {
               "name": "26.1.4",
               "id": 4604,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6018,6 +6308,8 @@
             {
               "name": "26.1.5",
               "id": 4605,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6054,6 +6346,8 @@
             {
               "name": "16.1.6",
               "id": 4606,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6090,6 +6384,8 @@
     {
       "name": "Milano Via Colombo",
       "id": "MIA06",
+      "lat": 45.4719,
+      "lon": 9.2269,
       "buildings": [
         {
           "name": "Edificio 32.1",
@@ -6097,6 +6393,8 @@
             {
               "name": "E.P.6",
               "id": 5098,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6137,6 +6435,8 @@
             {
               "name": "E.P.7",
               "id": 5099,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6182,6 +6482,8 @@
             {
               "name": "E.P.1",
               "id": 4596,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6223,6 +6525,8 @@
             {
               "name": "E.P.2",
               "id": 4752,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -6238,6 +6542,8 @@
             {
               "name": "E.P.3",
               "id": 4766,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6254,6 +6560,8 @@
     {
       "name": "Milano Bovisa - Via Durando",
       "id": "MIB02",
+      "lat": 45.5044,
+      "lon": 9.164,
       "buildings": [
         {
           "name": "Edificio B1",
@@ -6261,6 +6569,8 @@
             {
               "name": "Aula F.LLI CASTIGLIONI",
               "id": 4517,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 5,
@@ -6307,6 +6617,8 @@
             {
               "name": "B2.0.1 - D.I.",
               "id": 2092,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6348,6 +6660,8 @@
             {
               "name": "B2.1.1",
               "id": 1898,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6384,6 +6698,8 @@
             {
               "name": "B2.1.2",
               "id": 1903,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -6410,6 +6726,8 @@
             {
               "name": "B2.1.3",
               "id": 987,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -6432,6 +6750,8 @@
             {
               "name": "B2.1.5",
               "id": 2106,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6459,6 +6779,8 @@
             {
               "name": "B2.1.6",
               "id": 984,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6490,6 +6812,8 @@
             {
               "name": "B2.1.8",
               "id": 983,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -6512,6 +6836,8 @@
             {
               "name": "B2.1.9",
               "id": 1899,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6548,6 +6874,8 @@
             {
               "name": "B2.1.10",
               "id": 1301,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -6574,6 +6902,8 @@
             {
               "name": "B2.1.11",
               "id": 2108,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6605,6 +6935,8 @@
             {
               "name": "B2.1.12",
               "id": 1906,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6632,6 +6964,8 @@
             {
               "name": "B2.1.13",
               "id": 1905,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -6658,6 +6992,8 @@
             {
               "name": "B2.1.14",
               "id": 2107,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6685,6 +7021,8 @@
             {
               "name": "B2.1.15",
               "id": 988,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -6707,6 +7045,8 @@
             {
               "name": "B2.1.16",
               "id": 4618,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6748,6 +7088,8 @@
             {
               "name": "B2.2.1",
               "id": 1914,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 5,
@@ -6775,6 +7117,8 @@
             {
               "name": "B2.2.2",
               "id": 1913,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6807,6 +7151,8 @@
             {
               "name": "B2.2.3",
               "id": 1912,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -6829,6 +7175,8 @@
             {
               "name": "B2.2.4",
               "id": 1911,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6861,6 +7209,8 @@
             {
               "name": "B2.2.5",
               "id": 4617,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6906,6 +7256,8 @@
             {
               "name": "B2.2.6",
               "id": 1910,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -6938,6 +7290,8 @@
             {
               "name": "B2.2.7",
               "id": 1909,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -6964,6 +7318,8 @@
             {
               "name": "B2.2.8",
               "id": 1908,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7000,6 +7356,8 @@
             {
               "name": "B2.2.9",
               "id": 4620,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7041,6 +7399,8 @@
             {
               "name": "B2.2.10",
               "id": 1907,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -7063,6 +7423,8 @@
             {
               "name": "B2.2.11",
               "id": 1917,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7099,6 +7461,8 @@
             {
               "name": "B2.2.12",
               "id": 4616,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7144,6 +7508,8 @@
             {
               "name": "B2.2.13",
               "id": 1916,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 5,
@@ -7175,6 +7541,8 @@
             {
               "name": "B2.2.14",
               "id": 1915,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -7197,6 +7565,8 @@
             {
               "name": "B2.2.15",
               "id": 4619,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7234,6 +7604,8 @@
             {
               "name": "B2.3.1",
               "id": 1956,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -7256,6 +7628,8 @@
             {
               "name": "B2.3.2",
               "id": 1955,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -7282,6 +7656,8 @@
             {
               "name": "B2.3.3",
               "id": 1954,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -7308,6 +7684,8 @@
             {
               "name": "B2.3.4",
               "id": 1953,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -7330,6 +7708,8 @@
             {
               "name": "B6.2.1",
               "id": 4693,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7341,6 +7721,8 @@
             {
               "name": "B6.2.2",
               "id": 4694,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7377,6 +7759,8 @@
             {
               "name": "B6.2.3",
               "id": 4855,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7388,6 +7772,8 @@
             {
               "name": "B6.2.4",
               "id": 4856,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7403,6 +7789,8 @@
             {
               "name": "B6.2.5",
               "id": 4699,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7444,6 +7832,8 @@
             {
               "name": "B6.2.6",
               "id": 4700,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7481,6 +7871,8 @@
             {
               "name": "B6.3.1",
               "id": 4701,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7492,6 +7884,8 @@
             {
               "name": "B6.3.2",
               "id": 4703,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7503,6 +7897,8 @@
             {
               "name": "B6.3.3",
               "id": 4861,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7519,6 +7915,8 @@
             {
               "name": "B8.0.1",
               "id": 4778,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7560,6 +7958,8 @@
             {
               "name": "B8.0.2",
               "id": 4779,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7601,6 +8001,8 @@
             {
               "name": "B8.0.3",
               "id": 4780,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7638,6 +8040,8 @@
             {
               "name": "B8.0.4",
               "id": 4781,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7675,6 +8079,8 @@
             {
               "name": "B8.0.5",
               "id": 4782,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7716,6 +8122,8 @@
             {
               "name": "B8.0.6",
               "id": 4783,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7753,6 +8161,8 @@
             {
               "name": "B8.0.7",
               "id": 5072,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7768,6 +8178,8 @@
             {
               "name": "B8.0.8",
               "id": 4784,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7809,6 +8221,8 @@
             {
               "name": "B8.0.9",
               "id": 5073,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7824,18 +8238,24 @@
             {
               "name": "B8.0.10",
               "id": 4862,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "B8.0.11",
               "id": 4863,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "B8.0.12",
               "id": 4864,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7847,6 +8267,8 @@
             {
               "name": "B8.1.1",
               "id": 4785,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7897,6 +8319,8 @@
             {
               "name": "B8.1.2",
               "id": 5074,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7912,6 +8336,8 @@
             {
               "name": "B8.1.3",
               "id": 4786,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -7954,6 +8380,8 @@
             {
               "name": "B8.1.4",
               "id": 5075,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -7965,6 +8393,8 @@
             {
               "name": "B8.2.1",
               "id": 4787,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8007,6 +8437,8 @@
             {
               "name": "B8.2.2",
               "id": 4788,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8053,6 +8485,8 @@
             {
               "name": "B8.2.3",
               "id": 4789,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8089,6 +8523,8 @@
     {
       "name": "Milano Bovisa - Via La Masa",
       "id": "MIB01",
+      "lat": 45.5029,
+      "lon": 9.1563,
       "buildings": [
         {
           "name": "Edificio B12",
@@ -8096,6 +8532,8 @@
             {
               "name": "L.01",
               "id": 79,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8137,6 +8575,8 @@
             {
               "name": "L.02",
               "id": 80,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8187,6 +8627,8 @@
             {
               "name": "L.03",
               "id": 81,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8232,6 +8674,8 @@
             {
               "name": "L.04 - VIRTUAL LAB",
               "id": 82,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8269,6 +8713,8 @@
             {
               "name": "L.05 - D.I.",
               "id": 83,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8305,6 +8751,8 @@
             {
               "name": "L.06",
               "id": 84,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8351,6 +8799,8 @@
             {
               "name": "L.07",
               "id": 85,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8397,6 +8847,8 @@
             {
               "name": "L.08",
               "id": 87,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8438,6 +8890,8 @@
             {
               "name": "L.09",
               "id": 86,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8487,6 +8941,8 @@
             {
               "name": "L.11",
               "id": 89,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8528,6 +8984,8 @@
             {
               "name": "L.12",
               "id": 1781,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8569,6 +9027,8 @@
             {
               "name": "L.13",
               "id": 1782,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8610,6 +9070,8 @@
             {
               "name": "L.14",
               "id": 641,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8647,6 +9109,8 @@
             {
               "name": "L.15",
               "id": 1862,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8689,6 +9153,8 @@
             {
               "name": "LM.1",
               "id": 1783,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8731,6 +9197,8 @@
             {
               "name": "LM.3",
               "id": 628,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8776,6 +9244,8 @@
             {
               "name": "LM.4",
               "id": 629,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8817,6 +9287,8 @@
             {
               "name": "LM.5",
               "id": 630,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8858,6 +9330,8 @@
             {
               "name": "LM.6",
               "id": 631,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8908,6 +9382,8 @@
             {
               "name": "BL.27.0.1",
               "id": 4546,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8949,6 +9425,8 @@
             {
               "name": "BL.27.0.2",
               "id": 4547,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -8990,6 +9468,8 @@
             {
               "name": "BL.27.0.3",
               "id": 4548,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9039,6 +9519,8 @@
             {
               "name": "BL.27.0.4",
               "id": 4549,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9084,6 +9566,8 @@
             {
               "name": "BL.27.0.5",
               "id": 4550,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9125,6 +9609,8 @@
             {
               "name": "BL.27.0.6",
               "id": 4551,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9170,6 +9656,8 @@
             {
               "name": "BL.27.0.7",
               "id": 4552,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9207,6 +9695,8 @@
             {
               "name": "BL.27.0.8",
               "id": 4553,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9248,6 +9738,8 @@
             {
               "name": "BL.27.1.1",
               "id": 4554,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9302,6 +9794,8 @@
             {
               "name": "BL.27.1.2",
               "id": 4556,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9343,6 +9837,8 @@
             {
               "name": "BL.27.1.3",
               "id": 4557,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9393,6 +9889,8 @@
             {
               "name": "BL.27.1.4",
               "id": 4558,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9443,6 +9941,8 @@
             {
               "name": "BL.27.1.5",
               "id": 4559,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9489,6 +9989,8 @@
             {
               "name": "BL.27.1.6",
               "id": 4560,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9543,6 +10045,8 @@
             {
               "name": "BL.27.1.7",
               "id": 4561,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9597,6 +10101,8 @@
             {
               "name": "BL.27.1.8",
               "id": 4562,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9652,6 +10158,8 @@
             {
               "name": "AULA CARASSA E DADDA",
               "id": 4745,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -9663,6 +10171,8 @@
             {
               "name": "BL.28.1.1",
               "id": 4741,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9700,6 +10210,8 @@
             {
               "name": "BL.28.1.2",
               "id": 4742,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9735,6 +10247,8 @@
             {
               "name": "BL.28.2.1",
               "id": 4743,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9780,6 +10294,8 @@
             {
               "name": "BL.28.2.2",
               "id": 4744,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -9815,6 +10331,8 @@
     {
       "name": "Cremona",
       "id": "CRG02",
+      "lat": 45.1349,
+      "lon": 10.0154,
       "buildings": [
         {
           "name": "Edificio CR03",
@@ -9822,18 +10340,24 @@
             {
               "name": "CR03.0.1",
               "id": 5150,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR03.0.2",
               "id": 5152,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR03.0.3",
               "id": 5155,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             }
@@ -9845,48 +10369,64 @@
             {
               "name": "CR04.0.1",
               "id": 5147,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR04.0.2",
               "id": 5146,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR04.0.3",
               "id": 5148,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR04.1.1",
               "id": 5149,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR04.1.2",
               "id": 5151,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR04.1.3",
               "id": 5153,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR04.1.4",
               "id": 5154,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR04.2.1",
               "id": 5156,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -9902,6 +10442,8 @@
             {
               "name": "CR04.2.2",
               "id": 5157,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -9913,6 +10455,8 @@
             {
               "name": "CR04.2.3",
               "id": 5158,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": [
                 {
@@ -9924,18 +10468,24 @@
             {
               "name": "CR04.2.4",
               "id": 5159,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR04.2.5",
               "id": 5160,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "CR04.2.6",
               "id": 5161,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             }
@@ -9946,6 +10496,8 @@
     {
       "name": "Lecco",
       "id": "LCF04",
+      "lat": 45.8492,
+      "lon": 9.397,
       "buildings": [
         {
           "name": "Edificio 8",
@@ -9953,6 +10505,8 @@
             {
               "name": "T.1",
               "id": 4635,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 7,
@@ -9980,6 +10534,8 @@
             {
               "name": "T.2",
               "id": 4636,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 7,
@@ -10007,6 +10563,8 @@
             {
               "name": "T.3",
               "id": 4637,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 7,
@@ -10034,6 +10592,8 @@
             {
               "name": "T.4",
               "id": 4638,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 7,
@@ -10066,6 +10626,8 @@
             {
               "name": "B.0.1",
               "id": 4639,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10093,11 +10655,18 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "18:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "B.0.2",
               "id": 4640,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10135,6 +10704,8 @@
             {
               "name": "B.0.3",
               "id": 4641,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10176,6 +10747,8 @@
             {
               "name": "B.0.4",
               "id": 4642,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10203,11 +10776,18 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:00",
+                  "fine": "18:00"
+                }
+              ]
             },
             {
               "name": "B.0.5",
               "id": 4643,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10240,6 +10820,8 @@
             {
               "name": "B.0.6",
               "id": 4644,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10277,6 +10859,8 @@
             {
               "name": "B.0.7",
               "id": 4645,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10314,6 +10898,8 @@
             {
               "name": "B.1.1",
               "id": 4646,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10341,11 +10927,18 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "B.1.2",
               "id": 4647,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10387,6 +10980,8 @@
             {
               "name": "B.1.3",
               "id": 4648,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10419,6 +11014,8 @@
             {
               "name": "B.1.4",
               "id": 4649,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10461,6 +11058,8 @@
             {
               "name": "B.1.5",
               "id": 4650,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10498,6 +11097,8 @@
             {
               "name": "B.2.1",
               "id": 4651,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10539,6 +11140,8 @@
             {
               "name": "B.2.2",
               "id": 4652,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10575,6 +11178,8 @@
             {
               "name": "B.2.3",
               "id": 4653,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10621,6 +11226,8 @@
             {
               "name": "B.2.4",
               "id": 4654,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10643,11 +11250,18 @@
                   "en": "Microphone"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:30",
+                  "fine": "16:30"
+                }
+              ]
             },
             {
               "name": "B.2.5",
               "id": 4655,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10680,6 +11294,8 @@
             {
               "name": "B.2.6",
               "id": 4656,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10722,6 +11338,8 @@
             {
               "name": "A.0.1",
               "id": 4657,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10749,11 +11367,18 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "18:00"
+                }
+              ]
             },
             {
               "name": "A.0.2",
               "id": 4658,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10781,11 +11406,18 @@
                   "en": "Seats with electric socket"
                 }
               ],
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "18:00"
+                }
+              ]
             },
             {
               "name": "A.1.1",
               "id": 4659,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10818,6 +11450,8 @@
             {
               "name": "A.1.2",
               "id": 4660,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10847,6 +11481,10 @@
               ],
               "occupancy": [
                 {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
                   "inizio": "13:15",
                   "fine": "17:15"
                 }
@@ -10855,6 +11493,8 @@
             {
               "name": "A.1.3",
               "id": 4661,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,
@@ -10901,12 +11541,16 @@
             {
               "name": "M.1",
               "id": 5018,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "M.2",
               "id": 5017,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 7,
@@ -10933,6 +11577,8 @@
     {
       "name": "Mantova",
       "id": "MNG01",
+      "lat": 45.1603,
+      "lon": 10.7889,
       "buildings": [
         {
           "name": "Edificio 1",
@@ -10940,6 +11586,8 @@
             {
               "name": "A.0.1",
               "id": 2072,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -10977,6 +11625,8 @@
             {
               "name": "A.0.2",
               "id": 2078,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -10999,6 +11649,8 @@
             {
               "name": "A.0.3",
               "id": 2074,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 5,
@@ -11031,6 +11683,8 @@
             {
               "name": "A.0.4",
               "id": 2077,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -11062,6 +11716,8 @@
             {
               "name": "A.1.1",
               "id": 2071,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -11094,12 +11750,16 @@
             {
               "name": "A.1.2",
               "id": 4674,
+              "lat": null,
+              "lon": null,
               "features": [],
               "occupancy": []
             },
             {
               "name": "A.1.3",
               "id": 2065,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -11146,6 +11806,8 @@
             {
               "name": "A.1.4",
               "id": 2066,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 4,
@@ -11177,6 +11839,8 @@
             {
               "name": "A.1.5",
               "id": 2073,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 5,
@@ -11204,6 +11868,8 @@
             {
               "name": "A.1.8",
               "id": 2067,
+              "lat": null,
+              "lon": null,
               "features": [
                 {
                   "id": 6,

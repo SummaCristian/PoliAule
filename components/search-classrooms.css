@@ -372,6 +372,38 @@ mark {
   transform: translateY(0) scale(0.98);
 }
 
+.search-level-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.2rem;
+  padding: 0;
+
+  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+  border: none;
+  border-radius: 0.5rem;
+  color: var(--text-color-accent);
+  cursor: pointer;
+
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.search-level-back-btn:hover {
+  background: color-mix(in srgb, var(--text-color-accent) 12%, transparent);
+}
+
+.search-level-back-btn:active {
+  transform: scale(0.92);
+}
+
+.search-level-back-btn .material-symbols-outlined {
+  font-size: 1.25rem !important;
+}
+
 .search-card-header {
   display: flex;
   flex-direction: row;

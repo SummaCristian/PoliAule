@@ -312,12 +312,28 @@ function updateBreadcrumb() {
 
 // ---------- LEVEL HEADER ----------
 
-function setLevelHeader(icon, labelKey) {
+function setLevelHeader(icon, labelKey, onBack = null) {
   const header = document.getElementById('search-level-header');
-  header.innerHTML = `
-    <span class="material-symbols-outlined search-level-header-icon">${icon}</span>
-    <span class="search-level-header-text">${t(labelKey)}</span>
-  `;
+  header.innerHTML = '';
+
+  if (onBack) {
+    const backBtn = document.createElement('button');
+    backBtn.className = 'search-level-back-btn';
+    backBtn.innerHTML = '<span class="material-symbols-outlined">arrow_back</span>';
+    backBtn.title = t('search.back');
+    backBtn.addEventListener('click', onBack);
+    header.appendChild(backBtn);
+  }
+
+  const iconEl = document.createElement('span');
+  iconEl.className = 'material-symbols-outlined search-level-header-icon';
+  iconEl.textContent = icon;
+  header.appendChild(iconEl);
+
+  const textEl = document.createElement('span');
+  textEl.className = 'search-level-header-text';
+  textEl.textContent = t(labelKey);
+  header.appendChild(textEl);
 }
 
 // ---------- RENDER FUNCTIONS ----------
@@ -346,7 +362,7 @@ function renderCampuses() {
 function renderBuildings(campus) {
   hierarchyState = { level: 1, campus, building: null };
   updateBreadcrumb();
-  setLevelHeader('domain', 'search.headerBuildings');
+  setLevelHeader('domain', 'search.headerBuildings', () => renderCampuses());
 
   const container = document.getElementById('search-results-container');
   const grid = document.createElement('div');
@@ -365,7 +381,7 @@ function renderBuildings(campus) {
 function renderClassrooms(campus, building) {
   hierarchyState = { level: 2, campus, building };
   updateBreadcrumb();
-  setLevelHeader('meeting_room', 'search.headerClassrooms');
+  setLevelHeader('meeting_room', 'search.headerClassrooms', () => renderBuildings(campus));
 
   const container = document.getElementById('search-results-container');
   const grid = document.createElement('div');

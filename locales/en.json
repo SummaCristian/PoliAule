@@ -32,6 +32,7 @@
   "search.subtitle": "Browse campuses and buildings, or type a name to find any classroom.",
   "search.inputPlaceholder": "e.g. 2.0.1, Aula Rogers...",
   "search.allCampuses": "All campuses",
+  "search.back": "Back",
   "building.prefix": "Building",
 
   "search.buildings": "{n} buildings",

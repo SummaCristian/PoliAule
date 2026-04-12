@@ -5,7 +5,8 @@ import {
   SKIP_DAYS
 } from './available-rooms-script.js';
 
-import { initSearchTab } from './search-classrooms-script.js';
+import { initSearchTab, classroomsData as staticClassroomsData } from './search-classrooms-script.js';
+import { classroomDetail } from './components/classroom-detail.js';
 
 import { initTimePickers } from './components/time-picker.js';
 import { setupCampusPicker } from './components/campus-picker.js';
@@ -203,6 +204,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       fetchClassroomsData(),
       initSearchTab(),
     ]);
+
+    // Init classroom detail overlay (hash routing + VT morph)
+    classroomDetail.init(staticClassroomsData);
 
     // Setup the campus picker with the available ones
     setupCampusPicker();

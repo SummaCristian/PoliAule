@@ -30,7 +30,7 @@ function getCampusGroupName(campus) {
   return null;
 }
 
-let classroomsData = null;
+export let classroomsData = null;
 let searchIndex = null;
 
 // Hierarchy navigation state
@@ -130,8 +130,9 @@ function buildClassroomCard(room, query = '') {
     .map(f => `<span class="material-symbols-outlined search-card-feature-icon" title="${t(FEATURE_ICONS[f.id].key)}">${FEATURE_ICONS[f.id].icon}</span>`)
     .join('');
 
-  const el = document.createElement('div');
+  const el = document.createElement('button');
   el.className = 'search-card search-card--classroom';
+  el.dataset.openClassroom = room.id;
   el.innerHTML = `
     <div class="search-card-header">
       <div class="search-card-icon-wrapper">

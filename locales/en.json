@@ -98,6 +98,11 @@
   "settings.languageDesc": "Change the language of the app.",
   "settings.noCampusData": "Open the app first to load campuses",
 
+  "detail.features": "Features",
+  "detail.noFeatures": "No features listed",
+  "detail.weeklySchedule": "Weekly Schedule",
+  "detail.noData": "No schedule data available",
+
   "footer.whatsNew": "What's new?",
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer1": "Non-definitive version, stuff can and will change.",

@@ -171,8 +171,13 @@ export function buildCardForClassroom(classroom, fromTime, toTime, isToday = fal
   return `
     <div class="classroom-card">
       <div class="classroom-card-header">
-        <h4 class="classroom-name">${classroom.name}</h4>
-        <h4 class="classroom-status-txt ${classroom.status}">${classroom.status === 'free' ? t('status.free') : t('status.partiallyFree')}</h4>
+        <div class="classroom-card-header-left">
+          <h4 class="classroom-name">${classroom.name}</h4>
+          <h4 class="classroom-status-txt ${classroom.status}">${classroom.status === 'free' ? t('status.free') : t('status.partiallyFree')}</h4>
+        </div>
+        <button class="classroom-info-btn" data-open-classroom="${classroom.id}" aria-label="View details">
+          <span class="material-symbols-outlined">info</span>
+        </button>
       </div>
       ${buildTimeline(classroom.occupancy, fromTime, toTime, isToday)}
       ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}

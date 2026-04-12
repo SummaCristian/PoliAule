@@ -32,6 +32,8 @@
   "search.subtitle": "Naviga tra campus ed edifici, o digita un nome per trovare un'aula.",
   "search.inputPlaceholder": "es. 2.0.1, Aula Rogers...",
   "search.allCampuses": "Tutti i campus",
+  "building.prefix": "Edificio",
+
   "search.buildings": "{n} edifici",
   "search.classrooms": "{n} aule",
   "search.headerCampuses": "Campus",

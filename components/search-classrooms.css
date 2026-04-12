@@ -24,13 +24,22 @@ mark {
 
   background-color: var(--background-color-secondary);
   border-radius: 999px;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1.25rem;
   box-shadow: var(--shadow);
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 6%, transparent);
 
   max-width: 480px;
   width: 100%;
-  margin: 0 auto 0.75rem;
+  margin: 0 auto 1rem;
   box-sizing: border-box;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.search-bar-wrapper:focus-within {
+  border-color: color-mix(in srgb, var(--text-color-accent) 45%, transparent);
+  box-shadow: 
+    0 0 0 4px color-mix(in srgb, var(--text-color-accent) 15%, transparent),
+    var(--shadow);
 }
 
 .search-bar-wrapper .material-symbols-outlined {
@@ -307,22 +316,22 @@ mark {
 
 .search-grid {
   display: grid;
-  gap: 0.75rem;
-  padding: 0.25rem;
+  gap: 1rem;
+  padding: 0.5rem;
 
   animation: appear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .search-grid--campus {
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
 .search-grid--building {
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 }
 
 .search-grid--classroom {
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
 
 /* ── Cards ───────────────────────────────────────────────── */
@@ -330,74 +339,147 @@ mark {
 .search-card {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.75rem;
   text-align: start;
 
   padding: 1rem;
-  border-radius: 1rem;
+  border-radius: 1.25rem;
 
-  background-color: var(--background-color);
+  background-color: var(--background-color-secondary);
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 6%, transparent);
   box-shadow: var(--shadow);
-  border: none;
+  
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.2s ease,
+              border-color 0.2s ease;
 }
 
 .search-card:is(button) {
   cursor: pointer;
-  transition: scale 0.15s ease;
 }
 
 .search-card:is(button):hover {
-  scale: 1.03;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.1),
+    var(--shadow);
+  border-color: color-mix(in srgb, var(--text-color-accent) 30%, transparent);
 }
 
-.search-card--campus {
-  min-height: 90px;
-  justify-content: center;
+.search-card:is(button):active {
+  transform: translateY(0) scale(0.98);
 }
 
-.search-card--building {
-  min-height: 72px;
+.search-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.search-card-icon-wrapper {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--text-color-accent) 10%, transparent);
+  color: var(--text-color-accent);
+}
+
+.search-card-icon-wrapper .material-symbols-outlined {
+  font-size: 1.5rem !important;
+}
+
+.search-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
 }
 
 .search-card-name {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: var(--text-color-primary);
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .search-card--campus .search-card-name {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
 }
 
 .search-card-subtitle {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.search-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--text-color-primary) 5%, transparent);
 }
 
 .search-card-meta {
   font-size: 0.75rem;
-  font-weight: 600;
-  margin-top: auto;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
 }
 
 .search-card-meta.small {
   font-size: 0.7rem;
-  opacity: 0.75;
+  font-weight: 600;
+}
+
+.search-card-arrow {
+  font-size: 1.1rem !important;
+  color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.search-card:hover .search-card-arrow {
+  transform: translateX(3px);
+  color: var(--text-color-accent);
+}
+
+.search-card--classroom {
+  gap: 0.5rem;
+}
+
+.search-card--classroom .search-card-icon-wrapper {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.6rem;
+}
+
+.search-card--classroom .search-card-icon-wrapper .material-symbols-outlined {
+  font-size: 1.2rem !important;
 }
 
 .search-card-features {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 0.1rem;
-  margin-top: 0.3rem;
+  gap: 0.2rem;
+  margin-top: 0.25rem;
 }
 
 .search-card-feature-icon {
   font-size: 1rem !important;
-  color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
+  color: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
 }
 
 /* ── Empty / no-results state ────────────────────────────── */
@@ -415,16 +497,21 @@ mark {
 /* ── Responsive ──────────────────────────────────────────── */
 
 @media (max-width: 600px) {
+  .search-grid {
+    gap: 0.75rem;
+    padding: 0.25rem;
+  }
+
   .search-grid--campus {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
 
   .search-grid--building {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 
   .search-grid--classroom {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   }
 }
 

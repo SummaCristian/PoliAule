@@ -6,7 +6,7 @@
     "long": 9.2280,
     "buildings": [
       {
-        "name": "Edificio 2",
+        "name": "2",
         "classrooms": [
           {
             "name": "2.0.1",
@@ -362,7 +362,7 @@
         ]
       },
       {
-        "name": "Edificio 3",
+        "name": "3",
         "classrooms": [
           {
             "name": "3.0.1",
@@ -1035,7 +1035,7 @@
         ]
       },
       {
-        "name": "Edificio 4",
+        "name": "4",
         "classrooms": [
           {
             "name": "4.0.1",
@@ -1071,7 +1071,7 @@
         ]
       },
       {
-        "name": "Edificio 5",
+        "name": "5",
         "classrooms": [
           {
             "name": "5.0.1",
@@ -1226,7 +1226,7 @@
         ]
       },
       {
-        "name": "Edificio 6",
+        "name": "6",
         "classrooms": [
           {
             "name": "6.0.1",
@@ -1257,7 +1257,7 @@
         ]
       },
       {
-        "name": "Edificio 7",
+        "name": "7",
         "classrooms": [
           {
             "name": "7.1.1",
@@ -1386,7 +1386,7 @@
         ]
       },
       {
-        "name": "Edificio 8",
+        "name": "8",
         "classrooms": [
           {
             "name": "8.0.1",
@@ -1453,7 +1453,7 @@
         ]
       },
       {
-        "name": "Edificio 9",
+        "name": "9",
         "classrooms": [
           {
             "name": "9.0.1",
@@ -1592,7 +1592,7 @@
         ]
       },
       {
-        "name": "Edificio 11",
+        "name": "11",
         "classrooms": [
           {
             "name": "IV",
@@ -2297,7 +2297,7 @@
         ]
       },
       {
-        "name": "Edificio 13 (Trifoglio)",
+        "name": "13 (Trifoglio)",
         "classrooms": [
           {
             "name": "T.1.1",
@@ -2617,7 +2617,7 @@
         ]
       },
       {
-        "name": "Edificio 14 (Nave)",
+        "name": "14 (Nave)",
         "classrooms": [
           {
             "name": "B.2.1",
@@ -3217,7 +3217,7 @@
         ]
       },
       {
-        "name": "Edificio 16B",
+        "name": "16B",
         "classrooms": [
           {
             "name": "16B.1.1",
@@ -3366,7 +3366,7 @@
         ]
       },
       {
-        "name": "Edificio 16C",
+        "name": "16C",
         "classrooms": [
           {
             "name": "16C.0.1",
@@ -3449,7 +3449,7 @@
         ]
       },
       {
-        "name": "Edificio 19",
+        "name": "19",
         "classrooms": [
           {
             "name": "19.0.1",
@@ -3470,7 +3470,7 @@
         ]
       },
       {
-        "name": "Edificio 20",
+        "name": "20",
         "classrooms": [
           {
             "name": "20.S.1",
@@ -3501,7 +3501,7 @@
         ]
       },
       {
-        "name": "Edificio 21",
+        "name": "21",
         "classrooms": [
           {
             "name": "21.0.1",
@@ -3753,7 +3753,7 @@
         ]
       },
       {
-        "name": "Edificio 23",
+        "name": "23",
         "classrooms": [
           {
             "name": "G.0.1",
@@ -3790,7 +3790,7 @@
         ]
       },
       {
-        "name": "Edificio 25",
+        "name": "25",
         "classrooms": [
           {
             "name": "25.0.1",
@@ -4264,7 +4264,7 @@
         ]
       },
       {
-        "name": "Edificio 26",
+        "name": "26",
         "classrooms": [
           {
             "name": "26.0.1",
@@ -4572,7 +4572,7 @@
     "lon": 9.2269,
     "buildings": [
       {
-        "name": "Edificio 32.1",
+        "name": "32.1",
         "classrooms": [
           {
             "name": "E.P.6",
@@ -4629,7 +4629,7 @@
         ]
       },
       {
-        "name": "Edificio 32.3",
+        "name": "32.3",
         "classrooms": [
           {
             "name": "E.P.1",
@@ -4689,7 +4689,7 @@
     "lon": 9.1640,
     "buildings": [
       {
-        "name": "Edificio B1",
+        "name": "B1",
         "classrooms": [
           {
             "name": "Aula F.LLI CASTIGLIONI",
@@ -4725,7 +4725,7 @@
         ]
       },
       {
-        "name": "Edificio B2",
+        "name": "B2",
         "classrooms": [
           {
             "name": "B2.0.1 - D.I.",
@@ -5469,7 +5469,7 @@
         ]
       },
       {
-        "name": "Edificio B6",
+        "name": "B6",
         "classrooms": [
           {
             "name": "B6.2.1",
@@ -5592,7 +5592,7 @@
         ]
       },
       {
-        "name": "Edificio B8",
+        "name": "B8",
         "classrooms": [
           {
             "name": "B8.0.1",
@@ -6027,7 +6027,7 @@
     "lon": 9.1563,
     "buildings": [
       {
-        "name": "Edificio B12",
+        "name": "B12",
         "classrooms": [
           {
             "name": "L.01",
@@ -6481,7 +6481,7 @@
         ]
       },
       {
-        "name": "Edificio B15",
+        "name": "B15",
         "classrooms": [
           {
             "name": "LM.1",
@@ -6646,7 +6646,7 @@
         ]
       },
       {
-        "name": "Edificio BL27",
+        "name": "BL27",
         "classrooms": [
           {
             "name": "BL.27.0.1",
@@ -7182,7 +7182,7 @@
         ]
       },
       {
-        "name": "Edificio BL28",
+        "name": "BL28",
         "classrooms": [
           {
             "name": "AULA CARASSA E DADDA",
@@ -7304,7 +7304,7 @@
     "lon": 10.0154,
     "buildings": [
       {
-        "name": "Edificio CR03",
+        "name": "CR03",
         "classrooms": [
           {
             "name": "CR03.0.1",
@@ -7324,7 +7324,7 @@
         ]
       },
       {
-        "name": "Edificio CR04",
+        "name": "CR04",
         "classrooms": [
           {
             "name": "CR04.0.1",
@@ -7402,7 +7402,7 @@
     "lon": 9.3970,
     "buildings": [
       {
-        "name": "Edificio 8",
+        "name": "8",
         "classrooms": [
           {
             "name": "T.1",
@@ -7511,7 +7511,7 @@
         ]
       },
       {
-        "name": "Edificio 9",
+        "name": "9",
         "classrooms": [
           {
             "name": "B.0.1",
@@ -8079,7 +8079,7 @@
         ]
       },
       {
-        "name": "Edificio 10",
+        "name": "10",
         "classrooms": [
           {
             "name": "A.0.1",
@@ -8239,7 +8239,7 @@
         ]
       },
       {
-        "name": "Edificio 12",
+        "name": "12",
         "classrooms": [
           {
             "name": "M.1",
@@ -8278,7 +8278,7 @@
     "lon": 10.7889,
     "buildings": [
       {
-        "name": "Edificio 1",
+        "name": "1",
         "classrooms": [
           {
             "name": "A.0.1",

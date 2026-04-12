@@ -86,9 +86,19 @@ function buildCampusCard(campus) {
   const btn = document.createElement('button');
   btn.className = 'search-card search-card--campus';
   btn.innerHTML = `
-    <span class="search-card-name">${escapeHtml(displayName)}</span>
-    ${groupName ? `<span class="search-card-subtitle secondary">${escapeHtml(groupName)}</span>` : ''}
-    <span class="search-card-meta secondary">${t('search.buildings').replace('{n}', n)}</span>
+    <div class="search-card-header">
+      <div class="search-card-icon-wrapper">
+        <span class="material-symbols-outlined">location_on</span>
+      </div>
+      <div class="search-card-info">
+        <span class="search-card-name">${escapeHtml(displayName)}</span>
+        ${groupName ? `<span class="search-card-subtitle secondary">${escapeHtml(groupName)}</span>` : ''}
+      </div>
+    </div>
+    <div class="search-card-footer">
+      <span class="search-card-meta secondary">${t('search.buildings').replace('{n}', n)}</span>
+      <span class="material-symbols-outlined search-card-arrow">chevron_right</span>
+    </div>
   `;
   return btn;
 }
@@ -98,8 +108,18 @@ function buildBuildingCard(building) {
   const btn = document.createElement('button');
   btn.className = 'search-card search-card--building';
   btn.innerHTML = `
-    <span class="search-card-name">${building.name}</span>
-    <span class="search-card-meta secondary">${t('search.classrooms').replace('{n}', n)}</span>
+    <div class="search-card-header">
+      <div class="search-card-icon-wrapper">
+        <span class="material-symbols-outlined">domain</span>
+      </div>
+      <div class="search-card-info">
+        <span class="search-card-name">${building.name}</span>
+      </div>
+    </div>
+    <div class="search-card-footer">
+      <span class="search-card-meta secondary">${t('search.classrooms').replace('{n}', n)}</span>
+      <span class="material-symbols-outlined search-card-arrow">chevron_right</span>
+    </div>
   `;
   return btn;
 }
@@ -113,9 +133,16 @@ function buildClassroomCard(room, query = '') {
   const el = document.createElement('div');
   el.className = 'search-card search-card--classroom';
   el.innerHTML = `
-    <span class="search-card-name">${highlight(room.name, query)}</span>
-    ${room.buildingName    ? `<span class="search-card-meta secondary">${highlight(room.buildingName, query)}</span>` : ''}
-    ${room.campusShortName ? `<span class="search-card-meta secondary small">${highlight(room.campusShortName, query)}</span>` : ''}
+    <div class="search-card-header">
+      <div class="search-card-icon-wrapper">
+        <span class="material-symbols-outlined">meeting_room</span>
+      </div>
+      <div class="search-card-info">
+        <span class="search-card-name">${highlight(room.name, query)}</span>
+        ${room.buildingName    ? `<span class="search-card-meta secondary">${highlight(room.buildingName, query)}</span>` : ''}
+        ${room.campusShortName ? `<span class="search-card-meta secondary small">${highlight(room.campusShortName, query)}</span>` : ''}
+      </div>
+    </div>
     ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
   `;
   return el;

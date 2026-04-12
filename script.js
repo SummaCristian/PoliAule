@@ -152,7 +152,7 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
   buildingCard.innerHTML = `
     <div class="building-card-header">
       <div class="building-card-header-text">
-        <h3 class="building-name">${buildingName}</h3>
+        <h3 class="building-name">${t('building.prefix')} ${buildingName}</h3>
         <div class="building-counts">${countParts}</div>
       </div>
       <span class="material-symbols-outlined building-chevron">expand_more</span>

@@ -76,33 +76,36 @@ def fetch_occupancy(client: httpx.Client, room_id: int, d: date) -> list[dict] |
     return None  # Failed to fetch even after MAX_RETRIES attempts
 
 
+def _pick(src: dict, *keys: str) -> dict:
+    """Return a dict with only the given keys that are present and non-None in src."""
+    return {k: src[k] for k in keys if src.get(k) is not None}
+
+
 def build_output(campuses: list[dict], client: httpx.Client, d: date, no_delay: bool) -> dict:
     """Build the output JSON file, mirroring the classrooms structure, plus occupancy in each classroom."""
     result = []
     for campus in campuses:
-        campus_out = {"name": campus["name"], "id": campus["id"], "lat": campus.get("lat"), "lon": campus.get("lon"), "buildings": []}
+        campus_out = {**_pick(campus, "name", "id", "lat", "long"), "buildings": []}
         for building in campus["buildings"]:
-            building_out = {"name": building["name"], "classrooms": []}
+            building_out = {
+                **_pick(building, "name", "lat", "lng", "idEdificio", "address"),
+                "classrooms": [],
+            }
             for classroom in building["classrooms"]:
                 print(f"  Fetching room {classroom['name']} (id={classroom['id']})...")
                 occupancy = fetch_occupancy(client, classroom["id"], d)  # API Call
                 building_out["classrooms"].append(
                     {
-                        "name": classroom["name"],
-                        "id": classroom["id"],
-                        "lat": classroom.get("lat"),
-                        "lon": classroom.get("lon"),
-                        "features": classroom.get("features"),
-                        "occupancy": occupancy
-                        if occupancy is not None
-                        else [],  # If fetch failed, set occupancy to empty list
+                        **_pick(classroom, "name", "id", "features",
+                                "idfoto", "capienza", "posti_disabili", "numero_postazioni"),
+                        "occupancy": occupancy if occupancy is not None else [],
                     }
                 )
 
                 # Wait before the next API call to avoid overwhelming the server
                 if not no_delay:
                     time.sleep(DELAY_BETWEEN_CALLS)
-                    
+
             campus_out["buildings"].append(building_out)
         result.append(campus_out)
 

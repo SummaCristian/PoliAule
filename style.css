@@ -517,7 +517,7 @@ label {
 
 @media (max-width: 800px) {
   .tabbar {
-    width: calc((100% / var(--tabs)) - 4px);
+    width: calc((120% / var(--tabs)) - 4px);
   }
 }
 

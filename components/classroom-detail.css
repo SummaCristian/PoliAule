@@ -21,6 +21,33 @@
   opacity: 1;
 }
 
+/* ── Hero photo ─────────────────────────────────────────────────── */
+
+.detail-photo-container {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  animation: detail-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.detail-photo-container.loaded {
+  animation: none;
+  background: none;
+}
+
+.detail-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.detail-photo.loaded {
+  opacity: 1;
+}
+
 /* ── Header ─────────────────────────────────────────────────────── */
 
 /* Back button lives in .header-nav-row, pinned to the left while tabbar stays centered */

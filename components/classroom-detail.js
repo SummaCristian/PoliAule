@@ -33,6 +33,8 @@ const HASH_PATTERN = /^#classroom\/(\d+)$/;
 
 // ---------- CLASS ----------
 
+const PHOTO_API = 'https://onlineservices.polimi.it/maps_rest/rest/syncro/rooms/foto';
+
 class ClassroomDetail {
   constructor() {
     this._overlay  = null;
@@ -165,6 +167,7 @@ class ClassroomDetail {
     }
 
     this._loadSchedule(id);
+    if (entry.classroom.idfoto) this._loadPhoto(id, entry.classroom.idfoto);
   }
 
   // ---------- CLOSE ----------
@@ -255,6 +258,7 @@ class ClassroomDetail {
       .join('');
 
     this._overlay.innerHTML = `
+      ${classroom.idfoto ? `<div class="detail-photo-container"><img class="detail-photo" alt=""></div>` : ''}
       <div class="detail-header">
         <h1 class="detail-title">${classroom.name}</h1>
       </div>
@@ -281,6 +285,36 @@ class ClassroomDetail {
         </section>
       </div>
     `;
+  }
+
+  // ---------- RENDER: HERO PHOTO ----------
+
+  async _loadPhoto(classroomId, idfoto) {
+    try {
+      // Always fetch a fresh URL — the docmanager endpoint requires an active
+      // polimi.it session that gets established by this API call, so we cannot
+      // skip it even when we have a previously-resolved URL.
+      const resp = await fetch(`${PHOTO_API}/${idfoto}`, { credentials: 'omit' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const text = await resp.text();
+      // Response is raw text; extract the first URL it contains
+      const url = text.match(/https?:\/\/\S+/)?.[0];
+      if (!url) throw new Error('no URL in response');
+
+      // Stale check: user may have navigated away while we were fetching
+      if (this._currentId !== classroomId) return;
+
+      const container = this._overlay.querySelector('.detail-photo-container');
+      const img = container?.querySelector('.detail-photo');
+      if (!container || !img) return;
+
+      img.onload  = () => { img.classList.add('loaded'); container.classList.add('loaded'); };
+      img.onerror = () => container.remove();
+      img.src = url;
+    } catch {
+      if (this._currentId !== classroomId) return;
+      this._overlay.querySelector('.detail-photo-container')?.remove();
+    }
   }
 
   // ---------- RENDER: WEEKLY SCHEDULE ----------

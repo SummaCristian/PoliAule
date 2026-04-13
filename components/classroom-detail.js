@@ -116,7 +116,6 @@ class ClassroomDetail {
 
     this._currentId   = id;
     this._openTrigger = pending ?? null;
-    document.body.style.overflow = 'hidden';
 
     const nameEl = pending?.nameEl ?? null;
 
@@ -134,6 +133,7 @@ class ClassroomDetail {
         if (nameEl) nameEl.style.viewTransitionName = '';
 
         // Show overlay and back button
+        document.body.classList.add('detail-open');
         this._overlay.removeAttribute('hidden');
         this._renderContent(entry);
         this._overlay.classList.add('visible');
@@ -159,6 +159,7 @@ class ClassroomDetail {
       });
     } else {
       // Fallback: show overlay, swap tabbar for back button without animation
+      document.body.classList.add('detail-open');
       this._overlay.removeAttribute('hidden');
       this._renderContent(entry);
       if (this._tabbar) this._tabbar.classList.add('detail-open');
@@ -176,7 +177,6 @@ class ClassroomDetail {
     if (!this._overlay || this._overlay.hidden) return;
 
     this._currentId = null;
-    document.body.style.overflow = '';
 
     const nameEl    = this._openTrigger?.nameEl ?? null;
     const titleEl   = this._overlay.querySelector('.detail-title');
@@ -200,6 +200,7 @@ class ClassroomDetail {
         // -- DOM changes (defines NEW state) --
 
         // Fully hide the overlay and back button
+        document.body.classList.remove('detail-open');
         this._overlay.setAttribute('hidden', '');
         this._overlay.classList.remove('visible');
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
@@ -220,6 +221,7 @@ class ClassroomDetail {
       if (this._tabbar) this._tabbar.classList.remove('detail-open');
       if (this._backBtn) this._backBtn.setAttribute('hidden', '');
       const hide = () => {
+        document.body.classList.remove('detail-open');
         this._overlay.setAttribute('hidden', '');
         cleanup();
       };

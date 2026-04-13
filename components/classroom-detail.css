@@ -1,14 +1,14 @@
-/* ── Classroom Detail Overlay ─────────────────────────────────────── */
+/* ── Classroom Detail Panel ────────────────────────────────────────── */
 
-#classroom-detail-overlay {
-  position: fixed;
-  top: var(--header-height, 80px); /* sits below the sticky header */
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100;
+/* Sits inside .body-container at the same level as .tab-content divs.
+   Hidden by default (via the [hidden] attribute); shown as a flex column
+   that fills the remaining space when the detail-open class is on body. */
+
+#classroom-detail-overlay:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   background: var(--background-color);
-  overflow-y: auto;
   overflow-x: hidden;
 
   /* Fallback fade-in for browsers without View Transitions */
@@ -19,6 +19,15 @@
 
 #classroom-detail-overlay.visible {
   opacity: 1;
+}
+
+/* Hide tab contents and footer while the detail panel is open */
+body.detail-open .tab-content {
+  display: none !important;
+}
+
+body.detail-open .footer {
+  display: none;
 }
 
 /* ── Hero photo ─────────────────────────────────────────────────── */

@@ -37,6 +37,7 @@ class ClassroomDetail {
   constructor() {
     this._overlay  = null;
     this._tabbar   = null;
+    this._backBtn  = null;
     this._staticData = null;       // classrooms.json hierarchy
     this._flatIndex  = null;       // Map<id, { classroom, building, campus }>
     this._pendingTrigger = null;   // { nameEl } stored by click handler before hashchange fires
@@ -50,6 +51,16 @@ class ClassroomDetail {
     this._staticData = staticData;
     this._overlay = document.getElementById('classroom-detail-overlay');
     this._tabbar  = document.querySelector('.tabbar');
+    this._backBtn = document.getElementById('detail-back-btn');
+
+    this._backBtn?.addEventListener('click', () => {
+      if (this._openedViaPushState) {
+        history.back();
+      } else {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        this._doClose();
+      }
+    });
 
     window.addEventListener('hashchange', () => this._onHashChange());
 
@@ -109,30 +120,26 @@ class ClassroomDetail {
 
     if (document.startViewTransition && this._tabbar) {
       // -- OLD state setup (before VT snapshot) --
-      // Tabbar morphs into the back button
+      // Tabbar morphs into the back button (both live in the header, so it's a clean in-place swap)
       this._tabbar.style.viewTransitionName = 'classroom-nav';
       // Room name morphs into the overlay title
       if (nameEl) nameEl.style.viewTransitionName = 'classroom-detail-name';
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
-
-        // Remove VT names from OLD-state sources so they don't duplicate the NEW-state targets.
-        // Two elements sharing a VT name in the same state causes the browser to abort the
-        // entire transition — that's why the open morph was silently skipped.
         this._tabbar.style.viewTransitionName = '';
         this._tabbar.classList.add('detail-open');
         if (nameEl) nameEl.style.viewTransitionName = '';
 
-        // Show the overlay
+        // Show overlay and back button
         this._overlay.removeAttribute('hidden');
         this._renderContent(entry);
         this._overlay.classList.add('visible');
+        if (this._backBtn) this._backBtn.removeAttribute('hidden');
 
-        // Back button is the NEW state destination for classroom-nav
-        const backBtn = this._overlay.querySelector('.detail-back-btn');
+        // Back button in the header is the NEW state destination for classroom-nav
         const titleEl = this._overlay.querySelector('.detail-title');
-        if (backBtn) backBtn.style.viewTransitionName = 'classroom-nav';
+        if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
         if (titleEl) titleEl.style.viewTransitionName = 'classroom-detail-name';
       });
 
@@ -140,22 +147,20 @@ class ClassroomDetail {
         // Clean up — VT names must be cleared after the animation
         this._tabbar.style.viewTransitionName = '';
         if (nameEl) nameEl.style.viewTransitionName = '';
-        this._overlay.querySelector('.detail-back-btn')
-          ?.style.setProperty('view-transition-name', '');
+        if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         this._overlay.querySelector('.detail-title')
           ?.style.setProperty('view-transition-name', '');
-        // Tabbar stays hidden (opacity 0) until the overlay closes
       }).catch(() => {
         this._tabbar.style.viewTransitionName = '';
         if (nameEl) nameEl.style.viewTransitionName = '';
+        if (this._backBtn) this._backBtn.style.viewTransitionName = '';
       });
     } else {
-      // Fallback: show overlay, hide tabbar without animation
+      // Fallback: show overlay, swap tabbar for back button without animation
       this._overlay.removeAttribute('hidden');
       this._renderContent(entry);
-      if (this._tabbar) {
-        this._tabbar.classList.add('detail-open');
-      }
+      if (this._tabbar) this._tabbar.classList.add('detail-open');
+      if (this._backBtn) this._backBtn.removeAttribute('hidden');
       requestAnimationFrame(() => this._overlay.classList.add('visible'));
     }
 
@@ -170,9 +175,8 @@ class ClassroomDetail {
     this._currentId = null;
     document.body.style.overflow = '';
 
-    const nameEl  = this._openTrigger?.nameEl ?? null;
-    const backBtn = this._overlay.querySelector('.detail-back-btn');
-    const titleEl = this._overlay.querySelector('.detail-title');
+    const nameEl    = this._openTrigger?.nameEl ?? null;
+    const titleEl   = this._overlay.querySelector('.detail-title');
     const nameInDom = nameEl && document.body.contains(nameEl);
 
     const cleanup = () => {
@@ -180,20 +184,23 @@ class ClassroomDetail {
       this._openTrigger = null;
       if (nameEl) nameEl.style.viewTransitionName = '';
       if (this._tabbar) this._tabbar.style.viewTransitionName = '';
+      if (this._backBtn) this._backBtn.style.viewTransitionName = '';
     };
 
     if (document.startViewTransition && this._tabbar) {
       // -- OLD state setup --
-      // Back button is the source; tabbar is the destination
-      if (backBtn) backBtn.style.viewTransitionName = 'classroom-nav';
+      // Back button (in header) is the source; tabbar is the destination
+      if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
       if (titleEl && nameInDom) titleEl.style.viewTransitionName = 'classroom-detail-name';
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
 
-        // Fully hide the overlay so it's absent from the NEW state
+        // Fully hide the overlay and back button
         this._overlay.setAttribute('hidden', '');
         this._overlay.classList.remove('visible');
+        if (this._backBtn) this._backBtn.setAttribute('hidden', '');
+        if (this._backBtn) this._backBtn.style.viewTransitionName = '';
 
         // Restore and name the tabbar as the NEW state destination for classroom-nav
         this._tabbar.classList.remove('detail-open');
@@ -205,11 +212,10 @@ class ClassroomDetail {
 
       vt.finished.then(cleanup).catch(cleanup);
     } else {
-      // Fallback: fade out overlay, restore tabbar without animation
+      // Fallback: fade out overlay, swap back button for tabbar without animation
       this._overlay.classList.remove('visible');
-      if (this._tabbar) {
-        this._tabbar.classList.remove('detail-open');
-      }
+      if (this._tabbar) this._tabbar.classList.remove('detail-open');
+      if (this._backBtn) this._backBtn.setAttribute('hidden', '');
       const hide = () => {
         this._overlay.setAttribute('hidden', '');
         cleanup();
@@ -250,9 +256,6 @@ class ClassroomDetail {
 
     this._overlay.innerHTML = `
       <div class="detail-header">
-        <button class="detail-back-btn" aria-label="${t('search.back')}">
-          <span class="material-symbols-outlined">arrow_back</span>
-        </button>
         <h1 class="detail-title">${classroom.name}</h1>
       </div>
       <div class="detail-content">
@@ -278,16 +281,6 @@ class ClassroomDetail {
         </section>
       </div>
     `;
-
-    this._overlay.querySelector('.detail-back-btn').addEventListener('click', () => {
-      if (this._openedViaPushState) {
-        history.back();
-      } else {
-        // Opened via direct URL — clear hash without leaving the page
-        history.replaceState(null, '', window.location.pathname + window.location.search);
-        this._doClose();
-      }
-    });
   }
 
   // ---------- RENDER: WEEKLY SCHEDULE ----------

@@ -284,7 +284,7 @@ label {
 
   display: flex;
   flex-direction: column;
-  gap: 0.5REM;
+  gap: 0;
 
   position: sticky;
   top: 0;
@@ -485,9 +485,16 @@ label {
   gap: 0;
 }
 
+.header-nav-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem 0.5rem;
+}
+
 .tabbar {
   position: relative;
-  align-self: center;
 
   display: flex;
 

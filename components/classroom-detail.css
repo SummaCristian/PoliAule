@@ -2,7 +2,7 @@
 
 #classroom-detail-overlay {
   position: fixed;
-  top: var(--header-height, 80px); /* sit below the sticky header */
+  top: var(--header-height, 80px); /* sits below the sticky header */
   left: 0;
   right: 0;
   bottom: 0;
@@ -23,58 +23,84 @@
 
 /* ── Header ─────────────────────────────────────────────────────── */
 
+/* Back button lives in .header-nav-row, pinned to the left while tabbar stays centered */
+#detail-back-btn {
+  position: absolute;
+  left: 1rem;
+}
+
+#detail-back-btn[hidden] {
+  display: none;
+}
+
 .detail-header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: var(--background-color);
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color-primary) 10%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  /* Connects visually with the main sticky header above */
-  margin-top: -1px;
+  padding: 1rem 1.25rem 0;
 }
 
 .detail-back-btn {
   flex-shrink: 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
+  gap: 0.125rem;
+  padding: 0.375rem 0.875rem 0.375rem 0.5rem;
+  border-radius: 999px;
   border: none;
-  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  background: #dddddd67;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.35),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.1),
+    var(--shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: var(--text-color-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   transition: background 0.15s ease, transform 0.1s ease;
 }
 
+@media (prefers-color-scheme: dark) {
+  .detail-back-btn {
+    background: rgba(71, 71, 71, 0.294);
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+      inset -1px -1px 0 rgba(255, 255, 255, 0.03),
+      var(--shadow);
+  }
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .detail-back-btn {
+    background: rgba(220, 220, 220, 0.92);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .detail-back-btn {
+      background: rgba(55, 55, 55, 0.96);
+    }
+  }
+}
+
 .detail-back-btn:hover {
-  background: color-mix(in srgb, var(--text-color-primary) 15%, transparent);
+  background: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
 }
 
 .detail-back-btn:active {
-  transform: scale(0.9);
+  transform: scale(0.95);
 }
 
 .detail-back-btn .material-symbols-outlined {
   font-size: 1.25rem;
+  margin-left: -0.125rem;
 }
 
 .detail-title {
-  font-size: 1.25rem;
+  font-size: 1.875rem;
   font-weight: 700;
-  margin: 0;
+  margin: 0 auto 0.25rem;
   color: var(--text-color-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  contain: layout;
+  width: fit-content;
 }
 
 /* ── Content ─────────────────────────────────────────────────────── */
@@ -332,7 +358,15 @@
 
   /* Shared element: classroom name morphs card → overlay title */
   ::view-transition-group(classroom-detail-name) {
-    animation-duration: 0.4s;
+    animation-duration: 0.35s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* With fit-content on both elements the boxes are near-identical in size,
+     so the group is essentially a position-only morph with minimal scaling. */
+  ::view-transition-old(classroom-detail-name),
+  ::view-transition-new(classroom-detail-name) {
+    animation-duration: 0.35s;
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 

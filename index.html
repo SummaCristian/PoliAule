@@ -91,17 +91,24 @@
 
     </div>
 
-    <div class="tabbar slide-in-top">
-      <div class="tab-indicator"></div>
+    <div class="header-nav-row">
+      <button id="detail-back-btn" class="detail-back-btn" hidden>
+        <span class="material-symbols-outlined">chevron_left</span>
+        <span class="detail-back-label">Back</span>
+      </button>
 
-      <button class="tab active" data-target="available-classrooms-container">
-        <span class="material-symbols-outlined">event_available</span>
-        <span data-i18n="tabs.available">Available</span>
-      </button>
-      <button class="tab" data-target="search-classrooms-container">
-        <span class="material-symbols-outlined">search</span>
-        <span data-i18n="tabs.search">Search</span>
-      </button>
+      <div class="tabbar slide-in-top">
+        <div class="tab-indicator"></div>
+
+        <button class="tab active" data-target="available-classrooms-container">
+          <span class="material-symbols-outlined">event_available</span>
+          <span data-i18n="tabs.available">Available</span>
+        </button>
+        <button class="tab" data-target="search-classrooms-container">
+          <span class="material-symbols-outlined">search</span>
+          <span data-i18n="tabs.search">Search</span>
+        </button>
+      </div>
     </div>
 
   </header>

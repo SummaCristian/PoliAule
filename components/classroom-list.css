@@ -256,6 +256,7 @@
   font-weight: 700;
   text-align: start;
   margin: 0;
+  width: fit-content;
 }
 
 .classroom-status-txt {

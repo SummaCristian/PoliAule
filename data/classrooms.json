@@ -3,7 +3,7 @@
     "name": "Milano Leonardo - Città Studi",
     "id": "MIA01",
     "lat": 45.4787,
-    "long": 9.2280,
+    "long": 9.228,
     "buildings": [
       {
         "name": "2",
@@ -42,7 +42,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 27853006,
+            "capienza": 307,
+            "posti_disabili": 2
           },
           {
             "name": "2.0.2",
@@ -73,7 +76,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48622,
+            "capienza": 300
           },
           {
             "name": "2.1.1",
@@ -109,7 +114,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48623,
+            "capienza": 144,
+            "numero_postazioni": 144
           },
           {
             "name": "2.1.2",
@@ -145,7 +153,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48624,
+            "capienza": 168,
+            "numero_postazioni": 168
           },
           {
             "name": "2.1.3",
@@ -181,7 +192,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48625,
+            "capienza": 94
           },
           {
             "name": "2.1.4",
@@ -212,7 +225,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48632,
+            "capienza": 214
           },
           {
             "name": "2.1.5",
@@ -243,7 +258,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48630,
+            "capienza": 140
           },
           {
             "name": "2.2.1",
@@ -269,7 +286,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 30209229,
+            "capienza": 70,
+            "numero_postazioni": 36
           },
           {
             "name": "2.2.2",
@@ -300,7 +320,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48635,
+            "capienza": 66,
+            "numero_postazioni": 33
           },
           {
             "name": "2.2.3",
@@ -331,7 +354,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48792,
+            "capienza": 56,
+            "numero_postazioni": 28
           },
           {
             "name": "2.2.4",
@@ -357,9 +383,16 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 3309658,
+            "capienza": 82,
+            "numero_postazioni": 41
           }
-        ]
+        ],
+        "lat": 45.4788189737,
+        "lng": 9.2275284342,
+        "idEdificio": "52",
+        "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "3",
@@ -398,7 +431,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48636,
+            "capienza": 56,
+            "numero_postazioni": 36
           },
           {
             "name": "3.0.2",
@@ -439,7 +475,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48698,
+            "capienza": 174,
+            "numero_postazioni": 175
           },
           {
             "name": "3.0.3",
@@ -480,7 +519,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 12258939,
+            "capienza": 267,
+            "numero_postazioni": 248
           },
           {
             "name": "3.1.1",
@@ -521,7 +563,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48723,
+            "capienza": 144,
+            "posti_disabili": 1,
+            "numero_postazioni": 98
           },
           {
             "name": "3.1.11",
@@ -547,7 +593,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 30200545,
+            "capienza": 78,
+            "numero_postazioni": 39
           },
           {
             "name": "3.1.12",
@@ -573,7 +622,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 26213069,
+            "capienza": 140
           },
           {
             "name": "3.1.2",
@@ -614,7 +665,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48651,
+            "capienza": 160,
+            "posti_disabili": 2,
+            "numero_postazioni": 162
           },
           {
             "name": "3.1.3",
@@ -655,7 +710,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48660,
+            "capienza": 132,
+            "posti_disabili": 2,
+            "numero_postazioni": 134
           },
           {
             "name": "3.1.4",
@@ -696,7 +755,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48675,
+            "capienza": 88,
+            "posti_disabili": 2,
+            "numero_postazioni": 90
           },
           {
             "name": "3.1.5",
@@ -737,7 +800,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48677,
+            "capienza": 88,
+            "posti_disabili": 2,
+            "numero_postazioni": 93
           },
           {
             "name": "3.1.6",
@@ -778,7 +845,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48685,
+            "capienza": 96,
+            "posti_disabili": 2,
+            "numero_postazioni": 98
           },
           {
             "name": "3.1.7",
@@ -819,7 +890,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48641,
+            "capienza": 117,
+            "posti_disabili": 3,
+            "numero_postazioni": 121
           },
           {
             "name": "3.1.8",
@@ -845,7 +920,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 30106533,
+            "capienza": 117,
+            "posti_disabili": 1,
+            "numero_postazioni": 117
           },
           {
             "name": "3.1.9",
@@ -866,7 +945,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 3344921,
+            "capienza": 68
           },
           {
             "name": "3.2.1",
@@ -907,7 +988,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 3350422,
+            "capienza": 92,
+            "posti_disabili": 2,
+            "numero_postazioni": 94
           },
           {
             "name": "3.2.2",
@@ -948,7 +1033,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 3344936,
+            "capienza": 72,
+            "posti_disabili": 2,
+            "numero_postazioni": 74
           },
           {
             "name": "3.2.3",
@@ -989,7 +1078,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 3344997,
+            "capienza": 82,
+            "posti_disabili": 2,
+            "numero_postazioni": 84
           },
           {
             "name": "3.2.4",
@@ -1030,9 +1123,17 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 3345001,
+            "capienza": 92,
+            "posti_disabili": 2,
+            "numero_postazioni": 94
           }
-        ]
+        ],
+        "lat": 45.4774465,
+        "lng": 9.22766426715,
+        "idEdificio": "53",
+        "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "4",
@@ -1066,9 +1167,15 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48760,
+            "capienza": 310
           }
-        ]
+        ],
+        "lat": 45.47882013175,
+        "lng": 9.228401241250001,
+        "idEdificio": "30",
+        "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "5",
@@ -1102,7 +1209,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48437,
+            "capienza": 284
           },
           {
             "name": "5.0.2",
@@ -1138,7 +1247,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 4814483,
+            "capienza": 174
           },
           {
             "name": "5.0.3",
@@ -1174,7 +1285,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 4791785,
+            "capienza": 230
           },
           {
             "name": "BELTRAMI",
@@ -1190,7 +1303,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48604,
+            "capienza": 66
           },
           {
             "name": "5.1.1",
@@ -1221,9 +1336,15 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48614,
+            "capienza": 290
           }
-        ]
+        ],
+        "lat": 45.477452258,
+        "lng": 9.228652237550001,
+        "idEdificio": "31",
+        "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "6",
@@ -1252,9 +1373,15 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48328,
+            "capienza": 275
           }
-        ]
+        ],
+        "lat": 45.4781159576,
+        "lng": 9.22892631775,
+        "idEdificio": "34",
+        "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "7",
@@ -1288,7 +1415,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48634,
+            "capienza": 108
           },
           {
             "name": "7.1.2",
@@ -1309,7 +1438,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48690,
+            "capienza": 40
           },
           {
             "name": "7.1.3",
@@ -1340,7 +1471,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48701,
+            "capienza": 190
           },
           {
             "name": "7.0.1",
@@ -1381,9 +1514,17 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 4253988,
+            "capienza": 88,
+            "posti_disabili": 1,
+            "numero_postazioni": 48
           }
-        ]
+        ],
+        "lat": 45.47815526475,
+        "lng": 9.229576102700001,
+        "idEdificio": "35",
+        "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "8",
@@ -1422,7 +1563,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48610,
+            "capienza": 260,
+            "posti_disabili": 4
           },
           {
             "name": "8.1.1",
@@ -1448,9 +1592,15 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 3279392,
+            "capienza": 150
           }
-        ]
+        ],
+        "lat": 45.4788241289,
+        "lng": 9.229476471849999,
+        "idEdificio": "36",
+        "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "9",
@@ -1489,7 +1639,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48733,
+            "capienza": 280
           },
           {
             "name": "9.0.2",
@@ -1510,7 +1662,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48763,
+            "capienza": 80
           },
           {
             "name": "9.0.3",
@@ -1546,12 +1700,17 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 4791787,
+            "capienza": 90
           },
           {
             "name": "9.0.4",
             "id": 4765,
-            "features": []
+            "features": [],
+            "idfoto": 5398748,
+            "capienza": 20,
+            "numero_postazioni": 20
           },
           {
             "name": "9.1.2",
@@ -1587,9 +1746,15 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48779,
+            "capienza": 288
           }
-        ]
+        ],
+        "lat": 45.477415266,
+        "lng": 9.2294584277,
+        "idEdificio": "37",
+        "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "11",
@@ -1623,7 +1788,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48758,
+            "capienza": 97
           },
           {
             "name": "A - ALDO ROSSI",
@@ -1654,7 +1821,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48737,
+            "capienza": 144
           },
           {
             "name": "B",
@@ -1685,7 +1854,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48738,
+            "capienza": 120
           },
           {
             "name": "C",
@@ -1716,7 +1887,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48739,
+            "capienza": 80
           },
           {
             "name": "D",
@@ -1752,7 +1925,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48740,
+            "capienza": 72
           },
           {
             "name": "E/F",
@@ -1773,7 +1948,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48419,
+            "capienza": 82,
+            "numero_postazioni": 41
           },
           {
             "name": "III.A",
@@ -1804,7 +1982,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48749,
+            "capienza": 86,
+            "numero_postazioni": 43
           },
           {
             "name": "III.B",
@@ -1835,7 +2016,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48750,
+            "capienza": 248
           },
           {
             "name": "III.C",
@@ -1866,7 +2049,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48751,
+            "capienza": 90,
+            "numero_postazioni": 45
           },
           {
             "name": "III.D",
@@ -1897,7 +2083,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48752,
+            "capienza": 80,
+            "numero_postazioni": 40
           },
           {
             "name": "O.1",
@@ -1918,7 +2107,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 14505255,
+            "capienza": 78,
+            "numero_postazioni": 39
           },
           {
             "name": "Q.1",
@@ -1949,7 +2141,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48747,
+            "capienza": 76,
+            "numero_postazioni": 38
           },
           {
             "name": "R.1",
@@ -1980,7 +2175,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48748,
+            "capienza": 104,
+            "numero_postazioni": 52
           },
           {
             "name": "U.1",
@@ -2011,7 +2209,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48753,
+            "capienza": 110,
+            "numero_postazioni": 55
           },
           {
             "name": "Y.1",
@@ -2027,7 +2228,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 20305473,
+            "capienza": 62,
+            "posti_disabili": 1,
+            "numero_postazioni": 31
           },
           {
             "name": "Z.1 D.I.",
@@ -2048,7 +2253,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 20305490,
+            "capienza": 34,
+            "numero_postazioni": 34
           },
           {
             "name": "J.2",
@@ -2079,7 +2287,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48744,
+            "capienza": 88,
+            "numero_postazioni": 44
           },
           {
             "name": "O.2",
@@ -2110,7 +2321,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48745,
+            "capienza": 92,
+            "numero_postazioni": 46
           },
           {
             "name": "O.2.1",
@@ -2141,7 +2355,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48420,
+            "capienza": 74,
+            "numero_postazioni": 37
           },
           {
             "name": "R.2",
@@ -2162,7 +2379,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 78,
+            "numero_postazioni": 39
           },
           {
             "name": "U.2",
@@ -2193,7 +2413,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48754,
+            "capienza": 138,
+            "numero_postazioni": 69
           },
           {
             "name": "Z.2",
@@ -2219,7 +2442,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48429,
+            "capienza": 74,
+            "numero_postazioni": 37
           },
           {
             "name": "G.1",
@@ -2245,7 +2471,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48742,
+            "capienza": 56,
+            "numero_postazioni": 28
           },
           {
             "name": "G.2",
@@ -2271,7 +2500,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48451,
+            "capienza": 82,
+            "numero_postazioni": 41
           },
           {
             "name": "G.3",
@@ -2292,7 +2524,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 9860856,
+            "capienza": 95,
+            "posti_disabili": 1
           }
         ]
       },
@@ -2333,7 +2568,9 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 48693,
+            "capienza": 300
           },
           {
             "name": "T.1.2",
@@ -2369,7 +2606,9 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 48735,
+            "capienza": 300
           },
           {
             "name": "T.1.3",
@@ -2400,7 +2639,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48736,
+            "capienza": 300
           },
           {
             "name": "T.2.1",
@@ -2431,7 +2672,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48694,
+            "capienza": 300
           },
           {
             "name": "T.2.2",
@@ -2462,7 +2705,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48695,
+            "capienza": 300
           },
           {
             "name": "T.2.3",
@@ -2493,7 +2738,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48696,
+            "capienza": 300
           },
           {
             "name": "T.0.1",
@@ -2519,7 +2766,9 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48728,
+            "capienza": 100
           },
           {
             "name": "T.0.2",
@@ -2550,7 +2799,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48692,
+            "capienza": 100
           },
           {
             "name": "T.0.3",
@@ -2581,7 +2832,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48331,
+            "capienza": 50
           },
           {
             "name": "T.0.4",
@@ -2612,7 +2865,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48609,
+            "capienza": 50
           }
         ]
       },
@@ -2648,7 +2903,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48438,
+            "capienza": 93,
+            "numero_postazioni": 45
           },
           {
             "name": "B.2.2",
@@ -2679,7 +2937,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48620,
+            "capienza": 93,
+            "posti_disabili": 2,
+            "numero_postazioni": 41
           },
           {
             "name": "B.2.3",
@@ -2710,7 +2972,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48439,
+            "capienza": 93,
+            "posti_disabili": 2,
+            "numero_postazioni": 41
           },
           {
             "name": "B.2.4",
@@ -2741,7 +3007,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48440,
+            "capienza": 164
           },
           {
             "name": "B.3.1",
@@ -2772,7 +3040,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48746,
+            "capienza": 93,
+            "numero_postazioni": 45
           },
           {
             "name": "B.3.2",
@@ -2803,7 +3074,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48756,
+            "capienza": 93,
+            "numero_postazioni": 45
           },
           {
             "name": "B.3.3",
@@ -2834,7 +3108,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48441,
+            "capienza": 93,
+            "numero_postazioni": 45
           },
           {
             "name": "B.3.4",
@@ -2865,7 +3142,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48442,
+            "capienza": 164
           },
           {
             "name": "B.4.1",
@@ -2891,7 +3170,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48330,
+            "capienza": 93,
+            "numero_postazioni": 45
           },
           {
             "name": "B.4.2",
@@ -2922,7 +3204,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48342,
+            "capienza": 93,
+            "numero_postazioni": 45
           },
           {
             "name": "B.4.3",
@@ -2953,7 +3238,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 26355785,
+            "capienza": 93,
+            "posti_disabili": 1,
+            "numero_postazioni": 45
           },
           {
             "name": "B.4.4",
@@ -2984,7 +3273,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 3309614,
+            "capienza": 164
           },
           {
             "name": "B.5.1",
@@ -3010,7 +3301,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 27538704,
+            "capienza": 80
           },
           {
             "name": "B.5.2",
@@ -3036,7 +3329,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 27538729,
+            "capienza": 82
           },
           {
             "name": "B.5.3",
@@ -3062,7 +3357,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 27538723,
+            "capienza": 82
           },
           {
             "name": "B.5.4",
@@ -3093,7 +3390,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 27538734,
+            "capienza": 70
           },
           {
             "name": "B.6.1",
@@ -3119,7 +3418,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 27538749,
+            "capienza": 73
           },
           {
             "name": "B.6.2",
@@ -3150,7 +3451,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 27538751,
+            "capienza": 104,
+            "numero_postazioni": 52
           },
           {
             "name": "B.6.3",
@@ -3181,7 +3485,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 27538759,
+            "capienza": 104,
+            "numero_postazioni": 52
           },
           {
             "name": "B.6.4",
@@ -3212,7 +3519,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 27538767,
+            "capienza": 35,
+            "numero_postazioni": 17
           }
         ]
       },
@@ -3253,7 +3563,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 16441937,
+            "capienza": 174,
+            "posti_disabili": 2
           },
           {
             "name": "16B.2.1",
@@ -3289,7 +3602,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 16441954,
+            "capienza": 149,
+            "posti_disabili": 2
           },
           {
             "name": "16B.3.1",
@@ -3325,7 +3641,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 16441963,
+            "capienza": 149,
+            "posti_disabili": 2
           },
           {
             "name": "16B.0.1",
@@ -3361,7 +3680,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 16441932,
+            "capienza": 149,
+            "posti_disabili": 2
           }
         ]
       },
@@ -3392,7 +3714,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 17301818,
+            "capienza": 80,
+            "numero_postazioni": 40
           },
           {
             "name": "16C.0.2",
@@ -3418,7 +3743,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 17301823,
+            "capienza": 64,
+            "numero_postazioni": 32
           },
           {
             "name": "16C.0.3",
@@ -3444,7 +3772,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 17301828,
+            "capienza": 64,
+            "numero_postazioni": 32
           }
         ]
       },
@@ -3465,7 +3796,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48360,
+            "capienza": 53
           }
         ]
       },
@@ -3496,7 +3829,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48612,
+            "capienza": 264
           }
         ]
       },
@@ -3542,7 +3877,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48729,
+            "capienza": 53,
+            "posti_disabili": 1,
+            "numero_postazioni": 53
           },
           {
             "name": "21.0.2",
@@ -3583,7 +3922,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48357,
+            "capienza": 48,
+            "posti_disabili": 1,
+            "numero_postazioni": 48
           },
           {
             "name": "21.0.3",
@@ -3614,7 +3957,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48607,
+            "capienza": 139
           },
           {
             "name": "21.S.1",
@@ -3655,7 +4000,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48521,
+            "capienza": 130,
+            "numero_postazioni": 130
           },
           {
             "name": "21.S.2",
@@ -3686,7 +4034,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48398,
+            "capienza": 126
           },
           {
             "name": "21.S.3",
@@ -3717,7 +4067,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48535,
+            "capienza": 117
           },
           {
             "name": "21.S.4",
@@ -3748,7 +4100,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48583,
+            "capienza": 126
           }
         ]
       },
@@ -3769,7 +4123,9 @@
                 "it": "Oscurabile",
                 "en": "Dimmable"
               }
-            ]
+            ],
+            "idfoto": 48363,
+            "capienza": 40
           },
           {
             "name": "G.0.2",
@@ -3785,7 +4141,9 @@
                 "it": "Oscurabile",
                 "en": "Dimmable"
               }
-            ]
+            ],
+            "idfoto": 48364,
+            "capienza": 40
           }
         ]
       },
@@ -3826,7 +4184,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48784,
+            "capienza": 144
           },
           {
             "name": "25.0.2",
@@ -3862,7 +4222,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48785,
+            "capienza": 144
           },
           {
             "name": "25.1.1",
@@ -3893,7 +4255,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48786,
+            "capienza": 50
           },
           {
             "name": "25.1.2",
@@ -3924,7 +4288,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48787,
+            "capienza": 54
           },
           {
             "name": "25.1.3",
@@ -3955,7 +4321,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48788,
+            "capienza": 54
           },
           {
             "name": "25.1.4",
@@ -3986,7 +4354,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48789,
+            "capienza": 50
           },
           {
             "name": "25.1.5",
@@ -4017,7 +4387,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48790,
+            "capienza": 50
           },
           {
             "name": "25.1.6",
@@ -4048,7 +4420,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48791,
+            "capienza": 50
           },
           {
             "name": "25.2.1",
@@ -4084,7 +4458,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48347,
+            "capienza": 148,
+            "posti_disabili": 1,
+            "numero_postazioni": 148
           },
           {
             "name": "25.2.2",
@@ -4120,7 +4498,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48348,
+            "capienza": 154,
+            "posti_disabili": 1,
+            "numero_postazioni": 154
           },
           {
             "name": "25.2.3",
@@ -4156,7 +4538,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48349,
+            "capienza": 120,
+            "posti_disabili": 1,
+            "numero_postazioni": 120
           },
           {
             "name": "25.S.1",
@@ -4187,7 +4573,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48780,
+            "capienza": 148
           },
           {
             "name": "25.S.2",
@@ -4223,7 +4611,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48782,
+            "capienza": 144
           },
           {
             "name": "25.S.3",
@@ -4259,7 +4649,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 48783,
+            "capienza": 141
           }
         ]
       },
@@ -4285,7 +4677,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 70
           },
           {
             "name": "26.0.2",
@@ -4311,7 +4705,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 76,
+            "posti_disabili": 1
           },
           {
             "name": "26.0.3",
@@ -4337,7 +4734,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 70,
+            "posti_disabili": 1
           },
           {
             "name": "26.0.4",
@@ -4373,7 +4773,11 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 107,
+            "posti_disabili": 1,
+            "numero_postazioni": 177
           },
           {
             "name": "26.1.1",
@@ -4399,7 +4803,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 207,
+            "posti_disabili": 1
           },
           {
             "name": "26.1.2",
@@ -4430,7 +4837,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 7036606,
+            "capienza": 138,
+            "posti_disabili": 1
           },
           {
             "name": "26.1.3",
@@ -4466,7 +4876,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 7036615,
+            "capienza": 122,
+            "numero_postazioni": 120
           },
           {
             "name": "26.1.4",
@@ -4502,7 +4915,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": 7036616,
+            "capienza": 134,
+            "numero_postazioni": 131
           },
           {
             "name": "26.1.5",
@@ -4528,7 +4944,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 167
           },
           {
             "name": "16.1.6",
@@ -4559,7 +4977,10 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 167,
+            "posti_disabili": 1
           }
         ]
       }
@@ -4598,7 +5019,9 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 100
           },
           {
             "name": "E.P.7",
@@ -4624,9 +5047,15 @@
                 "it": "DAD - riunione",
                 "en": "Videoconference - meeting"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 90
           }
-        ]
+        ],
+        "lat": 45.4721692759,
+        "lng": 9.226856068050001,
+        "idEdificio": "60",
+        "address": "Via Colombo 40"
       },
       {
         "name": "32.3",
@@ -4660,12 +5089,16 @@
                 "it": "Proiettore diapositive",
                 "en": "Slide projector"
               }
-            ]
+            ],
+            "idfoto": 4916861,
+            "capienza": 72
           },
           {
             "name": "E.P.2",
             "id": 4752,
-            "features": []
+            "features": [],
+            "idfoto": 4916879,
+            "capienza": 30
           },
           {
             "name": "E.P.3",
@@ -4676,9 +5109,15 @@
                 "it": "Video proiettore",
                 "en": "Video projector"
               }
-            ]
+            ],
+            "idfoto": 5455194,
+            "capienza": 30
           }
-        ]
+        ],
+        "lat": 45.471808632800006,
+        "lng": 9.2271522898,
+        "idEdificio": "114",
+        "address": "Via Colombo 40"
       }
     ]
   },
@@ -4686,7 +5125,7 @@
     "name": "Milano Bovisa - Via Durando",
     "id": "MIB02",
     "lat": 45.5044,
-    "lon": 9.1640,
+    "lon": 9.164,
     "buildings": [
       {
         "name": "B1",
@@ -4720,9 +5159,17 @@
                 "it": "Microfono",
                 "en": "Microphone"
               }
-            ]
+            ],
+            "idfoto": 128333,
+            "capienza": 134,
+            "posti_disabili": 1,
+            "numero_postazioni": 67
           }
-        ]
+        ],
+        "lat": 45.50533154615,
+        "lng": 9.167083935800001,
+        "idEdificio": "104",
+        "address": "Via Candiani 72"
       },
       {
         "name": "B2",
@@ -4756,7 +5203,10 @@
                 "it": "Didattica Innovativa",
                 "en": "Innovative teaching"
               }
-            ]
+            ],
+            "idfoto": 48514,
+            "capienza": 84,
+            "numero_postazioni": 42
           },
           {
             "name": "B2.1.1",
@@ -4782,7 +5232,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48396,
+            "capienza": 276,
+            "numero_postazioni": 276
           },
           {
             "name": "B2.1.2",
@@ -4798,7 +5251,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48399,
+            "capienza": 108,
+            "numero_postazioni": 54
           },
           {
             "name": "B2.1.3",
@@ -4814,7 +5270,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48801,
+            "capienza": 108,
+            "numero_postazioni": 54
           },
           {
             "name": "B2.1.5",
@@ -4835,7 +5294,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48526,
+            "capienza": 102,
+            "numero_postazioni": 51
           },
           {
             "name": "B2.1.6",
@@ -4856,7 +5318,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48799,
+            "capienza": 96,
+            "numero_postazioni": 48
           },
           {
             "name": "B2.1.8",
@@ -4872,7 +5337,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48798,
+            "capienza": 98,
+            "numero_postazioni": 49
           },
           {
             "name": "B2.1.9",
@@ -4898,7 +5366,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48397,
+            "capienza": 265,
+            "numero_postazioni": 265
           },
           {
             "name": "B2.1.10",
@@ -4914,7 +5385,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48344,
+            "capienza": 112,
+            "numero_postazioni": 56
           },
           {
             "name": "B2.1.11",
@@ -4935,7 +5409,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48528,
+            "capienza": 48,
+            "numero_postazioni": 24
           },
           {
             "name": "B2.1.12",
@@ -4956,7 +5433,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48401,
+            "capienza": 48,
+            "numero_postazioni": 24
           },
           {
             "name": "B2.1.13",
@@ -4972,7 +5452,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48400,
+            "capienza": 48,
+            "numero_postazioni": 24
           },
           {
             "name": "B2.1.14",
@@ -4993,7 +5476,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48527,
+            "capienza": 48,
+            "numero_postazioni": 24
           },
           {
             "name": "B2.1.15",
@@ -5009,7 +5495,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48802,
+            "capienza": 112,
+            "numero_postazioni": 56
           },
           {
             "name": "B2.1.16",
@@ -5040,7 +5529,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 117,
+            "posti_disabili": 1
           },
           {
             "name": "B2.2.1",
@@ -5061,7 +5553,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48409,
+            "capienza": 284,
+            "numero_postazioni": 284
           },
           {
             "name": "B2.2.2",
@@ -5087,7 +5582,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48408,
+            "capienza": 78,
+            "numero_postazioni": 39
           },
           {
             "name": "B2.2.3",
@@ -5103,7 +5601,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48407,
+            "capienza": 112,
+            "numero_postazioni": 56
           },
           {
             "name": "B2.2.4",
@@ -5129,7 +5630,11 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48406,
+            "capienza": 64,
+            "posti_disabili": 1,
+            "numero_postazioni": 32
           },
           {
             "name": "B2.2.5",
@@ -5160,7 +5665,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 124,
+            "posti_disabili": 1
           },
           {
             "name": "B2.2.6",
@@ -5186,7 +5694,11 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48405,
+            "capienza": 64,
+            "posti_disabili": 1,
+            "numero_postazioni": 32
           },
           {
             "name": "B2.2.7",
@@ -5202,7 +5714,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48404,
+            "capienza": 112,
+            "numero_postazioni": 56
           },
           {
             "name": "B2.2.8",
@@ -5228,7 +5743,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48403,
+            "capienza": 284,
+            "numero_postazioni": 284
           },
           {
             "name": "B2.2.9",
@@ -5259,7 +5777,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 19611631,
+            "capienza": 89,
+            "posti_disabili": 1,
+            "numero_postazioni": 89
           },
           {
             "name": "B2.2.10",
@@ -5275,7 +5797,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48402,
+            "capienza": 90,
+            "numero_postazioni": 45
           },
           {
             "name": "B2.2.11",
@@ -5301,7 +5826,11 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48412,
+            "capienza": 64,
+            "posti_disabili": 1,
+            "numero_postazioni": 32
           },
           {
             "name": "B2.2.12",
@@ -5332,7 +5861,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 147,
+            "posti_disabili": 1
           },
           {
             "name": "B2.2.13",
@@ -5353,7 +5885,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48411,
+            "capienza": 160,
+            "posti_disabili": 1
           },
           {
             "name": "B2.2.14",
@@ -5369,7 +5904,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48410,
+            "capienza": 96,
+            "numero_postazioni": 48
           },
           {
             "name": "B2.2.15",
@@ -5400,7 +5938,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 101,
+            "posti_disabili": 1
           },
           {
             "name": "B2.3.1",
@@ -5416,7 +5957,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48426,
+            "capienza": 88,
+            "numero_postazioni": 44
           },
           {
             "name": "B2.3.2",
@@ -5432,7 +5976,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48425,
+            "capienza": 64,
+            "numero_postazioni": 32
           },
           {
             "name": "B2.3.3",
@@ -5448,7 +5995,10 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48424,
+            "capienza": 102,
+            "numero_postazioni": 51
           },
           {
             "name": "B2.3.4",
@@ -5464,9 +6014,16 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 48423,
+            "capienza": 112,
+            "numero_postazioni": 56
           }
-        ]
+        ],
+        "lat": 45.5058544554,
+        "lng": 9.166840446150001,
+        "idEdificio": "103",
+        "address": "Via Candiani 72"
       },
       {
         "name": "B6",
@@ -5474,7 +6031,10 @@
           {
             "name": "B6.2.1",
             "id": 4693,
-            "features": []
+            "features": [],
+            "idfoto": 3700212,
+            "capienza": 154,
+            "numero_postazioni": 76
           },
           {
             "name": "B6.2.2",
@@ -5500,17 +6060,26 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 19611640,
+            "capienza": 98,
+            "numero_postazioni": 49
           },
           {
             "name": "B6.2.3",
             "id": 4855,
-            "features": []
+            "features": [],
+            "idfoto": 19611644,
+            "capienza": 84,
+            "numero_postazioni": 42
           },
           {
             "name": "B6.2.4",
             "id": 4856,
-            "features": []
+            "features": [],
+            "idfoto": 19611648,
+            "capienza": 84,
+            "numero_postazioni": 42
           },
           {
             "name": "B6.2.5",
@@ -5541,7 +6110,10 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 19611654,
+            "capienza": 200,
+            "numero_postazioni": 84
           },
           {
             "name": "B6.2.6",
@@ -5572,24 +6144,40 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 19611666,
+            "capienza": 200,
+            "numero_postazioni": 84
           },
           {
             "name": "B6.3.1",
             "id": 4701,
-            "features": []
+            "features": [],
+            "idfoto": 3700224,
+            "capienza": 56,
+            "numero_postazioni": 28
           },
           {
             "name": "B6.3.2",
             "id": 4703,
-            "features": []
+            "features": [],
+            "idfoto": 3700228,
+            "capienza": 110,
+            "numero_postazioni": 55
           },
           {
             "name": "B6.3.3",
             "id": 4861,
-            "features": []
+            "features": [],
+            "idfoto": -2147483648,
+            "capienza": 64,
+            "numero_postazioni": 32
           }
-        ]
+        ],
+        "lat": 45.5048297804,
+        "lng": 9.166254668099999,
+        "idEdificio": "102",
+        "address": "Via Candiani 72"
       },
       {
         "name": "B8",
@@ -5623,7 +6211,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 126
           },
           {
             "name": "B8.0.2",
@@ -5654,7 +6244,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 19611668,
+            "capienza": 232
           },
           {
             "name": "B8.0.3",
@@ -5685,7 +6277,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 19611671,
+            "capienza": 250
           },
           {
             "name": "B8.0.4",
@@ -5716,7 +6310,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 19611674,
+            "capienza": 250
           },
           {
             "name": "B8.0.5",
@@ -5747,7 +6343,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 19611676,
+            "capienza": 195
           },
           {
             "name": "B8.0.6",
@@ -5778,12 +6376,16 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 19611691,
+            "capienza": 160
           },
           {
             "name": "B8.0.7",
             "id": 5072,
-            "features": []
+            "features": [],
+            "idfoto": 20950085,
+            "capienza": 128
           },
           {
             "name": "B8.0.8",
@@ -5814,27 +6416,40 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 19611693,
+            "capienza": 128
           },
           {
             "name": "B8.0.9",
             "id": 5073,
-            "features": []
+            "features": [],
+            "idfoto": 20950094,
+            "capienza": 160
           },
           {
             "name": "B8.0.10",
             "id": 4862,
-            "features": []
+            "features": [],
+            "idfoto": -2147483648,
+            "capienza": 78,
+            "numero_postazioni": 39
           },
           {
             "name": "B8.0.11",
             "id": 4863,
-            "features": []
+            "features": [],
+            "idfoto": -2147483648,
+            "capienza": 72,
+            "numero_postazioni": 36
           },
           {
             "name": "B8.0.12",
             "id": 4864,
-            "features": []
+            "features": [],
+            "idfoto": -2147483648,
+            "capienza": 54,
+            "numero_postazioni": 27
           },
           {
             "name": "B8.1.1",
@@ -5870,12 +6485,16 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 19611701,
+            "capienza": 144
           },
           {
             "name": "B8.1.2",
             "id": 5074,
-            "features": []
+            "features": [],
+            "idfoto": 20950102,
+            "capienza": 156
           },
           {
             "name": "B8.1.3",
@@ -5911,12 +6530,16 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 19611705,
+            "capienza": 172
           },
           {
             "name": "B8.1.4",
             "id": 5075,
-            "features": []
+            "features": [],
+            "idfoto": 20950108,
+            "capienza": 144
           },
           {
             "name": "B8.2.1",
@@ -5952,7 +6575,9 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 19611707,
+            "capienza": 300
           },
           {
             "name": "B8.2.2",
@@ -5988,7 +6613,9 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 19611718,
+            "capienza": 300
           },
           {
             "name": "B8.2.3",
@@ -6014,9 +6641,15 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 19611723,
+            "capienza": 70
           }
-        ]
+        ],
+        "lat": 45.504704893050004,
+        "lng": 9.1648882627,
+        "idEdificio": "80",
+        "address": "Via Candiani 72"
       }
     ]
   },
@@ -6058,7 +6691,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48762,
+            "capienza": 262
           },
           {
             "name": "L.02",
@@ -6094,7 +6729,10 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 48764,
+            "capienza": 112,
+            "numero_postazioni": 112
           },
           {
             "name": "L.03",
@@ -6125,7 +6763,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48768,
+            "capienza": 188
           },
           {
             "name": "L.04 - VIRTUAL LAB",
@@ -6161,7 +6801,9 @@
                 "it": "visori Oculus Quest 2",
                 "en": "Oculus Quest 2 VR headsets"
               }
-            ]
+            ],
+            "idfoto": 48769,
+            "capienza": 60
           },
           {
             "name": "L.05 - D.I.",
@@ -6187,7 +6829,9 @@
                 "it": "Didattica Innovativa",
                 "en": "Innovative teaching"
               }
-            ]
+            ],
+            "idfoto": 48770,
+            "capienza": 45
           },
           {
             "name": "L.06",
@@ -6223,7 +6867,10 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 48771,
+            "capienza": 224,
+            "numero_postazioni": 224
           },
           {
             "name": "L.07",
@@ -6259,7 +6906,10 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 48772,
+            "capienza": 180,
+            "numero_postazioni": 179
           },
           {
             "name": "L.08",
@@ -6290,7 +6940,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48776,
+            "capienza": 230
           },
           {
             "name": "L.09",
@@ -6321,7 +6973,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48773,
+            "capienza": 150
           },
           {
             "name": "L.11",
@@ -6352,7 +7006,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48778,
+            "capienza": 90,
+            "numero_postazioni": 88
           },
           {
             "name": "L.12",
@@ -6383,7 +7040,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48373,
+            "capienza": 211,
+            "posti_disabili": 1,
+            "numero_postazioni": 211
           },
           {
             "name": "L.13",
@@ -6414,7 +7075,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 493,
+            "numero_postazioni": 473
           },
           {
             "name": "L.14",
@@ -6445,7 +7109,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48727,
+            "capienza": 176,
+            "numero_postazioni": 176
           },
           {
             "name": "L.15",
@@ -6476,9 +7143,17 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48384,
+            "capienza": 230,
+            "posti_disabili": 1,
+            "numero_postazioni": 230
           }
-        ]
+        ],
+        "lat": 45.50141425445,
+        "lng": 9.154316515049999,
+        "idEdificio": "96",
+        "address": "Via La Masa 34"
       },
       {
         "name": "B15",
@@ -6517,7 +7192,10 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 48375,
+            "capienza": 400,
+            "numero_postazioni": 399
           },
           {
             "name": "LM.3",
@@ -6548,7 +7226,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48721,
+            "capienza": 160,
+            "posti_disabili": 1
           },
           {
             "name": "LM.4",
@@ -6579,7 +7260,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48722,
+            "capienza": 160,
+            "posti_disabili": 1
           },
           {
             "name": "LM.5",
@@ -6610,7 +7294,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48724,
+            "capienza": 184
           },
           {
             "name": "LM.6",
@@ -6641,9 +7327,15 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 48725,
+            "capienza": 184
           }
-        ]
+        ],
+        "lat": 45.50167923845,
+        "lng": 9.15701955025,
+        "idEdificio": "71",
+        "address": "Via La Masa 34"
       },
       {
         "name": "BL27",
@@ -6677,7 +7369,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 90083,
+            "capienza": 212,
+            "posti_disabili": 2,
+            "numero_postazioni": 212
           },
           {
             "name": "BL.27.0.2",
@@ -6708,7 +7404,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 90087,
+            "capienza": 212,
+            "posti_disabili": 2,
+            "numero_postazioni": 212
           },
           {
             "name": "BL.27.0.3",
@@ -6739,7 +7439,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 90088,
+            "capienza": 212,
+            "posti_disabili": 2,
+            "numero_postazioni": 212
           },
           {
             "name": "BL.27.0.4",
@@ -6770,7 +7474,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 90089,
+            "capienza": 212,
+            "posti_disabili": 2,
+            "numero_postazioni": 212
           },
           {
             "name": "BL.27.0.5",
@@ -6801,7 +7509,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 90090,
+            "capienza": 154,
+            "posti_disabili": 1,
+            "numero_postazioni": 154
           },
           {
             "name": "BL.27.0.6",
@@ -6832,7 +7544,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 90091,
+            "capienza": 154,
+            "posti_disabili": 1,
+            "numero_postazioni": 154
           },
           {
             "name": "BL.27.0.7",
@@ -6863,7 +7579,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 90092,
+            "capienza": 154,
+            "posti_disabili": 1,
+            "numero_postazioni": 154
           },
           {
             "name": "BL.27.0.8",
@@ -6894,7 +7614,11 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 90098,
+            "capienza": 154,
+            "posti_disabili": 1,
+            "numero_postazioni": 154
           },
           {
             "name": "BL.27.1.1",
@@ -6930,7 +7654,11 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 90101,
+            "capienza": 64,
+            "posti_disabili": 1,
+            "numero_postazioni": 64
           },
           {
             "name": "BL.27.1.2",
@@ -6961,7 +7689,11 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 90102,
+            "capienza": 103,
+            "posti_disabili": 1,
+            "numero_postazioni": 103
           },
           {
             "name": "BL.27.1.3",
@@ -6997,7 +7729,11 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 90105,
+            "capienza": 103,
+            "posti_disabili": 1,
+            "numero_postazioni": 103
           },
           {
             "name": "BL.27.1.4",
@@ -7033,7 +7769,11 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 90106,
+            "capienza": 103,
+            "posti_disabili": 1,
+            "numero_postazioni": 103
           },
           {
             "name": "BL.27.1.5",
@@ -7069,7 +7809,11 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 90108,
+            "capienza": 103,
+            "posti_disabili": 1,
+            "numero_postazioni": 103
           },
           {
             "name": "BL.27.1.6",
@@ -7105,7 +7849,10 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 90109,
+            "capienza": 48,
+            "numero_postazioni": 48
           },
           {
             "name": "BL.27.1.7",
@@ -7141,7 +7888,10 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 90111,
+            "capienza": 48,
+            "numero_postazioni": 48
           },
           {
             "name": "BL.27.1.8",
@@ -7177,9 +7927,16 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 90113,
+            "capienza": 48,
+            "numero_postazioni": 48
           }
-        ]
+        ],
+        "lat": 45.503707305700004,
+        "lng": 9.1573088145,
+        "idEdificio": "78",
+        "address": "Via Lambruschini 4"
       },
       {
         "name": "BL28",
@@ -7187,7 +7944,9 @@
           {
             "name": "AULA CARASSA E DADDA",
             "id": 4745,
-            "features": []
+            "features": [],
+            "idfoto": 14268062,
+            "capienza": 420
           },
           {
             "name": "BL.28.1.1",
@@ -7218,7 +7977,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 180
           },
           {
             "name": "BL.28.1.2",
@@ -7239,7 +8000,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 90
           },
           {
             "name": "BL.28.2.1",
@@ -7270,7 +8033,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 180
           },
           {
             "name": "BL.28.2.2",
@@ -7291,9 +8056,15 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 90
           }
-        ]
+        ],
+        "lat": 45.50307929805,
+        "lng": 9.15722858265,
+        "idEdificio": "62",
+        "address": "Via Lambruschini 4"
       }
     ]
   },
@@ -7309,19 +8080,29 @@
           {
             "name": "CR03.0.1",
             "id": 5150,
-            "features": []
+            "features": [],
+            "capienza": 42,
+            "numero_postazioni": 42
           },
           {
             "name": "CR03.0.2",
             "id": 5152,
-            "features": []
+            "features": [],
+            "capienza": 30,
+            "numero_postazioni": 30
           },
           {
             "name": "CR03.0.3",
             "id": 5155,
-            "features": []
+            "features": [],
+            "capienza": 36,
+            "numero_postazioni": 36
           }
-        ]
+        ],
+        "lat": 45.133884249350004,
+        "lng": 10.0147801809,
+        "idEdificio": "27309",
+        "address": "Via Angelo Massarotti 21c"
       },
       {
         "name": "CR04",
@@ -7329,69 +8110,105 @@
           {
             "name": "CR04.0.1",
             "id": 5147,
-            "features": []
+            "features": [],
+            "capienza": 256,
+            "posti_disabili": 1,
+            "numero_postazioni": 256
           },
           {
             "name": "CR04.0.2",
             "id": 5146,
-            "features": []
+            "features": [],
+            "capienza": 256,
+            "posti_disabili": 1,
+            "numero_postazioni": 256
           },
           {
             "name": "CR04.0.3",
             "id": 5148,
-            "features": []
+            "features": [],
+            "capienza": 80,
+            "numero_postazioni": 80
           },
           {
             "name": "CR04.1.1",
             "id": 5149,
-            "features": []
+            "features": [],
+            "capienza": 150,
+            "posti_disabili": 1,
+            "numero_postazioni": 150
           },
           {
             "name": "CR04.1.2",
             "id": 5151,
-            "features": []
+            "features": [],
+            "capienza": 150,
+            "posti_disabili": 1,
+            "numero_postazioni": 150
           },
           {
             "name": "CR04.1.3",
             "id": 5153,
-            "features": []
+            "features": [],
+            "capienza": 150,
+            "posti_disabili": 1,
+            "numero_postazioni": 150
           },
           {
             "name": "CR04.1.4",
             "id": 5154,
-            "features": []
+            "features": [],
+            "capienza": 150,
+            "posti_disabili": 1,
+            "numero_postazioni": 150
           },
           {
             "name": "CR04.2.1",
             "id": 5156,
-            "features": []
+            "features": [],
+            "capienza": 80,
+            "numero_postazioni": 80
           },
           {
             "name": "CR04.2.2",
             "id": 5157,
-            "features": []
+            "features": [],
+            "capienza": 80,
+            "numero_postazioni": 80
           },
           {
             "name": "CR04.2.3",
             "id": 5158,
-            "features": []
+            "features": [],
+            "capienza": 80,
+            "numero_postazioni": 80
           },
           {
             "name": "CR04.2.4",
             "id": 5159,
-            "features": []
+            "features": [],
+            "capienza": 100,
+            "numero_postazioni": 100
           },
           {
             "name": "CR04.2.5",
             "id": 5160,
-            "features": []
+            "features": [],
+            "capienza": 80,
+            "numero_postazioni": 80
           },
           {
             "name": "CR04.2.6",
             "id": 5161,
-            "features": []
+            "features": [],
+            "capienza": 80,
+            "numero_postazioni": 80
           }
-        ]
+        ],
+        "lat": 45.13442455095,
+        "lng": 10.0139647516,
+        "idEdificio": "27310",
+        "address": "Via Angelo Massarotti 21c"
       }
     ]
   },
@@ -7399,7 +8216,7 @@
     "name": "Lecco",
     "id": "LCF04",
     "lat": 45.8492,
-    "lon": 9.3970,
+    "lon": 9.397,
     "buildings": [
       {
         "name": "8",
@@ -7428,7 +8245,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060490,
+            "capienza": 61,
+            "posti_disabili": 1
           },
           {
             "name": "T.2",
@@ -7454,7 +8274,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060492,
+            "capienza": 61,
+            "posti_disabili": 1
           },
           {
             "name": "T.3",
@@ -7480,7 +8303,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060308,
+            "capienza": 40,
+            "posti_disabili": 1
           },
           {
             "name": "T.4",
@@ -7506,9 +8332,16 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060494,
+            "capienza": 40,
+            "posti_disabili": 1
           }
-        ]
+        ],
+        "lat": 45.8491659576,
+        "lng": 9.39705088725,
+        "idEdificio": "130",
+        "address": "Via Previati 1C"
       },
       {
         "name": "9",
@@ -7542,7 +8375,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060333,
+            "capienza": 88,
+            "posti_disabili": 1
           },
           {
             "name": "B.0.2",
@@ -7573,7 +8409,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060338,
+            "capienza": 48,
+            "posti_disabili": 1
           },
           {
             "name": "B.0.3",
@@ -7604,7 +8443,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060342,
+            "capienza": 88,
+            "posti_disabili": 1
           },
           {
             "name": "B.0.4",
@@ -7635,7 +8477,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060351,
+            "capienza": 120,
+            "posti_disabili": 1
           },
           {
             "name": "B.0.5",
@@ -7666,7 +8511,9 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060383,
+            "capienza": 100
           },
           {
             "name": "B.0.6",
@@ -7702,7 +8549,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060393,
+            "capienza": 88,
+            "posti_disabili": 1
           },
           {
             "name": "B.0.7",
@@ -7733,7 +8583,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 158,
+            "posti_disabili": 1
           },
           {
             "name": "B.1.1",
@@ -7764,7 +8617,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060403,
+            "capienza": 155,
+            "posti_disabili": 1
           },
           {
             "name": "B.1.2",
@@ -7795,7 +8651,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060406,
+            "capienza": 50,
+            "posti_disabili": 1
           },
           {
             "name": "B.1.3",
@@ -7821,7 +8680,10 @@
                 "it": "Microfono",
                 "en": "Microphone"
               }
-            ]
+            ],
+            "idfoto": 29060408,
+            "capienza": 140,
+            "numero_postazioni": 70
           },
           {
             "name": "B.1.4",
@@ -7857,7 +8719,10 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 120,
+            "posti_disabili": 1
           },
           {
             "name": "B.1.5",
@@ -7888,7 +8753,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060435,
+            "capienza": 100,
+            "posti_disabili": 1
           },
           {
             "name": "B.2.1",
@@ -7919,7 +8787,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060439,
+            "capienza": 120,
+            "posti_disabili": 1
           },
           {
             "name": "B.2.2",
@@ -7945,7 +8816,10 @@
                 "it": "Microfono",
                 "en": "Microphone"
               }
-            ]
+            ],
+            "idfoto": 29060446,
+            "capienza": 88,
+            "posti_disabili": 1
           },
           {
             "name": "B.2.3",
@@ -7981,7 +8855,9 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 29060448,
+            "capienza": 120
           },
           {
             "name": "B.2.4",
@@ -8007,7 +8883,11 @@
                 "it": "Microfono",
                 "en": "Microphone"
               }
-            ]
+            ],
+            "idfoto": 29060328,
+            "capienza": 90,
+            "posti_disabili": 1,
+            "numero_postazioni": 45
           },
           {
             "name": "B.2.5",
@@ -8038,7 +8918,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060452,
+            "capienza": 120,
+            "posti_disabili": 1
           },
           {
             "name": "B.2.6",
@@ -8074,9 +8957,16 @@
                 "it": "Postazioni dotate di presa di rete",
                 "en": "Seats with network socket"
               }
-            ]
+            ],
+            "idfoto": 29060458,
+            "capienza": 120,
+            "posti_disabili": 1
           }
-        ]
+        ],
+        "lat": 45.848849747900005,
+        "lng": 9.396724998900002,
+        "idEdificio": "63",
+        "address": "Via Previati 1C"
       },
       {
         "name": "10",
@@ -8110,7 +9000,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29263223,
+            "capienza": 126,
+            "posti_disabili": 1
           },
           {
             "name": "A.0.2",
@@ -8141,7 +9034,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29061808,
+            "capienza": 126,
+            "posti_disabili": 1
           },
           {
             "name": "A.1.1",
@@ -8172,7 +9068,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29060317,
+            "capienza": 49,
+            "posti_disabili": 1
           },
           {
             "name": "A.1.2",
@@ -8203,7 +9102,10 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": -2147483648,
+            "capienza": 162,
+            "posti_disabili": 1
           },
           {
             "name": "A.1.3",
@@ -8234,9 +9136,16 @@
                 "it": "Postazioni dotate di presa elettrica",
                 "en": "Seats with electric socket"
               }
-            ]
+            ],
+            "idfoto": 29263233,
+            "capienza": 180,
+            "posti_disabili": 1
           }
-        ]
+        ],
+        "lat": 45.84944386545,
+        "lng": 9.3964272737,
+        "idEdificio": "64",
+        "address": "Via Previati 1C"
       },
       {
         "name": "12",
@@ -8244,7 +9153,9 @@
           {
             "name": "M.1",
             "id": 5018,
-            "features": []
+            "features": [],
+            "idfoto": 29060461,
+            "capienza": 40
           },
           {
             "name": "M.2",
@@ -8265,9 +9176,15 @@
                 "it": "Microfono ambientale",
                 "en": "Environmental microphone"
               }
-            ]
+            ],
+            "idfoto": 29060475,
+            "capienza": 56
           }
-        ]
+        ],
+        "lat": 45.8502456455,
+        "lng": 9.39638024235,
+        "idEdificio": "18234",
+        "address": "Via Previati 1C"
       }
     ]
   },
@@ -8309,7 +9226,10 @@
                 "it": "Proiettore diapositive",
                 "en": "Slide projector"
               }
-            ]
+            ],
+            "idfoto": 26582054,
+            "capienza": 100,
+            "numero_postazioni": 72
           },
           {
             "name": "A.0.2",
@@ -8330,7 +9250,10 @@
                 "it": "Oscurabile",
                 "en": "Dimmable"
               }
-            ]
+            ],
+            "idfoto": 26582213,
+            "capienza": 102,
+            "numero_postazioni": 102
           },
           {
             "name": "A.0.3",
@@ -8361,7 +9284,10 @@
                 "it": "Video proiettore con PC",
                 "en": "Video projector with PC"
               }
-            ]
+            ],
+            "idfoto": 26582217,
+            "capienza": 130,
+            "numero_postazioni": 130
           },
           {
             "name": "A.0.4",
@@ -8382,7 +9308,10 @@
                 "it": "Oscurabile",
                 "en": "Dimmable"
               }
-            ]
+            ],
+            "idfoto": 26582221,
+            "capienza": 52,
+            "numero_postazioni": 52
           },
           {
             "name": "A.1.1",
@@ -8408,12 +9337,17 @@
                 "it": "Cattedra cablata",
                 "en": "Wired chair"
               }
-            ]
+            ],
+            "idfoto": 26582228,
+            "capienza": 45,
+            "numero_postazioni": 45
           },
           {
             "name": "A.1.2",
             "id": 4674,
-            "features": []
+            "features": [],
+            "idfoto": 26582207,
+            "capienza": 20
           },
           {
             "name": "A.1.3",
@@ -8449,7 +9383,10 @@
                 "it": "Video proiettore con PC",
                 "en": "Video projector with PC"
               }
-            ]
+            ],
+            "idfoto": 26582230,
+            "capienza": 78,
+            "numero_postazioni": 78
           },
           {
             "name": "A.1.4",
@@ -8470,7 +9407,10 @@
                 "it": "Oscurabile",
                 "en": "Dimmable"
               }
-            ]
+            ],
+            "idfoto": 26582239,
+            "capienza": 52,
+            "numero_postazioni": 52
           },
           {
             "name": "A.1.5",
@@ -8491,7 +9431,10 @@
                 "it": "Video proiettore con PC",
                 "en": "Video projector with PC"
               }
-            ]
+            ],
+            "idfoto": 26582240,
+            "capienza": 60,
+            "numero_postazioni": 60
           },
           {
             "name": "A.1.8",
@@ -8507,7 +9450,10 @@
                 "it": "Video proiettore con PC",
                 "en": "Video projector with PC"
               }
-            ]
+            ],
+            "idfoto": 26582243,
+            "capienza": 40,
+            "numero_postazioni": 40
           }
         ]
       }

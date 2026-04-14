@@ -153,7 +153,6 @@ function buildClassroomCard(room, query = '') {
 // ---------- BREADCRUMB DROPDOWN ----------
 
 function openBreadcrumbDropdown(anchor, items) {
-  haptics.trigger(defaultPatterns.success);
   // Toggle: clicking the same anchor again closes the dropdown
   if (activeDropdown?._anchor === anchor) {
     closeActiveDropdown();

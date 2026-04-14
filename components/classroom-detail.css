@@ -412,13 +412,24 @@ body.detail-open .footer {
   opacity: 0.7;
 }
 
-.detail-schedule-row--sunday {
-  opacity: 0.6;
+.detail-schedule--hide-sundays .detail-schedule-row--sunday {
+  display: none;
+}
+
+.detail-schedule-row--sunday .detail-schedule-label {
+  opacity: 0.5;
 }
 
 .detail-schedule-row--sunday .detail-schedule-bar {
-  background: color-mix(in srgb, #ff0000 5%, transparent);
-  border-color: color-mix(in srgb, #ff0000 10%, transparent);
+  background: color-mix(in srgb, #e53935 12%, transparent);
+  border-color: color-mix(in srgb, #e53935 25%, transparent);
+}
+
+.detail-schedule-ticks .timeline-time-indicator--now {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  z-index: 9;
 }
 
 .detail-schedule-bar-wrapper .timeline-hover-cursor {
@@ -474,8 +485,17 @@ body.detail-open .footer {
   z-index: 5;
 }
 
+.detail-schedule-ticks {
+  position: relative;
+  height: 3rem;
+  margin-left: calc(3.5rem + 0.75rem);
+  margin-bottom: 0.15rem;
+  overflow: visible;
+}
+
 .detail-schedule-tick {
   position: absolute;
+  bottom: 0;
   transform: translateX(-50%);
   pointer-events: none;
 }

@@ -1,4 +1,4 @@
-import { classroomsData as occupancyData } from '../available-rooms-script.js';
+import { classroomsData as occupancyData, SKIP_DAYS } from '../available-rooms-script.js';
 import { t } from '../i18n.js';
 import { haptics, defaultPatterns } from './haptics.js';
 import { createTimeFormatter } from '../utils/time-format.js';
@@ -12,17 +12,17 @@ function minutesToTimeDisplay(minutes) {
 // ---------- CONSTANTS ----------
 
 const FEATURE_ICONS = {
-  4:   { icon: 'videocam',            key: 'features.videoProjector' },
-  5:   { icon: 'mic',                 key: 'features.radioMic' },
-  6:   { icon: 'blinds',              key: 'features.dimmable' },
-  7:   { icon: 'cable',               key: 'features.wiredDesk' },
+  4: { icon: 'videocam', key: 'features.videoProjector' },
+  5: { icon: 'mic', key: 'features.radioMic' },
+  6: { icon: 'blinds', key: 'features.dimmable' },
+  7: { icon: 'cable', key: 'features.wiredDesk' },
   142: { icon: 'electrical_services', key: 'features.powerOutlets' },
-  223: { icon: 'video_call',          key: 'features.videoconf' },
+  223: { icon: 'video_call', key: 'features.videoconf' },
 };
 
 // Mirror the campus naming logic from campus-picker.js / search-classrooms-script.js
-const CITTA_STUDI_IDS   = new Set(['MIA01', 'MIA06']);
-const BOVISA_IDS        = new Set(['MIB01', 'MIB02']);
+const CITTA_STUDI_IDS = new Set(['MIA01', 'MIA06']);
+const BOVISA_IDS = new Set(['MIB01', 'MIB02']);
 const CITTA_STUDI_NAMES = { MIA01: 'Leonardo', MIA06: 'Colombo' };
 
 function getCampusDisplayName(campus) {
@@ -45,13 +45,13 @@ const PHOTO_API = 'https://onlineservices.polimi.it/maps_rest/rest/syncro/rooms/
 
 class ClassroomDetail {
   constructor() {
-    this._overlay  = null;
-    this._tabbar   = null;
-    this._backBtn  = null;
+    this._overlay = null;
+    this._tabbar = null;
+    this._backBtn = null;
     this._staticData = null;       // classrooms.json hierarchy
-    this._flatIndex  = null;       // Map<id, { classroom, building, campus }>
+    this._flatIndex = null;       // Map<id, { classroom, building, campus }>
     this._pendingTrigger = null;   // { nameEl } stored by click handler before hashchange fires
-    this._openTrigger    = null;   // same, kept for reverse morph on close
+    this._openTrigger = null;   // same, kept for reverse morph on close
     this._openedViaPushState = false;
     this._currentId = null;
     this._savedScrollPos = 0;
@@ -61,7 +61,7 @@ class ClassroomDetail {
   init(staticData) {
     this._staticData = staticData;
     this._overlay = document.getElementById('classroom-detail-overlay');
-    this._tabbar  = document.querySelector('.tabbar');
+    this._tabbar = document.querySelector('.tabbar');
     this._backBtn = document.getElementById('detail-back-btn');
 
     this._backBtn?.addEventListener('click', () => {
@@ -75,6 +75,11 @@ class ClassroomDetail {
 
     window.addEventListener('hashchange', () => this._onHashChange());
 
+    window.addEventListener('hidesundayschange', (e) => {
+      const container = document.getElementById('detail-schedule-container');
+      if (container) container.classList.toggle('detail-schedule--hide-sundays', e.detail.hidden);
+    });
+
     // Click delegation — handles both available-tab info buttons and search-tab cards
     document.addEventListener('click', (e) => {
       const trigger = e.target.closest('[data-open-classroom]');
@@ -84,7 +89,7 @@ class ClassroomDetail {
       const id = parseInt(trigger.dataset.openClassroom);
 
       // Name element that will morph into the overlay title
-      const card   = trigger.closest('.classroom-card') ?? trigger;
+      const card = trigger.closest('.classroom-card') ?? trigger;
       const nameEl = card.querySelector('.classroom-name, .search-card-name') ?? null;
 
       this._pendingTrigger = { nameEl };
@@ -105,7 +110,7 @@ class ClassroomDetail {
   _onHashChange() {
     const match = location.hash.match(HASH_PATTERN);
     if (match) {
-      const id      = parseInt(match[1]);
+      const id = parseInt(match[1]);
       const pending = this._pendingTrigger;
       this._pendingTrigger = null;
       this._doOpen(id, pending);
@@ -123,7 +128,7 @@ class ClassroomDetail {
     const entry = this._flatIndex?.get(id);
     if (!entry) return;
 
-    this._currentId   = id;
+    this._currentId = id;
     this._openTrigger = pending ?? null;
 
     // Save scroll position for when we return
@@ -201,8 +206,8 @@ class ClassroomDetail {
 
     this._currentId = null;
 
-    const nameEl    = this._openTrigger?.nameEl ?? null;
-    const titleEl   = this._overlay.querySelector('.detail-title');
+    const nameEl = this._openTrigger?.nameEl ?? null;
+    const titleEl = this._overlay.querySelector('.detail-title');
     const nameInDom = nameEl && document.body.contains(nameEl);
 
     const cleanup = () => {
@@ -314,9 +319,9 @@ class ClassroomDetail {
         <section class="detail-section">
           <h2 class="detail-section-title">${t('detail.features')}</h2>
           ${featuresHtml
-            ? `<div class="detail-features">${featuresHtml}</div>`
-            : `<p class="secondary detail-no-features">${t('detail.noFeatures')}</p>`
-          }
+        ? `<div class="detail-features">${featuresHtml}</div>`
+        : `<p class="secondary detail-no-features">${t('detail.noFeatures')}</p>`
+      }
         </section>
 
         <section class="detail-section">
@@ -383,7 +388,7 @@ class ClassroomDetail {
         // but it can be recreated by a future _loadPhoto call (like a refresh).
         if (this._currentId === classroomId) container.remove();
       };
-      
+
       img.src = url;
     } catch (err) {
       console.error('Classroom photo load error:', err);
@@ -395,7 +400,7 @@ class ClassroomDetail {
   // ---------- RENDER: WEEKLY SCHEDULE ----------
 
   _loadSchedule(classroomId) {
-    const data      = occupancyData; 
+    const data = occupancyData;
     const container = document.getElementById('detail-schedule-container');
 
     if (!container) {
@@ -410,7 +415,7 @@ class ClassroomDetail {
     }
 
     try {
-      const today    = new Date();
+      const today = new Date();
       const todayKey = [
         today.getFullYear(),
         String(today.getMonth() + 1).padStart(2, '0'),
@@ -418,51 +423,70 @@ class ClassroomDetail {
       ].join('');
 
       const DAY_START = 8 * 60 + 15;
-      const DAY_END   = 20 * 60;
-      const total     = DAY_END - DAY_START;
+      const DAY_END = 20 * 60 + 15;
+      const total = DAY_END - DAY_START;
 
-      const rowsHtml = data.map(dayData => {
-        if (!dayData || !dayData.date) return '';
+      // Build chronological day list, inserting Sunday placeholders between data days
+      const parseKey = key => new Date(
+        parseInt(key.slice(0, 4), 10),
+        parseInt(key.slice(4, 6), 10) - 1,
+        parseInt(key.slice(6, 8), 10)
+      );
+      const sortedData = data.filter(d => d?.date).sort((a, b) => parseKey(a.date) - parseKey(b.date));
+      const days = [];
+      let prevDate = null;
+      for (const dayData of sortedData) {
+        const curr = parseKey(dayData.date);
+        if (prevDate) {
+          const check = new Date(prevDate);
+          check.setDate(check.getDate() + 1);
+          while (check < curr) {
+            if (SKIP_DAYS.includes(check.getDay())) days.push({ dayData: null, date: new Date(check) });
+            check.setDate(check.getDate() + 1);
+          }
+        }
+        days.push({ dayData, date: curr });
+        prevDate = curr;
+      }
+
+      const rowsHtml = days.map(({ dayData, date }) => {
+        const isSunday = !dayData;
+
+        const dayName   = date.toLocaleDateString(undefined, { weekday: 'short' });
+        const dayNum    = date.getDate();
+        const monthName = date.toLocaleDateString(undefined, { month: 'short' });
+
+        if (isSunday) {
+          return `
+            <div class="detail-schedule-row detail-schedule-row--sunday">
+              <div class="detail-schedule-label">
+                <span class="detail-schedule-day">${dayName}</span>
+                <span class="detail-schedule-date secondary">${dayNum} ${monthName}</span>
+              </div>
+              <div class="detail-schedule-bar-wrapper">
+                <div class="detail-schedule-bar"></div>
+              </div>
+            </div>`;
+        }
 
         let occupancy = [];
         outer: for (const c of dayData.campuses ?? []) {
           for (const b of c.buildings ?? []) {
-            // Flexible ID check (string vs number)
             const room = b.classrooms?.find(r => String(r.id) === String(classroomId));
             if (room) { occupancy = room.occupancy ?? []; break outer; }
           }
         }
 
-        const dateKey = dayData.date;
-        const isToday = dateKey === todayKey;
-        const year    = parseInt(dateKey.slice(0, 4), 10);
-        const month   = parseInt(dateKey.slice(4, 6), 10) - 1;
-        const day     = parseInt(dateKey.slice(6, 8), 10);
-        
-        const date    = new Date(year, month, day);
-        const dayName = date instanceof Date && !isNaN(date) 
-          ? date.toLocaleDateString(undefined, { weekday: 'short' })
-          : '???';
-        const dayNum  = date instanceof Date && !isNaN(date) ? date.getDate() : '?';
-        const monthName = date instanceof Date && !isNaN(date)
-          ? date.toLocaleDateString(undefined, { month: 'short' })
-          : '???';
-
+        const isToday   = dayData.date === todayKey;
         const blocksHtml = (occupancy || []).map(slot => {
           if (!slot.inizio || !slot.fine) return '';
           const s = Math.max(timeToMinutes(slot.inizio), DAY_START);
-          const e = Math.min(timeToMinutes(slot.fine),   DAY_END);
+          const e = Math.min(timeToMinutes(slot.fine), DAY_END);
           if (e <= s) return '';
           const left  = ((s - DAY_START) / total * 100).toFixed(2);
           const width = ((e - s)         / total * 100).toFixed(2);
           return `<div class="detail-schedule-block" style="left:${left}%;width:${width}%"></div>`;
         }).join('');
-
-        const now    = new Date();
-        const nowMin = now.getHours() * 60 + now.getMinutes();
-        const nowHtml = isToday && nowMin >= DAY_START && nowMin <= DAY_END
-          ? `<div class="detail-schedule-now" style="left:${((nowMin - DAY_START) / total * 100).toFixed(2)}%"></div>`
-          : '';
 
         return `
           <div class="detail-schedule-row${isToday ? ' detail-schedule-row--today' : ''}">
@@ -474,12 +498,11 @@ class ClassroomDetail {
               <div class="timeline-hover-cursor" hidden></div>
               <div class="detail-schedule-bar">
                 ${blocksHtml}
-                ${nowHtml}
                 <div class="timeline-hover-line" hidden></div>
               </div>
             </div>
           </div>`;
-      }).filter(Boolean).join('');
+      }).join('');
 
       if (!rowsHtml) {
         console.warn('ClassroomDetail: No room matches found in any day of occupancy data');
@@ -487,15 +510,29 @@ class ClassroomDetail {
         return;
       }
 
-      const ticksHtml = [9, 11, 13, 15, 17, 19].map(h => {
-        const left = ((h * 60 - DAY_START) / total * 100).toFixed(2);
-        return `<div class="detail-schedule-tick" style="left:${left}%"><span>${h}:00</span></div>`;
-      }).join('');
+      const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+      const nowTickHtml = nowMin >= DAY_START && nowMin <= DAY_END
+        ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="left:${((nowMin - DAY_START) / total * 100).toFixed(2)}%">${t('timepicker.now')}</div>`
+        : '';
+
+      const ticksHtml = (() => {
+        const ticks = [];
+        for (let m = DAY_START; m <= DAY_END; m += 60) {
+          const left = ((m - DAY_START) / total * 100).toFixed(2);
+          const h    = Math.floor(m / 60);
+          ticks.push(`<div class="detail-schedule-tick" style="left:${left}%"><span>${h}:15</span></div>`);
+        }
+        return ticks.join('');
+      })();
 
       container.innerHTML = `
+        <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}</div>
         <div class="detail-schedule-grid">${rowsHtml}</div>
-        <div class="detail-schedule-ticks">${ticksHtml}</div>
       `;
+
+      if (localStorage.getItem('poliAule_hideSundays') === 'true') {
+        container.classList.add('detail-schedule--hide-sundays');
+      }
 
       // ---------- TIMELINE HOVER ----------
       let _activeBar = null;
@@ -505,7 +542,8 @@ class ClassroomDetail {
         if (_activeBar && _activeBar !== bar) {
           const prevCursor = _activeBar.closest('.detail-schedule-bar-wrapper')?.querySelector('.timeline-hover-cursor');
           if (prevCursor) prevCursor.hidden = true;
-          _activeBar.querySelector('.timeline-hover-line').hidden = true;
+          const prevLine = _activeBar.querySelector('.timeline-hover-line');
+          if (prevLine) prevLine.hidden = true;
           _activeBar = null;
         }
 
@@ -533,7 +571,8 @@ class ClassroomDetail {
         if (_activeBar) {
           const prevCursor = _activeBar.closest('.detail-schedule-bar-wrapper')?.querySelector('.timeline-hover-cursor');
           if (prevCursor) prevCursor.hidden = true;
-          _activeBar.querySelector('.timeline-hover-line').hidden = true;
+          const prevLine = _activeBar.querySelector('.timeline-hover-line');
+          if (prevLine) prevLine.hidden = true;
           _activeBar = null;
         }
       });

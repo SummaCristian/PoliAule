@@ -540,7 +540,7 @@ body.detail-open .footer {
 
   /* Container: column — selector on top, then time axis + bar below */
   #detail-schedule-container {
-    --schedule-bar-height: clamp(280px, 60svh, 700px);
+    --schedule-bar-height: clamp(240px, 48svh, 480px);
     --bar-width: 26rem;
     display: flex;
     flex-direction: column;
@@ -554,6 +554,7 @@ body.detail-open .footer {
     align-items: flex-start;
     justify-content: center;
     gap: 0.625rem;
+    overflow-x: clip;
   }
 
   /* Time axis */
@@ -665,15 +666,15 @@ body.detail-open .footer {
     display: none;
   }
 
-  /* Hover cursor: floats to the right of the bar, vertically centred on the mouse */
+  /* Hover cursor: floats inside the bar, top-right corner, just above the hover line */
   .detail-schedule-bar-wrapper .timeline-hover-cursor {
-    left: calc(100% + 0.5rem);
+    right: 0.375rem;
+    left: auto;
     top: 0; /* overridden by JS */
-    right: auto;
-    transform: translateY(-50%);
+    transform: translateY(calc(-100% - 0.375rem));
   }
 
-  /* No downward arrow — cursor is beside the bar, not above it */
+  /* No arrow — cursor sits inside the bar */
   .detail-schedule-bar-wrapper .timeline-hover-cursor::before,
   .detail-schedule-bar-wrapper .timeline-hover-cursor::after {
     display: none;

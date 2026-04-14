@@ -1,5 +1,6 @@
 import { classroomsData as occupancyData } from '../available-rooms-script.js';
 import { t } from '../i18n.js';
+import { haptics, defaultPatterns } from './haptics.js';
 
 // ---------- CONSTANTS ----------
 
@@ -262,7 +263,7 @@ class ClassroomDetail {
     this._overlay.innerHTML = `
       ${classroom.idfoto ? `<div class="detail-photo-container"><img class="detail-photo" alt=""></div>` : ''}
       <div class="detail-header">
-        <h1 class="detail-title">${classroom.name}</h1>
+        <h1 class="detail-title" role="button" tabindex="0">${classroom.name}</h1>
       </div>
       <div class="detail-content">
         <p class="detail-subtitle secondary">
@@ -287,33 +288,64 @@ class ClassroomDetail {
         </section>
       </div>
     `;
+
+    // Title click -> manual refresh of photo and schedule
+    this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {
+      haptics.trigger(defaultPatterns.success);
+      this._loadSchedule(classroom.id);
+      if (classroom.idfoto) this._loadPhoto(classroom.id, classroom.idfoto);
+    });
   }
 
   // ---------- RENDER: HERO PHOTO ----------
 
   async _loadPhoto(classroomId, idfoto) {
-    try {
-      // Always fetch a fresh URL — the docmanager endpoint requires an active
-      // polimi.it session that gets established by this API call, so we cannot
-      // skip it even when we have a previously-resolved URL.
-      const resp = await fetch(`${PHOTO_API}/${idfoto}`, { credentials: 'omit' });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const text = await resp.text();
-      // Response is raw text; extract the first URL it contains
-      const url = text.match(/https?:\/\/\S+/)?.[0];
-      if (!url) throw new Error('no URL in response');
+    if (this._currentId !== classroomId) return;
 
-      // Stale check: user may have navigated away while we were fetching
+    try {
+      // Step 1: Fetch the fresh URL.
+      // The polimi API establishes a session/cookie here required for step 2.
+      const resp = await fetch(`${PHOTO_API}/${idfoto}`, { credentials: 'omit' });
+      if (!resp.ok) throw new Error(`URL fetch failed: ${resp.status}`);
+      const text = await resp.text();
+      const url = text.match(/https?:\/\/\S+/)?.[0];
+      if (!url) throw new Error('No URL in response');
+
       if (this._currentId !== classroomId) return;
 
-      const container = this._overlay.querySelector('.detail-photo-container');
-      const img = container?.querySelector('.detail-photo');
-      if (!container || !img) return;
+      // Ensure we have a container for the photo (it might have been removed on previous error)
+      let container = this._overlay.querySelector('.detail-photo-container');
+      if (!container) {
+        const header = this._overlay.querySelector('.detail-header');
+        if (header) {
+          header.insertAdjacentHTML('beforebegin', '<div class="detail-photo-container"><img class="detail-photo" alt=""></div>');
+          container = this._overlay.querySelector('.detail-photo-container');
+        }
+      }
 
-      img.onload  = () => { img.classList.add('loaded'); container.classList.add('loaded'); };
-      img.onerror = () => container.remove();
+      const img = container?.querySelector('.detail-photo');
+      if (!img) return;
+
+      // Reset state for new attempt
+      img.classList.remove('loaded');
+      container.classList.remove('loaded');
+
+      // Step 2: Assign to img.src. 
+      // We use the tag directly to avoid CORS fetch issues while still 
+      // triggering the browser's network request for the image.
+      img.onload = () => {
+        img.classList.add('loaded');
+        container.classList.add('loaded');
+      };
+      img.onerror = () => {
+        // If it fails (e.g. cookie error), we remove the container so it's clean,
+        // but it can be recreated by a future _loadPhoto call (like a refresh).
+        if (this._currentId === classroomId) container.remove();
+      };
+      
       img.src = url;
-    } catch {
+    } catch (err) {
+      console.error('Classroom photo load error:', err);
       if (this._currentId !== classroomId) return;
       this._overlay.querySelector('.detail-photo-container')?.remove();
     }

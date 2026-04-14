@@ -153,6 +153,8 @@ body.detail-open .footer {
   margin: 0 auto 0.25rem;
   color: var(--text-color-primary);
   width: fit-content;
+  cursor: pointer;
+  user-select: none;
 }
 
 /* ── Content ─────────────────────────────────────────────────────── */

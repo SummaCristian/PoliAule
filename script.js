@@ -450,15 +450,16 @@ function setupDatePicker() {
   const elements = container.querySelectorAll('.date-element-container');
 
   function placeIndicator(el) {
-    const containerRect = container.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
+    // Use offsetLeft/offsetWidth/offsetHeight instead of getBoundingClientRect()
+    // so that CSS transform animations on ancestor elements (e.g. the tab appear
+    // animation's scale(0.95)) don't skew the measurements.
     const paddingLeft = parseFloat(getComputedStyle(container).paddingLeft);
-    const x = elRect.left - containerRect.left - paddingLeft;
+    const x = el.offsetLeft - paddingLeft;
 
     // Store x as a CSS variable so the shake keyframe can reference it
     indicator.style.setProperty('--indicator-x', `${x}px`);
-    indicator.style.width = `${elRect.width}px`;
-    indicator.style.height = `${elRect.height}px`;
+    indicator.style.width = `${el.offsetWidth}px`;
+    indicator.style.height = `${el.offsetHeight}px`;
     indicator.style.transform = `translateX(${x}px)`;
     indicator.style.opacity = '1';
   }

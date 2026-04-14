@@ -990,6 +990,25 @@ ul li::marker {
   transform: rotate(45deg);
 }
 
+@supports (anchor-name: --a) {
+  .popover {
+    position: fixed;
+    inset: auto;
+    top: anchor(bottom);
+    left: anchor(left);
+    margin: 8px 0 0 0;
+    position-try-fallbacks: --popover-above, flip-inline, --popover-above flip-inline;
+    position-visibility: anchors-visible;
+  }
+
+  @position-try --popover-above {
+    inset: auto;
+    bottom: anchor(top);
+    left: anchor(left);
+    margin: 0 0 8px 0;
+  }
+}
+
 .popover-title {
   font-size: 1.65rem;
 

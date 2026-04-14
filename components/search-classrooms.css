@@ -228,6 +228,17 @@ mark {
   animation: dropdown-appear 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@supports (anchor-name: --a) {
+  .breadcrumb-dropdown {
+    inset: auto;
+    top: anchor(bottom);
+    left: anchor(left);
+    margin-top: 6px;
+    position-try-fallbacks: flip-block, flip-inline;
+    position-visibility: anchors-visible;
+  }
+}
+
 .breadcrumb-dropdown-item {
   display: flex;
   flex-direction: row;

@@ -1,6 +1,8 @@
 import { t, onLanguageSwitch } from './i18n.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 
+const supportsAnchor = CSS.supports('anchor-name: --a');
+
 const FEATURE_ICONS = {
   4:   { icon: 'videocam',            key: 'features.videoProjector' },
   5:   { icon: 'mic',                 key: 'features.radioMic' },
@@ -204,18 +206,23 @@ function openBreadcrumbDropdown(anchor, items) {
   activeDropdown = dropdown;
   anchor.setAttribute('aria-expanded', 'true');
 
-  // Position below the anchor button, flush-left, clamped to viewport
-  const rect = anchor.getBoundingClientRect();
-  dropdown.style.left = `${rect.left}px`;
-  dropdown.style.top = `${rect.bottom + 6}px`;
+  if (supportsAnchor) {
+    anchor.style.anchorName = '--breadcrumb-dropdown';
+    dropdown.style.positionAnchor = '--breadcrumb-dropdown';
+  } else {
+    // Fallback: position manually using getBoundingClientRect
+    const rect = anchor.getBoundingClientRect();
+    dropdown.style.left = `${rect.left}px`;
+    dropdown.style.top = `${rect.bottom + 6}px`;
 
-  requestAnimationFrame(() => {
-    if (!activeDropdown) return;
-    const ddRect = dropdown.getBoundingClientRect();
-    if (ddRect.right > window.innerWidth - 8) {
-      dropdown.style.left = `${Math.max(8, window.innerWidth - ddRect.width - 8)}px`;
-    }
-  });
+    requestAnimationFrame(() => {
+      if (!activeDropdown) return;
+      const ddRect = dropdown.getBoundingClientRect();
+      if (ddRect.right > window.innerWidth - 8) {
+        dropdown.style.left = `${Math.max(8, window.innerWidth - ddRect.width - 8)}px`;
+      }
+    });
+  }
 
   // Dismiss on outside click (deferred so this very click doesn't close it)
   const onOutsideClick = (e) => {
@@ -229,6 +236,9 @@ function openBreadcrumbDropdown(anchor, items) {
 
 function closeActiveDropdown() {
   if (!activeDropdown) return;
+  if (supportsAnchor && activeDropdown._anchor) {
+    activeDropdown._anchor.style.anchorName = '';
+  }
   if (activeDropdown._onOutsideClick) {
     document.removeEventListener('click', activeDropdown._onOutsideClick);
   }

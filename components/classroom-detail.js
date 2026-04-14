@@ -474,7 +474,7 @@ class ClassroomDetail {
         String(today.getDate()).padStart(2, '0'),
       ].join('');
 
-      const DAY_START = 8 * 60 + 15;
+      const DAY_START = 7 * 60 + 15;
       const DAY_END = 20 * 60 + 15;
       const total = DAY_END - DAY_START;
 
@@ -500,6 +500,8 @@ class ClassroomDetail {
         days.push({ dayData, date: curr });
         prevDate = curr;
       }
+
+      const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
 
       const rowsHtml = days.map(({ dayData, date }) => {
         const isSunday = !dayData;
@@ -551,6 +553,7 @@ class ClassroomDetail {
               <div class="timeline-hover-cursor" hidden></div>
               <div class="detail-schedule-bar">
                 ${blocksHtml}
+                ${isToday && nowMin >= DAY_START && nowMin <= DAY_END ? `<div class="timeline-now-bar-line" style="--pos:${((nowMin - DAY_START) / total * 100).toFixed(2)}%"></div>` : ''}
                 <div class="timeline-hover-line" hidden></div>
               </div>
             </div>
@@ -563,7 +566,6 @@ class ClassroomDetail {
         return;
       }
 
-      const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
       const nowTickHtml = nowMin >= DAY_START && nowMin <= DAY_END
         ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${((nowMin - DAY_START) / total * 100).toFixed(2)}%">${t('timepicker.now')}</div>`
         : '';
@@ -669,15 +671,28 @@ class ClassroomDetail {
         if (!cursor || !line) return;
 
         const rect = bar.getBoundingClientRect();
-        const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const isMobileVertical = window.matchMedia('(max-width: 599px)').matches;
+
+        const fraction = isMobileVertical
+          ? Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
+          : Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         const minutes = Math.round(DAY_START + fraction * total);
         const pct = `${(fraction * 100).toFixed(2)}%`;
 
-        cursor.style.left = pct;
+        if (isMobileVertical) {
+          cursor.style.top = pct;
+          cursor.style.left = '';
+          line.style.top = pct;
+          line.style.left = '';
+        } else {
+          cursor.style.left = pct;
+          cursor.style.top = '';
+          line.style.left = pct;
+          line.style.top = '';
+        }
+
         cursor.textContent = minutesToTimeDisplay(minutes);
         cursor.hidden = false;
-
-        line.style.left = pct;
         line.hidden = false;
       });
       container.addEventListener('mouseleave', () => {

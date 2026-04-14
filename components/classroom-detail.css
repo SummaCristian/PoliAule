@@ -518,13 +518,15 @@ body.detail-open .footer {
 
 /* ── Vertical layout (mobile) ────────────────────────────────────── */
 
-/* Day selector: mobile-only */
-.detail-schedule-day-selector {
+/* Day selector and now-bar-line: mobile-only */
+.detail-schedule-day-selector,
+.timeline-now-bar-line {
   display: none;
 }
 
 @media (max-width: 599px) {
-  .detail-schedule-day-selector {
+  .detail-schedule-day-selector,
+  .timeline-now-bar-line {
     display: block;
   }
 
@@ -579,10 +581,35 @@ body.detail-open .footer {
   }
 
   .detail-schedule-ticks .timeline-time-indicator--now {
-    left: auto;
-    right: -0.25rem;
+    left: 0;
+    right: auto;
     top: var(--pos);
     transform: translateY(-50%);
+    transform-origin: right center;
+    animation: now-indicator-appear-mobile 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+  }
+
+  /* Arrow points right instead of down */
+  .detail-schedule-ticks .timeline-time-indicator--now::after {
+    top: 50%;
+    left: 100%;
+    right: auto;
+    border-top-color: transparent;
+    border-left-color: color-mix(in srgb, var(--background-color-secondary) 50%, #2196F3 50%);
+    transform: translateY(-50%);
+  }
+
+  @keyframes now-indicator-appear-mobile {
+    from {
+      opacity: 0;
+      transform: translateX(14px) translateY(-50%);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) translateY(-50%);
+      filter: blur(0);
+    }
   }
 
   /* Grid: fixed to bar width so justify-content on the parent can center it */
@@ -638,10 +665,42 @@ body.detail-open .footer {
     display: none;
   }
 
-  /* Hide desktop-only hover elements */
-  .timeline-hover-cursor,
-  .timeline-hover-line {
-    display: none !important;
+  /* Hover cursor: floats to the right of the bar, vertically centred on the mouse */
+  .detail-schedule-bar-wrapper .timeline-hover-cursor {
+    left: calc(100% + 0.5rem);
+    top: 0; /* overridden by JS */
+    right: auto;
+    transform: translateY(-50%);
+  }
+
+  /* No downward arrow — cursor is beside the bar, not above it */
+  .detail-schedule-bar-wrapper .timeline-hover-cursor::before,
+  .detail-schedule-bar-wrapper .timeline-hover-cursor::after {
+    display: none;
+  }
+
+  /* Hover line: horizontal sweep across the bar */
+  .detail-schedule-bar .timeline-hover-line {
+    top: 0; /* overridden by JS */
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    transform: translateY(-50%);
+  }
+
+  /* Now indicator line inside today's bar */
+  .timeline-now-bar-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--pos);
+    height: 2px;
+    background: var(--text-color-accent);
+    transform: translateY(-50%);
+    z-index: 4;
+    pointer-events: none;
   }
 }
 

@@ -538,7 +538,7 @@ class ClassroomDetail {
           if (e <= s) return '';
           const left  = ((s - DAY_START) / total * 100).toFixed(2);
           const width = ((e - s)         / total * 100).toFixed(2);
-          return `<div class="detail-schedule-block" style="left:${left}%;width:${width}%"></div>`;
+          return `<div class="detail-schedule-block" style="--block-start:${left}%;--block-size:${width}%"></div>`;
         }).join('');
 
         return `
@@ -565,26 +565,87 @@ class ClassroomDetail {
 
       const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
       const nowTickHtml = nowMin >= DAY_START && nowMin <= DAY_END
-        ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="left:${((nowMin - DAY_START) / total * 100).toFixed(2)}%">${t('timepicker.now')}</div>`
+        ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${((nowMin - DAY_START) / total * 100).toFixed(2)}%">${t('timepicker.now')}</div>`
         : '';
 
       const ticksHtml = (() => {
         const ticks = [];
         for (let m = DAY_START; m <= DAY_END; m += 60) {
           const left = ((m - DAY_START) / total * 100).toFixed(2);
-          ticks.push(`<div class="detail-schedule-tick" style="left:${left}%"><span>${minutesToTimeDisplay(m)}</span></div>`);
+          ticks.push(`<div class="detail-schedule-tick" style="--pos:${left}%"><span>${minutesToTimeDisplay(m)}</span></div>`);
         }
         return ticks.join('');
       })();
 
+      // --- Mobile day selector chips ---
+      const selectorItemsHtml = days.map(({ dayData, date }, i) => {
+        const isSunday = !dayData;
+        const raw = date.toLocaleDateString(getLocale(), { weekday: 'narrow' });
+        const dayName = raw.charAt(0).toUpperCase() + raw.slice(1);
+        const dayNum = date.getDate();
+        return `
+          <div class="date-element-container${isSunday ? ' detail-schedule-day--sunday' : ''}" data-day-index="${i}">
+            <span class="date-day-of-week${isSunday ? ' date-sunday' : ''}">${dayName}</span>
+            <span class="date-number">${dayNum}</span>
+          </div>`;
+      }).join('');
+
       container.innerHTML = `
-        <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}</div>
-        <div class="detail-schedule-grid">${rowsHtml}</div>
+        <div class="detail-schedule-day-selector">
+          <div class="date-picker-container detail-schedule-picker">
+            <div class="date-indicator"></div>
+            ${selectorItemsHtml}
+          </div>
+        </div>
+        <div class="detail-schedule-inner">
+          <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}</div>
+          <div class="detail-schedule-grid">${rowsHtml}</div>
+        </div>
       `;
 
       if (localStorage.getItem('poliAule_hideSundays') === 'true') {
         container.classList.add('detail-schedule--hide-sundays');
       }
+
+      // --- Mobile day selector interaction ---
+      const pickerContainer = container.querySelector('.detail-schedule-picker');
+      const indicatorEl = pickerContainer.querySelector('.date-indicator');
+      const gridEl = container.querySelector('.detail-schedule-grid');
+      const rowEls = gridEl.querySelectorAll('.detail-schedule-row');
+
+      function placeSelectorIndicator(chipEl) {
+        const paddingLeft = parseFloat(getComputedStyle(pickerContainer).paddingLeft);
+        const x = chipEl.offsetLeft - paddingLeft;
+        indicatorEl.style.setProperty('--indicator-x', `${x}px`);
+        indicatorEl.style.width = `${chipEl.offsetWidth}px`;
+        indicatorEl.style.height = `${chipEl.offsetHeight}px`;
+        indicatorEl.style.transform = `translateX(${x}px)`;
+        indicatorEl.style.opacity = '1';
+      }
+
+      function selectScheduleDay(index) {
+        pickerContainer.querySelectorAll('.date-element-container').forEach(c => c.classList.remove('active'));
+        const chip = pickerContainer.querySelector(`[data-day-index="${index}"]`);
+        if (chip) {
+          chip.classList.add('active');
+          placeSelectorIndicator(chip);
+        }
+        rowEls.forEach((row, i) => row.classList.toggle('selected', i === index));
+      }
+
+      pickerContainer.querySelectorAll('.date-element-container').forEach(chip => {
+        chip.addEventListener('click', () => {
+          haptics.trigger(defaultPatterns.success);
+          selectScheduleDay(parseInt(chip.dataset.dayIndex));
+        });
+      });
+
+      // Auto-select today, or first available day if today has no data
+      const todayDayIndex = days.findIndex(d => d.dayData?.date === todayKey);
+      const initialDayIndex = todayDayIndex >= 0
+        ? todayDayIndex
+        : days.findIndex(d => d.dayData !== null);
+      selectScheduleDay(Math.max(0, initialDayIndex));
 
       // ---------- TIMELINE HOVER ----------
       let _activeBar = null;

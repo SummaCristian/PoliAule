@@ -407,6 +407,8 @@ body.detail-open .footer {
   position: absolute;
   top: 2px;
   bottom: 2px;
+  left: calc(var(--block-start) + 1px);
+  width: calc(var(--block-size) - 2px);
   border-radius: 3px;
   background: var(--text-color-accent);
   opacity: 0.7;
@@ -428,6 +430,7 @@ body.detail-open .footer {
 .detail-schedule-ticks .timeline-time-indicator--now {
   position: absolute;
   top: 0;
+  left: var(--pos);
   transform: translateX(-50%);
   z-index: 9;
 }
@@ -496,6 +499,7 @@ body.detail-open .footer {
 .detail-schedule-tick {
   position: absolute;
   bottom: 0;
+  left: var(--pos);
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -510,6 +514,135 @@ body.detail-open .footer {
   font-size: 0.6rem;
   color: var(--text-color-secondary);
   font-weight: 600;
+}
+
+/* ── Vertical layout (mobile) ────────────────────────────────────── */
+
+/* Day selector: mobile-only */
+.detail-schedule-day-selector {
+  display: none;
+}
+
+@media (max-width: 599px) {
+  .detail-schedule-day-selector {
+    display: block;
+  }
+
+  /* Override date-picker-container defaults for this context */
+  .detail-schedule-picker {
+    margin-top: 0;
+    margin-bottom: 0; /* gap handled by container */
+    max-width: 100%;
+    opacity: 1 !important; /* date-picker-container starts at 0 until JS fires */
+  }
+
+  /* Container: column — selector on top, then time axis + bar below */
+  #detail-schedule-container {
+    --schedule-bar-height: 840px;
+    --bar-width: 26rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  /* Inner row: time axis on the left, single day bar on the right */
+  .detail-schedule-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.625rem;
+  }
+
+  /* Time axis */
+  .detail-schedule-ticks {
+    flex-shrink: 0;
+    width: 3.5rem;
+    height: var(--schedule-bar-height);
+    margin-top: 0;
+    margin-left: 0;
+    margin-bottom: 0;
+    overflow: visible;
+  }
+
+  .detail-schedule-tick span {
+    font-size: 0.7rem;
+  }
+
+  .detail-schedule-tick {
+    left: auto;
+    right: 0;
+    bottom: auto;
+    top: var(--pos);
+    transform: translateY(-50%);
+    text-align: right;
+  }
+
+  .detail-schedule-ticks .timeline-time-indicator--now {
+    left: auto;
+    right: -0.25rem;
+    top: var(--pos);
+    transform: translateY(-50%);
+  }
+
+  /* Grid: fixed to bar width so justify-content on the parent can center it */
+  .detail-schedule-grid {
+    flex: 0 1 var(--bar-width);
+    flex-direction: row;
+    gap: 0;
+    min-width: 0;
+  }
+
+  /* All day rows hidden on mobile; only .selected is shown */
+  .detail-schedule-row {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1;
+    gap: 0;
+  }
+
+  .detail-schedule-row.selected {
+    display: flex;
+  }
+
+  /* Label redundant — selector shows the current day */
+  .detail-schedule-label {
+    display: none;
+  }
+
+  .detail-schedule-bar-wrapper {
+    flex: 1;
+  }
+
+  /* Vertical bar */
+  .detail-schedule-bar {
+    height: var(--schedule-bar-height);
+    width: 100%;
+    max-width: var(--bar-width);
+    border-radius: 0.75rem;
+  }
+
+  /* Blocks: vertical positioning using the CSS vars */
+  .detail-schedule-block {
+    top: calc(var(--block-start) + 1px);
+    height: calc(var(--block-size) - 2px);
+    left: 2px;
+    right: 2px;
+    width: auto;
+    bottom: auto;
+  }
+
+  /* Hide Sunday chips when hide-sundays is active */
+  .detail-schedule--hide-sundays .detail-schedule-day--sunday {
+    display: none;
+  }
+
+  /* Hide desktop-only hover elements */
+  .timeline-hover-cursor,
+  .timeline-hover-line {
+    display: none !important;
+  }
 }
 
 /* ── Skeleton loading ─────────────────────────────────────────────── */

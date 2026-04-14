@@ -206,7 +206,7 @@ mark {
 
 .breadcrumb-dropdown {
   position: fixed;
-  z-index: 2000;
+  z-index: 900;
 
   min-width: 160px;
   max-width: 260px;

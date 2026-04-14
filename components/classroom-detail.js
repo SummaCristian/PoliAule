@@ -1,6 +1,13 @@
 import { classroomsData as occupancyData } from '../available-rooms-script.js';
 import { t } from '../i18n.js';
 import { haptics, defaultPatterns } from './haptics.js';
+import { createTimeFormatter } from '../utils/time-format.js';
+
+function minutesToTimeDisplay(minutes) {
+  const d = new Date();
+  d.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
+  return createTimeFormatter({ hour: 'numeric', minute: '2-digit' }).format(d);
+}
 
 // ---------- CONSTANTS ----------
 
@@ -151,6 +158,10 @@ class ClassroomDetail {
         const titleEl = this._overlay.querySelector('.detail-title');
         if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
         if (titleEl) titleEl.style.viewTransitionName = 'classroom-detail-name';
+
+        // Load data immediately after rendering in the transition callback
+        this._loadSchedule(id);
+        if (entry.classroom.idfoto) this._loadPhoto(id, entry.classroom.idfoto);
       });
 
       vt.finished.then(() => {
@@ -176,10 +187,11 @@ class ClassroomDetail {
         this._overlay.classList.add('visible');
         window.scrollTo(0, 0);
       });
-    }
 
-    this._loadSchedule(id);
-    if (entry.classroom.idfoto) this._loadPhoto(id, entry.classroom.idfoto);
+      // Load data immediately after rendering in the fallback branch
+      this._loadSchedule(id);
+      if (entry.classroom.idfoto) this._loadPhoto(id, entry.classroom.idfoto);
+    }
   }
 
   // ---------- CLOSE ----------
@@ -383,85 +395,152 @@ class ClassroomDetail {
   // ---------- RENDER: WEEKLY SCHEDULE ----------
 
   _loadSchedule(classroomId) {
-    const data      = occupancyData; // live ES module binding
+    const data      = occupancyData; 
     const container = document.getElementById('detail-schedule-container');
-    if (!container) return;
 
-    if (!data?.length) {
+    if (!container) {
+      console.warn('ClassroomDetail: Schedule container not found in DOM');
+      return;
+    }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      console.warn('ClassroomDetail: No occupancy data found or empty');
       container.innerHTML = `<p class="secondary">${t('detail.noData')}</p>`;
       return;
     }
 
-    const today    = new Date();
-    const todayKey = [
-      today.getFullYear(),
-      String(today.getMonth() + 1).padStart(2, '0'),
-      String(today.getDate()).padStart(2, '0'),
-    ].join('');
+    try {
+      const today    = new Date();
+      const todayKey = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, '0'),
+        String(today.getDate()).padStart(2, '0'),
+      ].join('');
 
-    const DAY_START = 8 * 60;
-    const DAY_END   = 20 * 60;
-    const total     = DAY_END - DAY_START;
+      const DAY_START = 8 * 60 + 15;
+      const DAY_END   = 20 * 60;
+      const total     = DAY_END - DAY_START;
 
-    const rowsHtml = data.map(dayData => {
-      let occupancy = [];
-      outer: for (const c of dayData.campuses ?? []) {
-        for (const b of c.buildings ?? []) {
-          const room = b.classrooms?.find(r => r.id === classroomId);
-          if (room) { occupancy = room.occupancy ?? []; break outer; }
+      const rowsHtml = data.map(dayData => {
+        if (!dayData || !dayData.date) return '';
+
+        let occupancy = [];
+        outer: for (const c of dayData.campuses ?? []) {
+          for (const b of c.buildings ?? []) {
+            // Flexible ID check (string vs number)
+            const room = b.classrooms?.find(r => String(r.id) === String(classroomId));
+            if (room) { occupancy = room.occupancy ?? []; break outer; }
+          }
         }
+
+        const dateKey = dayData.date;
+        const isToday = dateKey === todayKey;
+        const year    = parseInt(dateKey.slice(0, 4), 10);
+        const month   = parseInt(dateKey.slice(4, 6), 10) - 1;
+        const day     = parseInt(dateKey.slice(6, 8), 10);
+        
+        const date    = new Date(year, month, day);
+        const dayName = date instanceof Date && !isNaN(date) 
+          ? date.toLocaleDateString(undefined, { weekday: 'short' })
+          : '???';
+        const dayNum  = date instanceof Date && !isNaN(date) ? date.getDate() : '?';
+        const monthName = date instanceof Date && !isNaN(date)
+          ? date.toLocaleDateString(undefined, { month: 'short' })
+          : '???';
+
+        const blocksHtml = (occupancy || []).map(slot => {
+          if (!slot.inizio || !slot.fine) return '';
+          const s = Math.max(timeToMinutes(slot.inizio), DAY_START);
+          const e = Math.min(timeToMinutes(slot.fine),   DAY_END);
+          if (e <= s) return '';
+          const left  = ((s - DAY_START) / total * 100).toFixed(2);
+          const width = ((e - s)         / total * 100).toFixed(2);
+          return `<div class="detail-schedule-block" style="left:${left}%;width:${width}%"></div>`;
+        }).join('');
+
+        const now    = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const nowHtml = isToday && nowMin >= DAY_START && nowMin <= DAY_END
+          ? `<div class="detail-schedule-now" style="left:${((nowMin - DAY_START) / total * 100).toFixed(2)}%"></div>`
+          : '';
+
+        return `
+          <div class="detail-schedule-row${isToday ? ' detail-schedule-row--today' : ''}">
+            <div class="detail-schedule-label">
+              <span class="detail-schedule-day">${dayName}</span>
+              <span class="detail-schedule-date secondary">${dayNum} ${monthName}</span>
+            </div>
+            <div class="detail-schedule-bar-wrapper">
+              <div class="timeline-hover-cursor" hidden></div>
+              <div class="detail-schedule-bar">
+                ${blocksHtml}
+                ${nowHtml}
+                <div class="timeline-hover-line" hidden></div>
+              </div>
+            </div>
+          </div>`;
+      }).filter(Boolean).join('');
+
+      if (!rowsHtml) {
+        console.warn('ClassroomDetail: No room matches found in any day of occupancy data');
+        container.innerHTML = `<p class="secondary">${t('detail.noData')}</p>`;
+        return;
       }
 
-      const dateKey   = dayData.date;
-      const isToday   = dateKey === todayKey;
-      const date      = new Date(
-        parseInt(dateKey.slice(0, 4)),
-        parseInt(dateKey.slice(4, 6)) - 1,
-        parseInt(dateKey.slice(6, 8))
-      );
-      const dayName   = date.toLocaleDateString(undefined, { weekday: 'short' });
-      const dayNum    = date.getDate();
-      const monthName = date.toLocaleDateString(undefined, { month: 'short' });
-
-      const blocksHtml = occupancy.map(slot => {
-        const s = Math.max(timeToMinutes(slot.inizio), DAY_START);
-        const e = Math.min(timeToMinutes(slot.fine),   DAY_END);
-        if (e <= s) return '';
-        const left  = ((s - DAY_START) / total * 100).toFixed(2);
-        const width = ((e - s)         / total * 100).toFixed(2);
-        return `<div class="detail-schedule-block" style="left:${left}%;width:${width}%"></div>`;
+      const ticksHtml = [9, 11, 13, 15, 17, 19].map(h => {
+        const left = ((h * 60 - DAY_START) / total * 100).toFixed(2);
+        return `<div class="detail-schedule-tick" style="left:${left}%"><span>${h}:00</span></div>`;
       }).join('');
 
-      const now    = new Date();
-      const nowMin = now.getHours() * 60 + now.getMinutes();
-      const nowHtml = isToday && nowMin >= DAY_START && nowMin <= DAY_END
-        ? `<div class="detail-schedule-now" style="left:${((nowMin - DAY_START) / total * 100).toFixed(2)}%"></div>`
-        : '';
+      container.innerHTML = `
+        <div class="detail-schedule-grid">${rowsHtml}</div>
+        <div class="detail-schedule-ticks">${ticksHtml}</div>
+      `;
 
-      return `
-        <div class="detail-schedule-row${isToday ? ' detail-schedule-row--today' : ''}">
-          <div class="detail-schedule-label">
-            <span class="detail-schedule-day">${dayName}</span>
-            <span class="detail-schedule-date secondary">${dayNum} ${monthName}</span>
-          </div>
-          <div class="detail-schedule-bar-wrapper">
-            <div class="detail-schedule-bar">
-              ${blocksHtml}
-              ${nowHtml}
-            </div>
-          </div>
-        </div>`;
-    }).join('');
+      // ---------- TIMELINE HOVER ----------
+      let _activeBar = null;
+      container.addEventListener('mousemove', e => {
+        const bar = e.target.closest?.('.detail-schedule-bar');
 
-    const ticksHtml = [8, 10, 12, 14, 16, 18, 20].map(h => {
-      const left = ((h * 60 - DAY_START) / total * 100).toFixed(2);
-      return `<div class="detail-schedule-tick" style="left:${left}%"><span>${h}:00</span></div>`;
-    }).join('');
+        if (_activeBar && _activeBar !== bar) {
+          const prevCursor = _activeBar.closest('.detail-schedule-bar-wrapper')?.querySelector('.timeline-hover-cursor');
+          if (prevCursor) prevCursor.hidden = true;
+          _activeBar.querySelector('.timeline-hover-line').hidden = true;
+          _activeBar = null;
+        }
 
-    container.innerHTML = `
-      <div class="detail-schedule-grid">${rowsHtml}</div>
-      <div class="detail-schedule-ticks">${ticksHtml}</div>
-    `;
+        if (!bar) return;
+        _activeBar = bar;
+
+        const wrapper = bar.closest('.detail-schedule-bar-wrapper');
+        const cursor = wrapper?.querySelector('.timeline-hover-cursor');
+        const line = bar.querySelector('.timeline-hover-line');
+        if (!cursor || !line) return;
+
+        const rect = bar.getBoundingClientRect();
+        const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const minutes = Math.round(DAY_START + fraction * total);
+        const pct = `${(fraction * 100).toFixed(2)}%`;
+
+        cursor.style.left = pct;
+        cursor.textContent = minutesToTimeDisplay(minutes);
+        cursor.hidden = false;
+
+        line.style.left = pct;
+        line.hidden = false;
+      });
+      container.addEventListener('mouseleave', () => {
+        if (_activeBar) {
+          const prevCursor = _activeBar.closest('.detail-schedule-bar-wrapper')?.querySelector('.timeline-hover-cursor');
+          if (prevCursor) prevCursor.hidden = true;
+          _activeBar.querySelector('.timeline-hover-line').hidden = true;
+          _activeBar = null;
+        }
+      });
+    } catch (err) {
+      console.error('ClassroomDetail: Error rendering schedule:', err);
+      container.innerHTML = `<p class="secondary">${t('detail.noData')}</p>`;
+    }
   }
 }
 

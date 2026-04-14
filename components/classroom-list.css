@@ -356,7 +356,7 @@
   background: color-mix(in srgb, var(--text-color-primary) 22%, transparent);
 }
 
-.timeline-hover-cursor {
+.timeline-bar-wrapper .timeline-hover-cursor {
   position: absolute;
   top: 0;
   transform: translateX(-50%);
@@ -377,7 +377,7 @@
 }
 
 /* Border triangle (1px larger, in border color, sits behind the fill triangle) */
-.timeline-hover-cursor::before {
+.timeline-bar-wrapper .timeline-hover-cursor::before {
   content: '';
   position: absolute;
   top: 100%;
@@ -388,7 +388,7 @@
 }
 
 /* Fill triangle (covers the border triangle except the bottom tip) */
-.timeline-hover-cursor::after {
+.timeline-bar-wrapper .timeline-hover-cursor::after {
   content: '';
   position: absolute;
   top: calc(100% - 1px);
@@ -398,7 +398,7 @@
   border-top-color: var(--background-color);
 }
 
-.timeline-hover-line {
+.timeline-bar .timeline-hover-line {
   position: absolute;
   top: 0;
   bottom: 0;

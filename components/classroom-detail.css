@@ -408,30 +408,82 @@ body.detail-open .footer {
   top: 2px;
   bottom: 2px;
   border-radius: 3px;
-  background: color-mix(in srgb, #e74c3c 70%, transparent);
+  background: var(--text-color-accent);
+  opacity: 0.7;
 }
 
-.detail-schedule-now {
+.detail-schedule-row--sunday {
+  opacity: 0.6;
+}
+
+.detail-schedule-row--sunday .detail-schedule-bar {
+  background: color-mix(in srgb, #ff0000 5%, transparent);
+  border-color: color-mix(in srgb, #ff0000 10%, transparent);
+}
+
+.detail-schedule-bar-wrapper .timeline-hover-cursor {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%) translateY(calc(-100% - 8px));
+
+  background: var(--background-color);
+  color: var(--text-color-primary);
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 18%, transparent);
+  border-radius: 0.5rem;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+
+  pointer-events: none;
+  user-select: none;
+  z-index: 10;
+}
+
+/* Border triangle (1px larger, in border color, sits behind the fill triangle) */
+.detail-schedule-bar-wrapper .timeline-hover-cursor::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
+}
+
+/* Fill triangle (covers the border triangle except the bottom tip) */
+.detail-schedule-bar-wrapper .timeline-hover-cursor::after {
+  content: '';
+  position: absolute;
+  top: calc(100% - 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--background-color);
+}
+
+.detail-schedule-bar .timeline-hover-line {
   position: absolute;
   top: 0;
   bottom: 0;
   width: 2px;
-  background: var(--text-color-accent);
-  border-radius: 1px;
-  z-index: 1;
-}
-
-/* Tick labels below the schedule */
-.detail-schedule-ticks {
-  position: relative;
-  height: 1.1rem;
-  margin-left: calc(3.5rem + 0.75rem); /* align with bars */
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
+  pointer-events: none;
+  z-index: 5;
 }
 
 .detail-schedule-tick {
   position: absolute;
   transform: translateX(-50%);
   pointer-events: none;
+}
+
+
+.detail-schedule-tick--quarter {
+  opacity: 0.4;
+  font-size: 0.5rem;
 }
 
 .detail-schedule-tick span {

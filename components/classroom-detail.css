@@ -540,7 +540,7 @@ body.detail-open .footer {
 
   /* Container: column — selector on top, then time axis + bar below */
   #detail-schedule-container {
-    --schedule-bar-height: 840px;
+    --schedule-bar-height: clamp(280px, 60svh, 700px);
     --bar-width: 26rem;
     display: flex;
     flex-direction: column;

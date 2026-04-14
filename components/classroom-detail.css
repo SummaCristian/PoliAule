@@ -32,6 +32,7 @@ body.detail-open .footer {
 /* ── Hero photo ─────────────────────────────────────────────────── */
 
 .detail-photo-container {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -98,6 +99,40 @@ body.detail-open .footer {
   transform: scale(1);
 }
 
+.detail-photo-gradient {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.detail-photo.loaded + .detail-photo-gradient {
+  opacity: 1;
+}
+
+@media (max-width: 599px) {
+  .detail-photo-gradient {
+    /* Gradient Blur: the secret is using a mask to only blur the bottom. */
+    top: auto;
+    height: 42%;
+    
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    
+    /* Fade the blur itself out at the top. 
+       A 10% stop keeps it solid at the very bottom without feeling heavy. */
+    mask-image: linear-gradient(to top, black 10%, transparent);
+    -webkit-mask-image: linear-gradient(to top, black 10%, transparent);
+
+    /* Also a background color to blend perfectly into the content area. */
+    background: linear-gradient(to top, 
+      var(--background-color) 5%, 
+      transparent 100%
+    );
+  }
+}
+
 /* ── Header ─────────────────────────────────────────────────────── */
 
 /* Back button lives in .header-nav-row, pinned to the left while tabbar stays centered */
@@ -112,14 +147,62 @@ body.detail-open .footer {
 }
 
 .detail-header {
-  padding: 1rem 1.25rem 0;
+  padding: 1.25rem 1.25rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  align-items: flex-start; /* Mobile default */
+}
+
+@media (min-width: 600px) {
+  .detail-header {
+    align-items: center; /* Desktop centered */
+  }
 }
 
 @media (max-width: 599px) {
   .detail-header {
-    /* Add some "breath" after the immersive photo on mobile */
-    padding-top: 1.5rem;
+    /* Pull it up to sit on top of the blurred hero image section */
+    margin-top: -6rem;
+    padding-top: 1rem;
+    position: relative;
+    z-index: 2; /* Stay above the blur layer */
   }
+
+  .detail-title {
+    /* Align perfectly with the floating back button */
+    padding-top: 0.25rem;
+  }
+}
+
+.detail-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-color-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.detail-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+}
+
+.detail-stat .material-symbols-outlined {
+  font-size: 1.1rem !important;
+  color: var(--text-color-accent);
 }
 
 .detail-back-btn {
@@ -180,29 +263,27 @@ body.detail-open .footer {
   margin-left: -0.125rem;
 }
 
-.detail-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  margin: 0 auto 0.25rem;
-  color: var(--text-color-primary);
-  width: fit-content;
-  cursor: pointer;
-  user-select: none;
-}
-
 /* ── Content ─────────────────────────────────────────────────────── */
 
 .detail-content {
-  padding: 1.25rem 1.25rem 4rem;
+  padding: 1rem 1.25rem 4rem;
   max-width: 680px;
   margin: 0 auto;
   text-align: left;
 }
 
 .detail-subtitle {
-  margin: 0 0 2rem;
+  margin: 0 0 1.5rem;
   font-size: 0.95rem;
   font-weight: 600;
+  text-align: left;
+}
+
+@media (min-width: 600px) {
+  .detail-subtitle {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
 }
 
 /* ── Section ─────────────────────────────────────────────────────── */

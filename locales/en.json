@@ -100,6 +100,8 @@
 
   "detail.features": "Features",
   "detail.noFeatures": "No features listed",
+  "detail.seats": "Seats",
+  "detail.disabledSeats": "Accessible seats",
   "detail.weeklySchedule": "Weekly Schedule",
   "detail.noData": "No schedule data available",
 

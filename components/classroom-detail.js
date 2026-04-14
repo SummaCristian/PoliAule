@@ -275,15 +275,30 @@ class ClassroomDetail {
       .join('');
 
     this._overlay.innerHTML = `
-      ${classroom.idfoto ? `<div class="detail-photo-container"><img class="detail-photo" alt=""></div>` : ''}
+      ${classroom.idfoto ? `
+        <div class="detail-photo-container">
+          <img class="detail-photo" alt="">
+          <div class="detail-photo-gradient"></div>
+        </div>` : ''}
       <div class="detail-header">
         <h1 class="detail-title" role="button" tabindex="0">${classroom.name}</h1>
-      </div>
-      <div class="detail-content">
         <p class="detail-subtitle secondary">
           ${t('building.prefix')} ${building.name} &middot; ${getCampusDisplayName(campus)}
         </p>
-
+        <div class="detail-stats">
+          <div class="detail-stat">
+            <span class="material-symbols-outlined">groups</span>
+            <span>${classroom.capienza} ${t('detail.seats')}</span>
+          </div>
+          ${classroom.posti_disabili ? `
+            <div class="detail-stat">
+              <span class="material-symbols-outlined">accessible</span>
+              <span>${classroom.posti_disabili} ${t('detail.disabledSeats')}</span>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+      <div class="detail-content">
         <section class="detail-section">
           <h2 class="detail-section-title">${t('detail.features')}</h2>
           ${featuresHtml

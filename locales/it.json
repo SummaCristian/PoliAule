@@ -100,6 +100,8 @@
 
   "detail.features": "Dotazioni",
   "detail.noFeatures": "Nessuna dotazione",
+  "detail.seats": "Posti",
+  "detail.disabledSeats": "Posti disabili",
   "detail.weeklySchedule": "Orario settimanale",
   "detail.noData": "Nessun dato disponibile",
 

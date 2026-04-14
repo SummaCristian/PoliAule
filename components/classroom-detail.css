@@ -38,6 +38,22 @@ body.detail-open .footer {
   overflow: hidden;
   background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
   animation: detail-skeleton-pulse 1.4s ease-in-out infinite;
+
+  align-self: center;
+}
+
+@media (min-width: 600px) {
+  .detail-photo-container {
+    width: 60%;
+
+    border-radius: 1rem;
+  }
+}
+
+@media (min-width: 1000px) {
+  .detail-photo-container {
+    width: 40%;
+  }
 }
 
 .detail-photo-container.loaded {

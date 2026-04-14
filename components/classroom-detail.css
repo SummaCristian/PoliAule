@@ -49,7 +49,10 @@ body.detail-open .footer {
 @media (max-width: 599px) {
   .detail-photo-container {
     width: 100%;
-    aspect-ratio: 4 / 3;
+    /* Stabilize height: no longer just a byproduct of width. */
+    aspect-ratio: auto;
+    height: 38vh;
+    min-height: 280px;
     border-radius: 0;
     
     /* Pull it up to sit exactly behind the entire header.
@@ -113,21 +116,32 @@ body.detail-open .footer {
 
 @media (max-width: 599px) {
   .detail-photo-gradient {
-    /* Gradient Blur: the secret is using a mask to only blur the bottom. */
+    /* Gradient Blur: a more sophisticated approach using a taller, fixed-height 
+       area and a smoother mask to ensure the blur feels substantial on all screens. */
     top: auto;
-    height: 42%;
+    height: 180px; /* Consistent blur height regardless of image height */
     
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
     
-    /* Fade the blur itself out at the top. 
-       A 10% stop keeps it solid at the very bottom without feeling heavy. */
-    mask-image: linear-gradient(to top, black 10%, transparent);
-    -webkit-mask-image: linear-gradient(to top, black 10%, transparent);
+    /* Smoother fade-out for the blur itself. */
+    mask-image: linear-gradient(to top, 
+      black 0%, 
+      black 20%, 
+      rgba(0, 0, 0, 0.5) 60%, 
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(to top, 
+      black 0%, 
+      black 20%, 
+      rgba(0, 0, 0, 0.5) 60%, 
+      transparent 100%
+    );
 
-    /* Also a background color to blend perfectly into the content area. */
+    /* Blend into the background color with a matching gradient. */
     background: linear-gradient(to top, 
-      var(--background-color) 5%, 
+      var(--background-color) 0%, 
+      color-mix(in srgb, var(--background-color) 80%, transparent) 30%,
       transparent 100%
     );
   }

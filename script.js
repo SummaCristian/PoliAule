@@ -310,6 +310,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`;
   }
   collapseBtn.addEventListener('click', () => {
+    haptics.trigger(defaultPatterns.success);
     const allCollapsed = collapseBtn.dataset.state === 'collapsed';
     container.querySelectorAll('.building-card').forEach(card => {
       card.classList.toggle('collapsed', !allCollapsed);
@@ -332,6 +333,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> ${t('results.filterPartial')}`;
     if (!showPartialDefault) container.classList.add('hide-partial');
     toggleBtn.addEventListener('click', () => {
+      haptics.trigger(defaultPatterns.success);
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
       if (!isActive) {

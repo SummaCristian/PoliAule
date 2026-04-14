@@ -83,6 +83,7 @@ export class Popover {
 
     // Toggle this one
     isOpen ? this.close() : this.open();
+    haptics.trigger(defaultPatterns.success);
   }
 
   // Hides the popover when clicking outside of it

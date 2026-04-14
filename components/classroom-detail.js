@@ -65,6 +65,7 @@ class ClassroomDetail {
     this._backBtn = document.getElementById('detail-back-btn');
 
     this._backBtn?.addEventListener('click', () => {
+      haptics.trigger(defaultPatterns.success);
       if (this._openedViaPushState) {
         history.back();
       } else {
@@ -103,6 +104,7 @@ class ClassroomDetail {
       const trigger = e.target.closest('[data-open-classroom]');
       if (!trigger) return;
       e.stopPropagation();
+      haptics.trigger(defaultPatterns.success);
 
       const id = parseInt(trigger.dataset.openClassroom);
 

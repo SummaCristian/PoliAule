@@ -52,10 +52,10 @@
   "campus.milanLabel": "Milano",
   "campus.otherLabel": "Altre città",
 
-  "features.videoProjector": "Videoproiettore",
-  "features.radioMic": "Microfono radio",
+  "features.videoProjector": "Proiettore",
+  "features.radioMic": "Microfono ambientale",
   "features.dimmable": "Oscurabile",
-  "features.wiredDesk": "Presa cablata",
+  "features.wiredDesk": "Presa ethernet",
   "features.powerOutlets": "Prese di corrente",
   "features.videoconf": "Videoconferenza",
 

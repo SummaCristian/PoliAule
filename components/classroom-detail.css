@@ -9,7 +9,6 @@
   flex-direction: column;
   flex: 1;
   background: var(--background-color);
-  overflow-x: hidden;
 
   /* Fallback fade-in for browsers without View Transitions */
   opacity: 0;
@@ -36,41 +35,67 @@ body.detail-open .footer {
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
   animation: detail-skeleton-pulse 1.4s ease-in-out infinite;
 
   align-self: center;
+  flex-shrink: 0;
+
+  transition: box-shadow 0.4s ease, background-color 0.4s ease;
 }
 
-@media (min-width: 600px) {
+/* Mobile "Hero Header" style */
+@media (max-width: 599px) {
   .detail-photo-container {
-    width: 60%;
-
-    border-radius: 1rem;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 0;
+    
+    /* Pull it up to sit exactly behind the entire header.
+       We subtract the 1rem padding of .body-container and the full header height. */
+    margin-top: calc(-1 * var(--header-height, 80px) - 1rem);
+    
+    box-shadow: none;
   }
 }
 
-@media (min-width: 1000px) {
+/* Desktop "Card" style */
+@media (min-width: 600px) {
   .detail-photo-container {
-    width: 40%;
+    width: 92%;
+    max-width: 720px;
+    aspect-ratio: 16 / 9;
+    border-radius: 1.5rem;
+    margin-top: 0.5rem;
+    box-shadow: var(--shadow);
   }
 }
 
 .detail-photo-container.loaded {
   animation: none;
-  background: none;
+  background: var(--background-color-secondary);
+}
+
+@media (min-width: 600px) {
+  .detail-photo-container.loaded {
+    box-shadow: var(--shadow);
+  }
 }
 
 .detail-photo {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
   opacity: 0;
-  transition: opacity 0.35s ease;
+  transform: scale(1.05);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .detail-photo.loaded {
   opacity: 1;
+  transform: scale(1);
 }
 
 /* ── Header ─────────────────────────────────────────────────────── */
@@ -79,6 +104,7 @@ body.detail-open .footer {
 #detail-back-btn {
   position: absolute;
   left: 1rem;
+  z-index: 10; /* Ensure it stays above the immersive photo */
 }
 
 #detail-back-btn[hidden] {
@@ -87,6 +113,13 @@ body.detail-open .footer {
 
 .detail-header {
   padding: 1rem 1.25rem 0;
+}
+
+@media (max-width: 599px) {
+  .detail-header {
+    /* Add some "breath" after the immersive photo on mobile */
+    padding-top: 1.5rem;
+  }
 }
 
 .detail-back-btn {

@@ -1,5 +1,5 @@
 import { classroomsData as occupancyData, SKIP_DAYS } from '../available-rooms-script.js';
-import { t } from '../i18n.js';
+import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { haptics, defaultPatterns } from './haptics.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 
@@ -78,6 +78,24 @@ class ClassroomDetail {
     window.addEventListener('hidesundayschange', (e) => {
       const container = document.getElementById('detail-schedule-container');
       if (container) container.classList.toggle('detail-schedule--hide-sundays', e.detail.hidden);
+    });
+
+    onLanguageSwitch(() => {
+      if (this._currentId === null) return;
+      const entry = this._flatIndex?.get(this._currentId);
+      if (!entry) return;
+      const scrollY = window.scrollY;
+      this._renderContent(entry);
+      this._loadSchedule(this._currentId);
+      if (entry.classroom.idfoto) this._loadPhoto(this._currentId, entry.classroom.idfoto);
+      window.scrollTo(0, scrollY);
+    });
+
+    window.addEventListener('timeformatchange', () => {
+      if (this._currentId === null) return;
+      const scrollY = window.scrollY;
+      this._loadSchedule(this._currentId);
+      window.scrollTo(0, scrollY);
     });
 
     // Click delegation — handles both available-tab info buttons and search-tab cards
@@ -452,9 +470,10 @@ class ClassroomDetail {
       const rowsHtml = days.map(({ dayData, date }) => {
         const isSunday = !dayData;
 
-        const dayName   = date.toLocaleDateString(undefined, { weekday: 'short' });
+        const raw       = date.toLocaleDateString(getLocale(), { weekday: 'short' });
+        const dayName   = raw.charAt(0).toUpperCase() + raw.slice(1);
         const dayNum    = date.getDate();
-        const monthName = date.toLocaleDateString(undefined, { month: 'short' });
+        const monthName = date.toLocaleDateString(getLocale(), { month: 'short' });
 
         if (isSunday) {
           return `
@@ -519,8 +538,7 @@ class ClassroomDetail {
         const ticks = [];
         for (let m = DAY_START; m <= DAY_END; m += 60) {
           const left = ((m - DAY_START) / total * 100).toFixed(2);
-          const h    = Math.floor(m / 60);
-          ticks.push(`<div class="detail-schedule-tick" style="left:${left}%"><span>${h}:15</span></div>`);
+          ticks.push(`<div class="detail-schedule-tick" style="left:${left}%"><span>${minutesToTimeDisplay(m)}</span></div>`);
         }
         return ticks.join('');
       })();

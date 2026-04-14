@@ -47,6 +47,7 @@ class ClassroomDetail {
     this._openTrigger    = null;   // same, kept for reverse morph on close
     this._openedViaPushState = false;
     this._currentId = null;
+    this._savedScrollPos = 0;
   }
 
   // Called from script.js after all data is loaded.
@@ -118,6 +119,9 @@ class ClassroomDetail {
     this._currentId   = id;
     this._openTrigger = pending ?? null;
 
+    // Save scroll position for when we return
+    this._savedScrollPos = window.scrollY;
+
     const nameEl = pending?.nameEl ?? null;
 
     if (document.startViewTransition && this._tabbar) {
@@ -139,6 +143,9 @@ class ClassroomDetail {
         this._renderContent(entry);
         this._overlay.classList.add('visible');
         if (this._backBtn) this._backBtn.removeAttribute('hidden');
+
+        // Reset scroll for the new view
+        window.scrollTo(0, 0);
 
         // Back button in the header is the NEW state destination for classroom-nav
         const titleEl = this._overlay.querySelector('.detail-title');
@@ -165,7 +172,10 @@ class ClassroomDetail {
       this._renderContent(entry);
       if (this._tabbar) this._tabbar.classList.add('detail-open');
       if (this._backBtn) this._backBtn.removeAttribute('hidden');
-      requestAnimationFrame(() => this._overlay.classList.add('visible'));
+      requestAnimationFrame(() => {
+        this._overlay.classList.add('visible');
+        window.scrollTo(0, 0);
+      });
     }
 
     this._loadSchedule(id);
@@ -213,6 +223,9 @@ class ClassroomDetail {
 
         // Room name morphs back too
         if (nameInDom) nameEl.style.viewTransitionName = 'classroom-detail-name';
+
+        // Restore scroll position so VT can morph back to the correct spot
+        window.scrollTo(0, this._savedScrollPos);
       });
 
       vt.finished.then(cleanup).catch(cleanup);
@@ -224,6 +237,7 @@ class ClassroomDetail {
       const hide = () => {
         document.body.classList.remove('detail-open');
         this._overlay.setAttribute('hidden', '');
+        window.scrollTo(0, this._savedScrollPos);
         cleanup();
       };
       this._overlay.addEventListener('transitionend', hide, { once: true });

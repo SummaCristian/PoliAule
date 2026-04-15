@@ -1,5 +1,13 @@
 /* Theme and color schemes */
 :root {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+:root {
   --background-color: #F2F2F2;
   --background-color-secondary: #FFFFFF;
 

@@ -349,17 +349,41 @@ body.detail-open .footer {
 /* ── Weekly Schedule ─────────────────────────────────────────────── */
 
 .detail-schedule-grid {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.5rem;
   margin-bottom: 0.25rem;
 }
 
+/* Vertical grid lines container */
+.detail-schedule-grid-lines {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Match the bar column: label width (3.75rem) + gap (0.875rem) */
+  left: calc(3.75rem + 0.875rem);
+  right: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.detail-schedule-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--pos);
+  width: 1px;
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+}
+
 .detail-schedule-row {
+  position: relative;
   display: grid;
-  grid-template-columns: 3.5rem 1fr;
-  gap: 0.75rem;
+  grid-template-columns: 3.75rem 1fr;
+  gap: 0.875rem;
   align-items: center;
+  z-index: 1;
 }
 
 .detail-schedule-row--today .detail-schedule-label {
@@ -367,7 +391,8 @@ body.detail-open .footer {
 }
 
 .detail-schedule-row--today .detail-schedule-bar {
-  border-color: color-mix(in srgb, var(--text-color-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--text-color-accent) 4%, transparent);
+  border-color: color-mix(in srgb, var(--text-color-accent) 25%, transparent);
 }
 
 .detail-schedule-label {
@@ -379,14 +404,15 @@ body.detail-open .footer {
 }
 
 .detail-schedule-day {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 800;
   color: var(--text-color-primary);
   line-height: 1.1;
 }
 
 .detail-schedule-date {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
+  font-weight: 600;
   line-height: 1.1;
 }
 
@@ -396,22 +422,32 @@ body.detail-open .footer {
 
 .detail-schedule-bar {
   position: relative;
-  height: 1.625rem;
-  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
-  border-radius: 0.4rem;
+  height: 2.125rem;
+  background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
+  border-radius: 0.5rem;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .detail-schedule-block {
   position: absolute;
-  top: 2px;
-  bottom: 2px;
-  left: calc(var(--block-start) + 1px);
-  width: calc(var(--block-size) - 2px);
-  border-radius: 3px;
-  background: var(--text-color-accent);
-  opacity: 0.7;
+  top: 3px;
+  bottom: 3px;
+  /* Increased side gaps for better separation between consecutive blocks */
+  left: calc(var(--block-start) + 2px);
+  width: calc(var(--block-size) - 4px);
+  border-radius: 4px;
+  background: var(--accent-gradient);
+  opacity: 0.85;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  border: 1px solid color-mix(in srgb, var(--text-color-accent) 20%, black);
+}
+
+@media (prefers-color-scheme: dark) {
+  .detail-schedule-block {
+    border-color: color-mix(in srgb, var(--text-color-accent) 20%, white);
+  }
 }
 
 .detail-schedule--hide-sundays .detail-schedule-row--sunday {
@@ -423,16 +459,34 @@ body.detail-open .footer {
 }
 
 .detail-schedule-row--sunday .detail-schedule-bar {
-  background: color-mix(in srgb, #e53935 12%, transparent);
-  border-color: color-mix(in srgb, #e53935 25%, transparent);
+  background: color-mix(in srgb, #e53935 8%, transparent);
+  border-color: color-mix(in srgb, #e53935 15%, transparent);
 }
 
 .detail-schedule-ticks .timeline-time-indicator--now {
   position: absolute;
-  top: 0;
+  top: 1px;
   left: var(--pos);
   transform: translateX(-50%);
-  z-index: 9;
+  z-index: 10;
+  background: #2196F3;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+}
+
+/* Arrow for the now indicator at the top */
+.detail-schedule-ticks .timeline-time-indicator--now::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #2196F3;
 }
 
 .detail-schedule-bar-wrapper .timeline-time-indicator--now {
@@ -446,10 +500,25 @@ body.detail-open .footer {
   left: var(--pos);
   width: 2px;
   transform: translateX(-50%);
-  background: color-mix(in srgb, #2196F3 50%, transparent);
+  background: #2196F3;
   pointer-events: none;
   z-index: 4;
 }
+
+.detail-schedule-now-line::before,
+.detail-schedule-now-line::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: inherit;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.detail-schedule-now-line::before { top: -3px; }
+.detail-schedule-now-line::after { bottom: -3px; }
 
 .detail-schedule-bar-wrapper .timeline-hover-cursor {
   position: absolute;
@@ -507,7 +576,8 @@ body.detail-open .footer {
 .detail-schedule-ticks {
   position: relative;
   height: 3rem;
-  margin-left: calc(3.5rem + 0.75rem);
+  /* Matched to .detail-schedule-row columns: 3.75rem + 0.875rem gap */
+  margin-left: calc(3.75rem + 0.875rem);
   margin-bottom: 0.15rem;
   overflow: visible;
 }
@@ -621,6 +691,9 @@ body.detail-open .footer {
     top: var(--pos);
     transform: translateY(-50%);
     transform-origin: left center;
+    background: #2196F3;
+    color: white;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
     animation: now-indicator-appear-mobile 0.65s linear 0.35s forwards;
   }
 
@@ -630,7 +703,7 @@ body.detail-open .footer {
     right: 100%;
     left: auto;
     border-top-color: transparent;
-    border-right-color: color-mix(in srgb, var(--background-color-secondary) 50%, #2196F3 50%);
+    border-right-color: #2196F3;
     transform: translateY(-50%);
   }
 
@@ -668,6 +741,14 @@ body.detail-open .footer {
     max-width: 18rem;
   }
 
+  .detail-schedule-grid-lines {
+    left: 0;
+  }
+
+  .detail-schedule-now-line {
+    display: none;
+  }
+
   /* All day rows hidden on mobile; only .selected is shown */
   .detail-schedule-row {
     display: none;
@@ -699,12 +780,24 @@ body.detail-open .footer {
 
   /* Blocks: vertical positioning using the CSS vars */
   .detail-schedule-block {
-    top: calc(var(--block-start) + 1px);
-    height: calc(var(--block-size) - 2px);
-    left: 2px;
-    right: 2px;
+    /* Increased gaps for better separation between consecutive blocks on mobile */
+    top: calc(var(--block-start) + 2px);
+    height: calc(var(--block-size) - 4px);
+    left: 3px;
+    right: 3px;
     width: auto;
     bottom: auto;
+    border-radius: 6px;
+  }
+
+  /* Grid lines on mobile: horizontal */
+  .detail-schedule-grid-line {
+    left: 0;
+    right: 0;
+    top: var(--pos);
+    bottom: auto;
+    width: auto;
+    height: 1px;
   }
 
   /* Hide Sunday chips when hide-sundays is active */
@@ -744,11 +837,25 @@ body.detail-open .footer {
     right: 0;
     top: var(--pos);
     height: 2px;
-    background: var(--text-color-accent);
+    background: #2196F3;
     transform: translateY(-50%);
     z-index: 4;
     pointer-events: none;
   }
+
+  .timeline-now-bar-line::before,
+  .timeline-now-bar-line::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    background: inherit;
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+  .timeline-now-bar-line::before { left: -3px; }
+  .timeline-now-bar-line::after { right: -3px; }
 }
 
 /* ── Skeleton loading ─────────────────────────────────────────────── */

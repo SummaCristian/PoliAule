@@ -522,7 +522,6 @@ class ClassroomDetail {
                 <span class="detail-schedule-date secondary">${dayNum} ${monthName}</span>
               </div>
               <div class="detail-schedule-bar-wrapper">
-                ${nowPct !== null ? `<div class="detail-schedule-now-line" style="--pos:${nowPct}%"></div>` : ''}
                 <div class="detail-schedule-bar"></div>
               </div>
             </div>`;
@@ -556,7 +555,6 @@ class ClassroomDetail {
             <div class="detail-schedule-bar-wrapper">
               <div class="timeline-hover-cursor" hidden></div>
               ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>` : ''}
-              ${nowPct !== null ? `<div class="detail-schedule-now-line" style="--pos:${nowPct}%"></div>` : ''}
               <div class="detail-schedule-bar">
                 ${blocksHtml}
                 ${isToday && nowPct !== null ? `<div class="timeline-now-bar-line" style="--pos:${nowPct}%"></div>` : ''}
@@ -585,6 +583,18 @@ class ClassroomDetail {
         return ticks.join('');
       })();
 
+      const gridLinesHtml = (() => {
+        const lines = [];
+        for (let m = DAY_START; m <= DAY_END; m += 60) {
+          const left = ((m - DAY_START) / total * 100).toFixed(2);
+          lines.push(`<div class="detail-schedule-grid-line" style="--pos:${left}%"></div>`);
+        }
+        if (nowPct !== null) {
+          lines.push(`<div class="detail-schedule-now-line" style="--pos:${nowPct}%"></div>`);
+        }
+        return lines.join('');
+      })();
+
       // --- Mobile day selector chips ---
       const selectorItemsHtml = days.map(({ dayData, date }, i) => {
         const isSunday = !dayData;
@@ -607,7 +617,10 @@ class ClassroomDetail {
         </div>
         <div class="detail-schedule-inner">
           <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}</div>
-          <div class="detail-schedule-grid">${rowsHtml}</div>
+          <div class="detail-schedule-grid">
+            <div class="detail-schedule-grid-lines">${gridLinesHtml}</div>
+            ${rowsHtml}
+          </div>
         </div>
       `;
 

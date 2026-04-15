@@ -360,12 +360,12 @@ class ClassroomDetail {
         <div class="detail-stats">
           <div class="detail-stat">
             <span class="material-symbols-outlined">groups</span>
-            <span>${classroom.capienza} ${t('detail.seats')}</span>
+            <span>${classroom.seats} ${t('detail.seats')}</span>
           </div>
-          ${classroom.posti_disabili ? `
+          ${classroom.accessible_seats ? `
             <div class="detail-stat">
               <span class="material-symbols-outlined">accessible</span>
-              <span>${classroom.posti_disabili} ${t('detail.disabledSeats')}</span>
+              <span>${classroom.accessible_seats} ${t('detail.disabledSeats')}</span>
             </div>
           ` : ''}
         </div>

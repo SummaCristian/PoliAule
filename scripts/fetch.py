@@ -88,7 +88,7 @@ def build_output(campuses: list[dict], client: httpx.Client, d: date, no_delay: 
         campus_out = {**_pick(campus, "name", "id", "lat", "long"), "buildings": []}
         for building in campus["buildings"]:
             building_out = {
-                **_pick(building, "name", "lat", "lng", "idEdificio", "address"),
+                **_pick(building, "name", "altName", "lat", "long", "idEdificio", "address"),
                 "classrooms": [],
             }
             for classroom in building["classrooms"]:
@@ -97,7 +97,7 @@ def build_output(campuses: list[dict], client: httpx.Client, d: date, no_delay: 
                 building_out["classrooms"].append(
                     {
                         **_pick(classroom, "name", "id", "features",
-                                "idfoto", "capienza", "posti_disabili", "numero_postazioni"),
+                                "idfoto", "seats", "accessible_seats", "workstations"),
                         "occupancy": occupancy if occupancy is not None else [],
                     }
                 )

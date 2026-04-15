@@ -7,6 +7,7 @@
     "buildings": [
       {
         "name": "2",
+        "altName": "",
         "classrooms": [
           {
             "name": "2.0.1",
@@ -44,8 +45,8 @@
               }
             ],
             "idfoto": 27853006,
-            "capienza": 307,
-            "posti_disabili": 2
+            "seats": 307,
+            "accessible_seats": 2
           },
           {
             "name": "2.0.2",
@@ -78,7 +79,7 @@
               }
             ],
             "idfoto": 48622,
-            "capienza": 300
+            "seats": 300
           },
           {
             "name": "2.1.1",
@@ -116,8 +117,8 @@
               }
             ],
             "idfoto": 48623,
-            "capienza": 144,
-            "numero_postazioni": 144
+            "seats": 144,
+            "workstations": 144
           },
           {
             "name": "2.1.2",
@@ -155,8 +156,8 @@
               }
             ],
             "idfoto": 48624,
-            "capienza": 168,
-            "numero_postazioni": 168
+            "seats": 168,
+            "workstations": 168
           },
           {
             "name": "2.1.3",
@@ -194,7 +195,7 @@
               }
             ],
             "idfoto": 48625,
-            "capienza": 94
+            "seats": 94
           },
           {
             "name": "2.1.4",
@@ -227,7 +228,7 @@
               }
             ],
             "idfoto": 48632,
-            "capienza": 214
+            "seats": 214
           },
           {
             "name": "2.1.5",
@@ -260,7 +261,7 @@
               }
             ],
             "idfoto": 48630,
-            "capienza": 140
+            "seats": 140
           },
           {
             "name": "2.2.1",
@@ -288,8 +289,8 @@
               }
             ],
             "idfoto": 30209229,
-            "capienza": 70,
-            "numero_postazioni": 36
+            "seats": 70,
+            "workstations": 36
           },
           {
             "name": "2.2.2",
@@ -322,8 +323,8 @@
               }
             ],
             "idfoto": 48635,
-            "capienza": 66,
-            "numero_postazioni": 33
+            "seats": 66,
+            "workstations": 33
           },
           {
             "name": "2.2.3",
@@ -356,8 +357,8 @@
               }
             ],
             "idfoto": 48792,
-            "capienza": 56,
-            "numero_postazioni": 28
+            "seats": 56,
+            "workstations": 28
           },
           {
             "name": "2.2.4",
@@ -385,17 +386,18 @@
               }
             ],
             "idfoto": 3309658,
-            "capienza": 82,
-            "numero_postazioni": 41
+            "seats": 82,
+            "workstations": 41
           }
         ],
         "lat": 45.4788189737,
-        "lng": 9.2275284342,
+        "long": 9.2275284342,
         "idEdificio": "52",
         "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "3",
+        "altName": "",
         "classrooms": [
           {
             "name": "3.0.1",
@@ -433,8 +435,8 @@
               }
             ],
             "idfoto": 48636,
-            "capienza": 56,
-            "numero_postazioni": 36
+            "seats": 56,
+            "workstations": 36
           },
           {
             "name": "3.0.2",
@@ -477,8 +479,8 @@
               }
             ],
             "idfoto": 48698,
-            "capienza": 174,
-            "numero_postazioni": 175
+            "seats": 174,
+            "workstations": 175
           },
           {
             "name": "3.0.3",
@@ -521,8 +523,8 @@
               }
             ],
             "idfoto": 12258939,
-            "capienza": 267,
-            "numero_postazioni": 248
+            "seats": 267,
+            "workstations": 248
           },
           {
             "name": "3.1.1",
@@ -565,9 +567,9 @@
               }
             ],
             "idfoto": 48723,
-            "capienza": 144,
-            "posti_disabili": 1,
-            "numero_postazioni": 98
+            "seats": 144,
+            "accessible_seats": 1,
+            "workstations": 98
           },
           {
             "name": "3.1.11",
@@ -595,8 +597,8 @@
               }
             ],
             "idfoto": 30200545,
-            "capienza": 78,
-            "numero_postazioni": 39
+            "seats": 78,
+            "workstations": 39
           },
           {
             "name": "3.1.12",
@@ -624,7 +626,7 @@
               }
             ],
             "idfoto": 26213069,
-            "capienza": 140
+            "seats": 140
           },
           {
             "name": "3.1.2",
@@ -667,9 +669,9 @@
               }
             ],
             "idfoto": 48651,
-            "capienza": 160,
-            "posti_disabili": 2,
-            "numero_postazioni": 162
+            "seats": 160,
+            "accessible_seats": 2,
+            "workstations": 162
           },
           {
             "name": "3.1.3",
@@ -712,9 +714,9 @@
               }
             ],
             "idfoto": 48660,
-            "capienza": 132,
-            "posti_disabili": 2,
-            "numero_postazioni": 134
+            "seats": 132,
+            "accessible_seats": 2,
+            "workstations": 134
           },
           {
             "name": "3.1.4",
@@ -757,9 +759,9 @@
               }
             ],
             "idfoto": 48675,
-            "capienza": 88,
-            "posti_disabili": 2,
-            "numero_postazioni": 90
+            "seats": 88,
+            "accessible_seats": 2,
+            "workstations": 90
           },
           {
             "name": "3.1.5",
@@ -802,9 +804,9 @@
               }
             ],
             "idfoto": 48677,
-            "capienza": 88,
-            "posti_disabili": 2,
-            "numero_postazioni": 93
+            "seats": 88,
+            "accessible_seats": 2,
+            "workstations": 93
           },
           {
             "name": "3.1.6",
@@ -847,9 +849,9 @@
               }
             ],
             "idfoto": 48685,
-            "capienza": 96,
-            "posti_disabili": 2,
-            "numero_postazioni": 98
+            "seats": 96,
+            "accessible_seats": 2,
+            "workstations": 98
           },
           {
             "name": "3.1.7",
@@ -892,9 +894,9 @@
               }
             ],
             "idfoto": 48641,
-            "capienza": 117,
-            "posti_disabili": 3,
-            "numero_postazioni": 121
+            "seats": 117,
+            "accessible_seats": 3,
+            "workstations": 121
           },
           {
             "name": "3.1.8",
@@ -922,9 +924,9 @@
               }
             ],
             "idfoto": 30106533,
-            "capienza": 117,
-            "posti_disabili": 1,
-            "numero_postazioni": 117
+            "seats": 117,
+            "accessible_seats": 1,
+            "workstations": 117
           },
           {
             "name": "3.1.9",
@@ -947,7 +949,7 @@
               }
             ],
             "idfoto": 3344921,
-            "capienza": 68
+            "seats": 68
           },
           {
             "name": "3.2.1",
@@ -990,9 +992,9 @@
               }
             ],
             "idfoto": 3350422,
-            "capienza": 92,
-            "posti_disabili": 2,
-            "numero_postazioni": 94
+            "seats": 92,
+            "accessible_seats": 2,
+            "workstations": 94
           },
           {
             "name": "3.2.2",
@@ -1035,9 +1037,9 @@
               }
             ],
             "idfoto": 3344936,
-            "capienza": 72,
-            "posti_disabili": 2,
-            "numero_postazioni": 74
+            "seats": 72,
+            "accessible_seats": 2,
+            "workstations": 74
           },
           {
             "name": "3.2.3",
@@ -1080,9 +1082,9 @@
               }
             ],
             "idfoto": 3344997,
-            "capienza": 82,
-            "posti_disabili": 2,
-            "numero_postazioni": 84
+            "seats": 82,
+            "accessible_seats": 2,
+            "workstations": 84
           },
           {
             "name": "3.2.4",
@@ -1125,18 +1127,19 @@
               }
             ],
             "idfoto": 3345001,
-            "capienza": 92,
-            "posti_disabili": 2,
-            "numero_postazioni": 94
+            "seats": 92,
+            "accessible_seats": 2,
+            "workstations": 94
           }
         ],
         "lat": 45.4774465,
-        "lng": 9.22766426715,
+        "long": 9.22766426715,
         "idEdificio": "53",
         "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "4",
+        "altName": "",
         "classrooms": [
           {
             "name": "4.0.1",
@@ -1169,16 +1172,17 @@
               }
             ],
             "idfoto": 48760,
-            "capienza": 310
+            "seats": 310
           }
         ],
         "lat": 45.47882013175,
-        "lng": 9.228401241250001,
+        "long": 9.228401241250001,
         "idEdificio": "30",
         "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "5",
+        "altName": "",
         "classrooms": [
           {
             "name": "5.0.1",
@@ -1211,7 +1215,7 @@
               }
             ],
             "idfoto": 48437,
-            "capienza": 284
+            "seats": 284
           },
           {
             "name": "5.0.2",
@@ -1249,7 +1253,7 @@
               }
             ],
             "idfoto": 4814483,
-            "capienza": 174
+            "seats": 174
           },
           {
             "name": "5.0.3",
@@ -1287,7 +1291,7 @@
               }
             ],
             "idfoto": 4791785,
-            "capienza": 230
+            "seats": 230
           },
           {
             "name": "BELTRAMI",
@@ -1305,7 +1309,7 @@
               }
             ],
             "idfoto": 48604,
-            "capienza": 66
+            "seats": 66
           },
           {
             "name": "5.1.1",
@@ -1338,16 +1342,17 @@
               }
             ],
             "idfoto": 48614,
-            "capienza": 290
+            "seats": 290
           }
         ],
         "lat": 45.477452258,
-        "lng": 9.228652237550001,
+        "long": 9.228652237550001,
         "idEdificio": "31",
         "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "6",
+        "altName": "",
         "classrooms": [
           {
             "name": "6.0.1",
@@ -1375,16 +1380,17 @@
               }
             ],
             "idfoto": 48328,
-            "capienza": 275
+            "seats": 275
           }
         ],
         "lat": 45.4781159576,
-        "lng": 9.22892631775,
+        "long": 9.22892631775,
         "idEdificio": "34",
         "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "7",
+        "altName": "",
         "classrooms": [
           {
             "name": "7.1.1",
@@ -1417,7 +1423,7 @@
               }
             ],
             "idfoto": 48634,
-            "capienza": 108
+            "seats": 108
           },
           {
             "name": "7.1.2",
@@ -1440,7 +1446,7 @@
               }
             ],
             "idfoto": 48690,
-            "capienza": 40
+            "seats": 40
           },
           {
             "name": "7.1.3",
@@ -1473,7 +1479,7 @@
               }
             ],
             "idfoto": 48701,
-            "capienza": 190
+            "seats": 190
           },
           {
             "name": "7.0.1",
@@ -1516,18 +1522,19 @@
               }
             ],
             "idfoto": 4253988,
-            "capienza": 88,
-            "posti_disabili": 1,
-            "numero_postazioni": 48
+            "seats": 88,
+            "accessible_seats": 1,
+            "workstations": 48
           }
         ],
         "lat": 45.47815526475,
-        "lng": 9.229576102700001,
+        "long": 9.229576102700001,
         "idEdificio": "35",
         "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "8",
+        "altName": "",
         "classrooms": [
           {
             "name": "8.0.1",
@@ -1565,8 +1572,8 @@
               }
             ],
             "idfoto": 48610,
-            "capienza": 260,
-            "posti_disabili": 4
+            "seats": 260,
+            "accessible_seats": 4
           },
           {
             "name": "8.1.1",
@@ -1594,16 +1601,17 @@
               }
             ],
             "idfoto": 3279392,
-            "capienza": 150
+            "seats": 150
           }
         ],
         "lat": 45.4788241289,
-        "lng": 9.229476471849999,
+        "long": 9.229476471849999,
         "idEdificio": "36",
         "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "9",
+        "altName": "",
         "classrooms": [
           {
             "name": "9.0.1",
@@ -1641,7 +1649,7 @@
               }
             ],
             "idfoto": 48733,
-            "capienza": 280
+            "seats": 280
           },
           {
             "name": "9.0.2",
@@ -1664,7 +1672,7 @@
               }
             ],
             "idfoto": 48763,
-            "capienza": 80
+            "seats": 80
           },
           {
             "name": "9.0.3",
@@ -1702,15 +1710,15 @@
               }
             ],
             "idfoto": 4791787,
-            "capienza": 90
+            "seats": 90
           },
           {
             "name": "9.0.4",
             "id": 4765,
             "features": [],
             "idfoto": 5398748,
-            "capienza": 20,
-            "numero_postazioni": 20
+            "seats": 20,
+            "workstations": 20
           },
           {
             "name": "9.1.2",
@@ -1748,16 +1756,17 @@
               }
             ],
             "idfoto": 48779,
-            "capienza": 288
+            "seats": 288
           }
         ],
         "lat": 45.477415266,
-        "lng": 9.2294584277,
+        "long": 9.2294584277,
         "idEdificio": "37",
         "address": "Piazza Leonardo da Vinci 32"
       },
       {
         "name": "11",
+        "altName": "",
         "classrooms": [
           {
             "name": "IV",
@@ -1790,7 +1799,7 @@
               }
             ],
             "idfoto": 48758,
-            "capienza": 97
+            "seats": 97
           },
           {
             "name": "A - ALDO ROSSI",
@@ -1823,7 +1832,7 @@
               }
             ],
             "idfoto": 48737,
-            "capienza": 144
+            "seats": 144
           },
           {
             "name": "B",
@@ -1856,7 +1865,7 @@
               }
             ],
             "idfoto": 48738,
-            "capienza": 120
+            "seats": 120
           },
           {
             "name": "C",
@@ -1889,7 +1898,7 @@
               }
             ],
             "idfoto": 48739,
-            "capienza": 80
+            "seats": 80
           },
           {
             "name": "D",
@@ -1927,7 +1936,7 @@
               }
             ],
             "idfoto": 48740,
-            "capienza": 72
+            "seats": 72
           },
           {
             "name": "E/F",
@@ -1950,8 +1959,8 @@
               }
             ],
             "idfoto": 48419,
-            "capienza": 82,
-            "numero_postazioni": 41
+            "seats": 82,
+            "workstations": 41
           },
           {
             "name": "III.A",
@@ -1984,8 +1993,8 @@
               }
             ],
             "idfoto": 48749,
-            "capienza": 86,
-            "numero_postazioni": 43
+            "seats": 86,
+            "workstations": 43
           },
           {
             "name": "III.B",
@@ -2018,7 +2027,7 @@
               }
             ],
             "idfoto": 48750,
-            "capienza": 248
+            "seats": 248
           },
           {
             "name": "III.C",
@@ -2051,8 +2060,8 @@
               }
             ],
             "idfoto": 48751,
-            "capienza": 90,
-            "numero_postazioni": 45
+            "seats": 90,
+            "workstations": 45
           },
           {
             "name": "III.D",
@@ -2085,8 +2094,8 @@
               }
             ],
             "idfoto": 48752,
-            "capienza": 80,
-            "numero_postazioni": 40
+            "seats": 80,
+            "workstations": 40
           },
           {
             "name": "O.1",
@@ -2109,8 +2118,8 @@
               }
             ],
             "idfoto": 14505255,
-            "capienza": 78,
-            "numero_postazioni": 39
+            "seats": 78,
+            "workstations": 39
           },
           {
             "name": "Q.1",
@@ -2143,8 +2152,8 @@
               }
             ],
             "idfoto": 48747,
-            "capienza": 76,
-            "numero_postazioni": 38
+            "seats": 76,
+            "workstations": 38
           },
           {
             "name": "R.1",
@@ -2177,8 +2186,8 @@
               }
             ],
             "idfoto": 48748,
-            "capienza": 104,
-            "numero_postazioni": 52
+            "seats": 104,
+            "workstations": 52
           },
           {
             "name": "U.1",
@@ -2211,8 +2220,8 @@
               }
             ],
             "idfoto": 48753,
-            "capienza": 110,
-            "numero_postazioni": 55
+            "seats": 110,
+            "workstations": 55
           },
           {
             "name": "Y.1",
@@ -2230,9 +2239,9 @@
               }
             ],
             "idfoto": 20305473,
-            "capienza": 62,
-            "posti_disabili": 1,
-            "numero_postazioni": 31
+            "seats": 62,
+            "accessible_seats": 1,
+            "workstations": 31
           },
           {
             "name": "Z.1 D.I.",
@@ -2255,8 +2264,8 @@
               }
             ],
             "idfoto": 20305490,
-            "capienza": 34,
-            "numero_postazioni": 34
+            "seats": 34,
+            "workstations": 34
           },
           {
             "name": "J.2",
@@ -2289,8 +2298,8 @@
               }
             ],
             "idfoto": 48744,
-            "capienza": 88,
-            "numero_postazioni": 44
+            "seats": 88,
+            "workstations": 44
           },
           {
             "name": "O.2",
@@ -2323,8 +2332,8 @@
               }
             ],
             "idfoto": 48745,
-            "capienza": 92,
-            "numero_postazioni": 46
+            "seats": 92,
+            "workstations": 46
           },
           {
             "name": "O.2.1",
@@ -2357,8 +2366,8 @@
               }
             ],
             "idfoto": 48420,
-            "capienza": 74,
-            "numero_postazioni": 37
+            "seats": 74,
+            "workstations": 37
           },
           {
             "name": "R.2",
@@ -2381,8 +2390,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 78,
-            "numero_postazioni": 39
+            "seats": 78,
+            "workstations": 39
           },
           {
             "name": "U.2",
@@ -2415,8 +2424,8 @@
               }
             ],
             "idfoto": 48754,
-            "capienza": 138,
-            "numero_postazioni": 69
+            "seats": 138,
+            "workstations": 69
           },
           {
             "name": "Z.2",
@@ -2444,8 +2453,8 @@
               }
             ],
             "idfoto": 48429,
-            "capienza": 74,
-            "numero_postazioni": 37
+            "seats": 74,
+            "workstations": 37
           },
           {
             "name": "G.1",
@@ -2473,8 +2482,8 @@
               }
             ],
             "idfoto": 48742,
-            "capienza": 56,
-            "numero_postazioni": 28
+            "seats": 56,
+            "workstations": 28
           },
           {
             "name": "G.2",
@@ -2502,8 +2511,8 @@
               }
             ],
             "idfoto": 48451,
-            "capienza": 82,
-            "numero_postazioni": 41
+            "seats": 82,
+            "workstations": 41
           },
           {
             "name": "G.3",
@@ -2526,13 +2535,14 @@
               }
             ],
             "idfoto": 9860856,
-            "capienza": 95,
-            "posti_disabili": 1
+            "seats": 95,
+            "accessible_seats": 1
           }
         ]
       },
       {
-        "name": "13 (Trifoglio)",
+        "name": "13",
+        "altName": "Trifoglio",
         "classrooms": [
           {
             "name": "T.1.1",
@@ -2570,7 +2580,7 @@
               }
             ],
             "idfoto": 48693,
-            "capienza": 300
+            "seats": 300
           },
           {
             "name": "T.1.2",
@@ -2608,7 +2618,7 @@
               }
             ],
             "idfoto": 48735,
-            "capienza": 300
+            "seats": 300
           },
           {
             "name": "T.1.3",
@@ -2641,7 +2651,7 @@
               }
             ],
             "idfoto": 48736,
-            "capienza": 300
+            "seats": 300
           },
           {
             "name": "T.2.1",
@@ -2674,7 +2684,7 @@
               }
             ],
             "idfoto": 48696,
-            "capienza": 300
+            "seats": 300
           },
           {
             "name": "T.2.2",
@@ -2707,7 +2717,7 @@
               }
             ],
             "idfoto": 48694,
-            "capienza": 300
+            "seats": 300
           },
           {
             "name": "T.2.3",
@@ -2740,7 +2750,7 @@
               }
             ],
             "idfoto": 48695,
-            "capienza": 300
+            "seats": 300
           },
           {
             "name": "T.0.1",
@@ -2768,7 +2778,7 @@
               }
             ],
             "idfoto": 48728,
-            "capienza": 100
+            "seats": 100
           },
           {
             "name": "T.0.2",
@@ -2801,7 +2811,7 @@
               }
             ],
             "idfoto": 48692,
-            "capienza": 100
+            "seats": 100
           },
           {
             "name": "T.0.3",
@@ -2834,7 +2844,7 @@
               }
             ],
             "idfoto": 48331,
-            "capienza": 50
+            "seats": 50
           },
           {
             "name": "T.0.4",
@@ -2867,12 +2877,13 @@
               }
             ],
             "idfoto": 48609,
-            "capienza": 50
+            "seats": 50
           }
         ]
       },
       {
-        "name": "14 (Nave)",
+        "name": "14",
+        "altName": "Nave",
         "classrooms": [
           {
             "name": "B.2.1",
@@ -2905,8 +2916,8 @@
               }
             ],
             "idfoto": 48438,
-            "capienza": 93,
-            "numero_postazioni": 45
+            "seats": 93,
+            "workstations": 45
           },
           {
             "name": "B.2.2",
@@ -2939,9 +2950,9 @@
               }
             ],
             "idfoto": 48620,
-            "capienza": 93,
-            "posti_disabili": 2,
-            "numero_postazioni": 41
+            "seats": 93,
+            "accessible_seats": 2,
+            "workstations": 41
           },
           {
             "name": "B.2.3",
@@ -2974,9 +2985,9 @@
               }
             ],
             "idfoto": 48439,
-            "capienza": 93,
-            "posti_disabili": 2,
-            "numero_postazioni": 41
+            "seats": 93,
+            "accessible_seats": 2,
+            "workstations": 41
           },
           {
             "name": "B.2.4",
@@ -3009,7 +3020,7 @@
               }
             ],
             "idfoto": 48440,
-            "capienza": 164
+            "seats": 164
           },
           {
             "name": "B.3.1",
@@ -3042,8 +3053,8 @@
               }
             ],
             "idfoto": 48746,
-            "capienza": 93,
-            "numero_postazioni": 45
+            "seats": 93,
+            "workstations": 45
           },
           {
             "name": "B.3.2",
@@ -3076,8 +3087,8 @@
               }
             ],
             "idfoto": 48756,
-            "capienza": 93,
-            "numero_postazioni": 45
+            "seats": 93,
+            "workstations": 45
           },
           {
             "name": "B.3.3",
@@ -3110,8 +3121,8 @@
               }
             ],
             "idfoto": 48441,
-            "capienza": 93,
-            "numero_postazioni": 45
+            "seats": 93,
+            "workstations": 45
           },
           {
             "name": "B.3.4",
@@ -3144,7 +3155,7 @@
               }
             ],
             "idfoto": 48442,
-            "capienza": 164
+            "seats": 164
           },
           {
             "name": "B.4.1",
@@ -3172,8 +3183,8 @@
               }
             ],
             "idfoto": 48330,
-            "capienza": 93,
-            "numero_postazioni": 45
+            "seats": 93,
+            "workstations": 45
           },
           {
             "name": "B.4.2",
@@ -3206,8 +3217,8 @@
               }
             ],
             "idfoto": 48342,
-            "capienza": 93,
-            "numero_postazioni": 45
+            "seats": 93,
+            "workstations": 45
           },
           {
             "name": "B.4.3",
@@ -3240,9 +3251,9 @@
               }
             ],
             "idfoto": 26355785,
-            "capienza": 93,
-            "posti_disabili": 1,
-            "numero_postazioni": 45
+            "seats": 93,
+            "accessible_seats": 1,
+            "workstations": 45
           },
           {
             "name": "B.4.4",
@@ -3275,7 +3286,7 @@
               }
             ],
             "idfoto": 3309614,
-            "capienza": 164
+            "seats": 164
           },
           {
             "name": "B.5.1",
@@ -3303,7 +3314,7 @@
               }
             ],
             "idfoto": 27538704,
-            "capienza": 80
+            "seats": 80
           },
           {
             "name": "B.5.2",
@@ -3331,7 +3342,7 @@
               }
             ],
             "idfoto": 27538729,
-            "capienza": 82
+            "seats": 82
           },
           {
             "name": "B.5.3",
@@ -3359,7 +3370,7 @@
               }
             ],
             "idfoto": 27538723,
-            "capienza": 82
+            "seats": 82
           },
           {
             "name": "B.5.4",
@@ -3392,7 +3403,7 @@
               }
             ],
             "idfoto": 27538734,
-            "capienza": 70
+            "seats": 70
           },
           {
             "name": "B.6.1",
@@ -3420,7 +3431,7 @@
               }
             ],
             "idfoto": 27538749,
-            "capienza": 73
+            "seats": 73
           },
           {
             "name": "B.6.2",
@@ -3453,8 +3464,8 @@
               }
             ],
             "idfoto": 27538751,
-            "capienza": 104,
-            "numero_postazioni": 52
+            "seats": 104,
+            "workstations": 52
           },
           {
             "name": "B.6.3",
@@ -3487,8 +3498,8 @@
               }
             ],
             "idfoto": 27538759,
-            "capienza": 104,
-            "numero_postazioni": 52
+            "seats": 104,
+            "workstations": 52
           },
           {
             "name": "B.6.4",
@@ -3521,13 +3532,14 @@
               }
             ],
             "idfoto": 27538767,
-            "capienza": 35,
-            "numero_postazioni": 17
+            "seats": 35,
+            "workstations": 17
           }
         ]
       },
       {
         "name": "16B",
+        "altName": "",
         "classrooms": [
           {
             "name": "16B.1.1",
@@ -3565,8 +3577,8 @@
               }
             ],
             "idfoto": 16441937,
-            "capienza": 174,
-            "posti_disabili": 2
+            "seats": 174,
+            "accessible_seats": 2
           },
           {
             "name": "16B.2.1",
@@ -3604,8 +3616,8 @@
               }
             ],
             "idfoto": 16441954,
-            "capienza": 149,
-            "posti_disabili": 2
+            "seats": 149,
+            "accessible_seats": 2
           },
           {
             "name": "16B.3.1",
@@ -3643,8 +3655,8 @@
               }
             ],
             "idfoto": 16441963,
-            "capienza": 149,
-            "posti_disabili": 2
+            "seats": 149,
+            "accessible_seats": 2
           },
           {
             "name": "16B.0.1",
@@ -3682,13 +3694,14 @@
               }
             ],
             "idfoto": 16441932,
-            "capienza": 149,
-            "posti_disabili": 2
+            "seats": 149,
+            "accessible_seats": 2
           }
         ]
       },
       {
         "name": "16C",
+        "altName": "",
         "classrooms": [
           {
             "name": "16C.0.1",
@@ -3716,8 +3729,8 @@
               }
             ],
             "idfoto": 17301818,
-            "capienza": 80,
-            "numero_postazioni": 40
+            "seats": 80,
+            "workstations": 40
           },
           {
             "name": "16C.0.2",
@@ -3745,8 +3758,8 @@
               }
             ],
             "idfoto": 17301823,
-            "capienza": 64,
-            "numero_postazioni": 32
+            "seats": 64,
+            "workstations": 32
           },
           {
             "name": "16C.0.3",
@@ -3774,13 +3787,14 @@
               }
             ],
             "idfoto": 17301828,
-            "capienza": 64,
-            "numero_postazioni": 32
+            "seats": 64,
+            "workstations": 32
           }
         ]
       },
       {
         "name": "19",
+        "altName": "",
         "classrooms": [
           {
             "name": "19.0.1",
@@ -3798,12 +3812,13 @@
               }
             ],
             "idfoto": 48360,
-            "capienza": 53
+            "seats": 53
           }
         ]
       },
       {
         "name": "20",
+        "altName": "",
         "classrooms": [
           {
             "name": "20.S.1",
@@ -3831,12 +3846,13 @@
               }
             ],
             "idfoto": 48612,
-            "capienza": 264
+            "seats": 264
           }
         ]
       },
       {
         "name": "21",
+        "altName": "",
         "classrooms": [
           {
             "name": "21.0.1",
@@ -3879,9 +3895,9 @@
               }
             ],
             "idfoto": 48729,
-            "capienza": 53,
-            "posti_disabili": 1,
-            "numero_postazioni": 53
+            "seats": 53,
+            "accessible_seats": 1,
+            "workstations": 53
           },
           {
             "name": "21.0.2",
@@ -3924,9 +3940,9 @@
               }
             ],
             "idfoto": 48357,
-            "capienza": 48,
-            "posti_disabili": 1,
-            "numero_postazioni": 48
+            "seats": 48,
+            "accessible_seats": 1,
+            "workstations": 48
           },
           {
             "name": "21.0.3",
@@ -3959,7 +3975,7 @@
               }
             ],
             "idfoto": 48607,
-            "capienza": 139
+            "seats": 139
           },
           {
             "name": "21.S.1",
@@ -4002,8 +4018,8 @@
               }
             ],
             "idfoto": 48521,
-            "capienza": 130,
-            "numero_postazioni": 130
+            "seats": 130,
+            "workstations": 130
           },
           {
             "name": "21.S.2",
@@ -4036,7 +4052,7 @@
               }
             ],
             "idfoto": 48398,
-            "capienza": 126
+            "seats": 126
           },
           {
             "name": "21.S.3",
@@ -4069,7 +4085,7 @@
               }
             ],
             "idfoto": 48535,
-            "capienza": 117
+            "seats": 117
           },
           {
             "name": "21.S.4",
@@ -4102,12 +4118,13 @@
               }
             ],
             "idfoto": 48583,
-            "capienza": 126
+            "seats": 126
           }
         ]
       },
       {
         "name": "23",
+        "altName": "",
         "classrooms": [
           {
             "name": "G.0.1",
@@ -4125,7 +4142,7 @@
               }
             ],
             "idfoto": 48363,
-            "capienza": 40
+            "seats": 40
           },
           {
             "name": "G.0.2",
@@ -4143,12 +4160,13 @@
               }
             ],
             "idfoto": 48364,
-            "capienza": 40
+            "seats": 40
           }
         ]
       },
       {
         "name": "25",
+        "altName": "",
         "classrooms": [
           {
             "name": "25.0.1",
@@ -4186,7 +4204,7 @@
               }
             ],
             "idfoto": 48784,
-            "capienza": 144
+            "seats": 144
           },
           {
             "name": "25.0.2",
@@ -4224,7 +4242,7 @@
               }
             ],
             "idfoto": 48785,
-            "capienza": 144
+            "seats": 144
           },
           {
             "name": "25.1.1",
@@ -4257,7 +4275,7 @@
               }
             ],
             "idfoto": 48786,
-            "capienza": 50
+            "seats": 50
           },
           {
             "name": "25.1.2",
@@ -4290,7 +4308,7 @@
               }
             ],
             "idfoto": 48787,
-            "capienza": 54
+            "seats": 54
           },
           {
             "name": "25.1.3",
@@ -4323,7 +4341,7 @@
               }
             ],
             "idfoto": 48788,
-            "capienza": 54
+            "seats": 54
           },
           {
             "name": "25.1.4",
@@ -4356,7 +4374,7 @@
               }
             ],
             "idfoto": 48789,
-            "capienza": 50
+            "seats": 50
           },
           {
             "name": "25.1.5",
@@ -4389,7 +4407,7 @@
               }
             ],
             "idfoto": 48790,
-            "capienza": 50
+            "seats": 50
           },
           {
             "name": "25.1.6",
@@ -4422,7 +4440,7 @@
               }
             ],
             "idfoto": 48791,
-            "capienza": 50
+            "seats": 50
           },
           {
             "name": "25.2.1",
@@ -4460,9 +4478,9 @@
               }
             ],
             "idfoto": 48347,
-            "capienza": 148,
-            "posti_disabili": 1,
-            "numero_postazioni": 148
+            "seats": 148,
+            "accessible_seats": 1,
+            "workstations": 148
           },
           {
             "name": "25.2.2",
@@ -4500,9 +4518,9 @@
               }
             ],
             "idfoto": 48348,
-            "capienza": 154,
-            "posti_disabili": 1,
-            "numero_postazioni": 154
+            "seats": 154,
+            "accessible_seats": 1,
+            "workstations": 154
           },
           {
             "name": "25.2.3",
@@ -4540,9 +4558,9 @@
               }
             ],
             "idfoto": 48349,
-            "capienza": 120,
-            "posti_disabili": 1,
-            "numero_postazioni": 120
+            "seats": 120,
+            "accessible_seats": 1,
+            "workstations": 120
           },
           {
             "name": "25.S.1",
@@ -4575,7 +4593,7 @@
               }
             ],
             "idfoto": 48780,
-            "capienza": 148
+            "seats": 148
           },
           {
             "name": "25.S.2",
@@ -4613,7 +4631,7 @@
               }
             ],
             "idfoto": 48782,
-            "capienza": 144
+            "seats": 144
           },
           {
             "name": "25.S.3",
@@ -4651,12 +4669,13 @@
               }
             ],
             "idfoto": 48783,
-            "capienza": 141
+            "seats": 141
           }
         ]
       },
       {
         "name": "26",
+        "altName": "",
         "classrooms": [
           {
             "name": "26.0.1",
@@ -4679,7 +4698,7 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 70
+            "seats": 70
           },
           {
             "name": "26.0.2",
@@ -4707,8 +4726,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 76,
-            "posti_disabili": 1
+            "seats": 76,
+            "accessible_seats": 1
           },
           {
             "name": "26.0.3",
@@ -4736,8 +4755,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 70,
-            "posti_disabili": 1
+            "seats": 70,
+            "accessible_seats": 1
           },
           {
             "name": "26.0.4",
@@ -4775,9 +4794,9 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 107,
-            "posti_disabili": 1,
-            "numero_postazioni": 177
+            "seats": 107,
+            "accessible_seats": 1,
+            "workstations": 177
           },
           {
             "name": "26.1.1",
@@ -4805,8 +4824,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 207,
-            "posti_disabili": 1
+            "seats": 207,
+            "accessible_seats": 1
           },
           {
             "name": "26.1.2",
@@ -4839,8 +4858,8 @@
               }
             ],
             "idfoto": 7036606,
-            "capienza": 138,
-            "posti_disabili": 1
+            "seats": 138,
+            "accessible_seats": 1
           },
           {
             "name": "26.1.3",
@@ -4878,8 +4897,8 @@
               }
             ],
             "idfoto": 7036615,
-            "capienza": 122,
-            "numero_postazioni": 120
+            "seats": 122,
+            "workstations": 120
           },
           {
             "name": "26.1.4",
@@ -4917,8 +4936,8 @@
               }
             ],
             "idfoto": 7036616,
-            "capienza": 134,
-            "numero_postazioni": 131
+            "seats": 134,
+            "workstations": 131
           },
           {
             "name": "26.1.5",
@@ -4946,7 +4965,7 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 167
+            "seats": 167
           },
           {
             "name": "26.1.6",
@@ -4979,8 +4998,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 167,
-            "posti_disabili": 1
+            "seats": 167,
+            "accessible_seats": 1
           }
         ]
       }
@@ -4994,6 +5013,7 @@
     "buildings": [
       {
         "name": "32.1",
+        "altName": "",
         "classrooms": [
           {
             "name": "E.P.6",
@@ -5021,7 +5041,7 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 100
+            "seats": 100
           },
           {
             "name": "E.P.7",
@@ -5049,16 +5069,17 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 90
+            "seats": 90
           }
         ],
         "lat": 45.4721692759,
-        "lng": 9.226856068050001,
+        "long": 9.226856068050001,
         "idEdificio": "60",
         "address": "Via Colombo 40"
       },
       {
         "name": "32.3",
+        "altName": "",
         "classrooms": [
           {
             "name": "E.P.1",
@@ -5091,14 +5112,14 @@
               }
             ],
             "idfoto": 4916861,
-            "capienza": 72
+            "seats": 72
           },
           {
             "name": "E.P.2",
             "id": 4752,
             "features": [],
             "idfoto": 4916879,
-            "capienza": 30
+            "seats": 30
           },
           {
             "name": "E.P.3",
@@ -5111,11 +5132,11 @@
               }
             ],
             "idfoto": 5455194,
-            "capienza": 30
+            "seats": 30
           }
         ],
         "lat": 45.471808632800006,
-        "lng": 9.2271522898,
+        "long": 9.2271522898,
         "idEdificio": "114",
         "address": "Via Colombo 40"
       }
@@ -5129,6 +5150,7 @@
     "buildings": [
       {
         "name": "B1",
+        "altName": "",
         "classrooms": [
           {
             "name": "Aula F.LLI CASTIGLIONI",
@@ -5161,18 +5183,19 @@
               }
             ],
             "idfoto": 128333,
-            "capienza": 134,
-            "posti_disabili": 1,
-            "numero_postazioni": 67
+            "seats": 134,
+            "accessible_seats": 1,
+            "workstations": 67
           }
         ],
         "lat": 45.50533154615,
-        "lng": 9.167083935800001,
+        "long": 9.167083935800001,
         "idEdificio": "104",
         "address": "Via Candiani 72"
       },
       {
         "name": "B2",
+        "altName": "",
         "classrooms": [
           {
             "name": "B2.0.1 - D.I.",
@@ -5205,8 +5228,8 @@
               }
             ],
             "idfoto": 48514,
-            "capienza": 84,
-            "numero_postazioni": 42
+            "seats": 84,
+            "workstations": 42
           },
           {
             "name": "B2.1.1",
@@ -5234,8 +5257,8 @@
               }
             ],
             "idfoto": 48396,
-            "capienza": 276,
-            "numero_postazioni": 276
+            "seats": 276,
+            "workstations": 276
           },
           {
             "name": "B2.1.2",
@@ -5253,8 +5276,8 @@
               }
             ],
             "idfoto": 48399,
-            "capienza": 108,
-            "numero_postazioni": 54
+            "seats": 108,
+            "workstations": 54
           },
           {
             "name": "B2.1.3",
@@ -5272,8 +5295,8 @@
               }
             ],
             "idfoto": 48801,
-            "capienza": 108,
-            "numero_postazioni": 54
+            "seats": 108,
+            "workstations": 54
           },
           {
             "name": "B2.1.5",
@@ -5296,8 +5319,8 @@
               }
             ],
             "idfoto": 48526,
-            "capienza": 102,
-            "numero_postazioni": 51
+            "seats": 102,
+            "workstations": 51
           },
           {
             "name": "B2.1.6",
@@ -5320,8 +5343,8 @@
               }
             ],
             "idfoto": 48799,
-            "capienza": 96,
-            "numero_postazioni": 48
+            "seats": 96,
+            "workstations": 48
           },
           {
             "name": "B2.1.8",
@@ -5339,8 +5362,8 @@
               }
             ],
             "idfoto": 48798,
-            "capienza": 98,
-            "numero_postazioni": 49
+            "seats": 98,
+            "workstations": 49
           },
           {
             "name": "B2.1.9",
@@ -5368,8 +5391,8 @@
               }
             ],
             "idfoto": 48397,
-            "capienza": 265,
-            "numero_postazioni": 265
+            "seats": 265,
+            "workstations": 265
           },
           {
             "name": "B2.1.10",
@@ -5387,8 +5410,8 @@
               }
             ],
             "idfoto": 48344,
-            "capienza": 112,
-            "numero_postazioni": 56
+            "seats": 112,
+            "workstations": 56
           },
           {
             "name": "B2.1.11",
@@ -5411,8 +5434,8 @@
               }
             ],
             "idfoto": 48528,
-            "capienza": 48,
-            "numero_postazioni": 24
+            "seats": 48,
+            "workstations": 24
           },
           {
             "name": "B2.1.12",
@@ -5435,8 +5458,8 @@
               }
             ],
             "idfoto": 48401,
-            "capienza": 48,
-            "numero_postazioni": 24
+            "seats": 48,
+            "workstations": 24
           },
           {
             "name": "B2.1.13",
@@ -5454,8 +5477,8 @@
               }
             ],
             "idfoto": 48400,
-            "capienza": 48,
-            "numero_postazioni": 24
+            "seats": 48,
+            "workstations": 24
           },
           {
             "name": "B2.1.14",
@@ -5478,8 +5501,8 @@
               }
             ],
             "idfoto": 48527,
-            "capienza": 48,
-            "numero_postazioni": 24
+            "seats": 48,
+            "workstations": 24
           },
           {
             "name": "B2.1.15",
@@ -5497,8 +5520,8 @@
               }
             ],
             "idfoto": 48802,
-            "capienza": 112,
-            "numero_postazioni": 56
+            "seats": 112,
+            "workstations": 56
           },
           {
             "name": "B2.1.16",
@@ -5531,8 +5554,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 117,
-            "posti_disabili": 1
+            "seats": 117,
+            "accessible_seats": 1
           },
           {
             "name": "B2.2.1",
@@ -5555,8 +5578,8 @@
               }
             ],
             "idfoto": 48409,
-            "capienza": 284,
-            "numero_postazioni": 284
+            "seats": 284,
+            "workstations": 284
           },
           {
             "name": "B2.2.2",
@@ -5584,8 +5607,8 @@
               }
             ],
             "idfoto": 48408,
-            "capienza": 78,
-            "numero_postazioni": 39
+            "seats": 78,
+            "workstations": 39
           },
           {
             "name": "B2.2.3",
@@ -5603,8 +5626,8 @@
               }
             ],
             "idfoto": 48407,
-            "capienza": 112,
-            "numero_postazioni": 56
+            "seats": 112,
+            "workstations": 56
           },
           {
             "name": "B2.2.4",
@@ -5632,9 +5655,9 @@
               }
             ],
             "idfoto": 48406,
-            "capienza": 64,
-            "posti_disabili": 1,
-            "numero_postazioni": 32
+            "seats": 64,
+            "accessible_seats": 1,
+            "workstations": 32
           },
           {
             "name": "B2.2.5",
@@ -5667,8 +5690,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 124,
-            "posti_disabili": 1
+            "seats": 124,
+            "accessible_seats": 1
           },
           {
             "name": "B2.2.6",
@@ -5696,9 +5719,9 @@
               }
             ],
             "idfoto": 48405,
-            "capienza": 64,
-            "posti_disabili": 1,
-            "numero_postazioni": 32
+            "seats": 64,
+            "accessible_seats": 1,
+            "workstations": 32
           },
           {
             "name": "B2.2.7",
@@ -5716,8 +5739,8 @@
               }
             ],
             "idfoto": 48404,
-            "capienza": 112,
-            "numero_postazioni": 56
+            "seats": 112,
+            "workstations": 56
           },
           {
             "name": "B2.2.8",
@@ -5745,8 +5768,8 @@
               }
             ],
             "idfoto": 48403,
-            "capienza": 284,
-            "numero_postazioni": 284
+            "seats": 284,
+            "workstations": 284
           },
           {
             "name": "B2.2.9",
@@ -5779,9 +5802,9 @@
               }
             ],
             "idfoto": 19611631,
-            "capienza": 89,
-            "posti_disabili": 1,
-            "numero_postazioni": 89
+            "seats": 89,
+            "accessible_seats": 1,
+            "workstations": 89
           },
           {
             "name": "B2.2.10",
@@ -5799,8 +5822,8 @@
               }
             ],
             "idfoto": 48402,
-            "capienza": 90,
-            "numero_postazioni": 45
+            "seats": 90,
+            "workstations": 45
           },
           {
             "name": "B2.2.11",
@@ -5828,9 +5851,9 @@
               }
             ],
             "idfoto": 48412,
-            "capienza": 64,
-            "posti_disabili": 1,
-            "numero_postazioni": 32
+            "seats": 64,
+            "accessible_seats": 1,
+            "workstations": 32
           },
           {
             "name": "B2.2.12",
@@ -5863,8 +5886,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 147,
-            "posti_disabili": 1
+            "seats": 147,
+            "accessible_seats": 1
           },
           {
             "name": "B2.2.13",
@@ -5887,8 +5910,8 @@
               }
             ],
             "idfoto": 48411,
-            "capienza": 160,
-            "posti_disabili": 1
+            "seats": 160,
+            "accessible_seats": 1
           },
           {
             "name": "B2.2.14",
@@ -5906,8 +5929,8 @@
               }
             ],
             "idfoto": 48410,
-            "capienza": 96,
-            "numero_postazioni": 48
+            "seats": 96,
+            "workstations": 48
           },
           {
             "name": "B2.2.15",
@@ -5940,8 +5963,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 101,
-            "posti_disabili": 1
+            "seats": 101,
+            "accessible_seats": 1
           },
           {
             "name": "B2.3.1",
@@ -5959,8 +5982,8 @@
               }
             ],
             "idfoto": 48426,
-            "capienza": 88,
-            "numero_postazioni": 44
+            "seats": 88,
+            "workstations": 44
           },
           {
             "name": "B2.3.2",
@@ -5978,8 +6001,8 @@
               }
             ],
             "idfoto": 48425,
-            "capienza": 64,
-            "numero_postazioni": 32
+            "seats": 64,
+            "workstations": 32
           },
           {
             "name": "B2.3.3",
@@ -5997,8 +6020,8 @@
               }
             ],
             "idfoto": 48424,
-            "capienza": 102,
-            "numero_postazioni": 51
+            "seats": 102,
+            "workstations": 51
           },
           {
             "name": "B2.3.4",
@@ -6016,25 +6039,26 @@
               }
             ],
             "idfoto": 48423,
-            "capienza": 112,
-            "numero_postazioni": 56
+            "seats": 112,
+            "workstations": 56
           }
         ],
         "lat": 45.5058544554,
-        "lng": 9.166840446150001,
+        "long": 9.166840446150001,
         "idEdificio": "103",
         "address": "Via Candiani 72"
       },
       {
         "name": "B6",
+        "altName": "",
         "classrooms": [
           {
             "name": "B6.2.1",
             "id": 4693,
             "features": [],
             "idfoto": 3700212,
-            "capienza": 154,
-            "numero_postazioni": 76
+            "seats": 154,
+            "workstations": 76
           },
           {
             "name": "B6.2.2",
@@ -6062,24 +6086,24 @@
               }
             ],
             "idfoto": 19611640,
-            "capienza": 98,
-            "numero_postazioni": 49
+            "seats": 98,
+            "workstations": 49
           },
           {
             "name": "B6.2.3",
             "id": 4855,
             "features": [],
             "idfoto": 19611644,
-            "capienza": 84,
-            "numero_postazioni": 42
+            "seats": 84,
+            "workstations": 42
           },
           {
             "name": "B6.2.4",
             "id": 4856,
             "features": [],
             "idfoto": 19611648,
-            "capienza": 84,
-            "numero_postazioni": 42
+            "seats": 84,
+            "workstations": 42
           },
           {
             "name": "B6.2.5",
@@ -6112,8 +6136,8 @@
               }
             ],
             "idfoto": 19611654,
-            "capienza": 200,
-            "numero_postazioni": 84
+            "seats": 200,
+            "workstations": 84
           },
           {
             "name": "B6.2.6",
@@ -6146,41 +6170,42 @@
               }
             ],
             "idfoto": 19611666,
-            "capienza": 200,
-            "numero_postazioni": 84
+            "seats": 200,
+            "workstations": 84
           },
           {
             "name": "B6.3.1",
             "id": 4701,
             "features": [],
             "idfoto": 3700224,
-            "capienza": 56,
-            "numero_postazioni": 28
+            "seats": 56,
+            "workstations": 28
           },
           {
             "name": "B6.3.2",
             "id": 4703,
             "features": [],
             "idfoto": 3700228,
-            "capienza": 110,
-            "numero_postazioni": 55
+            "seats": 110,
+            "workstations": 55
           },
           {
             "name": "B6.3.3",
             "id": 4861,
             "features": [],
             "idfoto": -2147483648,
-            "capienza": 64,
-            "numero_postazioni": 32
+            "seats": 64,
+            "workstations": 32
           }
         ],
         "lat": 45.5048297804,
-        "lng": 9.166254668099999,
+        "long": 9.166254668099999,
         "idEdificio": "102",
         "address": "Via Candiani 72"
       },
       {
         "name": "B8",
+        "altName": "",
         "classrooms": [
           {
             "name": "B8.0.1",
@@ -6213,7 +6238,7 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 126
+            "seats": 126
           },
           {
             "name": "B8.0.2",
@@ -6246,7 +6271,7 @@
               }
             ],
             "idfoto": 19611668,
-            "capienza": 232
+            "seats": 232
           },
           {
             "name": "B8.0.3",
@@ -6279,7 +6304,7 @@
               }
             ],
             "idfoto": 19611671,
-            "capienza": 250
+            "seats": 250
           },
           {
             "name": "B8.0.4",
@@ -6312,7 +6337,7 @@
               }
             ],
             "idfoto": 19611674,
-            "capienza": 250
+            "seats": 250
           },
           {
             "name": "B8.0.5",
@@ -6345,7 +6370,7 @@
               }
             ],
             "idfoto": 19611676,
-            "capienza": 195
+            "seats": 195
           },
           {
             "name": "B8.0.6",
@@ -6378,14 +6403,14 @@
               }
             ],
             "idfoto": 19611691,
-            "capienza": 160
+            "seats": 160
           },
           {
             "name": "B8.0.7",
             "id": 5072,
             "features": [],
             "idfoto": 20950085,
-            "capienza": 128
+            "seats": 128
           },
           {
             "name": "B8.0.8",
@@ -6418,38 +6443,38 @@
               }
             ],
             "idfoto": 19611693,
-            "capienza": 128
+            "seats": 128
           },
           {
             "name": "B8.0.9",
             "id": 5073,
             "features": [],
             "idfoto": 20950094,
-            "capienza": 160
+            "seats": 160
           },
           {
             "name": "B8.0.10",
             "id": 4862,
             "features": [],
             "idfoto": -2147483648,
-            "capienza": 78,
-            "numero_postazioni": 39
+            "seats": 78,
+            "workstations": 39
           },
           {
             "name": "B8.0.11",
             "id": 4863,
             "features": [],
             "idfoto": -2147483648,
-            "capienza": 72,
-            "numero_postazioni": 36
+            "seats": 72,
+            "workstations": 36
           },
           {
             "name": "B8.0.12",
             "id": 4864,
             "features": [],
             "idfoto": -2147483648,
-            "capienza": 54,
-            "numero_postazioni": 27
+            "seats": 54,
+            "workstations": 27
           },
           {
             "name": "B8.1.1",
@@ -6487,14 +6512,14 @@
               }
             ],
             "idfoto": 19611701,
-            "capienza": 144
+            "seats": 144
           },
           {
             "name": "B8.1.2",
             "id": 5074,
             "features": [],
             "idfoto": 20950102,
-            "capienza": 156
+            "seats": 156
           },
           {
             "name": "B8.1.3",
@@ -6532,14 +6557,14 @@
               }
             ],
             "idfoto": 19611705,
-            "capienza": 172
+            "seats": 172
           },
           {
             "name": "B8.1.4",
             "id": 5075,
             "features": [],
             "idfoto": 20950108,
-            "capienza": 144
+            "seats": 144
           },
           {
             "name": "B8.2.1",
@@ -6577,7 +6602,7 @@
               }
             ],
             "idfoto": 19611707,
-            "capienza": 300
+            "seats": 300
           },
           {
             "name": "B8.2.2",
@@ -6615,7 +6640,7 @@
               }
             ],
             "idfoto": 19611718,
-            "capienza": 300
+            "seats": 300
           },
           {
             "name": "B8.2.3",
@@ -6643,11 +6668,11 @@
               }
             ],
             "idfoto": 19611723,
-            "capienza": 70
+            "seats": 70
           }
         ],
         "lat": 45.504704893050004,
-        "lng": 9.1648882627,
+        "long": 9.1648882627,
         "idEdificio": "80",
         "address": "Via Candiani 72"
       }
@@ -6661,6 +6686,7 @@
     "buildings": [
       {
         "name": "B12",
+        "altName": "",
         "classrooms": [
           {
             "name": "L.01",
@@ -6693,7 +6719,7 @@
               }
             ],
             "idfoto": 48762,
-            "capienza": 262
+            "seats": 262
           },
           {
             "name": "L.02",
@@ -6731,8 +6757,8 @@
               }
             ],
             "idfoto": 48764,
-            "capienza": 112,
-            "numero_postazioni": 112
+            "seats": 112,
+            "workstations": 112
           },
           {
             "name": "L.03",
@@ -6765,7 +6791,7 @@
               }
             ],
             "idfoto": 48768,
-            "capienza": 188
+            "seats": 188
           },
           {
             "name": "L.04 - VIRTUAL LAB",
@@ -6803,7 +6829,7 @@
               }
             ],
             "idfoto": 48769,
-            "capienza": 60
+            "seats": 60
           },
           {
             "name": "L.05 - D.I.",
@@ -6831,7 +6857,7 @@
               }
             ],
             "idfoto": 48770,
-            "capienza": 45
+            "seats": 45
           },
           {
             "name": "L.06",
@@ -6869,8 +6895,8 @@
               }
             ],
             "idfoto": 48771,
-            "capienza": 224,
-            "numero_postazioni": 224
+            "seats": 224,
+            "workstations": 224
           },
           {
             "name": "L.07",
@@ -6908,8 +6934,8 @@
               }
             ],
             "idfoto": 48772,
-            "capienza": 180,
-            "numero_postazioni": 179
+            "seats": 180,
+            "workstations": 179
           },
           {
             "name": "L.08",
@@ -6942,7 +6968,7 @@
               }
             ],
             "idfoto": 48776,
-            "capienza": 230
+            "seats": 230
           },
           {
             "name": "L.09",
@@ -6975,7 +7001,7 @@
               }
             ],
             "idfoto": 48773,
-            "capienza": 150
+            "seats": 150
           },
           {
             "name": "L.11",
@@ -7008,8 +7034,8 @@
               }
             ],
             "idfoto": 48778,
-            "capienza": 90,
-            "numero_postazioni": 88
+            "seats": 90,
+            "workstations": 88
           },
           {
             "name": "L.12",
@@ -7042,9 +7068,9 @@
               }
             ],
             "idfoto": 48373,
-            "capienza": 211,
-            "posti_disabili": 1,
-            "numero_postazioni": 211
+            "seats": 211,
+            "accessible_seats": 1,
+            "workstations": 211
           },
           {
             "name": "L.13",
@@ -7077,8 +7103,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 493,
-            "numero_postazioni": 473
+            "seats": 493,
+            "workstations": 473
           },
           {
             "name": "L.14",
@@ -7111,8 +7137,8 @@
               }
             ],
             "idfoto": 48727,
-            "capienza": 176,
-            "numero_postazioni": 176
+            "seats": 176,
+            "workstations": 176
           },
           {
             "name": "L.15",
@@ -7145,18 +7171,19 @@
               }
             ],
             "idfoto": 48384,
-            "capienza": 230,
-            "posti_disabili": 1,
-            "numero_postazioni": 230
+            "seats": 230,
+            "accessible_seats": 1,
+            "workstations": 230
           }
         ],
         "lat": 45.50141425445,
-        "lng": 9.154316515049999,
+        "long": 9.154316515049999,
         "idEdificio": "96",
         "address": "Via La Masa 34"
       },
       {
         "name": "B15",
+        "altName": "",
         "classrooms": [
           {
             "name": "LM.1",
@@ -7194,8 +7221,8 @@
               }
             ],
             "idfoto": 48375,
-            "capienza": 400,
-            "numero_postazioni": 399
+            "seats": 400,
+            "workstations": 399
           },
           {
             "name": "LM.3",
@@ -7228,8 +7255,8 @@
               }
             ],
             "idfoto": 48721,
-            "capienza": 160,
-            "posti_disabili": 1
+            "seats": 160,
+            "accessible_seats": 1
           },
           {
             "name": "LM.4",
@@ -7262,8 +7289,8 @@
               }
             ],
             "idfoto": 48722,
-            "capienza": 160,
-            "posti_disabili": 1
+            "seats": 160,
+            "accessible_seats": 1
           },
           {
             "name": "LM.5",
@@ -7296,7 +7323,7 @@
               }
             ],
             "idfoto": 48724,
-            "capienza": 184
+            "seats": 184
           },
           {
             "name": "LM.6",
@@ -7329,16 +7356,17 @@
               }
             ],
             "idfoto": 48725,
-            "capienza": 184
+            "seats": 184
           }
         ],
         "lat": 45.50167923845,
-        "lng": 9.15701955025,
+        "long": 9.15701955025,
         "idEdificio": "71",
         "address": "Via La Masa 34"
       },
       {
         "name": "BL27",
+        "altName": "",
         "classrooms": [
           {
             "name": "BL.27.0.1",
@@ -7371,9 +7399,9 @@
               }
             ],
             "idfoto": 90083,
-            "capienza": 212,
-            "posti_disabili": 2,
-            "numero_postazioni": 212
+            "seats": 212,
+            "accessible_seats": 2,
+            "workstations": 212
           },
           {
             "name": "BL.27.0.2",
@@ -7406,9 +7434,9 @@
               }
             ],
             "idfoto": 90087,
-            "capienza": 212,
-            "posti_disabili": 2,
-            "numero_postazioni": 212
+            "seats": 212,
+            "accessible_seats": 2,
+            "workstations": 212
           },
           {
             "name": "BL.27.0.3",
@@ -7441,9 +7469,9 @@
               }
             ],
             "idfoto": 90088,
-            "capienza": 212,
-            "posti_disabili": 2,
-            "numero_postazioni": 212
+            "seats": 212,
+            "accessible_seats": 2,
+            "workstations": 212
           },
           {
             "name": "BL.27.0.4",
@@ -7476,9 +7504,9 @@
               }
             ],
             "idfoto": 90089,
-            "capienza": 212,
-            "posti_disabili": 2,
-            "numero_postazioni": 212
+            "seats": 212,
+            "accessible_seats": 2,
+            "workstations": 212
           },
           {
             "name": "BL.27.0.5",
@@ -7511,9 +7539,9 @@
               }
             ],
             "idfoto": 90090,
-            "capienza": 154,
-            "posti_disabili": 1,
-            "numero_postazioni": 154
+            "seats": 154,
+            "accessible_seats": 1,
+            "workstations": 154
           },
           {
             "name": "BL.27.0.6",
@@ -7546,9 +7574,9 @@
               }
             ],
             "idfoto": 90091,
-            "capienza": 154,
-            "posti_disabili": 1,
-            "numero_postazioni": 154
+            "seats": 154,
+            "accessible_seats": 1,
+            "workstations": 154
           },
           {
             "name": "BL.27.0.7",
@@ -7581,9 +7609,9 @@
               }
             ],
             "idfoto": 90092,
-            "capienza": 154,
-            "posti_disabili": 1,
-            "numero_postazioni": 154
+            "seats": 154,
+            "accessible_seats": 1,
+            "workstations": 154
           },
           {
             "name": "BL.27.0.8",
@@ -7616,9 +7644,9 @@
               }
             ],
             "idfoto": 90098,
-            "capienza": 154,
-            "posti_disabili": 1,
-            "numero_postazioni": 154
+            "seats": 154,
+            "accessible_seats": 1,
+            "workstations": 154
           },
           {
             "name": "BL.27.1.1",
@@ -7656,9 +7684,9 @@
               }
             ],
             "idfoto": 90101,
-            "capienza": 64,
-            "posti_disabili": 1,
-            "numero_postazioni": 64
+            "seats": 64,
+            "accessible_seats": 1,
+            "workstations": 64
           },
           {
             "name": "BL.27.1.2",
@@ -7691,9 +7719,9 @@
               }
             ],
             "idfoto": 90102,
-            "capienza": 103,
-            "posti_disabili": 1,
-            "numero_postazioni": 103
+            "seats": 103,
+            "accessible_seats": 1,
+            "workstations": 103
           },
           {
             "name": "BL.27.1.3",
@@ -7731,9 +7759,9 @@
               }
             ],
             "idfoto": 90105,
-            "capienza": 103,
-            "posti_disabili": 1,
-            "numero_postazioni": 103
+            "seats": 103,
+            "accessible_seats": 1,
+            "workstations": 103
           },
           {
             "name": "BL.27.1.4",
@@ -7771,9 +7799,9 @@
               }
             ],
             "idfoto": 90106,
-            "capienza": 103,
-            "posti_disabili": 1,
-            "numero_postazioni": 103
+            "seats": 103,
+            "accessible_seats": 1,
+            "workstations": 103
           },
           {
             "name": "BL.27.1.5",
@@ -7811,9 +7839,9 @@
               }
             ],
             "idfoto": 90108,
-            "capienza": 103,
-            "posti_disabili": 1,
-            "numero_postazioni": 103
+            "seats": 103,
+            "accessible_seats": 1,
+            "workstations": 103
           },
           {
             "name": "BL.27.1.6",
@@ -7851,8 +7879,8 @@
               }
             ],
             "idfoto": 90109,
-            "capienza": 48,
-            "numero_postazioni": 48
+            "seats": 48,
+            "workstations": 48
           },
           {
             "name": "BL.27.1.7",
@@ -7890,8 +7918,8 @@
               }
             ],
             "idfoto": 90111,
-            "capienza": 48,
-            "numero_postazioni": 48
+            "seats": 48,
+            "workstations": 48
           },
           {
             "name": "BL.27.1.8",
@@ -7929,24 +7957,25 @@
               }
             ],
             "idfoto": 90113,
-            "capienza": 48,
-            "numero_postazioni": 48
+            "seats": 48,
+            "workstations": 48
           }
         ],
         "lat": 45.503707305700004,
-        "lng": 9.1573088145,
+        "long": 9.1573088145,
         "idEdificio": "78",
         "address": "Via Lambruschini 4"
       },
       {
         "name": "BL28",
+        "altName": "",
         "classrooms": [
           {
             "name": "AULA CARASSA E DADDA",
             "id": 4745,
             "features": [],
             "idfoto": 14268062,
-            "capienza": 420
+            "seats": 420
           },
           {
             "name": "BL.28.1.1",
@@ -7979,7 +8008,7 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 180
+            "seats": 180
           },
           {
             "name": "BL.28.1.2",
@@ -8002,7 +8031,7 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 90
+            "seats": 90
           },
           {
             "name": "BL.28.2.1",
@@ -8035,7 +8064,7 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 180
+            "seats": 180
           },
           {
             "name": "BL.28.2.2",
@@ -8058,11 +8087,11 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 90
+            "seats": 90
           }
         ],
         "lat": 45.50307929805,
-        "lng": 9.15722858265,
+        "long": 9.15722858265,
         "idEdificio": "62",
         "address": "Via Lambruschini 4"
       }
@@ -8076,137 +8105,139 @@
     "buildings": [
       {
         "name": "CR03",
+        "altName": "",
         "classrooms": [
           {
             "name": "CR03.0.1",
             "id": 5150,
             "features": [],
-            "capienza": 42,
-            "numero_postazioni": 42
+            "seats": 42,
+            "workstations": 42
           },
           {
             "name": "CR03.0.2",
             "id": 5152,
             "features": [],
-            "capienza": 30,
-            "numero_postazioni": 30
+            "seats": 30,
+            "workstations": 30
           },
           {
             "name": "CR03.0.3",
             "id": 5155,
             "features": [],
-            "capienza": 36,
-            "numero_postazioni": 36
+            "seats": 36,
+            "workstations": 36
           }
         ],
         "lat": 45.133884249350004,
-        "lng": 10.0147801809,
+        "long": 10.0147801809,
         "idEdificio": "27309",
         "address": "Via Angelo Massarotti 21c"
       },
       {
         "name": "CR04",
+        "altName": "",
         "classrooms": [
           {
             "name": "CR04.0.1",
             "id": 5147,
             "features": [],
-            "capienza": 256,
-            "posti_disabili": 1,
-            "numero_postazioni": 256
+            "seats": 256,
+            "accessible_seats": 1,
+            "workstations": 256
           },
           {
             "name": "CR04.0.2",
             "id": 5146,
             "features": [],
-            "capienza": 256,
-            "posti_disabili": 1,
-            "numero_postazioni": 256
+            "seats": 256,
+            "accessible_seats": 1,
+            "workstations": 256
           },
           {
             "name": "CR04.0.3",
             "id": 5148,
             "features": [],
-            "capienza": 80,
-            "numero_postazioni": 80
+            "seats": 80,
+            "workstations": 80
           },
           {
             "name": "CR04.1.1",
             "id": 5149,
             "features": [],
-            "capienza": 150,
-            "posti_disabili": 1,
-            "numero_postazioni": 150
+            "seats": 150,
+            "accessible_seats": 1,
+            "workstations": 150
           },
           {
             "name": "CR04.1.2",
             "id": 5151,
             "features": [],
-            "capienza": 150,
-            "posti_disabili": 1,
-            "numero_postazioni": 150
+            "seats": 150,
+            "accessible_seats": 1,
+            "workstations": 150
           },
           {
             "name": "CR04.1.3",
             "id": 5153,
             "features": [],
-            "capienza": 150,
-            "posti_disabili": 1,
-            "numero_postazioni": 150
+            "seats": 150,
+            "accessible_seats": 1,
+            "workstations": 150
           },
           {
             "name": "CR04.1.4",
             "id": 5154,
             "features": [],
-            "capienza": 150,
-            "posti_disabili": 1,
-            "numero_postazioni": 150
+            "seats": 150,
+            "accessible_seats": 1,
+            "workstations": 150
           },
           {
             "name": "CR04.2.1",
             "id": 5156,
             "features": [],
-            "capienza": 80,
-            "numero_postazioni": 80
+            "seats": 80,
+            "workstations": 80
           },
           {
             "name": "CR04.2.2",
             "id": 5157,
             "features": [],
-            "capienza": 80,
-            "numero_postazioni": 80
+            "seats": 80,
+            "workstations": 80
           },
           {
             "name": "CR04.2.3",
             "id": 5158,
             "features": [],
-            "capienza": 80,
-            "numero_postazioni": 80
+            "seats": 80,
+            "workstations": 80
           },
           {
             "name": "CR04.2.4",
             "id": 5159,
             "features": [],
-            "capienza": 100,
-            "numero_postazioni": 100
+            "seats": 100,
+            "workstations": 100
           },
           {
             "name": "CR04.2.5",
             "id": 5160,
             "features": [],
-            "capienza": 80,
-            "numero_postazioni": 80
+            "seats": 80,
+            "workstations": 80
           },
           {
             "name": "CR04.2.6",
             "id": 5161,
             "features": [],
-            "capienza": 80,
-            "numero_postazioni": 80
+            "seats": 80,
+            "workstations": 80
           }
         ],
         "lat": 45.13442455095,
-        "lng": 10.0139647516,
+        "long": 10.0139647516,
         "idEdificio": "27310",
         "address": "Via Angelo Massarotti 21c"
       }
@@ -8220,6 +8251,7 @@
     "buildings": [
       {
         "name": "8",
+        "altName": "",
         "classrooms": [
           {
             "name": "T.1",
@@ -8247,8 +8279,8 @@
               }
             ],
             "idfoto": 29060490,
-            "capienza": 61,
-            "posti_disabili": 1
+            "seats": 61,
+            "accessible_seats": 1
           },
           {
             "name": "T.2",
@@ -8276,8 +8308,8 @@
               }
             ],
             "idfoto": 29060492,
-            "capienza": 61,
-            "posti_disabili": 1
+            "seats": 61,
+            "accessible_seats": 1
           },
           {
             "name": "T.3",
@@ -8305,8 +8337,8 @@
               }
             ],
             "idfoto": 29060308,
-            "capienza": 40,
-            "posti_disabili": 1
+            "seats": 40,
+            "accessible_seats": 1
           },
           {
             "name": "T.4",
@@ -8334,17 +8366,18 @@
               }
             ],
             "idfoto": 29060494,
-            "capienza": 40,
-            "posti_disabili": 1
+            "seats": 40,
+            "accessible_seats": 1
           }
         ],
         "lat": 45.8491659576,
-        "lng": 9.39705088725,
+        "long": 9.39705088725,
         "idEdificio": "130",
         "address": "Via Previati 1C"
       },
       {
         "name": "9",
+        "altName": "",
         "classrooms": [
           {
             "name": "B.0.1",
@@ -8377,8 +8410,8 @@
               }
             ],
             "idfoto": 29060333,
-            "capienza": 88,
-            "posti_disabili": 1
+            "seats": 88,
+            "accessible_seats": 1
           },
           {
             "name": "B.0.2",
@@ -8411,8 +8444,8 @@
               }
             ],
             "idfoto": 29060338,
-            "capienza": 48,
-            "posti_disabili": 1
+            "seats": 48,
+            "accessible_seats": 1
           },
           {
             "name": "B.0.3",
@@ -8445,8 +8478,8 @@
               }
             ],
             "idfoto": 29060342,
-            "capienza": 88,
-            "posti_disabili": 1
+            "seats": 88,
+            "accessible_seats": 1
           },
           {
             "name": "B.0.4",
@@ -8479,8 +8512,8 @@
               }
             ],
             "idfoto": 29060351,
-            "capienza": 120,
-            "posti_disabili": 1
+            "seats": 120,
+            "accessible_seats": 1
           },
           {
             "name": "B.0.5",
@@ -8513,7 +8546,7 @@
               }
             ],
             "idfoto": 29060383,
-            "capienza": 100
+            "seats": 100
           },
           {
             "name": "B.0.6",
@@ -8551,8 +8584,8 @@
               }
             ],
             "idfoto": 29060393,
-            "capienza": 88,
-            "posti_disabili": 1
+            "seats": 88,
+            "accessible_seats": 1
           },
           {
             "name": "B.0.7",
@@ -8585,8 +8618,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 158,
-            "posti_disabili": 1
+            "seats": 158,
+            "accessible_seats": 1
           },
           {
             "name": "B.1.1",
@@ -8619,8 +8652,8 @@
               }
             ],
             "idfoto": 29060403,
-            "capienza": 155,
-            "posti_disabili": 1
+            "seats": 155,
+            "accessible_seats": 1
           },
           {
             "name": "B.1.2",
@@ -8653,8 +8686,8 @@
               }
             ],
             "idfoto": 29060406,
-            "capienza": 50,
-            "posti_disabili": 1
+            "seats": 50,
+            "accessible_seats": 1
           },
           {
             "name": "B.1.3",
@@ -8682,8 +8715,8 @@
               }
             ],
             "idfoto": 29060408,
-            "capienza": 140,
-            "numero_postazioni": 70
+            "seats": 140,
+            "workstations": 70
           },
           {
             "name": "B.1.4",
@@ -8721,8 +8754,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 120,
-            "posti_disabili": 1
+            "seats": 120,
+            "accessible_seats": 1
           },
           {
             "name": "B.1.5",
@@ -8755,8 +8788,8 @@
               }
             ],
             "idfoto": 29060435,
-            "capienza": 100,
-            "posti_disabili": 1
+            "seats": 100,
+            "accessible_seats": 1
           },
           {
             "name": "B.2.1",
@@ -8789,8 +8822,8 @@
               }
             ],
             "idfoto": 29060439,
-            "capienza": 120,
-            "posti_disabili": 1
+            "seats": 120,
+            "accessible_seats": 1
           },
           {
             "name": "B.2.2",
@@ -8818,8 +8851,8 @@
               }
             ],
             "idfoto": 29060446,
-            "capienza": 88,
-            "posti_disabili": 1
+            "seats": 88,
+            "accessible_seats": 1
           },
           {
             "name": "B.2.3",
@@ -8857,7 +8890,7 @@
               }
             ],
             "idfoto": 29060448,
-            "capienza": 120
+            "seats": 120
           },
           {
             "name": "B.2.4",
@@ -8885,9 +8918,9 @@
               }
             ],
             "idfoto": 29060328,
-            "capienza": 90,
-            "posti_disabili": 1,
-            "numero_postazioni": 45
+            "seats": 90,
+            "accessible_seats": 1,
+            "workstations": 45
           },
           {
             "name": "B.2.5",
@@ -8920,8 +8953,8 @@
               }
             ],
             "idfoto": 29060452,
-            "capienza": 120,
-            "posti_disabili": 1
+            "seats": 120,
+            "accessible_seats": 1
           },
           {
             "name": "B.2.6",
@@ -8959,17 +8992,18 @@
               }
             ],
             "idfoto": 29060458,
-            "capienza": 120,
-            "posti_disabili": 1
+            "seats": 120,
+            "accessible_seats": 1
           }
         ],
         "lat": 45.848849747900005,
-        "lng": 9.396724998900002,
+        "long": 9.396724998900002,
         "idEdificio": "63",
         "address": "Via Previati 1C"
       },
       {
         "name": "10",
+        "altName": "",
         "classrooms": [
           {
             "name": "A.0.1",
@@ -9002,8 +9036,8 @@
               }
             ],
             "idfoto": 29263223,
-            "capienza": 126,
-            "posti_disabili": 1
+            "seats": 126,
+            "accessible_seats": 1
           },
           {
             "name": "A.0.2",
@@ -9036,8 +9070,8 @@
               }
             ],
             "idfoto": 29061808,
-            "capienza": 126,
-            "posti_disabili": 1
+            "seats": 126,
+            "accessible_seats": 1
           },
           {
             "name": "A.1.1",
@@ -9070,8 +9104,8 @@
               }
             ],
             "idfoto": 29060317,
-            "capienza": 49,
-            "posti_disabili": 1
+            "seats": 49,
+            "accessible_seats": 1
           },
           {
             "name": "A.1.2",
@@ -9104,8 +9138,8 @@
               }
             ],
             "idfoto": -2147483648,
-            "capienza": 162,
-            "posti_disabili": 1
+            "seats": 162,
+            "accessible_seats": 1
           },
           {
             "name": "A.1.3",
@@ -9138,24 +9172,25 @@
               }
             ],
             "idfoto": 29263233,
-            "capienza": 180,
-            "posti_disabili": 1
+            "seats": 180,
+            "accessible_seats": 1
           }
         ],
         "lat": 45.84944386545,
-        "lng": 9.3964272737,
+        "long": 9.3964272737,
         "idEdificio": "64",
         "address": "Via Previati 1C"
       },
       {
         "name": "12",
+        "altName": "",
         "classrooms": [
           {
             "name": "M.1",
             "id": 5018,
             "features": [],
             "idfoto": 29060461,
-            "capienza": 40
+            "seats": 40
           },
           {
             "name": "M.2",
@@ -9178,11 +9213,11 @@
               }
             ],
             "idfoto": 29060475,
-            "capienza": 56
+            "seats": 56
           }
         ],
         "lat": 45.8502456455,
-        "lng": 9.39638024235,
+        "long": 9.39638024235,
         "idEdificio": "18234",
         "address": "Via Previati 1C"
       }
@@ -9196,6 +9231,7 @@
     "buildings": [
       {
         "name": "1",
+        "altName": "",
         "classrooms": [
           {
             "name": "A.0.1",
@@ -9228,8 +9264,8 @@
               }
             ],
             "idfoto": 26582054,
-            "capienza": 100,
-            "numero_postazioni": 72
+            "seats": 100,
+            "workstations": 72
           },
           {
             "name": "A.0.2",
@@ -9252,8 +9288,8 @@
               }
             ],
             "idfoto": 26582213,
-            "capienza": 102,
-            "numero_postazioni": 102
+            "seats": 102,
+            "workstations": 102
           },
           {
             "name": "A.0.3",
@@ -9286,8 +9322,8 @@
               }
             ],
             "idfoto": 26582217,
-            "capienza": 130,
-            "numero_postazioni": 130
+            "seats": 130,
+            "workstations": 130
           },
           {
             "name": "A.0.4",
@@ -9310,8 +9346,8 @@
               }
             ],
             "idfoto": 26582221,
-            "capienza": 52,
-            "numero_postazioni": 52
+            "seats": 52,
+            "workstations": 52
           },
           {
             "name": "A.1.1",
@@ -9339,15 +9375,15 @@
               }
             ],
             "idfoto": 26582228,
-            "capienza": 45,
-            "numero_postazioni": 45
+            "seats": 45,
+            "workstations": 45
           },
           {
             "name": "A.1.2",
             "id": 4674,
             "features": [],
             "idfoto": 26582207,
-            "capienza": 20
+            "seats": 20
           },
           {
             "name": "A.1.3",
@@ -9385,8 +9421,8 @@
               }
             ],
             "idfoto": 26582230,
-            "capienza": 78,
-            "numero_postazioni": 78
+            "seats": 78,
+            "workstations": 78
           },
           {
             "name": "A.1.4",
@@ -9409,8 +9445,8 @@
               }
             ],
             "idfoto": 26582239,
-            "capienza": 52,
-            "numero_postazioni": 52
+            "seats": 52,
+            "workstations": 52
           },
           {
             "name": "A.1.5",
@@ -9433,8 +9469,8 @@
               }
             ],
             "idfoto": 26582240,
-            "capienza": 60,
-            "numero_postazioni": 60
+            "seats": 60,
+            "workstations": 60
           },
           {
             "name": "A.1.8",
@@ -9452,8 +9488,8 @@
               }
             ],
             "idfoto": 26582243,
-            "capienza": 40,
-            "numero_postazioni": 40
+            "seats": 40,
+            "workstations": 40
           }
         ]
       }

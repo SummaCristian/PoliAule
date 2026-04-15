@@ -200,6 +200,28 @@ body.detail-open .footer {
   }
 }
 
+.detail-status-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+@media (min-width: 600px) {
+  .detail-status-wrapper {
+    align-items: center;
+  }
+}
+
+.detail-status-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-color-secondary);
+  opacity: 0.65;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.1rem;
+}
+
 .detail-title-row .classroom-status-txt {
   font-size: 0.95rem;
   font-weight: 800;

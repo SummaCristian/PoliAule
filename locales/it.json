@@ -101,6 +101,7 @@
   "settings.noCampusData": "Apri l'app per caricare i campus",
 
   "detail.features": "Dotazioni",
+  "detail.currentStatus": "Stato attuale",
   "detail.noFeatures": "Nessuna dotazione",
   "detail.seats": "Posti",
   "detail.disabledSeats": "Posti disabili",

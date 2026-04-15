@@ -101,6 +101,7 @@
   "settings.noCampusData": "Open the app first to load campuses",
 
   "detail.features": "Features",
+  "detail.currentStatus": "Current status",
   "detail.noFeatures": "No features listed",
   "detail.seats": "Seats",
   "detail.disabledSeats": "Accessible seats",

@@ -336,7 +336,11 @@ class ClassroomDetail {
         'free-soon': 'status.freeSoon',
         'occupied-soon': 'status.occupiedSoon'
       };
-      statusHtml = `<h4 class="classroom-status-txt ${status}">${t(statusKeys[status])}</h4>`;
+      statusHtml = `
+        <div class="detail-status-wrapper">
+          <span class="detail-status-label">${t('detail.currentStatus')}</span>
+          <h4 class="classroom-status-txt ${status}">${t(statusKeys[status])}</h4>
+        </div>`;
     }
 
     this._overlay.innerHTML = `

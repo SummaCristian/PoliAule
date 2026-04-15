@@ -435,6 +435,22 @@ body.detail-open .footer {
   z-index: 9;
 }
 
+.detail-schedule-bar-wrapper .timeline-time-indicator--now {
+  display: none;
+}
+
+.detail-schedule-now-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--pos);
+  width: 2px;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, #2196F3 50%, transparent);
+  pointer-events: none;
+  z-index: 4;
+}
+
 .detail-schedule-bar-wrapper .timeline-hover-cursor {
   position: absolute;
   top: 0;
@@ -530,31 +546,47 @@ body.detail-open .footer {
     display: block;
   }
 
+  .detail-schedule-ticks .timeline-time-indicator--now,
+  .detail-schedule-now-line {
+    display: none;
+  }
+
   /* Override date-picker-container defaults for this context */
   .detail-schedule-picker {
     margin-top: 0;
     margin-bottom: 0; /* gap handled by container */
-    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    /* align-self: center (from date-picker.css) has no effect here because
+       the parent (.detail-schedule-day-selector) is not a flex container.
+       Auto margins replicate the same centering behavior. */
     opacity: 1 !important; /* date-picker-container starts at 0 until JS fires */
   }
 
   /* Container: column — selector on top, then time axis + bar below */
   #detail-schedule-container {
     --schedule-bar-height: clamp(240px, 48svh, 480px);
-    --bar-width: 26rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
   }
 
-  /* Inner row: time axis on the left, single day bar on the right */
+  /* Inner row: time axis on the left, single day bar fills the rest */
   .detail-schedule-inner {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
     justify-content: center;
     gap: 0.625rem;
-    overflow-x: clip;
+    overflow: visible; /* clip was silently cutting off bar edges on narrow screens */
+  }
+
+  @media (max-width: 600px) {
+    .detail-schedule-inner {
+      width: 15rem;
+      align-self: center;
+      padding-right: 3.5rem;
+    }
   }
 
   /* Time axis */
@@ -581,44 +613,59 @@ body.detail-open .footer {
     text-align: right;
   }
 
-  .detail-schedule-ticks .timeline-time-indicator--now {
-    left: 0;
+  /* Now indicator: outside the bar, to the right, arrow pointing left */
+  .detail-schedule-bar-wrapper .timeline-time-indicator--now {
+    display: block;
+    left: calc(100% + 0.5rem);
     right: auto;
     top: var(--pos);
     transform: translateY(-50%);
-    transform-origin: right center;
-    animation: now-indicator-appear-mobile 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+    transform-origin: left center;
+    animation: now-indicator-appear-mobile 0.65s linear 0.35s forwards;
   }
 
-  /* Arrow points right instead of down */
-  .detail-schedule-ticks .timeline-time-indicator--now::after {
+  /* Arrow points left toward the bar */
+  .detail-schedule-bar-wrapper .timeline-time-indicator--now::after {
     top: 50%;
-    left: 100%;
-    right: auto;
+    right: 100%;
+    left: auto;
     border-top-color: transparent;
-    border-left-color: color-mix(in srgb, var(--background-color-secondary) 50%, #2196F3 50%);
+    border-right-color: color-mix(in srgb, var(--background-color-secondary) 50%, #2196F3 50%);
     transform: translateY(-50%);
   }
 
   @keyframes now-indicator-appear-mobile {
-    from {
+    0% {
       opacity: 0;
-      transform: translateX(14px) translateY(-50%);
-      filter: blur(4px);
+      transform: translateX(-40px) translateY(-50%) scale(0, 0);
+      filter: blur(16px);
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
-    to {
+    25% {
       opacity: 1;
-      transform: translateX(0) translateY(-50%);
+      transform: translateX(0) translateY(-50%) scale(0.85, 0.25);
+      filter: blur(2px);
+      animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    75% {
+      transform: translateX(0) translateY(-50%) scale(1.06, 1.08);
+      filter: blur(0);
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0) translateY(-50%) scale(1, 1);
       filter: blur(0);
     }
   }
 
-  /* Grid: fixed to bar width so justify-content on the parent can center it */
+  /* Grid: fills all remaining space after the ticks column */
   .detail-schedule-grid {
-    flex: 0 1 var(--bar-width);
+    flex: 1;
     flex-direction: row;
     gap: 0;
     min-width: 0;
+    max-width: 18rem;
   }
 
   /* All day rows hidden on mobile; only .selected is shown */
@@ -647,7 +694,6 @@ body.detail-open .footer {
   .detail-schedule-bar {
     height: var(--schedule-bar-height);
     width: 100%;
-    max-width: var(--bar-width);
     border-radius: 0.75rem;
   }
 
@@ -666,15 +712,15 @@ body.detail-open .footer {
     display: none;
   }
 
-  /* Hover cursor: floats inside the bar, top-right corner, just above the hover line */
+  /* Hover cursor: floats to the right of the bar, vertically centred on the mouse */
   .detail-schedule-bar-wrapper .timeline-hover-cursor {
-    right: 0.375rem;
-    left: auto;
+    left: calc(100% + 0.5rem);
     top: 0; /* overridden by JS */
-    transform: translateY(calc(-100% - 0.375rem));
+    right: auto;
+    transform: translateY(-50%);
   }
 
-  /* No arrow — cursor sits inside the bar */
+  /* No downward arrow — cursor is beside the bar, not above it */
   .detail-schedule-bar-wrapper .timeline-hover-cursor::before,
   .detail-schedule-bar-wrapper .timeline-hover-cursor::after {
     display: none;

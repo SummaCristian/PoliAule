@@ -502,6 +502,9 @@ class ClassroomDetail {
       }
 
       const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+      const nowPct = nowMin >= DAY_START && nowMin <= DAY_END
+        ? ((nowMin - DAY_START) / total * 100).toFixed(2)
+        : null;
 
       const rowsHtml = days.map(({ dayData, date }) => {
         const isSunday = !dayData;
@@ -519,6 +522,7 @@ class ClassroomDetail {
                 <span class="detail-schedule-date secondary">${dayNum} ${monthName}</span>
               </div>
               <div class="detail-schedule-bar-wrapper">
+                ${nowPct !== null ? `<div class="detail-schedule-now-line" style="--pos:${nowPct}%"></div>` : ''}
                 <div class="detail-schedule-bar"></div>
               </div>
             </div>`;
@@ -551,9 +555,11 @@ class ClassroomDetail {
             </div>
             <div class="detail-schedule-bar-wrapper">
               <div class="timeline-hover-cursor" hidden></div>
+              ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>` : ''}
+              ${nowPct !== null ? `<div class="detail-schedule-now-line" style="--pos:${nowPct}%"></div>` : ''}
               <div class="detail-schedule-bar">
                 ${blocksHtml}
-                ${isToday && nowMin >= DAY_START && nowMin <= DAY_END ? `<div class="timeline-now-bar-line" style="--pos:${((nowMin - DAY_START) / total * 100).toFixed(2)}%"></div>` : ''}
+                ${isToday && nowPct !== null ? `<div class="timeline-now-bar-line" style="--pos:${nowPct}%"></div>` : ''}
                 <div class="timeline-hover-line" hidden></div>
               </div>
             </div>
@@ -566,8 +572,8 @@ class ClassroomDetail {
         return;
       }
 
-      const nowTickHtml = nowMin >= DAY_START && nowMin <= DAY_END
-        ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${((nowMin - DAY_START) / total * 100).toFixed(2)}%">${t('timepicker.now')}</div>`
+      const nowTickHtml = nowPct !== null
+        ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>`
         : '';
 
       const ticksHtml = (() => {
@@ -625,7 +631,10 @@ class ClassroomDetail {
         indicatorEl.style.opacity = '1';
       }
 
+      let selectedDayIndex = 0;
+
       function selectScheduleDay(index) {
+        selectedDayIndex = index;
         pickerContainer.querySelectorAll('.date-element-container').forEach(c => c.classList.remove('active'));
         const chip = pickerContainer.querySelector(`[data-day-index="${index}"]`);
         if (chip) {
@@ -648,6 +657,13 @@ class ClassroomDetail {
         ? todayDayIndex
         : days.findIndex(d => d.dayData !== null);
       selectScheduleDay(Math.max(0, initialDayIndex));
+
+      // Re-position the indicator when resizing from desktop → mobile, because
+      // offsetLeft/offsetWidth read as 0 while the selector is display:none.
+      const mobileQuery = window.matchMedia('(max-width: 599px)');
+      mobileQuery.addEventListener('change', e => {
+        if (e.matches) selectScheduleDay(selectedDayIndex);
+      });
 
       // ---------- TIMELINE HOVER ----------
       let _activeBar = null;

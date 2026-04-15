@@ -229,6 +229,23 @@
   flex-direction: column;
   gap: 0.5rem;
   text-align: start;
+
+  cursor: pointer;
+  padding: 1rem;
+  margin: -1rem; /* Offset the container padding to fill it completely */
+  border-radius: 1rem;
+  transition: background-color 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.classroom-card:hover {
+  background-color: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
+}
+
+.classroom-card:hover .classroom-detail-btn {
+  color: var(--text-color-accent);
+  transform: translateX(4px);
 }
 
 .classroom-card-header {
@@ -237,6 +254,28 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.classroom-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.classroom-detail-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--text-color-secondary);
+  transition: color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.classroom-detail-btn .material-symbols-outlined {
+  font-size: 1.5rem !important;
 }
 
 .classroom-features {
@@ -252,7 +291,7 @@
 }
 
 .classroom-name {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   text-align: start;
   margin: 0;
@@ -260,9 +299,10 @@
 }
 
 .classroom-status-txt {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
   margin: 0;
+  flex-shrink: 0;
 }
 
 .classroom-status-txt.free {

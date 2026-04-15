@@ -506,25 +506,27 @@ class ClassroomDetail {
         ? ((nowMin - DAY_START) / total * 100).toFixed(2)
         : null;
 
-      const rowsHtml = days.map(({ dayData, date }) => {
+      const _dayParts = days.map(({ dayData, date }) => {
         const isSunday = !dayData;
 
-        const raw       = date.toLocaleDateString(getLocale(), { weekday: 'short' });
-        const dayName   = raw.charAt(0).toUpperCase() + raw.slice(1);
         const dayNum    = date.getDate();
-        const monthName = date.toLocaleDateString(getLocale(), { month: 'short' });
+        const narrowDay = date.toLocaleDateString(getLocale(), { weekday: 'narrow' });
+        const narrowDayName = narrowDay.charAt(0).toUpperCase() + narrowDay.slice(1);
+        const isToday = !isSunday && dayData.date === todayKey;
+
+        const labelHtml = `
+          <div class="detail-schedule-label-cell${isToday ? ' detail-schedule-label-cell--today' : ''} date-element-container">
+            <span class="date-day-of-week${isSunday ? ' date-sunday' : ''}">${narrowDayName}</span>
+            <span class="date-number">${dayNum}</span>
+          </div>`;
 
         if (isSunday) {
-          return `
+          return { labelHtml, rowHtml: `
             <div class="detail-schedule-row detail-schedule-row--sunday">
-              <div class="detail-schedule-label">
-                <span class="detail-schedule-day">${dayName}</span>
-                <span class="detail-schedule-date secondary">${dayNum} ${monthName}</span>
-              </div>
               <div class="detail-schedule-bar-wrapper">
                 <div class="detail-schedule-bar"></div>
               </div>
-            </div>`;
+            </div>` };
         }
 
         let occupancy = [];
@@ -535,7 +537,6 @@ class ClassroomDetail {
           }
         }
 
-        const isToday   = dayData.date === todayKey;
         const blocksHtml = (occupancy || []).map(slot => {
           if (!slot.inizio || !slot.fine) return '';
           const s = Math.max(timeToMinutes(slot.inizio), DAY_START);
@@ -546,12 +547,8 @@ class ClassroomDetail {
           return `<div class="detail-schedule-block" style="--block-start:${left}%;--block-size:${width}%"></div>`;
         }).join('');
 
-        return `
+        return { labelHtml, rowHtml: `
           <div class="detail-schedule-row${isToday ? ' detail-schedule-row--today' : ''}">
-            <div class="detail-schedule-label">
-              <span class="detail-schedule-day">${dayName}</span>
-              <span class="detail-schedule-date secondary">${dayNum} ${monthName}</span>
-            </div>
             <div class="detail-schedule-bar-wrapper">
               <div class="timeline-hover-cursor" hidden></div>
               ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>` : ''}
@@ -561,8 +558,11 @@ class ClassroomDetail {
                 <div class="timeline-hover-line" hidden></div>
               </div>
             </div>
-          </div>`;
-      }).join('');
+          </div>` };
+      });
+
+      const labelsHtml = _dayParts.map(p => p.labelHtml).join('');
+      const rowsHtml   = _dayParts.map(p => p.rowHtml).join('');
 
       if (!rowsHtml) {
         console.warn('ClassroomDetail: No room matches found in any day of occupancy data');
@@ -619,8 +619,12 @@ class ClassroomDetail {
         <div class="detail-schedule-inner">
           <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}</div>
           <div class="detail-schedule-grid">
-            <div class="detail-schedule-grid-lines">${gridLinesHtml}</div>
-            ${rowsHtml}
+            <div class="detail-desktop-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
+            <div class="detail-schedule-labels-pill">${labelsHtml}</div>
+            <div class="detail-schedule-bars">
+              <div class="detail-schedule-grid-lines">${gridLinesHtml}</div>
+              ${rowsHtml}
+            </div>
           </div>
         </div>
       `;
@@ -633,7 +637,7 @@ class ClassroomDetail {
       const pickerContainer = container.querySelector('.detail-schedule-picker');
       const indicatorEl = pickerContainer.querySelector('.date-indicator');
       const todayIndicatorEl = container.querySelector('.detail-today-indicator');
-      const gridEl = container.querySelector('.detail-schedule-grid');
+      const gridEl = container.querySelector('.detail-schedule-bars');
       const rowEls = gridEl.querySelectorAll('.detail-schedule-row');
 
       function placeSelectorIndicator(chipEl) {
@@ -703,6 +707,27 @@ class ClassroomDetail {
       });
       positionDetailTodayIndicator();
 
+      // Desktop Today indicator — position it vertically aligned with the today cell
+      const desktopTodayIndicatorEl = container.querySelector('.detail-desktop-today-indicator');
+      const pillEl = container.querySelector('.detail-schedule-labels-pill');
+
+      function positionDesktopTodayIndicator() {
+        if (!desktopTodayIndicatorEl || !pillEl || window.matchMedia('(max-width: 599px)').matches) return;
+        const todayCell = pillEl.querySelector('.detail-schedule-label-cell--today');
+        if (!todayCell) {
+          desktopTodayIndicatorEl.classList.add('hidden');
+          return;
+        }
+        desktopTodayIndicatorEl.classList.remove('hidden');
+        const top = pillEl.offsetTop
+          + todayCell.offsetTop
+          + todayCell.offsetHeight / 2
+          - desktopTodayIndicatorEl.offsetHeight / 2;
+        desktopTodayIndicatorEl.style.top = `${top}px`;
+      }
+      positionDesktopTodayIndicator();
+      window.addEventListener('resize', positionDesktopTodayIndicator);
+
       // Re-position the indicator when resizing from desktop → mobile, because
       // offsetLeft/offsetWidth read as 0 while the selector is display:none.
       const mobileQuery = window.matchMedia('(max-width: 599px)');
@@ -710,6 +735,8 @@ class ClassroomDetail {
         if (e.matches) {
           selectScheduleDay(selectedDayIndex);
           positionDetailTodayIndicator();
+        } else {
+          positionDesktopTodayIndicator();
         }
       });
 

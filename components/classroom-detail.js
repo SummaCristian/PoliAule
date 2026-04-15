@@ -349,13 +349,13 @@ class ClassroomDetail {
           <img class="detail-photo" alt="">
           <div class="detail-photo-gradient"></div>
         </div>` : ''}
-      <div class="detail-header">
+        <div class="detail-header">
         <div class="detail-title-row">
           <h1 class="detail-title" role="button" tabindex="0">${classroom.name}</h1>
           ${statusHtml}
         </div>
         <p class="detail-subtitle secondary">
-          ${t('building.prefix')} ${building.name} &middot; ${getCampusDisplayName(campus)}
+          ${t('building.prefix')} ${building.altName ? `${building.altName} (${building.name})` : building.name} &middot; ${getCampusDisplayName(campus)}
         </p>
         <div class="detail-stats">
           <div class="detail-stat">

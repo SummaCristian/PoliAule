@@ -57,7 +57,7 @@ function buildSearchIndex() {
     const campusShortName = getCampusDisplayName(campus);
     for (const building of campus.buildings) {
       for (const room of building.classrooms) {
-        index.push({ ...room, buildingName: building.name, campusShortName });
+        index.push({ ...room, buildingName: building.name, buildingAltName: building.altName, campusShortName });
       }
     }
   }
@@ -156,7 +156,7 @@ function buildClassroomCard(room, query = '') {
       </div>
       <div class="search-card-info">
         <span class="search-card-name">${highlight(room.name, query)}</span>
-        ${room.buildingName    ? `<span class="search-card-meta secondary">${highlight(room.buildingName, query)}</span>` : ''}
+        ${room.buildingName ? `<span class="search-card-meta secondary">${highlight(room.buildingName + (room.buildingAltName ? ' (' + room.buildingAltName + ')' : ''), query)}</span>` : ''}
         ${room.campusShortName ? `<span class="search-card-meta secondary small">${highlight(room.campusShortName, query)}</span>` : ''}
       </div>
       <div class="search-card-status">

@@ -137,14 +137,12 @@ tabs.forEach((tab, index) => {
 
 // Builds a <li> containing a building card with its room cards inside.
 // Returns the element and the next cardIndex for stagger sequencing.
-function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToday = false) {
-  const counts = { free: 0, 'partially-free': 0, 'not-free': 0 };
-  rooms.forEach(r => { if (r.status in counts) counts[r.status]++; });
-
+function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = false) {
+  const buildingName = building.name;
   const countParts = [
-    counts['free']           ? `<span class="building-count free">${counts['free']} ${t('status.free')}</span>` : '',
-    counts['partially-free'] ? `<span class="building-count partially-free">${counts['partially-free']} ${t('status.partial')}</span>` : '',
-    counts['not-free']       ? `<span class="building-count not-free">${counts['not-free']} ${t('status.occupied')}</span>` : '',
+    rooms.filter(r => r.status === 'free').length ? `<span class="building-count free">${rooms.filter(r => r.status === 'free').length} ${t('status.free')}</span>` : '',
+    rooms.filter(r => r.status === 'partially-free').length ? `<span class="building-count partially-free">${rooms.filter(r => r.status === 'partially-free').length} ${t('status.partial')}</span>` : '',
+    rooms.filter(r => r.status === 'not-free').length ? `<span class="building-count not-free">${rooms.filter(r => r.status === 'not-free').length} ${t('status.occupied')}</span>` : '',
   ].filter(Boolean).join('<span class="building-count-sep">·</span>');
 
   const buildingCard = document.createElement('div');
@@ -153,7 +151,7 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
   buildingCard.innerHTML = `
     <div class="building-card-header">
       <div class="building-card-header-text">
-        <h3 class="building-name">${t('building.prefix')} ${buildingName}</h3>
+        <h3 class="building-name">${t('building.prefix')} ${building.altName ? `${building.altName} (${building.name})` : buildingName}</h3>
         <div class="building-counts">${countParts}</div>
       </div>
       <span class="material-symbols-outlined building-chevron">expand_more</span>
@@ -170,7 +168,7 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
     roomItem.className = 'classroom-list-item-container';
     roomItem.dataset.status = room.status;
     roomItem.style.animationDelay = `${Math.min(cardIndex * 40, 300)}ms`;
-    roomItem.innerHTML = buildCardForClassroom(room, from, to, isToday);
+    roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday);
     cardIndex++;
     roomsList.appendChild(roomItem);
   });
@@ -355,8 +353,8 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   const isToday = date === todayStr;
 
   let cardIndex = 0;
-  results.forEach(building => {
-    const { li, cardIndex: next } = createBuildingItem(building.building.name, building.rooms, from, to, cardIndex, isToday);
+  results.forEach(buildingResult => {
+    const { li, cardIndex: next } = createBuildingItem(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday);
     cardIndex = next;
     list.appendChild(li);
   });

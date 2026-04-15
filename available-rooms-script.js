@@ -103,7 +103,7 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
 
     if (availableRooms.length > 0) {
       results.push({
-        building: { id: building.name, name: building.name },
+        building: building,
         rooms: availableRooms,
       });
     }

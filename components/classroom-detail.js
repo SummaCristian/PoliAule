@@ -602,7 +602,7 @@ class ClassroomDetail {
         const dayName = raw.charAt(0).toUpperCase() + raw.slice(1);
         const dayNum = date.getDate();
         return `
-          <div class="date-element-container${isSunday ? ' detail-schedule-day--sunday' : ''}" data-day-index="${i}">
+          <div class="date-element-container${isSunday ? ' detail-schedule-day--sunday date-skipped' : ''}" data-day-index="${i}">
             <span class="date-day-of-week${isSunday ? ' date-sunday' : ''}">${dayName}</span>
             <span class="date-number">${dayNum}</span>
           </div>`;
@@ -610,6 +610,7 @@ class ClassroomDetail {
 
       container.innerHTML = `
         <div class="detail-schedule-day-selector">
+          <div class="detail-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
           <div class="date-picker-container detail-schedule-picker">
             <div class="date-indicator"></div>
             ${selectorItemsHtml}
@@ -631,6 +632,7 @@ class ClassroomDetail {
       // --- Mobile day selector interaction ---
       const pickerContainer = container.querySelector('.detail-schedule-picker');
       const indicatorEl = pickerContainer.querySelector('.date-indicator');
+      const todayIndicatorEl = container.querySelector('.detail-today-indicator');
       const gridEl = container.querySelector('.detail-schedule-grid');
       const rowEls = gridEl.querySelectorAll('.detail-schedule-row');
 
@@ -659,6 +661,14 @@ class ClassroomDetail {
 
       pickerContainer.querySelectorAll('.date-element-container').forEach(chip => {
         chip.addEventListener('click', () => {
+          if (chip.classList.contains('date-skipped')) {
+            indicatorEl.classList.remove('shake');
+            void indicatorEl.offsetWidth; // force reflow to restart animation
+            indicatorEl.classList.add('shake');
+            indicatorEl.addEventListener('animationend', () => indicatorEl.classList.remove('shake'), { once: true });
+            haptics.trigger(defaultPatterns.error);
+            return;
+          }
           haptics.trigger(defaultPatterns.success);
           selectScheduleDay(parseInt(chip.dataset.dayIndex));
         });
@@ -671,11 +681,36 @@ class ClassroomDetail {
         : days.findIndex(d => d.dayData !== null);
       selectScheduleDay(Math.max(0, initialDayIndex));
 
+      // Today indicator: position the pill above the today chip (mobile only)
+      function positionDetailTodayIndicator() {
+        if (!todayIndicatorEl || !window.matchMedia('(max-width: 599px)').matches) return;
+        const todayChip = pickerContainer.querySelector(`[data-day-index="${todayDayIndex}"]`);
+        if (!todayChip || todayDayIndex < 0) {
+          todayIndicatorEl.classList.add('hidden');
+          return;
+        }
+        todayIndicatorEl.classList.remove('hidden');
+        const left = pickerContainer.offsetLeft + todayChip.offsetLeft + todayChip.offsetWidth / 2;
+        const top  = pickerContainer.offsetTop - todayIndicatorEl.offsetHeight - 8;
+        todayIndicatorEl.style.left = `${left}px`;
+        todayIndicatorEl.style.top  = `${top}px`;
+      }
+      todayIndicatorEl?.addEventListener('click', () => {
+        if (todayDayIndex >= 0) {
+          haptics.trigger(defaultPatterns.success);
+          selectScheduleDay(todayDayIndex);
+        }
+      });
+      positionDetailTodayIndicator();
+
       // Re-position the indicator when resizing from desktop → mobile, because
       // offsetLeft/offsetWidth read as 0 while the selector is display:none.
       const mobileQuery = window.matchMedia('(max-width: 599px)');
       mobileQuery.addEventListener('change', e => {
-        if (e.matches) selectScheduleDay(selectedDayIndex);
+        if (e.matches) {
+          selectScheduleDay(selectedDayIndex);
+          positionDetailTodayIndicator();
+        }
       });
 
       // ---------- TIMELINE HOVER ----------

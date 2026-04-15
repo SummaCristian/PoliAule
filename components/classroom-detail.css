@@ -709,7 +709,7 @@ body.detail-open .footer {
   /* Arrow points left toward the bar */
   .detail-schedule-bar-wrapper .timeline-time-indicator--now::after {
     top: 50%;
-    right: 100%;
+    right: 95%;
     left: auto;
     border-top-color: transparent;
     border-right-color: #2196F3;

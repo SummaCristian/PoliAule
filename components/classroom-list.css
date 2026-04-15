@@ -291,17 +291,24 @@
   top: 0;
   transform: translateX(-50%);
 
-  background: color-mix(in srgb, var(--background-color-secondary) 50%, var(--text-color-accent) 50%);
-  color: var(--text-color-primary);
-  border: 1px solid color-mix(in srgb, var(--text-color-accent) 15%, transparent);
-  border-radius: 0.5rem;
-  padding: 3px 8px;
-  font-size: 0.72rem;
-  font-weight: bold;
+  background: var(--text-color-accent);
+  color: white;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 800;
   white-space: nowrap;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
 
   user-select: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .timeline-time-indicator:not(.timeline-time-indicator--now) {
+    /* Use a slightly darker/more saturated green for better white text contrast on dark background */
+    background: #28a745;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+  }
 }
 
 .timeline-time-indicator::after {
@@ -310,13 +317,19 @@
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: color-mix(in srgb, var(--background-color-secondary) 50%, var(--text-color-accent) 50%);
+  border: 4px solid transparent;
+  border-top-color: var(--text-color-accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .timeline-time-indicator:not(.timeline-time-indicator--now)::after {
+    border-top-color: #28a745;
+  }
 }
 
 .timeline-time-indicator--now {
-  background: color-mix(in srgb, var(--background-color-secondary) 50%, #2196F3 50%);
-  border-color: color-mix(in srgb, #2196F3 30%, transparent);
+  background: #2196F3;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
 
   opacity: 0;
   transform-origin: bottom center;
@@ -324,7 +337,7 @@
 }
 
 .timeline-time-indicator--now::after {
-  border-top-color: color-mix(in srgb, var(--background-color-secondary) 50%, #2196F3 50%);
+  border-top-color: #2196F3;
 }
 
 .timeline-bar {

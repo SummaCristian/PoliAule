@@ -1,5 +1,6 @@
 import { t, onLanguageSwitch } from './i18n.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
+import { getClassroomStatusNow } from './available-rooms-script.js';
 
 const supportsAnchor = CSS.supports('anchor-name: --a');
 
@@ -133,6 +134,18 @@ function buildClassroomCard(room, query = '') {
     .map(f => `<span class="material-symbols-outlined search-card-feature-icon" title="${t(FEATURE_ICONS[f.id].key)}">${FEATURE_ICONS[f.id].icon}</span>`)
     .join('');
 
+  const status = getClassroomStatusNow(room.id);
+  let statusText = '';
+  if (status) {
+    const statusKeys = {
+      'free': 'status.free',
+      'occupied': 'status.occupied',
+      'free-soon': 'status.freeSoon',
+      'occupied-soon': 'status.occupiedSoon'
+    };
+    statusText = `<h4 class="classroom-status-txt ${status}">${t(statusKeys[status])}</h4>`;
+  }
+
   const el = document.createElement('button');
   el.className = 'search-card search-card--classroom';
   el.dataset.openClassroom = room.id;
@@ -145,6 +158,9 @@ function buildClassroomCard(room, query = '') {
         <span class="search-card-name">${highlight(room.name, query)}</span>
         ${room.buildingName    ? `<span class="search-card-meta secondary">${highlight(room.buildingName, query)}</span>` : ''}
         ${room.campusShortName ? `<span class="search-card-meta secondary small">${highlight(room.campusShortName, query)}</span>` : ''}
+      </div>
+      <div class="search-card-status">
+        ${statusText}
       </div>
     </div>
     ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}

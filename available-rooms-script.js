@@ -151,3 +151,55 @@ function getFreeSlots(occupancy, fromTime, toTime) {
 
   return freeSlots;
 }
+
+/**
+ * Returns the current availability status of a classroom relative to NOW.
+ * Possible return values: 'free', 'occupied', 'free-soon', 'occupied-soon', or null if no data.
+ */
+export function getClassroomStatusNow(classroomId) {
+  if (!classroomsData || classroomsData.length === 0) return null;
+
+  const now = new Date();
+  const dateKey = formatDateYYYYMMDD(now);
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  // Find today's data
+  const dayData = classroomsData.find(day => day.date === dateKey);
+  if (!dayData) return null;
+
+  let classroom = null;
+  outer: for (const campus of dayData.campuses) {
+    for (const building of campus.buildings) {
+      classroom = building.classrooms.find(r => String(r.id) === String(classroomId));
+      if (classroom) break outer;
+    }
+  }
+
+  if (!classroom) return null;
+
+  const occupancy = classroom.occupancy ?? [];
+  const isOccupiedNow = occupancy.some(slot => currentTime >= slot.inizio && currentTime < slot.fine);
+
+  const thirtyMinsLater = new Date(now.getTime() + 30 * 60 * 1000);
+  const thirtyMinsLaterTime = `${String(thirtyMinsLater.getHours()).padStart(2, '0')}:${String(thirtyMinsLater.getMinutes()).padStart(2, '0')}`;
+
+  if (isOccupiedNow) {
+    // Check if it will be free within 30 mins
+    const currentSlot = occupancy.find(slot => currentTime >= slot.inizio && currentTime < slot.fine);
+    // If current slot ends within 30 mins AND no other slot starts before that 30 min window ends
+    if (currentSlot.fine < thirtyMinsLaterTime) {
+      const nextOccupancy = occupancy.some(slot => slot.inizio >= currentSlot.fine && slot.inizio < thirtyMinsLaterTime);
+      if (!nextOccupancy) {
+        return 'free-soon';
+      }
+    }
+    return 'occupied';
+  } else {
+    // Currently free. Check if it will be occupied within 30 mins.
+    const nextOccupancy = occupancy.some(slot => slot.inizio > currentTime && slot.inizio < thirtyMinsLaterTime);
+    if (nextOccupancy) {
+      return 'occupied-soon';
+    }
+    return 'free';
+  }
+}

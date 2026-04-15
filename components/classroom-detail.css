@@ -185,6 +185,29 @@ body.detail-open .footer {
   align-items: flex-start; /* Mobile default */
 }
 
+.detail-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+@media (min-width: 600px) {
+  .detail-title-row {
+    width: auto;
+    justify-content: center;
+  }
+}
+
+.detail-title-row .classroom-status-txt {
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
 @media (min-width: 600px) {
   .detail-header {
     align-items: center; /* Desktop centered */

@@ -421,6 +421,19 @@ mark {
   align-items: center;
   gap: 0.75rem;
   flex: 1;
+  min-width: 0;
+}
+
+.search-card-status {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.search-card-status .classroom-status-txt {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .search-card-icon-wrapper {

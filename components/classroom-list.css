@@ -299,22 +299,30 @@
 }
 
 .classroom-status-txt {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 800;
   margin: 0;
   flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .classroom-status-txt.free {
   color: var(--text-color-accent);
 }
 
-.classroom-status-txt.partially-free {
-  color: #f0b429;
+.classroom-status-txt.free-soon {
+  color: #a6ce39; /* Yellow-green */
 }
 
-.classroom-status-txt.not-free {
-  color: #e53935;
+.classroom-status-txt.partially-free,
+.classroom-status-txt.occupied-soon {
+  color: #f0b429; /* Yellow/Orange */
+}
+
+.classroom-status-txt.not-free,
+.classroom-status-txt.occupied {
+  color: #e53935; /* Red */
 }
 
 .classroom-timeline {

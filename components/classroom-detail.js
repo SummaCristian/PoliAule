@@ -1,4 +1,4 @@
-import { classroomsData as occupancyData, SKIP_DAYS } from '../available-rooms-script.js';
+import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow } from '../available-rooms-script.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { haptics, defaultPatterns } from './haptics.js';
 import { createTimeFormatter } from '../utils/time-format.js';
@@ -108,11 +108,12 @@ class ClassroomDetail {
 
       const id = parseInt(trigger.dataset.openClassroom);
 
-      // Name element that will morph into the overlay title
-      const card = trigger.closest('.classroom-card') ?? trigger;
+      // Name and status elements that will morph into the overlay
+      const card = trigger.closest('.classroom-card, .search-card--classroom') ?? trigger;
       const nameEl = card.querySelector('.classroom-name, .search-card-name') ?? null;
+      const statusEl = card.querySelector('.classroom-status-txt') ?? null;
 
-      this._pendingTrigger = { nameEl };
+      this._pendingTrigger = { nameEl, statusEl };
       this._openedViaPushState = true;
       location.hash = '#classroom/' + id;
     });
@@ -155,6 +156,7 @@ class ClassroomDetail {
     this._savedScrollPos = window.scrollY;
 
     const nameEl = pending?.nameEl ?? null;
+    const statusEl = pending?.statusEl ?? null;
 
     if (document.startViewTransition && this._tabbar) {
       // -- OLD state setup (before VT snapshot) --
@@ -162,12 +164,14 @@ class ClassroomDetail {
       this._tabbar.style.viewTransitionName = 'classroom-nav';
       // Room name morphs into the overlay title
       if (nameEl) nameEl.style.viewTransitionName = 'classroom-detail-name';
+      if (statusEl) statusEl.style.viewTransitionName = 'classroom-status';
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
         this._tabbar.style.viewTransitionName = '';
         this._tabbar.classList.add('detail-open');
         if (nameEl) nameEl.style.viewTransitionName = '';
+        if (statusEl) statusEl.style.viewTransitionName = '';
 
         // Show overlay and back button
         document.body.classList.add('detail-open');
@@ -181,8 +185,10 @@ class ClassroomDetail {
 
         // Back button in the header is the NEW state destination for classroom-nav
         const titleEl = this._overlay.querySelector('.detail-title');
+        const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
         if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
         if (titleEl) titleEl.style.viewTransitionName = 'classroom-detail-name';
+        if (detailStatusEl) detailStatusEl.style.viewTransitionName = 'classroom-status';
 
         // Load data immediately after rendering in the transition callback
         this._loadSchedule(id);
@@ -193,12 +199,16 @@ class ClassroomDetail {
         // Clean up — VT names must be cleared after the animation
         this._tabbar.style.viewTransitionName = '';
         if (nameEl) nameEl.style.viewTransitionName = '';
+        if (statusEl) statusEl.style.viewTransitionName = '';
         if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         this._overlay.querySelector('.detail-title')
+          ?.style.setProperty('view-transition-name', '');
+        this._overlay.querySelector('.detail-title-row .classroom-status-txt')
           ?.style.setProperty('view-transition-name', '');
       }).catch(() => {
         this._tabbar.style.viewTransitionName = '';
         if (nameEl) nameEl.style.viewTransitionName = '';
+        if (statusEl) statusEl.style.viewTransitionName = '';
         if (this._backBtn) this._backBtn.style.viewTransitionName = '';
       });
     } else {
@@ -227,13 +237,17 @@ class ClassroomDetail {
     this._currentId = null;
 
     const nameEl = this._openTrigger?.nameEl ?? null;
+    const statusEl = this._openTrigger?.statusEl ?? null;
     const titleEl = this._overlay.querySelector('.detail-title');
+    const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
     const nameInDom = nameEl && document.body.contains(nameEl);
+    const statusInDom = statusEl && document.body.contains(statusEl);
 
     const cleanup = () => {
       this._overlay.innerHTML = '';
       this._openTrigger = null;
       if (nameEl) nameEl.style.viewTransitionName = '';
+      if (statusEl) statusEl.style.viewTransitionName = '';
       if (this._tabbar) this._tabbar.style.viewTransitionName = '';
       if (this._backBtn) this._backBtn.style.viewTransitionName = '';
     };
@@ -243,6 +257,7 @@ class ClassroomDetail {
       // Back button (in header) is the source; tabbar is the destination
       if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
       if (titleEl && nameInDom) titleEl.style.viewTransitionName = 'classroom-detail-name';
+      if (detailStatusEl && statusInDom) detailStatusEl.style.viewTransitionName = 'classroom-status';
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
@@ -260,6 +275,7 @@ class ClassroomDetail {
 
         // Room name morphs back too
         if (nameInDom) nameEl.style.viewTransitionName = 'classroom-detail-name';
+        if (statusInDom) statusEl.style.viewTransitionName = 'classroom-status';
 
         // Restore scroll position so VT can morph back to the correct spot
         window.scrollTo(0, this._savedScrollPos);
@@ -311,6 +327,18 @@ class ClassroomDetail {
       })
       .join('');
 
+    const status = getClassroomStatusNow(classroom.id);
+    let statusHtml = '';
+    if (status) {
+      const statusKeys = {
+        'free': 'status.free',
+        'occupied': 'status.occupied',
+        'free-soon': 'status.freeSoon',
+        'occupied-soon': 'status.occupiedSoon'
+      };
+      statusHtml = `<h4 class="classroom-status-txt ${status}">${t(statusKeys[status])}</h4>`;
+    }
+
     this._overlay.innerHTML = `
       ${classroom.idfoto ? `
         <div class="detail-photo-container">
@@ -318,7 +346,10 @@ class ClassroomDetail {
           <div class="detail-photo-gradient"></div>
         </div>` : ''}
       <div class="detail-header">
-        <h1 class="detail-title" role="button" tabindex="0">${classroom.name}</h1>
+        <div class="detail-title-row">
+          <h1 class="detail-title" role="button" tabindex="0">${classroom.name}</h1>
+          ${statusHtml}
+        </div>
         <p class="detail-subtitle secondary">
           ${t('building.prefix')} ${building.name} &middot; ${getCampusDisplayName(campus)}
         </p>

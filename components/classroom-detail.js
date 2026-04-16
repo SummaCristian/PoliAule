@@ -471,20 +471,22 @@ class ClassroomDetail {
       img.classList.remove('loaded');
       container.classList.remove('loaded');
 
-      // Step 2: Assign to img.src. 
-      // We use the tag directly to avoid CORS fetch issues while still 
-      // triggering the browser's network request for the image.
-      img.onload = () => {
-        img.classList.add('loaded');
-        container.classList.add('loaded');
-      };
-      img.onerror = () => {
-        // If it fails (e.g. cookie error), we remove the container so it's clean,
-        // but it can be recreated by a future _loadPhoto call (like a refresh).
-        if (this._currentId === classroomId) container.remove();
-      };
-
+      // Step 2: Assign to img.src and wait for full decode before revealing.
+      // We use img.decode() instead of onload because onload fires when the
+      // image is downloaded but before the browser has decoded the bitmap.
+      // On Safari iOS the decode happens a few frames later, causing a visible
+      // "swap-in" flash right after the opacity transition ends.
+      // decode() resolves only once the image is decoded and ready to paint.
       img.src = url;
+      img.decode()
+        .then(() => {
+          if (this._currentId !== classroomId) return;
+          img.classList.add('loaded');
+          container.classList.add('loaded');
+        })
+        .catch(() => {
+          if (this._currentId === classroomId) container.remove();
+        });
     } catch (err) {
       console.error('Classroom photo load error:', err);
       if (this._currentId !== classroomId) return;

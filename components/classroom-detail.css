@@ -58,11 +58,6 @@ body.detail-open .tab-content * {
   flex-shrink: 0;
 
   transition: box-shadow 0.4s ease, background-color 0.4s ease;
-
-  /* Promote to its own compositing layer so Safari doesn't flatten it
-     back into the document when the child image transition completes. */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
 }
 
 /* Mobile "Hero Header" style */
@@ -119,13 +114,8 @@ body.detail-open .tab-content * {
   object-fit: cover;
   object-position: center center;
   opacity: 0;
-  transform: scale(1.05) translateZ(0);
+  transform: scale(1.05);
   transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, opacity;
-  /* Prevents Safari from tearing down the GPU layer at transition end,
-     which causes a single-frame repaint flicker on iOS/WebKit. */
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
 
 @media (max-width: 599px) {
@@ -139,9 +129,7 @@ body.detail-open .tab-content * {
 
 .detail-photo.loaded {
   opacity: 1;
-  /* translateZ(0) keeps the compositing layer active so Safari doesn't tear it
-     down at the end of the transition (which causes the flicker). */
-  transform: scale(1) translateZ(0);
+  transform: scale(1);
 }
 
 .detail-photo-gradient {

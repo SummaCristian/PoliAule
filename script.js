@@ -438,6 +438,12 @@ function renderNoResultsClassroomsContainer(container) {
   `;
 }
 
+const TIME_MIN_MINS = 7 * 60 + 15;  // 07:15
+const TIME_MAX_MINS = 20 * 60 + 15; // 20:15
+
+// Set by setupTimePickers when the current time is after 20:15 (need tomorrow's date)
+let preferInitialDate = null;
+
 // Sets the allowed dates into the date picker,
 // and populates the custom UI and the hidden select with the available dates
 function setupDatePicker() {
@@ -613,9 +619,11 @@ function setupDatePicker() {
   // Wait for fonts to load to ensure accurate element measurements
   document.fonts.ready.then(() => {
     requestAnimationFrame(() => {
-      // Auto-select the first available (non-skipped) date
+      // Auto-select preferred date (tomorrow when after 20:15) or first available
+      const preferred = preferInitialDate
+        && [...elements].find(el => el.dataset.date === preferInitialDate && !el.classList.contains('date-skipped'));
       const firstAvailable = [...elements].find(el => !el.classList.contains('date-skipped'));
-      if (firstAvailable) selectDateElement(firstAvailable);
+      if (preferred || firstAvailable) selectDateElement(preferred || firstAvailable);
 
       positionTodayIndicator();
 
@@ -626,7 +634,7 @@ function setupDatePicker() {
 }
 
 // Sets up the time pickers to ensure that the 'to' time
-// is always at least 1 hour after the 'from' time
+// is always at least 1 hour after the 'from' time, within 07:15–20:15
 function setupTimePickers() {
   const fromPicker = document.getElementById('from-time-picker');
   const toPicker = document.getElementById('to-time-picker');
@@ -636,6 +644,10 @@ function setupTimePickers() {
     return h * 60 + m;
   }
 
+  function formatMins(mins) {
+    return `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+  }
+
   function formatTime(date) {
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   }
@@ -643,13 +655,12 @@ function setupTimePickers() {
   fromPicker.addEventListener('input', () => {
     if (!fromPicker.value) return;
 
-    const [hours, minutes] = fromPicker.value.split(':').map(Number);
-    const minTo = new Date();
-    minTo.setHours(hours + 1, minutes);
-    toPicker.min = formatTime(minTo);
+    const fromMins = toMinutes(fromPicker.value);
+    const minToMins = Math.min(fromMins + 60, TIME_MAX_MINS);
+    toPicker.min = formatMins(minToMins);
 
-    if (toPicker.value && toMinutes(toPicker.value) < toMinutes(toPicker.min)) {
-      toPicker.value = toPicker.min;
+    if (toPicker.value && toMinutes(toPicker.value) < minToMins) {
+      toPicker.value = formatMins(minToMins);
     }
   });
 
@@ -657,30 +668,44 @@ function setupTimePickers() {
     if (!toPicker.value || !fromPicker.value) return;
 
     const diffMinutes = toMinutes(toPicker.value) - toMinutes(fromPicker.value);
-
     if (diffMinutes < 60) {
-      const [fromHours, fromMinutes] = fromPicker.value.split(':').map(Number);
-      const corrected = new Date();
-      corrected.setHours(fromHours + 1, fromMinutes);
-      toPicker.value = formatTime(corrected);
+      const corrected = Math.min(toMinutes(fromPicker.value) + 60, TIME_MAX_MINS);
+      toPicker.value = formatMins(corrected);
     }
   });
 
   // Set initial values
   const intervalHours = parseInt(localStorage.getItem(INTERVAL_HOURS_KEY), 10) || 1;
   const now = new Date();
-  now.setMinutes(15, 0, 0);
-  if (new Date().getMinutes() >= 15) now.setHours(now.getHours() + 1);
 
-  const minTo = new Date(now);
-  minTo.setHours(now.getHours() + 1);
+  // Snap to next :15 slot
+  const snapped = new Date(now);
+  snapped.setMinutes(15, 0, 0);
+  if (now.getMinutes() >= 15) snapped.setHours(snapped.getHours() + 1);
 
-  const later = new Date(now);
-  later.setHours(now.getHours() + intervalHours);
+  const snappedMins = snapped.getHours() * 60 + snapped.getMinutes();
 
-  fromPicker.value = formatTime(now);
-  toPicker.value = formatTime(later);
-  toPicker.min = formatTime(minTo);
+  if (snappedMins > TIME_MAX_MINS) {
+    // After 20:15 → tomorrow at 07:15; signal date picker to advance
+    snapped.setDate(snapped.getDate() + 1);
+    snapped.setHours(7, 15, 0, 0);
+    preferInitialDate = [
+      snapped.getFullYear(),
+      String(snapped.getMonth() + 1).padStart(2, '0'),
+      String(snapped.getDate()).padStart(2, '0'),
+    ].join('-');
+  } else if (snappedMins < TIME_MIN_MINS) {
+    // Before 07:15 → today at 07:15
+    snapped.setHours(7, 15, 0, 0);
+  }
+
+  const fromMins = snapped.getHours() * 60 + snapped.getMinutes();
+  const toMins = Math.min(fromMins + intervalHours * 60, TIME_MAX_MINS);
+  const minToMins = Math.min(fromMins + 60, TIME_MAX_MINS);
+
+  fromPicker.value = formatTime(snapped);
+  toPicker.value = formatMins(toMins);
+  toPicker.min = formatMins(minToMins);
 }
 
 function setupDataFetchIndicator() {

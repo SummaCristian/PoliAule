@@ -732,11 +732,18 @@ class ClassroomDetail {
         });
       });
 
-      // Auto-select today, or first available day if today has no data
+      // Auto-select today, or next available day if after 20:15, or first available
       const todayDayIndex = days.findIndex(d => d.dayData?.date === todayKey);
-      const initialDayIndex = todayDayIndex >= 0
-        ? todayDayIndex
-        : days.findIndex(d => d.dayData !== null);
+      const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+      let initialDayIndex;
+      if (nowMins > DAY_END && todayDayIndex >= 0) {
+        const nextIndex = days.findIndex((d, i) => i > todayDayIndex && d.dayData !== null);
+        initialDayIndex = nextIndex >= 0 ? nextIndex : todayDayIndex;
+      } else if (todayDayIndex >= 0) {
+        initialDayIndex = todayDayIndex;
+      } else {
+        initialDayIndex = days.findIndex(d => d.dayData !== null);
+      }
       selectScheduleDay(Math.max(0, initialDayIndex));
 
       // Today indicator: position the pill above the today chip (mobile only)

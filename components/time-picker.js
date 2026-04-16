@@ -430,10 +430,32 @@ function buildTimePicker(wrapperEl) {
     configurable: true,
   });
 
+  const originalMaxDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'max');
+  Object.defineProperty(inputEl, 'max', {
+    get() { return originalMaxDescriptor.get.call(this); },
+    set(val) {
+      originalMaxDescriptor.set.call(this, val);
+      popupInput.max = val;
+    },
+    configurable: true,
+  });
+
   // ── Preset buttons ────────────────────────────────────────────────────────
 
+  const TIME_MIN = popupInput.min || '07:15';
+  const TIME_MAX = popupInput.max || '20:15';
+
+  function clampTime(h, m) {
+    const total = h * 60 + m;
+    const [minH, minM] = TIME_MIN.split(':').map(Number);
+    const [maxH, maxM] = TIME_MAX.split(':').map(Number);
+    const clamped = Math.min(Math.max(total, minH * 60 + minM), maxH * 60 + maxM);
+    return [Math.floor(clamped / 60), clamped % 60];
+  }
+
   function applyPreset(h, m) {
-    const val = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const [ch, cm] = clampTime(h, m);
+    const val = `${String(ch).padStart(2, '0')}:${String(cm).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
     haptics.trigger(defaultPatterns.success);
@@ -466,8 +488,8 @@ function buildTimePicker(wrapperEl) {
 
   function stepHour(delta) {
     const [h, m] = (popupInput.value || '00:00').split(':').map(Number);
-    const next = ((h + delta) + 24) % 24;
-    const val = `${String(next).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const [ch, cm] = clampTime(h + delta, m);
+    const val = `${String(ch).padStart(2, '0')}:${String(cm).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
     haptics.trigger(defaultPatterns.success);

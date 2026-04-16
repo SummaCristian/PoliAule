@@ -26,6 +26,8 @@ body.detail-open .tab-content {
   position: absolute;
   opacity: 0;
   pointer-events: none;
+  height: 0;
+  overflow: hidden;
 }
 
 body.detail-open .footer {

@@ -77,7 +77,8 @@ function escapeHtml(str) {
 function highlight(text, query) {
   const safe = escapeHtml(text);
   if (!query) return safe;
-  const safeQ = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Escape special regex chars, then allow spaces to also match dots (for x.y.z names queried as "x y z")
+  const safeQ = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '[\\s.]');
   return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<mark>$1</mark>');
 }
 
@@ -159,8 +160,8 @@ function buildClassroomCard(room, query = '') {
         <div class="search-card-status">
           ${statusText}
         </div>
-        ${room.buildingName ? `<span class="search-card-meta secondary">${highlight(room.buildingName + (room.buildingAltName ? ' (' + room.buildingAltName + ')' : ''), query)}</span>` : ''}
-        ${room.campusShortName ? `<span class="search-card-meta secondary small">${highlight(room.campusShortName, query)}</span>` : ''}
+        ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
+        ${room.campusShortName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusShortName, query)}</span>` : ''}
       </div>
     </div>
     ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
@@ -431,9 +432,12 @@ function renderSearchResults(query) {
   if (!searchIndex) searchIndex = buildSearchIndex();
 
   const q = query.trim().toLowerCase();
+  const qDotted = q.replace(/\s+/g, '.');
   const results = searchIndex.filter(room =>
     room.name.toLowerCase().includes(q) ||
+    room.name.toLowerCase().includes(qDotted) ||
     room.buildingName.toLowerCase().includes(q) ||
+    (room.buildingAltName && room.buildingAltName.toLowerCase().includes(q)) ||
     room.campusShortName.toLowerCase().includes(q)
   );
 

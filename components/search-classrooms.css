@@ -4,7 +4,8 @@ mark {
   background: rgba(255, 194, 0, 0.45);
   color: inherit;
   border-radius: 3px;
-  padding: 0 1px;
+  padding: 0 2px;
+  margin: 0 -2px;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
@@ -501,6 +502,18 @@ mark {
 .search-card-meta.small {
   font-size: 0.7rem;
   font-weight: 600;
+}
+
+.search-card-meta--with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.search-card-meta-icon {
+  font-size: 0.8rem !important;
+  flex-shrink: 0;
+  opacity: 0.8;
 }
 
 .search-card-arrow {

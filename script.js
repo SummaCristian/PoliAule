@@ -687,8 +687,8 @@ function setupTimePickers() {
   const snappedMins = snapped.getHours() * 60 + snapped.getMinutes();
 
   if (snappedMins > TIME_MAX_MINS) {
-    // After 20:15 → tomorrow at 07:15; signal date picker to advance
-    snapped.setDate(snapped.getDate() + 1);
+    // After 20:15 → next non-skipped day at 07:15; signal date picker to advance
+    do { snapped.setDate(snapped.getDate() + 1); } while (SKIP_DAYS.includes(snapped.getDay()));
     snapped.setHours(7, 15, 0, 0);
     preferInitialDate = [
       snapped.getFullYear(),

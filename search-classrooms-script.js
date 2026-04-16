@@ -387,6 +387,12 @@ function renderCampuses() {
 
   container.innerHTML = '';
   container.appendChild(grid);
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      grid.classList.add('appeared');
+    }, 400);
+  });
 }
 
 function renderBuildings(campus) {
@@ -406,6 +412,12 @@ function renderBuildings(campus) {
 
   container.innerHTML = '';
   container.appendChild(grid);
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      grid.classList.add('appeared');
+    }, 400);
+  });
 }
 
 function renderClassrooms(campus, building) {
@@ -424,6 +436,12 @@ function renderClassrooms(campus, building) {
 
   container.innerHTML = '';
   container.appendChild(grid);
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      grid.classList.add('appeared');
+    }, 400);
+  });
 }
 
 function renderSearchResults(query) {
@@ -460,6 +478,12 @@ function renderSearchResults(query) {
   grid.className = 'search-grid search-grid--classroom';
   results.forEach(room => grid.appendChild(buildClassroomCard(room, query.trim())));
   container.appendChild(grid);
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      grid.classList.add('appeared');
+    }, 400);
+  });
 }
 
 function restoreHierarchy() {

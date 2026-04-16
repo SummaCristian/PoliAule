@@ -979,7 +979,7 @@ ul li::marker {
 
 @media (max-width: 600px) {
   .popover {
-    max-width: 45%;
+    max-width: 60%;
   }
 }
 

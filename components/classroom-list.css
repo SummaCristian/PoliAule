@@ -119,6 +119,12 @@
   gap: 0.5rem;
   
   content-visibility: auto;
+
+  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.list-outer-container.appeared .building-card {
+  animation: none;
 }
 
 .building-card-header {
@@ -211,6 +217,16 @@
   &:hover {
     scale: 1.025;
   }
+}
+
+.list-outer-container.appeared .classroom-list-item-container,
+.list-outer-container.appeared > li {
+  animation: none;
+}
+
+/* Also disable the parent tab-content animation if it has appeared once */
+:has(> .list-outer-container.appeared) {
+  animation: none;
 }
 
 @keyframes card-appear {

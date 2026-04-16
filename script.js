@@ -148,6 +148,10 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
   const buildingCard = document.createElement('div');
   const autoCollapse = localStorage.getItem(AUTO_COLLAPSE_KEY) === 'true';
   buildingCard.className = autoCollapse ? 'building-card collapsed' : 'building-card';
+  
+  // Use current cardIndex for the building's delay, then increment for the rooms
+  const buildingIndex = cardIndex++;
+
   buildingCard.innerHTML = `
     <div class="building-card-header">
       <div class="building-card-header-text">
@@ -182,6 +186,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
   });
 
   const li = document.createElement('li');
+  li.style.animationDelay = `${Math.min(buildingIndex * 40, 300)}ms`;
   li.appendChild(buildingCard);
   if (rooms.every(r => r.status === 'partially-free')) li.dataset.allPartial = 'true';
   return { li, cardIndex };
@@ -361,6 +366,15 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   originalBuildingOrder = [...list.children];
 
   container.appendChild(list);
+
+  // Mark the list as appeared after the staggered animation finishes.
+  // This avoids re-triggering the animation when returning from the details page
+  // or switching back and forth between tabs.
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      list.classList.add('appeared');
+    }, 800);
+  });
 }
 
 // Render the error state for the Available Classrooms results container

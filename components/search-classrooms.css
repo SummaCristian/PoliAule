@@ -464,13 +464,17 @@ mark {
   font-weight: 800;
   color: var(--text-color-primary);
   line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .search-card--campus .search-card-name {
   font-size: 1.15rem;
+}
+
+.search-card-alt-name {
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-left: 0.2rem;
 }
 
 .search-card-subtitle {

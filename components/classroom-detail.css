@@ -256,8 +256,13 @@ body.detail-open .tab-content * {
 @media (max-width: 599px) {
   .detail-header {
     padding-top: 1rem;
+    gap: 0;
     position: relative;
     z-index: 2; /* Stay above the blur layer */
+  }
+
+  .detail-title-row {
+    align-items: last baseline;
   }
 
   /* Pull header up to overlay the blurred hero only when the photo container is present.
@@ -383,6 +388,16 @@ body.detail-open .tab-content * {
   font-size: 0.95rem;
   font-weight: 600;
   text-align: left;
+}
+
+@media (max-width: 599px) {
+  .detail-subtitle {
+    margin-bottom: 0.25rem;
+  }
+
+  .detail-stats {
+    margin-top: 0;
+  }
 }
 
 @media (min-width: 600px) {

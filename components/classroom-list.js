@@ -175,7 +175,6 @@ export function buildCardForClassroom(classroom, building, fromTime, toTime, isT
       <div class="classroom-card-header">
         <div class="classroom-card-header-left">
           <h4 class="classroom-name">${classroom.name}</h4>
-          <span class="classroom-building-name secondary">${buildingDisplay}</span>
           <h4 class="classroom-status-txt ${classroom.status}">${classroom.status === 'free' ? t('status.free') : t('status.partiallyFree')}</h4>
         </div>
         <div class="classroom-detail-btn">

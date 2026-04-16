@@ -19,8 +19,6 @@
   "results.emptySubtitle": "Dimmi quando ne hai bisogno e ti mostro le aule disponibili",
   "results.noResultsTitle": "Nessun risultato",
   "results.noResultsSubtitle": "Niente da fare, non c'è nessuna aula disponibile negli orari richiesti...",
-  "results.collapseAll": "Comprimi tutto",
-  "results.expandAll": "Espandi tutto",
   "results.filterPartial": "Parzialmente libere",
 
   "status.free": "Libera",
@@ -88,8 +86,6 @@
   "settings.sectionResults": "Risultati",
   "settings.intervalHours": "Intervallo predefinito",
   "settings.intervalHoursDesc": "Quante ore pre-selezionare come finestra di ricerca al caricamento.",
-  "settings.autoCollapse": "Comprimi automaticamente",
-  "settings.autoCollapseDesc": "Comprimi le sezioni edificio al caricamento dei risultati.",
   "settings.showPartial": "Mostra parzialmente libere",
   "settings.showPartialDesc": "Includi le aule parzialmente libere nell'intervallo selezionato.",
   "settings.sectionCampus": "Campus",

@@ -15,7 +15,7 @@ import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, AUTO_COLLAPSE_KEY, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY } from './components/settings.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -146,10 +146,9 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
   ].filter(Boolean).join('<span class="building-count-sep">·</span>');
 
   const buildingCard = document.createElement('div');
-  const autoCollapse = localStorage.getItem(AUTO_COLLAPSE_KEY) === 'true';
-  buildingCard.className = autoCollapse ? 'building-card collapsed' : 'building-card';
-  
-  // Use current cardIndex for the building's delay, then increment for the rooms
+  buildingCard.className = 'building-card collapsed';
+
+  // Use current cardIndex for the building's delay only (rooms rendered lazily)
   const buildingIndex = cardIndex++;
 
   buildingCard.innerHTML = `
@@ -167,22 +166,51 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
 
   const roomsList = document.createElement('ul');
   roomsList.className = 'list-inner-container';
-  rooms.forEach(room => {
-    const roomItem = document.createElement('li');
-    roomItem.className = 'classroom-list-item-container';
-    roomItem.dataset.status = room.status;
-    roomItem.style.animationDelay = `${Math.min(cardIndex * 40, 300)}ms`;
-    roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday);
-    cardIndex++;
-    roomsList.appendChild(roomItem);
-  });
 
   body.appendChild(roomsList);
   buildingCard.appendChild(body);
 
   buildingCard.querySelector('.building-card-header').addEventListener('click', () => {
+    const isCollapsed = buildingCard.classList.contains('collapsed');
+    if (isCollapsed) {
+      rooms.forEach(room => {
+        const roomItem = document.createElement('li');
+        roomItem.className = 'classroom-list-item-container';
+        roomItem.dataset.status = room.status;
+        roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday);
+        roomsList.appendChild(roomItem);
+      });
+      buildingCard.closest('.list-outer-container')
+        ?.querySelectorAll('.building-card:not(.collapsed)')
+        .forEach(card => {
+          if (card !== buildingCard) {
+            card.classList.add('collapsed');
+            card.querySelector('.list-inner-container').replaceChildren();
+          }
+        });
+    } else {
+      roomsList.replaceChildren();
+    }
     buildingCard.classList.toggle('collapsed');
     haptics.trigger(defaultPatterns.success);
+    if (isCollapsed) {
+      requestAnimationFrame(() => {
+        const scrollContainer = buildingCard.closest('#available-classrooms-results');
+        const containerIsScrollable = scrollContainer &&
+          ['auto', 'scroll'].includes(getComputedStyle(scrollContainer).overflowY);
+        if (containerIsScrollable) {
+          const top = buildingCard.getBoundingClientRect().top
+            - scrollContainer.getBoundingClientRect().top
+            + scrollContainer.scrollTop - 8;
+          scrollContainer.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        } else {
+          const header = document.querySelector('.header');
+          const offset = (header?.offsetHeight ?? 0) + 8;
+          const top = buildingCard.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        }
+      });
+    }
   });
 
   const li = document.createElement('li');
@@ -298,32 +326,9 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   container.classList.remove('empty');
 
-  // Filter row (always rendered)
+  // Filter row (rendered only when partial-free filter is needed)
   const filterRow = document.createElement('div');
   filterRow.className = 'results-filter-row';
-
-  // Collapse-all toggle — initial state driven by Auto Collapse setting
-  const autoCollapse = localStorage.getItem(AUTO_COLLAPSE_KEY) === 'true';
-  const collapseBtn = document.createElement('button');
-  collapseBtn.className = 'results-filter-btn active';
-  if (autoCollapse) {
-    collapseBtn.dataset.state = 'collapsed';
-    collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_more</span> ${t('results.expandAll')}`;
-  } else {
-    collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`;
-  }
-  collapseBtn.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.success);
-    const allCollapsed = collapseBtn.dataset.state === 'collapsed';
-    container.querySelectorAll('.building-card').forEach(card => {
-      card.classList.toggle('collapsed', !allCollapsed);
-    });
-    collapseBtn.dataset.state = allCollapsed ? '' : 'collapsed';
-    collapseBtn.innerHTML = allCollapsed
-      ? `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`
-      : `<span class="material-symbols-outlined">unfold_more</span> ${t('results.expandAll')}`;
-  });
-  filterRow.appendChild(collapseBtn);
 
   // Partial-free filter toggle — initial state driven by Show Partially Free setting
   const showPartialSaved = localStorage.getItem(SHOW_PARTIAL_KEY);
@@ -346,9 +351,8 @@ function renderAvailableClassroomsResults(results, date, from, to) {
       }
     });
     filterRow.appendChild(toggleBtn);
+    container.appendChild(filterRow);
   }
-
-  container.appendChild(filterRow);
 
   const list = document.createElement('ul');
   list.className = 'list-outer-container';

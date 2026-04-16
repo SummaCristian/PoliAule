@@ -19,8 +19,6 @@
   "results.emptySubtitle": "Tell me when you need it and I'll show you what's available",
   "results.noResultsTitle": "No results",
   "results.noResultsSubtitle": "Looks like you are out of luck, there is no classroom available between the times you requested...",
-  "results.collapseAll": "Collapse All",
-  "results.expandAll": "Expand All",
   "results.filterPartial": "Partially Free",
 
   "status.free": "Free",
@@ -88,8 +86,6 @@
   "settings.sectionResults": "Results",
   "settings.intervalHours": "Default Interval",
   "settings.intervalHoursDesc": "How many hours to pre-select as the search window on load.",
-  "settings.autoCollapse": "Auto Collapse",
-  "settings.autoCollapseDesc": "Start with building sections collapsed when results load.",
   "settings.showPartial": "Show Partially Free",
   "settings.showPartialDesc": "Include classrooms only partially free within your time range.",
   "settings.sectionCampus": "Campus",

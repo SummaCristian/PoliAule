@@ -111,18 +111,18 @@ export class Popover {
     // --popover-above try fires and the popover appears above the trigger.
     const isAbove = triggerRect.top > window.innerHeight / 2;
 
-    // Horizontal: the default placement is left: anchor(left), meaning the
-    // popover's left edge aligns to the trigger's left edge. flip-inline
-    // kicks in when that would push the popover off the right side of the
-    // viewport, switching to right: anchor(right) instead.
-    const flipsInline = triggerRect.left + popoverWidth > window.innerWidth - 8;
+    // Horizontal: the default placement is right: anchor(right), meaning the
+    // popover's right edge aligns to the trigger's right edge (natural for
+    // right-side triggers). flip-inline kicks in when that would push the
+    // popover off the left side of the viewport, switching to left: anchor(left).
+    const flipsInline = triggerRect.right - popoverWidth < 8;
 
     // Express the trigger's centre as an offset from the popover's left edge:
-    //   default     → trigger.left == popover.left  → centre = trigger.width / 2
-    //   flip-inline → trigger.right == popover.right → centre = popoverWidth - trigger.width / 2
+    //   default     → trigger.right == popover.right → centre = popoverWidth - trigger.width / 2
+    //   flip-inline → trigger.left == popover.left   → centre = trigger.width / 2
     const originX = flipsInline
-      ? popoverWidth - triggerRect.width / 2
-      : triggerRect.width / 2;
+      ? triggerRect.width / 2
+      : popoverWidth - triggerRect.width / 2;
 
     this.popover.style.transformOrigin = `${originX}px ${isAbove ? 'bottom' : 'top'}`;
 

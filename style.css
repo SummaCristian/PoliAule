@@ -1003,7 +1003,7 @@ ul li::marker {
     position: fixed;
     inset: auto;
     top: anchor(bottom);
-    left: anchor(left);
+    right: anchor(right);
     margin: 8px 0 0 0;
     position-try-fallbacks: --popover-above, flip-inline, --popover-above flip-inline;
     position-visibility: anchors-visible;
@@ -1012,7 +1012,7 @@ ul li::marker {
   @position-try --popover-above {
     inset: auto;
     bottom: anchor(top);
-    left: anchor(left);
+    right: anchor(right);
     margin: 0 0 8px 0;
   }
 }

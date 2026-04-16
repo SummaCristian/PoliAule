@@ -95,6 +95,12 @@
   "settings.rememberLastCampusDesc": "Remember the last campus you selected and automatically open it next time.",
   "settings.languageDesc": "Change the language of the app.",
   "settings.noCampusData": "Open the app first to load campuses",
+  "settings.sectionNavigation": "Navigation",
+  "settings.defaultTab": "Default Tab",
+  "settings.defaultTab.desc": "Which tab to open when you launch PoliAule.",
+  "settings.defaultTab.available": "Available",
+  "settings.defaultTab.last": "Last",
+  "settings.defaultTab.search": "Search",
 
   "detail.features": "Features",
   "detail.currentStatus": "Current status",

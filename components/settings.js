@@ -17,6 +17,18 @@ const LAST_CAMPUS_ID_KEY           = 'poliAule_lastCampusId';
 const HIDE_SUNDAYS_KEY             = 'poliAule_hideSundays';
 export const SHOW_PARTIAL_KEY      = 'poliAule_showPartial';
 export const INTERVAL_HOURS_KEY    = 'poliAule_intervalHours';
+export const DEFAULT_TAB_KEY       = 'poliAule_defaultTab';
+export const LAST_TAB_KEY          = 'poliAule_lastTab';
+
+// Returns the tab container ID to show on startup
+export function getStartupTabId() {
+  const mode = localStorage.getItem(DEFAULT_TAB_KEY) ?? 'available';
+  if (mode === 'last') {
+    return localStorage.getItem(LAST_TAB_KEY) ?? 'available-classrooms-container';
+  }
+  if (mode === 'search') return 'search-classrooms-container';
+  return 'available-classrooms-container';
+}
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -29,6 +41,7 @@ let triggerEl = null;
 let popupEl = null;
 let positionIndicatorFn = null;
 let positionTimeFmtIndicatorFn = null;
+let positionDefaultTabIndicatorFn = null;
 let refreshCampusSelectFn = null; // set by buildCampusSection, called on every open
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
@@ -149,8 +162,9 @@ function openSettings() {
   triggerEl.classList.add('settings-btn--morphing');
 
   popupEl.getBoundingClientRect(); // force reflow
-  positionIndicatorFn?.(false);         // snap lang indicator before morph animation starts
-  positionTimeFmtIndicatorFn?.(false);  // snap time format indicator before morph animation starts
+  positionIndicatorFn?.(false);            // snap lang indicator before morph animation starts
+  positionTimeFmtIndicatorFn?.(false);     // snap time format indicator before morph animation starts
+  positionDefaultTabIndicatorFn?.(false);  // snap default tab indicator before morph animation starts
   refreshCampusSelectFn?.();            // re-populate campus select now that data may be loaded
   popupEl.style.transition = '';
 
@@ -610,6 +624,44 @@ function buildPopup() {
         </div>
       </div>
 
+      <div class="settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__icon-badge">
+            <span class="material-symbols-outlined">tab</span>
+          </div>
+          <span class="settings-section__header-label" data-defaulttab-section-header>${t('settings.sectionNavigation')}</span>
+        </div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #5856D6">
+                <span class="material-symbols-outlined">tab</span>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.defaultTab">${t('settings.defaultTab')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.defaultTab.desc">${t('settings.defaultTab.desc')}</span>
+              </div>
+            </div>
+            <div class="settings-lang-toggle" data-defaulttab-toggle>
+              <div class="settings-lang-indicator"></div>
+              <button class="settings-lang-btn" data-defaulttab="available">
+                <span class="settings-seg-icon material-symbols-outlined">event_available</span>
+                <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.available">${t('settings.defaultTab.available')}</span>
+              </button>
+              <button class="settings-lang-btn" data-defaulttab="search">
+                <span class="settings-seg-icon material-symbols-outlined">search</span>
+                <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.search">${t('settings.defaultTab.search')}</span>
+              </button>
+              <div class="settings-seg-separator"></div>
+              <button class="settings-lang-btn" data-defaulttab="last">
+                <span class="settings-seg-icon material-symbols-outlined">history</span>
+                <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.last">${t('settings.defaultTab.last')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   `;
 
@@ -717,7 +769,40 @@ function buildPopup() {
     haptics.trigger(defaultPatterns.success);
   });
 
-  return { popup, positionIndicator, positionTimeFmtIndicator, retranslateCampus };
+  // Wire Default Tab 3-way toggle
+  const defaultTabToggle = popup.querySelector('[data-defaulttab-toggle]');
+  const defaultTabIndicator = defaultTabToggle.querySelector('.settings-lang-indicator');
+  const savedDefaultTab = localStorage.getItem(DEFAULT_TAB_KEY) ?? 'available';
+  defaultTabToggle.querySelector(`[data-defaulttab="${savedDefaultTab}"]`)?.classList.add('active');
+
+  function positionDefaultTabIndicator(animate) {
+    const activeBtn = defaultTabToggle.querySelector('.settings-lang-btn.active');
+    if (!activeBtn) return;
+    if (!animate) defaultTabIndicator.style.transition = 'none';
+    defaultTabIndicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
+    defaultTabIndicator.style.width = `${activeBtn.offsetWidth}px`;
+    defaultTabIndicator.style.height = `${activeBtn.offsetHeight}px`;
+    if (!animate) {
+      defaultTabIndicator.getBoundingClientRect();
+      defaultTabIndicator.style.transition = '';
+    }
+  }
+
+  defaultTabToggle.querySelectorAll('.settings-lang-btn[data-defaulttab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.dataset.defaulttab;
+      if (defaultTabToggle.querySelector('.settings-lang-btn.active') === btn) return;
+      localStorage.setItem(DEFAULT_TAB_KEY, val);
+      defaultTabToggle.querySelectorAll('.settings-lang-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      positionDefaultTabIndicator(true);
+      haptics.trigger(defaultPatterns.success);
+    });
+  });
+
+  positionDefaultTabIndicatorFn = positionDefaultTabIndicator;
+
+  return { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, retranslateCampus };
 }
 
 function updateLangButtons(popup, positionIndicator) {
@@ -733,7 +818,7 @@ export function initSettings() {
   triggerEl = document.getElementById('settings-btn');
   if (!triggerEl) return;
 
-  const { popup, positionIndicator, positionTimeFmtIndicator, retranslateCampus } = buildPopup();
+  const { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, retranslateCampus } = buildPopup();
   popupEl = popup;
   document.body.appendChild(popupEl);
 
@@ -746,6 +831,7 @@ export function initSettings() {
   const titleEl = popupEl.querySelector('.settings-popup__title');
   const sectionHeaderLabelEl = popupEl.querySelector('.settings-section__header-label');
   const timeFmtHeaderLabelEl = popupEl.querySelector('[data-timefmt-section-header]');
+  const defaultTabHeaderLabelEl = popupEl.querySelector('[data-defaulttab-section-header]');
 
   onLanguageSwitch(() => {
     titleEl.textContent = t('settings.title');
@@ -756,11 +842,16 @@ export function initSettings() {
       timeFmtHeaderLabelEl.textContent = t('settings.sectionDateTime');
       animateI18nElement(timeFmtHeaderLabelEl);
     }
+    if (defaultTabHeaderLabelEl) {
+      defaultTabHeaderLabelEl.textContent = t('settings.sectionNavigation');
+      animateI18nElement(defaultTabHeaderLabelEl);
+    }
     popupEl.querySelectorAll('[data-i18n]').forEach(el => {
       el.textContent = t(el.dataset.i18n);
     });
     updateLangButtons(popupEl, positionIndicator);
     positionTimeFmtIndicator?.(false);
+    positionDefaultTabIndicator?.(false);
     retranslateCampus();
   });
 

@@ -18,7 +18,7 @@ import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, getStartupTabId } from './components/settings.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -133,8 +133,31 @@ tabs.forEach((tab, index) => {
     tab.classList.add("active");
 
     indicator.style.transform = `translateX(${index * 100}%)`;
+
+    // Persist last-used tab when that mode is active
+    if (localStorage.getItem(DEFAULT_TAB_KEY) === 'last') {
+      localStorage.setItem(LAST_TAB_KEY, targetId);
+    }
   });
 });
+
+// Apply the startup tab preference
+{
+  const startupId = getStartupTabId();
+  if (startupId !== 'available-classrooms-container') {
+    const startupTab = [...tabs].find(t => t.dataset.target === startupId);
+    if (startupTab) {
+      const idx = [...tabs].indexOf(startupTab);
+      showContent(startupId);
+      document.querySelector(".tab.active")?.classList.remove("active");
+      startupTab.classList.add("active");
+      indicator.style.transition = 'none';
+      indicator.style.transform = `translateX(${idx * 100}%)`;
+      indicator.getBoundingClientRect(); // force reflow
+      indicator.style.transition = '';
+    }
+  }
+}
 
 // ---------- BUILDING CARD ----------
 

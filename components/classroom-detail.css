@@ -129,7 +129,10 @@ body.detail-open .tab-content * {
 
 .detail-photo.loaded {
   opacity: 1;
-  transform: scale(1);
+  /* scale(1.001) keeps the image fractionally larger than its overflow:hidden
+     container at all times — including the final frame — so Safari never
+     recalculates the overflow clip and the repaint flicker doesn't occur. */
+  transform: scale(1.001);
 }
 
 .detail-photo-gradient {

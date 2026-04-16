@@ -180,7 +180,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
   buildingCard.innerHTML = `
     <div class="building-card-header">
       <div class="building-card-header-text">
-        <h3 class="building-name">${t('building.prefix')} ${building.altName ? `${building.altName} (${building.name})` : buildingName}</h3>
+        <h3 class="building-name">${t('building.prefix')} ${buildingName}${building.altName ? ` <small class="building-alt-name">${building.altName}</small>` : ''}</h3>
         <div class="building-counts">${countParts}</div>
       </div>
       <span class="material-symbols-outlined building-chevron">expand_more</span>
@@ -196,7 +196,8 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
   body.appendChild(roomsList);
   buildingCard.appendChild(body);
 
-  buildingCard.querySelector('.building-card-header').addEventListener('click', () => {
+  buildingCard.addEventListener('click', (e) => {
+    if (!buildingCard.classList.contains('collapsed') && e.target.closest('.building-card-body')) return;
     const isCollapsed = buildingCard.classList.contains('collapsed');
 
     if (isCollapsed) {

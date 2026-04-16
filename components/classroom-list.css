@@ -135,6 +135,12 @@
 
 .building-card.collapsed .building-card-header {
   border-bottom-color: transparent;
+  padding-bottom: 0.25rem;
+}
+
+.building-card.collapsed {
+  gap: 0;
+  cursor: pointer;
 }
 
 .building-card-header-text {
@@ -148,6 +154,13 @@
   font-size: 1.75rem;
   font-weight: 700;
   margin: 0;
+}
+
+.building-alt-name {
+  font-size: 0.75em;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
+  margin-left: 0.15rem;
 }
 
 .building-counts {
@@ -175,10 +188,11 @@
   color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
+  transform: rotate(-180deg);
 }
 
 .building-card.collapsed .building-chevron {
-  transform: rotate(-90deg);
+  transform: rotate(0deg);
 }
 
 .building-card-body {

@@ -118,8 +118,6 @@
   flex-direction: column;
   gap: 0.5rem;
   
-  content-visibility: auto;
-
   animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -256,7 +254,6 @@
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   
-   content-visibility: auto;
    contain: layout paint style;
 }
 

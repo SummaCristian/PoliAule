@@ -22,11 +22,17 @@
 
 /* Hide tab contents and footer while the detail panel is open */
 body.detail-open .tab-content {
-  display: none !important;
+  visibility: hidden;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
 body.detail-open .footer {
-  display: none;
+  visibility: hidden;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ── Hero photo ─────────────────────────────────────────────────── */

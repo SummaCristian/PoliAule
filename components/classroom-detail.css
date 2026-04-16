@@ -10,14 +10,16 @@
   flex: 1;
   background: var(--background-color);
 
-  /* Fallback fade-in for browsers without View Transitions */
+  /* Fallback fade-in for browsers without View Transitions (or touch devices) */
   opacity: 0;
-  transition: opacity 0.22s ease;
-  will-change: opacity;
+  transform: translateY(12px);
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 }
 
 #classroom-detail-overlay.visible {
   opacity: 1;
+  transform: translateY(0);
 }
 
 /* Hide tab contents and footer while the detail panel is open */

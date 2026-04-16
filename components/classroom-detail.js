@@ -158,7 +158,8 @@ class ClassroomDetail {
     const nameEl = pending?.nameEl ?? null;
     const statusEl = pending?.statusEl ?? null;
 
-    if (document.startViewTransition && this._tabbar) {
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+    if (document.startViewTransition && this._tabbar && !isTouchDevice) {
       // -- OLD state setup (before VT snapshot) --
       // Tabbar morphs into the back button (both live in the header, so it's a clean in-place swap)
       this._tabbar.style.viewTransitionName = 'classroom-nav';
@@ -252,7 +253,8 @@ class ClassroomDetail {
       if (this._backBtn) this._backBtn.style.viewTransitionName = '';
     };
 
-    if (document.startViewTransition && this._tabbar) {
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+    if (document.startViewTransition && this._tabbar && !isTouchDevice) {
       // -- OLD state setup --
       // Back button (in header) is the source; tabbar is the destination
       if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';

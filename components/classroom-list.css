@@ -206,10 +206,15 @@
   box-shadow: var(--shadow);
 
   animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  transition: scale 0.15s ease;
+}
 
-  &:hover {
-    scale: 1.025;
+@media (hover: hover) and (pointer: fine) {
+  .classroom-list-item-container {
+    transition: scale 0.15s ease;
+
+    &:hover {
+      scale: 1.025;
+    }
   }
 }
 
@@ -217,12 +222,10 @@
   from {
     opacity: 0;
     transform: translateY(12px);
-    filter: blur(4px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 

@@ -312,7 +312,10 @@
   font-weight: 700;
   text-align: start;
   margin: 0;
-  width: fit-content;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .classroom-status-txt {

@@ -156,7 +156,7 @@ function buildClassroomCard(room, query = '') {
         <span class="material-symbols-outlined">meeting_room</span>
       </div>
       <div class="search-card-info">
-        <span class="search-card-name">${highlight(room.name, query)}</span>
+        <span class="search-card-name" title="${escapeHtml(room.name)}">${highlight(room.name, query)}</span>
         <div class="search-card-status">
           ${statusText}
         </div>

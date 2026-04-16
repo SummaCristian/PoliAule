@@ -474,7 +474,10 @@ mark {
   font-weight: 800;
   color: var(--text-color-primary);
   line-height: 1.2;
-  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .search-card--campus .search-card-name {

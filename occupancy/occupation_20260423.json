@@ -3293,7 +3293,8 @@
           ]
         },
         {
-          "name": "Edificio 13 (Trifoglio)",
+          "name": "13",
+          "altName": "Trifoglio",
           "classrooms": [
             {
               "name": "T.1.1",

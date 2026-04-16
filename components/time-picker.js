@@ -135,7 +135,72 @@ function onTransitionEnd(el, cb) {
   }, { once: true });
 }
 
-// ── Open / close ─────────────────────────────────────────────────────────────
+// ── Open / close / switch ─────────────────────────────────────────────────────
+
+function switchPicker(nextCard) {
+  if (isAnimating || !activeCard || nextCard === activeCard) return;
+  isAnimating = true;
+
+  const prevCard = activeCard;
+  const prevPopup = prevCard._popup;
+  const nextPopup = nextCard._popup;
+  activeCard = nextCard;
+
+  haptics.trigger(defaultPatterns.success);
+  nextCard._updateQuickLabel?.();
+
+  // ── Close outgoing: morph back to its card ───────────────────────────────
+  prevCard._input.blur();
+  prevPopup.classList.remove('tp-popup--open');
+  prevCard.classList.remove('tp-card--morphing'); // card re-appears as the morph target
+
+  const prevRect = prevCard.getBoundingClientRect();
+  requestAnimationFrame(() => {
+    applyGeometry(prevPopup, {
+      left: prevRect.left,
+      top: prevRect.top,
+      width: prevRect.width,
+      height: prevRect.height,
+      borderRadius: '18px',
+    });
+    prevPopup.style.boxShadow = 'var(--shadow)';
+  });
+
+  onTransitionEnd(prevPopup, () => {
+    prevPopup.style.display = 'none';
+  });
+
+  // ── Open incoming: morph from its card — simultaneously ──────────────────
+  const nextRect = nextCard.getBoundingClientRect();
+
+  nextPopup.style.transition = 'none';
+  applyGeometry(nextPopup, {
+    left: nextRect.left,
+    top: nextRect.top,
+    width: nextRect.width,
+    height: nextRect.height,
+    borderRadius: '18px',
+  });
+  nextPopup.style.boxShadow = 'var(--shadow)';
+  nextPopup.style.zIndex = '1201'; // stay on top of the shrinking popup
+  nextPopup.style.display = 'flex';
+  nextCard.classList.add('tp-card--morphing');
+
+  nextPopup.getBoundingClientRect(); // force reflow
+  nextPopup.style.transition = '';
+
+  requestAnimationFrame(() => {
+    applyGeometry(nextPopup, getPopupTarget());
+    nextPopup.style.boxShadow = 'var(--tp-shadow-lg)';
+    nextPopup.classList.add('tp-popup--open');
+  });
+
+  onTransitionEnd(nextPopup, () => {
+    nextPopup.style.zIndex = '';
+    isAnimating = false;
+    nextCard._input.focus();
+  });
+}
 
 function openPicker(cardEl) {
   if (isAnimating) return;
@@ -255,8 +320,15 @@ function buildTimePicker(wrapperEl) {
   popup.innerHTML = `
     <div class="tp-popup__inner">
       <div class="tp-popup__header">
-        <h4 class="subsection-header-title">${t(labelKey)}</h4>
-        <p class="subsection-header-subtitle secondary">${t(subtitleKey)}</p>
+        <div class="tp-popup__header-text">
+          <h4 class="subsection-header-title">${t(labelKey)}</h4>
+          <p class="subsection-header-subtitle secondary">${t(subtitleKey)}</p>
+        </div>
+        <button type="button" class="tp-popup__switch">
+          ${isFrom
+            ? `<span class="tp-switch__label">${t('form.toTitle')}</span><span class="material-symbols-outlined">arrow_forward</span>`
+            : `<span class="material-symbols-outlined">arrow_back</span><span class="tp-switch__label">${t('form.fromTitle')}</span>`}
+        </button>
       </div>
 
       <div class="tp-popup__input-wrap">
@@ -309,6 +381,8 @@ function buildTimePicker(wrapperEl) {
   card._input = popupInput;
   card._original = inputEl;
   card._timeDisplay = card.querySelector('.tp-card__time');
+  card._isFrom = isFrom;
+  card._switchBtn = popup.querySelector('.tp-popup__switch');
   _allCards.add(card);
   // Defer measurement until fonts are loaded so DS-Digital is available
   // Only fix the card display width (prevents layout shift as hours change 1→2 digits).
@@ -356,10 +430,32 @@ function buildTimePicker(wrapperEl) {
     configurable: true,
   });
 
+  const originalMaxDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'max');
+  Object.defineProperty(inputEl, 'max', {
+    get() { return originalMaxDescriptor.get.call(this); },
+    set(val) {
+      originalMaxDescriptor.set.call(this, val);
+      popupInput.max = val;
+    },
+    configurable: true,
+  });
+
   // ── Preset buttons ────────────────────────────────────────────────────────
 
+  const TIME_MIN = popupInput.min || '07:15';
+  const TIME_MAX = popupInput.max || '20:15';
+
+  function clampTime(h, m) {
+    const total = h * 60 + m;
+    const [minH, minM] = TIME_MIN.split(':').map(Number);
+    const [maxH, maxM] = TIME_MAX.split(':').map(Number);
+    const clamped = Math.min(Math.max(total, minH * 60 + minM), maxH * 60 + maxM);
+    return [Math.floor(clamped / 60), clamped % 60];
+  }
+
   function applyPreset(h, m) {
-    const val = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const [ch, cm] = clampTime(h, m);
+    const val = `${String(ch).padStart(2, '0')}:${String(cm).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
     haptics.trigger(defaultPatterns.success);
@@ -392,8 +488,8 @@ function buildTimePicker(wrapperEl) {
 
   function stepHour(delta) {
     const [h, m] = (popupInput.value || '00:00').split(':').map(Number);
-    const next = ((h + delta) + 24) % 24;
-    const val = `${String(next).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const [ch, cm] = clampTime(h + delta, m);
+    const val = `${String(ch).padStart(2, '0')}:${String(cm).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
     haptics.trigger(defaultPatterns.success);
@@ -446,6 +542,8 @@ function buildTimePicker(wrapperEl) {
   const popupHeaderP = popup.querySelector('.tp-popup__header p');
   const nowBtnText = popup.querySelector('.tp-quick-now .tp-text-node');
   const doneBtnText = popup.querySelector('.tp-popup__done .tp-text-node');
+  const switchLabelEl = popup.querySelector('.tp-switch__label');
+  const switchLabelKey = isFrom ? 'form.toTitle' : 'form.fromTitle';
 
   onLanguageSwitch(() => {
     cardLabelEl.textContent = t(labelKey);
@@ -460,6 +558,7 @@ function buildTimePicker(wrapperEl) {
     }
     doneBtnText.textContent = t('timepicker.done');
     animateI18nElement(doneBtnText);
+    if (switchLabelEl) switchLabelEl.textContent = t(switchLabelKey);
     updateQuickLabel();
   });
 
@@ -543,4 +642,13 @@ document.addEventListener('keydown', e => {
 
 export function initTimePickers() {
   document.querySelectorAll('.time-picker').forEach(buildTimePicker);
+
+  // Wire up the switch buttons between From and To pickers
+  const cards = [..._allCards];
+  const fromCard = cards.find(c => c._isFrom);
+  const toCard   = cards.find(c => !c._isFrom);
+  if (fromCard && toCard) {
+    fromCard._switchBtn?.addEventListener('click', () => switchPicker(toCard));
+    toCard._switchBtn?.addEventListener('click',   () => switchPicker(fromCard));
+  }
 }

@@ -299,6 +299,21 @@
   color: var(--text-color-primary);
 }
 
+/* Icon inside a segmented control button */
+.settings-seg-icon {
+  font-size: 1.1rem !important;
+  line-height: 1;
+}
+
+/* Thin vertical rule that visually separates button groups within a toggle */
+.settings-seg-separator {
+  flex-shrink: 0;
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 4px;
+  background: color-mix(in srgb, var(--text-color-primary) 15%, transparent);
+}
+
 @media (hover: hover) {
   .settings-lang-btn:not(.active):hover {
     background: color-mix(in srgb, var(--text-color-primary) 12%, transparent);

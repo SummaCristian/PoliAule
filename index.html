@@ -20,6 +20,9 @@
   <meta name="apple-mobile-web-app-title" content="PoliAule" />
   <link rel="manifest" href="/site.webmanifest" />
 
+  <!-- Preload the logo to improve loading times -->
+  <link rel="preload" as="image" href="/favicons/logo.png">
+
   <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />
@@ -27,6 +30,8 @@
   <link rel="stylesheet" href="./components/classroom-list.css" />
   <link rel="stylesheet" href="./components/campus-picker.css" />
   <link rel="stylesheet" href="./components/settings.css" />
+  <link rel="stylesheet" href="./components/search-classrooms.css" />
+  <link rel="stylesheet" href="./components/classroom-detail.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -45,6 +50,12 @@
 </head>
 
 <body>
+  <!-- Splash Screen -->
+  <div id="splash-overlay" class="splash-overlay" aria-hidden="true">
+    <img src="/favicons/logo.png" class="splash-logo" alt="" draggable="false" />
+    <span class="splash-loading-label">Loading</span>
+  </div>
+
   <!-- NoScript Overlay (clients with JS disabled) -->
   <noscript>
     <div class="noscript-overlay">
@@ -58,13 +69,13 @@
       <div class="header-title-container">
         <img src="/favicons/logo.png" class="header-logo">
 
-        <div class="header-title-beta-container">
+        <div class="header-title-beta-container splash-header-item">
           <h2 class="header-title">PoliAule</h2>
           <h4 class="secondary">Beta</h4>
         </div>
       </div>
 
-      <div class="header-buttons-container">
+      <div class="header-buttons-container splash-header-item">
 
         <!-- Data Fetch Indicator -->
         <button class="header-button" data-popover="data-fetch-indicator-popover" data-popover-shift-padding="16">
@@ -81,17 +92,24 @@
 
     </div>
 
-    <div class="tabbar slide-in-top">
-      <div class="tab-indicator"></div>
+    <div class="header-nav-row">
+      <button id="detail-back-btn" class="detail-back-btn" hidden>
+        <span class="material-symbols-outlined">chevron_left</span>
+        <span class="detail-back-label">Back</span>
+      </button>
 
-      <button class="tab active" data-target="available-classrooms-container">
-        <span class="material-symbols-outlined">event_available</span>
-        <span data-i18n="tabs.available">Available</span>
-      </button>
-      <button class="tab" data-target="search-classrooms-container">
-        <span class="material-symbols-outlined">search</span>
-        <span data-i18n="tabs.search">Search</span>
-      </button>
+      <div class="tabbar slide-in-top">
+        <div class="tab-indicator"></div>
+
+        <button class="tab active" data-target="available-classrooms-container">
+          <span class="material-symbols-outlined">event_available</span>
+          <span data-i18n="tabs.available">Available</span>
+        </button>
+        <button class="tab" data-target="search-classrooms-container">
+          <span class="material-symbols-outlined">search</span>
+          <span data-i18n="tabs.search">Search</span>
+        </button>
+      </div>
     </div>
 
   </header>
@@ -182,7 +200,7 @@
               </div>
             </label>
 
-            <input type="time" id="from-time-picker" name="from" />
+            <input type="time" id="from-time-picker" name="from" min="07:15" max="20:15" />
           </div>
 
           <!-- To time picker -->
@@ -196,7 +214,7 @@
               </div>
             </label>
 
-            <input type="time" id="to-time-picker" name="to" />
+            <input type="time" id="to-time-picker" name="to" min="07:15" max="20:15" />
           </div>
 
         </div>
@@ -228,34 +246,57 @@
         </p>
       </div>
 
-      <div class="info-box">
-        <h3 class="info-box-icon">🚧</h3>
-        <h3 class="info-box-title" data-i18n="wip.title">Work in Progress</h3>
-        <p class="info-box-content" data-i18n="wip.line1">I haven't actually made it this far yet...</p>
-        <p class="info-box-content" data-i18n="wip.line2">It's coming, just hang in there! (or, you know, check back
-          later)</p>
+      <!-- Search bar -->
+      <div class="search-bar-wrapper">
+        <span class="material-symbols-outlined">search</span>
+        <input
+          type="text"
+          id="classroom-search-input"
+          class="search-input"
+          data-i18n-attr="placeholder:search.inputPlaceholder"
+          placeholder="e.g. 2.0.1, Trifoglio..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="classroom-search-clear" class="search-clear-btn" type="button" tabindex="-1" aria-label="Clear search">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Results box: breadcrumb + card grid -->
+      <div class="search-results-box">
+        <nav id="search-breadcrumb" class="search-breadcrumb hidden" aria-label="breadcrumb">
+          <div class="search-breadcrumb-inner"></div>
+        </nav>
+        <div id="search-level-header" class="search-level-header"></div>
+        <div id="search-results-container"></div>
       </div>
 
     </div>
+
+    <!-- Classroom Detail Panel (sibling to tab-content divs, shown in-place) -->
+    <div id="classroom-detail-overlay" hidden></div>
 
   </div>
 
   <footer class="footer">
     <button class="transparent-button version-info-button" data-popover="version-info-popover">
-      <label class="secondary">Version 0.7.0 (beta)</label>
+      <label class="secondary">Version 0.8.0 (beta)</label>
     </button>
     <div id="version-info-popover" class="popover">
       <div class="arrow" data-arrow></div>
 
       <img src="/favicons/logo.png" class="changelog-logo" />
-      <h1 class="popover-title">Version 0.7.0 (Beta)</h1>
+      <h1 class="popover-title">Version 0.8.0 (Beta)</h1>
       <div class="changelog-container">
         <h2 class="popover-subtitle" data-i18n="footer.whatsNew">What's new?</h2>
 
         <ul>
-          <li>Added localization support!<br>PoliAule now supports both English and <strong>Italian</strong>!</li>
-          <li>Added an hover indicator inside classroom's timelines to show more detailed informations at any specific time in the graph</li>
-          <li>Added <strong>Settings</strong>!<br>Explore all the new possibilities and customize PoliAule to your liking!</li>
+          <li>Added an option to quickly switch between the 'From' and 'To' time picker modals on mobile</li>
+          <li>Added the <strong>Search</strong> Tab!<br>You can now search for a specific classroom's details both navigating through the campuses and buildings and via a search bar</li>
+          <li>Added a splash screen to make page load smoother</li>
+          <li>Added the <strong>classroom details page</strong>!<br>Here you will find all the details of that classroom, including a picture, the number of seats, the features available and the full weekly schedule fetched by PoliAule!</li>
+          <li>Added a setting to choose which Tab to show on startup</li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">

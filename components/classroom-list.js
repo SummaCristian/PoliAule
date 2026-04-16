@@ -159,7 +159,7 @@ document.addEventListener('mousemove', e => {
 // ---------- CARD ----------
 
 // Builds and returns a Card UI element for the classroom passed as parameter
-export function buildCardForClassroom(classroom, fromTime, toTime, isToday = false) {
+export function buildCardForClassroom(classroom, building, fromTime, toTime, isToday = false) {
   const featuresHtml = (classroom.features ?? [])
     .filter(f => FEATURE_ICONS[f.id])
     .map(f => {
@@ -168,11 +168,18 @@ export function buildCardForClassroom(classroom, fromTime, toTime, isToday = fal
     })
     .join('');
 
+  const buildingDisplay = building.altName ? `${building.altName} (${building.name})` : building.name;
+
   return `
-    <div class="classroom-card">
+    <div class="classroom-card" data-open-classroom="${classroom.id}" role="button" tabindex="0" aria-label="View details for ${classroom.name}">
       <div class="classroom-card-header">
-        <h4 class="classroom-name">${classroom.name}</h4>
-        <h4 class="classroom-status-txt ${classroom.status}">${classroom.status === 'free' ? t('status.free') : t('status.partiallyFree')}</h4>
+        <div class="classroom-card-header-left">
+          <h4 class="classroom-name" title="${classroom.name}">${classroom.name}</h4>
+          <h4 class="classroom-status-txt ${classroom.status}">${classroom.status === 'free' ? t('status.free') : t('status.partiallyFree')}</h4>
+        </div>
+        <div class="classroom-detail-btn">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </div>
       </div>
       ${buildTimeline(classroom.occupancy, fromTime, toTime, isToday)}
       ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}

@@ -119,9 +119,57 @@
 
 .tp-popup__header {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
 
+.tp-popup__header-text {
+  display: flex;
+  flex-direction: column;
   text-align: start;
+}
+
+.tp-popup__switch {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: color-mix(in srgb, var(--text-color-accent) 14%, transparent);
+  color: var(--text-color-accent);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background 0.15s ease, scale 0.15s ease;
+}
+
+.tp-popup__switch .material-symbols-outlined {
+  font-size: 16px !important;
+}
+
+@media (hover: hover) {
+  .tp-popup__switch:hover {
+    background: color-mix(in srgb, var(--text-color-accent) 22%, transparent);
+  }
+}
+
+.tp-popup__switch:active {
+  scale: 0.94;
+}
+
+/* Hidden in desktop inline mode — no modal to switch between */
+.tp-popup--inline .tp-popup__switch {
+  display: none;
 }
 
 /* ── Desktop inline mode ─────────────────────────────────────────────── */

@@ -1,9 +1,15 @@
+history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+
 import {
   classroomsData,
   findAvailableClassrooms,
   fetchClassroomsData,
   SKIP_DAYS
 } from './available-rooms-script.js';
+
+import { initSearchTab, classroomsData as staticClassroomsData } from './search-classrooms-script.js';
+import { classroomDetail } from './components/classroom-detail.js';
 
 import { initTimePickers } from './components/time-picker.js';
 import { setupCampusPicker } from './components/campus-picker.js';
@@ -12,7 +18,50 @@ import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, AUTO_COLLAPSE_KEY, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, getStartupTabId } from './components/settings.js';
+
+// ---------- SPLASH SCREEN ----------
+const _splashStartTime = Date.now();
+const _SPLASH_MIN_MS = 300;
+
+function dismissSplash() {
+  const overlay = document.getElementById('splash-overlay');
+  if (!overlay) return;
+
+  const splashLogo = overlay.querySelector('.splash-logo');
+  const realLogo = document.querySelector('.header-logo');
+
+  // FLIP: measure First (splash, centered) and Last (header) positions
+  const firstRect = splashLogo.getBoundingClientRect();
+  const lastRect = realLogo.getBoundingClientRect();
+
+  // FLIP: center-to-center translation (transform-origin is center by default)
+  const dx = (lastRect.left + lastRect.width / 2) - (firstRect.left + firstRect.width / 2);
+  const dy = (lastRect.top + lastRect.height / 2) - (firstRect.top + firstRect.height / 2);
+  const scale = lastRect.height / firstRect.height;
+
+  // Hide the real header logo so the flying one appears to be it
+  realLogo.style.opacity = '0';
+
+  // Allow interaction with the UI underneath while the logo is flying
+  overlay.style.pointerEvents = 'none';
+
+  // Force a style flush so the transition is active when we set the transform
+  splashLogo.classList.add('splash-logo-flying');
+  void splashLogo.offsetWidth;
+
+  // Start everything simultaneously: logo flies, background fades, header reveals
+  splashLogo.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+  overlay.classList.add('splash-hiding');
+  document.querySelectorAll('.splash-header-item')
+    .forEach(el => el.classList.add('splash-revealed'));
+
+  // The moment the logo lands: restore the real header logo and remove the overlay
+  splashLogo.addEventListener('transitionend', () => {
+    realLogo.style.opacity = '';
+    overlay.remove();
+  }, { once: true });
+}
 
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
@@ -84,30 +133,54 @@ tabs.forEach((tab, index) => {
     tab.classList.add("active");
 
     indicator.style.transform = `translateX(${index * 100}%)`;
+
+    // Persist last-used tab when that mode is active
+    if (localStorage.getItem(DEFAULT_TAB_KEY) === 'last') {
+      localStorage.setItem(LAST_TAB_KEY, targetId);
+    }
   });
 });
+
+// Apply the startup tab preference
+{
+  const startupId = getStartupTabId();
+  if (startupId !== 'available-classrooms-container') {
+    const startupTab = [...tabs].find(t => t.dataset.target === startupId);
+    if (startupTab) {
+      const idx = [...tabs].indexOf(startupTab);
+      showContent(startupId);
+      document.querySelector(".tab.active")?.classList.remove("active");
+      startupTab.classList.add("active");
+      indicator.style.transition = 'none';
+      indicator.style.transform = `translateX(${idx * 100}%)`;
+      indicator.getBoundingClientRect(); // force reflow
+      indicator.style.transition = '';
+    }
+  }
+}
 
 // ---------- BUILDING CARD ----------
 
 // Builds a <li> containing a building card with its room cards inside.
 // Returns the element and the next cardIndex for stagger sequencing.
-function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToday = false) {
-  const counts = { free: 0, 'partially-free': 0, 'not-free': 0 };
-  rooms.forEach(r => { if (r.status in counts) counts[r.status]++; });
-
+function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = false) {
+  const buildingName = building.name;
   const countParts = [
-    counts['free']           ? `<span class="building-count free">${counts['free']} ${t('status.free')}</span>` : '',
-    counts['partially-free'] ? `<span class="building-count partially-free">${counts['partially-free']} ${t('status.partial')}</span>` : '',
-    counts['not-free']       ? `<span class="building-count not-free">${counts['not-free']} ${t('status.occupied')}</span>` : '',
+    rooms.filter(r => r.status === 'free').length ? `<span class="building-count free">${rooms.filter(r => r.status === 'free').length} ${t('status.free')}</span>` : '',
+    rooms.filter(r => r.status === 'partially-free').length ? `<span class="building-count partially-free">${rooms.filter(r => r.status === 'partially-free').length} ${t('status.partial')}</span>` : '',
+    rooms.filter(r => r.status === 'not-free').length ? `<span class="building-count not-free">${rooms.filter(r => r.status === 'not-free').length} ${t('status.occupied')}</span>` : '',
   ].filter(Boolean).join('<span class="building-count-sep">·</span>');
 
   const buildingCard = document.createElement('div');
-  const autoCollapse = localStorage.getItem(AUTO_COLLAPSE_KEY) === 'true';
-  buildingCard.className = autoCollapse ? 'building-card collapsed' : 'building-card';
+  buildingCard.className = 'building-card collapsed';
+
+  // Use current cardIndex for the building's delay only (rooms rendered lazily)
+  const buildingIndex = cardIndex++;
+
   buildingCard.innerHTML = `
     <div class="building-card-header">
       <div class="building-card-header-text">
-        <h3 class="building-name">${buildingName}</h3>
+        <h3 class="building-name">${t('building.prefix')} ${buildingName}${building.altName ? ` <small class="building-alt-name">${building.altName}</small>` : ''}</h3>
         <div class="building-counts">${countParts}</div>
       </div>
       <span class="material-symbols-outlined building-chevron">expand_more</span>
@@ -119,25 +192,76 @@ function createBuildingItem(buildingName, rooms, from, to, cardIndex = 0, isToda
 
   const roomsList = document.createElement('ul');
   roomsList.className = 'list-inner-container';
-  rooms.forEach(room => {
-    const roomItem = document.createElement('li');
-    roomItem.className = 'classroom-list-item-container';
-    roomItem.dataset.status = room.status;
-    roomItem.style.animationDelay = `${Math.min(cardIndex * 40, 300)}ms`;
-    roomItem.innerHTML = buildCardForClassroom(room, from, to, isToday);
-    cardIndex++;
-    roomsList.appendChild(roomItem);
-  });
 
   body.appendChild(roomsList);
   buildingCard.appendChild(body);
 
-  buildingCard.querySelector('.building-card-header').addEventListener('click', () => {
-    buildingCard.classList.toggle('collapsed');
-    haptics.trigger(defaultPatterns.success);
+  buildingCard.addEventListener('click', (e) => {
+    if (!buildingCard.classList.contains('collapsed') && e.target.closest('.building-card-body')) return;
+    const isCollapsed = buildingCard.classList.contains('collapsed');
+
+    if (isCollapsed) {
+      const scrollContainer = buildingCard.closest('#available-classrooms-results');
+      const containerIsScrollable = scrollContainer &&
+        ['auto', 'scroll'].includes(getComputedStyle(scrollContainer).overflowY);
+
+      // Snapshot position before DOM changes
+      const cardTopBefore = buildingCard.getBoundingClientRect().top;
+
+      rooms.forEach(room => {
+        const roomItem = document.createElement('li');
+        roomItem.className = 'classroom-list-item-container';
+        roomItem.dataset.status = room.status;
+        roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday);
+        roomsList.appendChild(roomItem);
+      });
+      buildingCard.closest('.list-outer-container')
+        ?.querySelectorAll('.building-card:not(.collapsed)')
+        .forEach(card => {
+          if (card !== buildingCard) {
+            card.classList.add('collapsed');
+            card.querySelector('.list-inner-container').replaceChildren();
+          }
+        });
+      buildingCard.classList.remove('collapsed');
+      haptics.trigger(defaultPatterns.success);
+
+      // getBoundingClientRect() forces a synchronous reflow — cardTopAfter reflects
+      // the final layout (CSS transitions don't affect layout values, only visuals).
+      // Instantly compensate for any shift so the card stays visually in place.
+      const cardTopAfter = buildingCard.getBoundingClientRect().top;
+      const delta = cardTopAfter - cardTopBefore;
+      if (delta !== 0) {
+        if (containerIsScrollable) {
+          scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop + delta);
+        } else {
+          window.scrollBy(0, delta);
+        }
+      }
+
+      // Now smooth-scroll the card to the top of the visible area
+      requestAnimationFrame(() => {
+        if (containerIsScrollable) {
+          const top = buildingCard.getBoundingClientRect().top
+            - scrollContainer.getBoundingClientRect().top
+            + scrollContainer.scrollTop - 8;
+          scrollContainer.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        } else {
+          const header = document.querySelector('.header');
+          const offset = (header?.offsetHeight ?? 0) + 8;
+          const top = buildingCard.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        }
+      });
+    } else {
+      roomsList.replaceChildren();
+      buildingCard.classList.add('collapsed');
+      haptics.trigger(defaultPatterns.success);
+    }
   });
 
   const li = document.createElement('li');
+  li.style.animationDelay = `${Math.min(buildingIndex * 40, 300)}ms`;
   li.appendChild(buildingCard);
   if (rooms.every(r => r.status === 'partially-free')) li.dataset.allPartial = 'true';
   return { li, cardIndex };
@@ -153,7 +277,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initSettings();
 
-    await fetchClassroomsData();
+    // Fetch occupancy data and classroom directory in parallel
+    await Promise.all([
+      fetchClassroomsData(),
+      initSearchTab(),
+    ]);
+
+    // Init classroom detail overlay (hash routing + VT morph)
+    classroomDetail.init(staticClassroomsData);
 
     // Setup the campus picker with the available ones
     setupCampusPicker();
@@ -167,15 +298,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTimePickers();
 
     initTimePickers();
-    document.fonts.ready.then(() => {
-      document.querySelector('.time-pickers-container').style.opacity = '1';
-      document.getElementById('available-classrooms-form').removeAttribute('data-loading');
-    });
 
-    // Setup the data fetch indicator
+    // Setup the data fetch indicator and language switch handler immediately —
+    // these don't depend on fonts and shouldn't wait for the splash to dismiss
     setupDataFetchIndicator();
-
-    // Re-render dynamic content when the language is switched
     onLanguageSwitch(() => {
       setupDataFetchIndicatorText(true);
       setupDatePicker();
@@ -186,6 +312,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
       }
     });
+
+    // Wait for fonts so time pickers render correctly, then dismiss splash.
+    // By this point all data is fetched and every component is populated.
+    await document.fonts.ready;
+    document.querySelector('.time-pickers-container').style.opacity = '1';
+    document.getElementById('available-classrooms-form').removeAttribute('data-loading');
+
+    const elapsed = Date.now() - _splashStartTime;
+    const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
+    setTimeout(dismissSplash, remaining);
+
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
   }
@@ -236,31 +373,9 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   container.classList.remove('empty');
 
-  // Filter row (always rendered)
+  // Filter row (rendered only when partial-free filter is needed)
   const filterRow = document.createElement('div');
   filterRow.className = 'results-filter-row';
-
-  // Collapse-all toggle — initial state driven by Auto Collapse setting
-  const autoCollapse = localStorage.getItem(AUTO_COLLAPSE_KEY) === 'true';
-  const collapseBtn = document.createElement('button');
-  collapseBtn.className = 'results-filter-btn active';
-  if (autoCollapse) {
-    collapseBtn.dataset.state = 'collapsed';
-    collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_more</span> ${t('results.expandAll')}`;
-  } else {
-    collapseBtn.innerHTML = `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`;
-  }
-  collapseBtn.addEventListener('click', () => {
-    const allCollapsed = collapseBtn.dataset.state === 'collapsed';
-    container.querySelectorAll('.building-card').forEach(card => {
-      card.classList.toggle('collapsed', !allCollapsed);
-    });
-    collapseBtn.dataset.state = allCollapsed ? '' : 'collapsed';
-    collapseBtn.innerHTML = allCollapsed
-      ? `<span class="material-symbols-outlined">unfold_less</span> ${t('results.collapseAll')}`
-      : `<span class="material-symbols-outlined">unfold_more</span> ${t('results.expandAll')}`;
-  });
-  filterRow.appendChild(collapseBtn);
 
   // Partial-free filter toggle — initial state driven by Show Partially Free setting
   const showPartialSaved = localStorage.getItem(SHOW_PARTIAL_KEY);
@@ -273,6 +388,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> ${t('results.filterPartial')}`;
     if (!showPartialDefault) container.classList.add('hide-partial');
     toggleBtn.addEventListener('click', () => {
+      haptics.trigger(defaultPatterns.success);
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
       if (!isActive) {
@@ -282,9 +398,8 @@ function renderAvailableClassroomsResults(results, date, from, to) {
       }
     });
     filterRow.appendChild(toggleBtn);
+    container.appendChild(filterRow);
   }
-
-  container.appendChild(filterRow);
 
   const list = document.createElement('ul');
   list.className = 'list-outer-container';
@@ -294,14 +409,23 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   const isToday = date === todayStr;
 
   let cardIndex = 0;
-  results.forEach(building => {
-    const { li, cardIndex: next } = createBuildingItem(building.building.name, building.rooms, from, to, cardIndex, isToday);
+  results.forEach(buildingResult => {
+    const { li, cardIndex: next } = createBuildingItem(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday);
     cardIndex = next;
     list.appendChild(li);
   });
   originalBuildingOrder = [...list.children];
 
   container.appendChild(list);
+
+  // Mark the list as appeared after the staggered animation finishes.
+  // This avoids re-triggering the animation when returning from the details page
+  // or switching back and forth between tabs.
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      list.classList.add('appeared');
+    }, 800);
+  });
 }
 
 // Render the error state for the Available Classrooms results container
@@ -314,6 +438,12 @@ function renderNoResultsClassroomsContainer(container) {
     <p class="empty-container-subtitle">${t('results.noResultsSubtitle')}</p>
   `;
 }
+
+const TIME_MIN_MINS = 7 * 60 + 15;  // 07:15
+const TIME_MAX_MINS = 20 * 60 + 15; // 20:15
+
+// Set by setupTimePickers when the current time is after 20:15 (need tomorrow's date)
+let preferInitialDate = null;
 
 // Sets the allowed dates into the date picker,
 // and populates the custom UI and the hidden select with the available dates
@@ -389,15 +519,16 @@ function setupDatePicker() {
   const elements = container.querySelectorAll('.date-element-container');
 
   function placeIndicator(el) {
-    const containerRect = container.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
+    // Use offsetLeft/offsetWidth/offsetHeight instead of getBoundingClientRect()
+    // so that CSS transform animations on ancestor elements (e.g. the tab appear
+    // animation's scale(0.95)) don't skew the measurements.
     const paddingLeft = parseFloat(getComputedStyle(container).paddingLeft);
-    const x = elRect.left - containerRect.left - paddingLeft;
+    const x = el.offsetLeft - paddingLeft;
 
     // Store x as a CSS variable so the shake keyframe can reference it
     indicator.style.setProperty('--indicator-x', `${x}px`);
-    indicator.style.width = `${elRect.width}px`;
-    indicator.style.height = `${elRect.height}px`;
+    indicator.style.width = `${el.offsetWidth}px`;
+    indicator.style.height = `${el.offsetHeight}px`;
     indicator.style.transform = `translateX(${x}px)`;
     indicator.style.opacity = '1';
   }
@@ -489,9 +620,11 @@ function setupDatePicker() {
   // Wait for fonts to load to ensure accurate element measurements
   document.fonts.ready.then(() => {
     requestAnimationFrame(() => {
-      // Auto-select the first available (non-skipped) date
+      // Auto-select preferred date (tomorrow when after 20:15) or first available
+      const preferred = preferInitialDate
+        && [...elements].find(el => el.dataset.date === preferInitialDate && !el.classList.contains('date-skipped'));
       const firstAvailable = [...elements].find(el => !el.classList.contains('date-skipped'));
-      if (firstAvailable) selectDateElement(firstAvailable);
+      if (preferred || firstAvailable) selectDateElement(preferred || firstAvailable);
 
       positionTodayIndicator();
 
@@ -502,7 +635,7 @@ function setupDatePicker() {
 }
 
 // Sets up the time pickers to ensure that the 'to' time
-// is always at least 1 hour after the 'from' time
+// is always at least 1 hour after the 'from' time, within 07:15–20:15
 function setupTimePickers() {
   const fromPicker = document.getElementById('from-time-picker');
   const toPicker = document.getElementById('to-time-picker');
@@ -512,6 +645,10 @@ function setupTimePickers() {
     return h * 60 + m;
   }
 
+  function formatMins(mins) {
+    return `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+  }
+
   function formatTime(date) {
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   }
@@ -519,13 +656,12 @@ function setupTimePickers() {
   fromPicker.addEventListener('input', () => {
     if (!fromPicker.value) return;
 
-    const [hours, minutes] = fromPicker.value.split(':').map(Number);
-    const minTo = new Date();
-    minTo.setHours(hours + 1, minutes);
-    toPicker.min = formatTime(minTo);
+    const fromMins = toMinutes(fromPicker.value);
+    const minToMins = Math.min(fromMins + 60, TIME_MAX_MINS);
+    toPicker.min = formatMins(minToMins);
 
-    if (toPicker.value && toMinutes(toPicker.value) < toMinutes(toPicker.min)) {
-      toPicker.value = toPicker.min;
+    if (toPicker.value && toMinutes(toPicker.value) < minToMins) {
+      toPicker.value = formatMins(minToMins);
     }
   });
 
@@ -533,30 +669,44 @@ function setupTimePickers() {
     if (!toPicker.value || !fromPicker.value) return;
 
     const diffMinutes = toMinutes(toPicker.value) - toMinutes(fromPicker.value);
-
     if (diffMinutes < 60) {
-      const [fromHours, fromMinutes] = fromPicker.value.split(':').map(Number);
-      const corrected = new Date();
-      corrected.setHours(fromHours + 1, fromMinutes);
-      toPicker.value = formatTime(corrected);
+      const corrected = Math.min(toMinutes(fromPicker.value) + 60, TIME_MAX_MINS);
+      toPicker.value = formatMins(corrected);
     }
   });
 
   // Set initial values
   const intervalHours = parseInt(localStorage.getItem(INTERVAL_HOURS_KEY), 10) || 1;
   const now = new Date();
-  now.setMinutes(15, 0, 0);
-  if (new Date().getMinutes() >= 15) now.setHours(now.getHours() + 1);
 
-  const minTo = new Date(now);
-  minTo.setHours(now.getHours() + 1);
+  // Snap to next :15 slot
+  const snapped = new Date(now);
+  snapped.setMinutes(15, 0, 0);
+  if (now.getMinutes() >= 15) snapped.setHours(snapped.getHours() + 1);
 
-  const later = new Date(now);
-  later.setHours(now.getHours() + intervalHours);
+  const snappedMins = snapped.getHours() * 60 + snapped.getMinutes();
 
-  fromPicker.value = formatTime(now);
-  toPicker.value = formatTime(later);
-  toPicker.min = formatTime(minTo);
+  if (snappedMins > TIME_MAX_MINS) {
+    // After 20:15 → next non-skipped day at 07:15; signal date picker to advance
+    do { snapped.setDate(snapped.getDate() + 1); } while (SKIP_DAYS.includes(snapped.getDay()));
+    snapped.setHours(7, 15, 0, 0);
+    preferInitialDate = [
+      snapped.getFullYear(),
+      String(snapped.getMonth() + 1).padStart(2, '0'),
+      String(snapped.getDate()).padStart(2, '0'),
+    ].join('-');
+  } else if (snappedMins < TIME_MIN_MINS) {
+    // Before 07:15 → today at 07:15
+    snapped.setHours(7, 15, 0, 0);
+  }
+
+  const fromMins = snapped.getHours() * 60 + snapped.getMinutes();
+  const toMins = Math.min(fromMins + intervalHours * 60, TIME_MAX_MINS);
+  const minToMins = Math.min(fromMins + 60, TIME_MAX_MINS);
+
+  fromPicker.value = formatTime(snapped);
+  toPicker.value = formatMins(toMins);
+  toPicker.min = formatMins(minToMins);
 }
 
 function setupDataFetchIndicator() {

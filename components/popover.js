@@ -8,7 +8,8 @@ import {
   arrow
 } from "https://cdn.jsdelivr.net/npm/@floating-ui/dom@1/+esm";
 
-import { haptics, defaultPatterns } from './haptics.js';
+const supportsAnchor = CSS.supports('anchor-name: --a');
+let _anchorCounter = 0;
 
 // All Popovers currently in the page
 const allPopovers = [];
@@ -31,6 +32,12 @@ export class Popover {
 
     this.trigger.addEventListener('click', this._onClick);
     document.addEventListener('click', this._onDocumentClick);
+
+    if (supportsAnchor) {
+      const name = `--popover-${_anchorCounter++}`;
+      this.trigger.style.anchorName = name;
+      this.popover.style.positionAnchor = name;
+    }
 
     allPopovers.push(this);
   }
@@ -92,7 +99,53 @@ export class Popover {
     }
   }
 
-  open() { this.popover.setAttribute('data-show', ''); this._updatePosition(); }
+  // When CSS anchor positioning handles placement, floating-ui is skipped but we
+  // still need to point the arrow and set transform-origin toward the trigger.
+  // We only need the trigger's rect — no async call required.
+  _updateAnchorOriginAndArrow() {
+    const triggerRect = this.trigger.getBoundingClientRect();
+    // offsetWidth is a layout value — unaffected by transform: scale(0).
+    const popoverWidth = this.popover.offsetWidth;
+
+    // Vertical: if the trigger is in the lower half of the viewport the
+    // --popover-above try fires and the popover appears above the trigger.
+    const isAbove = triggerRect.top > window.innerHeight / 2;
+
+    // Horizontal: the default placement is right: anchor(right), meaning the
+    // popover's right edge aligns to the trigger's right edge (natural for
+    // right-side triggers). flip-inline kicks in when that would push the
+    // popover off the left side of the viewport, switching to left: anchor(left).
+    const flipsInline = triggerRect.right - popoverWidth < 8;
+
+    // Express the trigger's centre as an offset from the popover's left edge:
+    //   default     → trigger.right == popover.right → centre = popoverWidth - trigger.width / 2
+    //   flip-inline → trigger.left == popover.left   → centre = trigger.width / 2
+    const originX = flipsInline
+      ? triggerRect.width / 2
+      : popoverWidth - triggerRect.width / 2;
+
+    this.popover.style.transformOrigin = `${originX}px ${isAbove ? 'bottom' : 'top'}`;
+
+    if (this.arrowEl) {
+      this.arrowEl.style.left = `${originX - 5}px`;
+      if (isAbove) {
+        this.arrowEl.style.top = 'auto';
+        this.arrowEl.style.bottom = '-5px';
+      } else {
+        this.arrowEl.style.top = '-5px';
+        this.arrowEl.style.bottom = 'auto';
+      }
+    }
+  }
+
+  open() {
+    this.popover.setAttribute('data-show', '');
+    if (supportsAnchor) {
+      this._updateAnchorOriginAndArrow();
+    } else {
+      this._updatePosition();
+    }
+  }
   close() { this.popover.removeAttribute('data-show'); }
   toggle() { this.popover.hasAttribute('data-show') ? this.close() : this.open(); }
 
@@ -102,10 +155,13 @@ export class Popover {
   }
 }
 
-// Close all popovers on any scroll
-window.addEventListener('scroll', () => {
-  allPopovers.forEach(p => p.close());
-}, { capture: true, passive: true });
+// Close all popovers on scroll — only needed as a fallback when anchor positioning
+// isn't available, since position-visibility: anchors-visible handles it natively.
+if (!supportsAnchor) {
+  window.addEventListener('scroll', () => {
+    allPopovers.forEach(p => p.close());
+  }, { capture: true, passive: true });
+}
 
 // On page load finds all popover components and initializes them
 document.addEventListener('DOMContentLoaded', async () => {

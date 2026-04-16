@@ -1,0 +1,1273 @@
+/* ── Classroom Detail Panel ────────────────────────────────────────── */
+
+/* Sits inside .body-container at the same level as .tab-content divs.
+   Hidden by default (via the [hidden] attribute); shown as a flex column
+   that fills the remaining space when the detail-open class is on body. */
+
+#classroom-detail-overlay:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: var(--background-color);
+
+  /* Fallback fade-in for browsers without View Transitions */
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  will-change: opacity;
+}
+
+#classroom-detail-overlay.visible {
+  opacity: 1;
+}
+
+/* Hide tab contents and footer while the detail panel is open */
+body.detail-open .tab-content {
+  visibility: hidden;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+body.detail-open .footer {
+  visibility: hidden;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Disable background animations while the detail panel is open to save CPU/GPU */
+body.detail-open .tab-content,
+body.detail-open .tab-content * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ── Hero photo ─────────────────────────────────────────────────── */
+
+.detail-photo-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
+  animation: detail-skeleton-pulse 1.4s ease-in-out infinite;
+
+  align-self: center;
+  flex-shrink: 0;
+
+  transition: box-shadow 0.4s ease, background-color 0.4s ease;
+}
+
+/* Mobile "Hero Header" style */
+@media (max-width: 599px) {
+  .detail-photo-container {
+    width: 100%;
+    /* Stabilize height: no longer just a byproduct of width. */
+    aspect-ratio: auto;
+    height: 38vh;
+    min-height: 280px;
+    border-radius: 0;
+    
+    /* Pull it up to sit exactly behind the entire header.
+       We subtract the 1rem padding of .body-container and the full header height. */
+    margin-top: calc(-1 * var(--header-height, 80px) - 1rem);
+    
+    box-shadow: none;
+  }
+}
+
+/* Desktop "Card" style */
+@media (min-width: 600px) {
+  .detail-photo-container {
+    width: 92%;
+    max-width: 720px;
+    aspect-ratio: 16 / 9;
+    border-radius: 1.5rem;
+    margin-top: 0.5rem;
+    box-shadow: var(--shadow);
+  }
+}
+
+.detail-photo-container.loaded {
+  animation: none;
+  background: var(--background-color-secondary);
+}
+
+@media (max-width: 599px) {
+  .detail-photo-container.loaded {
+    background: var(--background-color);
+  }
+}
+
+@media (min-width: 600px) {
+  .detail-photo-container.loaded {
+    box-shadow: var(--shadow);
+  }
+}
+
+.detail-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  opacity: 0;
+  transform: scale(1.05);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 599px) {
+  .detail-photo {
+    /* Use a mask to fade out the image itself at the bottom to avoid "line" artifacts
+       between the image and the background blur layer. */
+    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  }
+}
+
+.detail-photo.loaded {
+  opacity: 1;
+  /* scale(1.001) keeps the image fractionally larger than its overflow:hidden
+     container at all times — including the final frame — so Safari never
+     recalculates the overflow clip and the repaint flicker doesn't occur. */
+  transform: scale(1.001);
+}
+
+.detail-photo-gradient {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  /* Use a faster transition than the image (0.6s) to ensure the blur/gradient 
+     is already established or feels immediate as the image fades in. */
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.detail-photo.loaded + .detail-photo-gradient {
+  opacity: 1;
+}
+
+@media (max-width: 599px) {
+  .detail-photo-gradient {
+    /* Gradient Blur: a more sophisticated approach using a taller, fixed-height 
+       area and a smoother mask to ensure the blur feels substantial on all screens. */
+    top: auto;
+    height: 180px; /* Consistent blur height regardless of image height */
+    
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    
+    /* Smoother fade-out for the blur itself. */
+    mask-image: linear-gradient(to top, 
+      black 0%, 
+      black 20%, 
+      rgba(0, 0, 0, 0.5) 60%, 
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(to top, 
+      black 0%, 
+      black 20%, 
+      rgba(0, 0, 0, 0.5) 60%, 
+      transparent 100%
+    );
+
+    /* Blend into the background color with a matching gradient. */
+    background: linear-gradient(to top, 
+      var(--background-color) 0%, 
+      color-mix(in srgb, var(--background-color) 80%, transparent) 30%,
+      transparent 100%
+    );
+  }
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+
+/* Back button lives in .header-nav-row, pinned to the left while tabbar stays centered */
+#detail-back-btn {
+  position: absolute;
+  left: 1rem;
+  z-index: 10; /* Ensure it stays above the immersive photo */
+}
+
+#detail-back-btn[hidden] {
+  display: none;
+}
+
+.detail-header {
+  padding: 1.25rem 1.25rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  align-items: flex-start; /* Mobile default */
+}
+
+.detail-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+@media (min-width: 600px) {
+  .detail-title-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: auto;
+  }
+}
+
+.detail-status-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+@media (min-width: 600px) {
+  .detail-status-wrapper {
+    align-items: center;
+  }
+}
+
+.detail-status-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-color-secondary);
+  opacity: 0.65;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.1rem;
+}
+
+.detail-title-row .classroom-status-txt {
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+@media (min-width: 600px) {
+  .detail-header {
+    align-items: center; /* Desktop centered */
+  }
+}
+
+@media (max-width: 599px) {
+  .detail-header {
+    padding-top: 1rem;
+    gap: 0;
+    position: relative;
+    z-index: 2; /* Stay above the blur layer */
+  }
+
+  .detail-title-row {
+    align-items: last baseline;
+  }
+
+  /* Pull header up to overlay the blurred hero only when the photo container is present.
+     This also handles the photo-load-error case: once the container is removed from the DOM
+     the negative margin is lifted and the header reflows into its natural position. */
+  #classroom-detail-overlay:has(.detail-photo-container) .detail-header {
+    margin-top: -6rem;
+  }
+
+  .detail-title {
+    /* Align perfectly with the floating back button */
+    padding-top: 0.25rem;
+  }
+}
+
+.detail-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-color-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.detail-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.detail-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+}
+
+.detail-stat .material-symbols-outlined {
+  font-size: 1.1rem !important;
+  color: var(--text-color-accent);
+}
+
+.detail-back-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.375rem 0.875rem 0.375rem 0.5rem;
+  border-radius: 999px;
+  border: none;
+  
+  /* Use a more opaque, theme-aware background with strong blur to ensure contrast over images */
+  background: color-mix(in srgb, var(--background-color-secondary) 82%, transparent);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.35),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.1),
+    var(--shadow);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  
+  color: var(--text-color-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  
+  /* Ensure the button and its content adapt their internal rendering to the theme */
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  .detail-back-btn {
+    /* Slightly less opaque in dark mode to feel more "glassy" but still legible */
+    background: color-mix(in srgb, var(--background-color-secondary) 72%, transparent);
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+      inset -1px -1px 0 rgba(255, 255, 255, 0.03),
+      var(--shadow);
+  }
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .detail-back-btn {
+    background: color-mix(in srgb, var(--background-color-secondary) 95%, black);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .detail-back-btn {
+      background: color-mix(in srgb, var(--background-color-secondary) 95%, white);
+    }
+  }
+}
+
+.detail-back-btn:hover {
+  background: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
+}
+
+.detail-back-btn:active {
+  transform: scale(0.95);
+}
+
+.detail-back-btn .material-symbols-outlined {
+  font-size: 1.25rem;
+  margin-left: -0.125rem;
+}
+
+/* ── Content ─────────────────────────────────────────────────────── */
+
+.detail-content {
+  width: 100%;
+  padding: 1rem 1.25rem 4rem;
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.detail-subtitle {
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+@media (max-width: 599px) {
+  .detail-subtitle {
+    margin-bottom: 0.25rem;
+  }
+
+  .detail-stats {
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 600px) {
+  .detail-subtitle {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+}
+
+/* ── Section ─────────────────────────────────────────────────────── */
+
+.detail-section {
+  margin-bottom: 2rem;
+}
+
+.detail-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-color-secondary);
+  margin: 0 0 0.75rem;
+}
+
+.detail-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.detail-section-header .detail-section-title {
+  margin-bottom: 0;
+}
+
+.detail-schedule-legend {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.detail-schedule-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.detail-schedule-legend-box {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+  background: var(--accent-gradient);
+  border: 1px solid color-mix(in srgb, var(--text-color-accent) 20%, black);
+  opacity: 0.85;
+}
+
+@media (prefers-color-scheme: dark) {
+  .detail-schedule-legend-box {
+    border-color: color-mix(in srgb, var(--text-color-accent) 20%, white);
+  }
+}
+
+.detail-schedule-legend-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-color-secondary);
+  opacity: 0.8;
+}
+
+/* ── Features ─────────────────────────────────────────────────────── */
+
+.detail-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.detail-feature-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4rem 0.875rem 0.4rem 0.625rem;
+  background: var(--background-color-secondary);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-color-primary);
+  box-shadow: var(--shadow);
+}
+
+.detail-feature-chip .material-symbols-outlined {
+  font-size: 1.1rem;
+  color: var(--text-color-accent);
+}
+
+.detail-no-features {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* ── Weekly Schedule ─────────────────────────────────────────────── */
+
+/* Desktop: create space on the left for the today indicator */
+@media (min-width: 600px) {
+  .detail-schedule-inner {
+    padding-left: 4.5rem;
+  }
+}
+
+.detail-schedule-grid {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  gap: 0.875rem;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+/* Left pill: vertical date picker clone */
+.detail-schedule-labels-pill {
+  flex-shrink: 0;
+  width: 3.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  background-color: var(--background-color-secondary);
+  border-radius: 999px;
+  padding: 0.75rem 0.5rem;
+
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px rgba(255, 255, 255, 0.1),
+    var(--shadow);
+}
+
+/* Override date-element-container sizing to fit the vertical pill */
+.detail-schedule-labels-pill .date-element-container {
+  aspect-ratio: unset;
+  width: 100%;
+  height: 2.625rem; /* match bar height */
+}
+
+.detail-schedule-label-cell--today .date-day-of-week,
+.detail-schedule-label-cell--today .date-number {
+  color: var(--text-color-accent);
+  font-weight: bold;
+  opacity: 1;
+}
+
+/* Desktop Today indicator — floats to the left of the labels pill, points right */
+.detail-desktop-today-indicator {
+  display: none; /* shown only on desktop via media query below */
+}
+
+@media (min-width: 600px) {
+  .detail-desktop-today-indicator {
+    display: block;
+    position: absolute;
+    right: calc(100% + 8px); /* 8px gap between indicator and pill */
+
+    background: var(--text-color-accent);
+    color: white;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: default;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+
+    opacity: 0;
+    animation: detail-today-indicator-appear 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
+
+    will-change: transform, opacity;
+    transition: scale 0.15s ease;
+  }
+
+  .detail-desktop-today-indicator::after {
+    content: '';
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-left-color: var(--text-color-accent);
+  }
+
+  .detail-desktop-today-indicator.hidden {
+    display: none;
+  }
+}
+
+@media (min-width: 600px) and (prefers-color-scheme: dark) {
+  .detail-desktop-today-indicator {
+    background: #28a745;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+  }
+  .detail-desktop-today-indicator::after {
+    border-left-color: #28a745;
+  }
+}
+
+@keyframes detail-today-indicator-appear {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px) scale(0.75);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Right column: grid lines + bar rows */
+.detail-schedule-bars {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Vertical grid lines container */
+.detail-schedule-grid-lines {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.detail-schedule-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--pos);
+  width: 1px;
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+}
+
+.detail-schedule-row {
+  position: relative;
+  z-index: 1;
+}
+
+.detail-schedule-row--today .detail-schedule-bar {
+  background: color-mix(in srgb, var(--text-color-accent) 4%, transparent);
+  border-color: color-mix(in srgb, var(--text-color-accent) 25%, transparent);
+}
+
+.detail-schedule-bar-wrapper {
+  position: relative;
+}
+
+.detail-schedule-bar {
+  position: relative;
+  height: 2.625rem;
+  background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.detail-schedule-block {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  /* Increased side gaps for better separation between consecutive blocks */
+  left: calc(var(--block-start) + 2px);
+  width: calc(var(--block-size) - 4px);
+  border-radius: 4px;
+  background: var(--accent-gradient);
+  opacity: 0.85;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  border: 1px solid color-mix(in srgb, var(--text-color-accent) 20%, black);
+}
+
+@media (prefers-color-scheme: dark) {
+  .detail-schedule-block {
+    border-color: color-mix(in srgb, var(--text-color-accent) 20%, white);
+  }
+}
+
+.detail-schedule--hide-sundays .detail-schedule-row--sunday,
+.detail-schedule--hide-sundays .detail-schedule-label-cell--sunday {
+  display: none;
+}
+
+.detail-schedule-row--sunday .detail-schedule-bar {
+  background: color-mix(in srgb, #e53935 8%, transparent);
+  border-color: color-mix(in srgb, #e53935 15%, transparent);
+}
+
+.detail-schedule-ticks .timeline-time-indicator--now {
+  position: absolute;
+  top: 1px;
+  left: var(--pos);
+  transform: translateX(-50%);
+  z-index: 10;
+  background: #2196F3;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+}
+
+/* Arrow for the now indicator at the top */
+.detail-schedule-ticks .timeline-time-indicator--now::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #2196F3;
+}
+
+.detail-schedule-bar-wrapper .timeline-time-indicator--now {
+  display: none;
+}
+
+.detail-schedule-now-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--pos);
+  width: 2px;
+  transform: translateX(-50%);
+  background: #2196F3;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.detail-schedule-now-line::before,
+.detail-schedule-now-line::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: inherit;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.detail-schedule-now-line::before { top: -3px; }
+.detail-schedule-now-line::after { bottom: -3px; }
+
+.detail-schedule-bar-wrapper .timeline-hover-cursor {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%) translateY(calc(-100% - 8px));
+
+  background: var(--background-color);
+  color: var(--text-color-primary);
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 18%, transparent);
+  border-radius: 0.5rem;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+
+  pointer-events: none;
+  user-select: none;
+  z-index: 10;
+}
+
+/* Border triangle (1px larger, in border color, sits behind the fill triangle) */
+.detail-schedule-bar-wrapper .timeline-hover-cursor::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
+}
+
+/* Fill triangle (covers the border triangle except the bottom tip) */
+.detail-schedule-bar-wrapper .timeline-hover-cursor::after {
+  content: '';
+  position: absolute;
+  top: calc(100% - 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--background-color);
+}
+
+.detail-schedule-bar .timeline-hover-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.detail-schedule-ticks {
+  position: relative;
+  height: 3rem;
+  /* Matched to labels pill width (3.75rem) + gap (0.875rem) */
+  margin-left: calc(3.75rem + 0.875rem);
+  margin-bottom: 0.15rem;
+  overflow: visible;
+}
+
+.detail-schedule-tick {
+  position: absolute;
+  bottom: 0;
+  left: var(--pos);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+
+.detail-schedule-tick--quarter {
+  opacity: 0.4;
+  font-size: 0.5rem;
+}
+
+.detail-schedule-tick span {
+  font-size: 0.6rem;
+  color: var(--text-color-secondary);
+  font-weight: 600;
+}
+
+/* ── Vertical layout (mobile) ────────────────────────────────────── */
+
+/* Day selector and now-bar-line: mobile-only */
+.detail-schedule-day-selector,
+.timeline-now-bar-line {
+  display: none;
+}
+
+@media (max-width: 599px) {
+  .detail-schedule-day-selector,
+  .timeline-now-bar-line {
+    display: block;
+  }
+
+  .detail-schedule-ticks .timeline-time-indicator--now,
+  .detail-schedule-now-line {
+    display: none;
+  }
+
+  /* Override date-picker-container defaults for this context */
+  .detail-schedule-picker {
+    margin-top: 0;
+    margin-bottom: 0; /* gap handled by container */
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 90% !important; /* Force it to stay within parent's 90% as in Available tab */
+    
+    /* align-self: center (from date-picker.css) works here because the parent is a flexbox */
+    align-self: center;
+    opacity: 1 !important; /* date-picker-container starts at 0 until JS fires */
+  }
+
+  .detail-schedule-day-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    overflow: visible;
+    position: relative;
+    padding-top: 2rem; /* room for the today indicator pill above the picker */
+  }
+
+  .detail-today-indicator {
+    position: absolute;
+    transform: translateX(-50%);
+
+    background: var(--text-color-accent);
+    color: white;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+    transform-origin: bottom center;
+
+    opacity: 0;
+    animation: today-indicator-appear 0.65s linear 0.35s forwards;
+
+    will-change: transform, scale;
+    transition: scale 0.15s ease, background-color 0.2s ease;
+  }
+
+  .detail-today-indicator::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--text-color-accent);
+  }
+
+  .detail-today-indicator.hidden {
+    display: none;
+  }
+
+  .detail-today-indicator:hover {
+    scale: 1.05;
+    background: color-mix(in srgb, var(--text-color-accent) 85%, black);
+  }
+
+  /* Container: column — selector on top, then time axis + bar below */
+  #detail-schedule-container {
+    --schedule-bar-height: clamp(240px, 48svh, 480px);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  /* Inner row: time axis on the left, single day bar fills the rest */
+  .detail-schedule-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.625rem;
+    overflow: visible; /* clip was silently cutting off bar edges on narrow screens */
+  }
+
+  @media (max-width: 600px) {
+    .detail-schedule-inner {
+      width: 15rem;
+      align-self: center;
+      padding-right: 3.5rem;
+    }
+  }
+
+  /* Time axis */
+  .detail-schedule-ticks {
+    flex-shrink: 0;
+    width: 3.5rem;
+    height: var(--schedule-bar-height);
+    margin-top: 0;
+    margin-left: 0;
+    margin-bottom: 0;
+    overflow: visible;
+  }
+
+  .detail-schedule-tick span {
+    font-size: 0.7rem;
+  }
+
+  .detail-schedule-tick {
+    left: auto;
+    right: 0;
+    bottom: auto;
+    top: var(--pos);
+    transform: translateY(-50%);
+    text-align: right;
+  }
+
+  /* Now indicator: outside the bar, to the right, arrow pointing left */
+  .detail-schedule-bar-wrapper .timeline-time-indicator--now {
+    display: block;
+    left: calc(100% + 0.5rem);
+    right: auto;
+    top: var(--pos);
+    transform: translateY(-50%);
+    transform-origin: left center;
+    background: #2196F3;
+    color: white;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+    animation: now-indicator-appear-mobile 0.65s linear 0.35s forwards;
+  }
+
+  /* Arrow points left toward the bar */
+  .detail-schedule-bar-wrapper .timeline-time-indicator--now::after {
+    top: 50%;
+    right: 95%;
+    left: auto;
+    border-top-color: transparent;
+    border-right-color: #2196F3;
+    transform: translateY(-50%);
+  }
+
+  @keyframes now-indicator-appear-mobile {
+    0% {
+      opacity: 0;
+      transform: translateX(-40px) translateY(-50%) scale(0, 0);
+      filter: blur(16px);
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    25% {
+      opacity: 1;
+      transform: translateX(0) translateY(-50%) scale(0.85, 0.25);
+      filter: blur(2px);
+      animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    75% {
+      transform: translateX(0) translateY(-50%) scale(1.06, 1.08);
+      filter: blur(0);
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0) translateY(-50%) scale(1, 1);
+      filter: blur(0);
+    }
+  }
+
+  /* Grid: fills all remaining space after the ticks column */
+  .detail-schedule-grid {
+    flex: 1;
+    flex-direction: row;
+    gap: 0;
+    min-width: 0;
+    max-width: 18rem;
+  }
+
+  .detail-schedule-grid-lines {
+    left: 0;
+  }
+
+  .detail-schedule-now-line {
+    display: none;
+  }
+
+  /* All day rows hidden on mobile; only .selected is shown */
+  .detail-schedule-row {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1;
+    gap: 0;
+  }
+
+  .detail-schedule-row.selected {
+    display: flex;
+    animation: detail-row-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .detail-schedule-row.selected .detail-schedule-block {
+    animation: detail-block-appear 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--idx) * 0.04s + 0.1s);
+  }
+
+  @keyframes detail-row-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes detail-block-appear {
+    from {
+      opacity: 0;
+      transform: scaleX(0.85) scaleY(0.85);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 0.85;
+      transform: scaleX(1) scaleY(1);
+      filter: blur(0);
+    }
+  }
+
+  /* Labels pill redundant on mobile — chip selector shows the current day */
+  .detail-schedule-labels-pill {
+    display: none;
+  }
+
+  .detail-schedule-bar-wrapper {
+    flex: 1;
+  }
+
+  /* Vertical bar */
+  .detail-schedule-bar {
+    height: var(--schedule-bar-height);
+    width: 100%;
+    border-radius: 0.75rem;
+  }
+
+  /* Blocks: vertical positioning using the CSS vars */
+  .detail-schedule-block {
+    /* Increased gaps for better separation between consecutive blocks on mobile */
+    top: calc(var(--block-start) + 2px);
+    height: calc(var(--block-size) - 4px);
+    left: 3px;
+    right: 3px;
+    width: auto;
+    bottom: auto;
+    border-radius: 6px;
+  }
+
+  /* Grid lines on mobile: horizontal */
+  .detail-schedule-grid-line {
+    left: 0;
+    right: 0;
+    top: var(--pos);
+    bottom: auto;
+    width: auto;
+    height: 1px;
+  }
+
+  /* Hide Sunday chips when hide-sundays is active */
+  .detail-schedule--hide-sundays .detail-schedule-day--sunday {
+    display: none;
+  }
+
+  /* Hover cursor: floats to the right of the bar, vertically centred on the mouse */
+  .detail-schedule-bar-wrapper .timeline-hover-cursor {
+    left: calc(100% + 0.5rem);
+    top: 0; /* overridden by JS */
+    right: auto;
+    transform: translateY(-50%);
+  }
+
+  /* No downward arrow — cursor is beside the bar, not above it */
+  .detail-schedule-bar-wrapper .timeline-hover-cursor::before,
+  .detail-schedule-bar-wrapper .timeline-hover-cursor::after {
+    display: none;
+  }
+
+  /* Hover line: horizontal sweep across the bar */
+  .detail-schedule-bar .timeline-hover-line {
+    top: 0; /* overridden by JS */
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    transform: translateY(-50%);
+  }
+
+  /* Now indicator line inside today's bar */
+  .timeline-now-bar-line {
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    top: var(--pos);
+    height: 2px;
+    background: #2196F3;
+    transform: translateY(-50%);
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  .timeline-now-bar-line::before,
+  .timeline-now-bar-line::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    background: inherit;
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+  .timeline-now-bar-line::before { left: -3px; }
+  .timeline-now-bar-line::after { right: -3px; }
+}
+
+/* ── Skeleton loading ─────────────────────────────────────────────── */
+
+.detail-schedule-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.detail-schedule-skeleton {
+  height: 1.625rem;
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  border-radius: 0.4rem;
+  animation: detail-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.detail-schedule-skeleton:nth-child(odd) {
+  animation-delay: 0.1s;
+}
+
+@keyframes detail-skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* ── Tabbar hidden state (when detail overlay is open) ───────────── */
+/* Uses !important to override the animation-fill-mode: forwards from .slide-in-top */
+
+.tabbar.detail-open {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ── View Transition animation overrides ──────────────────────────── */
+
+@supports (view-transition-name: none) {
+  /* Suppress the CSS opacity fallback transition when VT is available */
+  #classroom-detail-overlay {
+    transition: none;
+  }
+
+  /* Shared element: tabbar shrinks and morphs into the back button (and reverses on close) */
+  ::view-transition-group(classroom-nav) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-old(classroom-nav) {
+    animation-duration: 0.2s;
+    animation-timing-function: ease-out;
+  }
+
+  ::view-transition-new(classroom-nav) {
+    animation-duration: 0.35s;
+    animation-timing-function: ease-in;
+    animation-delay: 0.1s;
+  }
+
+  /* Shared element: classroom name morphs card → overlay title */
+  ::view-transition-group(classroom-detail-name) {
+    animation-duration: 0.35s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* With fit-content on both elements the boxes are near-identical in size,
+     so the group is essentially a position-only morph with minimal scaling. */
+  ::view-transition-old(classroom-detail-name),
+  ::view-transition-new(classroom-detail-name) {
+    animation-duration: 0.35s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Root cross-fade (for everything else: background, tabbar, etc.) */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.25s;
+  }
+}
+
+@media (max-width: 599px) and (prefers-color-scheme: dark) {
+  .detail-today-indicator {
+    background: #28a745;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+  }
+  .detail-today-indicator::after {
+    border-top-color: #28a745;
+  }
+  .detail-today-indicator:hover {
+    background: #218838;
+  }
+}

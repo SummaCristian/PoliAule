@@ -35,6 +35,13 @@ body.detail-open .footer {
   pointer-events: none;
 }
 
+/* Disable background animations while the detail panel is open to save CPU/GPU */
+body.detail-open .tab-content,
+body.detail-open .tab-content * {
+  animation: none !important;
+  transition: none !important;
+}
+
 /* ── Hero photo ─────────────────────────────────────────────────── */
 
 .detail-photo-container {

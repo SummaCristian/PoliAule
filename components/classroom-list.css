@@ -121,10 +121,6 @@
   animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.list-outer-container.appeared .building-card {
-  animation: none;
-}
-
 .building-card-header {
   display: flex;
   flex-direction: row;
@@ -217,14 +213,16 @@
   }
 }
 
+/* Prevent re-triggering the staggered animation after the first load */
 .list-outer-container.appeared .classroom-list-item-container,
-.list-outer-container.appeared > li {
-  animation: none;
+.list-outer-container.appeared > li,
+.list-outer-container.appeared .building-card {
+  animation: none !important;
 }
 
 /* Also disable the parent tab-content animation if it has appeared once */
 :has(> .list-outer-container.appeared) {
-  animation: none;
+  animation: none !important;
 }
 
 @keyframes card-appear {

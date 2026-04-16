@@ -92,6 +92,10 @@ body {
 }
 
 /* ── Splash Screen ────────────────────────────────────────────── */
+html:has(.splash-overlay) {
+  overflow: hidden;
+}
+
 .splash-overlay {
   position: fixed;
   inset: 0;
@@ -146,6 +150,39 @@ body {
   opacity: 1;
 }
 
+.splash-loading-label {
+  position: absolute;
+  bottom: 3.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-color-secondary);
+  opacity: 0;
+  scale: 0.88;
+  animation: splash-loading-appear 1s ease-out 3s forwards;
+}
+
+.splash-loading-label::after {
+  content: '...';
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  width: 0;
+  animation: splash-loading-dots 1.4s steps(4, end) 3s infinite;
+}
+
+@keyframes splash-loading-appear {
+  to {
+    opacity: 0.5;
+    scale: 1;
+  }
+}
+
+@keyframes splash-loading-dots {
+  to { width: 1.1em; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .splash-logo {
     animation: none;
@@ -154,6 +191,11 @@ body {
 
   .splash-logo.splash-logo-flying {
     transition: transform 0s;
+  }
+
+  .splash-loading-label,
+  .splash-loading-label::after {
+    animation: none;
   }
 }
 

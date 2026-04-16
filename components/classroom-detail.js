@@ -611,7 +611,7 @@ class ClassroomDetail {
 
       const ticksHtml = (() => {
         const ticks = [];
-        for (let m = DAY_START; m <= DAY_END; m += 60) {
+        for (let m = DAY_START + 60; m < DAY_END; m += 60) {
           const left = ((m - DAY_START) / total * 100).toFixed(2);
           ticks.push(`<div class="detail-schedule-tick" style="--pos:${left}%"><span>${minutesToTimeDisplay(m)}</span></div>`);
         }
@@ -620,7 +620,7 @@ class ClassroomDetail {
 
       const gridLinesHtml = (() => {
         const lines = [];
-        for (let m = DAY_START; m <= DAY_END; m += 60) {
+        for (let m = DAY_START + 60; m < DAY_END; m += 60) {
           const left = ((m - DAY_START) / total * 100).toFixed(2);
           lines.push(`<div class="detail-schedule-grid-line" style="--pos:${left}%"></div>`);
         }

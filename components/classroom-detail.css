@@ -1045,8 +1045,8 @@ body.detail-open .footer {
   /* Now indicator line inside today's bar */
   .timeline-now-bar-line {
     position: absolute;
-    left: 0;
-    right: 0;
+    left: 3px;
+    right: 3px;
     top: var(--pos);
     height: 2px;
     background: #2196F3;

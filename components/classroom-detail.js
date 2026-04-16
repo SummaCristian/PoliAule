@@ -55,6 +55,7 @@ class ClassroomDetail {
     this._openedViaPushState = false;
     this._currentId = null;
     this._savedScrollPos = 0;
+    this._openAnimationFinished = Promise.resolve(); // resolves when the page-open animation ends
   }
 
   // Called from script.js after all data is loaded.
@@ -194,6 +195,12 @@ class ClassroomDetail {
         this._loadSchedule(id);
         if (entry.classroom.idfoto) this._loadPhoto(id, entry.classroom.idfoto);
       });
+
+      // Store the VT promise so _loadPhoto can wait for the animation to finish
+      // before revealing the image. If the image is cached and decodes instantly,
+      // starting its reveal while the VT overlay is still active causes a flicker
+      // when the VT tears down its pseudo-elements.
+      this._openAnimationFinished = vt.finished.catch(() => {});
 
       vt.finished.then(() => {
         // Clean up — VT names must be cleared after the animation
@@ -471,22 +478,24 @@ class ClassroomDetail {
       img.classList.remove('loaded');
       container.classList.remove('loaded');
 
-      // Step 2: Assign to img.src and wait for full decode before revealing.
-      // We use img.decode() instead of onload because onload fires when the
-      // image is downloaded but before the browser has decoded the bitmap.
-      // On Safari iOS the decode happens a few frames later, causing a visible
-      // "swap-in" flash right after the opacity transition ends.
-      // decode() resolves only once the image is decoded and ready to paint.
+      // Step 2: Assign to img.src, then wait for BOTH:
+      //   a) full image decode (so the bitmap is ready before the transition starts)
+      //   b) the page-open animation to finish (so a cached/fast image doesn't start
+      //      its reveal while the VT overlay is still active — that interaction causes
+      //      a flicker in Safari iOS when the VT tears down its pseudo-elements)
       img.src = url;
-      img.decode()
-        .then(() => {
-          if (this._currentId !== classroomId) return;
-          img.classList.add('loaded');
-          container.classList.add('loaded');
-        })
-        .catch(() => {
+      Promise.all([
+        img.decode().catch(() => 'error'),
+        this._openAnimationFinished,
+      ]).then(([decodeResult]) => {
+        if (decodeResult === 'error') {
           if (this._currentId === classroomId) container.remove();
-        });
+          return;
+        }
+        if (this._currentId !== classroomId) return;
+        img.classList.add('loaded');
+        container.classList.add('loaded');
+      });
     } catch (err) {
       console.error('Classroom photo load error:', err);
       if (this._currentId !== classroomId) return;

@@ -368,10 +368,15 @@ function setLevelHeader(icon, labelKey, onBack = null) {
 
 // ---------- RENDER FUNCTIONS ----------
 
+function scrollSearchToTop() {
+  if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
 function renderCampuses() {
   hierarchyState = { level: 0, campus: null, building: null };
   updateBreadcrumb();
   setLevelHeader('location_city', 'search.headerCampuses');
+  scrollSearchToTop();
 
   const container = document.getElementById('search-results-container');
   const grid = document.createElement('div');
@@ -399,6 +404,7 @@ function renderBuildings(campus) {
   hierarchyState = { level: 1, campus, building: null };
   updateBreadcrumb();
   setLevelHeader('domain', 'search.headerBuildings', () => renderCampuses());
+  scrollSearchToTop();
 
   const container = document.getElementById('search-results-container');
   const grid = document.createElement('div');
@@ -424,6 +430,7 @@ function renderClassrooms(campus, building) {
   hierarchyState = { level: 2, campus, building };
   updateBreadcrumb();
   setLevelHeader('meeting_room', 'search.headerClassrooms', () => renderBuildings(campus));
+  scrollSearchToTop();
 
   const container = document.getElementById('search-results-container');
   const grid = document.createElement('div');

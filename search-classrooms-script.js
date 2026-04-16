@@ -156,11 +156,11 @@ function buildClassroomCard(room, query = '') {
       </div>
       <div class="search-card-info">
         <span class="search-card-name">${highlight(room.name, query)}</span>
+        <div class="search-card-status">
+          ${statusText}
+        </div>
         ${room.buildingName ? `<span class="search-card-meta secondary">${highlight(room.buildingName + (room.buildingAltName ? ' (' + room.buildingAltName + ')' : ''), query)}</span>` : ''}
         ${room.campusShortName ? `<span class="search-card-meta secondary small">${highlight(room.campusShortName, query)}</span>` : ''}
-      </div>
-      <div class="search-card-status">
-        ${statusText}
       </div>
     </div>
     ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}

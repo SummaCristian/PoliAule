@@ -263,8 +263,9 @@
 
 .classroom-card-header-left {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
   min-width: 0;
 }
 
@@ -296,7 +297,7 @@
 }
 
 .classroom-name {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   font-weight: 700;
   text-align: start;
   margin: 0;

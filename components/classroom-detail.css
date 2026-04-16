@@ -1020,6 +1020,36 @@ body.detail-open .footer {
 
   .detail-schedule-row.selected {
     display: flex;
+    animation: detail-row-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .detail-schedule-row.selected .detail-schedule-block {
+    animation: detail-block-appear 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--idx) * 0.04s + 0.1s);
+  }
+
+  @keyframes detail-row-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes detail-block-appear {
+    from {
+      opacity: 0;
+      transform: scaleX(0.85) scaleY(0.85);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 0.85;
+      transform: scaleX(1) scaleY(1);
+      filter: blur(0);
+    }
   }
 
   /* Labels pill redundant on mobile — chip selector shows the current day */

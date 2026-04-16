@@ -580,14 +580,14 @@ class ClassroomDetail {
           }
         }
 
-        const blocksHtml = (occupancy || []).map(slot => {
+        const blocksHtml = (occupancy || []).map((slot, idx) => {
           if (!slot.inizio || !slot.fine) return '';
           const s = Math.max(timeToMinutes(slot.inizio), DAY_START);
           const e = Math.min(timeToMinutes(slot.fine), DAY_END);
           if (e <= s) return '';
           const left  = ((s - DAY_START) / total * 100).toFixed(2);
           const width = ((e - s)         / total * 100).toFixed(2);
-          return `<div class="detail-schedule-block" style="--block-start:${left}%;--block-size:${width}%"></div>`;
+          return `<div class="detail-schedule-block" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
         }).join('');
 
         return { labelHtml, rowHtml: `

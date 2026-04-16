@@ -106,6 +106,7 @@
   "detail.seats": "Seats",
   "detail.disabledSeats": "Accessible seats",
   "detail.weeklySchedule": "Weekly Schedule",
+  "detail.occupied": "Occupied",
   "detail.noData": "No schedule data available",
 
   "footer.whatsNew": "What's new?",

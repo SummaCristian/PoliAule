@@ -392,6 +392,54 @@ body.detail-open .footer {
   margin: 0 0 0.75rem;
 }
 
+.detail-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.detail-section-header .detail-section-title {
+  margin-bottom: 0;
+}
+
+.detail-schedule-legend {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.detail-schedule-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.detail-schedule-legend-box {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+  background: var(--accent-gradient);
+  border: 1px solid color-mix(in srgb, var(--text-color-accent) 20%, black);
+  opacity: 0.85;
+}
+
+@media (prefers-color-scheme: dark) {
+  .detail-schedule-legend-box {
+    border-color: color-mix(in srgb, var(--text-color-accent) 20%, white);
+  }
+}
+
+.detail-schedule-legend-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-color-secondary);
+  opacity: 0.8;
+}
+
 /* ── Features ─────────────────────────────────────────────────────── */
 
 .detail-features {

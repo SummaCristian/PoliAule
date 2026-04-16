@@ -380,7 +380,15 @@ class ClassroomDetail {
         </section>
 
         <section class="detail-section">
-          <h2 class="detail-section-title">${t('detail.weeklySchedule')}</h2>
+          <div class="detail-section-header">
+            <h2 class="detail-section-title">${t('detail.weeklySchedule')}</h2>
+            <div class="detail-schedule-legend">
+              <div class="detail-schedule-legend-item">
+                <span class="detail-schedule-legend-box"></span>
+                <span class="detail-schedule-legend-label">${t('detail.occupied')}</span>
+              </div>
+            </div>
+          </div>
           <div id="detail-schedule-container">
             <div class="detail-schedule-loading">
               ${Array.from({ length: 7 }, () => '<div class="detail-schedule-skeleton"></div>').join('')}

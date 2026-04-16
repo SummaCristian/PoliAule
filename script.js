@@ -172,7 +172,15 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
 
   buildingCard.querySelector('.building-card-header').addEventListener('click', () => {
     const isCollapsed = buildingCard.classList.contains('collapsed');
+
     if (isCollapsed) {
+      const scrollContainer = buildingCard.closest('#available-classrooms-results');
+      const containerIsScrollable = scrollContainer &&
+        ['auto', 'scroll'].includes(getComputedStyle(scrollContainer).overflowY);
+
+      // Snapshot position before DOM changes
+      const cardTopBefore = buildingCard.getBoundingClientRect().top;
+
       rooms.forEach(room => {
         const roomItem = document.createElement('li');
         roomItem.className = 'classroom-list-item-container';
@@ -188,16 +196,24 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
             card.querySelector('.list-inner-container').replaceChildren();
           }
         });
-    } else {
-      roomsList.replaceChildren();
-    }
-    buildingCard.classList.toggle('collapsed');
-    haptics.trigger(defaultPatterns.success);
-    if (isCollapsed) {
+      buildingCard.classList.remove('collapsed');
+      haptics.trigger(defaultPatterns.success);
+
+      // getBoundingClientRect() forces a synchronous reflow — cardTopAfter reflects
+      // the final layout (CSS transitions don't affect layout values, only visuals).
+      // Instantly compensate for any shift so the card stays visually in place.
+      const cardTopAfter = buildingCard.getBoundingClientRect().top;
+      const delta = cardTopAfter - cardTopBefore;
+      if (delta !== 0) {
+        if (containerIsScrollable) {
+          scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop + delta);
+        } else {
+          window.scrollBy(0, delta);
+        }
+      }
+
+      // Now smooth-scroll the card to the top of the visible area
       requestAnimationFrame(() => {
-        const scrollContainer = buildingCard.closest('#available-classrooms-results');
-        const containerIsScrollable = scrollContainer &&
-          ['auto', 'scroll'].includes(getComputedStyle(scrollContainer).overflowY);
         if (containerIsScrollable) {
           const top = buildingCard.getBoundingClientRect().top
             - scrollContainer.getBoundingClientRect().top
@@ -210,6 +226,10 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
           window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
         }
       });
+    } else {
+      roomsList.replaceChildren();
+      buildingCard.classList.add('collapsed');
+      haptics.trigger(defaultPatterns.success);
     }
   });
 

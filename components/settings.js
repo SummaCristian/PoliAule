@@ -57,7 +57,7 @@ function getPopupTarget() {
   const naturalH = popupEl.scrollHeight;
   popupEl.style.height = ''; // applyGeometry sets the final value immediately after
 
-  const h = Math.min(naturalH, vh - 60);
+  const h = Math.min(naturalH, vh - 120);
   return {
     left: (vw - w) / 2,
     top: (vh - h) / 2,

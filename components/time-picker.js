@@ -442,13 +442,12 @@ function buildTimePicker(wrapperEl) {
 
   // ── Preset buttons ────────────────────────────────────────────────────────
 
-  const TIME_MIN = popupInput.min || '07:15';
-  const TIME_MAX = popupInput.max || '20:15';
-
   function clampTime(h, m) {
+    const effectiveMin = popupInput.min || '07:15';
+    const effectiveMax = popupInput.max || '20:15';
     const total = h * 60 + m;
-    const [minH, minM] = TIME_MIN.split(':').map(Number);
-    const [maxH, maxM] = TIME_MAX.split(':').map(Number);
+    const [minH, minM] = effectiveMin.split(':').map(Number);
+    const [maxH, maxM] = effectiveMax.split(':').map(Number);
     const clamped = Math.min(Math.max(total, minH * 60 + minM), maxH * 60 + maxM);
     return [Math.floor(clamped / 60), clamped % 60];
   }

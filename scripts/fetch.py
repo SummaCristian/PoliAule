@@ -19,7 +19,7 @@ RETRY_DELAY = 2  # seconds between retries
 
 # Fetch settings
 NEXT_DAYS_WINDOW = 7  # Number of days to fetch starting from today
-DELAY_BETWEEN_CALLS = 1  # seconds to wait between API calls
+DELAY_BETWEEN_CALLS = 0.5  # seconds to wait between API calls
 
 # Days to skip entirely (0 = Monday, 6 = Sunday)
 SKIP_WEEKDAYS = {6}  # PoliMi is mostly closed on Sundays anyway.

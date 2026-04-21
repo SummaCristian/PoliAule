@@ -46,31 +46,68 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
   // Query region highlight
   const queryHtml = `<div class="timeline-query-region" style="left:${pct(fromMin)};width:${wPct(fromMin, toMin)}"></div>`;
 
-  // Occupied blocks clipped to display range
+  // Generate blocks only for occupations
   const blocksHtml = (occupancy ?? []).map(slot => {
-    const s = Math.max(timeToMinutes(slot.inizio), displayStart);
-    const e = Math.min(timeToMinutes(slot.fine), displayEnd);
-    if (e <= s) return '';
-    const isConflict = s < toMin && e > fromMin;
-    return `<div class="timeline-block ${isConflict ? 'timeline-block--busy' : 'timeline-block--context'}" style="left:calc(${pct(s)} + 2px);width:calc(${wPct(s, e)} - 4px)"></div>`;
-  }).join('');
-
-  // Collect occupation boundary times within the display range
-  const rawBoundaries = [];
-  for (const slot of (occupancy ?? [])) {
     const s = timeToMinutes(slot.inizio);
     const e = timeToMinutes(slot.fine);
-    if (s > displayStart && s < displayEnd) rawBoundaries.push(s);
-    if (e > displayStart && e < displayEnd) rawBoundaries.push(e);
-  }
-  const boundaries = [...new Set(rawBoundaries)].sort((a, b) => a - b);
+    
+    // Clip to display range
+    const clipS = Math.max(s, displayStart);
+    const clipE = Math.min(e, displayEnd);
+    
+    if (clipE <= clipS) return '';
+
+    // A block is "query" if it intersects the query range
+    // but for the visual "on top" effect, we might want to split it 
+    // if it spans across the query boundary. 
+    // However, to keep it simple and clean, let's just render the clipped block
+    // and let CSS handle the styling if we can.
+    // Actually, splitting is better for the "dashed context" vs "solid query" look.
+    
+    const segments = [];
+    
+    // Segment 1: before query
+    if (clipS < fromMin) {
+      const end = Math.min(clipE, fromMin);
+      if (end > clipS) segments.push({ s: clipS, e: end, scope: 'context' });
+    }
+    
+    // Segment 2: inside query
+    if (clipE > fromMin && clipS < toMin) {
+      const start = Math.max(clipS, fromMin);
+      const end = Math.min(clipE, toMin);
+      if (end > start) segments.push({ s: start, e: end, scope: 'query' });
+    }
+    
+    // Segment 3: after query
+    if (clipE > toMin) {
+      const start = Math.max(clipS, toMin);
+      if (clipE > start) segments.push({ s: start, e: clipE, scope: 'context' });
+    }
+
+    return segments.map((seg, i) => {
+      const isFirst = i === 0;
+      const isLast = i === segments.length - 1;
+      const classes = ['timeline-block', 'timeline-block--busy', `timeline-block--${seg.scope}`];
+      if (!isFirst) classes.push('timeline-block--seamless-left');
+      if (!isLast) classes.push('timeline-block--seamless-right');
+      return `<div class="${classes.join(' ')}" style="left:${pct(seg.s)};width:${wPct(seg.s, seg.e)}"></div>`;
+    }).join('');
+  }).join('');
 
   // Pick a tick interval that yields ~4–6 labels across the display range
   const niceDivisions = [15, 20, 30, 45, 60, 90, 120, 180, 240];
   const tickInterval = niceDivisions.find(d => d >= total / 5) ?? 240;
 
   // Generate candidates at HH:15 marks (one per hour), plus occupation boundaries
-  const candidateTimes = new Set(boundaries);
+  const candidateTimes = new Set();
+  // Filter boundaries to only those that were in the original occupancy for tick marks
+  for (const slot of (occupancy ?? [])) {
+    const s = timeToMinutes(slot.inizio);
+    const e = timeToMinutes(slot.fine);
+    if (s > displayStart && s < displayEnd) candidateTimes.add(s);
+    if (e > displayStart && e < displayEnd) candidateTimes.add(e);
+  }
   const firstMark = Math.ceil((displayStart - 15) / 60) * 60 + 15;
   for (let t = firstMark; t <= displayEnd; t += 60) {
     candidateTimes.add(t);
@@ -78,10 +115,11 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
 
   // Sort and enforce minimum spacing to prevent label overlap
   const minSpacing = Math.round(tickInterval * 0.75);
+  const edgeMargin = 20;
   const labelsHtml = [];
   let lastAdded = -Infinity;
   for (const t of [...candidateTimes].sort((a, b) => a - b)) {
-    if (t - lastAdded >= minSpacing) {
+    if (t - displayStart >= edgeMargin && displayEnd - t >= edgeMargin && t - lastAdded >= minSpacing) {
       labelsHtml.push(`<div class="timeline-tick-label" style="left:${pct(t)}"><span data-time-minutes="${t}">${minutesToTimeDisplay(t)}</span></div>`);
       lastAdded = t;
     }

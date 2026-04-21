@@ -20,6 +20,7 @@
   "results.noResultsTitle": "Nessun risultato",
   "results.noResultsSubtitle": "Niente da fare, non c'è nessuna aula disponibile negli orari richiesti...",
   "results.filterPartial": "Parzialmente libere",
+  "results.allPartialHidden": "Tutte le aule qui sono solo parzialmente libere e sono attualmente nascoste.",
 
   "status.free": "Libera",
   "status.partial": "Parziale",

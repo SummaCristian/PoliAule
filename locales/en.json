@@ -20,6 +20,7 @@
   "results.noResultsTitle": "No results",
   "results.noResultsSubtitle": "Looks like you are out of luck, there is no classroom available between the times you requested...",
   "results.filterPartial": "Partially Free",
+  "results.allPartialHidden": "All classrooms here are only partially free and are currently hidden.",
 
   "status.free": "Free",
   "status.partial": "Partial",

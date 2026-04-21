@@ -215,6 +215,12 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
         roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday);
         roomsList.appendChild(roomItem);
       });
+      if (rooms.every(r => r.status === 'partially-free')) {
+        const emptyState = document.createElement('li');
+        emptyState.className = 'building-all-partial-hidden';
+        emptyState.textContent = t('results.allPartialHidden');
+        roomsList.appendChild(emptyState);
+      }
       buildingCard.closest('.list-outer-container')
         ?.querySelectorAll('.building-card:not(.collapsed)')
         .forEach(card => {
@@ -254,9 +260,14 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
         }
       });
     } else {
-      roomsList.replaceChildren();
       buildingCard.classList.add('collapsed');
       haptics.trigger(defaultPatterns.success);
+      const onCollapsed = e => {
+        if (e.propertyName !== 'grid-template-rows') return;
+        body.removeEventListener('transitionend', onCollapsed);
+        roomsList.replaceChildren();
+      };
+      body.addEventListener('transitionend', onCollapsed);
     }
   });
 

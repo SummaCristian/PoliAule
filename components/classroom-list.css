@@ -53,6 +53,18 @@
   display: none;
 }
 
+.building-all-partial-hidden {
+  display: none;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #888);
+  text-align: center;
+}
+
+.available-classrooms-container.hide-partial .building-all-partial-hidden {
+  display: block;
+}
+
 .available-classrooms-container.empty {
   flex: 1;
   padding: 4rem 0;
@@ -198,11 +210,14 @@
 .building-card-body {
   display: grid;
   grid-template-rows: 1fr;
-  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .building-card.collapsed .building-card-body {
   grid-template-rows: 0fr;
+  opacity: 0;
 }
 
 .building-card-body > .list-inner-container {

@@ -132,7 +132,7 @@ function buildBuildingCard(building) {
 function buildClassroomCard(room, query = '') {
   const featuresHtml = (room.features ?? [])
     .filter(f => FEATURE_ICONS[f.id])
-    .map(f => `<span class="material-symbols-outlined search-card-feature-icon" title="${t(FEATURE_ICONS[f.id].key)}">${FEATURE_ICONS[f.id].icon}</span>`)
+    .map(f => `<span class="material-symbols-outlined search-card-feature-icon" data-tooltip="${t(FEATURE_ICONS[f.id].key)}">${FEATURE_ICONS[f.id].icon}</span>`)
     .join('');
 
   const status = getClassroomStatusNow(room.id);

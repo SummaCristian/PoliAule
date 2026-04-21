@@ -32,7 +32,7 @@
   background: color-mix(in srgb, var(--text-color-accent) 15%, transparent);
   color: var(--text-color-accent);
 
-  font-family: inherit;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;

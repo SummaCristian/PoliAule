@@ -3,6 +3,28 @@
   box-sizing: border-box;
 }
 
+.app-tooltip {
+  position: absolute;
+  z-index: 9999;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--text-color-primary);
+  color: var(--background-color);
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.app-tooltip--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 *, *:before, *:after {
   box-sizing: inherit;
 }

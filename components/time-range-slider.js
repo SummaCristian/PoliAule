@@ -220,6 +220,8 @@ function buildSlider(fromInput, toInput) {
   let panAnchorTo   = 0;
   let pointerDownX  = 0;
   let didDrag       = false;
+  let lastSnapFrom  = null; // track last snapped position to fire haptics only on change
+  let lastSnapTo    = null;
 
   function onPointerDown(e) {
     if (e.button !== 0 && e.pointerType !== 'touch') return;
@@ -239,10 +241,12 @@ function buildSlider(fromInput, toInput) {
 
     if (dFrom <= hitPx && dFrom <= dTo) {
       dragMode = 'from';
+      lastSnapFrom = fromMin;
       fromHandle.classList.add('trs-handle--dragging');
       fromBadge.classList.add('trs-badge--dragging');
     } else if (dTo <= hitPx) {
       dragMode = 'to';
+      lastSnapTo = toMin;
       toHandle.classList.add('trs-handle--dragging');
       toBadge.classList.add('trs-badge--dragging');
     } else if (rawM >= fromMin - SNAP * 0.5 && rawM <= toMin + SNAP * 0.5) {
@@ -250,6 +254,8 @@ function buildSlider(fromInput, toInput) {
       panAnchorX    = e.clientX;
       panAnchorFrom = fromMin;
       panAnchorTo   = toMin;
+      lastSnapFrom  = fromMin;
+      lastSnapTo    = toMin;
       fromBadge.classList.add('trs-badge--dragging');
       toBadge.classList.add('trs-badge--dragging');
     } else {
@@ -269,12 +275,20 @@ function buildSlider(fromInput, toInput) {
 
     if (dragMode === 'from') {
       fromMin = Math.max(MIN, Math.min(snapped, toMin - SNAP));
+      if (fromMin !== lastSnapFrom) {
+        haptics.trigger(defaultPatterns.success);
+        lastSnapFrom = fromMin;
+      }
     } else if (dragMode === 'to') {
       toMin = Math.max(fromMin + SNAP, Math.min(snapped, MAX));
+      if (toMin !== lastSnapTo) {
+        haptics.trigger(defaultPatterns.success);
+        lastSnapTo = toMin;
+      }
     } else {
       const rect      = bar.getBoundingClientRect();
       const deltaM    = ((e.clientX - panAnchorX) / rect.width) * TOTAL;
-      const snappedΔ  = snapTo(deltaM);
+      const snappedΔ  = snapTo(panAnchorFrom + deltaM) - panAnchorFrom;
       const duration  = panAnchorTo - panAnchorFrom;
       const newFrom   = panAnchorFrom + snappedΔ;
       const newTo     = panAnchorTo   + snappedΔ;
@@ -287,6 +301,11 @@ function buildSlider(fromInput, toInput) {
       } else {
         toMin   = MAX;
         fromMin = MAX - duration;
+      }
+      if (fromMin !== lastSnapFrom) {
+        haptics.trigger(defaultPatterns.success);
+        lastSnapFrom = fromMin;
+        lastSnapTo   = toMin;
       }
     }
 

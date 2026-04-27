@@ -122,24 +122,12 @@ function buildSlider(fromInput, toInput) {
   function buildTicks() {
     ticks.innerHTML = '';
 
-    // Fixed boundary labels — always visible, edge-anchored
-    const minLabel = document.createElement('div');
-    minLabel.className = 'trs-tick-label trs-tick-label--min';
-    minLabel.dataset.timeMinutes = MIN;
-    minLabel.textContent = formatMinutes(MIN);
-    ticks.appendChild(minLabel);
-
-    const maxLabel = document.createElement('div');
-    maxLabel.className = 'trs-tick-label trs-tick-label--max';
-    maxLabel.dataset.timeMinutes = MAX;
-    maxLabel.textContent = formatMinutes(MAX);
-    ticks.appendChild(maxLabel);
-
-    // Interior ticks — filtered by spacing to avoid overlap with edge labels
+    // Interior tick labels only — boundary times (07:15/20:15) omitted to avoid
+    // crowding on mobile; the badges already show current selection times.
     const niceDivisions = [15, 20, 30, 45, 60, 90, 120];
     const tickInterval = niceDivisions.find(d => d >= TOTAL / 6) ?? 120;
     const minSpacing   = Math.round(tickInterval * 0.75);
-    const edgeMargin   = 45; // wider margin so interior ticks don't crowd edge labels
+    const edgeMargin   = 20;
     const candidates   = new Set();
     const firstMark    = Math.ceil((MIN - 15) / 60) * 60 + 15;
     for (let t = firstMark; t <= MAX; t += 60) candidates.add(t);
@@ -155,6 +143,17 @@ function buildSlider(fromInput, toInput) {
         ticks.appendChild(label);
         lastAdded = t;
       }
+    }
+  }
+
+  function buildGridLines() {
+    bar.querySelectorAll('.trs-grid-line').forEach(el => el.remove());
+    const firstMark = Math.ceil((MIN - 15) / 60) * 60 + 15;
+    for (let t = firstMark; t < MAX; t += 60) {
+      const line = document.createElement('div');
+      line.className = 'trs-grid-line';
+      line.style.left = pct(t);
+      bar.appendChild(line);
     }
   }
 
@@ -184,7 +183,8 @@ function buildSlider(fromInput, toInput) {
     toHandle.setAttribute('aria-valuetext', formatMinutes(toMin));
   }
 
-  buildTicks(); // ticks are static (MIN/MAX fixed)
+  buildTicks();
+  buildGridLines(); // static — positions don't change with locale
 
   // ── Input sync ────────────────────────────────────────────────────────────
 

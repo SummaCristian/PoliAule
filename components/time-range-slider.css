@@ -56,7 +56,7 @@
 
 .trs-badge--dragging {
   transform-origin: bottom center;
-  transform: translateX(-50%) scale(1.2) !important;
+  transform: translateX(-50%) translateY(-25%) scale(1.2) !important;
   box-shadow: 0 6px 18px color-mix(in srgb, var(--badge-bg) 60%, transparent) !important;
   font-size: 0.85rem !important;
   padding: 4px 12px !important;
@@ -134,17 +134,23 @@
   opacity: 0.85;
 }
 
-/* ── Handles ──────────────────────────────────────────────────────────────── */
+/* ── Handles — vertical liquid-glass pill ─────────────────────────────────── */
 
 .trs-handle {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background: var(--text-color-accent);
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--text-color-accent) 50%, transparent);
+  width: 14px;
+  height: 38px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(14px) saturate(1.6);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.14),
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
   cursor: grab;
   touch-action: none;
   z-index: 3;
@@ -155,32 +161,79 @@
     transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Expanded invisible hit area for touch */
+@media (prefers-color-scheme: dark) {
+  .trs-handle {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.45),
+      0 1px 3px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+}
+
+/* Expanded invisible hit area — wider horizontally for the narrow pill */
 .trs-handle::before {
   content: '';
   position: absolute;
-  inset: -10px;
+  inset: -8px -14px;
   border-radius: 50%;
+}
+
+/* Grip notch */
+.trs-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  .trs-handle::after {
+    background: rgba(255, 255, 255, 0.3);
+  }
 }
 
 .trs-handle:focus-visible {
   box-shadow:
-    0 2px 10px color-mix(in srgb, var(--text-color-accent) 50%, transparent),
+    0 2px 8px rgba(0, 0, 0, 0.14),
     0 0 0 3px color-mix(in srgb, var(--text-color-accent) 35%, transparent);
 }
 
 @media (hover: hover) {
   .trs-handle:hover {
-    transform: translate(-50%, -50%) scale(1.15);
-    box-shadow: 0 4px 16px color-mix(in srgb, var(--text-color-accent) 60%, transparent);
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
   }
 }
 
 .trs-handle--dragging {
-  transform: translate(-50%, -50%) scale(1.25) !important;
-  box-shadow: 0 6px 22px color-mix(in srgb, var(--text-color-accent) 65%, transparent) !important;
+  transform: translate(-50%, -50%) scale(1.15) !important;
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 1) !important;
   cursor: grabbing !important;
   transition: none !important;
+}
+
+/* ── Hour snap grid lines ──────────────────────────────────────────────────── */
+
+.trs-grid-line {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 0;
+  border-left: 1px dashed color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+  pointer-events: none;
+  z-index: 0;
+  transform: translateX(-50%);
 }
 
 /* ── Tick labels ─────────────────────────────────────────────────────────── */
@@ -202,18 +255,3 @@
   white-space: nowrap;
 }
 
-/* Boundary labels (07:15 / 20:15) always visible, anchored to edges */
-.trs-tick-label--min {
-  left: 0;
-  transform: none;
-  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
-  font-weight: 700;
-}
-
-.trs-tick-label--max {
-  right: 0;
-  left: auto;
-  transform: none;
-  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
-  font-weight: 700;
-}

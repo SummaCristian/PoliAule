@@ -154,7 +154,7 @@ function switchPicker(nextCard) {
   prevPopup.classList.remove('tp-popup--open');
   prevCard.classList.remove('tp-card--morphing'); // card re-appears as the morph target
 
-  const prevRect = prevCard.getBoundingClientRect();
+  const prevRect = prevCard._sourceRect ?? prevCard.getBoundingClientRect();
   requestAnimationFrame(() => {
     applyGeometry(prevPopup, {
       left: prevRect.left,
@@ -171,7 +171,8 @@ function switchPicker(nextCard) {
   });
 
   // ── Open incoming: morph from its card — simultaneously ──────────────────
-  const nextRect = nextCard.getBoundingClientRect();
+  const nextRect = nextCard._sourceRect ?? nextCard.getBoundingClientRect();
+  nextCard._sourceRect = nextRect;
 
   nextPopup.style.transition = 'none';
   applyGeometry(nextPopup, {
@@ -202,24 +203,26 @@ function switchPicker(nextCard) {
   });
 }
 
-function openPicker(cardEl) {
+export function openPicker(cardEl, sourceRect = null) {
   if (isAnimating) return;
   isAnimating = true;
   activeCard = cardEl;
 
   const popup = cardEl._popup;
-  const rect = cardEl.getBoundingClientRect();
+  const rect = sourceRect ?? cardEl.getBoundingClientRect();
+  cardEl._sourceRect = rect; // store for closePicker / switchPicker
 
   lockScroll();
 
-  // Snap popup over the card (no transition)
+  // Snap popup over the source (no transition); use pill radius when opening from a badge
+  const initialRadius = sourceRect ? '999px' : '18px';
   popup.style.transition = 'none';
   applyGeometry(popup, {
     left: rect.left,
     top: rect.top,
     width: rect.width,
     height: rect.height,
-    borderRadius: '18px',
+    borderRadius: initialRadius,
   });
   popup.style.boxShadow = 'var(--shadow)';
   popup.style.display = 'flex';
@@ -249,7 +252,7 @@ function closePicker() {
 
   const cardEl = activeCard;
   const popup = cardEl._popup;
-  const rect = cardEl.getBoundingClientRect();
+  const rect = cardEl._sourceRect ?? cardEl.getBoundingClientRect();
 
   cardEl._input.blur();
   popup.classList.remove('tp-popup--open');
@@ -570,54 +573,6 @@ function buildTimePicker(wrapperEl) {
     openPicker(card);
   });
 
-  // ── Desktop inline mode ───────────────────────────────────────────────────
-
-  function enterInlineMode() {
-    // If a morph popup is open for this card, close it first
-    if (activeCard === card) closePicker();
-
-    popup.style.display = '';   // let CSS/flex take over
-    popup.style.position = 'static';
-    popup.style.width = '';
-    popup.style.height = '';
-    popup.style.top = '';
-    popup.style.left = '';
-    popup.style.boxShadow = 'none';
-    popup.style.borderRadius = '';
-    popup.style.transition = 'none';
-    popup.classList.add('tp-popup--inline');
-    popup.classList.add('tp-popup--open');  // keeps inner content visible
-
-    card.classList.add('tp-card--inline');
-
-    // Move popup into the wrapper so it participates in normal flow
-    wrapperEl.appendChild(popup);
-  }
-
-  function exitInlineMode() {
-    popup.classList.remove('tp-popup--inline');
-    popup.classList.remove('tp-popup--open');
-    popup.style.display = 'none';
-    popup.style.position = '';
-    popup.style.transition = '';
-    card.classList.remove('tp-card--inline');
-
-    // Return popup to body for morph positioning
-    document.body.appendChild(popup);
-  }
-
-  function handleBreakpoint(e) {
-    if (e.matches) {
-      enterInlineMode();
-    } else {
-      exitInlineMode();
-    }
-  }
-
-  DESKTOP_MQ.addEventListener('change', handleBreakpoint);
-
-  // Set initial state
-  if (DESKTOP_MQ.matches) enterInlineMode();
 }
 
 // ── Resize: keep open popup centred ─────────────────────────────────────────
@@ -650,4 +605,12 @@ export function initTimePickers() {
     fromCard._switchBtn?.addEventListener('click', () => switchPicker(toCard));
     toCard._switchBtn?.addEventListener('click',   () => switchPicker(fromCard));
   }
+}
+
+export function getPickerCards() {
+  const cards = [..._allCards];
+  return {
+    fromCard: cards.find(c => c._isFrom)  ?? null,
+    toCard:   cards.find(c => !c._isFrom) ?? null,
+  };
 }

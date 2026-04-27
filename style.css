@@ -972,24 +972,20 @@ form[data-loading] .date-picker-skeleton>div {
 
 form[data-loading] .time-pickers-skeleton {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 form[data-loading] .time-pickers-skeleton>div {
-  height: 3.9rem;
-  border-radius: 18px;
+  height: 3.5rem;
+  border-radius: 1.75rem;
   flex: 1;
 }
 
-@media (min-width: 52rem) {
-  form[data-loading] .time-pickers-skeleton>div {
-    flex: 0 0 17rem;
-    height: 17rem;
-  }
+form[data-loading] .time-pickers-skeleton>div:last-child {
+  height: 1.4rem;
+  border-radius: 0.7rem;
+  opacity: 0.5;
 }
 
 form[data-loading] .campus-label-sk,

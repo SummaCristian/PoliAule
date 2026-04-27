@@ -22,6 +22,7 @@ import { initSearchTab, classroomsData as staticClassroomsData } from './search-
 import { classroomDetail } from './components/classroom-detail.js';
 
 import { initTimePickers } from './components/time-picker.js';
+import { initTimeRangeSlider } from './components/time-range-slider.js';
 import { setupCampusPicker } from './components/campus-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
@@ -320,6 +321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTimePickers();
 
     initTimePickers();
+    initTimeRangeSlider();
 
     // Setup the data fetch indicator and language switch handler immediately —
     // these don't depend on fonts and shouldn't wait for the splash to dismiss

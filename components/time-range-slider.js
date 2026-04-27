@@ -3,6 +3,12 @@
 // as the primary input; tapping a badge opens the morph popup for typed entry.
 
 import { haptics, defaultPatterns } from './haptics.js';
+
+// Defer haptic out of the pointer event to avoid mobile browser suppression
+// of navigator.vibrate() during active touch handling.
+function triggerHaptic() {
+  setTimeout(() => haptics.trigger(defaultPatterns.success), 0);
+}
 import { openPicker, getPickerCards } from './time-picker.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 
@@ -262,7 +268,7 @@ function buildSlider(fromInput, toInput) {
       return;
     }
 
-    haptics.trigger(defaultPatterns.success);
+    triggerHaptic();
     bar.setPointerCapture(e.pointerId);
   }
 
@@ -277,13 +283,13 @@ function buildSlider(fromInput, toInput) {
     if (dragMode === 'from') {
       fromMin = Math.max(MIN, Math.min(snapped, toMin - SNAP));
       if (fromMin !== lastSnapFrom) {
-        haptics.trigger(defaultPatterns.success);
+        triggerHaptic();
         lastSnapFrom = fromMin;
       }
     } else if (dragMode === 'to') {
       toMin = Math.max(fromMin + SNAP, Math.min(snapped, MAX));
       if (toMin !== lastSnapTo) {
-        haptics.trigger(defaultPatterns.success);
+        triggerHaptic();
         lastSnapTo = toMin;
       }
     } else {
@@ -304,7 +310,7 @@ function buildSlider(fromInput, toInput) {
         fromMin = MAX - duration;
       }
       if (fromMin !== lastSnapFrom) {
-        haptics.trigger(defaultPatterns.success);
+        triggerHaptic();
         lastSnapFrom = fromMin;
         lastSnapTo   = toMin;
       }
@@ -327,7 +333,7 @@ function buildSlider(fromInput, toInput) {
     didDrag  = false;
 
     if (wasDrag) {
-      haptics.trigger(defaultPatterns.success);
+      triggerHaptic();
       // Reflect any corrections applied by setupTimePickers' input listeners
       const cFrom = timeToMinutes(fromInput.value);
       const cTo   = timeToMinutes(toInput.value);
@@ -336,7 +342,7 @@ function buildSlider(fromInput, toInput) {
       }
     } else {
       // Tap (no significant movement) — open popup for the tapped handle
-      haptics.trigger(defaultPatterns.success);
+      triggerHaptic();
       if (endedDragMode === 'from') openFrom();
       else if (endedDragMode === 'to')   openTo();
     }
@@ -363,8 +369,8 @@ function buildSlider(fromInput, toInput) {
     openPicker(toCard, toCard._sourceRect);
   }
 
-  fromBadge.addEventListener('click', () => { haptics.trigger(defaultPatterns.success); openFrom(); });
-  toBadge.addEventListener('click',   () => { haptics.trigger(defaultPatterns.success); openTo(); });
+  fromBadge.addEventListener('click', () => { triggerHaptic(); openFrom(); });
+  toBadge.addEventListener('click',   () => { triggerHaptic(); openTo(); });
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
 
@@ -372,11 +378,11 @@ function buildSlider(fromInput, toInput) {
     const step = e.shiftKey ? 60 : SNAP;
     if (e.key === 'ArrowLeft') {
       fromMin = Math.max(MIN, fromMin - step);
-      render(); syncInputs(); haptics.trigger(defaultPatterns.success);
+      render(); syncInputs(); triggerHaptic();
       e.preventDefault();
     } else if (e.key === 'ArrowRight') {
       fromMin = Math.min(toMin - SNAP, fromMin + step);
-      render(); syncInputs(); haptics.trigger(defaultPatterns.success);
+      render(); syncInputs(); triggerHaptic();
       e.preventDefault();
     } else if (e.key === 'Enter' || e.key === ' ') {
       openFrom(); e.preventDefault();
@@ -387,11 +393,11 @@ function buildSlider(fromInput, toInput) {
     const step = e.shiftKey ? 60 : SNAP;
     if (e.key === 'ArrowLeft') {
       toMin = Math.max(fromMin + SNAP, toMin - step);
-      render(); syncInputs(); haptics.trigger(defaultPatterns.success);
+      render(); syncInputs(); triggerHaptic();
       e.preventDefault();
     } else if (e.key === 'ArrowRight') {
       toMin = Math.min(MAX, toMin + step);
-      render(); syncInputs(); haptics.trigger(defaultPatterns.success);
+      render(); syncInputs(); triggerHaptic();
       e.preventDefault();
     } else if (e.key === 'Enter' || e.key === ' ') {
       openTo(); e.preventDefault();

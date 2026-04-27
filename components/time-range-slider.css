@@ -239,6 +239,72 @@
   transition: none !important;
 }
 
+/* ── Now indicator ────────────────────────────────────────────────────────── */
+
+.trs-now-badge {
+  position: absolute;
+  top: 0.1rem;
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+
+  background: #2196F3;
+  color: white;
+  border-radius: 999px;
+  padding: 2px 8px;
+
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+
+  opacity: 0;
+  animation: today-indicator-appear 0.65s linear 0.35s forwards;
+}
+
+.trs-now-badge::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #2196F3;
+}
+
+.trs-now-line {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  transform: translateX(-50%);
+  background: #2196F3;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  animation: today-indicator-appear 0.65s linear 0.35s forwards;
+}
+
+.trs-now-line::before,
+.trs-now-line::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: inherit;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.trs-now-line::before { top: -3px; }
+.trs-now-line::after  { bottom: -3px; }
+
 /* ── Hour snap grid lines ──────────────────────────────────────────────────── */
 
 .trs-grid-line {

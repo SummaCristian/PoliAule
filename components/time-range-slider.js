@@ -11,6 +11,7 @@ function triggerHaptic() {
 }
 import { openPicker, getPickerCards } from './time-picker.js';
 import { createTimeFormatter } from '../utils/time-format.js';
+import { t } from '../i18n.js';
 
 const SNAP = 60; // one-hour grid — snaps only to HH:15 marks
 const DRAG_THRESHOLD = 4; // px of movement before a tap becomes a drag
@@ -185,6 +186,21 @@ function buildSlider(fromInput, toInput) {
 
   buildTicks();
   buildGridLines(); // static — positions don't change with locale
+
+  // ── Now indicator ─────────────────────────────────────────────────────────
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  if (nowMin > MIN && nowMin < MAX) {
+    const nowBadge = document.createElement('div');
+    nowBadge.className = 'trs-now-badge';
+    nowBadge.textContent = t('timepicker.now');
+    nowBadge.style.left = pct(nowMin);
+    barWrapper.appendChild(nowBadge);
+
+    const nowLine = document.createElement('div');
+    nowLine.className = 'trs-now-line';
+    nowLine.style.left = pct(nowMin);
+    bar.appendChild(nowLine);
+  }
 
   // ── Input sync ────────────────────────────────────────────────────────────
 

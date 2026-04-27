@@ -335,6 +335,7 @@ function buildSlider(fromInput, toInput) {
       }
     } else {
       // Tap (no significant movement) — open popup for the tapped handle
+      haptics.trigger(defaultPatterns.success);
       if (endedDragMode === 'from') openFrom();
       else if (endedDragMode === 'to')   openTo();
     }
@@ -361,8 +362,8 @@ function buildSlider(fromInput, toInput) {
     openPicker(toCard, toCard._sourceRect);
   }
 
-  fromBadge.addEventListener('click', openFrom);
-  toBadge.addEventListener('click', openTo);
+  fromBadge.addEventListener('click', () => { haptics.trigger(defaultPatterns.success); openFrom(); });
+  toBadge.addEventListener('click',   () => { haptics.trigger(defaultPatterns.success); openTo(); });
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
 

@@ -1,6 +1,16 @@
 history.scrollRestoration = 'manual';
 window.scrollTo(0, 0);
 
+const h = location.hostname;
+const envLabel = h === 'beta.poliaule.com' ? 'Beta'
+               : h === 'poliaule.com'      ? null
+               :                             'Local';
+if (envLabel) {
+  const badge = document.getElementById('env-badge');
+  badge.textContent = envLabel;
+  badge.removeAttribute('hidden');
+}
+
 import {
   classroomsData,
   findAvailableClassrooms,

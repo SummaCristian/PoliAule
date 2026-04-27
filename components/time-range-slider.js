@@ -262,6 +262,7 @@ function buildSlider(fromInput, toInput) {
       return;
     }
 
+    haptics.trigger(defaultPatterns.success);
     bar.setPointerCapture(e.pointerId);
   }
 

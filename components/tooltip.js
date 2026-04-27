@@ -5,6 +5,7 @@ document.body.appendChild(tip);
 let hideTimer = null;
 
 document.addEventListener('mouseenter', e => {
+  if (!(e.target instanceof Element)) return;
   const el = e.target.closest('[data-tooltip]');
   if (!el) return;
 
@@ -25,6 +26,6 @@ document.addEventListener('mouseenter', e => {
 }, true);
 
 document.addEventListener('mouseleave', e => {
-  if (!e.target.closest('[data-tooltip]')) return;
+  if (!(e.target instanceof Element) || !e.target.closest('[data-tooltip]')) return;
   hideTimer = setTimeout(() => tip.classList.remove('app-tooltip--visible'), 80);
 }, true);

@@ -6,7 +6,7 @@ import { haptics, defaultPatterns } from './haptics.js';
 import { openPicker, getPickerCards } from './time-picker.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 
-const SNAP = 15; // snap grid in minutes
+const SNAP = 60; // one-hour grid — snaps only to HH:15 marks
 const DRAG_THRESHOLD = 4; // px of movement before a tap becomes a drag
 
 function toHHMM(minutes) {
@@ -26,7 +26,8 @@ function formatMinutes(minutes) {
 }
 
 function snapTo(m) {
-  return Math.round(m / SNAP) * SNAP;
+  // Snap to nearest HH:15 mark (08:15, 09:15, …)
+  return Math.round((m - 15) / 60) * 60 + 15;
 }
 
 function formatDuration(minutes) {
@@ -239,14 +240,18 @@ function buildSlider(fromInput, toInput) {
     if (dFrom <= hitPx && dFrom <= dTo) {
       dragMode = 'from';
       fromHandle.classList.add('trs-handle--dragging');
+      fromBadge.classList.add('trs-badge--dragging');
     } else if (dTo <= hitPx) {
       dragMode = 'to';
       toHandle.classList.add('trs-handle--dragging');
+      toBadge.classList.add('trs-badge--dragging');
     } else if (rawM >= fromMin - SNAP * 0.5 && rawM <= toMin + SNAP * 0.5) {
       dragMode      = 'pan';
       panAnchorX    = e.clientX;
       panAnchorFrom = fromMin;
       panAnchorTo   = toMin;
+      fromBadge.classList.add('trs-badge--dragging');
+      toBadge.classList.add('trs-badge--dragging');
     } else {
       return;
     }
@@ -293,6 +298,8 @@ function buildSlider(fromInput, toInput) {
     if (!dragMode) return;
     fromHandle.classList.remove('trs-handle--dragging');
     toHandle.classList.remove('trs-handle--dragging');
+    fromBadge.classList.remove('trs-badge--dragging');
+    toBadge.classList.remove('trs-badge--dragging');
 
     const wasDrag      = didDrag;
     const endedDragMode = dragMode;

@@ -67,11 +67,15 @@ function buildSlider(fromInput, toInput) {
   fromBadge.type = 'button';
   fromBadge.className = 'trs-badge trs-badge--from';
   fromBadge.setAttribute('aria-label', 'Edit start time');
+  const fromText = document.createElement('span');
+  fromBadge.appendChild(fromText);
 
   const toBadge = document.createElement('button');
   toBadge.type = 'button';
   toBadge.className = 'trs-badge trs-badge--to';
   toBadge.setAttribute('aria-label', 'Edit end time');
+  const toText = document.createElement('span');
+  toBadge.appendChild(toText);
 
   const bar = document.createElement('div');
   bar.className = 'trs-bar';
@@ -158,15 +162,23 @@ function buildSlider(fromInput, toInput) {
     }
   }
 
-  function render() {
-    fromBadge.textContent = formatMinutes(fromMin);
-    fromBadge.style.left  = pct(fromMin);
-    toBadge.textContent   = formatMinutes(toMin);
-    toBadge.style.left    = pct(toMin);
+  function updateBadgeText(el, newText) {
+    if (el.textContent === newText) return;
+    el.textContent = newText;
+    el.classList.remove('trs-badge-text--changing');
+    void el.offsetWidth; // trigger reflow
+    el.classList.add('trs-badge-text--changing');
+  }
+
+  function render(vFrom = fromMin, vTo = toMin) {
+    updateBadgeText(fromText, formatMinutes(fromMin));
+    fromBadge.style.left  = pct(vFrom);
+    updateBadgeText(toText, formatMinutes(toMin));
+    toBadge.style.left    = pct(vTo);
 
     const duration    = toMin - fromMin;
-    const rangePct    = duration / TOTAL * 100;
-    range.style.left  = pct(fromMin);
+    const rangePct    = (vTo - vFrom) / TOTAL * 100;
+    range.style.left  = pct(vFrom);
     range.style.width = `${rangePct.toFixed(2)}%`;
 
     // Show duration label only when the range is wide enough to fit it
@@ -175,11 +187,11 @@ function buildSlider(fromInput, toInput) {
     durationEl.textContent = formatDuration(duration);
     durationEl.style.display = rangePixels > 48 ? '' : 'none';
 
-    fromHandle.style.left = pct(fromMin);
+    fromHandle.style.left = pct(vFrom);
     fromHandle.setAttribute('aria-valuenow', String(fromMin));
     fromHandle.setAttribute('aria-valuetext', formatMinutes(fromMin));
 
-    toHandle.style.left = pct(toMin);
+    toHandle.style.left = pct(vTo);
     toHandle.setAttribute('aria-valuenow', String(toMin));
     toHandle.setAttribute('aria-valuetext', formatMinutes(toMin));
   }
@@ -294,46 +306,47 @@ function buildSlider(fromInput, toInput) {
     if (!didDrag) return;
 
     const rawM    = xToMinutes(e.clientX);
-    const snapped = snapTo(rawM);
+    let vFrom = fromMin;
+    let vTo   = toMin;
 
     if (dragMode === 'from') {
-      fromMin = Math.max(MIN, Math.min(snapped, toMin - SNAP));
-      if (fromMin !== lastSnapFrom) {
+      vFrom = Math.max(MIN, Math.min(rawM, toMin - SNAP));
+      const snapped = snapTo(vFrom);
+      if (snapped !== fromMin) {
+        fromMin = snapped;
         triggerHaptic();
-        lastSnapFrom = fromMin;
+        syncInputs();
       }
     } else if (dragMode === 'to') {
-      toMin = Math.max(fromMin + SNAP, Math.min(snapped, MAX));
-      if (toMin !== lastSnapTo) {
+      vTo = Math.max(fromMin + SNAP, Math.min(rawM, MAX));
+      const snapped = snapTo(vTo);
+      if (snapped !== toMin) {
+        toMin = snapped;
         triggerHaptic();
-        lastSnapTo = toMin;
+        syncInputs();
       }
     } else {
       const rect      = bar.getBoundingClientRect();
       const deltaM    = ((e.clientX - panAnchorX) / rect.width) * TOTAL;
-      const snappedΔ  = snapTo(panAnchorFrom + deltaM) - panAnchorFrom;
-      const duration  = panAnchorTo - panAnchorFrom;
-      const newFrom   = panAnchorFrom + snappedΔ;
-      const newTo     = panAnchorTo   + snappedΔ;
-      if (newFrom >= MIN && newTo <= MAX) {
-        fromMin = newFrom;
-        toMin   = newTo;
-      } else if (newFrom < MIN) {
-        fromMin = MIN;
-        toMin   = MIN + duration;
-      } else {
-        toMin   = MAX;
-        fromMin = MAX - duration;
-      }
-      if (fromMin !== lastSnapFrom) {
+      vFrom = panAnchorFrom + deltaM;
+      vTo   = panAnchorTo   + deltaM;
+
+      const duration = panAnchorTo - panAnchorFrom;
+      if (vFrom < MIN) { vFrom = MIN; vTo = MIN + duration; }
+      else if (vTo > MAX) { vTo = MAX; vFrom = MAX - duration; }
+
+      const snappedF = snapTo(vFrom);
+      const snappedT = snappedF + duration;
+
+      if (snappedF !== fromMin && snappedT <= MAX && snappedF >= MIN) {
+        fromMin = snappedF;
+        toMin   = snappedT;
         triggerHaptic();
-        lastSnapFrom = fromMin;
-        lastSnapTo   = toMin;
+        syncInputs();
       }
     }
 
-    render();
-    syncInputs();
+    render(vFrom, vTo);
   }
 
   function onPointerUp() {
@@ -347,6 +360,13 @@ function buildSlider(fromInput, toInput) {
     const endedDragMode = dragMode;
     dragMode = null;
     didDrag  = false;
+
+    // Animate snap back to logical values
+    bar.classList.add('trs-bar--snapping');
+    render();
+    setTimeout(() => {
+      bar.classList.remove('trs-bar--snapping');
+    }, 300);
 
     if (wasDrag) {
       triggerHaptic();

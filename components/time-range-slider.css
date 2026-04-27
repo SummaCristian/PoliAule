@@ -56,7 +56,7 @@
 
 .trs-badge--dragging {
   transform-origin: bottom center;
-  transform: translateX(-50%) translateY(-25%) scale(1.2) !important;
+  transform: translate(-50%, -50%) scale(1.2) !important;
   box-shadow: 0 6px 18px color-mix(in srgb, var(--badge-bg) 60%, transparent) !important;
   font-size: 0.85rem !important;
   padding: 4px 12px !important;
@@ -340,6 +340,23 @@
 
 .trs-now-line::before { top: -3px; }
 .trs-now-line::after  { bottom: -3px; }
+
+.trs-bar--snapping .trs-handle,
+.trs-bar--snapping .trs-badge,
+.trs-bar--snapping .trs-range {
+  transition: 
+    left 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    width 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes trs-text-update {
+  from { opacity: 0.5; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.trs-badge-text--changing {
+  animation: trs-text-update 0.15s ease-out;
+}
 
 /* ── Hour snap grid lines ──────────────────────────────────────────────────── */
 

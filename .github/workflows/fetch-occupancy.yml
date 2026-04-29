@@ -47,3 +47,15 @@ jobs:
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m "chore: update occupancy data $(date -u '+%Y-%m-%d')"
           git push
+
+      - name: Sync beta with main
+        run: |
+          git fetch origin beta
+          git checkout beta
+          git merge main --no-edit
+          if git push origin beta; then
+            echo "beta synced with main at $(git rev-parse --short HEAD)"
+          else
+            echo "push to beta failed" >&2
+            exit 1
+          fi

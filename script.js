@@ -175,7 +175,7 @@ tabs.forEach((tab, index) => {
 
 // Builds a <li> containing a building card with its room cards inside.
 // Returns the element and the next cardIndex for stagger sequencing.
-function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = false) {
+function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = false, date = null) {
   const buildingName = building.name;
   const countParts = [
     rooms.filter(r => r.status === 'free').length ? `<span class="building-count free">${rooms.filter(r => r.status === 'free').length} ${t('status.free')}</span>` : '',
@@ -224,7 +224,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
         const roomItem = document.createElement('li');
         roomItem.className = 'classroom-list-item-container';
         roomItem.dataset.status = room.status;
-        roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday);
+        roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday, date);
         roomsList.appendChild(roomItem);
       });
       if (rooms.every(r => r.status === 'partially-free')) {
@@ -434,7 +434,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   let cardIndex = 0;
   results.forEach(buildingResult => {
-    const { li, cardIndex: next } = createBuildingItem(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday);
+    const { li, cardIndex: next } = createBuildingItem(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date);
     cardIndex = next;
     list.appendChild(li);
   });

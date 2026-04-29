@@ -56,6 +56,7 @@ class ClassroomDetail {
     this._currentId = null;
     this._savedScrollPos = 0;
     this._openAnimationFinished = Promise.resolve(); // resolves when the page-open animation ends
+    this._queryContext = null;  // { date, from, to } when opened from Available Tab, else null
   }
 
   // Called from script.js after all data is loaded.
@@ -114,7 +115,14 @@ class ClassroomDetail {
       const nameEl = card.querySelector('.classroom-name, .search-card-name') ?? null;
       const statusEl = card.querySelector('.classroom-status-txt') ?? null;
 
-      this._pendingTrigger = { nameEl, statusEl };
+      const queryDate = card.dataset.queryDate ?? null;
+      const queryFrom = card.dataset.queryFrom ?? null;
+      const queryTo   = card.dataset.queryTo   ?? null;
+      const queryContext = queryDate && queryFrom && queryTo
+        ? { date: queryDate, from: queryFrom, to: queryTo }
+        : null;
+
+      this._pendingTrigger = { nameEl, statusEl, queryContext };
       this._openedViaPushState = true;
       location.hash = '#classroom/' + id;
     });
@@ -152,6 +160,7 @@ class ClassroomDetail {
 
     this._currentId = id;
     this._openTrigger = pending ?? null;
+    this._queryContext = pending?.queryContext ?? null;
 
     // Save scroll position for when we return
     this._savedScrollPos = window.scrollY;
@@ -253,6 +262,7 @@ class ClassroomDetail {
     const cleanup = () => {
       this._overlay.innerHTML = '';
       this._openTrigger = null;
+      this._queryContext = null;
       if (nameEl) nameEl.style.viewTransitionName = '';
       if (statusEl) statusEl.style.viewTransitionName = '';
       if (this._tabbar) this._tabbar.style.viewTransitionName = '';
@@ -560,13 +570,26 @@ class ClassroomDetail {
         ? ((nowMin - DAY_START) / total * 100).toFixed(2)
         : null;
 
+      // Query context: from/to range carried over from the Available Tab
+      const queryDateKey = this._queryContext?.date?.replace(/-/g, '') ?? null;
+      let queryFromPct = null, queryToPct = null, queryFromDisplay = '', queryToDisplay = '';
+      if (this._queryContext) {
+        const qFrom = Math.max(timeToMinutes(this._queryContext.from), DAY_START);
+        const qTo   = Math.min(timeToMinutes(this._queryContext.to),   DAY_END);
+        queryFromPct    = ((qFrom - DAY_START) / total * 100).toFixed(2);
+        queryToPct      = ((qTo   - DAY_START) / total * 100).toFixed(2);
+        queryFromDisplay = minutesToTimeDisplay(qFrom);
+        queryToDisplay   = minutesToTimeDisplay(qTo);
+      }
+
       const _dayParts = days.map(({ dayData, date }) => {
         const isSunday = !dayData;
 
         const dayNum    = date.getDate();
         const narrowDay = date.toLocaleDateString(getLocale(), { weekday: 'narrow' });
         const narrowDayName = narrowDay.charAt(0).toUpperCase() + narrowDay.slice(1);
-        const isToday = !isSunday && dayData.date === todayKey;
+        const isToday    = !isSunday && dayData.date === todayKey;
+        const isQueryDay = !isSunday && queryDateKey !== null && dayData.date === queryDateKey;
 
         const labelHtml = `
           <div class="detail-schedule-label-cell${isToday ? ' detail-schedule-label-cell--today' : ''} date-element-container">
@@ -601,12 +624,22 @@ class ClassroomDetail {
           return `<div class="detail-schedule-block" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
         }).join('');
 
+        const queryOverlayHtml = isQueryDay && queryFromPct !== null
+          ? `<div class="detail-schedule-query-region" style="--qfrom:${queryFromPct}%;--qto:${queryToPct}%"></div>`
+          : '';
+        const querySideIndicatorsHtml = isQueryDay && queryFromPct !== null ? `
+          <div class="detail-schedule-query-indicator" style="--qpos:${queryFromPct}%">${queryFromDisplay}</div>
+          <div class="detail-schedule-query-indicator" style="--qpos:${queryToPct}%">${queryToDisplay}</div>
+        ` : '';
+
         return { labelHtml, rowHtml: `
-          <div class="detail-schedule-row${isToday ? ' detail-schedule-row--today' : ''}">
+          <div class="detail-schedule-row${isToday ? ' detail-schedule-row--today' : ''}${isQueryDay ? ' detail-schedule-row--query' : ''}">
             <div class="detail-schedule-bar-wrapper">
               <div class="timeline-hover-cursor" hidden></div>
               ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>` : ''}
+              ${querySideIndicatorsHtml}
               <div class="detail-schedule-bar">
+                ${queryOverlayHtml}
                 ${blocksHtml}
                 ${isToday && nowPct !== null ? `<div class="timeline-now-bar-line" style="--pos:${nowPct}%"></div>` : ''}
                 <div class="timeline-hover-line" hidden></div>
@@ -627,6 +660,11 @@ class ClassroomDetail {
       const nowTickHtml = nowPct !== null
         ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>`
         : '';
+
+      const queryTicksHtml = queryFromPct !== null ? `
+        <div class="detail-schedule-query-indicator" style="--qpos:${queryFromPct}%">${queryFromDisplay}</div>
+        <div class="detail-schedule-query-indicator" style="--qpos:${queryToPct}%">${queryToDisplay}</div>
+      ` : '';
 
       const ticksHtml = (() => {
         const ticks = [];
@@ -671,7 +709,7 @@ class ClassroomDetail {
           </div>
         </div>
         <div class="detail-schedule-inner">
-          <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}</div>
+          <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}${queryTicksHtml}</div>
           <div class="detail-schedule-grid">
             <div class="detail-desktop-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
             <div class="detail-schedule-labels-pill">${labelsHtml}</div>
@@ -732,11 +770,15 @@ class ClassroomDetail {
         });
       });
 
-      // Auto-select today, or next available day if after 20:15, or first available
+      // Auto-select: prefer the queried day when coming from the Available Tab,
+      // otherwise today, or next available day if after 20:15, or first available
       const todayDayIndex = days.findIndex(d => d.dayData?.date === todayKey);
       const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
       let initialDayIndex;
-      if (nowMins > DAY_END && todayDayIndex >= 0) {
+      if (queryDateKey) {
+        const queryDayIndex = days.findIndex(d => d.dayData?.date === queryDateKey);
+        initialDayIndex = queryDayIndex >= 0 ? queryDayIndex : (todayDayIndex >= 0 ? todayDayIndex : days.findIndex(d => d.dayData !== null));
+      } else if (nowMins > DAY_END && todayDayIndex >= 0) {
         const nextIndex = days.findIndex((d, i) => i > todayDayIndex && d.dayData !== null);
         initialDayIndex = nextIndex >= 0 ? nextIndex : todayDayIndex;
       } else if (todayDayIndex >= 0) {

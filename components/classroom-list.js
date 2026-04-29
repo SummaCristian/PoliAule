@@ -197,7 +197,7 @@ document.addEventListener('mousemove', e => {
 // ---------- CARD ----------
 
 // Builds and returns a Card UI element for the classroom passed as parameter
-export function buildCardForClassroom(classroom, building, fromTime, toTime, isToday = false) {
+export function buildCardForClassroom(classroom, building, fromTime, toTime, isToday = false, date = null) {
   const featuresHtml = (classroom.features ?? [])
     .filter(f => FEATURE_ICONS[f.id])
     .map(f => {
@@ -209,7 +209,7 @@ export function buildCardForClassroom(classroom, building, fromTime, toTime, isT
   const buildingDisplay = building.altName ? `${building.altName} (${building.name})` : building.name;
 
   return `
-    <div class="classroom-card" data-open-classroom="${classroom.id}" role="button" tabindex="0" aria-label="View details for ${classroom.name}">
+    <div class="classroom-card" data-open-classroom="${classroom.id}" data-query-from="${fromTime}" data-query-to="${toTime}"${date ? ` data-query-date="${date}"` : ''} role="button" tabindex="0" aria-label="View details for ${classroom.name}">
       <div class="classroom-card-header">
         <div class="classroom-card-header-left">
           <h4 class="classroom-name" title="${classroom.name}">${classroom.name}</h4>

@@ -202,7 +202,7 @@ export function buildCardForClassroom(classroom, building, fromTime, toTime, isT
     .filter(f => FEATURE_ICONS[f.id])
     .map(f => {
       const { icon, key } = FEATURE_ICONS[f.id];
-      return `<span class="material-symbols-outlined classroom-feature-icon" data-tooltip="${t(key)}">${icon}</span>`;
+      return `<span class="material-symbols-outlined classroom-feature-icon" data-feature-id="${f.id}" data-tooltip="${t(key)}">${icon}</span>`;
     })
     .join('');
 

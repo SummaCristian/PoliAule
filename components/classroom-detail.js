@@ -122,7 +122,9 @@ class ClassroomDetail {
         ? { date: queryDate, from: queryFrom, to: queryTo }
         : null;
 
-      this._pendingTrigger = { nameEl, statusEl, queryContext };
+      const featureIconEls = [...card.querySelectorAll('[data-feature-id]')];
+
+      this._pendingTrigger = { nameEl, statusEl, queryContext, featureIconEls };
       this._openedViaPushState = true;
       location.hash = '#classroom/' + id;
     });
@@ -175,6 +177,11 @@ class ClassroomDetail {
       // Room name morphs into the overlay title
       if (nameEl) nameEl.style.viewTransitionName = 'classroom-detail-name';
       if (statusEl) statusEl.style.viewTransitionName = 'classroom-status';
+      // Feature icons morph into the detail feature chips
+      const featureIconEls = pending?.featureIconEls ?? [];
+      for (const el of featureIconEls) {
+        el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
+      }
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
@@ -182,6 +189,7 @@ class ClassroomDetail {
         this._tabbar.classList.add('detail-open');
         if (nameEl) nameEl.style.viewTransitionName = '';
         if (statusEl) statusEl.style.viewTransitionName = '';
+        for (const el of featureIconEls) el.style.viewTransitionName = '';
 
         // Show overlay and back button
         document.body.classList.add('detail-open');
@@ -199,6 +207,11 @@ class ClassroomDetail {
         if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
         if (titleEl) titleEl.style.viewTransitionName = 'classroom-detail-name';
         if (detailStatusEl) detailStatusEl.style.viewTransitionName = 'classroom-status';
+        // Morph icon → icon inside chip (same size both ends → clean positional move)
+        this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id]').forEach(chip => {
+          const iconEl = chip.querySelector('.material-symbols-outlined');
+          if (iconEl) iconEl.style.viewTransitionName = `classroom-feature-${chip.dataset.featureId}`;
+        });
 
         // Load data immediately after rendering in the transition callback
         this._loadSchedule(id);
@@ -221,11 +234,17 @@ class ClassroomDetail {
           ?.style.setProperty('view-transition-name', '');
         this._overlay.querySelector('.detail-title-row .classroom-status-txt')
           ?.style.setProperty('view-transition-name', '');
+        this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
+          el.style.viewTransitionName = '';
+        });
       }).catch(() => {
         this._tabbar.style.viewTransitionName = '';
         if (nameEl) nameEl.style.viewTransitionName = '';
         if (statusEl) statusEl.style.viewTransitionName = '';
         if (this._backBtn) this._backBtn.style.viewTransitionName = '';
+        this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
+          el.style.viewTransitionName = '';
+        });
       });
     } else {
       // Fallback: show overlay, swap tabbar for back button without animation
@@ -258,6 +277,8 @@ class ClassroomDetail {
     const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
     const nameInDom = nameEl && document.body.contains(nameEl);
     const statusInDom = statusEl && document.body.contains(statusEl);
+    const featureIconEls = (this._openTrigger?.featureIconEls ?? [])
+      .filter(el => document.body.contains(el));
 
     const cleanup = () => {
       this._overlay.innerHTML = '';
@@ -267,6 +288,7 @@ class ClassroomDetail {
       if (statusEl) statusEl.style.viewTransitionName = '';
       if (this._tabbar) this._tabbar.style.viewTransitionName = '';
       if (this._backBtn) this._backBtn.style.viewTransitionName = '';
+      for (const el of featureIconEls) el.style.viewTransitionName = '';
     };
 
     if (document.startViewTransition && this._tabbar) {
@@ -275,6 +297,11 @@ class ClassroomDetail {
       if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
       if (titleEl && nameInDom) titleEl.style.viewTransitionName = 'classroom-detail-name';
       if (detailStatusEl && statusInDom) detailStatusEl.style.viewTransitionName = 'classroom-status';
+      // Chip icons are the OLD state sources
+      this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
+        const fid = el.closest('[data-feature-id]').dataset.featureId;
+        el.style.viewTransitionName = `classroom-feature-${fid}`;
+      });
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
@@ -293,6 +320,10 @@ class ClassroomDetail {
         // Room name morphs back too
         if (nameInDom) nameEl.style.viewTransitionName = 'classroom-detail-name';
         if (statusInDom) statusEl.style.viewTransitionName = 'classroom-status';
+        // Card icons are the NEW state destinations
+        for (const el of featureIconEls) {
+          el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
+        }
 
         // Restore scroll position so VT can morph back to the correct spot
         window.scrollTo(0, this._savedScrollPos);
@@ -337,7 +368,7 @@ class ClassroomDetail {
       .map(({ id }) => {
         const { icon, key } = FEATURE_ICONS[id];
         return `
-          <div class="detail-feature-chip">
+          <div class="detail-feature-chip" data-feature-id="${id}">
             <span class="material-symbols-outlined">${icon}</span>
             <span>${t(key)}</span>
           </div>`;

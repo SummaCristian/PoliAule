@@ -279,6 +279,10 @@ body.detail-open .tab-content * {
     text-align: left;
     /* Align perfectly with the floating back button */
     padding-top: 0.25rem;
+    /* Shrink to text width (like it did as a flex item before) so the VT morph
+       from the card name stays positional rather than expanding across the full column */
+    width: fit-content;
+    max-width: 100%;
   }
 
   .detail-status-wrapper {

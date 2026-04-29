@@ -456,10 +456,10 @@ class ClassroomDetail {
     // 3D tilt on desktop photo
     const photoContainer = this._overlay.querySelector('.detail-photo-container');
     if (photoContainer) {
-      const desktopQuery = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 600px)');
+      const wideEnough = window.matchMedia('(min-width: 600px)');
 
-      photoContainer.addEventListener('mousemove', (e) => {
-        if (!desktopQuery.matches) return;
+      photoContainer.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse' || !wideEnough.matches) return;
         const rect = photoContainer.getBoundingClientRect();
         const dx = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
         const dy = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
@@ -470,18 +470,11 @@ class ClassroomDetail {
         photoContainer.style.boxShadow  = '0 24px 64px rgba(0,0,0,0.28)';
       });
 
-      photoContainer.addEventListener('mouseleave', () => {
+      photoContainer.addEventListener('pointerleave', (e) => {
+        if (e.pointerType !== 'mouse') return;
         photoContainer.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease';
         photoContainer.style.transform  = '';
         photoContainer.style.boxShadow  = '';
-      });
-
-      desktopQuery.addEventListener('change', (e) => {
-        if (!e.matches) {
-          photoContainer.style.transition = '';
-          photoContainer.style.transform  = '';
-          photoContainer.style.boxShadow  = '';
-        }
       });
     }
   }

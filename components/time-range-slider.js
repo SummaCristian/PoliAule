@@ -212,6 +212,20 @@ function buildSlider(fromInput, toInput) {
     nowLine.className = 'trs-now-line';
     nowLine.style.left = pct(nowMin);
     bar.appendChild(nowLine);
+
+    nowBadge.addEventListener('click', () => {
+      const currentNow = new Date().getHours() * 60 + new Date().getMinutes();
+      const duration = toMin - fromMin;
+      const newFrom = Math.max(MIN, Math.min(snapTo(currentNow), MAX));
+      const newTo   = Math.min(newFrom + duration, MAX);
+      fromMin = newFrom;
+      toMin   = newTo;
+      syncInputs();
+      bar.classList.add('trs-bar--snapping');
+      render();
+      setTimeout(() => bar.classList.remove('trs-bar--snapping'), 300);
+      triggerHaptic();
+    });
   }
 
   // ── Input sync ────────────────────────────────────────────────────────────

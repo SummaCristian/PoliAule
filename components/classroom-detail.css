@@ -262,10 +262,47 @@ body.detail-open .tab-content * {
     gap: 0;
     position: relative;
     z-index: 2; /* Stay above the blur layer */
+
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    text-align: left;
   }
 
   .detail-title-row {
-    align-items: last baseline;
+    display: contents;
+  }
+
+  .detail-title {
+    grid-column: 1;
+    grid-row: 1;
+    text-align: left;
+    /* Align perfectly with the floating back button */
+    padding-top: 0.25rem;
+  }
+
+  .detail-status-wrapper {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* Match title's padding-top for alignment */
+    padding-top: 0.25rem;
+  }
+
+  .detail-subtitle {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-bottom: 0.25rem;
+    text-align: left;
+    align-self: start;
+  }
+
+  .detail-stats {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin-top: 0;
   }
 
   /* Pull header up to overlay the blurred hero only when the photo container is present.
@@ -273,11 +310,6 @@ body.detail-open .tab-content * {
      the negative margin is lifted and the header reflows into its natural position. */
   #classroom-detail-overlay:has(.detail-photo-container) .detail-header {
     margin-top: -6rem;
-  }
-
-  .detail-title {
-    /* Align perfectly with the floating back button */
-    padding-top: 0.25rem;
   }
 }
 
@@ -391,16 +423,6 @@ body.detail-open .tab-content * {
   font-size: 0.95rem;
   font-weight: 600;
   text-align: left;
-}
-
-@media (max-width: 599px) {
-  .detail-subtitle {
-    margin-bottom: 0.25rem;
-  }
-
-  .detail-stats {
-    margin-top: 0;
-  }
 }
 
 @media (min-width: 600px) {

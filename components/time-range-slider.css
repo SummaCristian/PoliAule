@@ -87,8 +87,8 @@
 /* ── Timeline bar — taller for easier touch targets ───────────────────────── */
 
 .trs-bar {
-  height: 3.5rem;
-  border-radius: 1.75rem;
+  height: 3rem;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -106,53 +106,41 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  border-radius: 1.75rem;
-  
-  /* Solid tint + subtle diagonal pattern for a "selected area" feel */
-  background-color: color-mix(in srgb, var(--text-color-accent) 14%, transparent);
-  background-image: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 12px,
-    color-mix(in srgb, var(--text-color-accent) 6%, transparent) 12px,
-    color-mix(in srgb, var(--text-color-accent) 6%, transparent) 24px
-  );
+  border-radius: 10px;
+
+  background-color: color-mix(in srgb, var(--text-color-accent) 28%, transparent);
+  background-image: none;
 
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  
-  /* Subtle inner border to separate from container border */
-  box-shadow: 
-    inset 0 0 0 1px color-mix(in srgb, var(--text-color-accent) 20%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    
+
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--text-color-accent) 38%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 2px 12px color-mix(in srgb, var(--text-color-accent) 16%, transparent);
+
   cursor: grab;
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .trs-range:active {
-  background-color: color-mix(in srgb, var(--text-color-accent) 20%, transparent);
+  background-color: color-mix(in srgb, var(--text-color-accent) 36%, transparent);
   cursor: grabbing;
 }
 
 @media (prefers-color-scheme: dark) {
   .trs-range {
-    background-color: color-mix(in srgb, var(--text-color-accent) 18%, transparent);
-    background-image: repeating-linear-gradient(
-      -45deg,
-      transparent,
-      transparent 12px,
-      rgba(255, 255, 255, 0.03) 12px,
-      rgba(255, 255, 255, 0.03) 24px
-    );
-    box-shadow: 
+    background-color: color-mix(in srgb, var(--text-color-accent) 32%, transparent);
+    background-image: none;
+    box-shadow:
+      inset 0 0 0 1.5px color-mix(in srgb, var(--text-color-accent) 45%, transparent),
       inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      0 4px 12px rgba(0, 0, 0, 0.2);
+      0 4px 16px rgba(0, 0, 0, 0.25);
   }
 }
 
@@ -166,38 +154,35 @@
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
-  opacity: 0.9;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  opacity: 1;
+  text-shadow:
+    0 1px 4px rgba(255, 255, 255, 0.6),
+    0 0 12px rgba(255, 255, 255, 0.3);
 }
 
 @media (prefers-color-scheme: dark) {
   .trs-duration {
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    text-shadow:
+      0 1px 4px rgba(0, 0, 0, 0.6),
+      0 0 12px rgba(0, 0, 0, 0.3);
   }
 }
 
-/* ── Handles — vertical liquid-glass pill ─────────────────────────────────── */
+/* ── Handles — edge grip tabs, secondary to the range block ───────────────── */
 
 .trs-handle {
   position: absolute;
   top: 50%;
-  /* Force GPU layer to fix backdrop-filter bugs in Chrome/Chromium */
-  transform: translate(-50%, -50%) translateZ(0);
-  width: 14px;
-  height: 38px;
-  border-radius: 7px;
-  
-  background-color: rgba(255, 255, 255, 0.9); /* More solid fallback */
-  background: rgba(255, 255, 255, 0.85);
-  
-  -webkit-backdrop-filter: blur(10px) saturate(180%);
-  backdrop-filter: blur(10px) saturate(180%);
-  
-  border: 1px solid rgba(255, 255, 255, 1);
+  width: 10px;
+  height: 28px;
+  border-radius: 5px;
+
+  background: color-mix(in srgb, var(--text-color-accent) 85%, white);
+  border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 95%, transparent);
   box-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.12),
-    0 1px 3px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+
   cursor: grab;
   touch-action: none;
   z-index: 3;
@@ -205,31 +190,39 @@
 
   transition:
     box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.2s ease;
+}
+
+/* Both handles centered on the range edge — half inside, half outside */
+.trs-handle.trs-handle--from {
+  transform: translate(-50%, -50%) translateZ(0);
+  border-radius: 5px;
+}
+
+.trs-handle.trs-handle--to {
+  transform: translate(-50%, -50%) translateZ(0);
+  border-radius: 5px;
 }
 
 @media (prefers-color-scheme: dark) {
   .trs-handle {
-    background-color: rgba(60, 60, 60, 0.9); /* Darker fallback */
-    background: rgba(255, 255, 255, 0.22);
-    border-color: rgba(255, 255, 255, 0.35);
+    background: color-mix(in srgb, var(--text-color-accent) 75%, #1a1a1a);
+    border-color: color-mix(in srgb, var(--text-color-accent) 90%, transparent);
     box-shadow:
-      0 2px 10px rgba(0, 0, 0, 0.4),
-      0 1px 3px rgba(0, 0, 0, 0.25),
+      0 2px 8px rgba(0, 0, 0, 0.45),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 }
 
-/* Expanded invisible hit area — wider horizontally for the narrow pill */
+/* Expanded invisible touch target */
 .trs-handle::before {
   content: '';
   position: absolute;
-  inset: -8px -14px;
-  border-radius: 50%;
+  inset: -8px -12px;
 }
 
-/* Grip notches — triple lines */
+/* Grip notches — triple horizontal lines */
 .trs-handle::after {
   content: '';
   position: absolute;
@@ -238,39 +231,38 @@
   transform: translate(-50%, -50%);
   width: 4px;
   height: 2px;
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 -4px 0 rgba(0, 0, 0, 0.2), 0 4px 0 rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 -4px 0 rgba(255, 255, 255, 0.75), 0 4px 0 rgba(255, 255, 255, 0.75);
   border-radius: 1px;
 }
 
 @media (prefers-color-scheme: dark) {
   .trs-handle::after {
-    background: rgba(255, 255, 255, 0.35);
-    box-shadow: 0 -4px 0 rgba(255, 255, 255, 0.35), 0 4px 0 rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 -4px 0 rgba(255, 255, 255, 0.55), 0 4px 0 rgba(255, 255, 255, 0.55);
   }
 }
 
 .trs-handle:focus-visible {
   box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--text-color-accent) 35%, transparent),
-    0 2px 10px rgba(0, 0, 0, 0.12);
+    0 0 0 3px color-mix(in srgb, var(--text-color-accent) 40%, transparent),
+    0 1px 6px rgba(0, 0, 0, 0.14);
 }
 
 @media (hover: hover) {
-  .trs-handle:hover {
-    transform: translate(-50%, -50%) scale(1.1);
-    box-shadow:
-      0 4px 16px rgba(0, 0, 0, 0.18),
-      inset 0 1px 0 rgba(255, 255, 255, 1);
+  .trs-handle.trs-handle--from:hover,
+  .trs-handle.trs-handle--to:hover {
+    transform: translate(-50%, -50%) scale(1.12);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   }
 }
 
-.trs-handle--dragging {
-  transform: translate(-50%, -50%) translateZ(0) scale(1.18) !important;
+.trs-handle.trs-handle--from.trs-handle--dragging,
+.trs-handle.trs-handle--to.trs-handle--dragging {
+  transform: translate(-50%, -50%) translateZ(0) scale(1.2) !important;
   box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-  border-color: var(--text-color-accent) !important;
   cursor: grabbing !important;
   transition: none !important;
 }
@@ -279,9 +271,10 @@
 
 .trs-now-badge {
   position: absolute;
-  top: 0.1rem;
+  /* 2rem barWrapper padding-top + 3rem bar height + 0.4rem gap */
+  top: calc(2rem + 3rem + 0.4rem);
   transform: translateX(-50%);
-  transform-origin: bottom center;
+  transform-origin: top center;
 
   background: #2196F3;
   color: white;
@@ -303,20 +296,21 @@
   animation: today-indicator-appear 0.65s linear 0.35s forwards;
 }
 
+/* Arrow points up toward the bar */
 .trs-now-badge::after {
   content: '';
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 4px solid transparent;
-  border-top-color: #2196F3;
+  border-bottom-color: #2196F3;
 }
 
 .trs-now-line {
   position: absolute;
-  top: 6px;
-  bottom: 6px;
+  top: 5px;
+  bottom: 5px;
   width: 2px;
   transform: translateX(-50%);
   background: #2196F3;
@@ -362,8 +356,8 @@
 
 .trs-grid-line {
   position: absolute;
-  top: 6px;
-  bottom: 6px;
+  top: 5px;
+  bottom: 5px;
   width: 0;
   border-left: 1px dashed color-mix(in srgb, var(--text-color-primary) 10%, transparent);
   pointer-events: none;
@@ -376,7 +370,7 @@
 .trs-ticks {
   position: relative;
   height: 1.4rem;
-  margin-top: 0.4rem;
+  margin-top: 1.8rem; /* clears the Now badge below the bar */
 }
 
 .trs-tick-label {

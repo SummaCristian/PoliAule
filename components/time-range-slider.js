@@ -449,9 +449,9 @@ function buildSlider(fromInput, toInput) {
 
   render();
 
-  // Expose badge elements so caller can pre-set _sourceRect on cards
   wrapper._fromBadge = fromBadge;
   wrapper._toBadge   = toBadge;
+  wrapper._render    = render;
 
   return wrapper;
 }
@@ -476,6 +476,7 @@ export function initTimeRangeSlider() {
   // Pre-register source rects so switchPicker has valid positions for both
   // cards even before the user taps either badge.
   requestAnimationFrame(() => {
+    slider._render(); // re-render now that bar has real layout dimensions
     const { fromCard, toCard } = getPickerCards();
     if (fromCard) fromCard._sourceRect = slider._fromBadge.getBoundingClientRect();
     if (toCard)   toCard._sourceRect   = slider._toBadge.getBoundingClientRect();

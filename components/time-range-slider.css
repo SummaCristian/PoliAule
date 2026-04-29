@@ -134,6 +134,11 @@
   cursor: grabbing;
 }
 
+.trs-range--dragging {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 @media (prefers-color-scheme: dark) {
   .trs-range {
     background-color: color-mix(in srgb, var(--text-color-accent) 32%, transparent);

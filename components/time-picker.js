@@ -474,7 +474,16 @@ function buildTimePicker(wrapperEl) {
       const h = now.getMinutes() >= 45
         ? (now.getHours() + 1) % 24
         : now.getHours();
-      applyPreset(h, 15);
+      
+      const maxVal = popupInput.max || '20:15';
+      const [maxH, maxM] = maxVal.split(':').map(Number);
+      const maxTotal = maxH * 60 + maxM;
+      
+      let targetTotal = h * 60 + 15;
+      if (targetTotal + 60 > maxTotal) {
+        targetTotal = Math.max(0, maxTotal - 60);
+      }
+      applyPreset(Math.floor(targetTotal / 60), targetTotal % 60);
     } else {
       const fromInput = document.querySelector('.time-picker input[type="time"]');
       if (fromInput?.value) {
@@ -508,8 +517,21 @@ function buildTimePicker(wrapperEl) {
     if (isFrom) {
       const now = new Date();
       const h = now.getMinutes() >= 45 ? (now.getHours() + 1) % 24 : now.getHours();
+
+      const maxVal = popupInput.max || '20:15';
+      const [maxH, maxM] = maxVal.split(':').map(Number);
+      const maxTotal = maxH * 60 + maxM;
+
+      let targetTotal = h * 60 + 15;
+      if (targetTotal + 60 > maxTotal) {
+        targetTotal = Math.max(0, maxTotal - 60);
+      }
+
+      const targetH = Math.floor(targetTotal / 60);
+      const targetM = targetTotal % 60;
+
       quickLabelEl.textContent =
-        formatTimeDisplay(`${String(h).padStart(2, '0')}:15`);
+        formatTimeDisplay(`${String(targetH).padStart(2, '0')}:${String(targetM).padStart(2, '0')}`);
     } else {
       const fromInput = document.querySelector('.time-picker input[type="time"]');
       if (fromInput?.value) {

@@ -724,8 +724,16 @@ function setupTimePickers() {
     snapped.setHours(7, 15, 0, 0);
   }
 
-  const fromMins = snapped.getHours() * 60 + snapped.getMinutes();
-  const toMins = Math.min(fromMins + intervalHours * 60, TIME_MAX_MINS);
+  let fromMins = snapped.getHours() * 60 + snapped.getMinutes();
+  let toMins = fromMins + intervalHours * 60;
+
+  if (toMins > TIME_MAX_MINS) {
+    toMins = TIME_MAX_MINS;
+    fromMins = Math.max(TIME_MIN_MINS, toMins - Math.max(60, intervalHours * 60));
+    // Re-sync snapped object for formatTime(snapped)
+    snapped.setHours(Math.floor(fromMins / 60), fromMins % 60, 0, 0);
+  }
+
   const minToMins = Math.min(fromMins + 60, TIME_MAX_MINS);
 
   fromPicker.value = formatTime(snapped);

@@ -53,7 +53,12 @@ function buildSlider(fromInput, toInput) {
   const TOTAL = MAX - MIN;
 
   let fromMin = timeToMinutes(fromInput.value) || MIN;
-  let toMin   = timeToMinutes(toInput.value)   || Math.min(fromMin + 120, MAX);
+  let toMin   = timeToMinutes(toInput.value)   || (fromMin + 120);
+
+  if (toMin > MAX) {
+    toMin = MAX;
+    fromMin = Math.max(MIN, toMin - Math.max(60, toMin - fromMin));
+  }
 
   // ── DOM structure ─────────────────────────────────────────────────────────
 
@@ -216,8 +221,14 @@ function buildSlider(fromInput, toInput) {
     nowBadge.addEventListener('click', () => {
       const currentNow = new Date().getHours() * 60 + new Date().getMinutes();
       const duration = toMin - fromMin;
-      const newFrom = Math.max(MIN, Math.min(snapTo(currentNow), MAX));
-      const newTo   = Math.min(newFrom + duration, MAX);
+      let newFrom = Math.max(MIN, Math.min(snapTo(currentNow), MAX));
+      let newTo   = newFrom + duration;
+
+      if (newTo > MAX) {
+        newTo = MAX;
+        newFrom = Math.max(MIN, newTo - Math.max(60, duration));
+      }
+
       fromMin = newFrom;
       toMin   = newTo;
       syncInputs();

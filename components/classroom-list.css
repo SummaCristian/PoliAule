@@ -361,7 +361,7 @@
 }
 
 .classroom-status-txt.free-soon {
-  color: color-mix(in srgb, var(--color-status-free) 70%, var(--color-status-partial));
+  color: var(--color-status-free-soon);
 }
 
 .classroom-status-txt.partially-free,

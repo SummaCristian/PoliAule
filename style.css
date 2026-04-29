@@ -45,6 +45,7 @@
 
   /* Status colors */
   --color-status-free: #2a9e47;
+  --color-status-free-soon: #5a7a10;
   --color-status-partial: #f0b429;
   --color-status-busy: #e53935;
 
@@ -70,6 +71,7 @@
 
     /* Status colors */
     --color-status-free: #3ce065;
+    --color-status-free-soon: color-mix(in srgb, var(--color-status-free) 70%, var(--color-status-partial));
     --color-status-partial: #f5a623;
     --color-status-busy: #ff5252;
 

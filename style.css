@@ -43,7 +43,13 @@
   --text-color-secondary: #333333;
   --text-color-accent: #2a9e47;
 
+  /* Status colors */
+  --color-status-free: #2a9e47;
+  --color-status-partial: #f0b429;
+  --color-status-busy: #e53935;
+
   --accent-gradient: linear-gradient(135deg, #0d7a30, #2ecc5a);
+  --busy-gradient: linear-gradient(135deg, #ff5252, #e53935);
 
   --shadow:
     0 1px 2px rgba(0, 0, 0, 0.06),
@@ -62,7 +68,13 @@
     --text-color-secondary: #CCCCCC;
     --text-color-accent: #3ce065;
 
+    /* Status colors */
+    --color-status-free: #3ce065;
+    --color-status-partial: #f5a623;
+    --color-status-busy: #ff5252;
+
     --accent-gradient: linear-gradient(135deg, #1fa840, #90ffb8);
+    --busy-gradient: linear-gradient(135deg, #f44336, #ff867f);
 
     --shadow:
       0 1px 2px rgba(0, 0, 0, 0.3),

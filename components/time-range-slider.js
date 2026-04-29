@@ -310,8 +310,6 @@ function buildSlider(fromInput, toInput) {
       return;
     }
 
-    range.classList.add('trs-range--dragging');
-
     triggerHaptic();
     bar.setPointerCapture(e.pointerId);
   }
@@ -371,7 +369,6 @@ function buildSlider(fromInput, toInput) {
     toHandle.classList.remove('trs-handle--dragging');
     fromBadge.classList.remove('trs-badge--dragging');
     toBadge.classList.remove('trs-badge--dragging');
-    range.classList.remove('trs-range--dragging');
 
     const wasDrag      = didDrag;
     const endedDragMode = dragMode;

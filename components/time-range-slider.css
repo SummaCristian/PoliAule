@@ -7,7 +7,8 @@
 
 .trs-bar-wrapper {
   position: relative;
-  padding-top: 2rem; /* vertical room for badge + arrow above the bar */
+  padding-top: 1.6rem; /* vertical room for badge + arrow above the bar */
+  padding-bottom: 1.8rem; /* room for Now badge below the bar */
 }
 
 /* ── Time badges — matches .timeline-time-indicator style ─────────────────── */
@@ -271,8 +272,8 @@
 
 .trs-now-badge {
   position: absolute;
-  /* 2rem barWrapper padding-top + 3rem bar height + 0.4rem gap */
-  top: calc(2rem + 3rem + 0.4rem);
+  /* 1.6rem barWrapper padding-top + 3rem bar height + 0.4rem gap */
+  top: calc(1.6rem + 3rem + 0.4rem);
   transform: translateX(-50%);
   transform-origin: top center;
 
@@ -382,9 +383,11 @@
 /* ── Tick labels ─────────────────────────────────────────────────────────── */
 
 .trs-ticks {
-  position: relative;
+  position: absolute;
+  top: 0.1rem;
+  left: 0;
+  right: 0;
   height: 1.4rem;
-  margin-top: 1.8rem; /* clears the Now badge below the bar */
 }
 
 .trs-tick-label {

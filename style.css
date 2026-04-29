@@ -98,6 +98,8 @@ body {
 
   /* Remove the tap highlight for mobile browsers */
   -webkit-tap-highlight-color: transparent;
+
+  user-select: none;
 }
 
 .noscript-overlay {

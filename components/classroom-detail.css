@@ -677,11 +677,6 @@ body.detail-open .tab-content * {
   z-index: 1;
 }
 
-.detail-schedule-row--today .detail-schedule-bar {
-  background: color-mix(in srgb, var(--text-color-accent) 4%, transparent);
-  border-color: color-mix(in srgb, var(--text-color-accent) 25%, transparent);
-}
-
 .detail-schedule-bar-wrapper {
   position: relative;
 }

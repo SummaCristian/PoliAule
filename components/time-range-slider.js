@@ -53,7 +53,7 @@ function buildSlider(fromInput, toInput) {
   const TOTAL = MAX - MIN;
 
   let fromMin = timeToMinutes(fromInput.value) || MIN;
-  let toMin   = timeToMinutes(toInput.value)   || Math.min(fromMin + 60, MAX);
+  let toMin   = timeToMinutes(toInput.value)   || Math.min(fromMin + 120, MAX);
 
   // ── DOM structure ─────────────────────────────────────────────────────────
 

@@ -178,6 +178,15 @@ def main():
                 json.dump(output, f, ensure_ascii=False, indent=2)
             print(f"  Written to {out_path}")
 
+    # Write the list of available dates
+    list_path = OUTPUT_DIR / "list.json"
+    with open(list_path, "w", encoding="utf-8") as f:
+        json.dump({
+            "generated_at": datetime.now().isoformat(),
+            "dates": [d.strftime("%Y%m%d") for d in days],
+        }, f, ensure_ascii=False, indent=2)
+    print(f"\nWritten date list to {list_path}")
+
     print("\nDone.")
 
 

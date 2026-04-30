@@ -22,6 +22,7 @@ import { initSearchTab, classroomsData as staticClassroomsData } from './search-
 import { classroomDetail } from './components/classroom-detail.js';
 
 import { initTimePickers } from './components/time-picker.js';
+import { initTimeRangeSlider } from './components/time-range-slider.js';
 import { setupCampusPicker } from './components/campus-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
@@ -174,7 +175,7 @@ tabs.forEach((tab, index) => {
 
 // Builds a <li> containing a building card with its room cards inside.
 // Returns the element and the next cardIndex for stagger sequencing.
-function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = false) {
+function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = false, date = null) {
   const buildingName = building.name;
   const countParts = [
     rooms.filter(r => r.status === 'free').length ? `<span class="building-count free">${rooms.filter(r => r.status === 'free').length} ${t('status.free')}</span>` : '',
@@ -223,7 +224,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
         const roomItem = document.createElement('li');
         roomItem.className = 'classroom-list-item-container';
         roomItem.dataset.status = room.status;
-        roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday);
+        roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday, date);
         roomsList.appendChild(roomItem);
       });
       if (rooms.every(r => r.status === 'partially-free')) {
@@ -320,6 +321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTimePickers();
 
     initTimePickers();
+    initTimeRangeSlider();
 
     // Setup the data fetch indicator and language switch handler immediately —
     // these don't depend on fonts and shouldn't wait for the splash to dismiss
@@ -432,7 +434,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   let cardIndex = 0;
   results.forEach(buildingResult => {
-    const { li, cardIndex: next } = createBuildingItem(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday);
+    const { li, cardIndex: next } = createBuildingItem(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date);
     cardIndex = next;
     list.appendChild(li);
   });
@@ -722,8 +724,16 @@ function setupTimePickers() {
     snapped.setHours(7, 15, 0, 0);
   }
 
-  const fromMins = snapped.getHours() * 60 + snapped.getMinutes();
-  const toMins = Math.min(fromMins + intervalHours * 60, TIME_MAX_MINS);
+  let fromMins = snapped.getHours() * 60 + snapped.getMinutes();
+  let toMins = fromMins + intervalHours * 60;
+
+  if (toMins > TIME_MAX_MINS) {
+    toMins = TIME_MAX_MINS;
+    fromMins = Math.max(TIME_MIN_MINS, toMins - Math.max(60, intervalHours * 60));
+    // Re-sync snapped object for formatTime(snapped)
+    snapped.setHours(Math.floor(fromMins / 60), fromMins % 60, 0, 0);
+  }
+
   const minToMins = Math.min(fromMins + 60, TIME_MAX_MINS);
 
   fromPicker.value = formatTime(snapped);

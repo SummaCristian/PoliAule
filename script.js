@@ -9,6 +9,10 @@ if (envLabel) {
   const badge = document.getElementById('env-badge');
   badge.textContent = envLabel;
   badge.removeAttribute('hidden');
+
+  document.querySelectorAll('link[href^="/favicons/main/"]').forEach(el => {
+    el.href = el.href.replace('/favicons/main/', '/favicons/beta/');
+  });
 }
 
 import {

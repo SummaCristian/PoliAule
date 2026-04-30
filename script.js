@@ -30,7 +30,7 @@ import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import './components/tooltip.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, getStartupTabId } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, AUTO_SEARCH_KEY, getStartupTabId } from './components/settings.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -342,6 +342,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     await document.fonts.ready;
     document.querySelector('.time-pickers-container').style.opacity = '1';
     document.getElementById('available-classrooms-form').removeAttribute('data-loading');
+
+    const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
+    if (autoSearchEnabled) {
+      document.getElementById('available-classrooms-form').dispatchEvent(
+        new Event('submit', { cancelable: true, bubbles: true })
+      );
+    }
 
     const elapsed = Date.now() - _splashStartTime;
     const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);

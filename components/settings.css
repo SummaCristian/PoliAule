@@ -444,6 +444,63 @@
   font-family: inherit;
 }
 
+/* ── Inline warning note (yellow) ───────────────────────────────────────────── */
+
+.settings-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0 0.625rem 0.625rem;
+  padding: 0.625rem 0.75rem;
+  background: color-mix(in srgb, #FF9F0A 12%, transparent);
+  border: 1px solid color-mix(in srgb, #FF9F0A 30%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+  max-height: 5rem;
+  opacity: 1;
+  transition:
+    max-height 0.25s ease,
+    opacity    0.2s ease,
+    margin     0.25s ease,
+    padding    0.25s ease;
+}
+
+.settings-warning--hidden {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-color: transparent;
+  pointer-events: none;
+}
+
+.settings-warning__icon {
+  font-size: 18px !important;
+  color: #CC7A00;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .settings-warning__icon {
+    color: #FF9F0A;
+  }
+}
+
+.settings-warning__text {
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #CC7A00;
+  letter-spacing: -0.015em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .settings-warning__text {
+    color: #FF9F0A;
+  }
+}
+
 /* ── Campus select picker ────────────────────────────────────────────────────── */
 
 .settings-row--campus-picker {

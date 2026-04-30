@@ -665,6 +665,8 @@ label {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+
+font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .tab.active {
@@ -741,6 +743,7 @@ label {
 
 .version-info-button>label {
   text-decoration: underline;
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .info-label {

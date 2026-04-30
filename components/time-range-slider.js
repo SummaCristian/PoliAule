@@ -205,39 +205,48 @@ function buildSlider(fromInput, toInput) {
   buildGridLines(); // static — positions don't change with locale
 
   // ── Now indicator ─────────────────────────────────────────────────────────
-  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
-  if (nowMin > MIN && nowMin < MAX) {
-    const nowBadge = document.createElement('div');
-    nowBadge.className = 'trs-now-badge';
-    nowBadge.textContent = t('timepicker.now');
-    nowBadge.style.left = pct(nowMin);
-    barWrapper.appendChild(nowBadge);
+  const nowBadge = document.createElement('div');
+  nowBadge.className = 'trs-now-badge';
+  nowBadge.textContent = t('timepicker.now');
+  barWrapper.appendChild(nowBadge);
 
-    const nowLine = document.createElement('div');
-    nowLine.className = 'trs-now-line';
-    nowLine.style.left = pct(nowMin);
-    bar.appendChild(nowLine);
+  const nowLine = document.createElement('div');
+  nowLine.className = 'trs-now-line';
+  bar.appendChild(nowLine);
 
-    nowBadge.addEventListener('click', () => {
-      const currentNow = new Date().getHours() * 60 + new Date().getMinutes();
-      const duration = toMin - fromMin;
-      let newFrom = Math.max(MIN, Math.min(snapTo(currentNow), MAX));
-      let newTo   = newFrom + duration;
-
-      if (newTo > MAX) {
-        newTo = MAX;
-        newFrom = Math.max(MIN, newTo - Math.max(60, duration));
-      }
-
-      fromMin = newFrom;
-      toMin   = newTo;
-      syncInputs();
-      bar.classList.add('trs-bar--snapping');
-      render();
-      setTimeout(() => bar.classList.remove('trs-bar--snapping'), 300);
-      triggerHaptic();
-    });
+  function updateNowPosition() {
+    const n = new Date().getHours() * 60 + new Date().getMinutes();
+    const inRange = n > MIN && n < MAX;
+    nowBadge.style.display = inRange ? '' : 'none';
+    nowLine.style.display  = inRange ? '' : 'none';
+    if (inRange) {
+      nowBadge.style.left = pct(n);
+      nowLine.style.left  = pct(n);
+    }
   }
+
+  updateNowPosition();
+  setInterval(updateNowPosition, 60_000);
+
+  nowBadge.addEventListener('click', () => {
+    const currentNow = new Date().getHours() * 60 + new Date().getMinutes();
+    const duration = toMin - fromMin;
+    let newFrom = Math.max(MIN, Math.min(snapTo(currentNow), MAX));
+    let newTo   = newFrom + duration;
+
+    if (newTo > MAX) {
+      newTo = MAX;
+      newFrom = Math.max(MIN, newTo - Math.max(60, duration));
+    }
+
+    fromMin = newFrom;
+    toMin   = newTo;
+    syncInputs();
+    bar.classList.add('trs-bar--snapping');
+    render();
+    setTimeout(() => bar.classList.remove('trs-bar--snapping'), 300);
+    triggerHaptic();
+  });
 
   // ── Input sync ────────────────────────────────────────────────────────────
 

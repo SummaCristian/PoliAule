@@ -57,6 +57,7 @@ class ClassroomDetail {
     this._savedScrollPos = 0;
     this._openAnimationFinished = Promise.resolve(); // resolves when the page-open animation ends
     this._queryContext = null;  // { date, from, to } when opened from Available Tab, else null
+    this._nowTimer = null;
   }
 
   // Called from script.js after all data is loaded.
@@ -540,6 +541,7 @@ class ClassroomDetail {
   // ---------- RENDER: WEEKLY SCHEDULE ----------
 
   _loadSchedule(classroomId) {
+    clearInterval(this._nowTimer);
     const data = occupancyData;
     const container = document.getElementById('detail-schedule-container');
 
@@ -748,6 +750,17 @@ class ClassroomDetail {
       if (localStorage.getItem('poliAule_hideSundays') === 'true') {
         container.classList.add('detail-schedule--hide-sundays');
       }
+
+      this._nowTimer = setInterval(() => {
+        const n = new Date().getHours() * 60 + new Date().getMinutes();
+        const pctVal = n >= DAY_START && n <= DAY_END
+          ? `${((n - DAY_START) / total * 100).toFixed(2)}%`
+          : null;
+        container.querySelectorAll('.timeline-time-indicator--now, .timeline-now-bar-line, .detail-schedule-now-line').forEach(el => {
+          if (pctVal) { el.style.setProperty('--pos', pctVal); el.hidden = false; }
+          else { el.hidden = true; }
+        });
+      }, 60_000);
 
       // --- Mobile day selector interaction ---
       const pickerContainer = container.querySelector('.detail-schedule-picker');

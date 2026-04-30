@@ -31,6 +31,18 @@ window.addEventListener('timeformatchange', () => {
   });
 });
 
+// Update the "now" position on all visible list-timeline now indicators every minute.
+setInterval(() => {
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  document.querySelectorAll('.timeline-time-indicator--now[data-now-start]').forEach(el => {
+    const start = +el.dataset.nowStart;
+    const tot   = +el.dataset.nowTotal;
+    const inRange = nowMin > start && nowMin < start + tot;
+    el.hidden = !inRange;
+    if (inRange) el.style.left = `${((nowMin - start) / tot * 100).toFixed(2)}%`;
+  });
+}, 60_000);
+
 function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
   const fromMin = timeToMinutes(fromTime);
   const toMin = timeToMinutes(toTime);
@@ -133,7 +145,7 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
     if (nowMin > displayStart && nowMin < displayEnd) {
-      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now" style="left:${pct(nowMin)}">${t('timepicker.now')}</div>`;
+      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now" data-now-start="${displayStart}" data-now-total="${total}" style="left:${pct(nowMin)}">${t('timepicker.now')}</div>`;
     }
   }
 

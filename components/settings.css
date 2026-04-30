@@ -201,7 +201,8 @@
 }
 
 /* Separator between rows in the same group */
-.settings-row + .settings-row {
+.settings-row + .settings-row,
+.settings-warning + .settings-row {
   border-top: 0.5px solid color-mix(in srgb, var(--text-color-primary) 10%, transparent);
 }
 

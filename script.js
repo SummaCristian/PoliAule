@@ -30,7 +30,7 @@ import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import './components/tooltip.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, AUTO_SEARCH_KEY, getStartupTabId } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY, getStartupTabId } from './components/settings.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -322,6 +322,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initTimePickers();
     initTimeRangeSlider();
+    setupLiveSearch();
 
     // Setup the data fetch indicator and language switch handler immediately —
     // these don't depend on fonts and shouldn't wait for the splash to dismiss
@@ -391,6 +392,7 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
 // Builds the UI to show the results of the 'Available Classrooms' form submission,
 function renderAvailableClassroomsResults(results, date, from, to) {
   const container = document.getElementById('available-classrooms-results');
+  container.dataset.searched = 'true';
   container.innerHTML = ''; // Clear previous results
 
   // Find the day entry matching the selected date
@@ -584,6 +586,7 @@ function setupDatePicker() {
     placeIndicator(el);
 
     datePicker.value = el.dataset.date;
+    datePicker.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Haptic feedback
     haptics.trigger([
@@ -834,5 +837,33 @@ function setupDataFetchIndicatorText(animate = false) {
     <label class="data-status-time secondary">${t('data.lastFetched')}: ${formattedTime}</label>
   `;
   if (animate) animateI18nElement(container);
+}
+
+// ---------- LIVE SEARCH ----------
+
+function setupLiveSearch() {
+  const form = document.getElementById('available-classrooms-form');
+  const results = document.getElementById('available-classrooms-results');
+
+  function isEnabled() {
+    return localStorage.getItem(LIVE_SEARCH_KEY) !== 'false';
+  }
+
+  function trigger() {
+    if (!isEnabled() || !classroomsData.length || !results.dataset.searched) return;
+    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  }
+
+  let debounceTimer = null;
+  function triggerDebounced() {
+    if (!isEnabled()) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(trigger, 320);
+  }
+
+  document.addEventListener('campuschange', trigger);
+  document.getElementById('date-picker').addEventListener('change', trigger);
+  document.getElementById('from-time-picker').addEventListener('input', triggerDebounced);
+  document.getElementById('to-time-picker').addEventListener('input', triggerDebounced);
 }
 

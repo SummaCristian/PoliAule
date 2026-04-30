@@ -20,6 +20,7 @@ export const INTERVAL_HOURS_KEY    = 'poliAule_intervalHours';
 export const DEFAULT_TAB_KEY       = 'poliAule_defaultTab';
 export const LAST_TAB_KEY          = 'poliAule_lastTab';
 export const AUTO_SEARCH_KEY       = 'poliAule_autoSearch';
+export const LIVE_SEARCH_KEY       = 'poliAule_liveSearch';
 
 // Returns the tab container ID to show on startup
 export function getStartupTabId() {
@@ -633,6 +634,17 @@ function buildPopup() {
               </div>
             </div>
           </div>
+          <div class="settings-row" data-live-search-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #FF2D55">
+                <span class="material-symbols-outlined">sync</span>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.liveSearch">${t('settings.liveSearch')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.liveSearchDesc">${t('settings.liveSearchDesc')}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -794,13 +806,36 @@ function buildPopup() {
     <span class="material-symbols-outlined settings-warning__icon">warning</span>
     <span class="settings-warning__text" data-i18n="settings.autoSearchWarning">${t('settings.autoSearchWarning')}</span>
   `;
-  autoSearchRow.closest('.settings-group').appendChild(autoSearchWarning);
+  autoSearchRow.insertAdjacentElement('afterend', autoSearchWarning);
 
   autoSearchToggle.addEventListener('click', () => {
     const isOn = !autoSearchToggle.classList.contains('on');
     setToggleState(autoSearchToggle, isOn);
     localStorage.setItem(AUTO_SEARCH_KEY, String(isOn));
     autoSearchWarning.classList.toggle('settings-warning--hidden', !isOn);
+    haptics.trigger(defaultPatterns.success);
+  });
+
+  // Wire Live Search toggle (default: true)
+  const liveSearchRow = popup.querySelector('[data-live-search-row]');
+  const liveSearchSaved = localStorage.getItem(LIVE_SEARCH_KEY);
+  const liveSearchOn = liveSearchSaved === null ? true : liveSearchSaved === 'true';
+  const liveSearchToggle = buildToggle(liveSearchOn);
+  liveSearchRow.appendChild(liveSearchToggle);
+
+  const liveSearchWarning = document.createElement('div');
+  liveSearchWarning.className = 'settings-warning' + (liveSearchOn ? '' : ' settings-warning--hidden');
+  liveSearchWarning.innerHTML = `
+    <span class="material-symbols-outlined settings-warning__icon">warning</span>
+    <span class="settings-warning__text" data-i18n="settings.liveSearchWarning">${t('settings.liveSearchWarning')}</span>
+  `;
+  liveSearchRow.insertAdjacentElement('afterend', liveSearchWarning);
+
+  liveSearchToggle.addEventListener('click', () => {
+    const isOn = !liveSearchToggle.classList.contains('on');
+    setToggleState(liveSearchToggle, isOn);
+    localStorage.setItem(LIVE_SEARCH_KEY, String(isOn));
+    liveSearchWarning.classList.toggle('settings-warning--hidden', !isOn);
     haptics.trigger(defaultPatterns.success);
   });
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-29T06:10:54.537651",
+  "generated_at": "2026-04-30T06:11:30.306710",
   "date": "20260505",
   "campuses": [
     {
@@ -8222,7 +8222,7 @@
               "occupancy": [
                 {
                   "inizio": "08:15",
-                  "fine": "13:15"
+                  "fine": "14:15"
                 },
                 {
                   "inizio": "14:15",
@@ -8258,12 +8258,7 @@
               "idfoto": 19611640,
               "seats": 98,
               "workstations": 49,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B6.2.3",
@@ -10743,6 +10738,10 @@
               "workstations": 103,
               "occupancy": [
                 {
+                  "inizio": "08:15",
+                  "fine": "11:15"
+                },
+                {
                   "inizio": "11:15",
                   "fine": "14:15"
                 },
@@ -10949,6 +10948,10 @@
                 {
                   "inizio": "14:15",
                   "fine": "16:15"
+                },
+                {
+                  "inizio": "16:15",
+                  "fine": "18:15"
                 },
                 {
                   "inizio": "18:15",
@@ -11437,7 +11440,12 @@
               "idfoto": 29060308,
               "seats": 40,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "18:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "T.4",
@@ -11473,7 +11481,7 @@
         },
         {
           "name": "9",
-          "altName": "",
+          "altName": "B",
           "lat": 45.848849747900005,
           "long": 9.396724998900002,
           "idEdificio": "63",
@@ -12152,6 +12160,10 @@
               "accessible_seats": 1,
               "occupancy": [
                 {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
                   "inizio": "14:15",
                   "fine": "16:15"
                 }
@@ -12201,7 +12213,7 @@
         },
         {
           "name": "10",
-          "altName": "",
+          "altName": "A",
           "lat": 45.84944386545,
           "long": 9.3964272737,
           "idEdificio": "64",
@@ -12320,7 +12332,12 @@
               "idfoto": 29060317,
               "seats": 49,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "07:00",
+                  "fine": "09:30"
+                }
+              ]
             },
             {
               "name": "A.1.2",

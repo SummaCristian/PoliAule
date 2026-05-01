@@ -51,7 +51,10 @@ Up to 7 files are available at any time, covering today through the next 6 days.
 [                                   ← array of campuses
   {
     id:        string               // e.g. "MIA01"
-    name:      string               // e.g. "Milano Leonardo - Città Studi"
+    name:      string               // short display name, e.g. "Leonardo"
+    slug:      string               // URL-safe identifier, e.g. "leonardo"
+    city:      string               // e.g. "Milan"
+    group:     string | undefined   // group within the city, e.g. "Città Studi" or "Bovisa" - omitted for single-campus cities
     lat:       number
     long:      number
     buildings: [
@@ -87,7 +90,7 @@ Up to 7 files are available at any time, covering today through the next 6 days.
 
 ### `/occupancy/occupation_YYYYMMDD.json`
 
-Same structure as `classrooms.json`, with a top-level metadata wrapper and an `occupancy` array added to each classroom.
+Same structure as `classrooms.json`, with a top-level metadata wrapper and an `occupancy` array added to each classroom. Campus-level metadata fields (`slug`, `city`, `group`) are **not** included in occupancy files — fetch `classrooms.json` for those.
 
 ```
 {
@@ -95,8 +98,11 @@ Same structure as `classrooms.json`, with a top-level metadata wrapper and an `o
   date:         string   // "YYYYMMDD"
   campuses: [
     {
-      ...                // same campus/building/classroom fields as above
-      buildings: [
+      id:        string  // campus identifier
+      name:      string  // short display name
+      lat:       number
+      long:      number
+      buildings: [       // same building/classroom fields as classrooms.json
         {
           ...
           classrooms: [
@@ -123,15 +129,15 @@ Each entry in `occupancy` represents a time slot in which the classroom is **not
 
 ## Known campuses
 
-| ID | Name |
-|---|---|
-| `MIA01` | Milano Leonardo - Città Studi |
-| `MIA06` | Milano - Via Colombo |
-| `MIB01` | Milano Bovisa - Via La Masa |
-| `MIB02` | Milano Bovisa - Via Durando |
-| `CRG02` | Cremona |
-| `LCF04` | Lecco |
-| `MNG01` | Mantova |
+| ID | Name | Slug | City | Group |
+|---|---|---|---|---|
+| `MIA01` | Leonardo | `leonardo` | Milan | Città Studi |
+| `MIA06` | Colombo | `colombo` | Milan | Città Studi |
+| `MIB01` | La Masa | `la-masa` | Milan | Bovisa |
+| `MIB02` | Durando | `durando` | Milan | Bovisa |
+| `CRG02` | Cremona | `cremona` | Cremona | — |
+| `LCF04` | Lecco | `lecco` | Lecco | — |
+| `MNG01` | Mantova | `mantova` | Mantova | — |
 
 ---
 

@@ -1,6 +1,22 @@
 import { onLanguageSwitch, t } from '../i18n.js';
+import { haptics, defaultPatterns } from './haptics.js';
 
 const HASH = '#info';
+const GITHUB_REPO = 'SummaCristian/poliaule';
+const STATS_CACHE_KEY = 'poliaule_github_stats';
+const STATS_CACHE_TTL =  60 * 60 * 1000; // 1 hour
+
+const LANG_COLORS = {
+  HTML: '#e34c26',
+  CSS: '#563d7c',
+  JavaScript: '#f1e05a',
+  Python: '#3572A5',
+  TypeScript: '#3178c6',
+  Vue: '#41b883',
+  Svelte: '#ff3e00',
+  Shell: '#89e051',
+  Dockerfile: '#384d54',
+};
 
 class InfoPage {
   constructor() {
@@ -13,6 +29,7 @@ class InfoPage {
     this._isOpen = false;
     this._openedFromDetail = false;
     this._showBadge = false;
+    this._cachedStats = null;
   }
 
   init() {
@@ -22,6 +39,13 @@ class InfoPage {
     this._logoEl = document.querySelector('.header-logo');
     this._titleEl = document.querySelector('.header-title');
     this._badgeEl = document.getElementById('env-badge');
+
+    // Haptics for interactive GitHub elements
+    this._overlay?.addEventListener('click', (e) => {
+      if (e.target.closest('.github-stat-card') || e.target.closest('.contributor-item') || e.target.closest('.github-repo-chip')) {
+        haptics.vibrate(defaultPatterns.light);
+      }
+    });
 
     document.getElementById('info-trigger')?.addEventListener('click', () => {
       location.hash = HASH;
@@ -313,29 +337,71 @@ class InfoPage {
               </div>
             </a>
 
-            <a href="https://github.com/SummaCristian/poliaule" target="_blank" rel="noopener" class="info-badge">
-              <svg viewBox="0 0 16 16" version="1.1" aria-hidden="true">
-                <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
-              </svg>
-              <div class="badge-text">
-                <span class="top-text">${t('info.aboutMe.github')}</span>
-                <span class="bottom-text">GitHub</span>
-              </div>
-            </a>
           </div>
 
-          <div class="about-me-section">
-            <h2>${t('info.aboutMe.title')}</h2>
-            <div class="about-me-container">
-              <img src="/assets/profile.jpg" alt="Profile picture of Cristian Summa" class="about-me-photo" draggable="false">
-              <div class="about-me-bubbles">
-                <p class="message-bubble">${t('info.aboutMe.parag1')}</p>
-                <p class="message-bubble">${t('info.aboutMe.parag2')}</p>
-                <p class="message-bubble">${t('info.aboutMe.parag3')}</p>
-                <div class="typing-indicator message-bubble">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+          <div class="info-two-col">
+            <div class="about-me-section">
+              <h2>${t('info.aboutMe.title')}</h2>
+              <div class="about-me-container">
+                <img src="/assets/profile.jpg" alt="Profile picture of Cristian Summa" class="about-me-photo" draggable="false">
+                <div class="about-me-bubbles">
+                  <p class="message-bubble">${t('info.aboutMe.parag1')}</p>
+                  <p class="message-bubble">${t('info.aboutMe.parag2')}</p>
+                  <p class="message-bubble">${t('info.aboutMe.parag3')}</p>
+                  <div class="typing-indicator message-bubble">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="github-stats-section">
+              <div class="github-section-head">
+                <h2>${t('info.github.title')}</h2>
+                <a href="https://github.com/SummaCristian/poliaule" target="_blank" rel="noopener" class="github-repo-chip">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
+                  <span>GitHub</span>
+                </a>
+              </div>
+              <div class="github-stats-grid">
+                <a href="https://github.com/SummaCristian/poliaule/stargazers" target="_blank" rel="noopener" class="github-stat-card">
+                  <span class="material-symbols-outlined github-stat-icon">star</span>
+                  <span class="github-stat-number" data-stat="stars">—</span>
+                  <span class="github-stat-label">${t('info.github.stars')}</span>
+                </a>
+                <a href="https://github.com/SummaCristian/poliaule/commits/main" target="_blank" rel="noopener" class="github-stat-card">
+                  <span class="material-symbols-outlined github-stat-icon">commit</span>
+                  <span class="github-stat-number" data-stat="commits">—</span>
+                  <span class="github-stat-label">${t('info.github.commits')}</span>
+                </a>
+                <a href="https://github.com/SummaCristian/poliaule/issues" target="_blank" rel="noopener" class="github-stat-card">
+                  <span class="material-symbols-outlined github-stat-icon">bug_report</span>
+                  <span class="github-stat-number" data-stat="issues">—</span>
+                  <span class="github-stat-label">${t('info.github.issues')}</span>
+                </a>
+                <a href="https://github.com/SummaCristian/poliaule/blob/main/LICENSE" target="_blank" rel="noopener" class="github-stat-card">
+                  <span class="material-symbols-outlined github-stat-icon">balance</span>
+                  <span class="github-stat-number" data-stat="license">—</span>
+                  <span class="github-stat-label">${t('info.github.license')}</span>
+                </a>
+              </div>
+
+              <div class="github-extended">
+                <div class="github-subsection">
+                  <div class="github-subsection-header">
+                    <span class="material-symbols-outlined">code</span>
+                    <span>${t('info.github.languages')}</span>
+                  </div>
+                  <div data-github="lang-bar"><div class="github-skeleton" style="height:2rem"></div></div>
+                </div>
+                <div class="github-subsection">
+                  <div class="github-subsection-header">
+                    <span class="material-symbols-outlined">group</span>
+                    <span>${t('info.github.contributors')}</span>
+                  </div>
+                  <div data-github="contributors"><div class="github-skeleton" style="height:3rem"></div></div>
                 </div>
               </div>
             </div>
@@ -383,6 +449,145 @@ class InfoPage {
       }, { threshold: 0.1 });
       observer.observe(aboutMeSection);
     }
+
+    const observe = (selector, threshold = 0.1) => {
+      const el = this._overlay.querySelector(selector);
+      if (!el) return;
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) { entry.target.classList.add('is-visible'); obs.unobserve(entry.target); }
+        });
+      }, { threshold });
+      obs.observe(el);
+    };
+
+    observe('.github-stats-section');
+    observe('.github-extended', 0.05);
+    this._fetchGithubStats();
+  }
+
+  async _fetchGithubStats() {
+    // In-memory cache (complete) — instant return for language-switch re-renders.
+    const c = this._cachedStats;
+    if (c?.repo && c?.langs && c?.contributors) {
+      this._applyGithubStats(c);
+      return;
+    }
+    if (c) this._applyGithubStats(c);
+
+    // Persistent cache — apply immediately and skip the network if still fresh.
+    try {
+      const stored = JSON.parse(localStorage.getItem(STATS_CACHE_KEY) ?? 'null');
+      if (stored && Date.now() - stored.fetchedAt < STATS_CACHE_TTL) {
+        this._cachedStats = stored.data;
+        this._applyGithubStats(this._cachedStats);
+        if (stored.data?.repo && stored.data?.langs && stored.data?.contributors) return;
+      }
+    } catch { /* malformed entry — proceed to network */ }
+
+    try {
+      const base = `https://api.github.com/repos/${GITHUB_REPO}`;
+      const hdrs = { headers: { Accept: 'application/vnd.github+json' } };
+
+      const [repoRes, commitsRes, langsRes, contribRes] = await Promise.all([
+        fetch(base, hdrs),
+        fetch(`${base}/commits?per_page=1`, hdrs),
+        fetch(`${base}/languages`, hdrs),
+        fetch(`${base}/contributors?per_page=10`, hdrs),
+      ]);
+
+      if (!repoRes.ok) throw new Error(`GitHub API ${repoRes.status}`);
+      const repo = await repoRes.json();
+
+      let commits = null;
+      if (commitsRes.ok) {
+        const link = commitsRes.headers.get('Link') ?? '';
+        const match = link.match(/[?&]page=(\d+)>;\s*rel="last"/);
+        commits = match ? parseInt(match[1], 10) : null;
+      }
+
+      const langs = langsRes.ok ? await langsRes.json() : null;
+      const contributors = contribRes.ok ? await contribRes.json() : null;
+
+      if (!this._cachedStats) this._cachedStats = {};
+      this._cachedStats.repo = repo;
+      this._cachedStats.commits = commits;
+      if (langs) this._cachedStats.langs = langs;
+      if (contributors?.length) this._cachedStats.contributors = contributors;
+
+      this._applyGithubStats(this._cachedStats);
+      this._persistStatsCache();
+    } catch (err) {
+      console.warn('[PoliAule] GitHub stats fetch failed:', err);
+    }
+  }
+
+  _persistStatsCache() {
+    try {
+      localStorage.setItem(STATS_CACHE_KEY, JSON.stringify({ data: this._cachedStats, fetchedAt: Date.now() }));
+    } catch { /* storage quota exceeded — not critical */ }
+  }
+
+  _applyGithubStats({ repo, commits, langs, contributors }) {
+    if (!this._overlay) return;
+
+    const grid = this._overlay.querySelector('.github-stats-grid');
+    if (grid) {
+      const set = (stat, value) => {
+        const el = grid.querySelector(`[data-stat="${stat}"]`);
+        if (el) el.textContent = value;
+      };
+      set('stars', repo.stargazers_count.toLocaleString());
+      set('commits', commits != null ? commits.toLocaleString() : '—');
+      set('issues', repo.open_issues_count.toLocaleString());
+      set('license', repo.license?.spdx_id ?? '—');
+    }
+
+    if (langs) this._renderLanguageBar(langs);
+    if (contributors?.length) this._renderContributors(contributors);
+  }
+
+  _renderLanguageBar(langs) {
+    const el = this._overlay?.querySelector('[data-github="lang-bar"]');
+    if (!el) return;
+
+    const total = Object.values(langs).reduce((a, b) => a + b, 0);
+    const entries = Object.entries(langs).map(([lang, bytes]) => ({
+      lang,
+      pct: bytes / total * 100,
+      color: LANG_COLORS[lang] ?? '#8b949e',
+    }));
+
+    el.innerHTML = `
+      <div class="lang-bar">
+        ${entries.map(e => `<div class="lang-segment" style="width:${e.pct.toFixed(2)}%;background:${e.color}" title="${e.lang} ${e.pct.toFixed(1)}%"></div>`).join('')}
+      </div>
+      <div class="lang-legend">
+        ${entries.map(e => `
+          <div class="lang-legend-item">
+            <span class="lang-dot" style="background:${e.color}"></span>
+            <span class="lang-name">${e.lang}</span>
+            <span class="lang-pct">${e.pct.toFixed(1)}%</span>
+          </div>`).join('')}
+      </div>
+    `;
+  }
+
+_renderContributors(contributors) {
+    const el = this._overlay?.querySelector('[data-github="contributors"]');
+    if (!el) return;
+
+    const items = contributors.slice(0, 8).map(c => `
+      <a href="${c.html_url}" target="_blank" rel="noopener" class="contributor-item" title="${c.login}">
+        <img src="${c.avatar_url}&s=64" alt="${c.login}" class="contributor-avatar" loading="lazy">
+        <span class="contributor-info">
+          <span class="contributor-login">${c.login}</span>
+          <span class="contributor-count">${c.contributions.toLocaleString()}</span>
+        </span>
+      </a>
+    `).join('');
+
+    el.innerHTML = `<div class="contributors-list">${items}</div>`;
   }
 }
 

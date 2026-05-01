@@ -130,6 +130,14 @@
   "info.aboutMe.beta": "Beta Version",
   "info.aboutMe.open": "Open",
 
+  "info.github.title": "Open Source",
+  "info.github.stars": "Stars",
+  "info.github.commits": "Commits",
+  "info.github.issues": "Open Issues",
+  "info.github.license": "License",
+  "info.github.languages": "Languages",
+  "info.github.contributors": "Contributors",
+
   "footer.whatsNew": "What's new?",
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer1": "Non-definitive version, stuff can and will change.",

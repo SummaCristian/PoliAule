@@ -58,21 +58,35 @@ body.info-open .header-title-btn {
 /* ── Hero Section ───────────────────────────────────────────────────── */
 
 .info-hero {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding-bottom: 4rem;
+  padding-bottom: 2rem;
 }
 
 .info-hero-icon {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+
   user-select: none;
   -webkit-user-drag: none;
+
+  /* Base shape */
+  border-radius: 28%; /* slightly higher than your 22.5% */
+  corner-shape: superellipse;
+
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  /* iOS-like shadow stack */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 12px rgba(0, 0, 0, 0.08),
+    0 16px 28px rgba(0, 0, 0, 0.12);
+
+  position: relative;
 }
 
 .info-hero-title {
@@ -141,4 +155,33 @@ body.info-open .header-title-btn {
     animation-duration: 0.3s;
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
+}
+
+/* Body */
+
+.info-body strong {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.about-me-container {
+  display: flex;
+  flex-direction: row;
+  align-items: start;
+
+  gap: 1rem;
+}
+
+.about-me-photo {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  object-fit: cover;
+
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 12px rgba(0, 0, 0, 0.08),
+    0 16px 28px rgba(0, 0, 0, 0.12);
 }

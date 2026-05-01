@@ -118,6 +118,14 @@
   "detail.occupied": "Occupied",
   "detail.noData": "No schedule data available",
 
+  "info.body.intro": "<strong>PoliAule</strong> is a web app that helps students find available classrooms across <strong>Politecnico di Milano</strong> campuses.",
+  "info.aboutMe.parag2": "Like many of you, I often needed a free classroom for studying, group work, or filling gaps between classes. The official tools make this harder than it should be, requiring logins or checking rooms one by one...",
+  "info.body.parag1": "Built by students for students, <strong>PoliAule</strong> is a free, open-source project designed to make finding a place to study, collaborate, or take a break simple. Whether you need a quiet spot, a room with power outlets, or just want to check if your go-to space is free, <strong>PoliAule</strong> makes it quick and easy.",
+
+  "info.aboutMe.title": "About me",
+  "info.aboutMe.parag1": "Hi there! I'm <strong>Cristian Summa</strong>, a software engineer and <strong>Politecnico di Milano student</strong>.",
+  "info.aboutMe.parag3": "So I built <strong>PoliAule</strong>: a simple, user-friendly way to see available classrooms at a glance. The goal is straightforward: save you time and make campus life a bit easier.",
+
   "footer.whatsNew": "What's new?",
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer1": "Non-definitive version, stuff can and will change.",

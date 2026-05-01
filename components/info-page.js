@@ -1,3 +1,5 @@
+import { onLanguageSwitch, t } from '../i18n.js';
+
 const HASH = '#info';
 
 class InfoPage {
@@ -10,6 +12,7 @@ class InfoPage {
     this._badgeEl = null;
     this._isOpen = false;
     this._openedFromDetail = false;
+    this._showBadge = false;
   }
 
   init() {
@@ -40,6 +43,10 @@ class InfoPage {
     });
 
     window.addEventListener('hashchange', () => this._onHashChange());
+
+    onLanguageSwitch(() => {
+      if (this._isOpen) this._renderContent(this._showBadge);
+    });
 
     // If the splash is still present, dismissSplash() will call checkHash() after
     // the VT completes. Only open immediately if splash is already gone.
@@ -268,14 +275,36 @@ class InfoPage {
   }
 
   _renderContent(showBadge) {
+    this._showBadge = showBadge;
     const badgeText = this._badgeEl?.textContent ?? '';
     this._overlay.innerHTML = `
       <div class="info-page">
+        <!-- Hero section -->
         <div class="info-hero">
-          <img src="/favicons/main/logo.png" class="info-hero-icon" draggable="false" alt="">
+          <!-- Logo -->
+          <img src="/favicons/${showBadge ? 'beta' : 'main'}/apple-touch-icon.png" class="info-hero-icon" draggable="false" alt="">
+          <!-- Title -->
           <h1 class="info-hero-title">PoliAule</h1>
+          <!-- 'Beta' or 'Local' badge if necessary -->
           ${showBadge ? `<h4 class="info-hero-badge secondary">${badgeText}</h4>` : ''}
         </div>
+
+        <!-- Body content -->
+        <div class="info-body">
+          <p>${t('info.body.intro')}</p>
+          <p>${t('info.body.parag1')}</p>
+
+          <div class="about-me-section">
+            <h2>${t('info.aboutMe.title')}</h2>
+            <div class="about-me-container">
+              <img src="/assets/profile.jpg" alt="Profile picture of Cristian Summa" class="about-me-photo">
+              <p>${t('info.aboutMe.parag1')}</p>
+            </div>
+            <p>${t('info.aboutMe.parag2')}</p>
+            <p>${t('info.aboutMe.parag3')}</p>
+          </div>
+        </div>
+
       </div>
     `;
   }

@@ -20,6 +20,7 @@ import {
 
 import { initSearchTab, classroomsData as staticClassroomsData } from './search-classrooms-script.js';
 import { classroomDetail } from './components/classroom-detail.js';
+import { infoPage } from './components/info-page.js';
 
 import { initTimePickers } from './components/time-picker.js';
 import { initTimeRangeSlider } from './components/time-range-slider.js';
@@ -42,37 +43,77 @@ function dismissSplash() {
 
   const splashLogo = overlay.querySelector('.splash-logo');
   const realLogo = document.querySelector('.header-logo');
+  const isInfo = location.hash === '#info';
 
-  // FLIP: measure First (splash, centered) and Last (header) positions
-  const firstRect = splashLogo.getBoundingClientRect();
-  const lastRect = realLogo.getBoundingClientRect();
+  const revealHeader = () =>
+    document.querySelectorAll('.splash-header-item')
+      .forEach(el => el.classList.add('splash-revealed'));
 
-  // FLIP: center-to-center translation (transform-origin is center by default)
-  const dx = (lastRect.left + lastRect.width / 2) - (firstRect.left + firstRect.width / 2);
-  const dy = (lastRect.top + lastRect.height / 2) - (firstRect.top + firstRect.height / 2);
-  const scale = lastRect.height / firstRect.height;
+  if (document.startViewTransition) {
+    // --- View Transition path ---
+    splashLogo.style.viewTransitionName = 'splash-icon';
 
-  // Hide the real header logo so the flying one appears to be it
-  realLogo.style.opacity = '0';
+    if (isInfo) {
+      // Also name the header title/badge so they morph directly into the hero
+      const titleEl = document.querySelector('.header-title');
+      const badgeEl = document.getElementById('env-badge');
+      const tabbar  = document.querySelector('.tabbar');
+      if (titleEl) titleEl.style.viewTransitionName = 'info-title';
+      if (badgeEl && !badgeEl.hidden) {
+        badgeEl.style.lineHeight = '1';
+        badgeEl.style.viewTransitionName = 'info-badge';
+      }
+      if (tabbar) tabbar.style.viewTransitionName = 'classroom-nav';
 
-  // Allow interaction with the UI underneath while the logo is flying
-  overlay.style.pointerEvents = 'none';
+      const vt = document.startViewTransition(() => {
+        splashLogo.style.viewTransitionName = '';
+        if (titleEl) titleEl.style.viewTransitionName = '';
+        if (badgeEl) { badgeEl.style.lineHeight = ''; badgeEl.style.viewTransitionName = ''; }
+        if (tabbar)  tabbar.style.viewTransitionName = '';
 
-  // Force a style flush so the transition is active when we set the transform
-  splashLogo.classList.add('splash-logo-flying');
-  void splashLogo.offsetWidth;
+        overlay.remove();
+        revealHeader();
 
-  // Start everything simultaneously: logo flies, background fades, header reveals
-  splashLogo.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
-  overlay.classList.add('splash-hiding');
-  document.querySelectorAll('.splash-header-item')
-    .forEach(el => el.classList.add('splash-revealed'));
+        // Open info page in this same VT — no second transition needed
+        infoPage._applyOpenState('splash-icon');
+      });
 
-  // The moment the logo lands: restore the real header logo and remove the overlay
-  splashLogo.addEventListener('transitionend', () => {
-    realLogo.style.opacity = '';
-    overlay.remove();
-  }, { once: true });
+      vt.finished.then(() => infoPage._clearVtNames()).catch(() => infoPage._clearVtNames());
+    } else {
+      const vt = document.startViewTransition(() => {
+        splashLogo.style.viewTransitionName = '';
+        overlay.remove();
+        revealHeader();
+        realLogo.style.viewTransitionName = 'splash-icon';
+      });
+
+      const cleanup = () => { realLogo.style.viewTransitionName = ''; };
+      vt.finished.then(cleanup).catch(cleanup);
+    }
+  } else {
+    // --- FLIP fallback ---
+    const firstRect = splashLogo.getBoundingClientRect();
+    const lastRect  = realLogo.getBoundingClientRect();
+    const dx    = (lastRect.left + lastRect.width  / 2) - (firstRect.left + firstRect.width  / 2);
+    const dy    = (lastRect.top  + lastRect.height / 2) - (firstRect.top  + firstRect.height / 2);
+    const scale = lastRect.height / firstRect.height;
+
+    realLogo.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+
+    splashLogo.classList.add('splash-logo-flying');
+    void splashLogo.offsetWidth;
+
+    splashLogo.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+    overlay.classList.add('splash-hiding');
+    revealHeader();
+
+    splashLogo.addEventListener('transitionend', () => {
+      realLogo.style.opacity = '';
+      overlay.remove();
+      if (isInfo) infoPage.checkHash();
+    }, { once: true });
+  }
 }
 
 // ---------- THEME COLOR META TAGS ----------
@@ -299,6 +340,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyTranslations();
 
     initSettings();
+
+    // Init info page overlay immediately — no data dependency
+    infoPage.init();
 
     // Fetch occupancy data and classroom directory in parallel
     await Promise.all([

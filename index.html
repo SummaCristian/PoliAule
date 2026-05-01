@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="./components/settings.css" />
   <link rel="stylesheet" href="./components/search-classrooms.css" />
   <link rel="stylesheet" href="./components/classroom-detail.css" />
+  <link rel="stylesheet" href="./components/info-page.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -67,12 +68,14 @@
   <header class="header">
     <div class="header-top-line-container">
       <div class="header-title-container">
-        <img src="/favicons/main/logo.png" class="header-logo">
+        <button class="header-title-btn" id="info-trigger" aria-label="About PoliAule">
+          <img src="/favicons/main/logo.png" class="header-logo">
 
-        <div class="header-title-beta-container splash-header-item">
-          <h2 class="header-title">PoliAule</h2>
-          <h4 class="secondary" id="env-badge" hidden>Beta</h4>
-        </div>
+          <div class="header-title-beta-container splash-header-item">
+            <h2 class="header-title">PoliAule</h2>
+            <h4 class="secondary" id="env-badge" hidden>Beta</h4>
+          </div>
+        </button>
       </div>
 
       <div class="header-buttons-container splash-header-item">
@@ -276,6 +279,9 @@
 
     <!-- Classroom Detail Panel (sibling to tab-content divs, shown in-place) -->
     <div id="classroom-detail-overlay" hidden></div>
+
+    <!-- Info Page Panel (sibling to tab-content divs, shown in-place) -->
+    <div id="info-page-overlay" hidden></div>
 
   </div>
 

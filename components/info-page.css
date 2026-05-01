@@ -1,0 +1,144 @@
+/* ── Info Page Overlay ──────────────────────────────────────────────── */
+
+/* Sits inside .body-container at the same level as .tab-content divs.
+   Hidden by default (via the [hidden] attribute); shown as a flex column
+   that fills the remaining space when info-open class is on body. */
+
+#info-page-overlay:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: var(--background-color);
+
+  /* Fallback fade-in for browsers without View Transitions */
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  will-change: opacity;
+}
+
+#info-page-overlay.visible {
+  opacity: 1;
+}
+
+/* Hide tab contents and footer while the info page is open */
+body.info-open .tab-content {
+  visibility: hidden;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+body.info-open .footer {
+  visibility: hidden;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The logo+title button participates in the VT morph — hide it while open
+   so the large hero versions are the only visible copies. */
+body.info-open .header-title-btn {
+  visibility: hidden;
+}
+
+/* ── Info Page Layout ───────────────────────────────────────────────── */
+
+.info-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  padding: 0 1.5rem 2rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Hero Section ───────────────────────────────────────────────────── */
+
+.info-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-bottom: 4rem;
+}
+
+.info-hero-icon {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.info-hero-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0.25rem 0 0;
+  line-height: 1.1;
+
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  mix-blend-mode: multiply;
+}
+
+@media (prefers-color-scheme: dark) {
+  .info-hero-title {
+    mix-blend-mode: normal;
+  }
+}
+
+.info-hero-badge {
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ── View Transition animations ─────────────────────────────────────── */
+
+@supports (view-transition-name: none) {
+  #info-page-overlay {
+    transition: none;
+  }
+
+  ::view-transition-group(info-logo) {
+    animation-duration: 0.38s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-old(info-logo),
+  ::view-transition-new(info-logo) {
+    animation-duration: 0.38s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-group(info-title) {
+    animation-duration: 0.35s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-old(info-title),
+  ::view-transition-new(info-title) {
+    animation-duration: 0.35s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-group(info-badge) {
+    animation-duration: 0.3s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-old(info-badge),
+  ::view-transition-new(info-badge) {
+    animation-duration: 0.3s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}

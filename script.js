@@ -178,6 +178,9 @@ tabs.forEach((tab, index) => {
     const targetId = tab.dataset.target;
     showContent(targetId);
 
+    // Always scroll to top on tab change
+    window.scrollTo(0, 0);
+
     // Haptic feedback
     haptics.trigger(defaultPatterns.success)
 

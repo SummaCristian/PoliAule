@@ -315,28 +315,33 @@ class InfoPage {
 
         <!-- Body content -->
         <div class="info-body">
-          <div>
-            <p>${t('info.body.intro')}</p>
-            <p>${t('info.body.parag1')}</p>
-          </div>
+          <div class="info-intro">
+            <div class="info-section-text">
+              <p>${t('info.body.intro')}</p>
+              <p>${t('info.body.parag1')}</p>
+            </div>
 
-          <div class="badge-row">
-            <a href="https://poliaule.com" target="_blank" rel="noopener" class="info-badge">
+            <div class="badge-container">
+            <a href="https://poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--stable">
               <img src="/favicons/main/apple-touch-icon.png" alt="" draggable="false">
               <div class="badge-text">
-                <span class="top-text">${t('info.aboutMe.open')}</span>
+                <span class="top-text">poliaule.com</span>
                 <span class="bottom-text">${t('info.aboutMe.website')}</span>
+                <span class="badge-description">${t('info.badge.stableDesc') || 'The production version of PoliAule'}</span>
               </div>
             </a>
 
-            <a href="https://beta.poliaule.com" target="_blank" rel="noopener" class="info-badge">
+            <a href="https://beta.poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--beta">
               <img src="/favicons/beta/apple-touch-icon.png" alt="" draggable="false">
               <div class="badge-text">
-                <span class="top-text">${t('info.aboutMe.open')}</span>
+                <span class="top-text">beta.poliaule.com</span>
                 <span class="bottom-text">${t('info.aboutMe.beta')}</span>
+                <span class="badge-description">${t('info.badge.betaDesc') || 'The beta version of PoliAule'}</span>
+                <span class="badge-label">BETA</span>
               </div>
             </a>
 
+          </div>
           </div>
 
           <div class="info-two-col">

@@ -126,8 +126,10 @@
   "info.aboutMe.parag2": "Come molti di voi, spesso avevo bisogno di un'aula libera per studiare, lavorare in gruppo o riempire i buchi tra le mie lezioni. Gli strumenti ufficiali rendono questa ricerca più difficile di quanto dovrebbe essere, richiedendo accessi o controllando una a una le singole aule...",
   "info.aboutMe.parag3": "Quindi ho creato <strong>PoliAule</strong>: un modo semplice e intuitivo per vedere le aule disponibili a colpo d'occhio. L'obiettivo è chiaro: farti risparmiare tempo e rendere la vita in campus un po' più facile.",
   "info.aboutMe.github": "Vedi su",
-  "info.aboutMe.website": "Sito Principale",
-  "info.aboutMe.beta": "Versione Beta",
+  "info.aboutMe.website": "PoliAule",
+  "info.aboutMe.beta": "PoliAule Beta",
+  "info.badge.stableDesc": "Versione ufficiale pronta all'uso quotidiano.",
+  "info.badge.betaDesc": "Versione in anteprima con le ultime funzioni.",
   "info.aboutMe.open": "Apri",
 
   "info.github.title": "Open Source",

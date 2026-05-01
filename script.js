@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     classroomDetail.init(staticClassroomsData);
 
     // Setup the campus picker with the available ones
-    setupCampusPicker();
+    setupCampusPicker(staticClassroomsData);
     applyPreferredCampusIfEnabled();
     applyRememberLastCampusIfEnabled();
 

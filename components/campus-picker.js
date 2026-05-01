@@ -1,4 +1,3 @@
-import { classroomsData } from '../available-rooms-script.js';
 import { haptics, defaultPatterns } from './haptics.js';
 import { t } from '../i18n.js';
 
@@ -28,8 +27,8 @@ export function selectCampusById(id, animate = true) {
 }
 
 // Initializes the Campus picker, allowing to select only the options actually available
-export function setupCampusPicker() {
-  const campuses = classroomsData[0].campuses;
+export function setupCampusPicker(staticData) {
+  const campuses = staticData;
   const hiddenInput = document.getElementById('campus-picker');
   const container = document.getElementById('campus-chips');
 
@@ -38,37 +37,29 @@ export function setupCampusPicker() {
     document.dispatchEvent(new CustomEvent('campuschange', { detail: { id } }));
   }
 
-  const BOVISA_IDS = new Set(['MIB01', 'MIB02']);
-  const CITTA_STUDI_IDS = new Set(['MIA01', 'MIA06']);
-  const CITTA_STUDI_NAMES = { MIA01: 'Leonardo', MIA06: 'Colombo' };
-
   const available = campuses.filter(c => c.buildings.length > 0);
-  const bovisaCampuses = available.filter(c => BOVISA_IDS.has(c.id));
-  const cittaStudiCampuses = available.filter(c => CITTA_STUDI_IDS.has(c.id));
 
-  // Build sectioned rows
-  const milanoRow = document.createElement('div');
-  milanoRow.className = 'campus-chips-row';
+  // Group by city, then by group within each city
+  const cityMap = new Map(); // city → Map<group|null, campus[]>
+  for (const campus of available) {
+    if (!cityMap.has(campus.city)) cityMap.set(campus.city, new Map());
+    const groupKey = campus.group ?? null;
+    const cityGroups = cityMap.get(campus.city);
+    if (!cityGroups.has(groupKey)) cityGroups.set(groupKey, []);
+    cityGroups.get(groupKey).push(campus);
+  }
 
-  const otherRow = document.createElement('div');
-  otherRow.className = 'campus-chips-row';
-
-  const milanoSection = document.createElement('div');
-  milanoSection.className = 'campus-chips-section';
-  const milanoLabel = document.createElement('label');
-  milanoLabel.textContent = t('campus.milanLabel');
-  milanoLabel.dataset.i18n = 'campus.milanLabel';
-  milanoSection.appendChild(milanoLabel);
-  milanoSection.appendChild(milanoRow);
-  container.appendChild(milanoSection);
-
-  const otherSection = document.createElement('div');
-  otherSection.className = 'campus-chips-section';
-  const otherLabel = document.createElement('label');
-  otherLabel.textContent = t('campus.otherLabel');
-  otherLabel.dataset.i18n = 'campus.otherLabel';
-  otherSection.appendChild(otherLabel);
-  otherSection.appendChild(otherRow);
+  // Cities with at least one group chip get their own section; the rest go into "Other cities"
+  const mainCities = [];
+  const otherCampuses = [];
+  for (const [city, groups] of cityMap) {
+    const hasGroups = [...groups.keys()].some(k => k !== null);
+    if (hasGroups) {
+      mainCities.push({ city, groups });
+    } else {
+      for (const campusList of groups.values()) otherCampuses.push(...campusList);
+    }
+  }
 
   function deactivateAll() {
     container.querySelectorAll('.campus-chip').forEach(c => c.classList.remove('active'));
@@ -101,7 +92,7 @@ export function setupCampusPicker() {
     }
   }
 
-  function buildGroupChip(label, subCampuses, nameMap) {
+  function buildGroupChip(label, subCampuses) {
     const groupEl = document.createElement('div');
     groupEl.className = 'campus-chip campus-chip-group';
 
@@ -125,20 +116,17 @@ export function setupCampusPicker() {
     indicator.className = 'campus-subchip-indicator';
     subOptions.appendChild(indicator);
 
-    subCampuses.forEach(bc => {
-      const shortName = nameMap
-        ? (nameMap[bc.id] ?? bc.name)
-        : (bc.name.split(' - ')[1] ?? bc.name).replace(/^Via\s+/i, '');
+    subCampuses.forEach(campus => {
       const subChip = document.createElement('button');
       subChip.type = 'button';
       subChip.className = 'campus-subchip';
-      subChip.dataset.value = bc.id;
-      subChip.textContent = shortName;
+      subChip.dataset.value = campus.id;
+      subChip.textContent = campus.name;
 
       subChip.addEventListener('click', () => {
         groupEl.querySelectorAll('.campus-subchip').forEach(s => s.classList.remove('active'));
         subChip.classList.add('active');
-        setSelectedCampus(bc.id);
+        setSelectedCampus(campus.id);
         positionIndicator(subOptions, subChip, true);
         haptics.trigger(defaultPatterns.success);
       });
@@ -152,53 +140,68 @@ export function setupCampusPicker() {
     return groupEl;
   }
 
-  let cittaStudiInserted = false;
-  let bovisaInserted = false;
-  let firstChipInfo = null;
-
-  available.forEach(campus => {
-    const isMilano = campus.id.startsWith('MI');
-    const row = isMilano ? milanoRow : otherRow;
-
-    if (CITTA_STUDI_IDS.has(campus.id)) {
-      if (cittaStudiInserted) return;
-      cittaStudiInserted = true;
-
-      const groupEl = buildGroupChip('Città Studi', cittaStudiCampuses, CITTA_STUDI_NAMES);
-      row.appendChild(groupEl);
-      if (!firstChipInfo) firstChipInfo = { el: groupEl, isGroup: true };
-      return;
-    }
-
-    if (BOVISA_IDS.has(campus.id)) {
-      if (bovisaInserted) return;
-      bovisaInserted = true;
-
-      const groupEl = buildGroupChip('Bovisa', bovisaCampuses, null);
-      row.appendChild(groupEl);
-      if (!firstChipInfo) firstChipInfo = { el: groupEl, isGroup: true };
-      return;
-    }
-
+  function buildPlainChip(campus) {
     const chip = document.createElement('button');
     chip.type = 'button';
     chip.className = 'campus-chip';
     chip.dataset.value = campus.id;
     chip.textContent = campus.name;
-
     chip.addEventListener('click', () => {
       deactivateAll();
       chip.classList.add('active');
       setSelectedCampus(campus.id);
       haptics.trigger(defaultPatterns.success);
     });
+    return chip;
+  }
 
-    row.appendChild(chip);
-    if (!firstChipInfo) firstChipInfo = { el: chip, isGroup: false };
-  });
+  let firstChipInfo = null;
 
-  // Only show "Other cities" section if it has chips
-  if (otherRow.children.length > 0) {
+  for (const { city, groups } of mainCities) {
+    const row = document.createElement('div');
+    row.className = 'campus-chips-row';
+
+    const section = document.createElement('div');
+    section.className = 'campus-chips-section';
+    const label = document.createElement('label');
+    label.textContent = city;
+    section.appendChild(label);
+    section.appendChild(row);
+    container.appendChild(section);
+
+    for (const [groupName, groupCampuses] of groups) {
+      if (groupName !== null) {
+        const groupEl = buildGroupChip(groupName, groupCampuses);
+        row.appendChild(groupEl);
+        if (!firstChipInfo) firstChipInfo = { el: groupEl, isGroup: true };
+      } else {
+        for (const campus of groupCampuses) {
+          const chip = buildPlainChip(campus);
+          row.appendChild(chip);
+          if (!firstChipInfo) firstChipInfo = { el: chip, isGroup: false };
+        }
+      }
+    }
+  }
+
+  if (otherCampuses.length > 0) {
+    const otherRow = document.createElement('div');
+    otherRow.className = 'campus-chips-row';
+
+    const otherSection = document.createElement('div');
+    otherSection.className = 'campus-chips-section';
+    const otherLabel = document.createElement('label');
+    otherLabel.textContent = t('campus.otherLabel');
+    otherLabel.dataset.i18n = 'campus.otherLabel';
+    otherSection.appendChild(otherLabel);
+    otherSection.appendChild(otherRow);
+
+    for (const campus of otherCampuses) {
+      const chip = buildPlainChip(campus);
+      otherRow.appendChild(chip);
+      if (!firstChipInfo) firstChipInfo = { el: chip, isGroup: false };
+    }
+
     container.appendChild(otherSection);
   }
 

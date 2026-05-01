@@ -21,24 +21,14 @@ const FEATURE_ICONS = {
   223: { icon: 'video_call', key: 'features.videoconf' },
 };
 
-// Mirror the campus naming logic from campus-picker.js / search-classrooms-script.js
-const CITTA_STUDI_IDS = new Set(['MIA01', 'MIA06']);
-const BOVISA_IDS = new Set(['MIB01', 'MIB02']);
-const CITTA_STUDI_NAMES = { MIA01: 'Leonardo', MIA06: 'Colombo' };
-
-function getCampusDisplayName(campus) {
-  if (CITTA_STUDI_IDS.has(campus.id)) return CITTA_STUDI_NAMES[campus.id] ?? campus.name;
-  if (BOVISA_IDS.has(campus.id))
-    return (campus.name.split(' - ')[1] ?? campus.name).replace(/^Via\s+/i, '');
-  return campus.name;
-}
 
 function timeToMinutes(time) {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;
 }
 
-const HASH_PATTERN = /^#classroom\/(\d+)$/;
+const HASH_PATTERN    = /^#classroom\/([^\/]+)\/(.+)$/;
+const HASH_PATTERN_V1 = /^#classroom\/(\d+)$/;
 
 // ---------- CLASS ----------
 
@@ -51,6 +41,7 @@ class ClassroomDetail {
     this._backBtn = null;
     this._staticData = null;       // classrooms.json hierarchy
     this._flatIndex = null;       // Map<id, { classroom, building, campus }>
+    this._slugIndex = null;       // Map<"campus-slug\x00name", { classroom, building, campus }>
     this._pendingTrigger = null;   // { nameEl } stored by click handler before hashchange fires
     this._openTrigger = null;   // same, kept for reverse morph on close
     this._openedViaPushState = false;
@@ -128,26 +119,39 @@ class ClassroomDetail {
 
       this._pendingTrigger = { nameEl, statusEl, queryContext, featureIconEls };
       this._openedViaPushState = true;
-      location.hash = '#classroom/' + id;
+      this._buildFlatIndex();
+      const _entry = this._flatIndex?.get(id);
+      location.hash = _entry
+        ? '#classroom/' + _entry.campus.slug + '/' + encodeURIComponent(_entry.classroom.name)
+        : '#classroom/' + id;
     });
 
     // Handle hash that's already in the URL on page load (hashchange doesn't fire on load)
-    const match = location.hash.match(HASH_PATTERN);
-    if (match) {
-      this._openedViaPushState = false;
-      this._doOpen(parseInt(match[1]), null);
+    if (HASH_PATTERN.test(location.hash) || HASH_PATTERN_V1.test(location.hash)) {
+      this._buildFlatIndex();
+      const id = this._resolveHashToId(location.hash);
+      if (id !== null) {
+        this._openedViaPushState = false;
+        this._doOpen(id, null);
+      }
     }
   }
 
   // ---------- HASH ROUTING ----------
 
   _onHashChange() {
-    const match = location.hash.match(HASH_PATTERN);
-    if (match) {
-      const id = parseInt(match[1]);
-      const pending = this._pendingTrigger;
-      this._pendingTrigger = null;
-      this._doOpen(id, pending);
+    const isClassroomHash = HASH_PATTERN.test(location.hash) || HASH_PATTERN_V1.test(location.hash);
+    if (isClassroomHash) {
+      this._buildFlatIndex();
+      const id = this._resolveHashToId(location.hash);
+      if (id !== null) {
+        const pending = this._pendingTrigger;
+        this._pendingTrigger = null;
+        this._doOpen(id, pending);
+      } else {
+        this._pendingTrigger = null;
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
     } else if (this._currentId !== null) {
       if (location.hash === '#info') {
         this._silentClose();
@@ -380,13 +384,34 @@ class ClassroomDetail {
   _buildFlatIndex() {
     if (this._flatIndex) return;
     this._flatIndex = new Map();
+    this._slugIndex = new Map();
     for (const campus of (this._staticData ?? [])) {
       for (const building of campus.buildings) {
         for (const classroom of building.classrooms) {
-          this._flatIndex.set(classroom.id, { classroom, building, campus });
+          const entry = { classroom, building, campus };
+          this._flatIndex.set(classroom.id, entry);
+          this._slugIndex.set(campus.slug + '\x00' + classroom.name, entry);
         }
       }
     }
+  }
+
+  _resolveHashToId(hash) {
+    let match = hash.match(HASH_PATTERN);
+    if (match) {
+      const slug = match[1];
+      let name;
+      try { name = decodeURIComponent(match[2]); }
+      catch { return null; }
+      const entry = this._slugIndex?.get(slug + '\x00' + name);
+      return entry ? entry.classroom.id : null;
+    }
+    match = hash.match(HASH_PATTERN_V1);
+    if (match) {
+      const id = parseInt(match[1], 10);
+      return this._flatIndex?.has(id) ? id : null;
+    }
+    return null;
   }
 
   // ---------- RENDER: STATIC CONTENT ----------
@@ -432,7 +457,7 @@ class ClassroomDetail {
           ${statusHtml}
         </div>
         <p class="detail-subtitle secondary">
-          ${t('building.prefix')} ${building.altName ? `${building.altName} (${building.name})` : building.name} &middot; ${getCampusDisplayName(campus)}
+          ${t('building.prefix')} ${building.altName ? `${building.altName} (${building.name})` : building.name} &middot; ${campus.name}
         </p>
         <div class="detail-stats">
           <div class="detail-stat">

@@ -314,6 +314,45 @@ class InfoPage {
 
       </div>
     `;
+
+    // Trigger animations when the about-me section becomes visible
+    const aboutMeSection = this._overlay.querySelector('.about-me-section');
+    const bubblesContainer = this._overlay.querySelector('.about-me-container');
+    
+    if (aboutMeSection && bubblesContainer) {
+      // 1. Measure final height to reserve space
+      // We temporarily "force" the final state to measure it
+      const bubbles = bubblesContainer.querySelector('.about-me-bubbles');
+      const allBubbles = bubbles.querySelectorAll('.message-bubble');
+      
+      // Save current styles
+      const originalSectionStyle = aboutMeSection.style.cssText;
+      
+      // Apply final state styles for measurement
+      allBubbles.forEach(b => {
+        b.style.maxHeight = '500px';
+        b.style.paddingTop = '0.8rem';
+        b.style.paddingBottom = '0.8rem';
+        b.style.opacity = '1';
+      });
+      
+      const finalHeight = aboutMeSection.offsetHeight;
+      
+      // Restore initial state and set the reserved height
+      allBubbles.forEach(b => b.style.cssText = '');
+      aboutMeSection.style.minHeight = `${finalHeight}px`;
+
+      // 2. Setup observer
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+      observer.observe(aboutMeSection);
+    }
   }
 }
 

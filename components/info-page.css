@@ -159,6 +159,14 @@ body.info-open .header-title-btn {
 
 /* Body */
 
+.info-body {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
 .info-body strong {
   background: var(--accent-gradient);
   -webkit-background-clip: text;
@@ -166,22 +174,170 @@ body.info-open .header-title-btn {
   background-clip: text;
 }
 
+.about-me-section {
+  width: 100%;
+  margin-top: 2rem;
+}
+
+.about-me-section h2 {
+  text-align: center;
+}
+
 .about-me-container {
   display: flex;
   flex-direction: row;
-  align-items: start;
-
-  gap: 1rem;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+  width: 100%;
 }
 
 .about-me-photo {
-  width: 4rem;
-  height: 4rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
+  margin-bottom: 2px;
 
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.04),
-    0 6px 12px rgba(0, 0, 0, 0.08),
-    0 16px 28px rgba(0, 0, 0, 0.12);
+    0 4px 8px rgba(0, 0, 0, 0.08);
+
+  /* Animation: pop in with the first message */
+  opacity: 0;
+  transform: scale(0);
+  animation: photo-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.1s;
+}
+
+@keyframes photo-pop-in {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.about-me-bubbles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  flex: 1;
+}
+
+.message-bubble {
+  background-color: #e1e1e3;
+  color: #000;
+  padding: 0 0.9rem; /* Vertically collapsed by default */
+  border-radius: 1.15rem;
+  max-width: 75%;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-align: left;
+  margin: 0;
+  position: relative;
+  width: fit-content;
+
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+
+  /* Animation: pop in and expand height */
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transform: translateX(-20px) translateY(10px) scale(0.8);
+  transform-origin: left bottom;
+  animation: message-pop-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Typing indicator specifics */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 2.2rem;
+  padding: 0 0.8rem !important;
+  margin-bottom: 3px;
+  animation: typing-indicator-cycle 5s ease-in-out forwards;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  background-color: #939399;
+  border-radius: 50%;
+  display: inline-block;
+  animation: dot-jump 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-jump {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-5px); }
+}
+
+/* Cycle typing indicator visibility smoothly */
+@keyframes typing-indicator-cycle {
+  /* Message 1 typing phase */
+  0%   { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; }
+  4%   { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  12%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  16%  { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; } /* M1 arrives at 0.8s */
+
+  /* Message 2 typing phase */
+  28%  { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; }
+  32%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  42%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  46%  { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; } /* M2 arrives at 2.3s */
+
+  /* Message 3 typing phase */
+  58%  { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; }
+  62%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  72%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  76%  { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; } /* M3 arrives at 3.8s */
+
+  100% { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; }
+}
+
+@keyframes message-pop-in {
+  0% {
+    opacity: 0;
+    max-height: 0;
+    transform: translateX(-20px) translateY(10px) scale(0.8);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  100% {
+    opacity: 1;
+    max-height: 500px; /* Safe for very long messages on small screens */
+    transform: translateX(0) translateY(0) scale(1);
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+  }
+}
+
+.message-bubble:nth-child(1) { animation-delay: 0.8s; }
+.message-bubble:nth-child(2) { animation-delay: 2.3s; }
+.message-bubble:nth-child(3) { animation-delay: 3.8s; }
+
+/* iMessage-like stacking logic for corners */
+.message-bubble:not(:nth-last-child(2)) { /* Skip the typing indicator and the last message */
+  border-bottom-left-radius: 0.25rem;
+}
+
+.message-bubble:not(:first-child) {
+  border-top-left-radius: 0.25rem;
+}
+
+/* Dark mode for bubbles */
+@media (prefers-color-scheme: dark) {
+  .message-bubble {
+    background-color: #323235;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.05);
+  }
 }

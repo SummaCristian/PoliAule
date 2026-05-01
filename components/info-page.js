@@ -297,11 +297,18 @@ class InfoPage {
           <div class="about-me-section">
             <h2>${t('info.aboutMe.title')}</h2>
             <div class="about-me-container">
-              <img src="/assets/profile.jpg" alt="Profile picture of Cristian Summa" class="about-me-photo">
-              <p>${t('info.aboutMe.parag1')}</p>
+              <img src="/assets/profile.jpg" alt="Profile picture of Cristian Summa" class="about-me-photo" draggable="false">
+              <div class="about-me-bubbles">
+                <p class="message-bubble">${t('info.aboutMe.parag1')}</p>
+                <p class="message-bubble">${t('info.aboutMe.parag2')}</p>
+                <p class="message-bubble">${t('info.aboutMe.parag3')}</p>
+                <div class="typing-indicator message-bubble">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
             </div>
-            <p>${t('info.aboutMe.parag2')}</p>
-            <p>${t('info.aboutMe.parag3')}</p>
           </div>
         </div>
 

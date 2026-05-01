@@ -30,6 +30,7 @@ class InfoPage {
     this._openedFromDetail = false;
     this._showBadge = false;
     this._cachedStats = null;
+    this._savedScrollPos = 0;
   }
 
   init() {
@@ -130,6 +131,9 @@ class InfoPage {
     if (!this._overlay) return;
     this._isOpen = true;
 
+    // Save scroll position for when we return
+    this._savedScrollPos = window.scrollY;
+
     const logoEl = this._logoEl;
     const titleEl = this._titleEl;
     const badgeEl = this._badgeEl?.hidden === false ? this._badgeEl : null;
@@ -167,6 +171,9 @@ class InfoPage {
           if (!fromDetail) this._backBtn.style.viewTransitionName = 'classroom-nav';
         }
 
+        // Reset scroll for the new view
+        window.scrollTo(0, 0);
+
         const heroIcon = this._overlay.querySelector('.info-hero-icon');
         const heroTitle = this._overlay.querySelector('.info-hero-title');
         const heroBadge = this._overlay.querySelector('.info-hero-badge');
@@ -183,6 +190,9 @@ class InfoPage {
       this._renderContent(showBadge);
       this._overlay.classList.add('visible');
       if (this._backBtn) this._backBtn.removeAttribute('hidden');
+
+      // Reset scroll for the new view
+      window.scrollTo(0, 0);
     }
   }
 
@@ -234,6 +244,9 @@ class InfoPage {
           badgeEl.style.lineHeight = '1'; // override line-height: 0 so VT has a non-zero bounding box
           badgeEl.style.viewTransitionName = 'info-badge';
         }
+
+        // Restore scroll position so VT can morph back to the correct spot
+        window.scrollTo(0, this._savedScrollPos);
       });
 
       vt.finished.then(cleanup).catch(cleanup);

@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-05-01T06:29:28.800250",
+  "generated_at": "2026-05-01T22:48:17.654102",
   "date": "20260506",
   "campuses": [
     {
-      "name": "Milano Leonardo - Città Studi",
+      "name": "Leonardo",
       "id": "MIA01",
       "lat": 45.4787,
       "long": 9.228,
@@ -6927,7 +6927,7 @@
       ]
     },
     {
-      "name": "Milano Via Colombo",
+      "name": "Colombo",
       "id": "MIA06",
       "lat": 45.4719,
       "buildings": [
@@ -7112,7 +7112,7 @@
       ]
     },
     {
-      "name": "Milano Bovisa - Via Durando",
+      "name": "Durando",
       "id": "MIB02",
       "lat": 45.5044,
       "buildings": [
@@ -9298,7 +9298,7 @@
       ]
     },
     {
-      "name": "Milano Bovisa - Via La Masa",
+      "name": "La Masa",
       "id": "MIB01",
       "lat": 45.5029,
       "buildings": [

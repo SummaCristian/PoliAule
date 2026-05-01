@@ -390,7 +390,7 @@ class ClassroomDetail {
         for (const classroom of building.classrooms) {
           const entry = { classroom, building, campus };
           this._flatIndex.set(classroom.id, entry);
-          this._slugIndex.set(campus.slug + '\x00' + classroom.name, entry);
+          this._slugIndex.set(campus.slug + '\x00' + classroom.name.toLowerCase(), entry);
         }
       }
     }
@@ -403,7 +403,7 @@ class ClassroomDetail {
       let name;
       try { name = decodeURIComponent(match[2]); }
       catch { return null; }
-      const entry = this._slugIndex?.get(slug + '\x00' + name);
+      const entry = this._slugIndex?.get(slug.toLowerCase() + '\x00' + name.toLowerCase());
       return entry ? entry.classroom.id : null;
     }
     match = hash.match(HASH_PATTERN_V1);

@@ -125,6 +125,10 @@
   "info.aboutMe.title": "About me",
   "info.aboutMe.parag1": "Hi there! I'm <strong>Cristian Summa</strong>, a software engineer and <strong>Politecnico di Milano student</strong>.",
   "info.aboutMe.parag3": "So I built <strong>PoliAule</strong>: a simple, user-friendly way to see available classrooms at a glance. The goal is straightforward: save you time and make campus life a bit easier.",
+  "info.aboutMe.github": "View on",
+  "info.aboutMe.website": "Main Website",
+  "info.aboutMe.beta": "Beta Version",
+  "info.aboutMe.open": "Open",
 
   "footer.whatsNew": "What's new?",
   "footer.checkOnGitHub": "Check on GitHub",

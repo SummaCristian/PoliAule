@@ -306,7 +306,7 @@ class InfoPage {
         <!-- Hero section -->
         <div class="info-hero">
           <!-- Logo -->
-          <img src="/favicons/${showBadge ? 'beta' : 'main'}/apple-touch-icon.png" class="info-hero-icon" draggable="false" alt="">
+          <img src="/favicons/${showBadge ? 'beta' : 'main'}/icon.png" class="info-hero-icon" draggable="false" alt="">
           <!-- Title -->
           <h1 class="info-hero-title">PoliAule</h1>
           <!-- 'Beta' or 'Local' badge if necessary -->
@@ -323,7 +323,7 @@ class InfoPage {
 
             <div class="badge-container">
             <a href="https://poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--stable">
-              <img src="/favicons/main/apple-touch-icon.png" alt="" draggable="false">
+              <img src="/favicons/main/icon.png" alt="" draggable="false">
               <div class="badge-text">
                 <span class="top-text">poliaule.com</span>
                 <span class="bottom-text">${t('info.aboutMe.website')}</span>
@@ -332,7 +332,7 @@ class InfoPage {
             </a>
 
             <a href="https://beta.poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--beta">
-              <img src="/favicons/beta/apple-touch-icon.png" alt="" draggable="false">
+              <img src="/favicons/beta/icon.png" alt="" draggable="false">
               <div class="badge-text">
                 <span class="top-text">beta.poliaule.com</span>
                 <span class="bottom-text">${t('info.aboutMe.beta')}</span>

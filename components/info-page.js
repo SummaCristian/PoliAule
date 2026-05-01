@@ -9,6 +9,7 @@ class InfoPage {
     this._titleEl = null;
     this._badgeEl = null;
     this._isOpen = false;
+    this._openedFromDetail = false;
   }
 
   init() {
@@ -23,12 +24,19 @@ class InfoPage {
       location.hash = HASH;
     });
 
-    // classroom-detail's back-btn listener calls history.replaceState (no hashchange),
-    // so we need our own listener to directly close when we're the active page.
-    this._backBtn?.addEventListener('click', () => {
+    // Use stopImmediatePropagation to prevent classroomDetail's listener (on the same button)
+    // from also firing when info is open — that would trigger a second concurrent VT.
+    this._backBtn?.addEventListener('click', (e) => {
       if (!this._isOpen) return;
-      history.replaceState(null, '', window.location.pathname + window.location.search);
-      this._doClose();
+      e.stopImmediatePropagation();
+      if (this._openedFromDetail) {
+        // Go back to the classroom hash; hashchange will trigger _silentClose() here
+        // and classroomDetail._onHashChange() will run its own VT to reopen the detail.
+        history.back();
+      } else {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        this._doClose();
+      }
     });
 
     window.addEventListener('hashchange', () => this._onHashChange());
@@ -50,7 +58,14 @@ class InfoPage {
     if (location.hash === HASH) {
       if (!this._isOpen) this._doOpen();
     } else if (this._isOpen) {
-      this._doClose();
+      if (/^#classroom\//.test(location.hash)) {
+        // Just update state — classroomDetail._doOpen() will incorporate the info close
+        // into its own VT (hero → header logo morph). Don't touch the DOM here.
+        this._isOpen = false;
+        this._openedFromDetail = false;
+      } else {
+        this._doClose();
+      }
     }
   }
 
@@ -88,9 +103,13 @@ class InfoPage {
     const titleEl = this._titleEl;
     const badgeEl = this._badgeEl?.hidden === false ? this._badgeEl : null;
     const showBadge = !!badgeEl;
+    // When navigating from the detail page, the back button is already visible and
+    // the tabbar is already hidden — skip the classroom-nav morph to avoid conflicting VTs.
+    const fromDetail = this._backBtn != null && !this._backBtn.hidden;
+    this._openedFromDetail = fromDetail;
 
     if (document.startViewTransition && this._tabbar) {
-      this._tabbar.style.viewTransitionName = 'classroom-nav';
+      if (!fromDetail) this._tabbar.style.viewTransitionName = 'classroom-nav';
       if (logoEl) logoEl.style.viewTransitionName = 'info-logo';
       if (titleEl) titleEl.style.viewTransitionName = 'info-title';
       if (badgeEl) {
@@ -99,7 +118,7 @@ class InfoPage {
       }
 
       const vt = document.startViewTransition(() => {
-        this._tabbar.style.viewTransitionName = '';
+        if (!fromDetail) this._tabbar.style.viewTransitionName = '';
         if (logoEl) logoEl.style.viewTransitionName = '';
         if (titleEl) titleEl.style.viewTransitionName = '';
         if (badgeEl) {
@@ -114,7 +133,7 @@ class InfoPage {
         this._overlay.classList.add('visible');
         if (this._backBtn) {
           this._backBtn.removeAttribute('hidden');
-          this._backBtn.style.viewTransitionName = 'classroom-nav';
+          if (!fromDetail) this._backBtn.style.viewTransitionName = 'classroom-nav';
         }
 
         const heroIcon = this._overlay.querySelector('.info-hero-icon');
@@ -199,6 +218,42 @@ class InfoPage {
       this._overlay.addEventListener('transitionend', hide, { once: true });
       setTimeout(hide, 300);
     }
+  }
+
+  // Called by classroomDetail._doOpen() BEFORE the VT snapshot (OLD state):
+  // names the info hero elements so they're captured for the morph.
+  _prepareReturnVT() {
+    const heroIcon  = this._overlay?.querySelector('.info-hero-icon');
+    const heroTitle = this._overlay?.querySelector('.info-hero-title');
+    const heroBadge = this._overlay?.querySelector('.info-hero-badge');
+    if (heroIcon)  heroIcon.style.viewTransitionName  = 'info-logo';
+    if (heroTitle) heroTitle.style.viewTransitionName = 'info-title';
+    if (heroBadge) heroBadge.style.viewTransitionName = 'info-badge';
+  }
+
+  // Called by classroomDetail._doOpen() INSIDE the VT callback (NEW state):
+  // closes the info overlay and names the header elements as morph targets.
+  _applyReturnVT() {
+    document.body.classList.remove('info-open');
+    if (this._overlay) {
+      this._overlay.setAttribute('hidden', '');
+      this._overlay.classList.remove('visible');
+      this._overlay.innerHTML = '';
+    }
+    if (this._logoEl)  this._logoEl.style.viewTransitionName  = 'info-logo';
+    if (this._titleEl) this._titleEl.style.viewTransitionName = 'info-title';
+    const badgeEl = this._badgeEl?.hidden === false ? this._badgeEl : null;
+    if (badgeEl) {
+      badgeEl.style.lineHeight = '1';
+      badgeEl.style.viewTransitionName = 'info-badge';
+    }
+  }
+
+  // Called by classroomDetail._doOpen() AFTER the VT finishes: clears header VT names.
+  _cleanupReturnVT() {
+    if (this._logoEl)  this._logoEl.style.viewTransitionName  = '';
+    if (this._titleEl) this._titleEl.style.viewTransitionName = '';
+    if (this._badgeEl) { this._badgeEl.style.lineHeight = ''; this._badgeEl.style.viewTransitionName = ''; }
   }
 
   _clearVtNames() {

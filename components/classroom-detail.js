@@ -2,6 +2,7 @@ import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow } fro
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { haptics, defaultPatterns } from './haptics.js';
 import { createTimeFormatter } from '../utils/time-format.js';
+import { infoPage } from './info-page.js';
 
 function minutesToTimeDisplay(minutes) {
   const d = new Date();
@@ -148,8 +149,25 @@ class ClassroomDetail {
       this._pendingTrigger = null;
       this._doOpen(id, pending);
     } else if (this._currentId !== null) {
-      this._doClose();
+      if (location.hash === '#info') {
+        this._silentClose();
+      } else {
+        this._doClose();
+      }
     }
+  }
+
+  _silentClose() {
+    if (!this._overlay || this._overlay.hidden) return;
+    this._currentId = null;
+    clearInterval(this._nowTimer);
+    document.body.classList.remove('detail-open');
+    // Leave tabbar.detail-open and backBtn visibility intact — info page takes over both
+    this._overlay.setAttribute('hidden', '');
+    this._overlay.classList.remove('visible');
+    this._overlay.innerHTML = '';
+    this._openTrigger = null;
+    this._queryContext = null;
   }
 
   // ---------- OPEN ----------
@@ -170,11 +188,19 @@ class ClassroomDetail {
 
     const nameEl = pending?.nameEl ?? null;
     const statusEl = pending?.statusEl ?? null;
+    // When returning from info page, tabbar is already hidden and backBtn already visible —
+    // skip the classroom-nav morph (same pattern as infoPage's fromDetail detection).
+    const fromInfo = !!(this._backBtn && !this._backBtn.hidden);
 
     if (document.startViewTransition && this._tabbar) {
       // -- OLD state setup (before VT snapshot) --
-      // Tabbar morphs into the back button (both live in the header, so it's a clean in-place swap)
-      this._tabbar.style.viewTransitionName = 'classroom-nav';
+      if (fromInfo) {
+        // Info overlay is still visible — name its hero elements so they morph into the header.
+        infoPage._prepareReturnVT();
+      } else {
+        // Tabbar morphs into the back button (both live in the header, so it's a clean in-place swap)
+        this._tabbar.style.viewTransitionName = 'classroom-nav';
+      }
       // Room name morphs into the overlay title
       if (nameEl) nameEl.style.viewTransitionName = 'classroom-detail-name';
       if (statusEl) statusEl.style.viewTransitionName = 'classroom-status';
@@ -186,8 +212,13 @@ class ClassroomDetail {
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
-        this._tabbar.style.viewTransitionName = '';
-        this._tabbar.classList.add('detail-open');
+        if (fromInfo) {
+          // Close info overlay and name header elements as NEW state morph targets.
+          infoPage._applyReturnVT();
+        } else {
+          this._tabbar.style.viewTransitionName = '';
+          this._tabbar.classList.add('detail-open');
+        }
         if (nameEl) nameEl.style.viewTransitionName = '';
         if (statusEl) statusEl.style.viewTransitionName = '';
         for (const el of featureIconEls) el.style.viewTransitionName = '';
@@ -205,7 +236,7 @@ class ClassroomDetail {
         // Back button in the header is the NEW state destination for classroom-nav
         const titleEl = this._overlay.querySelector('.detail-title');
         const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
-        if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
+        if (!fromInfo && this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
         if (titleEl) titleEl.style.viewTransitionName = 'classroom-detail-name';
         if (detailStatusEl) detailStatusEl.style.viewTransitionName = 'classroom-status';
         // Morph icon → icon inside chip (same size both ends → clean positional move)
@@ -225,8 +256,7 @@ class ClassroomDetail {
       // when the VT tears down its pseudo-elements.
       this._openAnimationFinished = vt.finished.catch(() => {});
 
-      vt.finished.then(() => {
-        // Clean up — VT names must be cleared after the animation
+      const cleanup = () => {
         this._tabbar.style.viewTransitionName = '';
         if (nameEl) nameEl.style.viewTransitionName = '';
         if (statusEl) statusEl.style.viewTransitionName = '';
@@ -238,21 +268,19 @@ class ClassroomDetail {
         this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
           el.style.viewTransitionName = '';
         });
-      }).catch(() => {
-        this._tabbar.style.viewTransitionName = '';
-        if (nameEl) nameEl.style.viewTransitionName = '';
-        if (statusEl) statusEl.style.viewTransitionName = '';
-        if (this._backBtn) this._backBtn.style.viewTransitionName = '';
-        this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
-          el.style.viewTransitionName = '';
-        });
-      });
+        if (fromInfo) infoPage._cleanupReturnVT();
+      };
+      vt.finished.then(cleanup).catch(cleanup);
     } else {
       // Fallback: show overlay, swap tabbar for back button without animation
+      if (fromInfo) {
+        infoPage._applyReturnVT();
+      } else {
+        if (this._tabbar) this._tabbar.classList.add('detail-open');
+      }
       document.body.classList.add('detail-open');
       this._overlay.removeAttribute('hidden');
       this._renderContent(entry);
-      if (this._tabbar) this._tabbar.classList.add('detail-open');
       if (this._backBtn) this._backBtn.removeAttribute('hidden');
       requestAnimationFrame(() => {
         this._overlay.classList.add('visible');

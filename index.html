@@ -13,25 +13,27 @@
   <meta name="theme-color" content="#1E1E1E" media="(prefers-color-scheme: dark)">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/favicons/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg" />
-  <link rel="shortcut icon" href="/favicons/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="/favicons/main/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicons/main/favicon.svg" />
+  <link rel="shortcut icon" href="/favicons/main/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/main/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-title" content="PoliAule" />
-  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="manifest" href="/favicons/main/site.webmanifest" />
 
   <!-- Preload the logo to improve loading times -->
-  <link rel="preload" as="image" href="/favicons/logo.png">
+  <link rel="preload" as="image" href="/favicons/main/logo.png">
 
   <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
+  <link rel="stylesheet" href="./components/time-range-slider.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
   <link rel="stylesheet" href="./components/campus-picker.css" />
   <link rel="stylesheet" href="./components/settings.css" />
   <link rel="stylesheet" href="./components/search-classrooms.css" />
   <link rel="stylesheet" href="./components/classroom-detail.css" />
+  <link rel="stylesheet" href="./components/info-page.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -44,7 +46,6 @@
   <script type="module" src="available-rooms-script.js" defer></script>
   <script type="module" src="./components/popover.js" defer></script>
   <script type="module" src="./components/haptics.js" defer></script>
-  <script type="module" src="./components/time-picker.js" defer></script>
   <script type="module" src="./components/classroom-list.js" defer></script>
 
 </head>
@@ -52,7 +53,7 @@
 <body>
   <!-- Splash Screen -->
   <div id="splash-overlay" class="splash-overlay" aria-hidden="true">
-    <img src="/favicons/logo.png" class="splash-logo" alt="" draggable="false" />
+    <img src="/favicons/main/logo.png" class="splash-logo" alt="" draggable="false" />
     <span class="splash-loading-label">Loading</span>
   </div>
 
@@ -67,12 +68,14 @@
   <header class="header">
     <div class="header-top-line-container">
       <div class="header-title-container">
-        <img src="/favicons/logo.png" class="header-logo">
+        <button class="header-title-btn" id="info-trigger" aria-label="About PoliAule">
+          <img src="/favicons/main/logo.png" class="header-logo">
 
-        <div class="header-title-beta-container splash-header-item">
-          <h2 class="header-title">PoliAule</h2>
-          <h4 class="secondary">Beta</h4>
-        </div>
+          <div class="header-title-beta-container splash-header-item">
+            <h2 class="header-title">PoliAule</h2>
+            <h4 class="secondary" id="env-badge" hidden>Beta</h4>
+          </div>
+        </button>
       </div>
 
       <div class="header-buttons-container splash-header-item">
@@ -277,28 +280,32 @@
     <!-- Classroom Detail Panel (sibling to tab-content divs, shown in-place) -->
     <div id="classroom-detail-overlay" hidden></div>
 
+    <!-- Info Page Panel (sibling to tab-content divs, shown in-place) -->
+    <div id="info-page-overlay" hidden></div>
+
   </div>
 
   <footer class="footer">
     <button class="transparent-button version-info-button" data-popover="version-info-popover">
-      <label class="secondary">Version 0.8.1 (beta)</label>
+      <label class="secondary">Version 0.9.0 (beta)</label>
     </button>
     <div id="version-info-popover" class="popover">
       <div class="arrow" data-arrow></div>
 
-      <img src="/favicons/logo.png" class="changelog-logo" />
-      <h1 class="popover-title">Version 0.8.1 (Beta)</h1>
+      <img src="/favicons/main/logo.png" class="changelog-logo" />
+      <h1 class="popover-title">Version 0.9.0 (Beta)</h1>
       <div class="changelog-container">
         <h2 class="popover-subtitle" data-i18n="footer.whatsNew">What's new?</h2>
 
         <ul>
-          <li>Added an option to quickly switch between the 'From' and 'To' time picker modals on mobile</li>
-          <li>Added the <strong>Search</strong> Tab!<br>You can now search for a specific classroom's details both navigating through the campuses and buildings and via a search bar</li>
-          <li>Added a splash screen to make page load smoother</li>
-          <li>Added the <strong>classroom details page</strong>!<br>Here you will find all the details of that classroom, including a picture, the number of seats, the features available and the full weekly schedule fetched by PoliAule!</li>
-          <li>Added a setting to choose which Tab to show on startup</li>
-
-          <li>(0.8.1) Fixed a bug with time pickers</li>
+          <li>Redesigned the availability timeline in Available classroom results</li>
+          <li>Redesigned the Time Pickers: the all new Time Range picker makes selecting a range quicker and more intuitive</li>
+          <li>Updated navigation: Details page now carries your queried period if you reach it from the Available Tab</li>
+          <li>Added new icons for the Beta version of PoliAule! Check them out at <a href="https://beta.poliaule.com" target="_blank">beta.poliaule.com</a></li>
+          <li>Added 'Auto-Search on Load' feature: Available classrooms can be shown automatically when the page loads</li>
+          <li>Added 'Live Search' feature: Search results update in real-time as you change the search query parameters</li>
+          <li>Updated URL schema for classroom details page</li>
+          <li>Added the Info page: tap on the title in the header to find out more about PoliAule!</li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">

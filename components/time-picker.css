@@ -333,7 +333,7 @@
 
 @font-face {
   font-family: 'DS-Digital';
-  src: url('/fonts/DS-DIGIB.TTF') format('truetype');
+  src: url('/fonts/DS-DIGIB.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;

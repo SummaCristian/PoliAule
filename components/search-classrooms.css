@@ -52,7 +52,7 @@ mark {
   border: none;
   outline: none;
   background: transparent;
-  font-family: inherit;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-color-primary);
@@ -147,7 +147,7 @@ mark {
   border: none;
   padding: 0.2rem 0.4rem;
   border-radius: 0.5rem;
-  font-family: inherit;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-color-accent);
@@ -250,7 +250,7 @@ mark {
   border-radius: 0.5rem;
   background: none;
   cursor: pointer;
-  font-family: inherit;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
   text-align: start;
 
   transition: background 0.1s ease;
@@ -369,8 +369,7 @@ mark {
   box-shadow: var(--shadow);
   
   position: relative;
-  overflow: hidden;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.2s ease,
               border-color 0.2s ease;
 }

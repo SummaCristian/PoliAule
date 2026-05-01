@@ -13,26 +13,6 @@ const FEATURE_ICONS = {
   223: { icon: 'video_call',          key: 'features.videoconf' },
 };
 
-// ---------- CAMPUS NAME HELPERS ----------
-// Mirror the exact naming logic from components/campus-picker.js so the
-// names shown here always match what appears in the Available-tab picker.
-
-const CITTA_STUDI_IDS   = new Set(['MIA01', 'MIA06']);
-const BOVISA_IDS        = new Set(['MIB01', 'MIB02']);
-const CITTA_STUDI_NAMES = { MIA01: 'Leonardo', MIA06: 'Colombo' };
-
-function getCampusDisplayName(campus) {
-  if (CITTA_STUDI_IDS.has(campus.id)) return CITTA_STUDI_NAMES[campus.id] ?? campus.name;
-  if (BOVISA_IDS.has(campus.id))
-    return (campus.name.split(' - ')[1] ?? campus.name).replace(/^Via\s+/i, '');
-  return campus.name;
-}
-
-function getCampusGroupName(campus) {
-  if (CITTA_STUDI_IDS.has(campus.id)) return 'Città Studi';
-  if (BOVISA_IDS.has(campus.id))      return 'Bovisa';
-  return null;
-}
 
 export let classroomsData = null;
 let searchIndex = null;
@@ -54,10 +34,9 @@ async function loadData() {
 function buildSearchIndex() {
   const index = [];
   for (const campus of classroomsData) {
-    const campusShortName = getCampusDisplayName(campus);
     for (const building of campus.buildings) {
       for (const room of building.classrooms) {
-        index.push({ ...room, buildingName: building.name, buildingAltName: building.altName, campusShortName });
+        index.push({ ...room, buildingName: building.name, buildingAltName: building.altName, campusName: campus.name });
       }
     }
   }
@@ -85,8 +64,6 @@ function highlight(text, query) {
 // ---------- CARD BUILDERS ----------
 
 function buildCampusCard(campus) {
-  const displayName = getCampusDisplayName(campus);
-  const groupName   = getCampusGroupName(campus);
   const n = campus.buildings.length;
   const btn = document.createElement('button');
   btn.className = 'search-card search-card--campus';
@@ -96,8 +73,8 @@ function buildCampusCard(campus) {
         <span class="material-symbols-outlined">location_on</span>
       </div>
       <div class="search-card-info">
-        <span class="search-card-name">${escapeHtml(displayName)}</span>
-        ${groupName ? `<span class="search-card-subtitle secondary">${escapeHtml(groupName)}</span>` : ''}
+        <span class="search-card-name">${escapeHtml(campus.name)}</span>
+        ${campus.group ? `<span class="search-card-subtitle secondary">${escapeHtml(campus.group)}</span>` : ''}
       </div>
     </div>
     <div class="search-card-footer">
@@ -132,7 +109,7 @@ function buildBuildingCard(building) {
 function buildClassroomCard(room, query = '') {
   const featuresHtml = (room.features ?? [])
     .filter(f => FEATURE_ICONS[f.id])
-    .map(f => `<span class="material-symbols-outlined search-card-feature-icon" title="${t(FEATURE_ICONS[f.id].key)}">${FEATURE_ICONS[f.id].icon}</span>`)
+    .map(f => `<span class="material-symbols-outlined search-card-feature-icon" data-feature-id="${f.id}" data-tooltip="${t(FEATURE_ICONS[f.id].key)}">${FEATURE_ICONS[f.id].icon}</span>`)
     .join('');
 
   const status = getClassroomStatusNow(room.id);
@@ -161,7 +138,7 @@ function buildClassroomCard(room, query = '') {
           ${statusText}
         </div>
         ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
-        ${room.campusShortName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusShortName, query)}</span>` : ''}
+        ${room.campusName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusName, query)}</span>` : ''}
       </div>
     </div>
     ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
@@ -309,13 +286,13 @@ function updateBreadcrumb() {
   if (campus) {
     inner.appendChild(makeSep());
 
-    const campusSegment = makeDropdownSegment(getCampusDisplayName(campus), level === 1, (e) => {
+    const campusSegment = makeDropdownSegment(campus.name, level === 1, (e) => {
       e.stopPropagation();
       openBreadcrumbDropdown(campusSegment, classroomsData
         .filter(c => c.buildings.length > 0)
         .map(c => ({
-          label:    getCampusDisplayName(c),
-          sublabel: getCampusGroupName(c),
+          label:    c.name,
+          sublabel: c.group ?? null,
           active:   c.id === campus.id,
           onSelect: () => renderBuildings(c),
         }))
@@ -463,7 +440,7 @@ function renderSearchResults(query) {
     room.name.toLowerCase().includes(qDotted) ||
     room.buildingName.toLowerCase().includes(q) ||
     (room.buildingAltName && room.buildingAltName.toLowerCase().includes(q)) ||
-    room.campusShortName.toLowerCase().includes(q)
+    room.campusName.toLowerCase().includes(q)
   );
 
   const container = document.getElementById('search-results-container');

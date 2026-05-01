@@ -2,6 +2,7 @@ import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow } fro
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { haptics, defaultPatterns } from './haptics.js';
 import { createTimeFormatter } from '../utils/time-format.js';
+import { infoPage } from './info-page.js';
 
 function minutesToTimeDisplay(minutes) {
   const d = new Date();
@@ -20,24 +21,14 @@ const FEATURE_ICONS = {
   223: { icon: 'video_call', key: 'features.videoconf' },
 };
 
-// Mirror the campus naming logic from campus-picker.js / search-classrooms-script.js
-const CITTA_STUDI_IDS = new Set(['MIA01', 'MIA06']);
-const BOVISA_IDS = new Set(['MIB01', 'MIB02']);
-const CITTA_STUDI_NAMES = { MIA01: 'Leonardo', MIA06: 'Colombo' };
-
-function getCampusDisplayName(campus) {
-  if (CITTA_STUDI_IDS.has(campus.id)) return CITTA_STUDI_NAMES[campus.id] ?? campus.name;
-  if (BOVISA_IDS.has(campus.id))
-    return (campus.name.split(' - ')[1] ?? campus.name).replace(/^Via\s+/i, '');
-  return campus.name;
-}
 
 function timeToMinutes(time) {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;
 }
 
-const HASH_PATTERN = /^#classroom\/(\d+)$/;
+const HASH_PATTERN    = /^#classroom\/([^\/]+)\/(.+)$/;
+const HASH_PATTERN_V1 = /^#classroom\/(\d+)$/;
 
 // ---------- CLASS ----------
 
@@ -50,12 +41,15 @@ class ClassroomDetail {
     this._backBtn = null;
     this._staticData = null;       // classrooms.json hierarchy
     this._flatIndex = null;       // Map<id, { classroom, building, campus }>
+    this._slugIndex = null;       // Map<"campus-slug\x00name", { classroom, building, campus }>
     this._pendingTrigger = null;   // { nameEl } stored by click handler before hashchange fires
     this._openTrigger = null;   // same, kept for reverse morph on close
     this._openedViaPushState = false;
     this._currentId = null;
     this._savedScrollPos = 0;
     this._openAnimationFinished = Promise.resolve(); // resolves when the page-open animation ends
+    this._queryContext = null;  // { date, from, to } when opened from Available Tab, else null
+    this._nowTimer = null;
   }
 
   // Called from script.js after all data is loaded.
@@ -114,31 +108,70 @@ class ClassroomDetail {
       const nameEl = card.querySelector('.classroom-name, .search-card-name') ?? null;
       const statusEl = card.querySelector('.classroom-status-txt') ?? null;
 
-      this._pendingTrigger = { nameEl, statusEl };
+      const queryDate = card.dataset.queryDate ?? null;
+      const queryFrom = card.dataset.queryFrom ?? null;
+      const queryTo   = card.dataset.queryTo   ?? null;
+      const queryContext = queryDate && queryFrom && queryTo
+        ? { date: queryDate, from: queryFrom, to: queryTo }
+        : null;
+
+      const featureIconEls = [...card.querySelectorAll('[data-feature-id]')];
+
+      this._pendingTrigger = { nameEl, statusEl, queryContext, featureIconEls };
       this._openedViaPushState = true;
-      location.hash = '#classroom/' + id;
+      this._buildFlatIndex();
+      const _entry = this._flatIndex?.get(id);
+      location.hash = _entry
+        ? '#classroom/' + _entry.campus.slug + '/' + encodeURIComponent(_entry.classroom.name)
+        : '#classroom/' + id;
     });
 
     // Handle hash that's already in the URL on page load (hashchange doesn't fire on load)
-    const match = location.hash.match(HASH_PATTERN);
-    if (match) {
-      this._openedViaPushState = false;
-      this._doOpen(parseInt(match[1]), null);
+    if (HASH_PATTERN.test(location.hash) || HASH_PATTERN_V1.test(location.hash)) {
+      this._buildFlatIndex();
+      const id = this._resolveHashToId(location.hash);
+      if (id !== null) {
+        this._openedViaPushState = false;
+        this._doOpen(id, null);
+      }
     }
   }
 
   // ---------- HASH ROUTING ----------
 
   _onHashChange() {
-    const match = location.hash.match(HASH_PATTERN);
-    if (match) {
-      const id = parseInt(match[1]);
-      const pending = this._pendingTrigger;
-      this._pendingTrigger = null;
-      this._doOpen(id, pending);
+    const isClassroomHash = HASH_PATTERN.test(location.hash) || HASH_PATTERN_V1.test(location.hash);
+    if (isClassroomHash) {
+      this._buildFlatIndex();
+      const id = this._resolveHashToId(location.hash);
+      if (id !== null) {
+        const pending = this._pendingTrigger;
+        this._pendingTrigger = null;
+        this._doOpen(id, pending);
+      } else {
+        this._pendingTrigger = null;
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
     } else if (this._currentId !== null) {
-      this._doClose();
+      if (location.hash === '#info') {
+        this._silentClose();
+      } else {
+        this._doClose();
+      }
     }
+  }
+
+  _silentClose() {
+    if (!this._overlay || this._overlay.hidden) return;
+    this._currentId = null;
+    clearInterval(this._nowTimer);
+    document.body.classList.remove('detail-open');
+    // Leave tabbar.detail-open and backBtn visibility intact — info page takes over both
+    this._overlay.setAttribute('hidden', '');
+    this._overlay.classList.remove('visible');
+    this._overlay.innerHTML = '';
+    this._openTrigger = null;
+    this._queryContext = null;
   }
 
   // ---------- OPEN ----------
@@ -152,27 +185,47 @@ class ClassroomDetail {
 
     this._currentId = id;
     this._openTrigger = pending ?? null;
+    this._queryContext = pending?.queryContext ?? null;
 
     // Save scroll position for when we return
     this._savedScrollPos = window.scrollY;
 
     const nameEl = pending?.nameEl ?? null;
     const statusEl = pending?.statusEl ?? null;
+    // When returning from info page, tabbar is already hidden and backBtn already visible —
+    // skip the classroom-nav morph (same pattern as infoPage's fromDetail detection).
+    const fromInfo = !!(this._backBtn && !this._backBtn.hidden);
 
     if (document.startViewTransition && this._tabbar) {
       // -- OLD state setup (before VT snapshot) --
-      // Tabbar morphs into the back button (both live in the header, so it's a clean in-place swap)
-      this._tabbar.style.viewTransitionName = 'classroom-nav';
+      if (fromInfo) {
+        // Info overlay is still visible — name its hero elements so they morph into the header.
+        infoPage._prepareReturnVT();
+      } else {
+        // Tabbar morphs into the back button (both live in the header, so it's a clean in-place swap)
+        this._tabbar.style.viewTransitionName = 'classroom-nav';
+      }
       // Room name morphs into the overlay title
       if (nameEl) nameEl.style.viewTransitionName = 'classroom-detail-name';
       if (statusEl) statusEl.style.viewTransitionName = 'classroom-status';
+      // Feature icons morph into the detail feature chips
+      const featureIconEls = pending?.featureIconEls ?? [];
+      for (const el of featureIconEls) {
+        el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
+      }
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
-        this._tabbar.style.viewTransitionName = '';
-        this._tabbar.classList.add('detail-open');
+        if (fromInfo) {
+          // Close info overlay and name header elements as NEW state morph targets.
+          infoPage._applyReturnVT();
+        } else {
+          this._tabbar.style.viewTransitionName = '';
+          this._tabbar.classList.add('detail-open');
+        }
         if (nameEl) nameEl.style.viewTransitionName = '';
         if (statusEl) statusEl.style.viewTransitionName = '';
+        for (const el of featureIconEls) el.style.viewTransitionName = '';
 
         // Show overlay and back button
         document.body.classList.add('detail-open');
@@ -187,9 +240,14 @@ class ClassroomDetail {
         // Back button in the header is the NEW state destination for classroom-nav
         const titleEl = this._overlay.querySelector('.detail-title');
         const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
-        if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
+        if (!fromInfo && this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
         if (titleEl) titleEl.style.viewTransitionName = 'classroom-detail-name';
         if (detailStatusEl) detailStatusEl.style.viewTransitionName = 'classroom-status';
+        // Morph icon → icon inside chip (same size both ends → clean positional move)
+        this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id]').forEach(chip => {
+          const iconEl = chip.querySelector('.material-symbols-outlined');
+          if (iconEl) iconEl.style.viewTransitionName = `classroom-feature-${chip.dataset.featureId}`;
+        });
 
         // Load data immediately after rendering in the transition callback
         this._loadSchedule(id);
@@ -202,8 +260,7 @@ class ClassroomDetail {
       // when the VT tears down its pseudo-elements.
       this._openAnimationFinished = vt.finished.catch(() => {});
 
-      vt.finished.then(() => {
-        // Clean up — VT names must be cleared after the animation
+      const cleanup = () => {
         this._tabbar.style.viewTransitionName = '';
         if (nameEl) nameEl.style.viewTransitionName = '';
         if (statusEl) statusEl.style.viewTransitionName = '';
@@ -212,18 +269,22 @@ class ClassroomDetail {
           ?.style.setProperty('view-transition-name', '');
         this._overlay.querySelector('.detail-title-row .classroom-status-txt')
           ?.style.setProperty('view-transition-name', '');
-      }).catch(() => {
-        this._tabbar.style.viewTransitionName = '';
-        if (nameEl) nameEl.style.viewTransitionName = '';
-        if (statusEl) statusEl.style.viewTransitionName = '';
-        if (this._backBtn) this._backBtn.style.viewTransitionName = '';
-      });
+        this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
+          el.style.viewTransitionName = '';
+        });
+        if (fromInfo) infoPage._cleanupReturnVT();
+      };
+      vt.finished.then(cleanup).catch(cleanup);
     } else {
       // Fallback: show overlay, swap tabbar for back button without animation
+      if (fromInfo) {
+        infoPage._applyReturnVT();
+      } else {
+        if (this._tabbar) this._tabbar.classList.add('detail-open');
+      }
       document.body.classList.add('detail-open');
       this._overlay.removeAttribute('hidden');
       this._renderContent(entry);
-      if (this._tabbar) this._tabbar.classList.add('detail-open');
       if (this._backBtn) this._backBtn.removeAttribute('hidden');
       requestAnimationFrame(() => {
         this._overlay.classList.add('visible');
@@ -249,14 +310,18 @@ class ClassroomDetail {
     const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
     const nameInDom = nameEl && document.body.contains(nameEl);
     const statusInDom = statusEl && document.body.contains(statusEl);
+    const featureIconEls = (this._openTrigger?.featureIconEls ?? [])
+      .filter(el => document.body.contains(el));
 
     const cleanup = () => {
       this._overlay.innerHTML = '';
       this._openTrigger = null;
+      this._queryContext = null;
       if (nameEl) nameEl.style.viewTransitionName = '';
       if (statusEl) statusEl.style.viewTransitionName = '';
       if (this._tabbar) this._tabbar.style.viewTransitionName = '';
       if (this._backBtn) this._backBtn.style.viewTransitionName = '';
+      for (const el of featureIconEls) el.style.viewTransitionName = '';
     };
 
     if (document.startViewTransition && this._tabbar) {
@@ -265,6 +330,11 @@ class ClassroomDetail {
       if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
       if (titleEl && nameInDom) titleEl.style.viewTransitionName = 'classroom-detail-name';
       if (detailStatusEl && statusInDom) detailStatusEl.style.viewTransitionName = 'classroom-status';
+      // Chip icons are the OLD state sources
+      this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
+        const fid = el.closest('[data-feature-id]').dataset.featureId;
+        el.style.viewTransitionName = `classroom-feature-${fid}`;
+      });
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
@@ -283,6 +353,10 @@ class ClassroomDetail {
         // Room name morphs back too
         if (nameInDom) nameEl.style.viewTransitionName = 'classroom-detail-name';
         if (statusInDom) statusEl.style.viewTransitionName = 'classroom-status';
+        // Card icons are the NEW state destinations
+        for (const el of featureIconEls) {
+          el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
+        }
 
         // Restore scroll position so VT can morph back to the correct spot
         window.scrollTo(0, this._savedScrollPos);
@@ -310,13 +384,34 @@ class ClassroomDetail {
   _buildFlatIndex() {
     if (this._flatIndex) return;
     this._flatIndex = new Map();
+    this._slugIndex = new Map();
     for (const campus of (this._staticData ?? [])) {
       for (const building of campus.buildings) {
         for (const classroom of building.classrooms) {
-          this._flatIndex.set(classroom.id, { classroom, building, campus });
+          const entry = { classroom, building, campus };
+          this._flatIndex.set(classroom.id, entry);
+          this._slugIndex.set(campus.slug + '\x00' + classroom.name.toLowerCase(), entry);
         }
       }
     }
+  }
+
+  _resolveHashToId(hash) {
+    let match = hash.match(HASH_PATTERN);
+    if (match) {
+      const slug = match[1];
+      let name;
+      try { name = decodeURIComponent(match[2]); }
+      catch { return null; }
+      const entry = this._slugIndex?.get(slug.toLowerCase() + '\x00' + name.toLowerCase());
+      return entry ? entry.classroom.id : null;
+    }
+    match = hash.match(HASH_PATTERN_V1);
+    if (match) {
+      const id = parseInt(match[1], 10);
+      return this._flatIndex?.has(id) ? id : null;
+    }
+    return null;
   }
 
   // ---------- RENDER: STATIC CONTENT ----------
@@ -327,7 +422,7 @@ class ClassroomDetail {
       .map(({ id }) => {
         const { icon, key } = FEATURE_ICONS[id];
         return `
-          <div class="detail-feature-chip">
+          <div class="detail-feature-chip" data-feature-id="${id}">
             <span class="material-symbols-outlined">${icon}</span>
             <span>${t(key)}</span>
           </div>`;
@@ -362,7 +457,7 @@ class ClassroomDetail {
           ${statusHtml}
         </div>
         <p class="detail-subtitle secondary">
-          ${t('building.prefix')} ${building.altName ? `${building.altName} (${building.name})` : building.name} &middot; ${getCampusDisplayName(campus)}
+          ${t('building.prefix')} ${building.altName ? `${building.altName} (${building.name})` : building.name} &middot; ${campus.name}
         </p>
         <div class="detail-stats">
           <div class="detail-stat">
@@ -415,10 +510,10 @@ class ClassroomDetail {
     // 3D tilt on desktop photo
     const photoContainer = this._overlay.querySelector('.detail-photo-container');
     if (photoContainer) {
-      const desktopQuery = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 600px)');
+      const wideEnough = window.matchMedia('(min-width: 600px)');
 
-      photoContainer.addEventListener('mousemove', (e) => {
-        if (!desktopQuery.matches) return;
+      photoContainer.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse' || !wideEnough.matches) return;
         const rect = photoContainer.getBoundingClientRect();
         const dx = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
         const dy = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
@@ -429,18 +524,11 @@ class ClassroomDetail {
         photoContainer.style.boxShadow  = '0 24px 64px rgba(0,0,0,0.28)';
       });
 
-      photoContainer.addEventListener('mouseleave', () => {
+      photoContainer.addEventListener('pointerleave', (e) => {
+        if (e.pointerType !== 'mouse') return;
         photoContainer.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease';
         photoContainer.style.transform  = '';
         photoContainer.style.boxShadow  = '';
-      });
-
-      desktopQuery.addEventListener('change', (e) => {
-        if (!e.matches) {
-          photoContainer.style.transition = '';
-          photoContainer.style.transform  = '';
-          photoContainer.style.boxShadow  = '';
-        }
       });
     }
   }
@@ -506,6 +594,7 @@ class ClassroomDetail {
   // ---------- RENDER: WEEKLY SCHEDULE ----------
 
   _loadSchedule(classroomId) {
+    clearInterval(this._nowTimer);
     const data = occupancyData;
     const container = document.getElementById('detail-schedule-container');
 
@@ -560,13 +649,26 @@ class ClassroomDetail {
         ? ((nowMin - DAY_START) / total * 100).toFixed(2)
         : null;
 
+      // Query context: from/to range carried over from the Available Tab
+      const queryDateKey = this._queryContext?.date?.replace(/-/g, '') ?? null;
+      let queryFromPct = null, queryToPct = null, queryFromDisplay = '', queryToDisplay = '';
+      if (this._queryContext) {
+        const qFrom = Math.max(timeToMinutes(this._queryContext.from), DAY_START);
+        const qTo   = Math.min(timeToMinutes(this._queryContext.to),   DAY_END);
+        queryFromPct    = ((qFrom - DAY_START) / total * 100).toFixed(2);
+        queryToPct      = ((qTo   - DAY_START) / total * 100).toFixed(2);
+        queryFromDisplay = minutesToTimeDisplay(qFrom);
+        queryToDisplay   = minutesToTimeDisplay(qTo);
+      }
+
       const _dayParts = days.map(({ dayData, date }) => {
         const isSunday = !dayData;
 
         const dayNum    = date.getDate();
         const narrowDay = date.toLocaleDateString(getLocale(), { weekday: 'narrow' });
         const narrowDayName = narrowDay.charAt(0).toUpperCase() + narrowDay.slice(1);
-        const isToday = !isSunday && dayData.date === todayKey;
+        const isToday    = !isSunday && dayData.date === todayKey;
+        const isQueryDay = !isSunday && queryDateKey !== null && dayData.date === queryDateKey;
 
         const labelHtml = `
           <div class="detail-schedule-label-cell${isToday ? ' detail-schedule-label-cell--today' : ''} date-element-container">
@@ -601,12 +703,22 @@ class ClassroomDetail {
           return `<div class="detail-schedule-block" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
         }).join('');
 
+        const queryOverlayHtml = isQueryDay && queryFromPct !== null
+          ? `<div class="detail-schedule-query-region" style="--qfrom:${queryFromPct}%;--qto:${queryToPct}%"></div>`
+          : '';
+        const querySideIndicatorsHtml = isQueryDay && queryFromPct !== null ? `
+          <div class="detail-schedule-query-indicator" style="--qpos:${queryFromPct}%">${queryFromDisplay}</div>
+          <div class="detail-schedule-query-indicator" style="--qpos:${queryToPct}%">${queryToDisplay}</div>
+        ` : '';
+
         return { labelHtml, rowHtml: `
-          <div class="detail-schedule-row${isToday ? ' detail-schedule-row--today' : ''}">
+          <div class="detail-schedule-row${isToday ? ' detail-schedule-row--today' : ''}${isQueryDay ? ' detail-schedule-row--query' : ''}">
             <div class="detail-schedule-bar-wrapper">
               <div class="timeline-hover-cursor" hidden></div>
               ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>` : ''}
+              ${querySideIndicatorsHtml}
               <div class="detail-schedule-bar">
+                ${queryOverlayHtml}
                 ${blocksHtml}
                 ${isToday && nowPct !== null ? `<div class="timeline-now-bar-line" style="--pos:${nowPct}%"></div>` : ''}
                 <div class="timeline-hover-line" hidden></div>
@@ -627,6 +739,11 @@ class ClassroomDetail {
       const nowTickHtml = nowPct !== null
         ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>`
         : '';
+
+      const queryTicksHtml = queryFromPct !== null ? `
+        <div class="detail-schedule-query-indicator" style="--qpos:${queryFromPct}%">${queryFromDisplay}</div>
+        <div class="detail-schedule-query-indicator" style="--qpos:${queryToPct}%">${queryToDisplay}</div>
+      ` : '';
 
       const ticksHtml = (() => {
         const ticks = [];
@@ -671,7 +788,7 @@ class ClassroomDetail {
           </div>
         </div>
         <div class="detail-schedule-inner">
-          <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}</div>
+          <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}${queryTicksHtml}</div>
           <div class="detail-schedule-grid">
             <div class="detail-desktop-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
             <div class="detail-schedule-labels-pill">${labelsHtml}</div>
@@ -686,6 +803,17 @@ class ClassroomDetail {
       if (localStorage.getItem('poliAule_hideSundays') === 'true') {
         container.classList.add('detail-schedule--hide-sundays');
       }
+
+      this._nowTimer = setInterval(() => {
+        const n = new Date().getHours() * 60 + new Date().getMinutes();
+        const pctVal = n >= DAY_START && n <= DAY_END
+          ? `${((n - DAY_START) / total * 100).toFixed(2)}%`
+          : null;
+        container.querySelectorAll('.timeline-time-indicator--now, .timeline-now-bar-line, .detail-schedule-now-line').forEach(el => {
+          if (pctVal) { el.style.setProperty('--pos', pctVal); el.hidden = false; }
+          else { el.hidden = true; }
+        });
+      }, 60_000);
 
       // --- Mobile day selector interaction ---
       const pickerContainer = container.querySelector('.detail-schedule-picker');
@@ -732,11 +860,15 @@ class ClassroomDetail {
         });
       });
 
-      // Auto-select today, or next available day if after 20:15, or first available
+      // Auto-select: prefer the queried day when coming from the Available Tab,
+      // otherwise today, or next available day if after 20:15, or first available
       const todayDayIndex = days.findIndex(d => d.dayData?.date === todayKey);
       const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
       let initialDayIndex;
-      if (nowMins > DAY_END && todayDayIndex >= 0) {
+      if (queryDateKey) {
+        const queryDayIndex = days.findIndex(d => d.dayData?.date === queryDateKey);
+        initialDayIndex = queryDayIndex >= 0 ? queryDayIndex : (todayDayIndex >= 0 ? todayDayIndex : days.findIndex(d => d.dayData !== null));
+      } else if (nowMins > DAY_END && todayDayIndex >= 0) {
         const nextIndex = days.findIndex((d, i) => i > todayDayIndex && d.dayData !== null);
         initialDayIndex = nextIndex >= 0 ? nextIndex : todayDayIndex;
       } else if (todayDayIndex >= 0) {

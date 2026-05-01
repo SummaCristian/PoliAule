@@ -1,0 +1,982 @@
+/* ── Info Page Overlay ──────────────────────────────────────────────── */
+
+/* Sits inside .body-container at the same level as .tab-content divs.
+   Hidden by default (via the [hidden] attribute); shown as a flex column
+   that fills the remaining space when info-open class is on body. */
+
+#info-page-overlay:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: var(--background-color);
+
+  /* Fallback fade-in for browsers without View Transitions */
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  will-change: opacity;
+}
+
+#info-page-overlay.visible {
+  opacity: 1;
+}
+
+/* Hide tab contents and footer while the info page is open */
+body.info-open .tab-content {
+  visibility: hidden;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+body.info-open .footer {
+  visibility: hidden;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The logo+title button participates in the VT morph — hide it while open
+   so the large hero versions are the only visible copies. */
+body.info-open .header-title-btn {
+  visibility: hidden;
+}
+
+/* ── Info Page Layout ───────────────────────────────────────────────── */
+
+.info-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  padding: 0 1.5rem 2rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Hero Section ───────────────────────────────────────────────────── */
+
+.info-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-bottom: 2rem;
+}
+
+.info-hero-icon {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+
+  user-select: none;
+  -webkit-user-drag: none;
+
+  /* Base shape */
+  border-radius: 28%; /* slightly higher than your 22.5% */
+  corner-shape: superellipse;
+
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  /* iOS-like shadow stack */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 12px rgba(0, 0, 0, 0.08),
+    0 16px 28px rgba(0, 0, 0, 0.12);
+
+  position: relative;
+}
+
+.info-hero-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0.25rem 0 0;
+  line-height: 1.1;
+
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  mix-blend-mode: multiply;
+}
+
+@media (prefers-color-scheme: dark) {
+  .info-hero-title {
+    mix-blend-mode: normal;
+  }
+}
+
+.info-hero-badge {
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ── View Transition animations ─────────────────────────────────────── */
+
+@supports (view-transition-name: none) {
+  #info-page-overlay {
+    transition: none;
+  }
+
+  ::view-transition-group(info-logo) {
+    animation-duration: 0.38s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-old(info-logo),
+  ::view-transition-new(info-logo) {
+    animation-duration: 0.38s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-group(info-title) {
+    animation-duration: 0.35s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-old(info-title),
+  ::view-transition-new(info-title) {
+    animation-duration: 0.35s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-group(info-badge) {
+    animation-duration: 0.3s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::view-transition-old(info-badge),
+  ::view-transition-new(info-badge) {
+    animation-duration: 0.3s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Body */
+
+.info-body {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.info-page strong {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.info-page h2 {
+  width: 100%; 
+  text-align: start !important;
+
+  margin: 0;
+}
+
+/* ── Two-column row (About Me + GitHub Stats) ───────────────────────── */
+
+.info-two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  width: 100%;
+  margin-top: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 650px) {
+  .info-two-col {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.about-me-section {
+  width: 100%;
+}
+
+.about-me-section h2 {
+  text-align: center;
+}
+
+@media (min-width: 650px) {
+  .about-me-section h2 {
+    text-align: left;
+  }
+}
+
+.about-me-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+  width: 100%;
+}
+
+.about-me-photo {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 8px rgba(0, 0, 0, 0.08);
+
+  /* Animation: pop in with the first message */
+  opacity: 0;
+  transform: scale(0);
+}
+
+.about-me-section.is-visible .about-me-photo {
+  animation: photo-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.1s;
+}
+
+@keyframes photo-pop-in {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.about-me-bubbles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  flex: 1;
+}
+
+.message-bubble {
+  background-color: #fafafa;
+  color: #000;
+  padding: 0 0.9rem; /* Vertically collapsed by default */
+  border-radius: 1.15rem;
+  max-width: 75%;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-align: left;
+  margin: 0;
+  position: relative;
+  width: fit-content;
+
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+
+  /* Animation: pop in and expand height */
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transform: translateX(-20px) translateY(10px) scale(0.8);
+  transform-origin: left bottom;
+}
+
+.about-me-section.is-visible .message-bubble {
+  animation: message-pop-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Typing indicator specifics */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 2.2rem;
+  padding: 0 0.8rem !important;
+  margin-bottom: 3px;
+}
+
+.about-me-section.is-visible .typing-indicator {
+  animation: typing-indicator-cycle 5s ease-in-out forwards;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  background-color: #939399;
+  border-radius: 50%;
+  display: inline-block;
+  animation: dot-jump 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-jump {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-5px); }
+}
+
+/* Cycle typing indicator visibility smoothly */
+@keyframes typing-indicator-cycle {
+  /* Message 1 typing phase */
+  0%   { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; }
+  4%   { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  12%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  16%  { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; } /* M1 arrives at 0.8s */
+
+  /* Message 2 typing phase */
+  28%  { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; }
+  32%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  42%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  46%  { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; } /* M2 arrives at 2.3s */
+
+  /* Message 3 typing phase */
+  58%  { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; }
+  62%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  72%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  76%  { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; } /* M3 arrives at 3.8s */
+
+  100% { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; }
+}
+
+@keyframes message-pop-in {
+  0% {
+    opacity: 0;
+    max-height: 0;
+    transform: translateX(-20px) translateY(10px) scale(0.8);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  100% {
+    opacity: 1;
+    max-height: 500px; /* Safe for very long messages on small screens */
+    transform: translateX(0) translateY(0) scale(1);
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+  }
+}
+
+.about-me-section.is-visible .message-bubble:nth-child(1) { animation-delay: 0.8s; }
+.about-me-section.is-visible .message-bubble:nth-child(2) { animation-delay: 2.3s; }
+.about-me-section.is-visible .message-bubble:nth-child(3) { animation-delay: 3.8s; }
+
+/* iMessage-like stacking logic for corners */
+.about-me-section.is-visible .message-bubble:not(:nth-last-child(2)) { /* Skip the typing indicator and the last message */
+  border-bottom-left-radius: 0.25rem;
+}
+
+.about-me-section.is-visible .message-bubble:not(:first-child) {
+  border-top-left-radius: 0.25rem;
+}
+
+/* Dark mode for bubbles */
+@media (prefers-color-scheme: dark) {
+  .message-bubble {
+    background-color: #323235;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.badge-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 2.5rem 0;
+  width: 100%;
+}
+
+@media (min-width: 800px) {
+  .badge-container {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+.info-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--background-color-secondary);
+  color: var(--text-color-primary);
+  padding: 1.2rem 1.6rem;
+  border-radius: 1.5rem;
+  text-decoration: none;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, box-shadow 0.3s ease;
+
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+
+  /* Initial state for animation */
+  opacity: 0;
+  transform: translateY(15px) scale(0.95);
+  
+  width: 100%;
+  max-width: 320px;
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.info-badge::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .info-badge::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.15),
+      transparent
+    );
+  }
+}
+
+.info-badge:hover::after {
+  left: 150%;
+}
+
+.info-badge--stable {
+  background-color: color-mix(in srgb, var(--color-status-free) 12%, var(--background-color-secondary)) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--color-status-free) 30%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .info-badge--stable {
+    background-color: color-mix(in srgb, var(--color-status-free) 15%, var(--background-color-secondary)) !important;
+    border-color: color-mix(in srgb, var(--color-status-free) 40%, transparent);
+  }
+}
+
+@media (hover: hover) {
+  .info-badge--stable:hover {
+    background-color: color-mix(in srgb, var(--color-status-free) 18%, var(--background-color-secondary)) !important;
+    box-shadow: 
+      0 12px 24px color-mix(in srgb, var(--color-status-free) 8%, transparent),
+      0 18px 48px color-mix(in srgb, var(--color-status-free) 10%, transparent);
+  }
+}
+
+.info-badge--beta {
+  /* Using a solid 5px border to ensure consistent rendering across devices */
+  border: 3px solid transparent !important;
+  background: 
+    linear-gradient(color-mix(in srgb, #007aff 10%, var(--background-color-secondary)), color-mix(in srgb, #007aff 10% , var(--background-color-secondary))) padding-box,
+    repeating-linear-gradient(-45deg, #f1e05a, #f1e05a 12px, #000 12px, #000 24px) border-box;
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, background-color 0.2s ease;
+}
+
+@keyframes hazard-crawl {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 0 0, 48px 0; }
+}
+
+@media (hover: hover) {
+  .info-badge--beta:hover {
+    background: 
+      linear-gradient(color-mix(in srgb, #007aff 15%, var(--background-color-secondary)), color-mix(in srgb, #007aff 15%, var(--background-color-secondary))) padding-box,
+      repeating-linear-gradient(-45deg, #f1e05a, #f1e05a 12px, #000 12px, #000 24px) border-box;
+    animation: hazard-crawl 1s linear infinite;
+  }
+}
+
+.visible .info-badge {
+  animation: badge-pop-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Stagger animations - showing earlier since they are now at the top */
+.visible .info-badge:nth-child(1) { animation-delay: 0.15s; }
+.visible .info-badge:nth-child(2) { animation-delay: 0.25s; }
+.visible .info-badge:nth-child(3) { animation-delay: 0.35s; }
+
+@keyframes badge-pop-in {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (hover: hover) {
+  .info-badge:hover {
+    transform: translateY(-10px) scale(1.15);
+    box-shadow:
+      0 16px 32px rgba(0, 0, 0, 0.05),
+      0 24px 50px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.info-badge:active {
+  transform: translateY(-2px) scale(0.98);
+  opacity: 0.95;
+  transition-duration: 0.1s;
+}
+
+.info-badge svg,
+.info-badge img {
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-right: 1.25rem;
+  flex-shrink: 0;
+}
+
+.info-badge svg {
+  fill: currentColor;
+}
+
+.info-badge img {
+  border-radius: 28%; /* Matching hero icon */
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.info-badge .badge-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.info-badge .badge-text .top-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02rem;
+  opacity: 0.9;
+  margin-bottom: 2px;
+  color: var(--text-color-accent);
+}
+
+.info-badge .badge-text .bottom-text {
+  font-size: 1.35rem;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--text-color-primary);
+}
+
+.info-badge .badge-description {
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.75;
+  margin-top: 5px;
+  color: var(--text-color-secondary);
+}
+
+.info-badge .badge-label {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: #f1e05a;
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: rotate(3deg);
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .info-badge {
+    background-color: var(--background-color-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.2),
+      0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .info-badge img {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ── GitHub Stats Section ───────────────────────────────────────────── */
+
+.github-stats-section {
+  width: 100%;
+}
+
+.github-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.github-repo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  text-decoration: none;
+  padding: 0.4rem 0.75rem 0.4rem 0.6rem;
+  border-radius: 2rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 12%, transparent);
+  background: var(--background-color-secondary);
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.github-repo-chip svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+@media (hover: hover) {
+  .github-repo-chip:hover {
+    color: var(--text-color-primary);
+    border-color: color-mix(in srgb, var(--text-color-primary) 28%, transparent);
+    transform: scale(1.05);
+  }
+}
+
+.github-repo-chip:active {
+  transform: scale(0.95);
+}
+
+.github-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.github-stat-card {
+  background-color: var(--background-color-secondary);
+  border-radius: 1rem;
+  padding: 1.1rem 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  text-align: center;
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 4px 10px rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background-color 0.25s ease;
+
+  opacity: 0;
+  transform: translateY(14px) scale(0.96);
+}
+
+@media (hover: hover) {
+  .github-stat-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    border-color: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
+    background-color: color-mix(in srgb, var(--background-color-secondary) 95%, var(--text-color-primary));
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.06),
+      0 12px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .github-stat-card:hover .github-stat-icon {
+    transform: translateY(-2px) rotate(-8deg);
+  }
+
+  .github-stat-card:hover .github-stat-number {
+    transform: scale(1.05);
+  }
+}
+
+.github-stat-card:active {
+  transform: translateY(-2px) scale(0.97);
+  transition-duration: 0.1s;
+}
+
+.github-stats-section.is-visible .github-stat-card {
+  animation: github-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.github-stats-section.is-visible .github-stat-card:nth-child(1) { animation-delay: 0.05s; }
+.github-stats-section.is-visible .github-stat-card:nth-child(2) { animation-delay: 0.12s; }
+.github-stats-section.is-visible .github-stat-card:nth-child(3) { animation-delay: 0.19s; }
+.github-stats-section.is-visible .github-stat-card:nth-child(4) { animation-delay: 0.26s; }
+
+@keyframes github-card-in {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.github-stat-icon {
+  font-size: 1.4rem;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.15rem;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.github-stat-number {
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.github-stat-date {
+  font-size: 1rem;
+}
+
+.github-stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-color-secondary);
+  opacity: 0.75;
+  margin-top: 0.1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .github-stat-card {
+    border-color: color-mix(in srgb, var(--text-color-primary) 12%, transparent);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.15),
+      0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* ── GitHub Extended Sections ───────────────────────────────────────── */
+
+.github-extended {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.github-subsection {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.github-extended.is-visible .github-subsection {
+  animation: github-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.github-extended.is-visible .github-subsection:nth-child(1) { animation-delay: 0.05s; }
+.github-extended.is-visible .github-subsection:nth-child(2) { animation-delay: 0.15s; }
+.github-extended.is-visible .github-subsection:nth-child(3) { animation-delay: 0.25s; }
+
+.github-subsection-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-color-secondary);
+  opacity: 0.8;
+}
+
+.github-subsection-header .material-symbols-outlined {
+  font-size: 1rem;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Skeleton loader */
+
+.github-skeleton {
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Language bar */
+
+.lang-bar {
+  display: flex;
+  border-radius: 100px;
+  overflow: hidden;
+  height: 8px;
+  width: 100%;
+  gap: 2px;
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  transition: transform 0.3s ease, height 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (hover: hover) {
+  .lang-bar:hover {
+    height: 12px;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .lang-bar:hover .lang-segment:not(:hover) {
+    opacity: 0.5;
+    filter: grayscale(0.2);
+  }
+
+  .lang-segment:hover {
+    transform: scaleX(1.02);
+    z-index: 1;
+  }
+}
+
+.lang-segment {
+  height: 100%;
+  min-width: 1px;
+  transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+}
+
+.lang-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.6rem;
+}
+
+.lang-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.lang-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lang-name {
+  font-weight: 600;
+  color: var(--text-color-primary);
+}
+
+.lang-pct {
+  color: var(--text-color-secondary);
+  opacity: 0.75;
+}
+
+/* Contributors */
+
+.contributors-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.contributor-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  color: var(--text-color-primary);
+  padding: 0.4rem 0.9rem 0.4rem 0.4rem;
+  background: var(--background-color-secondary);
+  border-radius: 2rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) {
+  .contributor-item:hover {
+    transform: translateY(-3px) scale(1.04);
+    border-color: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
+    background-color: color-mix(in srgb, var(--background-color-secondary) 95%, var(--text-color-primary));
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.06),
+      0 8px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  .contributor-item:hover .contributor-avatar {
+    transform: scale(1.1);
+  }
+}
+
+.contributor-item:active {
+  transform: translateY(-1px) scale(0.97);
+}
+
+.contributor-avatar {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.contributor-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.contributor-login {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-color-primary);
+}
+
+.contributor-count {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  opacity: 0.7;
+}
+
+@media (prefers-color-scheme: dark) {
+  .contributor-item {
+    border-color: color-mix(in srgb, var(--text-color-primary) 12%, transparent);
+  }
+}

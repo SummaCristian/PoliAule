@@ -1,6 +1,6 @@
 [
   {
-    "name": "Milano Leonardo - Città Studi",
+    "name": "Leonardo",
     "id": "MIA01",
     "lat": 45.4787,
     "long": 9.228,
@@ -5003,10 +5003,13 @@
           }
         ]
       }
-    ]
+    ],
+    "slug": "leonardo",
+    "city": "Milan",
+    "group": "Città Studi"
   },
   {
-    "name": "Milano Via Colombo",
+    "name": "Colombo",
     "id": "MIA06",
     "lat": 45.4719,
     "lon": 9.2269,
@@ -5140,10 +5143,13 @@
         "idEdificio": "114",
         "address": "Via Colombo 40"
       }
-    ]
+    ],
+    "slug": "colombo",
+    "city": "Milan",
+    "group": "Città Studi"
   },
   {
-    "name": "Milano Bovisa - Via Durando",
+    "name": "Durando",
     "id": "MIB02",
     "lat": 45.5044,
     "lon": 9.164,
@@ -6676,10 +6682,13 @@
         "idEdificio": "80",
         "address": "Via Candiani 72"
       }
-    ]
+    ],
+    "slug": "durando",
+    "city": "Milan",
+    "group": "Bovisa"
   },
   {
-    "name": "Milano Bovisa - Via La Masa",
+    "name": "La Masa",
     "id": "MIB01",
     "lat": 45.5029,
     "lon": 9.1563,
@@ -8095,7 +8104,10 @@
         "idEdificio": "62",
         "address": "Via Lambruschini 4"
       }
-    ]
+    ],
+    "slug": "la-masa",
+    "city": "Milan",
+    "group": "Bovisa"
   },
   {
     "name": "Cremona",
@@ -8241,7 +8253,9 @@
         "idEdificio": "27310",
         "address": "Via Angelo Massarotti 21c"
       }
-    ]
+    ],
+    "slug": "cremona",
+    "city": "Cremona"
   },
   {
     "name": "Lecco",
@@ -9221,7 +9235,9 @@
         "idEdificio": "18234",
         "address": "Via Previati 1C"
       }
-    ]
+    ],
+    "slug": "lecco",
+    "city": "Lecco"
   },
   {
     "name": "Mantova",
@@ -9493,6 +9509,8 @@
           }
         ]
       }
-    ]
+    ],
+    "slug": "mantova",
+    "city": "Mantova"
   }
 ]

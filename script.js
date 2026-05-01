@@ -1,6 +1,16 @@
 history.scrollRestoration = 'manual';
 window.scrollTo(0, 0);
 
+const h = location.hostname;
+const envLabel = h === 'beta.poliaule.com' ? 'Beta'
+               : h === 'poliaule.com'      ? null
+               :                             'Local';
+if (envLabel) {
+  const badge = document.getElementById('env-badge');
+  badge.textContent = envLabel;
+  badge.removeAttribute('hidden');
+}
+
 import {
   classroomsData,
   findAvailableClassrooms,
@@ -10,15 +20,18 @@ import {
 
 import { initSearchTab, classroomsData as staticClassroomsData } from './search-classrooms-script.js';
 import { classroomDetail } from './components/classroom-detail.js';
+import { infoPage } from './components/info-page.js';
 
 import { initTimePickers } from './components/time-picker.js';
+import { initTimeRangeSlider } from './components/time-range-slider.js';
 import { setupCampusPicker } from './components/campus-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, getStartupTabId } from './components/settings.js';
+import './components/tooltip.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY, getStartupTabId } from './components/settings.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -30,37 +43,77 @@ function dismissSplash() {
 
   const splashLogo = overlay.querySelector('.splash-logo');
   const realLogo = document.querySelector('.header-logo');
+  const isInfo = location.hash === '#info';
 
-  // FLIP: measure First (splash, centered) and Last (header) positions
-  const firstRect = splashLogo.getBoundingClientRect();
-  const lastRect = realLogo.getBoundingClientRect();
+  const revealHeader = () =>
+    document.querySelectorAll('.splash-header-item')
+      .forEach(el => el.classList.add('splash-revealed'));
 
-  // FLIP: center-to-center translation (transform-origin is center by default)
-  const dx = (lastRect.left + lastRect.width / 2) - (firstRect.left + firstRect.width / 2);
-  const dy = (lastRect.top + lastRect.height / 2) - (firstRect.top + firstRect.height / 2);
-  const scale = lastRect.height / firstRect.height;
+  if (document.startViewTransition) {
+    // --- View Transition path ---
+    splashLogo.style.viewTransitionName = 'splash-icon';
 
-  // Hide the real header logo so the flying one appears to be it
-  realLogo.style.opacity = '0';
+    if (isInfo) {
+      // Also name the header title/badge so they morph directly into the hero
+      const titleEl = document.querySelector('.header-title');
+      const badgeEl = document.getElementById('env-badge');
+      const tabbar  = document.querySelector('.tabbar');
+      if (titleEl) titleEl.style.viewTransitionName = 'info-title';
+      if (badgeEl && !badgeEl.hidden) {
+        badgeEl.style.lineHeight = '1';
+        badgeEl.style.viewTransitionName = 'info-badge';
+      }
+      if (tabbar) tabbar.style.viewTransitionName = 'classroom-nav';
 
-  // Allow interaction with the UI underneath while the logo is flying
-  overlay.style.pointerEvents = 'none';
+      const vt = document.startViewTransition(() => {
+        splashLogo.style.viewTransitionName = '';
+        if (titleEl) titleEl.style.viewTransitionName = '';
+        if (badgeEl) { badgeEl.style.lineHeight = ''; badgeEl.style.viewTransitionName = ''; }
+        if (tabbar)  tabbar.style.viewTransitionName = '';
 
-  // Force a style flush so the transition is active when we set the transform
-  splashLogo.classList.add('splash-logo-flying');
-  void splashLogo.offsetWidth;
+        overlay.remove();
+        revealHeader();
 
-  // Start everything simultaneously: logo flies, background fades, header reveals
-  splashLogo.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
-  overlay.classList.add('splash-hiding');
-  document.querySelectorAll('.splash-header-item')
-    .forEach(el => el.classList.add('splash-revealed'));
+        // Open info page in this same VT — no second transition needed
+        infoPage._applyOpenState('splash-icon');
+      });
 
-  // The moment the logo lands: restore the real header logo and remove the overlay
-  splashLogo.addEventListener('transitionend', () => {
-    realLogo.style.opacity = '';
-    overlay.remove();
-  }, { once: true });
+      vt.finished.then(() => infoPage._clearVtNames()).catch(() => infoPage._clearVtNames());
+    } else {
+      const vt = document.startViewTransition(() => {
+        splashLogo.style.viewTransitionName = '';
+        overlay.remove();
+        revealHeader();
+        realLogo.style.viewTransitionName = 'splash-icon';
+      });
+
+      const cleanup = () => { realLogo.style.viewTransitionName = ''; };
+      vt.finished.then(cleanup).catch(cleanup);
+    }
+  } else {
+    // --- FLIP fallback ---
+    const firstRect = splashLogo.getBoundingClientRect();
+    const lastRect  = realLogo.getBoundingClientRect();
+    const dx    = (lastRect.left + lastRect.width  / 2) - (firstRect.left + firstRect.width  / 2);
+    const dy    = (lastRect.top  + lastRect.height / 2) - (firstRect.top  + firstRect.height / 2);
+    const scale = lastRect.height / firstRect.height;
+
+    realLogo.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+
+    splashLogo.classList.add('splash-logo-flying');
+    void splashLogo.offsetWidth;
+
+    splashLogo.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+    overlay.classList.add('splash-hiding');
+    revealHeader();
+
+    splashLogo.addEventListener('transitionend', () => {
+      realLogo.style.opacity = '';
+      overlay.remove();
+      if (isInfo) infoPage.checkHash();
+    }, { once: true });
+  }
 }
 
 // ---------- THEME COLOR META TAGS ----------
@@ -125,6 +178,9 @@ tabs.forEach((tab, index) => {
     const targetId = tab.dataset.target;
     showContent(targetId);
 
+    // Always scroll to top on tab change
+    window.scrollTo(0, 0);
+
     // Haptic feedback
     haptics.trigger(defaultPatterns.success)
 
@@ -163,7 +219,7 @@ tabs.forEach((tab, index) => {
 
 // Builds a <li> containing a building card with its room cards inside.
 // Returns the element and the next cardIndex for stagger sequencing.
-function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = false) {
+function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = false, date = null) {
   const buildingName = building.name;
   const countParts = [
     rooms.filter(r => r.status === 'free').length ? `<span class="building-count free">${rooms.filter(r => r.status === 'free').length} ${t('status.free')}</span>` : '',
@@ -212,9 +268,15 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
         const roomItem = document.createElement('li');
         roomItem.className = 'classroom-list-item-container';
         roomItem.dataset.status = room.status;
-        roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday);
+        roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday, date);
         roomsList.appendChild(roomItem);
       });
+      if (rooms.every(r => r.status === 'partially-free')) {
+        const emptyState = document.createElement('li');
+        emptyState.className = 'building-all-partial-hidden';
+        emptyState.textContent = t('results.allPartialHidden');
+        roomsList.appendChild(emptyState);
+      }
       buildingCard.closest('.list-outer-container')
         ?.querySelectorAll('.building-card:not(.collapsed)')
         .forEach(card => {
@@ -254,9 +316,14 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
         }
       });
     } else {
-      roomsList.replaceChildren();
       buildingCard.classList.add('collapsed');
       haptics.trigger(defaultPatterns.success);
+      const onCollapsed = e => {
+        if (e.propertyName !== 'grid-template-rows') return;
+        body.removeEventListener('transitionend', onCollapsed);
+        roomsList.replaceChildren();
+      };
+      body.addEventListener('transitionend', onCollapsed);
     }
   });
 
@@ -277,6 +344,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initSettings();
 
+    // Init info page overlay immediately — no data dependency
+    infoPage.init();
+
     // Fetch occupancy data and classroom directory in parallel
     await Promise.all([
       fetchClassroomsData(),
@@ -287,7 +357,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     classroomDetail.init(staticClassroomsData);
 
     // Setup the campus picker with the available ones
-    setupCampusPicker();
+    setupCampusPicker(staticClassroomsData);
     applyPreferredCampusIfEnabled();
     applyRememberLastCampusIfEnabled();
 
@@ -298,6 +368,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTimePickers();
 
     initTimePickers();
+    initTimeRangeSlider();
+    setupLiveSearch();
 
     // Setup the data fetch indicator and language switch handler immediately —
     // these don't depend on fonts and shouldn't wait for the splash to dismiss
@@ -318,6 +390,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     await document.fonts.ready;
     document.querySelector('.time-pickers-container').style.opacity = '1';
     document.getElementById('available-classrooms-form').removeAttribute('data-loading');
+
+    const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
+    if (autoSearchEnabled) {
+      document.getElementById('available-classrooms-form').dispatchEvent(
+        new Event('submit', { cancelable: true, bubbles: true })
+      );
+    }
 
     const elapsed = Date.now() - _splashStartTime;
     const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
@@ -360,6 +439,7 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
 // Builds the UI to show the results of the 'Available Classrooms' form submission,
 function renderAvailableClassroomsResults(results, date, from, to) {
   const container = document.getElementById('available-classrooms-results');
+  container.dataset.searched = 'true';
   container.innerHTML = ''; // Clear previous results
 
   // Find the day entry matching the selected date
@@ -410,7 +490,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   let cardIndex = 0;
   results.forEach(buildingResult => {
-    const { li, cardIndex: next } = createBuildingItem(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday);
+    const { li, cardIndex: next } = createBuildingItem(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date);
     cardIndex = next;
     list.appendChild(li);
   });
@@ -553,6 +633,7 @@ function setupDatePicker() {
     placeIndicator(el);
 
     datePicker.value = el.dataset.date;
+    datePicker.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Haptic feedback
     haptics.trigger([
@@ -700,8 +781,16 @@ function setupTimePickers() {
     snapped.setHours(7, 15, 0, 0);
   }
 
-  const fromMins = snapped.getHours() * 60 + snapped.getMinutes();
-  const toMins = Math.min(fromMins + intervalHours * 60, TIME_MAX_MINS);
+  let fromMins = snapped.getHours() * 60 + snapped.getMinutes();
+  let toMins = fromMins + intervalHours * 60;
+
+  if (toMins > TIME_MAX_MINS) {
+    toMins = TIME_MAX_MINS;
+    fromMins = Math.max(TIME_MIN_MINS, toMins - Math.max(60, intervalHours * 60));
+    // Re-sync snapped object for formatTime(snapped)
+    snapped.setHours(Math.floor(fromMins / 60), fromMins % 60, 0, 0);
+  }
+
   const minToMins = Math.min(fromMins + 60, TIME_MAX_MINS);
 
   fromPicker.value = formatTime(snapped);
@@ -795,5 +884,33 @@ function setupDataFetchIndicatorText(animate = false) {
     <label class="data-status-time secondary">${t('data.lastFetched')}: ${formattedTime}</label>
   `;
   if (animate) animateI18nElement(container);
+}
+
+// ---------- LIVE SEARCH ----------
+
+function setupLiveSearch() {
+  const form = document.getElementById('available-classrooms-form');
+  const results = document.getElementById('available-classrooms-results');
+
+  function isEnabled() {
+    return localStorage.getItem(LIVE_SEARCH_KEY) !== 'false';
+  }
+
+  function trigger() {
+    if (!isEnabled() || !classroomsData.length || !results.dataset.searched) return;
+    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  }
+
+  let debounceTimer = null;
+  function triggerDebounced() {
+    if (!isEnabled()) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(trigger, 320);
+  }
+
+  document.addEventListener('campuschange', trigger);
+  document.getElementById('date-picker').addEventListener('change', trigger);
+  document.getElementById('from-time-picker').addEventListener('input', triggerDebounced);
+  document.getElementById('to-time-picker').addEventListener('input', triggerDebounced);
 }
 

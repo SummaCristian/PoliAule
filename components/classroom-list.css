@@ -32,7 +32,7 @@
   background: color-mix(in srgb, var(--text-color-accent) 15%, transparent);
   color: var(--text-color-accent);
 
-  font-family: inherit;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
@@ -51,6 +51,18 @@
 
 .available-classrooms-container.hide-partial [data-status="partially-free"] {
   display: none;
+}
+
+.building-all-partial-hidden {
+  display: none;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #888);
+  text-align: center;
+}
+
+.available-classrooms-container.hide-partial .building-all-partial-hidden {
+  display: block;
 }
 
 .available-classrooms-container.empty {
@@ -175,9 +187,9 @@
   font-weight: 700;
 }
 
-.building-count.free          { color: var(--text-color-accent); }
-.building-count.partially-free { color: #f0b429; }
-.building-count.not-free       { color: #e53935; }
+.building-count.free          { color: var(--color-status-free); }
+.building-count.partially-free { color: var(--color-status-partial); }
+.building-count.not-free       { color: var(--color-status-busy); }
 
 .building-count-sep {
   font-size: 0.65rem;
@@ -198,11 +210,14 @@
 .building-card-body {
   display: grid;
   grid-template-rows: 1fr;
-  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .building-card.collapsed .building-card-body {
   grid-template-rows: 0fr;
+  opacity: 0;
 }
 
 .building-card-body > .list-inner-container {
@@ -342,21 +357,21 @@
 }
 
 .classroom-status-txt.free {
-  color: var(--text-color-accent);
+  color: var(--color-status-free);
 }
 
 .classroom-status-txt.free-soon {
-  color: #a6ce39; /* Yellow-green */
+  color: var(--color-status-free-soon);
 }
 
 .classroom-status-txt.partially-free,
 .classroom-status-txt.occupied-soon {
-  color: #f0b429; /* Yellow/Orange */
+  color: var(--color-status-partial);
 }
 
 .classroom-status-txt.not-free,
 .classroom-status-txt.occupied {
-  color: #e53935; /* Red */
+  color: var(--color-status-busy);
 }
 
 .classroom-timeline {
@@ -367,12 +382,12 @@
 
 .timeline-bar-wrapper {
   position: relative;
-  padding-top: 2rem;
+  padding-top: 1.8rem;
 }
 
 .timeline-time-indicator {
   position: absolute;
-  top: 0;
+  top: 0.1rem;
   transform: translateX(-50%);
 
   background: var(--text-color-accent);
@@ -385,6 +400,7 @@
   box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
 
   user-select: none;
+  z-index: 10;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -426,31 +442,62 @@
 
 .timeline-bar {
   position: relative;
-  height: 2.5rem;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+  height: 2.2rem;
+  border-radius: 1.1rem;
+  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
 }
 
 .timeline-query-region {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: color-mix(in srgb, var(--text-color-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--text-color-accent) 4%, transparent);
+  border-left: 1.5px dashed color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+  border-right: 1.5px dashed color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+  z-index: 1;
+  pointer-events: none;
 }
 
 .timeline-block {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 6px;
+  z-index: 2;
+  transition: opacity 0.2s ease;
 }
 
-.timeline-block--busy {
-  background: color-mix(in srgb, #e53935 70%, transparent);
+.timeline-block--busy.timeline-block--query {
+  background: var(--busy-gradient);
+  border: 1px solid color-mix(in srgb, var(--color-status-busy) 20%, black);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.timeline-block--context {
-  background: color-mix(in srgb, var(--text-color-primary) 22%, transparent);
+.timeline-block--busy.timeline-block--context {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 4px,
+    color-mix(in srgb, var(--color-status-busy) 25%, transparent) 4px,
+    color-mix(in srgb, var(--color-status-busy) 25%, transparent) 8px
+  );
+  border: 1px solid color-mix(in srgb, var(--color-status-busy) 15%, transparent);
+  opacity: 0.8;
+}
+
+.timeline-block--seamless-left {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-left: none !important;
+}
+
+.timeline-block--seamless-right {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-right: none !important;
 }
 
 .timeline-bar-wrapper .timeline-hover-cursor {

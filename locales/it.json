@@ -73,6 +73,8 @@
   "data.redTitle": "Dati obsoleti",
   "data.redDesc": "Nessun dato trovato per oggi. I risultati potrebbero non riflettere l'orario attuale.",
   "data.lastFetched": "Ultimo aggiornamento",
+  "data.reload": "Ricarica dati",
+  "data.reloading": "Ricaricamento…",
 
   "settings.title": "Impostazioni",
   "settings.language": "Lingua",

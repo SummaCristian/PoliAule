@@ -73,6 +73,8 @@
   "data.redTitle": "Data is outdated",
   "data.redDesc": "No availability data found for today. Results may not reflect the current schedule.",
   "data.lastFetched": "Last fetched",
+  "data.reload": "Reload data",
+  "data.reloading": "Reloading…",
 
   "settings.title": "Settings",
   "settings.language": "Language",

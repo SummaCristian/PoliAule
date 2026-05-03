@@ -605,6 +605,27 @@ label {
   gap: 0;
 }
 
+.data-reload-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.data-reload-icon {
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.data-reload-icon.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .header-nav-row {
   position: relative;
   display: flex;

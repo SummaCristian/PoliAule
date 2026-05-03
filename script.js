@@ -882,8 +882,36 @@ function setupDataFetchIndicatorText(animate = false) {
     <h1 class="popover-title ${status}">${title}</h1>
     <p class="data-status-description secondary">${description}</p>
     <label class="data-status-time secondary">${t('data.lastFetched')}: ${formattedTime}</label>
+    <button id="reload-data-btn" class="button-primary button-secondary data-reload-btn">
+      <span class="material-symbols-outlined data-reload-icon">refresh</span>
+      <span class="data-reload-label">${t('data.reload')}</span>
+    </button>
   `;
+  document.getElementById('reload-data-btn').addEventListener('click', reloadOccupancyData);
   if (animate) animateI18nElement(container);
+}
+
+async function reloadOccupancyData() {
+  const btn = document.getElementById('reload-data-btn');
+  if (!btn || btn.disabled) return;
+
+  btn.disabled = true;
+  btn.querySelector('.data-reload-icon').classList.add('spinning');
+  btn.querySelector('.data-reload-label').textContent = t('data.reloading');
+
+  await fetchClassroomsData();
+
+  const indicator = document.getElementById('data-fetch-indicator');
+  indicator.classList.remove('green', 'yellow', 'red');
+  setupDataFetchIndicator();
+  setupDatePicker(classroomsData);
+
+  const resultsContainer = document.getElementById('available-classrooms-results');
+  if (resultsContainer && !resultsContainer.classList.contains('empty')) {
+    document.getElementById('available-classrooms-form').dispatchEvent(
+      new Event('submit', { cancelable: true, bubbles: true })
+    );
+  }
 }
 
 // ---------- LIVE SEARCH ----------

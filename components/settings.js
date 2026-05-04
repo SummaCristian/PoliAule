@@ -775,7 +775,7 @@ function buildPopup() {
 
   // Wire Interval Hours stepper
   const intervalHoursRow = popup.querySelector('[data-interval-hours-row]');
-  const savedHours = parseInt(localStorage.getItem(INTERVAL_HOURS_KEY), 10) || 1;
+  const savedHours = parseInt(localStorage.getItem(INTERVAL_HOURS_KEY), 10) || 2;
   const intervalStepper = buildStepper(savedHours, 1, 12, v => `${v}h`, v => {
     localStorage.setItem(INTERVAL_HOURS_KEY, String(v));
   });

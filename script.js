@@ -757,7 +757,7 @@ function setupTimePickers() {
   });
 
   // Set initial values
-  const intervalHours = parseInt(localStorage.getItem(INTERVAL_HOURS_KEY), 10) || 1;
+  const intervalHours = parseInt(localStorage.getItem(INTERVAL_HOURS_KEY), 10) || 2;
   const now = new Date();
 
   // Snap to next :15 slot

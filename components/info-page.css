@@ -1117,19 +1117,24 @@ body.info-open .header-title-btn {
 
 .info-pwa-header {
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.25rem;
   margin-bottom: 1.5rem;
 }
 
-.info-pwa-header > .material-symbols-outlined {
+.info-pwa-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.info-pwa-title-row > .material-symbols-outlined {
   font-size: 2rem;
   background: var(--accent-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   flex-shrink: 0;
-  margin-top: 0.15rem;
 }
 
 .info-pwa-header h2 {

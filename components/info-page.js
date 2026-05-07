@@ -368,11 +368,11 @@ class InfoPage {
           <!-- PWA Install Section -->
           <div class="info-pwa-section">
             <div class="info-pwa-header">
-              <span class="material-symbols-outlined">install_mobile</span>
-              <div>
+              <div class="info-pwa-title-row">
+                <span class="material-symbols-outlined">install_mobile</span>
                 <h2>${t('info.pwa.title')}</h2>
-                <p class="info-pwa-subtitle">${t('info.pwa.subtitle')}</p>
               </div>
+              <p class="info-pwa-subtitle">${t('info.pwa.subtitle')}</p>
             </div>
 
             <!-- Tab switcher: visible only on mobile -->

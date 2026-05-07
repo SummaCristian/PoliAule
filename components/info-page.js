@@ -45,7 +45,7 @@ class InfoPage {
     // Haptics for interactive GitHub elements
     this._overlay?.addEventListener('click', (e) => {
       if (e.target.closest('.github-stat-card') || e.target.closest('.contributor-item') || e.target.closest('.github-repo-chip') || e.target.closest('.create-issue-btn')) {
-        haptics.vibrate(defaultPatterns.light);
+        haptics.trigger(defaultPatterns.light);
       }
     });
 
@@ -568,7 +568,7 @@ class InfoPage {
       pwaTabbar.addEventListener('click', (e) => {
         const btn = e.target.closest('.pwa-tab');
         if (!btn || btn.classList.contains('active')) return;
-        haptics.vibrate(defaultPatterns.light);
+        haptics.trigger(defaultPatterns.light);
         const idx = tabs.indexOf(btn);
         tabs.forEach((t, i) => {
           t.classList.toggle('active', i === idx);

@@ -50,6 +50,7 @@ class InfoPage {
     });
 
     document.getElementById('info-trigger')?.addEventListener('click', () => {
+      haptics.trigger(defaultPatterns.light);
       location.hash = HASH;
     });
 
@@ -58,6 +59,7 @@ class InfoPage {
     this._backBtn?.addEventListener('click', (e) => {
       if (!this._isOpen) return;
       e.stopImmediatePropagation();
+      haptics.trigger(defaultPatterns.light);
       if (this._openedFromDetail) {
         // Go back to the classroom hash; hashchange will trigger _silentClose() here
         // and classroomDetail._onHashChange() will run its own VT to reopen the detail.

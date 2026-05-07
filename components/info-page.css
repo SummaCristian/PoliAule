@@ -508,6 +508,81 @@ body.info-open .header-title-btn {
   animation: badge-pop-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
+/* ── PoliNetwork chip ───────────────────────────────────────────────── */
+
+.info-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0;
+  text-align: center;
+}
+
+.info-disclaimer {
+  font-size: 0.78rem;
+  color: var(--text-color-secondary);
+  opacity: 0.6;
+  margin: 0;
+}
+
+.polinetwork-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.35rem 0.75rem 0.35rem 0.45rem;
+  border-radius: 2rem;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1156ae;
+  background-color: color-mix(in srgb, #1156ae 10%, var(--background-color-secondary));
+  border: 1px solid color-mix(in srgb, #1156ae 25%, transparent);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease;
+}
+
+.polinetwork-chip img {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.polinetwork-chip strong {
+  font-weight: 700;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
+  background-clip: unset !important;
+  color: #1156ae;
+}
+
+@media (hover: hover) {
+  .polinetwork-chip:hover {
+    transform: translateY(-2px) scale(1.04);
+    background-color: color-mix(in srgb, #1156ae 16%, var(--background-color-secondary));
+  }
+}
+
+.polinetwork-chip:active {
+  transform: scale(0.97);
+  transition-duration: 0.1s;
+}
+
+@media (prefers-color-scheme: dark) {
+  .polinetwork-chip {
+    color: color-mix(in srgb, #1156ae 70%, #fff);
+    background-color: color-mix(in srgb, #1156ae 14%, var(--background-color-secondary));
+    border-color: color-mix(in srgb, #1156ae 35%, transparent);
+  }
+
+  .polinetwork-chip strong {
+    color: color-mix(in srgb, #1156ae 70%, #fff);
+  }
+}
+
 /* Stagger animations - showing earlier since they are now at the top */
 .visible .info-badge:nth-child(1) { animation-delay: 0.15s; }
 .visible .info-badge:nth-child(2) { animation-delay: 0.25s; }

@@ -334,6 +334,14 @@ class InfoPage {
               <p>${t('info.body.parag1')}</p>
             </div>
 
+            <div class="info-meta">
+              <a href="https://polinetwork.org/it/projects/" target="_blank" rel="noopener" class="polinetwork-chip">
+                <img src="https://polinetwork.org/favicon.ico" alt="PoliNetwork" draggable="false">
+                <span>Featured in <strong>PoliNetwork</strong></span>
+              </a>
+              <p class="info-disclaimer">Not affiliated with Politecnico di Milano</p>
+            </div>
+
             <div class="badge-container">
             <a href="https://poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--stable">
               <img src="/favicons/main/icon.png" alt="" draggable="false">

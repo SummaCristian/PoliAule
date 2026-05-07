@@ -7,7 +7,7 @@ import { haptics, defaultPatterns } from './haptics.js';
 // Defer haptic out of the pointer event to avoid mobile browser suppression
 // of navigator.vibrate() during active touch handling.
 function triggerHaptic() {
-  setTimeout(() => haptics.trigger(defaultPatterns.success), 0);
+  setTimeout(() => haptics.trigger(defaultPatterns.light), 0);
 }
 import { openPicker, getPickerCards } from './time-picker.js';
 import { createTimeFormatter } from '../utils/time-format.js';

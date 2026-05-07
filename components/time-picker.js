@@ -95,7 +95,7 @@ function getOverlay() {
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.className = 'tp-overlay';
-    overlay.addEventListener('click', () => { haptics.trigger(defaultPatterns.success); closePicker(); });
+    overlay.addEventListener('click', () => { haptics.trigger(defaultPatterns.light); closePicker(); });
     overlay.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
     overlay.addEventListener('wheel', e => e.preventDefault(), { passive: false });
     document.body.appendChild(overlay);
@@ -146,7 +146,7 @@ function switchPicker(nextCard) {
   const nextPopup = nextCard._popup;
   activeCard = nextCard;
 
-  haptics.trigger(defaultPatterns.success);
+  haptics.trigger(defaultPatterns.light);
   nextCard._updateQuickLabel?.();
 
   // ── Close outgoing: morph back to its card ───────────────────────────────
@@ -460,7 +460,7 @@ function buildTimePicker(wrapperEl) {
     const val = `${String(ch).padStart(2, '0')}:${String(cm).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
   }
 
   popup.querySelector('.tp-quick-now')?.addEventListener('click', () => {
@@ -503,7 +503,7 @@ function buildTimePicker(wrapperEl) {
     const val = `${String(ch).padStart(2, '0')}:${String(cm).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
   }
 
   popup.querySelector('.tp-step-minus').addEventListener('click', () => stepHour(-1));
@@ -555,7 +555,7 @@ function buildTimePicker(wrapperEl) {
   // ── Done button ───────────────────────────────────────────────────────────
 
   popup.querySelector('.tp-popup__done').addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
     closePicker();
   });
 
@@ -590,7 +590,7 @@ function buildTimePicker(wrapperEl) {
 
   card.addEventListener('click', () => {
     if (DESKTOP_MQ.matches) return; // inline on desktop — card is not a trigger
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
     updateQuickLabel();
     openPicker(card);
   });

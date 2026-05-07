@@ -271,7 +271,7 @@ function buildStepper(value, min, max, format, onChange) {
     if (current <= min) return;
     current--;
     refresh();
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
     onChange(current);
   });
 
@@ -279,7 +279,7 @@ function buildStepper(value, min, max, format, onChange) {
     if (current >= max) return;
     current++;
     refresh();
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
     onChange(current);
   });
 
@@ -419,7 +419,7 @@ function buildCampusSection() {
       populateCampusSelect();
     }
     showPickerRow(preferredEnabled);
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
   });
 
   // ── Row 3: Remember Last Used toggle
@@ -457,7 +457,7 @@ function buildCampusSection() {
       setToggleState(preferredToggle, false);
       showPickerRow(false);
     }
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
   });
 
   // Save last used campus whenever the campus selection changes
@@ -719,7 +719,7 @@ function buildPopup() {
       const lang = btn.dataset.lang;
       if (lang === getLocale()) return;
       await setLocale(lang);
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       updateLangButtons(popup, positionIndicator);
     });
   });
@@ -754,7 +754,7 @@ function buildPopup() {
       timeFmtToggle.querySelectorAll('.settings-lang-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       positionTimeFmtIndicator(true);
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       window.dispatchEvent(new CustomEvent('timeformatchange'));
     });
   });
@@ -769,7 +769,7 @@ function buildPopup() {
     const isOn = !hideSundaysToggle.classList.contains('on');
     setToggleState(hideSundaysToggle, isOn);
     localStorage.setItem(HIDE_SUNDAYS_KEY, String(isOn));
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
     window.dispatchEvent(new CustomEvent('hidesundayschange', { detail: { hidden: isOn } }));
   });
 
@@ -790,7 +790,7 @@ function buildPopup() {
     const isOn = !showPartialToggle.classList.contains('on');
     setToggleState(showPartialToggle, isOn);
     localStorage.setItem(SHOW_PARTIAL_KEY, String(isOn));
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
   });
 
   // Wire Auto-Search on Load toggle (default: true)
@@ -813,7 +813,7 @@ function buildPopup() {
     setToggleState(autoSearchToggle, isOn);
     localStorage.setItem(AUTO_SEARCH_KEY, String(isOn));
     autoSearchWarning.classList.toggle('settings-warning--hidden', !isOn);
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
   });
 
   // Wire Live Search toggle (default: true)
@@ -836,7 +836,7 @@ function buildPopup() {
     setToggleState(liveSearchToggle, isOn);
     localStorage.setItem(LIVE_SEARCH_KEY, String(isOn));
     liveSearchWarning.classList.toggle('settings-warning--hidden', !isOn);
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
   });
 
   // Wire Default Tab 3-way toggle
@@ -866,7 +866,7 @@ function buildPopup() {
       defaultTabToggle.querySelectorAll('.settings-lang-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       positionDefaultTabIndicator(true);
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
     });
   });
 
@@ -893,7 +893,7 @@ export function initSettings() {
   document.body.appendChild(popupEl);
 
   triggerEl.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
     openSettings();
   });
 

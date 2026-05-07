@@ -61,7 +61,7 @@ class ClassroomDetail {
     this._backBtn = document.getElementById('detail-back-btn');
 
     this._backBtn?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       if (this._openedViaPushState) {
         history.back();
       } else {
@@ -100,7 +100,7 @@ class ClassroomDetail {
       const trigger = e.target.closest('[data-open-classroom]');
       if (!trigger) return;
       e.stopPropagation();
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
 
       const id = parseInt(trigger.dataset.openClassroom);
 
@@ -503,7 +503,7 @@ class ClassroomDetail {
 
     // Title click -> manual refresh of photo and schedule
     this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       this._loadSchedule(classroom.id);
       if (classroom.idfoto) this._loadPhoto(classroom.id, classroom.idfoto);
     });
@@ -863,7 +863,7 @@ class ClassroomDetail {
             haptics.trigger(defaultPatterns.error);
             return;
           }
-          haptics.trigger(defaultPatterns.success);
+          haptics.trigger(defaultPatterns.light);
           selectScheduleDay(parseInt(chip.dataset.dayIndex));
         });
       });
@@ -902,7 +902,7 @@ class ClassroomDetail {
       }
       todayIndicatorEl?.addEventListener('click', () => {
         if (todayDayIndex >= 0) {
-          haptics.trigger(defaultPatterns.success);
+          haptics.trigger(defaultPatterns.light);
           selectScheduleDay(todayDayIndex);
         }
       });

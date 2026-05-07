@@ -183,7 +183,7 @@ tabs.forEach((tab, index) => {
     window.scrollTo(0, 0);
 
     // Haptic feedback
-    haptics.trigger(defaultPatterns.success)
+    haptics.trigger(defaultPatterns.light)
 
     // Update active tab and indicator
     document.querySelector(".tab.active")?.classList.remove("active");
@@ -287,7 +287,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
           }
         });
       buildingCard.classList.remove('collapsed');
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
 
       // getBoundingClientRect() forces a synchronous reflow — cardTopAfter reflects
       // the final layout (CSS transitions don't affect layout values, only visuals).
@@ -318,7 +318,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
       });
     } else {
       buildingCard.classList.add('collapsed');
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       const onCollapsed = e => {
         if (e.propertyName !== 'grid-template-rows') return;
         body.removeEventListener('transitionend', onCollapsed);
@@ -415,7 +415,7 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   e.preventDefault();
 
   // Haptic feedback
-  haptics.trigger(defaultPatterns.success);
+  haptics.trigger(defaultPatterns.light);
 
   // Check if data was already fetched
   if (!classroomsData.length) {
@@ -469,7 +469,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> ${t('results.filterPartial')}`;
     if (!showPartialDefault) container.classList.add('hide-partial');
     toggleBtn.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
       if (!isActive) {

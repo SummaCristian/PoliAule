@@ -103,7 +103,7 @@ export function setupCampusPicker(staticData) {
     trigger.addEventListener('click', () => {
       activateGroupChip(groupEl);
       setSelectedCampus(hiddenInput.value);
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
     });
 
     const subOptionsWrapper = document.createElement('div');
@@ -128,7 +128,7 @@ export function setupCampusPicker(staticData) {
         subChip.classList.add('active');
         setSelectedCampus(campus.id);
         positionIndicator(subOptions, subChip, true);
-        haptics.trigger(defaultPatterns.success);
+        haptics.trigger(defaultPatterns.light);
       });
 
       subOptions.appendChild(subChip);
@@ -150,7 +150,7 @@ export function setupCampusPicker(staticData) {
       deactivateAll();
       chip.classList.add('active');
       setSelectedCampus(campus.id);
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
     });
     return chip;
   }

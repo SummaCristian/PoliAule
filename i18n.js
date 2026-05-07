@@ -49,7 +49,7 @@ export function getLocale() {
 // Walk [data-i18n] and [data-i18n-attr] nodes and apply current translations.
 export function applyTranslations(root = document) {
   root.querySelectorAll('[data-i18n]').forEach(el => {
-    el.textContent = t(el.dataset.i18n);
+    el.innerHTML = t(el.dataset.i18n);
     if (_isLangSwitch) animateI18nElement(el);
   });
   root.querySelectorAll('[data-i18n-attr]').forEach(el => {

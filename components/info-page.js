@@ -1,5 +1,6 @@
 import { onLanguageSwitch, t } from '../i18n.js';
 import { haptics, defaultPatterns } from './haptics.js';
+import { escapeHtml, safeUrl } from '../utils/html.js';
 
 const HASH = '#info';
 const GITHUB_REPO = 'SummaCristian/poliaule';
@@ -680,13 +681,13 @@ class InfoPage {
 
     el.innerHTML = `
       <div class="lang-bar">
-        ${entries.map(e => `<div class="lang-segment" style="width:${e.pct.toFixed(2)}%;background:${e.color}" title="${e.lang} ${e.pct.toFixed(1)}%"></div>`).join('')}
+        ${entries.map(e => `<div class="lang-segment" style="width:${e.pct.toFixed(2)}%;background:${e.color}" title="${escapeHtml(e.lang)} ${e.pct.toFixed(1)}%"></div>`).join('')}
       </div>
       <div class="lang-legend">
         ${entries.map(e => `
           <div class="lang-legend-item">
             <span class="lang-dot" style="background:${e.color}"></span>
-            <span class="lang-name">${e.lang}</span>
+            <span class="lang-name">${escapeHtml(e.lang)}</span>
             <span class="lang-pct">${e.pct.toFixed(1)}%</span>
           </div>`).join('')}
       </div>
@@ -697,15 +698,20 @@ _renderContributors(contributors) {
     const el = this._overlay?.querySelector('[data-github="contributors"]');
     if (!el) return;
 
-    const items = contributors.slice(0, 8).map(c => `
-      <a href="${c.html_url}" target="_blank" rel="noopener" class="contributor-item" title="${c.login}">
-        <img src="${c.avatar_url}&s=64" alt="${c.login}" class="contributor-avatar" loading="lazy">
-        <span class="contributor-info">
-          <span class="contributor-login">${c.login}</span>
-          <span class="contributor-count">${c.contributions.toLocaleString()}</span>
-        </span>
-      </a>
-    `).join('');
+    const items = contributors.slice(0, 8).map(c => {
+      const login = escapeHtml(c.login);
+      const href = safeUrl(c.html_url);
+      const avatar = safeUrl(c.avatar_url);
+      return `
+        <a href="${href}" target="_blank" rel="noopener" class="contributor-item" title="${login}">
+          <img src="${avatar}&s=64" alt="${login}" class="contributor-avatar" loading="lazy">
+          <span class="contributor-info">
+            <span class="contributor-login">${login}</span>
+            <span class="contributor-count">${c.contributions.toLocaleString()}</span>
+          </span>
+        </a>
+      `;
+    }).join('');
 
     el.innerHTML = `<div class="contributors-list">${items}</div>`;
   }

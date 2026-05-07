@@ -95,7 +95,7 @@ function buildBuildingCard(building) {
         <span class="material-symbols-outlined">domain</span>
       </div>
       <div class="search-card-info">
-        <span class="search-card-name">${building.name}${building.altName ? ` <small class="search-card-alt-name secondary">${building.altName}</small>` : ''}</span>
+        <span class="search-card-name">${escapeHtml(building.name)}${building.altName ? ` <small class="search-card-alt-name secondary">${escapeHtml(building.altName)}</small>` : ''}</span>
       </div>
     </div>
     <div class="search-card-footer">

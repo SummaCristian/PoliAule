@@ -30,6 +30,7 @@ import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
+import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY, getStartupTabId } from './components/settings.js';
 
@@ -236,7 +237,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
   buildingCard.innerHTML = `
     <div class="building-card-header">
       <div class="building-card-header-text">
-        <h3 class="building-name">${t('building.prefix')} ${buildingName}${building.altName ? ` <small class="building-alt-name">${building.altName}</small>` : ''}</h3>
+        <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}${building.altName ? ` <small class="building-alt-name">${escapeHtml(building.altName)}</small>` : ''}</h3>
         <div class="building-counts">${countParts}</div>
       </div>
       <span class="material-symbols-outlined building-chevron">expand_more</span>

@@ -567,6 +567,7 @@ class InfoPage {
       pwaTabbar.addEventListener('click', (e) => {
         const btn = e.target.closest('.pwa-tab');
         if (!btn || btn.classList.contains('active')) return;
+        haptics.vibrate(defaultPatterns.light);
         const idx = tabs.indexOf(btn);
         tabs.forEach((t, i) => {
           t.classList.toggle('active', i === idx);

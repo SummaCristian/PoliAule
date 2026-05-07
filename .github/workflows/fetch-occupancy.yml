@@ -3,6 +3,7 @@ name: Fetch Occupancy Data
 on:
   schedule:
     - cron: '0 3 * * *'  # Every day at 3am UTC (4am Italian time)
+    - cron: '0 10 * * *'  # ~12pm Italian time (CEST UTC+2)
   workflow_dispatch:      # Allow manual runs from the GitHub Actions tab
     inputs:
       no_delay:

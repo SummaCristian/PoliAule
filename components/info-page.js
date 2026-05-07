@@ -337,9 +337,9 @@ class InfoPage {
             <div class="info-meta">
               <a href="https://polinetwork.org/it/projects/" target="_blank" rel="noopener" class="polinetwork-chip">
                 <img src="https://polinetwork.org/favicon.ico" alt="PoliNetwork" draggable="false">
-                <span>Featured in <strong>PoliNetwork</strong></span>
+                <span>${t('info.polinetwork')}</span>
               </a>
-              <p class="info-disclaimer">Not affiliated with Politecnico di Milano</p>
+              <p class="info-disclaimer">${t('footer.disclaimer5')}</p>
             </div>
 
             <div class="badge-container">

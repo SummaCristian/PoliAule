@@ -124,7 +124,7 @@
   "info.body.parag1": "Creata dagli studenti per gli studenti, <strong>PoliAule</strong> è un progetto gratuito e open-source che mira a facilitare la ricerca di un posto dove studiare, collaborare o semplicemente fare una pausa tra le lezioni. Che tu abbia bisogno di un posto tranquillo per concentrarti, un'aula con delle prese o semplicemente vuoi controllare se il tuo angolo di studio preferito è libero, <strong>PoliAule</strong> è qui per aiutarti.",
 
   "info.aboutMe.title": "Chi sono",
-  "info.aboutMe.parag1": "Ciao! Sono <strong>Cristian Summa</strong>, un ingegnere informatico e <strong>studente del Politecnico di Milano</strong>.",
+  "info.aboutMe.parag1": "Ciao! Sono <a href='https://summacristian.com' target='_blank'>Cristian Summa</a>, un ingegnere informatico e <strong>studente del Politecnico di Milano</strong>.",
   "info.aboutMe.parag2": "Come molti di voi, spesso avevo bisogno di un'aula libera per studiare, lavorare in gruppo o riempire i buchi tra le mie lezioni. Gli strumenti ufficiali rendono questa ricerca più difficile di quanto dovrebbe essere, richiedendo accessi o controllando una a una le singole aule...",
   "info.aboutMe.parag3": "Quindi ho creato <strong>PoliAule</strong>: un modo semplice e intuitivo per vedere le aule disponibili a colpo d'occhio. L'obiettivo è chiaro: farti risparmiare tempo e rendere la vita in campus un po' più facile.",
   "info.aboutMe.github": "Vedi su",

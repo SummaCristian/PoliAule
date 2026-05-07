@@ -125,7 +125,7 @@
   "info.body.parag1": "Built by students for students, <strong>PoliAule</strong> is a free, open-source project designed to make finding a place to study, collaborate, or take a break simple. Whether you need a quiet spot, a room with power outlets, or just want to check if your go-to space is free, <strong>PoliAule</strong> makes it quick and easy.",
 
   "info.aboutMe.title": "About me",
-  "info.aboutMe.parag1": "Hi there! I'm <strong>Cristian Summa</strong>, a software engineer and <strong>Politecnico di Milano student</strong>.",
+  "info.aboutMe.parag1": "Hi there! I'm <a href='https://summacristian.com' target='_blank'>Cristian Summa</a>, a software engineer and <strong>Politecnico di Milano student</strong>.",
   "info.aboutMe.parag3": "So I built <strong>PoliAule</strong>: a simple, user-friendly way to see available classrooms at a glance. The goal is straightforward: save you time and make campus life a bit easier.",
   "info.aboutMe.github": "View on",
   "info.aboutMe.website": "PoliAule",

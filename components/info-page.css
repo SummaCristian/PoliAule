@@ -899,6 +899,43 @@ body.info-open .header-title-btn {
   background-clip: text;
 }
 
+/* Create Issue button */
+
+.create-issue-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: color-mix(in srgb, #e5534b 85%, var(--text-color-primary));
+  text-decoration: none;
+  padding: 0.45rem 0.9rem 0.45rem 0.7rem;
+  border-radius: 2rem;
+  border: 1px solid color-mix(in srgb, #e5534b 30%, transparent);
+  background: color-mix(in srgb, #e5534b 10%, var(--background-color-secondary));
+  white-space: nowrap;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin-top: 0.5rem;
+}
+
+.create-issue-btn .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+@media (hover: hover) {
+  .create-issue-btn:hover {
+    color: color-mix(in srgb, #e5534b 100%, transparent);
+    border-color: color-mix(in srgb, #e5534b 50%, transparent);
+    background: color-mix(in srgb, #e5534b 15%, var(--background-color-secondary));
+    transform: scale(1.05);
+  }
+}
+
+.create-issue-btn:active {
+  transform: scale(0.95);
+}
+
 /* Skeleton loader */
 
 .github-skeleton {

@@ -158,6 +158,7 @@
   "info.github.license": "Licenza",
   "info.github.languages": "Linguaggi",
   "info.github.contributors": "Contributori",
+  "info.github.createIssue": "Segnala un problema",
 
   "footer.whatsNew": "Cosa c'è di nuovo?",
   "footer.checkOnGitHub": "Vedi su GitHub",

@@ -43,7 +43,7 @@ class InfoPage {
 
     // Haptics for interactive GitHub elements
     this._overlay?.addEventListener('click', (e) => {
-      if (e.target.closest('.github-stat-card') || e.target.closest('.contributor-item') || e.target.closest('.github-repo-chip')) {
+      if (e.target.closest('.github-stat-card') || e.target.closest('.contributor-item') || e.target.closest('.github-repo-chip') || e.target.closest('.create-issue-btn')) {
         haptics.vibrate(defaultPatterns.light);
       }
     });
@@ -480,6 +480,10 @@ class InfoPage {
                 </a>
               </div>
 
+              <a href="https://github.com/SummaCristian/poliaule/issues/new" target="_blank" rel="noopener" class="create-issue-btn">
+                <span class="material-symbols-outlined">bug_report</span>
+                <span>${t('info.github.createIssue')}</span>
+              </a>
               <div class="github-extended">
                 <div class="github-subsection">
                   <div class="github-subsection-header">

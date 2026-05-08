@@ -20,8 +20,7 @@ export async function fetchPhotoUrl(idfoto) {
 
     photoUrlCache.set(idfoto, url);
     return url;
-  } catch (err) {
-    console.error('Photo URL fetch error:', err);
+  } catch {
     photoUrlCache.set(idfoto, 'error');
     return 'error';
   }

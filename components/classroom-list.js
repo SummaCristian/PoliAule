@@ -1,6 +1,7 @@
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { createTimeFormatter } from '../utils/time-format.js';
+import { fetchPhotoUrl } from '../utils/photo.js';
 
 const FEATURE_ICONS = {
   4: { icon: 'videocam', key: 'features.videoProjector' },
@@ -207,9 +208,33 @@ document.addEventListener('mousemove', e => {
   line.hidden = false;
 });
 
+// ---------- PHOTO ----------
+
+async function _loadCardPhoto(idfoto, card) {
+  const img = card.querySelector('.classroom-card-photo');
+  const url = await fetchPhotoUrl(idfoto);
+  if (url === 'error') {
+    card.classList.add('photo-failed');
+    return;
+  }
+  card.style.setProperty('--card-photo-url', `url("${url}")`);
+  img.onerror = () => card.classList.add('photo-failed');
+  img.src = url;
+  img.decode().then(() => img.classList.add('loaded')).catch(() => card.classList.add('photo-failed'));
+}
+
+const _photoObserver = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    _photoObserver.unobserve(entry.target);
+    const idfoto = parseInt(entry.target.dataset.idfoto, 10);
+    if (idfoto) _loadCardPhoto(idfoto, entry.target);
+  }
+}, { rootMargin: '300px' });
+
 // ---------- CARD ----------
 
-// Builds and returns a Card UI element for the classroom passed as parameter
+// Builds and returns a Card DOM element for the classroom passed as parameter
 export function buildCardForClassroom(classroom, building, fromTime, toTime, isToday = false, date = null) {
   const featuresHtml = (classroom.features ?? [])
     .filter(f => FEATURE_ICONS[f.id])
@@ -219,21 +244,55 @@ export function buildCardForClassroom(classroom, building, fromTime, toTime, isT
     })
     .join('');
 
-  const buildingDisplay = building.altName ? `${building.altName} (${building.name})` : building.name;
+  const statusLabel = classroom.status === 'free' ? t('status.free') : t('status.partiallyFree');
+  const timelineHtml = buildTimeline(classroom.occupancy, fromTime, toTime, isToday);
 
-  return `
-    <div class="classroom-card" data-open-classroom="${classroom.id}" data-query-from="${fromTime}" data-query-to="${toTime}"${date ? ` data-query-date="${date}"` : ''} role="button" tabindex="0" aria-label="View details for ${escapeHtml(classroom.name)}">
+  const el = document.createElement('div');
+  el.dataset.openClassroom = classroom.id;
+  el.dataset.queryFrom = fromTime;
+  el.dataset.queryTo = toTime;
+  if (date) el.dataset.queryDate = date;
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('aria-label', `View details for ${escapeHtml(classroom.name)}`);
+
+  if (classroom.idfoto) {
+    el.className = 'classroom-card classroom-card--with-photo';
+    el.dataset.idfoto = classroom.idfoto;
+    el.innerHTML = `
+      <img class="classroom-card-photo" alt="">
+      <div class="classroom-card-overlay"></div>
+      <div class="classroom-card-content">
+        <div class="classroom-card-header">
+          <div class="classroom-card-header-left">
+            <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${escapeHtml(classroom.name)}</h4>
+            <h4 class="classroom-status-txt ${classroom.status}">${statusLabel}</h4>
+          </div>
+          <div class="classroom-detail-btn">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </div>
+        </div>
+        ${timelineHtml}
+        ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}
+      </div>
+    `;
+    _photoObserver.observe(el);
+  } else {
+    el.className = 'classroom-card';
+    el.innerHTML = `
       <div class="classroom-card-header">
         <div class="classroom-card-header-left">
           <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${escapeHtml(classroom.name)}</h4>
-          <h4 class="classroom-status-txt ${classroom.status}">${classroom.status === 'free' ? t('status.free') : t('status.partiallyFree')}</h4>
+          <h4 class="classroom-status-txt ${classroom.status}">${statusLabel}</h4>
         </div>
         <div class="classroom-detail-btn">
           <span class="material-symbols-outlined">chevron_right</span>
         </div>
       </div>
-      ${buildTimeline(classroom.occupancy, fromTime, toTime, isToday)}
+      ${timelineHtml}
       ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}
-    </div>
-  `;
+    `;
+  }
+
+  return el;
 }

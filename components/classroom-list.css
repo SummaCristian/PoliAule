@@ -280,17 +280,161 @@
   transition: background-color 0.2s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  
-   contain: layout paint style;
+
+  contain: layout paint style;
 }
 
-.classroom-card:hover {
+/* ── Photo card variant ─────────────────────────────────────── */
+
+.classroom-card--with-photo {
+  padding: 0;
+  background: color-mix(in srgb, var(--text-color-primary) 12%, var(--background-color-secondary));
+}
+
+/* Blurred color wash — spans the full card, fades in once the photo loads.
+   This is the backdrop visible behind and below the real photo. */
+.classroom-card--with-photo::before {
+  content: '';
+  position: absolute;
+  inset: -30px;
+  background: var(--card-photo-url) center / cover no-repeat;
+  filter: blur(28px) saturate(1.4) brightness(0.52);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.classroom-card--with-photo:has(.classroom-card-photo.loaded)::before {
+  opacity: 1;
+}
+
+/* The actual photo — fills the card but fades out toward the middle,
+   letting the blurred wash beneath carry the image feel downward. */
+.classroom-card-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  border-radius: 1rem;
+  -webkit-mask-image: linear-gradient(to bottom, black 32%, transparent 62%);
+  mask-image: linear-gradient(to bottom, black 32%, transparent 62%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 1;
+}
+
+.classroom-card-photo.loaded {
+  opacity: 1;
+}
+
+/* Failed photo — show a muted placeholder icon */
+.classroom-card--with-photo.photo-failed::after {
+  content: 'hide_image';
+  font-family: 'Material Symbols Outlined';
+  font-size: 2rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.25);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Gradient scrim: light at top for the photo, deeper toward the bottom
+   where the blurred wash needs extra darkening for the timeline to read. */
+.classroom-card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(0, 0, 0, 0.42) 52%,
+    rgba(0, 0, 0, 0.68) 100%
+  );
+  transition: background 0.2s ease;
+}
+
+/* All card content — header, timeline, features — stacked on top.
+   padding-top pushes it down, leaving a clear image band at the top. */
+.classroom-card-content {
+  position: relative;
+  z-index: 3;
+  padding: 7rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── White text overrides for photo variant ─────────────────── */
+
+.classroom-card--with-photo .classroom-name {
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+
+.classroom-card--with-photo .classroom-status-txt {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  filter: brightness(1.3) saturate(1.1);
+}
+
+.classroom-card--with-photo .classroom-detail-btn {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.classroom-card--with-photo .classroom-feature-icon {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ── Timeline overrides for dark photo background ───────────── */
+
+.classroom-card--with-photo .classroom-timeline {
+  padding: 0.5rem 0 0;
+}
+
+.classroom-card--with-photo .timeline-bar {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: none;
+}
+
+.classroom-card--with-photo .timeline-query-region {
+  background: color-mix(in srgb, var(--text-color-accent) 20%, transparent);
+  border-color: color-mix(in srgb, var(--text-color-accent) 65%, transparent);
+}
+
+.classroom-card--with-photo .timeline-tick-label span {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.classroom-card--with-photo .timeline-tick-label::before {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.classroom-card:not(.classroom-card--with-photo):hover {
   background-color: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
+}
+
+.classroom-card--with-photo:hover .classroom-card-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.14) 0%,
+    rgba(0, 0, 0, 0.50) 52%,
+    rgba(0, 0, 0, 0.74) 100%
+  );
 }
 
 .classroom-card:hover .classroom-detail-btn {
   color: var(--text-color-accent);
   transform: translateX(4px);
+}
+
+.classroom-card--with-photo:hover .classroom-detail-btn {
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .classroom-card-header {

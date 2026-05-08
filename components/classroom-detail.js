@@ -115,7 +115,7 @@ class ClassroomDetail {
         : null;
 
       const featureIconEls = [...card.querySelectorAll('[data-feature-id]')];
-      const photoEl = card.querySelector('.search-card-photo.loaded') ?? null;
+      const photoEl = card.querySelector('.search-card-photo.loaded, .classroom-card-photo.loaded') ?? null;
 
       this._pendingTrigger = { nameEl, statusEl, queryContext, featureIconEls, photoEl };
       this._openedViaPushState = true;

@@ -94,6 +94,7 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
           features: classroom.features ?? [],
           occupancy: classroom.occupancy ?? [],
           slots: freeSlots,
+          idfoto: classroom.idfoto ?? null,
         });
       }
     }

@@ -350,7 +350,7 @@ mark {
 }
 
 .search-grid--classroom {
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 
 /* ── Cards ───────────────────────────────────────────────── */
@@ -468,12 +468,13 @@ mark {
 
 .search-card-name {
   font-size: 1.5rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-color-primary);
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  width: fit-content;
   max-width: 100%;
 }
 
@@ -540,6 +541,130 @@ mark {
   gap: 0.75rem;
 }
 
+/* ── Photo card (full-bleed image + gradient-blur overlay) ─── */
+
+.search-card--with-photo {
+  padding: 0;
+  aspect-ratio: 16 / 9;
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-color-primary) 12%, var(--background-color-secondary));
+}
+
+/* Blurred color wash — same image, heavily processed, fills the whole card.
+   Fades in alongside the photo once loaded. */
+.search-card--with-photo::before {
+  content: '';
+  position: absolute;
+  inset: -30px;
+  background: var(--photo-url) center / cover no-repeat;
+  filter: blur(28px) saturate(1.4) brightness(0.55);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.search-card--with-photo:has(.search-card-photo.loaded)::before {
+  opacity: 1;
+}
+
+.search-card-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  border-radius: 1.25rem; /* match card border-radius so VT snapshot has corners baked in */
+  /* Fade the photo out toward the bottom, revealing the blurred color wash */
+  -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 82%);
+  mask-image: linear-gradient(to bottom, black 30%, transparent 82%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 1;
+}
+
+.search-card-photo.loaded {
+  opacity: 1;
+}
+
+/* Photo could not be loaded — show a muted placeholder icon */
+.search-card--with-photo.photo-failed::after {
+  content: 'hide_image';
+  font-family: 'Material Symbols Outlined';
+  font-size: 2rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--text-color-primary) 25%, transparent);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Subtle darkening at the very bottom for text contrast */
+.search-card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.32) 100%);
+}
+
+/* Content anchored to the bottom, split into left (name/meta) and right (status/features) */
+.search-card-content {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  padding: 1rem 1.25rem 1.1rem;
+  gap: 0.75rem;
+}
+
+.search-card-content-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.search-card-content-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+/* Force white text on photo cards */
+.search-card--with-photo .search-card-name {
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  white-space: normal;
+  overflow: visible;
+}
+
+.search-card--with-photo .search-card-meta,
+.search-card--with-photo .search-card-meta-icon {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.search-card--with-photo .search-card-status .classroom-status-txt {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.search-card--with-photo .search-card-features {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+.search-card--with-photo .search-card-feature-icon {
+  color: rgba(255, 255, 255, 0.80);
+}
+
 .search-card--classroom .search-card-icon-wrapper {
   width: 2rem;
   height: 2rem;
@@ -592,7 +717,7 @@ mark {
   }
 
   .search-grid--classroom {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 

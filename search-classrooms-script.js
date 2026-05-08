@@ -1,6 +1,7 @@
 import { t, onLanguageSwitch } from './i18n.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { getClassroomStatusNow } from './available-rooms-script.js';
+import { fetchPhotoUrl } from './utils/photo.js';
 
 const supportsAnchor = CSS.supports('anchor-name: --a');
 
@@ -60,6 +61,34 @@ function highlight(text, query) {
   const safeQ = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '[\\s.]');
   return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<mark>$1</mark>');
 }
+
+// ---------- PHOTO THUMBNAILS ----------
+
+async function _loadCardPhoto(idfoto, img) {
+  const card = img.closest('.search-card--with-photo');
+  const url = await fetchPhotoUrl(idfoto);
+  if (url === 'error') {
+    card?.classList.add('photo-failed');
+    return;
+  }
+
+  // Set the CSS variable before src so ::before has the image ready when opacity kicks in
+  card?.style.setProperty('--photo-url', `url("${url}")`);
+
+  img.onerror = () => card?.classList.add('photo-failed');
+  img.src = url;
+  img.decode().then(() => img.classList.add('loaded')).catch(() => card?.classList.add('photo-failed'));
+}
+
+const _photoObserver = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    _photoObserver.unobserve(entry.target);
+    const idfoto = parseInt(entry.target.dataset.idfoto, 10);
+    const img = entry.target.querySelector('.search-card-photo');
+    if (img && idfoto) _loadCardPhoto(idfoto, img);
+  }
+}, { rootMargin: '300px' });
 
 // ---------- CARD BUILDERS ----------
 
@@ -125,24 +154,47 @@ function buildClassroomCard(room, query = '') {
   }
 
   const el = document.createElement('button');
-  el.className = 'search-card search-card--classroom';
   el.dataset.openClassroom = room.id;
-  el.innerHTML = `
-    <div class="search-card-header">
-      <div class="search-card-icon-wrapper">
-        <span class="material-symbols-outlined">meeting_room</span>
-      </div>
-      <div class="search-card-info">
-        <span class="search-card-name" title="${escapeHtml(room.name)}">${highlight(room.name, query)}</span>
-        <div class="search-card-status">
-          ${statusText}
+
+  if (room.idfoto) {
+    el.className = 'search-card search-card--classroom search-card--with-photo';
+    el.dataset.idfoto = room.idfoto;
+    el.innerHTML = `
+      <img class="search-card-photo" alt="">
+      <div class="search-card-overlay"></div>
+      <div class="search-card-content">
+        <div class="search-card-content-left">
+          <span class="search-card-name" title="${escapeHtml(room.name)}">${highlight(room.name, query)}</span>
+          ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
+          ${room.campusName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusName, query)}</span>` : ''}
         </div>
-        ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
-        ${room.campusName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusName, query)}</span>` : ''}
+        <div class="search-card-content-right">
+          ${statusText ? `<div class="search-card-status">${statusText}</div>` : ''}
+          ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
+        </div>
       </div>
-    </div>
-    ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
-  `;
+    `;
+    _photoObserver.observe(el);
+  } else {
+    el.className = 'search-card search-card--classroom';
+    el.innerHTML = `
+      <div class="search-card-header">
+        <div class="search-card-icon-wrapper">
+          <span class="material-symbols-outlined">meeting_room</span>
+        </div>
+        <div class="search-card-info">
+          <span class="search-card-name" title="${escapeHtml(room.name)}">${highlight(room.name, query)}</span>
+          <div class="search-card-status">
+            ${statusText}
+          </div>
+          ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
+          ${room.campusName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusName, query)}</span>` : ''}
+        </div>
+      </div>
+      ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
+    `;
+  }
+
   return el;
 }
 

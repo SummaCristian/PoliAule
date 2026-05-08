@@ -151,6 +151,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.classList.add('samsung');
   }
 
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (!isSafari) {
+    document.documentElement.classList.add('no-safari');
+  }
+
   const header = document.querySelector('.header');
   const setHeaderHeight = () =>
     document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);

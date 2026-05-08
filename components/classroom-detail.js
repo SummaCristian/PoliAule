@@ -2,6 +2,7 @@ import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow } fro
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { haptics, defaultPatterns } from './haptics.js';
 import { createTimeFormatter } from '../utils/time-format.js';
+import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
 
 function minutesToTimeDisplay(minutes) {
@@ -60,7 +61,7 @@ class ClassroomDetail {
     this._backBtn = document.getElementById('detail-back-btn');
 
     this._backBtn?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       if (this._openedViaPushState) {
         history.back();
       } else {
@@ -99,7 +100,7 @@ class ClassroomDetail {
       const trigger = e.target.closest('[data-open-classroom]');
       if (!trigger) return;
       e.stopPropagation();
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
 
       const id = parseInt(trigger.dataset.openClassroom);
 
@@ -453,11 +454,11 @@ class ClassroomDetail {
         </div>` : ''}
         <div class="detail-header">
         <div class="detail-title-row">
-          <h1 class="detail-title" role="button" tabindex="0">${classroom.name}</h1>
+          <h1 class="detail-title" role="button" tabindex="0">${escapeHtml(classroom.name)}</h1>
           ${statusHtml}
         </div>
         <p class="detail-subtitle secondary">
-          ${t('building.prefix')} ${building.altName ? `${building.altName} (${building.name})` : building.name} &middot; ${campus.name}
+          ${t('building.prefix')} ${building.altName ? `${escapeHtml(building.altName)} (${escapeHtml(building.name)})` : escapeHtml(building.name)} &middot; ${escapeHtml(campus.name)}
         </p>
         <div class="detail-stats">
           <div class="detail-stat">
@@ -502,7 +503,7 @@ class ClassroomDetail {
 
     // Title click -> manual refresh of photo and schedule
     this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       this._loadSchedule(classroom.id);
       if (classroom.idfoto) this._loadPhoto(classroom.id, classroom.idfoto);
     });
@@ -546,6 +547,13 @@ class ClassroomDetail {
       const text = await resp.text();
       const url = text.match(/https?:\/\/\S+/)?.[0];
       if (!url) throw new Error('No URL in response');
+
+      // Guard against a compromised API returning a URL pointing to an arbitrary server.
+      // The browser would otherwise silently GET that URL, leaking the user's IP/fingerprint.
+      const parsedUrl = new URL(url);
+      if (parsedUrl.hostname !== 'docmanager.polimi.it' || parsedUrl.protocol !== 'https:') {
+        throw new Error(`Untrusted photo URL: ${parsedUrl.hostname}`);
+      }
 
       if (this._currentId !== classroomId) return;
 
@@ -855,7 +863,7 @@ class ClassroomDetail {
             haptics.trigger(defaultPatterns.error);
             return;
           }
-          haptics.trigger(defaultPatterns.success);
+          haptics.trigger(defaultPatterns.light);
           selectScheduleDay(parseInt(chip.dataset.dayIndex));
         });
       });
@@ -894,7 +902,7 @@ class ClassroomDetail {
       }
       todayIndicatorEl?.addEventListener('click', () => {
         if (todayDayIndex >= 0) {
-          haptics.trigger(defaultPatterns.success);
+          haptics.trigger(defaultPatterns.light);
           selectScheduleDay(todayDayIndex);
         }
       });

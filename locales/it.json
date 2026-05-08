@@ -124,7 +124,7 @@
   "info.body.parag1": "Creata dagli studenti per gli studenti, <strong>PoliAule</strong> è un progetto gratuito e open-source che mira a facilitare la ricerca di un posto dove studiare, collaborare o semplicemente fare una pausa tra le lezioni. Che tu abbia bisogno di un posto tranquillo per concentrarti, un'aula con delle prese o semplicemente vuoi controllare se il tuo angolo di studio preferito è libero, <strong>PoliAule</strong> è qui per aiutarti.",
 
   "info.aboutMe.title": "Chi sono",
-  "info.aboutMe.parag1": "Ciao! Sono <strong>Cristian Summa</strong>, un ingegnere informatico e <strong>studente del Politecnico di Milano</strong>.",
+  "info.aboutMe.parag1": "Ciao! Sono <a href='https://summacristian.com' target='_blank'>Cristian Summa</a>, un ingegnere informatico e <strong>studente del Politecnico di Milano</strong>.",
   "info.aboutMe.parag2": "Come molti di voi, spesso avevo bisogno di un'aula libera per studiare, lavorare in gruppo o riempire i buchi tra le mie lezioni. Gli strumenti ufficiali rendono questa ricerca più difficile di quanto dovrebbe essere, richiedendo accessi o controllando una a una le singole aule...",
   "info.aboutMe.parag3": "Quindi ho creato <strong>PoliAule</strong>: un modo semplice e intuitivo per vedere le aule disponibili a colpo d'occhio. L'obiettivo è chiaro: farti risparmiare tempo e rendere la vita in campus un po' più facile.",
   "info.aboutMe.github": "Vedi su",
@@ -134,6 +134,23 @@
   "info.badge.betaDesc": "Versione in anteprima con le ultime funzioni.",
   "info.aboutMe.open": "Apri",
 
+  "info.pwa.title": "Installa come app",
+  "info.pwa.subtitle": "Aggiungi PoliAule alla tua schermata Home per accedervi rapidamente",
+  "info.pwa.ios.title": "iPhone / iPad",
+  "info.pwa.ios.step1": "Apri <strong>Safari</strong> e visita poliaule.com",
+  "info.pwa.ios.step2": "Tocca il pulsante <strong>Condividi</strong>",
+  "info.pwa.ios.step3": "Tocca <strong>Aggiungi alla schermata Home</strong>",
+  "info.pwa.ios.step4": "Tocca <strong>Aggiungi</strong> per confermare",
+  "info.pwa.android.title": "Android",
+  "info.pwa.android.step1": "Apri <strong>Chrome</strong> e visita poliaule.com",
+  "info.pwa.android.step2": "Tocca il <strong>menu ⋮</strong> in alto a destra",
+  "info.pwa.android.step3": "Tocca <strong>Aggiungi alla schermata Home</strong>",
+  "info.pwa.android.step4": "Tocca <strong>Aggiungi</strong> per confermare",
+  "info.pwa.desktop.title": "Desktop",
+  "info.pwa.desktop.step1": "Apri <strong>Chrome</strong> o <strong>Edge</strong> e visita poliaule.com",
+  "info.pwa.desktop.step2": "Clicca sull'<strong>icona di installazione</strong> nella barra degli indirizzi",
+  "info.pwa.desktop.step3": "Clicca su <strong>Installa</strong> per confermare",
+
   "info.github.title": "Open Source",
   "info.github.stars": "Stelle",
   "info.github.commits": "Commit",
@@ -141,13 +158,17 @@
   "info.github.license": "Licenza",
   "info.github.languages": "Linguaggi",
   "info.github.contributors": "Contributori",
+  "info.github.createIssue": "Segnala un problema",
+  "info.polinetwork": "Sponsorizzato da <strong>PoliNetwork</strong>",
 
   "footer.whatsNew": "Cosa c'è di nuovo?",
   "footer.checkOnGitHub": "Vedi su GitHub",
-  "footer.disclaimer1": "Versione non definitiva, le cose possono cambiare e cambieranno.",
-  "footer.disclaimer2": "Usala a tuo rischio e pericolo.",
-  "footer.disclaimer3": "Se trovi un errore, apri un",
-  "footer.issueLinkText": "Issue",
-  "footer.disclaimer4": "su GitHub.",
-  "footer.disclaimer5": "Non affiliato al Politecnico di Milano."
+  "footer.disclaimer5": "Non affiliato al Politecnico di Milano.",
+
+  "footer.versionInfo": "Versione 1.0.0",
+
+  "changelog.v1.0.0.item1": "PoliAule 1.0.0 è ufficialmente qui!",
+  "changelog.v1.0.0.item2": "Sono entusiasta di annunciare il primo rilascio stabile di PoliAule! Questa versione porta con sè due delle principali funzioni che chiunque potrebbe desiderare: puoi cercare le aule disponibili in ogni campus, e puoi vedere molti dettagli su ciascuna di esse.",
+  "changelog.v1.0.0.item3": "Spero che questo strumento possa essere utile a molti studenti là fuori, e sono entusiasta di continuare a migliorarlo con nuove funzioni e aggiornamenti in futuro. Se hai qualche feedback o suggerimento, non esitare a contattarmi o aprire un Issue su GitHub!",
+  "changelog.v1.0.0.item4": "Per il changelog completo e più dettagli su questa versione, controlla la pagina della release su GitHub: <a href=\"https://github.com/SummaCristian/poliaule/releases/tag/v1.0.0\" target=\"_blank\">Release v1.0.0</a>"
 }

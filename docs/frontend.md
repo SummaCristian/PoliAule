@@ -29,7 +29,7 @@ The animated sliding indicator under the tab bar is a single `<div class="tab-in
 
 ---
 
-## Classroom Detail — Hash Routing
+## Classroom Detail - Hash Routing
 
 Opening a classroom pushes a URL hash (`#classroom/{id}`) and triggers a `hashchange` event. Closing restores the previous state. This means:
 
@@ -138,6 +138,37 @@ Because `localStorage` is scoped to the browser on a single device, preferences 
 
 ---
 
+## Security
+
+### XSS prevention
+
+The frontend builds HTML by interpolating API data into template literals and assigning the result to `element.innerHTML`. If any value contains `<`, `>`, `"`, or `&`, the browser would parse it as markup - a Cross-Site Scripting (XSS) vulnerability if the data ever comes from a compromised upstream source.
+
+All external data is sanitized through `utils/html.js` before touching `innerHTML`:
+
+| Helper | Purpose |
+|---|---|
+| `escapeHtml(str)` | Replaces `& < > " '` with their HTML entity equivalents. Use on every string field from API responses or JSON files when building an HTML template. |
+| `safeUrl(url)` | Allows only `https:` URLs; returns `'#'` for anything else. Use for `href` and `src` attributes sourced from external data, to block `javascript:` URL injection. |
+
+**Rule:** any new `innerHTML` template that interpolates a field from an API response or a JSON file must wrap each string value in `escapeHtml()`, and any URL value in `safeUrl()`.
+
+The following do **not** need escaping:
+- `t()` calls - strings come from our own translation tables.
+- Numbers after `.toLocaleString()` / `.toFixed()` - numeric output contains no markup.
+- Icon names and class names from local constant maps (`FEATURE_ICONS`, `LANG_COLORS`), keyed on trusted integer IDs or hardcoded strings.
+
+### Classroom photo URL validation
+
+Classroom photos require two requests: the first fetches a URL from the Polimi API; the second is made implicitly by the browser when that URL is assigned to `img.src`. To prevent a compromised API response from redirecting the browser to an arbitrary third-party server (client-side SSRF), `_loadPhoto()` in `classroom-detail.js` validates the extracted URL before use:
+
+- Hostname must be exactly `docmanager.polimi.it`.
+- Protocol must be `https:`.
+
+Any URL that fails this check causes the photo container to be removed silently, as if no photo existed.
+
+---
+
 ## Module Summary
 
 | File | Role |
@@ -156,3 +187,4 @@ Because `localStorage` is scoped to the browser on a single device, preferences 
 | `components/tooltip.js` | Side-effect: global `data-tooltip` handler |
 | `components/popover.js` | `@floating-ui/dom` wrapper (available, not yet wired in) |
 | `utils/time-format.js` | `createTimeFormatter()`, locale-aware time display |
+| `utils/html.js` | `escapeHtml()` and `safeUrl()` - XSS sanitization helpers |

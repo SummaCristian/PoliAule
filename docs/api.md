@@ -39,7 +39,7 @@ GET /occupancy/occupation_YYYYMMDD.json
 
 Returns occupancy slots for all classrooms on a given date. Dates follow the `YYYYMMDD` format (e.g. `occupation_20260429.json`).
 
-Up to 7 files are available at any time, covering today through the next 6 days. Files are regenerated nightly around 3 AM UTC. Sundays and university holiday periods (Christmas, Summer) are skipped; no file is generated for those dates.
+Up to 7 files are available at any time, covering today through the next 6 days. Files are regenerated twice daily: around 3 AM UTC (4 AM Italian time) and 10 AM UTC (~12 PM Italian time). Sundays and university holiday periods (Christmas, Summer) are skipped; no file is generated for those dates.
 
 ---
 
@@ -154,11 +154,59 @@ Each entry in `occupancy` represents a time slot in which the classroom is **not
 
 ---
 
+## Security & data safety
+
+### What we do on our end
+
+String fields in the occupancy files pass through a tag-stripping step before being written. Any `<...>` sequences that the upstream Polimi API might return are removed at ingestion time, so the files you receive will never contain raw HTML tags.
+
+### What you should do on your end
+
+**Tag stripping is not a substitute for output escaping.** Stripping tags removes the most obvious attack shape, but a determined payload can survive in other forms (e.g. attribute injection, URL schemes). If you render any string field from these files into an HTML page, escape it at the point of rendering.
+
+**JavaScript**
+
+```js
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+  );
+}
+
+// Safe:
+el.innerHTML = `<span>${escapeHtml(classroom.name)}</span>`;
+
+// Also safe (no escaping needed — textContent never parses HTML):
+el.textContent = classroom.name;
+```
+
+**Python**
+
+```python
+import html
+
+# Safe:
+snippet = f"<span>{html.escape(classroom['name'])}</span>"
+```
+
+**URLs in href / src attributes**
+
+The `features` array does not contain URLs. If you ever construct links from field values, validate that the URL uses `https:` before placing it in an `href` or `src` attribute — a value like `javascript:…` is syntactically valid in those attributes and will execute on click.
+
+```js
+function safeUrl(url) {
+  try { return new URL(url).protocol === 'https:' ? url : '#'; }
+  catch { return '#'; }
+}
+```
+
+---
+
 ## Usage notes
 
 - **CORS**: files are served as static assets by Cloudflare Pages and are accessible from any origin via `fetch()`.
-- **Caching**: occupancy files are regenerated once per day. Cache them for up to an hour on your side to stay reasonably fresh without hammering the CDN.
-- **Missing dates**: if a file for a given date does not exist (404), the date was skipped (Sunday or holiday) or the nightly job has not run yet.
+- **Caching**: occupancy files are regenerated twice per day. Cache them for up to an hour on your side to stay reasonably fresh without hammering the CDN.
+- **Missing dates**: if a file for a given date does not exist (404), the date was skipped (Sunday or holiday) or the scheduled job has not run yet.
 - **Null fields**: optional fields (`idfoto`, `workstations`, `accessible_seats`, etc.) may be `null` if Politecnico did not provide them for a given room.
 
 ---

@@ -95,7 +95,7 @@ function buildBuildingCard(building) {
         <span class="material-symbols-outlined">domain</span>
       </div>
       <div class="search-card-info">
-        <span class="search-card-name">${building.name}${building.altName ? ` <small class="search-card-alt-name secondary">${building.altName}</small>` : ''}</span>
+        <span class="search-card-name">${escapeHtml(building.name)}${building.altName ? ` <small class="search-card-alt-name secondary">${escapeHtml(building.altName)}</small>` : ''}</span>
       </div>
     </div>
     <div class="search-card-footer">
@@ -189,7 +189,7 @@ function openBreadcrumbDropdown(anchor, items) {
     }
 
     btn.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       closeActiveDropdown();
       onSelect();
     });
@@ -280,7 +280,7 @@ function updateBreadcrumb() {
   const allBtn = document.createElement('button');
   allBtn.className = 'breadcrumb-btn';
   allBtn.textContent = t('search.allCampuses');
-  allBtn.addEventListener('click', () => { haptics.trigger(defaultPatterns.success); renderCampuses(); });
+  allBtn.addEventListener('click', () => { haptics.trigger(defaultPatterns.light); renderCampuses(); });
   inner.appendChild(allBtn);
 
   if (campus) {
@@ -328,7 +328,7 @@ function setLevelHeader(icon, labelKey, onBack = null) {
     backBtn.className = 'search-level-back-btn';
     backBtn.innerHTML = '<span class="material-symbols-outlined">arrow_back</span>';
     backBtn.title = t('search.back');
-    backBtn.addEventListener('click', () => { haptics.trigger(defaultPatterns.success); onBack(); });
+    backBtn.addEventListener('click', () => { haptics.trigger(defaultPatterns.light); onBack(); });
     header.appendChild(backBtn);
   }
 
@@ -363,7 +363,7 @@ function renderCampuses() {
     .filter(c => c.buildings.length > 0)
     .forEach(campus => {
       const card = buildCampusCard(campus);
-      card.addEventListener('click', () => { haptics.trigger(defaultPatterns.success); renderBuildings(campus); });
+      card.addEventListener('click', () => { haptics.trigger(defaultPatterns.light); renderBuildings(campus); });
       grid.appendChild(card);
     });
 
@@ -389,7 +389,7 @@ function renderBuildings(campus) {
 
   campus.buildings.forEach(building => {
     const card = buildBuildingCard(building);
-    card.addEventListener('click', () => { haptics.trigger(defaultPatterns.success); renderClassrooms(campus, building); });
+    card.addEventListener('click', () => { haptics.trigger(defaultPatterns.light); renderClassrooms(campus, building); });
     grid.appendChild(card);
   });
 
@@ -487,7 +487,7 @@ export async function initSearchTab() {
   const searchInput = document.getElementById('classroom-search-input');
 
   document.getElementById('classroom-search-clear').addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.success);
+    haptics.trigger(defaultPatterns.light);
     searchInput.value = '';
     searchInput.dispatchEvent(new Event('input'));
     searchInput.focus();

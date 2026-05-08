@@ -1,5 +1,6 @@
 import argparse
 import json
+import re
 import time
 import httpx
 from datetime import date, timedelta, datetime
@@ -35,6 +36,32 @@ HOLIDAY_PERIODS: list[tuple[date, date]] = [
 # ---------------------------------------------------------------------------
 
 
+_HTML_TAG_RE = re.compile(r'<[^>]*>')
+
+def strip_tags(value: object) -> object:
+    """
+    Recursively walk a parsed JSON value and strip HTML tags from every string.
+
+    We serve the occupancy JSON files as a public API consumed by third parties.
+    If the upstream Polimi API were ever compromised, it could embed HTML/script
+    tags in field values (classroom names, building names, etc.). Third-party
+    consumers who render those strings without escaping would be vulnerable to
+    XSS. Stripping tags here — at the ingestion boundary — neutralises the
+    payload before it reaches anyone downstream, without breaking our own
+    frontend (which still applies escapeHtml() at render time).
+
+    Only angle-bracket tags are stripped; the rest of the string is preserved,
+    so legitimate data is unaffected (building names never contain '<' or '>').
+    """
+    if isinstance(value, str):
+        return _HTML_TAG_RE.sub('', value)
+    if isinstance(value, list):
+        return [strip_tags(item) for item in value]
+    if isinstance(value, dict):
+        return {k: strip_tags(v) for k, v in value.items()}
+    return value
+
+
 def is_holiday(d: date) -> bool:
     """Return True if the date falls within any of the defined holiday periods."""
     return any(start <= d <= end for start, end in HOLIDAY_PERIODS)
@@ -64,7 +91,7 @@ def fetch_occupancy(client: httpx.Client, room_id: int, d: date) -> list[dict] |
         try:
             response = client.get(url, timeout=10)
             response.raise_for_status()
-            return response.json()
+            return strip_tags(response.json())
         except (httpx.HTTPError, httpx.TimeoutException) as e:
             print(
                 f"    Attempt {attempt}/{MAX_RETRIES} failed for room {room_id} on {d}: {e}"

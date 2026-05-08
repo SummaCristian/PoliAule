@@ -1,4 +1,5 @@
 import { t } from '../i18n.js';
+import { escapeHtml } from '../utils/html.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 
 const FEATURE_ICONS = {
@@ -221,10 +222,10 @@ export function buildCardForClassroom(classroom, building, fromTime, toTime, isT
   const buildingDisplay = building.altName ? `${building.altName} (${building.name})` : building.name;
 
   return `
-    <div class="classroom-card" data-open-classroom="${classroom.id}" data-query-from="${fromTime}" data-query-to="${toTime}"${date ? ` data-query-date="${date}"` : ''} role="button" tabindex="0" aria-label="View details for ${classroom.name}">
+    <div class="classroom-card" data-open-classroom="${classroom.id}" data-query-from="${fromTime}" data-query-to="${toTime}"${date ? ` data-query-date="${date}"` : ''} role="button" tabindex="0" aria-label="View details for ${escapeHtml(classroom.name)}">
       <div class="classroom-card-header">
         <div class="classroom-card-header-left">
-          <h4 class="classroom-name" title="${classroom.name}">${classroom.name}</h4>
+          <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${escapeHtml(classroom.name)}</h4>
           <h4 class="classroom-status-txt ${classroom.status}">${classroom.status === 'free' ? t('status.free') : t('status.partiallyFree')}</h4>
         </div>
         <div class="classroom-detail-btn">

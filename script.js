@@ -30,6 +30,7 @@ import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
+import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY, getStartupTabId } from './components/settings.js';
 
@@ -116,6 +117,18 @@ function dismissSplash() {
   }
 }
 
+function showSplashError() {
+  const overlay = document.getElementById('splash-overlay');
+  if (!overlay) return;
+  overlay.classList.add('splash-error');
+  overlay.innerHTML = `
+    <span class="material-symbols-outlined splash-error-icon">wifi_off</span>
+    <p class="splash-error-title">Unable to load</p>
+    <p class="splash-error-subtitle">Check your connection and try again.</p>
+    <button class="button-primary splash-error-reload" onclick="location.reload()">Reload</button>
+  `;
+}
+
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
 const darkMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]');
@@ -182,7 +195,7 @@ tabs.forEach((tab, index) => {
     window.scrollTo(0, 0);
 
     // Haptic feedback
-    haptics.trigger(defaultPatterns.success)
+    haptics.trigger(defaultPatterns.light)
 
     // Update active tab and indicator
     document.querySelector(".tab.active")?.classList.remove("active");
@@ -236,7 +249,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
   buildingCard.innerHTML = `
     <div class="building-card-header">
       <div class="building-card-header-text">
-        <h3 class="building-name">${t('building.prefix')} ${buildingName}${building.altName ? ` <small class="building-alt-name">${building.altName}</small>` : ''}</h3>
+        <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}${building.altName ? ` <small class="building-alt-name">${escapeHtml(building.altName)}</small>` : ''}</h3>
         <div class="building-counts">${countParts}</div>
       </div>
       <span class="material-symbols-outlined building-chevron">expand_more</span>
@@ -286,7 +299,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
           }
         });
       buildingCard.classList.remove('collapsed');
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
 
       // getBoundingClientRect() forces a synchronous reflow — cardTopAfter reflects
       // the final layout (CSS transitions don't affect layout values, only visuals).
@@ -317,7 +330,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
       });
     } else {
       buildingCard.classList.add('collapsed');
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       const onCollapsed = e => {
         if (e.propertyName !== 'grid-template-rows') return;
         body.removeEventListener('transitionend', onCollapsed);
@@ -338,6 +351,10 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
 
 // Triggers the fetching of data as soon as the page loads
 document.addEventListener('DOMContentLoaded', async () => {
+  // Safety net: if init hangs for any reason (e.g. fonts.ready stalls on bad
+  // connectivity), surface the error screen instead of staying stuck forever.
+  const _initTimeoutId = setTimeout(showSplashError, 15000);
+
   try {
     await initI18n();
     applyTranslations();
@@ -398,12 +415,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       );
     }
 
+    clearTimeout(_initTimeoutId);
     const elapsed = Date.now() - _splashStartTime;
     const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
     setTimeout(dismissSplash, remaining);
 
   } catch (error) {
-    console.error('Error fetching classrooms data:', error);
+    clearTimeout(_initTimeoutId);
+    console.error('Initialization failed:', error);
+    const elapsed = Date.now() - _splashStartTime;
+    const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
+    setTimeout(showSplashError, remaining);
   }
 });
 
@@ -414,7 +436,7 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   e.preventDefault();
 
   // Haptic feedback
-  haptics.trigger(defaultPatterns.success);
+  haptics.trigger(defaultPatterns.light);
 
   // Check if data was already fetched
   if (!classroomsData.length) {
@@ -468,7 +490,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
     toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> ${t('results.filterPartial')}`;
     if (!showPartialDefault) container.classList.add('hide-partial');
     toggleBtn.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.success);
+      haptics.trigger(defaultPatterns.light);
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
       if (!isActive) {

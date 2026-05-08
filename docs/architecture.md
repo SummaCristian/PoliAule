@@ -197,7 +197,7 @@ graph LR
 
 ### Keeping beta in sync
 
-After the nightly fetch commits new occupancy data to `main`, the Actions workflow checks out `beta` and merges `main` into it. That way `beta.poliaule.com` always serves fresh data, even when no code changes are in flight.
+After each scheduled fetch commits new occupancy data to `main`, the Actions workflow checks out `beta` and merges `main` into it. That way `beta.poliaule.com` always serves fresh data, even when no code changes are in flight.
 
 The app detects its environment from `location.hostname` at startup and shows a badge for `beta.poliaule.com` and local dev.
 

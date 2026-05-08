@@ -39,7 +39,7 @@ GET /occupancy/occupation_YYYYMMDD.json
 
 Returns occupancy slots for all classrooms on a given date. Dates follow the `YYYYMMDD` format (e.g. `occupation_20260429.json`).
 
-Up to 7 files are available at any time, covering today through the next 6 days. Files are regenerated nightly around 3 AM UTC. Sundays and university holiday periods (Christmas, Summer) are skipped; no file is generated for those dates.
+Up to 7 files are available at any time, covering today through the next 6 days. Files are regenerated twice daily: around 3 AM UTC (4 AM Italian time) and 10 AM UTC (~12 PM Italian time). Sundays and university holiday periods (Christmas, Summer) are skipped; no file is generated for those dates.
 
 ---
 
@@ -205,8 +205,8 @@ function safeUrl(url) {
 ## Usage notes
 
 - **CORS**: files are served as static assets by Cloudflare Pages and are accessible from any origin via `fetch()`.
-- **Caching**: occupancy files are regenerated once per day. Cache them for up to an hour on your side to stay reasonably fresh without hammering the CDN.
-- **Missing dates**: if a file for a given date does not exist (404), the date was skipped (Sunday or holiday) or the nightly job has not run yet.
+- **Caching**: occupancy files are regenerated twice per day. Cache them for up to an hour on your side to stay reasonably fresh without hammering the CDN.
+- **Missing dates**: if a file for a given date does not exist (404), the date was skipped (Sunday or holiday) or the scheduled job has not run yet.
 - **Null fields**: optional fields (`idfoto`, `workstations`, `accessible_seats`, etc.) may be `null` if Politecnico did not provide them for a given room.
 
 ---

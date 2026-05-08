@@ -117,6 +117,18 @@ function dismissSplash() {
   }
 }
 
+function showSplashError() {
+  const overlay = document.getElementById('splash-overlay');
+  if (!overlay) return;
+  overlay.classList.add('splash-error');
+  overlay.innerHTML = `
+    <span class="material-symbols-outlined splash-error-icon">wifi_off</span>
+    <p class="splash-error-title">Unable to load</p>
+    <p class="splash-error-subtitle">Check your connection and try again.</p>
+    <button class="button-primary splash-error-reload" onclick="location.reload()">Reload</button>
+  `;
+}
+
 // ---------- THEME COLOR META TAGS ----------
 const lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
 const darkMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]');
@@ -339,6 +351,10 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
 
 // Triggers the fetching of data as soon as the page loads
 document.addEventListener('DOMContentLoaded', async () => {
+  // Safety net: if init hangs for any reason (e.g. fonts.ready stalls on bad
+  // connectivity), surface the error screen instead of staying stuck forever.
+  const _initTimeoutId = setTimeout(showSplashError, 15000);
+
   try {
     await initI18n();
     applyTranslations();
@@ -399,12 +415,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       );
     }
 
+    clearTimeout(_initTimeoutId);
     const elapsed = Date.now() - _splashStartTime;
     const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
     setTimeout(dismissSplash, remaining);
 
   } catch (error) {
-    console.error('Error fetching classrooms data:', error);
+    clearTimeout(_initTimeoutId);
+    console.error('Initialization failed:', error);
+    const elapsed = Date.now() - _splashStartTime;
+    const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
+    setTimeout(showSplashError, remaining);
   }
 });
 

@@ -69,11 +69,11 @@ body.detail-open .tab-content * {
     height: 38vh;
     min-height: 280px;
     border-radius: 0;
-    
-    /* Pull it up to sit exactly behind the entire header.
-       We subtract the 1rem padding of .body-container and the full header height. */
-    margin-top: calc(-1 * var(--header-height, 80px) - 1rem);
-    
+    /* Cancel body-container's 1rem padding (-1rem), then extend an extra 3.5rem up
+       into the header-nav-row zone (0.5rem padding-top + ~3rem content/padding-bottom).
+       The nav-row has no background so the photo shows through it;
+       the solid header-top-line-container blocks it above. */
+    margin-top: -5.2rem;
     box-shadow: none;
   }
 }
@@ -113,6 +113,7 @@ body.detail-open .tab-content * {
   height: 100%;
   object-fit: cover;
   object-position: center center;
+  border-radius: inherit; /* carry the container's border-radius into the VT snapshot */
   opacity: 0;
   transform: scale(1.05);
   transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1397,6 +1398,23 @@ body.detail-open .tab-content * {
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation-duration: 0.25s;
+  }
+
+  /* Shared element: classroom photo card → detail hero */
+  ::view-transition-group(classroom-photo) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden; /* clip both snapshots to the group's morphing bounds */
+  }
+
+  ::view-transition-old(classroom-photo),
+  ::view-transition-new(classroom-photo) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    /* Scale to fill the morphing group box, matching object-fit: cover on both imgs */
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
   }
 }
 

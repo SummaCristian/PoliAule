@@ -288,12 +288,15 @@
 
 .classroom-card--with-photo {
   padding: 0;
+  border-radius: 1rem;
   background: color-mix(in srgb, var(--text-color-primary) 12%, var(--background-color-secondary));
   border: 1px solid color-mix(in srgb, white 14%, transparent);
   box-shadow:
     0 10px 24px rgba(0, 0, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
   overflow: hidden;
+  isolation: isolate;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
 /* Blurred color wash — spans the full card, fades in once the photo loads.
@@ -307,6 +310,7 @@
   z-index: 0;
   opacity: 0;
   transition: opacity 0.5s ease;
+  border-radius: inherit;
 }
 
 .classroom-card--with-photo:has(.classroom-card-photo.loaded)::before {
@@ -322,7 +326,7 @@
   height: 100%;
   object-fit: cover;
   object-position: center center;
-  border-radius: 1rem;
+  border-radius: inherit;
   -webkit-mask-image: linear-gradient(to bottom, black 34%, transparent 68%);
   mask-image: linear-gradient(to bottom, black 34%, transparent 68%);
   opacity: 0;
@@ -357,6 +361,7 @@
   position: absolute;
   inset: 0;
   z-index: 2;
+  border-radius: inherit;
   background: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 0.12) 0%,
@@ -371,6 +376,7 @@
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 0.30) 0%,

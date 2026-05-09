@@ -289,6 +289,11 @@
 .classroom-card--with-photo {
   padding: 0;
   background: color-mix(in srgb, var(--text-color-primary) 12%, var(--background-color-secondary));
+  border: 1px solid color-mix(in srgb, white 14%, transparent);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  overflow: hidden;
 }
 
 /* Blurred color wash — spans the full card, fades in once the photo loads.
@@ -296,9 +301,9 @@
 .classroom-card--with-photo::before {
   content: '';
   position: absolute;
-  inset: -30px;
+  inset: -36px;
   background: var(--card-photo-url) center / cover no-repeat;
-  filter: blur(28px) saturate(1.4) brightness(0.52);
+  filter: blur(34px) saturate(1.55) brightness(0.48);
   z-index: 0;
   opacity: 0;
   transition: opacity 0.5s ease;
@@ -318,15 +323,17 @@
   object-fit: cover;
   object-position: center center;
   border-radius: 1rem;
-  -webkit-mask-image: linear-gradient(to bottom, black 32%, transparent 62%);
-  mask-image: linear-gradient(to bottom, black 32%, transparent 62%);
+  -webkit-mask-image: linear-gradient(to bottom, black 34%, transparent 68%);
+  mask-image: linear-gradient(to bottom, black 34%, transparent 68%);
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transform: scale(1.03);
+  transition: opacity 0.5s ease, transform 0.45s ease;
   z-index: 1;
 }
 
 .classroom-card-photo.loaded {
   opacity: 1;
+  transform: scale(1);
 }
 
 /* Failed photo — show a muted placeholder icon */
@@ -352,11 +359,26 @@
   z-index: 2;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.08) 0%,
-    rgba(0, 0, 0, 0.42) 52%,
-    rgba(0, 0, 0, 0.68) 100%
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(0, 0, 0, 0.4) 38%,
+    rgba(0, 0, 0, 0.58) 68%,
+    rgba(0, 0, 0, 0.74) 100%
   );
   transition: background 0.2s ease;
+}
+
+.classroom-card-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.30) 0%,
+    rgba(0, 0, 0, 0.18) 22%,
+    rgba(0, 0, 0, 0.04) 44%,
+    rgba(0, 0, 0, 0) 60%
+  );
+  pointer-events: none;
 }
 
 /* All card content — header, timeline, features — stacked on top.
@@ -364,30 +386,62 @@
 .classroom-card-content {
   position: relative;
   z-index: 3;
-  padding: 7rem 1rem 1rem;
+  padding: 7.4rem 1rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.56rem;
 }
 
 /* ── White text overrides for photo variant ─────────────────── */
 
 .classroom-card--with-photo .classroom-name {
   color: #fff;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.01em;
 }
 
 .classroom-card--with-photo .classroom-status-txt {
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  filter: brightness(1.3) saturate(1.1);
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+  filter: none;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
 }
 
 .classroom-card--with-photo .classroom-detail-btn {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.86);
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .classroom-card--with-photo .classroom-feature-icon {
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.classroom-card--with-photo .classroom-status-txt.free {
+  color: #79f2a1;
+}
+
+.classroom-card--with-photo .classroom-status-txt.free-soon {
+  color: #b9ff85;
+}
+
+.classroom-card--with-photo .classroom-status-txt.partially-free,
+.classroom-card--with-photo .classroom-status-txt.occupied-soon {
+  color: #ffd76b;
+}
+
+.classroom-card--with-photo .classroom-status-txt.not-free,
+.classroom-card--with-photo .classroom-status-txt.occupied {
+  color: #ff9b8f;
 }
 
 /* ── Timeline overrides for dark photo background ───────────── */
@@ -397,22 +451,22 @@
 }
 
 .classroom-card--with-photo .timeline-bar {
-  background: rgba(255, 255, 255, 0.13);
-  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.18);
   box-shadow: none;
 }
 
 .classroom-card--with-photo .timeline-query-region {
-  background: color-mix(in srgb, var(--text-color-accent) 20%, transparent);
-  border-color: color-mix(in srgb, var(--text-color-accent) 65%, transparent);
+  background: color-mix(in srgb, var(--text-color-accent) 28%, transparent);
+  border-color: color-mix(in srgb, var(--text-color-accent) 76%, transparent);
 }
 
 .classroom-card--with-photo .timeline-tick-label span {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .classroom-card--with-photo .timeline-tick-label::before {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.44);
 }
 
 .classroom-card:not(.classroom-card--with-photo):hover {
@@ -422,9 +476,10 @@
 .classroom-card--with-photo:hover .classroom-card-overlay {
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.14) 0%,
-    rgba(0, 0, 0, 0.50) 52%,
-    rgba(0, 0, 0, 0.74) 100%
+    rgba(0, 0, 0, 0.16) 0%,
+    rgba(0, 0, 0, 0.45) 36%,
+    rgba(0, 0, 0, 0.64) 68%,
+    rgba(0, 0, 0, 0.78) 100%
   );
 }
 
@@ -435,6 +490,82 @@
 
 .classroom-card--with-photo:hover .classroom-detail-btn {
   color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.34);
+}
+
+.classroom-card--with-photo:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--text-color-accent) 72%, white);
+  outline-offset: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .classroom-card--with-photo::before {
+    filter: blur(34px) saturate(1.45) brightness(0.58);
+  }
+
+  .classroom-card-overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.08) 0%,
+      rgba(0, 0, 0, 0.32) 38%,
+      rgba(0, 0, 0, 0.52) 68%,
+      rgba(0, 0, 0, 0.66) 100%
+    );
+  }
+
+  .classroom-card-overlay::before {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.22) 0%,
+      rgba(0, 0, 0, 0.12) 22%,
+      rgba(0, 0, 0, 0.03) 44%,
+      rgba(0, 0, 0, 0) 60%
+    );
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .classroom-card--with-photo {
+    border: 1px solid color-mix(in srgb, black 7%, transparent);
+    box-shadow:
+      0 8px 22px rgba(18, 24, 40, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  }
+
+  .classroom-card--with-photo::before {
+    filter: blur(30px) saturate(1.32) brightness(0.8);
+  }
+
+  .classroom-card-overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(0, 0, 0, 0.16) 36%,
+      rgba(0, 0, 0, 0.34) 68%,
+      rgba(0, 0, 0, 0.54) 100%
+    );
+  }
+
+  .classroom-card-overlay::before {
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.08) 24%,
+      rgba(255, 255, 255, 0.02) 46%,
+      rgba(255, 255, 255, 0) 62%
+    );
+  }
+
+  .classroom-card--with-photo:hover .classroom-card-overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(0, 0, 0, 0.2) 34%,
+      rgba(0, 0, 0, 0.38) 68%,
+      rgba(0, 0, 0, 0.58) 100%
+    );
+  }
 }
 
 .classroom-card-header {
@@ -563,6 +694,24 @@
   transform: translateX(-50%);
   border: 4px solid transparent;
   border-top-color: var(--text-color-accent);
+}
+
+.timeline-time-indicator--edge-left {
+  transform: translateX(0);
+}
+
+.timeline-time-indicator--edge-left::after {
+  left: 12px;
+  transform: none;
+}
+
+.timeline-time-indicator--edge-right {
+  transform: translateX(-100%);
+}
+
+.timeline-time-indicator--edge-right::after {
+  left: calc(100% - 12px);
+  transform: none;
 }
 
 @media (prefers-color-scheme: dark) {

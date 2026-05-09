@@ -41,7 +41,12 @@ setInterval(() => {
     const tot   = +el.dataset.nowTotal;
     const inRange = nowMin > start && nowMin < start + tot;
     el.hidden = !inRange;
-    if (inRange) el.style.left = `${((nowMin - start) / tot * 100).toFixed(2)}%`;
+    if (inRange) {
+      const fraction = (nowMin - start) / tot;
+      el.style.left = `${(fraction * 100).toFixed(2)}%`;
+      el.classList.toggle('timeline-time-indicator--edge-left', fraction < 0.07);
+      el.classList.toggle('timeline-time-indicator--edge-right', fraction > 0.93);
+    }
   });
 }, 60_000);
 
@@ -56,6 +61,13 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
 
   const pct = m => `${((m - displayStart) / total * 100).toFixed(2)}%`;
   const wPct = (s, e) => `${((Math.min(e, displayEnd) - Math.max(s, displayStart)) / total * 100).toFixed(2)}%`;
+  const fraction = m => (m - displayStart) / total;
+  const edgeClassFor = m => {
+    const f = fraction(m);
+    if (f < 0.07) return ' timeline-time-indicator--edge-left';
+    if (f > 0.93) return ' timeline-time-indicator--edge-right';
+    return '';
+  };
 
   // Query region highlight
   const queryHtml = `<div class="timeline-query-region" style="left:${pct(fromMin)};width:${wPct(fromMin, toMin)}"></div>`;
@@ -139,15 +151,15 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
     }
   }
 
-  const indicatorFrom = `<div class="timeline-time-indicator" data-time-minutes="${fromMin}" style="left:${pct(fromMin)}">${minutesToTimeDisplay(fromMin)}</div>`;
-  const indicatorTo   = `<div class="timeline-time-indicator" data-time-minutes="${toMin}" style="left:${pct(toMin)}">${minutesToTimeDisplay(toMin)}</div>`;
+  const indicatorFrom = `<div class="timeline-time-indicator${edgeClassFor(fromMin)}" data-time-minutes="${fromMin}" style="left:${pct(fromMin)}">${minutesToTimeDisplay(fromMin)}</div>`;
+  const indicatorTo   = `<div class="timeline-time-indicator${edgeClassFor(toMin)}" data-time-minutes="${toMin}" style="left:${pct(toMin)}">${minutesToTimeDisplay(toMin)}</div>`;
 
   let indicatorNow = '';
   if (isToday) {
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
     if (nowMin > displayStart && nowMin < displayEnd) {
-      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now" data-now-start="${displayStart}" data-now-total="${total}" style="left:${pct(nowMin)}">${t('timepicker.now')}</div>`;
+      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now${edgeClassFor(nowMin)}" data-now-start="${displayStart}" data-now-total="${total}" style="left:${pct(nowMin)}">${t('timepicker.now')}</div>`;
     }
   }
 

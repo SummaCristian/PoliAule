@@ -73,10 +73,12 @@ export class Popover {
         const originX = arrowX != null ? `${arrowX + 5}px` : '50%'; // +5 = half arrow width
         const originY = side === 'bottom' ? 'top' : 'bottom';
         this.popover.style.transformOrigin = `${originX} ${originY}`;
+        this.popover.style.setProperty('--popover-closed-ty', side === 'bottom' ? '-6px' : '6px');
       } else {
         const originX = side === 'right' ? 'left' : 'right';
         const originY = arrowY != null ? `${arrowY + 5}px` : '50%';
         this.popover.style.transformOrigin = `${originX} ${originY}`;
+        this.popover.style.setProperty('--popover-closed-ty', '0px');
       }
     }
   }
@@ -125,6 +127,7 @@ export class Popover {
       : popoverWidth - triggerRect.width / 2;
 
     this.popover.style.transformOrigin = `${originX}px ${isAbove ? 'bottom' : 'top'}`;
+    this.popover.style.setProperty('--popover-closed-ty', isAbove ? '6px' : '-6px');
 
     if (this.arrowEl) {
       this.arrowEl.style.left = `${originX - 5}px`;

@@ -689,8 +689,6 @@ label {
 
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-
-  will-change: transform;
 }
 
 @media (max-width: 800px) {
@@ -1418,6 +1416,18 @@ in its compositor.
 All fancy elements like blurs or blend modes
 are rendered as solid colors
 */
+.no-safari .tabbar {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--background-color-secondary);
+}
+
+@media (prefers-color-scheme: dark) {
+  .no-safari .tabbar {
+    background: rgba(55, 55, 55, 0.96);
+  }
+}
+
 .samsung .tabbar,
 .samsung .popover,
 .samsung .header-button {

@@ -211,6 +211,8 @@ class ClassroomDetail {
     const photoEl = pending?.photoEl ?? null;
     const photoInDom = !!(photoEl && document.body.contains(photoEl));
 
+    let detailGradientEl = null;
+
     if (document.startViewTransition && this._tabbar) {
       // -- OLD state setup (before VT snapshot) --
       if (fromInfo) {
@@ -294,6 +296,11 @@ class ClassroomDetail {
             detailImg.style.setProperty('-webkit-mask-image', 'none');
             detailImg.style.viewTransitionName = 'classroom-photo';
           }
+          detailGradientEl = this._overlay.querySelector('.detail-photo-gradient');
+          if (detailGradientEl) {
+            detailGradientEl.style.transition = 'none';
+            detailGradientEl.style.viewTransitionName = 'detail-photo-gradient';
+          }
         }
 
         // Load data immediately after rendering in the transition callback
@@ -322,6 +329,10 @@ class ClassroomDetail {
           detailImgEl.style.setProperty('view-transition-name', '');
           detailImgEl.style.removeProperty('mask-image');
           detailImgEl.style.removeProperty('-webkit-mask-image');
+        }
+        if (detailGradientEl) {
+          detailGradientEl.style.removeProperty('transition');
+          detailGradientEl.style.viewTransitionName = '';
         }
         this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
           el.style.viewTransitionName = '';
@@ -381,6 +392,8 @@ class ClassroomDetail {
     const photoInDom = !!(photoEl && document.body.contains(photoEl));
     const detailImg = this._overlay.querySelector('.detail-photo');
     const detailImgLoaded = detailImg?.classList.contains('loaded');
+    let timelineEl = null;
+    let cardOverlayEl = null;
 
     const cleanup = () => {
       this._overlay.innerHTML = '';
@@ -416,6 +429,8 @@ class ClassroomDetail {
         detailImg.style.setProperty('mask-image', 'none');
         detailImg.style.setProperty('-webkit-mask-image', 'none');
         detailImg.style.viewTransitionName = 'classroom-photo';
+        const detailGradient = this._overlay.querySelector('.detail-photo-gradient');
+        if (detailGradient) detailGradient.style.viewTransitionName = 'detail-photo-gradient';
       }
       if (photoInDom && detailImgLoaded) {
         photoEl.style.setProperty('mask-image', 'none');
@@ -432,6 +447,9 @@ class ClassroomDetail {
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
         if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         if (detailImg) detailImg.style.viewTransitionName = '';
+        // Clear detail gradient name — it was snapshotted as old state above
+        const detailGradientClose = this._overlay.querySelector('.detail-photo-gradient');
+        if (detailGradientClose) detailGradientClose.style.viewTransitionName = '';
 
         // Restore and name the tabbar as the NEW state destination for classroom-nav
         this._tabbar.classList.remove('detail-open');
@@ -445,13 +463,59 @@ class ClassroomDetail {
           el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
         }
         // Card photo is the NEW state destination (mask already stripped above)
-        if (photoInDom && detailImgLoaded) photoEl.style.viewTransitionName = 'classroom-photo';
+        if (photoInDom && detailImgLoaded) {
+          photoEl.style.viewTransitionName = 'classroom-photo';
+          const photoCard = photoEl.closest('.classroom-card--with-photo, .search-card--with-photo');
+          timelineEl   = photoCard?.querySelector('.classroom-timeline') ?? null;
+          cardOverlayEl = photoCard?.querySelector('.classroom-card-overlay, .search-card-overlay') ?? null;
+          if (cardOverlayEl) cardOverlayEl.style.opacity = '0';
+          if (timelineEl) {
+            timelineEl.style.opacity = '0';
+            timelineEl.style.transform = 'translateY(10px)';
+          }
+        }
 
         // Restore scroll position so VT can morph back to the correct spot
         window.scrollTo(0, this._savedScrollPos);
       });
 
-      vt.finished.then(cleanup).catch(cleanup);
+      const OVERLAY_MS  = 220;
+      const TIMELINE_MS = 400;
+
+      vt.finished.then(() => {
+        cleanup();
+        requestAnimationFrame(() => {
+          // 1. Fade the card overlay in
+          if (cardOverlayEl) {
+            cardOverlayEl.style.transition = `opacity ${OVERLAY_MS}ms ease-in`;
+            cardOverlayEl.style.removeProperty('opacity');
+          }
+          // 2. After overlay is visible, slide + fade the timeline in
+          setTimeout(() => {
+            if (timelineEl) {
+              timelineEl.style.transition =
+                `opacity ${TIMELINE_MS}ms ease-out, transform ${TIMELINE_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`;
+              timelineEl.style.removeProperty('opacity');
+              timelineEl.style.removeProperty('transform');
+              setTimeout(() => {
+                timelineEl.style.removeProperty('transition');
+              }, TIMELINE_MS + 50);
+            }
+            if (cardOverlayEl) setTimeout(() => cardOverlayEl.style.removeProperty('transition'), OVERLAY_MS + 50);
+          }, OVERLAY_MS);
+        });
+      }).catch(() => {
+        cleanup();
+        if (cardOverlayEl) {
+          cardOverlayEl.style.removeProperty('opacity');
+          cardOverlayEl.style.removeProperty('transition');
+        }
+        if (timelineEl) {
+          timelineEl.style.removeProperty('opacity');
+          timelineEl.style.removeProperty('transform');
+          timelineEl.style.removeProperty('transition');
+        }
+      });
     } else {
       // Fallback: fade out overlay, swap back button for tabbar without animation
       this._overlay.classList.remove('visible');

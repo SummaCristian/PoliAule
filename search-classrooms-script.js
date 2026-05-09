@@ -163,13 +163,18 @@ function buildClassroomCard(room, query = '') {
       <img class="search-card-photo" alt="">
       <div class="search-card-overlay"></div>
       <div class="search-card-content">
-        <div class="search-card-content-left">
+        <div class="search-card-photo-header">
           <span class="search-card-name" title="${escapeHtml(room.name)}">${highlight(room.name, query)}</span>
+          <span class="search-card-arrow-button" aria-hidden="true">
+            <span class="material-symbols-outlined search-card-arrow">chevron_right</span>
+          </span>
+        </div>
+        <div class="search-card-photo-meta">
           ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
           ${room.campusName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusName, query)}</span>` : ''}
         </div>
-        <div class="search-card-content-right">
-          ${statusText ? `<div class="search-card-status">${statusText}</div>` : ''}
+        <div class="search-card-photo-bottom">
+          ${statusText ? `<div class="search-card-status search-card-status--photo">${statusText}</div>` : ''}
           ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
         </div>
       </div>

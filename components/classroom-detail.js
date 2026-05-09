@@ -233,10 +233,13 @@ class ClassroomDetail {
         el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
       }
       // Card photo morphs into the detail photo (only if already loaded in the card).
-      // Strip the gradient mask-image first so the VT snapshot is a clean rectangle.
+      // Strip mask and force settled opacity/scale so the snapshot is clean even if
+      // the card photo load-in transition is still mid-flight.
       if (photoInDom && validPhotoUrl) {
         photoEl.style.setProperty('mask-image', 'none');
         photoEl.style.setProperty('-webkit-mask-image', 'none');
+        photoEl.style.setProperty('opacity', '1');
+        photoEl.style.setProperty('transform', 'none');
         photoEl.style.viewTransitionName = 'classroom-photo';
       }
 
@@ -278,6 +281,8 @@ class ClassroomDetail {
 
         // If URL was cached and pre-decoded, stamp it onto the detail photo right now so
         // the VT new-state snapshot captures it fully rendered (no async wait needed).
+        // Also strip the mobile mask-image so the snapshot is a clean rectangle —
+        // the same treatment applied to the card photo on the old-state side.
         if (validPhotoUrl) {
           const detailImg = this._overlay.querySelector('.detail-photo');
           const detailContainer = this._overlay.querySelector('.detail-photo-container');
@@ -285,6 +290,8 @@ class ClassroomDetail {
             detailImg.src = validPhotoUrl;
             detailImg.classList.add('loaded');
             detailContainer?.classList.add('loaded');
+            detailImg.style.setProperty('mask-image', 'none');
+            detailImg.style.setProperty('-webkit-mask-image', 'none');
             detailImg.style.viewTransitionName = 'classroom-photo';
           }
         }
@@ -302,14 +309,20 @@ class ClassroomDetail {
           photoEl.style.viewTransitionName = '';
           photoEl.style.removeProperty('mask-image');
           photoEl.style.removeProperty('-webkit-mask-image');
+          photoEl.style.removeProperty('opacity');
+          photoEl.style.removeProperty('transform');
         }
         if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         this._overlay.querySelector('.detail-title')
           ?.style.setProperty('view-transition-name', '');
         this._overlay.querySelector('.detail-title-row .classroom-status-txt')
           ?.style.setProperty('view-transition-name', '');
-        this._overlay.querySelector('.detail-photo')
-          ?.style.setProperty('view-transition-name', '');
+        const detailImgEl = this._overlay.querySelector('.detail-photo');
+        if (detailImgEl) {
+          detailImgEl.style.setProperty('view-transition-name', '');
+          detailImgEl.style.removeProperty('mask-image');
+          detailImgEl.style.removeProperty('-webkit-mask-image');
+        }
         this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
           el.style.viewTransitionName = '';
         });
@@ -396,8 +409,14 @@ class ClassroomDetail {
         const fid = el.closest('[data-feature-id]').dataset.featureId;
         el.style.viewTransitionName = `classroom-feature-${fid}`;
       });
-      // Detail photo is the OLD state source; strip card photo mask for a clean new-state snapshot
-      if (detailImgLoaded) detailImg.style.viewTransitionName = 'classroom-photo';
+      // Detail photo is the OLD state source.
+      // Strip its mobile mask-image so the old-state snapshot is a clean rectangle,
+      // and strip the card photo mask for a clean new-state snapshot.
+      if (detailImgLoaded) {
+        detailImg.style.setProperty('mask-image', 'none');
+        detailImg.style.setProperty('-webkit-mask-image', 'none');
+        detailImg.style.viewTransitionName = 'classroom-photo';
+      }
       if (photoInDom && detailImgLoaded) {
         photoEl.style.setProperty('mask-image', 'none');
         photoEl.style.setProperty('-webkit-mask-image', 'none');

@@ -797,7 +797,7 @@
 
   opacity: 0;
   transform-origin: bottom center;
-  animation: today-indicator-appear 0.65s linear 0.35s forwards;
+  animation: today-indicator-appear 0.65s ease-out 0.35s forwards;
 }
 
 .timeline-time-indicator--now::after {

@@ -152,31 +152,24 @@ body.detail-open .tab-content * {
 
 @media (max-width: 599px) {
   .detail-photo-gradient {
-    /* Gradient Blur: a more sophisticated approach using a taller, fixed-height 
-       area and a smoother mask to ensure the blur feels substantial on all screens. */
     top: auto;
-    height: 180px; /* Consistent blur height regardless of image height */
-    
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
-    
-    /* Smoother fade-out for the blur itself. */
-    mask-image: linear-gradient(to top, 
-      black 0%, 
-      black 20%, 
-      rgba(0, 0, 0, 0.5) 60%, 
+    height: 180px;
+
+    mask-image: linear-gradient(to top,
+      black 0%,
+      black 20%,
+      rgba(0, 0, 0, 0.5) 60%,
       transparent 100%
     );
-    -webkit-mask-image: linear-gradient(to top, 
-      black 0%, 
-      black 20%, 
-      rgba(0, 0, 0, 0.5) 60%, 
+    -webkit-mask-image: linear-gradient(to top,
+      black 0%,
+      black 20%,
+      rgba(0, 0, 0, 0.5) 60%,
       transparent 100%
     );
 
-    /* Blend into the background color with a matching gradient. */
-    background: linear-gradient(to top, 
-      var(--background-color) 0%, 
+    background: linear-gradient(to top,
+      var(--background-color) 0%,
       color-mix(in srgb, var(--background-color) 80%, transparent) 30%,
       transparent 100%
     );
@@ -1402,19 +1395,39 @@ body.detail-open .tab-content * {
 
   /* Shared element: classroom photo card → detail hero */
   ::view-transition-group(classroom-photo) {
-    animation-duration: 0.42s;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    animation-duration: 0.45s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden; /* clip both snapshots to the group's morphing bounds */
   }
 
-  ::view-transition-old(classroom-photo),
-  ::view-transition-new(classroom-photo) {
-    animation-duration: 0.42s;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    /* Scale to fill the morphing group box, matching object-fit: cover on both imgs */
+  /* Old snapshot (card photo): fade out quickly so it doesn't ghost behind the new image */
+  ::view-transition-old(classroom-photo) {
+    animation-duration: 0.2s;
+    animation-timing-function: ease-in;
     object-fit: cover;
     width: 100%;
     height: 100%;
+  }
+
+  /* New snapshot (detail photo): match the group's spring so it reveals with the morph */
+  ::view-transition-new(classroom-photo) {
+    animation-duration: 0.45s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Detail photo gradient: fades in after the photo hero morph settles */
+  ::view-transition-old(detail-photo-gradient) {
+    animation-duration: 0.15s;
+    animation-timing-function: ease-out;
+  }
+  ::view-transition-new(detail-photo-gradient) {
+    animation-duration: 0.2s;
+    animation-delay: 0.25s;
+    animation-timing-function: ease-in;
+    animation-fill-mode: both;
   }
 }
 

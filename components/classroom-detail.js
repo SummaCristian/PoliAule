@@ -211,6 +211,8 @@ class ClassroomDetail {
     const photoEl = pending?.photoEl ?? null;
     const photoInDom = !!(photoEl && document.body.contains(photoEl));
 
+    let detailGradientEl = null;
+
     if (document.startViewTransition && this._tabbar) {
       // -- OLD state setup (before VT snapshot) --
       if (fromInfo) {
@@ -233,10 +235,13 @@ class ClassroomDetail {
         el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
       }
       // Card photo morphs into the detail photo (only if already loaded in the card).
-      // Strip the gradient mask-image first so the VT snapshot is a clean rectangle.
+      // Strip mask and force settled opacity/scale so the snapshot is clean even if
+      // the card photo load-in transition is still mid-flight.
       if (photoInDom && validPhotoUrl) {
         photoEl.style.setProperty('mask-image', 'none');
         photoEl.style.setProperty('-webkit-mask-image', 'none');
+        photoEl.style.setProperty('opacity', '1');
+        photoEl.style.setProperty('transform', 'none');
         photoEl.style.viewTransitionName = 'classroom-photo';
       }
 
@@ -278,6 +283,8 @@ class ClassroomDetail {
 
         // If URL was cached and pre-decoded, stamp it onto the detail photo right now so
         // the VT new-state snapshot captures it fully rendered (no async wait needed).
+        // Also strip the mobile mask-image so the snapshot is a clean rectangle —
+        // the same treatment applied to the card photo on the old-state side.
         if (validPhotoUrl) {
           const detailImg = this._overlay.querySelector('.detail-photo');
           const detailContainer = this._overlay.querySelector('.detail-photo-container');
@@ -285,7 +292,14 @@ class ClassroomDetail {
             detailImg.src = validPhotoUrl;
             detailImg.classList.add('loaded');
             detailContainer?.classList.add('loaded');
+            detailImg.style.setProperty('mask-image', 'none');
+            detailImg.style.setProperty('-webkit-mask-image', 'none');
             detailImg.style.viewTransitionName = 'classroom-photo';
+          }
+          detailGradientEl = this._overlay.querySelector('.detail-photo-gradient');
+          if (detailGradientEl) {
+            detailGradientEl.style.transition = 'none';
+            detailGradientEl.style.viewTransitionName = 'detail-photo-gradient';
           }
         }
 
@@ -302,14 +316,24 @@ class ClassroomDetail {
           photoEl.style.viewTransitionName = '';
           photoEl.style.removeProperty('mask-image');
           photoEl.style.removeProperty('-webkit-mask-image');
+          photoEl.style.removeProperty('opacity');
+          photoEl.style.removeProperty('transform');
         }
         if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         this._overlay.querySelector('.detail-title')
           ?.style.setProperty('view-transition-name', '');
         this._overlay.querySelector('.detail-title-row .classroom-status-txt')
           ?.style.setProperty('view-transition-name', '');
-        this._overlay.querySelector('.detail-photo')
-          ?.style.setProperty('view-transition-name', '');
+        const detailImgEl = this._overlay.querySelector('.detail-photo');
+        if (detailImgEl) {
+          detailImgEl.style.setProperty('view-transition-name', '');
+          detailImgEl.style.removeProperty('mask-image');
+          detailImgEl.style.removeProperty('-webkit-mask-image');
+        }
+        if (detailGradientEl) {
+          detailGradientEl.style.removeProperty('transition');
+          detailGradientEl.style.viewTransitionName = '';
+        }
         this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
           el.style.viewTransitionName = '';
         });
@@ -368,6 +392,8 @@ class ClassroomDetail {
     const photoInDom = !!(photoEl && document.body.contains(photoEl));
     const detailImg = this._overlay.querySelector('.detail-photo');
     const detailImgLoaded = detailImg?.classList.contains('loaded');
+    let timelineEl = null;
+    let cardOverlayEl = null;
 
     const cleanup = () => {
       this._overlay.innerHTML = '';
@@ -396,8 +422,16 @@ class ClassroomDetail {
         const fid = el.closest('[data-feature-id]').dataset.featureId;
         el.style.viewTransitionName = `classroom-feature-${fid}`;
       });
-      // Detail photo is the OLD state source; strip card photo mask for a clean new-state snapshot
-      if (detailImgLoaded) detailImg.style.viewTransitionName = 'classroom-photo';
+      // Detail photo is the OLD state source.
+      // Strip its mobile mask-image so the old-state snapshot is a clean rectangle,
+      // and strip the card photo mask for a clean new-state snapshot.
+      if (detailImgLoaded) {
+        detailImg.style.setProperty('mask-image', 'none');
+        detailImg.style.setProperty('-webkit-mask-image', 'none');
+        detailImg.style.viewTransitionName = 'classroom-photo';
+        const detailGradient = this._overlay.querySelector('.detail-photo-gradient');
+        if (detailGradient) detailGradient.style.viewTransitionName = 'detail-photo-gradient';
+      }
       if (photoInDom && detailImgLoaded) {
         photoEl.style.setProperty('mask-image', 'none');
         photoEl.style.setProperty('-webkit-mask-image', 'none');
@@ -413,6 +447,9 @@ class ClassroomDetail {
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
         if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         if (detailImg) detailImg.style.viewTransitionName = '';
+        // Clear detail gradient name — it was snapshotted as old state above
+        const detailGradientClose = this._overlay.querySelector('.detail-photo-gradient');
+        if (detailGradientClose) detailGradientClose.style.viewTransitionName = '';
 
         // Restore and name the tabbar as the NEW state destination for classroom-nav
         this._tabbar.classList.remove('detail-open');
@@ -426,13 +463,59 @@ class ClassroomDetail {
           el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
         }
         // Card photo is the NEW state destination (mask already stripped above)
-        if (photoInDom && detailImgLoaded) photoEl.style.viewTransitionName = 'classroom-photo';
+        if (photoInDom && detailImgLoaded) {
+          photoEl.style.viewTransitionName = 'classroom-photo';
+          const photoCard = photoEl.closest('.classroom-card--with-photo, .search-card--with-photo');
+          timelineEl   = photoCard?.querySelector('.classroom-timeline') ?? null;
+          cardOverlayEl = photoCard?.querySelector('.classroom-card-overlay, .search-card-overlay') ?? null;
+          if (cardOverlayEl) cardOverlayEl.style.opacity = '0';
+          if (timelineEl) {
+            timelineEl.style.opacity = '0';
+            timelineEl.style.transform = 'translateY(10px)';
+          }
+        }
 
         // Restore scroll position so VT can morph back to the correct spot
         window.scrollTo(0, this._savedScrollPos);
       });
 
-      vt.finished.then(cleanup).catch(cleanup);
+      const OVERLAY_MS  = 220;
+      const TIMELINE_MS = 400;
+
+      vt.finished.then(() => {
+        cleanup();
+        requestAnimationFrame(() => {
+          // 1. Fade the card overlay in
+          if (cardOverlayEl) {
+            cardOverlayEl.style.transition = `opacity ${OVERLAY_MS}ms ease-in`;
+            cardOverlayEl.style.removeProperty('opacity');
+          }
+          // 2. After overlay is visible, slide + fade the timeline in
+          setTimeout(() => {
+            if (timelineEl) {
+              timelineEl.style.transition =
+                `opacity ${TIMELINE_MS}ms ease-out, transform ${TIMELINE_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`;
+              timelineEl.style.removeProperty('opacity');
+              timelineEl.style.removeProperty('transform');
+              setTimeout(() => {
+                timelineEl.style.removeProperty('transition');
+              }, TIMELINE_MS + 50);
+            }
+            if (cardOverlayEl) setTimeout(() => cardOverlayEl.style.removeProperty('transition'), OVERLAY_MS + 50);
+          }, OVERLAY_MS);
+        });
+      }).catch(() => {
+        cleanup();
+        if (cardOverlayEl) {
+          cardOverlayEl.style.removeProperty('opacity');
+          cardOverlayEl.style.removeProperty('transition');
+        }
+        if (timelineEl) {
+          timelineEl.style.removeProperty('opacity');
+          timelineEl.style.removeProperty('transform');
+          timelineEl.style.removeProperty('transition');
+        }
+      });
     } else {
       // Fallback: fade out overlay, swap back button for tabbar without animation
       this._overlay.classList.remove('visible');

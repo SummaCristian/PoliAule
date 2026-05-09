@@ -636,8 +636,12 @@
 
 .classroom-detail-btn .material-symbols-outlined {
   font-size: 1.5rem !important;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
   line-height: 1;
+  transform: translateX(0.06em);
 }
 
 .classroom-features {

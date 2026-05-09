@@ -537,6 +537,11 @@ mark {
   color: var(--text-color-accent);
 }
 
+.search-card--with-photo:hover .search-card-arrow-button .search-card-arrow {
+  transform: none;
+  color: inherit;
+}
+
 .search-card--classroom {
   gap: 0.75rem;
 }
@@ -760,7 +765,7 @@ mark {
 .search-card-arrow-button .search-card-arrow {
   color: inherit;
   font-size: 1.2rem !important;
-  transform: translateX(0.06em);
+  transform: translateX(0.02em);
 }
 
 .search-card--classroom .search-card-icon-wrapper {

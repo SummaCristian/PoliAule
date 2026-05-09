@@ -296,6 +296,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
   overflow: hidden;
   isolation: isolate;
+  mask-image: radial-gradient(white, black);
   -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
@@ -364,9 +365,11 @@
   border-radius: inherit;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.08) 0%,
-    rgba(0, 0, 0, 0.32) 38%,
-    rgba(0, 0, 0, 0.52) 68%,
+    rgba(0, 0, 0, 0.16) 0%,
+    rgba(0, 0, 0, 0.06) 20%,
+    rgba(0, 0, 0, 0) 36%,
+    rgba(0, 0, 0, 0) 64%,
+    rgba(0, 0, 0, 0.36) 84%,
     rgba(0, 0, 0, 0.68) 100%
   );
   transition: background 0.2s ease;
@@ -378,10 +381,11 @@
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(120% 62% at 50% 0%, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.18) 48%, rgba(0, 0, 0, 0) 100%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0) 56%);
+    radial-gradient(130% 70% at 50% 0%, rgba(0, 0, 0, 0.54) 0%, rgba(0, 0, 0, 0.22) 34%, rgba(0, 0, 0, 0) 60%),
+    radial-gradient(120% 62% at 50% 0%, rgba(0, 0, 0, 0.52) 0%, rgba(0, 0, 0, 0.22) 44%, rgba(0, 0, 0, 0) 92%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0) 52%);
   mix-blend-mode: multiply;
-  opacity: 0.88;
+  opacity: 0.74;
   z-index: 0;
   pointer-events: none;
 }
@@ -398,7 +402,7 @@
     rgba(255, 255, 255, 0) 52%
   );
   mix-blend-mode: soft-light;
-  opacity: 0.55;
+  opacity: 0.36;
   z-index: 0;
   pointer-events: none;
 }
@@ -509,9 +513,11 @@
 .classroom-card--with-photo:hover .classroom-card-overlay {
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.16) 0%,
-    rgba(0, 0, 0, 0.45) 36%,
-    rgba(0, 0, 0, 0.64) 68%,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.08) 22%,
+    rgba(0, 0, 0, 0) 38%,
+    rgba(0, 0, 0, 0) 62%,
+    rgba(0, 0, 0, 0.44) 84%,
     rgba(0, 0, 0, 0.78) 100%
   );
 }
@@ -540,19 +546,21 @@
   .classroom-card-overlay {
     background: linear-gradient(
       to bottom,
-      rgba(0, 0, 0, 0.08) 0%,
-      rgba(0, 0, 0, 0.32) 38%,
-      rgba(0, 0, 0, 0.52) 68%,
+      rgba(0, 0, 0, 0.14) 0%,
+      rgba(0, 0, 0, 0.05) 20%,
+      rgba(0, 0, 0, 0) 36%,
+      rgba(0, 0, 0, 0) 64%,
+      rgba(0, 0, 0, 0.34) 84%,
       rgba(0, 0, 0, 0.66) 100%
     );
   }
 
   .classroom-card-overlay::before {
-    opacity: 0.72;
+    opacity: 0.64;
   }
 
   .classroom-card-overlay::after {
-    opacity: 0.26;
+    opacity: 0.18;
   }
 }
 
@@ -571,30 +579,35 @@
   .classroom-card-overlay {
     background: linear-gradient(
       to bottom,
-      rgba(255, 255, 255, 0.08) 0%,
-      rgba(0, 0, 0, 0.16) 36%,
-      rgba(0, 0, 0, 0.34) 68%,
+      rgba(255, 255, 255, 0.09) 0%,
+      rgba(0, 0, 0, 0.06) 18%,
+      rgba(0, 0, 0, 0) 36%,
+      rgba(0, 0, 0, 0) 64%,
+      rgba(0, 0, 0, 0.24) 84%,
       rgba(0, 0, 0, 0.54) 100%
     );
   }
 
   .classroom-card-overlay::before {
-    opacity: 0.92;
+    opacity: 0.72;
   }
 
   .classroom-card--with-photo:hover .classroom-card-overlay {
     background: linear-gradient(
       to bottom,
-      rgba(255, 255, 255, 0.1) 0%,
-      rgba(0, 0, 0, 0.2) 34%,
-      rgba(0, 0, 0, 0.38) 68%,
+      rgba(255, 255, 255, 0.11) 0%,
+      rgba(0, 0, 0, 0.08) 20%,
+      rgba(0, 0, 0, 0) 38%,
+      rgba(0, 0, 0, 0) 62%,
+      rgba(0, 0, 0, 0.28) 84%,
       rgba(0, 0, 0, 0.58) 100%
     );
   }
 
   .classroom-card-overlay::after {
-    opacity: 0.62;
+    opacity: 0.42;
   }
+
 }
 
 .classroom-card-header {
@@ -641,7 +654,7 @@
   justify-content: center;
   width: 1em;
   line-height: 1;
-  transform: translateX(0.06em);
+  transform: translateX(0.02em);
 }
 
 .classroom-features {

@@ -281,7 +281,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
         const roomItem = document.createElement('li');
         roomItem.className = 'classroom-list-item-container';
         roomItem.dataset.status = room.status;
-        roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday, date);
+        roomItem.appendChild(buildCardForClassroom(room, building, from, to, isToday, date));
         roomsList.appendChild(roomItem);
       });
       if (rooms.every(r => r.status === 'partially-free')) {

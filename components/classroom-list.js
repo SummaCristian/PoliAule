@@ -1,6 +1,7 @@
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { createTimeFormatter } from '../utils/time-format.js';
+import { fetchPhotoUrl } from '../utils/photo.js';
 
 const FEATURE_ICONS = {
   4: { icon: 'videocam', key: 'features.videoProjector' },
@@ -40,7 +41,12 @@ setInterval(() => {
     const tot   = +el.dataset.nowTotal;
     const inRange = nowMin > start && nowMin < start + tot;
     el.hidden = !inRange;
-    if (inRange) el.style.left = `${((nowMin - start) / tot * 100).toFixed(2)}%`;
+    if (inRange) {
+      const fraction = (nowMin - start) / tot;
+      el.style.left = `${(fraction * 100).toFixed(2)}%`;
+      el.classList.toggle('timeline-time-indicator--edge-left', fraction < 0.07);
+      el.classList.toggle('timeline-time-indicator--edge-right', fraction > 0.93);
+    }
   });
 }, 60_000);
 
@@ -55,6 +61,13 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
 
   const pct = m => `${((m - displayStart) / total * 100).toFixed(2)}%`;
   const wPct = (s, e) => `${((Math.min(e, displayEnd) - Math.max(s, displayStart)) / total * 100).toFixed(2)}%`;
+  const fraction = m => (m - displayStart) / total;
+  const edgeClassFor = m => {
+    const f = fraction(m);
+    if (f < 0.07) return ' timeline-time-indicator--edge-left';
+    if (f > 0.93) return ' timeline-time-indicator--edge-right';
+    return '';
+  };
 
   // Query region highlight
   const queryHtml = `<div class="timeline-query-region" style="left:${pct(fromMin)};width:${wPct(fromMin, toMin)}"></div>`;
@@ -138,15 +151,15 @@ function buildTimeline(occupancy, fromTime, toTime, isToday = false) {
     }
   }
 
-  const indicatorFrom = `<div class="timeline-time-indicator" data-time-minutes="${fromMin}" style="left:${pct(fromMin)}">${minutesToTimeDisplay(fromMin)}</div>`;
-  const indicatorTo   = `<div class="timeline-time-indicator" data-time-minutes="${toMin}" style="left:${pct(toMin)}">${minutesToTimeDisplay(toMin)}</div>`;
+  const indicatorFrom = `<div class="timeline-time-indicator${edgeClassFor(fromMin)}" data-time-minutes="${fromMin}" style="left:${pct(fromMin)}">${minutesToTimeDisplay(fromMin)}</div>`;
+  const indicatorTo   = `<div class="timeline-time-indicator${edgeClassFor(toMin)}" data-time-minutes="${toMin}" style="left:${pct(toMin)}">${minutesToTimeDisplay(toMin)}</div>`;
 
   let indicatorNow = '';
   if (isToday) {
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
     if (nowMin > displayStart && nowMin < displayEnd) {
-      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now" data-now-start="${displayStart}" data-now-total="${total}" style="left:${pct(nowMin)}">${t('timepicker.now')}</div>`;
+      indicatorNow = `<div class="timeline-time-indicator timeline-time-indicator--now${edgeClassFor(nowMin)}" data-now-start="${displayStart}" data-now-total="${total}" style="left:${pct(nowMin)}">${t('timepicker.now')}</div>`;
     }
   }
 
@@ -207,9 +220,33 @@ document.addEventListener('mousemove', e => {
   line.hidden = false;
 });
 
+// ---------- PHOTO ----------
+
+async function _loadCardPhoto(idfoto, card) {
+  const img = card.querySelector('.classroom-card-photo');
+  const url = await fetchPhotoUrl(idfoto);
+  if (url === 'error') {
+    card.classList.add('photo-failed');
+    return;
+  }
+  card.style.setProperty('--card-photo-url', `url("${url}")`);
+  img.onerror = () => card.classList.add('photo-failed');
+  img.src = url;
+  img.decode().then(() => img.classList.add('loaded')).catch(() => card.classList.add('photo-failed'));
+}
+
+const _photoObserver = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    _photoObserver.unobserve(entry.target);
+    const idfoto = parseInt(entry.target.dataset.idfoto, 10);
+    if (idfoto) _loadCardPhoto(idfoto, entry.target);
+  }
+}, { rootMargin: '300px' });
+
 // ---------- CARD ----------
 
-// Builds and returns a Card UI element for the classroom passed as parameter
+// Builds and returns a Card DOM element for the classroom passed as parameter
 export function buildCardForClassroom(classroom, building, fromTime, toTime, isToday = false, date = null) {
   const featuresHtml = (classroom.features ?? [])
     .filter(f => FEATURE_ICONS[f.id])
@@ -219,21 +256,59 @@ export function buildCardForClassroom(classroom, building, fromTime, toTime, isT
     })
     .join('');
 
-  const buildingDisplay = building.altName ? `${building.altName} (${building.name})` : building.name;
+  const statusLabel = classroom.status === 'free' ? t('status.free') : t('status.partiallyFree');
+  const timelineHtml = buildTimeline(classroom.occupancy, fromTime, toTime, isToday);
 
-  return `
-    <div class="classroom-card" data-open-classroom="${classroom.id}" data-query-from="${fromTime}" data-query-to="${toTime}"${date ? ` data-query-date="${date}"` : ''} role="button" tabindex="0" aria-label="View details for ${escapeHtml(classroom.name)}">
+  const el = document.createElement('div');
+  el.dataset.openClassroom = classroom.id;
+  el.dataset.queryFrom = fromTime;
+  el.dataset.queryTo = toTime;
+  if (date) el.dataset.queryDate = date;
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('aria-label', `View details for ${escapeHtml(classroom.name)}`);
+
+  if (classroom.idfoto) {
+    el.className = 'classroom-card classroom-card--with-photo';
+    el.dataset.idfoto = classroom.idfoto;
+    el.innerHTML = `
+      <img class="classroom-card-photo" alt="">
+      <div class="classroom-card-overlay"></div>
+      <div class="classroom-card-content">
+        <div class="classroom-card-header">
+          <div class="classroom-card-header-left">
+            <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${escapeHtml(classroom.name)}</h4>
+          </div>
+          <div class="classroom-detail-btn">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </div>
+        </div>
+        ${timelineHtml}
+        <div class="classroom-card-meta-row">
+          <h4 class="classroom-status-txt ${classroom.status}">${statusLabel}</h4>
+          ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}
+        </div>
+      </div>
+    `;
+    _photoObserver.observe(el);
+  } else {
+    el.className = 'classroom-card';
+    el.innerHTML = `
       <div class="classroom-card-header">
         <div class="classroom-card-header-left">
           <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${escapeHtml(classroom.name)}</h4>
-          <h4 class="classroom-status-txt ${classroom.status}">${classroom.status === 'free' ? t('status.free') : t('status.partiallyFree')}</h4>
         </div>
         <div class="classroom-detail-btn">
           <span class="material-symbols-outlined">chevron_right</span>
         </div>
       </div>
-      ${buildTimeline(classroom.occupancy, fromTime, toTime, isToday)}
-      ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}
-    </div>
-  `;
+      ${timelineHtml}
+      <div class="classroom-card-meta-row">
+        <h4 class="classroom-status-txt ${classroom.status}">${statusLabel}</h4>
+        ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}
+      </div>
+    `;
+  }
+
+  return el;
 }

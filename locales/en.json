@@ -165,10 +165,8 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 1.0.0",
+  "footer.versionInfo": "Version 1.1.0-beta1",
 
-  "changelog.v1.0.0.item1": "PoliAule 1.0.0 is officially here!",
-  "changelog.v1.0.0.item2": "I'm thrilled to announce the first stable release of PoliAule! This release brings two of the main features everyone could be asking for: you can search for available classrooms in every campus, and you can see many details about each classroom.",
-  "changelog.v1.0.0.item3": "I hope this tool can be useful to many students out there, and I'm excited to keep improving it with new features and updates in the future. If you have any feedback or suggestions, please don't hesitate to reach out or open an issue on GitHub!",
-  "changelog.v1.0.0.item4": "For the full changelog and more details about this release, check out the GitHub release page: <a href=\"https://github.com/SummaCristian/poliaule/releases/tag/v1.0.0\" target=\"_blank\">Release v1.0.0</a>"
+  "changelog.v1.1.0.item1": "Polished animations and transitions for a smoother user experience.",
+  "changelog.v1.1.0.item2": "Redesigned classroom cards to include pictures and a more modern layout."
 }

@@ -278,14 +278,16 @@ export function buildCardForClassroom(classroom, building, fromTime, toTime, isT
         <div class="classroom-card-header">
           <div class="classroom-card-header-left">
             <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${escapeHtml(classroom.name)}</h4>
-            <h4 class="classroom-status-txt ${classroom.status}">${statusLabel}</h4>
           </div>
           <div class="classroom-detail-btn">
             <span class="material-symbols-outlined">chevron_right</span>
           </div>
         </div>
         ${timelineHtml}
-        ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}
+        <div class="classroom-card-meta-row">
+          <h4 class="classroom-status-txt ${classroom.status}">${statusLabel}</h4>
+          ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}
+        </div>
       </div>
     `;
     _photoObserver.observe(el);
@@ -295,14 +297,16 @@ export function buildCardForClassroom(classroom, building, fromTime, toTime, isT
       <div class="classroom-card-header">
         <div class="classroom-card-header-left">
           <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${escapeHtml(classroom.name)}</h4>
-          <h4 class="classroom-status-txt ${classroom.status}">${statusLabel}</h4>
         </div>
         <div class="classroom-detail-btn">
           <span class="material-symbols-outlined">chevron_right</span>
         </div>
       </div>
       ${timelineHtml}
-      ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}
+      <div class="classroom-card-meta-row">
+        <h4 class="classroom-status-txt ${classroom.status}">${statusLabel}</h4>
+        ${featuresHtml ? `<div class="classroom-features">${featuresHtml}</div>` : ''}
+      </div>
     `;
   }
 

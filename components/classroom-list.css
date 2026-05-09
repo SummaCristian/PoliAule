@@ -364,10 +364,10 @@
   border-radius: inherit;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.12) 0%,
-    rgba(0, 0, 0, 0.4) 38%,
-    rgba(0, 0, 0, 0.58) 68%,
-    rgba(0, 0, 0, 0.74) 100%
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(0, 0, 0, 0.32) 38%,
+    rgba(0, 0, 0, 0.52) 68%,
+    rgba(0, 0, 0, 0.68) 100%
   );
   transition: background 0.2s ease;
 }
@@ -377,13 +377,29 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
+  background:
+    radial-gradient(120% 62% at 50% 0%, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.18) 48%, rgba(0, 0, 0, 0) 100%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0) 56%);
+  mix-blend-mode: multiply;
+  opacity: 0.88;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.classroom-card-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.30) 0%,
-    rgba(0, 0, 0, 0.18) 22%,
-    rgba(0, 0, 0, 0.04) 44%,
-    rgba(0, 0, 0, 0) 60%
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.06) 24%,
+    rgba(255, 255, 255, 0) 52%
   );
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -392,22 +408,33 @@
 .classroom-card-content {
   position: relative;
   z-index: 3;
-  padding: 7.4rem 1rem 1rem;
+  padding: 6.85rem 1rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.56rem;
+}
+
+.classroom-card--with-photo .classroom-card-content {
+  padding-top: 12rem;
 }
 
 /* ── White text overrides for photo variant ─────────────────── */
 
 .classroom-card--with-photo .classroom-name {
   color: #fff;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.72),
+    0 6px 16px rgba(0, 0, 0, 0.58),
+    0 0 1px rgba(0, 0, 0, 0.7);
   letter-spacing: 0.01em;
+  line-height: 1.05;
+  max-width: 95%;
 }
 
 .classroom-card--with-photo .classroom-status-txt {
-  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.72),
+    0 4px 10px rgba(0, 0, 0, 0.42);
   filter: none;
   padding: 0;
   border-radius: 0;
@@ -521,13 +548,11 @@
   }
 
   .classroom-card-overlay::before {
-    background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.22) 0%,
-      rgba(0, 0, 0, 0.12) 22%,
-      rgba(0, 0, 0, 0.03) 44%,
-      rgba(0, 0, 0, 0) 60%
-    );
+    opacity: 0.72;
+  }
+
+  .classroom-card-overlay::after {
+    opacity: 0.26;
   }
 }
 
@@ -554,13 +579,7 @@
   }
 
   .classroom-card-overlay::before {
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.18) 0%,
-      rgba(255, 255, 255, 0.08) 24%,
-      rgba(255, 255, 255, 0.02) 46%,
-      rgba(255, 255, 255, 0) 62%
-    );
+    opacity: 0.92;
   }
 
   .classroom-card--with-photo:hover .classroom-card-overlay {
@@ -572,6 +591,10 @@
       rgba(0, 0, 0, 0.58) 100%
     );
   }
+
+  .classroom-card-overlay::after {
+    opacity: 0.62;
+  }
 }
 
 .classroom-card-header {
@@ -582,12 +605,22 @@
   gap: 0.5rem;
 }
 
+.classroom-card--with-photo .classroom-card-header {
+  position: absolute;
+  top: 1rem;
+  left: 1.15rem;
+  right: 1.15rem;
+  z-index: 4;
+  align-items: center;
+}
+
 .classroom-card-header-left {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
   min-width: 0;
+  position: relative;
 }
 
 .classroom-detail-btn {
@@ -610,6 +643,15 @@
   flex-direction: row;
   gap: 0.1rem;
   flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+.classroom-card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 1.2rem;
 }
 
 .classroom-feature-icon {
@@ -622,9 +664,10 @@
   font-weight: 700;
   text-align: start;
   margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  line-height: 1.12;
   max-width: 100%;
 }
 
@@ -632,9 +675,12 @@
   font-size: 0.8rem;
   font-weight: 800;
   margin: 0;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-width: 0;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  line-height: 1.15;
+  text-wrap: balance;
 }
 
 .classroom-status-txt.free {

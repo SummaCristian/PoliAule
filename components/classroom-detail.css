@@ -1416,17 +1416,16 @@ body.detail-open .tab-content * {
     height: 100%;
   }
 
-  /* Detail photo gradient: fades in as the photo hero morph settles */
-  ::view-transition-old(detail-photo-gradient) {
-    animation-duration: 0.2s;
-    animation-timing-function: ease-out;
-  }
-  ::view-transition-new(detail-photo-gradient) {
+  /* Card meta elements (building info, arrow button): promoted to top layer during
+     close so they sit above the morphing photo (DOM order gives them higher z-index).
+     Fade in as the photo settles — no old state, so this is a reveal-only animation. */
+  ::view-transition-new(search-card-photo-meta),
+  ::view-transition-new(search-card-arrow-btn) {
     animation-duration: 0.45s;
-    animation-delay: 0.05s;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     animation-fill-mode: both;
   }
+
 }
 
 @media (max-width: 599px) and (prefers-color-scheme: dark) {

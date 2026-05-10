@@ -298,8 +298,7 @@ class ClassroomDetail {
           }
           detailGradientEl = this._overlay.querySelector('.detail-photo-gradient');
           if (detailGradientEl) {
-            detailGradientEl.style.transition = 'none';
-            detailGradientEl.style.viewTransitionName = 'detail-photo-gradient';
+            detailGradientEl.style.opacity = '0';
           }
         }
 
@@ -331,8 +330,7 @@ class ClassroomDetail {
           detailImgEl.style.removeProperty('-webkit-mask-image');
         }
         if (detailGradientEl) {
-          detailGradientEl.style.removeProperty('transition');
-          detailGradientEl.style.viewTransitionName = '';
+          detailGradientEl.style.removeProperty('opacity');
         }
         this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
           el.style.viewTransitionName = '';
@@ -398,6 +396,8 @@ class ClassroomDetail {
     const detailImgLoaded = detailImg?.classList.contains('loaded');
     let timelineEl = null;
     let cardOverlayEl = null;
+    let photoMetaEl = null;
+    let arrowBtnEl = null;
 
     const cleanup = () => {
       this._overlay.innerHTML = '';
@@ -413,6 +413,8 @@ class ClassroomDetail {
         photoEl.style.removeProperty('mask-image');
         photoEl.style.removeProperty('-webkit-mask-image');
       }
+      if (photoMetaEl) photoMetaEl.style.viewTransitionName = '';
+      if (arrowBtnEl) arrowBtnEl.style.viewTransitionName = '';
       if (photoCard) photoCard.style.removeProperty('content-visibility');
     };
 
@@ -436,8 +438,6 @@ class ClassroomDetail {
         detailImg.style.setProperty('mask-image', 'none');
         detailImg.style.setProperty('-webkit-mask-image', 'none');
         detailImg.style.viewTransitionName = 'classroom-photo';
-        const detailGradient = this._overlay.querySelector('.detail-photo-gradient');
-        if (detailGradient) detailGradient.style.viewTransitionName = 'detail-photo-gradient';
       }
       if (photoInDom && detailImgLoaded) {
         photoEl.style.setProperty('mask-image', 'none');
@@ -454,9 +454,6 @@ class ClassroomDetail {
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
         if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         if (detailImg) detailImg.style.viewTransitionName = '';
-        // Clear detail gradient name — it was snapshotted as old state above
-        const detailGradientClose = this._overlay.querySelector('.detail-photo-gradient');
-        if (detailGradientClose) detailGradientClose.style.viewTransitionName = '';
 
         // Restore and name the tabbar as the NEW state destination for classroom-nav
         this._tabbar.classList.remove('detail-open');
@@ -480,6 +477,14 @@ class ClassroomDetail {
             timelineEl.style.opacity = '0';
             timelineEl.style.transform = 'translateY(10px)';
           }
+          // Promote these unnamed card elements into the VT top layer so they sit
+          // above the morphing photo (DOM order gives them higher z-index).
+          // Without this they stay in normal flow, below the top layer, and appear
+          // to "jump" on top only when the VT ends.
+          photoMetaEl = photoCard?.querySelector('.search-card-photo-meta') ?? null;
+          arrowBtnEl  = photoCard?.querySelector('.search-card-arrow-button') ?? null;
+          if (photoMetaEl) photoMetaEl.style.viewTransitionName = 'search-card-photo-meta';
+          if (arrowBtnEl)  arrowBtnEl.style.viewTransitionName  = 'search-card-arrow-btn';
         }
 
         // Restore scroll position so VT can morph back to the correct spot

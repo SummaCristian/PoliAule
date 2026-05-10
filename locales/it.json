@@ -43,7 +43,6 @@
   "search.headerClassrooms": "Aule",
   "search.emptyTitle": "Nessuna aula trovata",
   "search.emptySubtitle": "Prova con un nome o una grafia diversa",
-  "search.tooManyResults": "Mostrati i primi {n} risultati. Affina la ricerca per vederne altri",
 
   "wip.title": "Lavori in corso",
   "wip.line1": "Non sono ancora arrivato fin qui...",
@@ -168,6 +167,8 @@
 
   "footer.versionInfo": "Version 1.1.0-beta2",
 
-  "changelog.v1.1.0.item1": "Rifinite animazioni e transizioni per un'esperienza utente più fluida.",
-  "changelog.v1.1.0.item2": "Riprogettate le schede delle aule per includere le immagini e un layout più moderno."
+  "changelog.v1.0.0.item1": "PoliAule 1.0.0 è ufficialmente qui!",
+  "changelog.v1.0.0.item2": "Sono entusiasta di annunciare il primo rilascio stabile di PoliAule! Questa versione porta con sè due delle principali funzioni che chiunque potrebbe desiderare: puoi cercare le aule disponibili in ogni campus, e puoi vedere molti dettagli su ciascuna di esse.",
+  "changelog.v1.0.0.item3": "Spero che questo strumento possa essere utile a molti studenti là fuori, e sono entusiasta di continuare a migliorarlo con nuove funzioni e aggiornamenti in futuro. Se hai qualche feedback o suggerimento, non esitare a contattarmi o aprire un Issue su GitHub!",
+  "changelog.v1.0.0.item4": "Per il changelog completo e più dettagli su questa versione, controlla la pagina della release su GitHub: <a href=\"https://github.com/SummaCristian/poliaule/releases/tag/1.0.0\" target=\"_blank\">Release v1.0.0</a>"
 }

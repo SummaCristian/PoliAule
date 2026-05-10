@@ -140,9 +140,7 @@ body.detail-open .tab-content * {
   position: absolute;
   inset: 0;
   opacity: 0;
-  /* Use a faster transition than the image (0.6s) to ensure the blur/gradient 
-     is already established or feels immediate as the image fades in. */
-  transition: opacity 0.3s ease;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 
@@ -1418,15 +1416,15 @@ body.detail-open .tab-content * {
     height: 100%;
   }
 
-  /* Detail photo gradient: fades in after the photo hero morph settles */
+  /* Detail photo gradient: fades in as the photo hero morph settles */
   ::view-transition-old(detail-photo-gradient) {
-    animation-duration: 0.15s;
+    animation-duration: 0.2s;
     animation-timing-function: ease-out;
   }
   ::view-transition-new(detail-photo-gradient) {
-    animation-duration: 0.2s;
-    animation-delay: 0.25s;
-    animation-timing-function: ease-in;
+    animation-duration: 0.45s;
+    animation-delay: 0.05s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     animation-fill-mode: both;
   }
 }

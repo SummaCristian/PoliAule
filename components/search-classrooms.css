@@ -580,13 +580,15 @@ mark {
      for every unloaded card, which causes OOM crashes on iOS Safari at scale. */
   z-index: 0;
   opacity: 0;
+  /* transition declared here (not in :has) so it doesn't re-fire when
+     content-visibility: auto restores a card and the :has selector re-activates. */
+  transition: opacity 0.5s ease;
   border-radius: inherit;
 }
 
 .search-card--with-photo:has(.search-card-photo.loaded)::before {
   filter: blur(32px) saturate(1.45) brightness(0.56);
   opacity: 1;
-  transition: opacity 0.5s ease;
 }
 
 .search-card-photo {
@@ -601,18 +603,16 @@ mark {
   -webkit-mask-image: linear-gradient(to bottom, black 32%, transparent 80%);
   mask-image: linear-gradient(to bottom, black 32%, transparent 80%);
   opacity: 0;
-  /* No transform/transition on unloaded state: avoids GPU compositing layer
-     promotion for every card before its photo arrives. */
+  /* Plain opacity transition instead of @keyframes: transitions re-read the current
+     computed value on re-render (already 1 once loaded), so they never replay when
+     content-visibility: auto brings a card back into view. @keyframes would restart
+     from opacity:0 every time, causing the blur-only flash. */
+  transition: opacity 0.5s ease;
   z-index: 1;
 }
 
 .search-card-photo.loaded {
-  animation: search-photo-reveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes search-photo-reveal {
-  from { opacity: 0; transform: scale(1.03); }
-  to   { opacity: 1; transform: scale(1); }
+  opacity: 1;
 }
 
 /* Photo could not be loaded — show a muted placeholder icon */

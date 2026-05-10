@@ -559,7 +559,13 @@ mark {
     0 8px 20px rgba(0, 0, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   isolation: isolate;
-  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  /* content-visibility: skip rendering off-screen cards so they don't allocate
+     GPU compositing layers. At 3× DPR on iPhone each layer is ~3 MB; 60 off-screen
+     cards would easily exhaust Safari's memory budget. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+  /* -webkit-mask-image removed: was a legacy iOS 12 overflow+border-radius hack,
+     unnecessary on iOS 13+ and forces a compositing layer on every card. */
 }
 
 /* Blurred color wash — same image, heavily processed, fills the whole card.

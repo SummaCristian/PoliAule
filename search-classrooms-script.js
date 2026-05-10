@@ -509,7 +509,7 @@ function renderClassrooms(campus, building) {
   });
 }
 
-const SEARCH_MAX_RESULTS = 60;
+const SEARCH_MAX_RESULTS = 40;
 
 function renderSearchResults(query) {
   closeActiveDropdown();

@@ -1,7 +1,6 @@
 import { t, onLanguageSwitch } from './i18n.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { getClassroomStatusNow } from './available-rooms-script.js';
-import { fetchPhotoUrl } from './utils/photo.js';
 
 const supportsAnchor = CSS.supports('anchor-name: --a');
 
@@ -61,58 +60,6 @@ function highlight(text, query) {
   const safeQ = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '[\\s.]');
   return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<mark>$1</mark>');
 }
-
-// ---------- PHOTO THUMBNAILS ----------
-
-// Limit simultaneous image downloads+decodes to avoid OOM crashes on iOS Safari
-// when large result sets (100+ cards) trigger many loads at once.
-const _photoSem = { slots: 4, queue: [] };
-function _acquirePhotoSlot() {
-  return new Promise(resolve => {
-    if (_photoSem.slots > 0) { _photoSem.slots--; resolve(); }
-    else _photoSem.queue.push(resolve);
-  });
-}
-function _releasePhotoSlot() {
-  const next = _photoSem.queue.shift();
-  if (next) next(); else _photoSem.slots++;
-}
-
-async function _loadCardPhoto(idfoto, img) {
-  const card = img.closest('.search-card--with-photo');
-  // Resolve the redirect URL first (cheap text fetch, no slot needed)
-  const url = await fetchPhotoUrl(idfoto);
-  if (url === 'error') {
-    card?.classList.add('photo-failed');
-    return;
-  }
-
-  // Gate the heavy image download + decode through the semaphore
-  await _acquirePhotoSlot();
-  try {
-    img.onerror = () => card?.classList.add('photo-failed');
-    img.src = url;
-    // Set --photo-url only after decode so the ::before pseudo-element reuses the
-    // already-decoded bitmap instead of triggering a second parallel decode.
-    await img.decode();
-    card?.style.setProperty('--photo-url', `url("${url}")`);
-    img.classList.add('loaded');
-  } catch {
-    card?.classList.add('photo-failed');
-  } finally {
-    _releasePhotoSlot();
-  }
-}
-
-const _photoObserver = new IntersectionObserver((entries) => {
-  for (const entry of entries) {
-    if (!entry.isIntersecting) continue;
-    _photoObserver.unobserve(entry.target);
-    const idfoto = parseInt(entry.target.dataset.idfoto, 10);
-    const img = entry.target.querySelector('.search-card-photo');
-    if (img && idfoto) _loadCardPhoto(idfoto, img);
-  }
-}, { rootMargin: '150px' });
 
 // ---------- CARD BUILDERS ----------
 
@@ -178,52 +125,24 @@ function buildClassroomCard(room, query = '') {
   }
 
   const el = document.createElement('button');
+  el.className = 'search-card search-card--classroom';
   el.dataset.openClassroom = room.id;
-
-  if (room.idfoto) {
-    el.className = 'search-card search-card--classroom search-card--with-photo';
-    el.dataset.idfoto = room.idfoto;
-    el.innerHTML = `
-      <img class="search-card-photo" alt="">
-      <div class="search-card-overlay"></div>
-      <div class="search-card-content">
-        <div class="search-card-photo-header">
-          <span class="search-card-name" title="${escapeHtml(room.name)}">${highlight(room.name, query)}</span>
-          <span class="search-card-arrow-button" aria-hidden="true">
-            <span class="material-symbols-outlined search-card-arrow">chevron_right</span>
-          </span>
-        </div>
-        <div class="search-card-photo-meta">
-          ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
-          ${room.campusName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusName, query)}</span>` : ''}
-        </div>
-        <div class="search-card-photo-bottom">
-          ${statusText ? `<div class="search-card-status search-card-status--photo">${statusText}</div>` : ''}
-          ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
-        </div>
+  el.innerHTML = `
+    <div class="search-card-header">
+      <div class="search-card-icon-wrapper">
+        <span class="material-symbols-outlined">meeting_room</span>
       </div>
-    `;
-    _photoObserver.observe(el);
-  } else {
-    el.className = 'search-card search-card--classroom';
-    el.innerHTML = `
-      <div class="search-card-header">
-        <div class="search-card-icon-wrapper">
-          <span class="material-symbols-outlined">meeting_room</span>
+      <div class="search-card-info">
+        <span class="search-card-name" title="${escapeHtml(room.name)}">${highlight(room.name, query)}</span>
+        <div class="search-card-status">
+          ${statusText}
         </div>
-        <div class="search-card-info">
-          <span class="search-card-name" title="${escapeHtml(room.name)}">${highlight(room.name, query)}</span>
-          <div class="search-card-status">
-            ${statusText}
-          </div>
-          ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
-          ${room.campusName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusName, query)}</span>` : ''}
-        </div>
+        ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
+        ${room.campusName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusName, query)}</span>` : ''}
       </div>
-      ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
-    `;
-  }
-
+    </div>
+    ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
+  `;
   return el;
 }
 
@@ -509,8 +428,6 @@ function renderClassrooms(campus, building) {
   });
 }
 
-const SEARCH_MAX_RESULTS = 40;
-
 function renderSearchResults(query) {
   closeActiveDropdown();
   setLevelHeader('meeting_room', 'search.headerClassrooms');
@@ -541,21 +458,10 @@ function renderSearchResults(query) {
     return;
   }
 
-  const capped = results.length > SEARCH_MAX_RESULTS;
-  const visible = capped ? results.slice(0, SEARCH_MAX_RESULTS) : results;
-
   const grid = document.createElement('div');
   grid.className = 'search-grid search-grid--classroom';
-  visible.forEach(room => grid.appendChild(buildClassroomCard(room, query.trim())));
-
+  results.forEach(room => grid.appendChild(buildClassroomCard(room, query.trim())));
   container.appendChild(grid);
-
-  if (capped) {
-    const notice = document.createElement('p');
-    notice.className = 'search-too-many-notice';
-    notice.textContent = t('search.tooManyResults').replace('{n}', SEARCH_MAX_RESULTS);
-    container.appendChild(notice);
-  }
 
   requestAnimationFrame(() => {
     setTimeout(() => {

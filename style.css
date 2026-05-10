@@ -689,6 +689,8 @@ label {
 
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+
+  will-change: transform;
 }
 
 @media (max-width: 800px) {
@@ -738,6 +740,7 @@ label {
   justify-content: center;
   gap: 6px;
 
+  will-change: color;
 }
 
 .material-symbols-outlined {
@@ -776,7 +779,7 @@ font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
     0 1px 2px rgba(0, 0, 0, 0.12),
     0 0 0 0.5px rgba(0, 0, 0, 0.04);
 
-  will-change: transform;
+  will-change: transform, width;
   transition:
     transform 0.28s cubic-bezier(.2, .8, .2, 1),
     width 0.28s cubic-bezier(.2, .8, .2, 1);
@@ -802,9 +805,9 @@ font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
 @keyframes slide-in-top {
   from {
     opacity: 0;
-    filter: blur(4px);
-    transform: translateY(-20px);
-    scale: 0.92;
+    filter: blur(8px);
+    transform: translateY(-32px);
+    scale: 0.75;
   }
 
   to {
@@ -835,7 +838,7 @@ font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
 }
 
 .slide-in-top {
-  animation: slide-in-top 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slide-in-top 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Tab content */
@@ -1132,13 +1135,13 @@ ul li::marker {
     var(--shadow);
 
   opacity: 0;
-  transform: scale(0.78) translateY(var(--popover-closed-ty, -6px));
+  transform: scale(0);
 
   pointer-events: none;
 
   transition:
-    opacity 120ms ease-out,
-    transform 200ms cubic-bezier(0.34, 1.3, 0.64, 1);
+    opacity 120ms ease,
+    transform 120ms ease;
 
   will-change: opacity, transform;
 }
@@ -1151,7 +1154,7 @@ ul li::marker {
 
 .popover[data-show] {
   opacity: 1;
-  transform: scale(1) translateY(0);
+  transform: scale(1);
 
   pointer-events: auto;
 }
@@ -1416,18 +1419,6 @@ in its compositor.
 All fancy elements like blurs or blend modes
 are rendered as solid colors
 */
-.no-safari .tabbar {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  background: var(--background-color-secondary);
-}
-
-@media (prefers-color-scheme: dark) {
-  .no-safari .tabbar {
-    background: rgba(55, 55, 55, 0.96);
-  }
-}
-
 .samsung .tabbar,
 .samsung .popover,
 .samsung .header-button {
@@ -1514,18 +1505,5 @@ are rendered as solid colors
     position: static;
     align-self: stretch;
     max-height: none;
-  }
-}
-
-/* ── Global reduced-motion fallback ──────────────────────────────────────── */
-/* Keeps opacity-only fades; removes spatial motion and decorative loops.    */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }

@@ -43,6 +43,7 @@
   "search.headerClassrooms": "Classrooms",
   "search.emptyTitle": "No classrooms found",
   "search.emptySubtitle": "Try a different name or spelling",
+  "search.tooManyResults": "Showing first {n} results. Narrow your search to see more.",
 
   "wip.title": "Work in Progress",
   "wip.line1": "I haven't actually made it this far yet...",

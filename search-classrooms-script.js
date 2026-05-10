@@ -509,6 +509,8 @@ function renderClassrooms(campus, building) {
   });
 }
 
+const SEARCH_MAX_RESULTS = 60;
+
 function renderSearchResults(query) {
   closeActiveDropdown();
   setLevelHeader('meeting_room', 'search.headerClassrooms');
@@ -539,10 +541,21 @@ function renderSearchResults(query) {
     return;
   }
 
+  const capped = results.length > SEARCH_MAX_RESULTS;
+  const visible = capped ? results.slice(0, SEARCH_MAX_RESULTS) : results;
+
   const grid = document.createElement('div');
   grid.className = 'search-grid search-grid--classroom';
-  results.forEach(room => grid.appendChild(buildClassroomCard(room, query.trim())));
+  visible.forEach(room => grid.appendChild(buildClassroomCard(room, query.trim())));
+
   container.appendChild(grid);
+
+  if (capped) {
+    const notice = document.createElement('p');
+    notice.className = 'search-too-many-notice';
+    notice.textContent = t('search.tooManyResults').replace('{n}', SEARCH_MAX_RESULTS);
+    container.appendChild(notice);
+  }
 
   requestAnimationFrame(() => {
     setTimeout(() => {

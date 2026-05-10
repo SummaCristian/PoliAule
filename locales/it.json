@@ -43,6 +43,7 @@
   "search.headerClassrooms": "Aule",
   "search.emptyTitle": "Nessuna aula trovata",
   "search.emptySubtitle": "Prova con un nome o una grafia diversa",
+  "search.tooManyResults": "Mostrati i primi {n} risultati. Affina la ricerca per vederne altri",
 
   "wip.title": "Lavori in corso",
   "wip.line1": "Non sono ancora arrivato fin qui...",

@@ -564,8 +564,9 @@ mark {
      cards would easily exhaust Safari's memory budget. */
   content-visibility: auto;
   contain-intrinsic-size: auto 220px;
-  /* -webkit-mask-image removed: was a legacy iOS 12 overflow+border-radius hack,
-     unnecessary on iOS 13+ and forces a compositing layer on every card. */
+  /* clip-path replaces the old -webkit-mask-image hack: clips abs-positioned children
+     to rounded corners in Safari without allocating a GPU compositing layer. */
+  clip-path: inset(0 round 1.25rem);
 }
 
 /* Blurred color wash — same image, heavily processed, fills the whole card.

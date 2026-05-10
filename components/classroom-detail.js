@@ -390,6 +390,10 @@ class ClassroomDetail {
 
     const photoEl = this._openTrigger?.photoEl ?? null;
     const photoInDom = !!(photoEl && document.body.contains(photoEl));
+    // content-visibility: auto skips rendering off-screen cards, which would make
+    // the VT new-state snapshot of the card photo blank. Force it visible here so
+    // the card's subtree is rendered when the VT captures it after scrollTo().
+    const photoCard = photoEl?.closest('.search-card--with-photo') ?? null;
     const detailImg = this._overlay.querySelector('.detail-photo');
     const detailImgLoaded = detailImg?.classList.contains('loaded');
     let timelineEl = null;
@@ -409,9 +413,12 @@ class ClassroomDetail {
         photoEl.style.removeProperty('mask-image');
         photoEl.style.removeProperty('-webkit-mask-image');
       }
+      if (photoCard) photoCard.style.removeProperty('content-visibility');
     };
 
     if (document.startViewTransition && this._tabbar) {
+      if (photoCard) photoCard.style.contentVisibility = 'visible';
+
       // -- OLD state setup --
       // Back button (in header) is the source; tabbar is the destination
       if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';

@@ -559,7 +559,14 @@ mark {
     0 8px 20px rgba(0, 0, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   isolation: isolate;
-  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  /* content-visibility: skip rendering off-screen cards so they don't allocate
+     GPU compositing layers. At 3× DPR on iPhone each layer is ~3 MB; 60 off-screen
+     cards would easily exhaust Safari's memory budget. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+  /* clip-path replaces the old -webkit-mask-image hack: clips abs-positioned children
+     to rounded corners in Safari without allocating a GPU compositing layer. */
+  clip-path: inset(0 round 1.25rem);
 }
 
 /* Blurred color wash — same image, heavily processed, fills the whole card.
@@ -569,14 +576,18 @@ mark {
   position: absolute;
   inset: -34px;
   background: var(--photo-url) center / cover no-repeat;
-  filter: blur(32px) saturate(1.45) brightness(0.56);
+  /* filter intentionally absent until loaded: avoids a GPU compositing layer
+     for every unloaded card, which causes OOM crashes on iOS Safari at scale. */
   z-index: 0;
   opacity: 0;
+  /* transition declared here (not in :has) so it doesn't re-fire when
+     content-visibility: auto restores a card and the :has selector re-activates. */
   transition: opacity 0.5s ease;
   border-radius: inherit;
 }
 
 .search-card--with-photo:has(.search-card-photo.loaded)::before {
+  filter: blur(32px) saturate(1.45) brightness(0.56);
   opacity: 1;
 }
 
@@ -592,14 +603,16 @@ mark {
   -webkit-mask-image: linear-gradient(to bottom, black 32%, transparent 80%);
   mask-image: linear-gradient(to bottom, black 32%, transparent 80%);
   opacity: 0;
-  transform: scale(1.03);
-  transition: opacity 0.5s ease, transform 0.45s ease;
+  /* Plain opacity transition instead of @keyframes: transitions re-read the current
+     computed value on re-render (already 1 once loaded), so they never replay when
+     content-visibility: auto brings a card back into view. @keyframes would restart
+     from opacity:0 every time, causing the blur-only flash. */
+  transition: opacity 0.5s ease;
   z-index: 1;
 }
 
 .search-card-photo.loaded {
   opacity: 1;
-  transform: scale(1);
 }
 
 /* Photo could not be loaded — show a muted placeholder icon */
@@ -846,6 +859,13 @@ mark {
   padding: 4rem 0;
   gap: 1.5rem;
   flex: 1;
+}
+
+.search-too-many-notice {
+  text-align: center;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+  padding: 0.75rem 1rem 0.25rem;
 }
 
 /* ── Responsive ──────────────────────────────────────────── */

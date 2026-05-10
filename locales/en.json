@@ -43,6 +43,7 @@
   "search.headerClassrooms": "Classrooms",
   "search.emptyTitle": "No classrooms found",
   "search.emptySubtitle": "Try a different name or spelling",
+  "search.tooManyResults": "Showing first {n} results. Narrow your search to see more.",
 
   "wip.title": "Work in Progress",
   "wip.line1": "I haven't actually made it this far yet...",
@@ -165,7 +166,7 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 1.1.0-beta1",
+  "footer.versionInfo": "Version 1.1.0-beta2",
 
   "changelog.v1.1.0.item1": "Polished animations and transitions for a smoother user experience.",
   "changelog.v1.1.0.item2": "Redesigned classroom cards to include pictures and a more modern layout."

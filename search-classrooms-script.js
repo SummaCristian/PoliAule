@@ -64,20 +64,44 @@ function highlight(text, query) {
 
 // ---------- PHOTO THUMBNAILS ----------
 
+// Limit simultaneous image downloads+decodes to avoid OOM crashes on iOS Safari
+// when large result sets (100+ cards) trigger many loads at once.
+const _photoSem = { slots: 4, queue: [] };
+function _acquirePhotoSlot() {
+  return new Promise(resolve => {
+    if (_photoSem.slots > 0) { _photoSem.slots--; resolve(); }
+    else _photoSem.queue.push(resolve);
+  });
+}
+function _releasePhotoSlot() {
+  const next = _photoSem.queue.shift();
+  if (next) next(); else _photoSem.slots++;
+}
+
 async function _loadCardPhoto(idfoto, img) {
   const card = img.closest('.search-card--with-photo');
+  // Resolve the redirect URL first (cheap text fetch, no slot needed)
   const url = await fetchPhotoUrl(idfoto);
   if (url === 'error') {
     card?.classList.add('photo-failed');
     return;
   }
 
-  // Set the CSS variable before src so ::before has the image ready when opacity kicks in
-  card?.style.setProperty('--photo-url', `url("${url}")`);
-
-  img.onerror = () => card?.classList.add('photo-failed');
-  img.src = url;
-  img.decode().then(() => img.classList.add('loaded')).catch(() => card?.classList.add('photo-failed'));
+  // Gate the heavy image download + decode through the semaphore
+  await _acquirePhotoSlot();
+  try {
+    img.onerror = () => card?.classList.add('photo-failed');
+    img.src = url;
+    // Set --photo-url only after decode so the ::before pseudo-element reuses the
+    // already-decoded bitmap instead of triggering a second parallel decode.
+    await img.decode();
+    card?.style.setProperty('--photo-url', `url("${url}")`);
+    img.classList.add('loaded');
+  } catch {
+    card?.classList.add('photo-failed');
+  } finally {
+    _releasePhotoSlot();
+  }
 }
 
 const _photoObserver = new IntersectionObserver((entries) => {
@@ -88,7 +112,7 @@ const _photoObserver = new IntersectionObserver((entries) => {
     const img = entry.target.querySelector('.search-card-photo');
     if (img && idfoto) _loadCardPhoto(idfoto, img);
   }
-}, { rootMargin: '300px' });
+}, { rootMargin: '150px' });
 
 // ---------- CARD BUILDERS ----------
 
@@ -485,6 +509,8 @@ function renderClassrooms(campus, building) {
   });
 }
 
+const SEARCH_MAX_RESULTS = 40;
+
 function renderSearchResults(query) {
   closeActiveDropdown();
   setLevelHeader('meeting_room', 'search.headerClassrooms');
@@ -515,10 +541,21 @@ function renderSearchResults(query) {
     return;
   }
 
+  const capped = results.length > SEARCH_MAX_RESULTS;
+  const visible = capped ? results.slice(0, SEARCH_MAX_RESULTS) : results;
+
   const grid = document.createElement('div');
   grid.className = 'search-grid search-grid--classroom';
-  results.forEach(room => grid.appendChild(buildClassroomCard(room, query.trim())));
+  visible.forEach(room => grid.appendChild(buildClassroomCard(room, query.trim())));
+
   container.appendChild(grid);
+
+  if (capped) {
+    const notice = document.createElement('p');
+    notice.className = 'search-too-many-notice';
+    notice.textContent = t('search.tooManyResults').replace('{n}', SEARCH_MAX_RESULTS);
+    container.appendChild(notice);
+  }
 
   requestAnimationFrame(() => {
     setTimeout(() => {

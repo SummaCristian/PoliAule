@@ -11,35 +11,26 @@ export const SKIP_DAYS = [0] // Sunday
 
 // ----------  FETCHING LOGIC ----------
 
-// Fetches the classrooms data from the server and 
+// Fetches the classrooms data from the server and
 // stores it in classroomsData.
-export async function fetchClassroomsData() { 
-  // Days to fetch (today + next 6 days)
-  const dates = [];
-  const cursor = new Date(); // Today
-
-  // Get the next 7 days, skipping the ones in SKIP_DAYS
-  while (dates.length < 7) {
-    if (!SKIP_DAYS.includes(cursor.getDay())) {
-      dates.push(new Date(cursor));
-    }
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  // Fetch all days in parallel and store the results in classroomsData
+export async function fetchClassroomsData() {
   try {
+    const listRes = await fetch('/occupancy/list.json');
+    if (!listRes.ok) throw new Error(`Failed to load list.json: ${listRes.status}`);
+    const { dates } = await listRes.json();
+
     const results = (await Promise.allSettled(
       dates.map(date =>
-        fetch(`/occupancy/occupation_${formatDateYYYYMMDD(date)}.json`)
+        fetch(`/occupancy/occupation_${date}.json`)
           .then(res => {
-            if (!res.ok) throw new Error(`Failed to load ${formatDateYYYYMMDD(date)}: ${res.status}`);
+            if (!res.ok) throw new Error(`Failed to load ${date}: ${res.status}`);
             return res.json();
           })
       )
     ))
       .filter(r => r.status === 'fulfilled')
       .map(r => r.value);
-    
+
     classroomsData.splice(0, classroomsData.length, ...results);
     console.log('All data loaded:', classroomsData);
   } catch (error) {
@@ -94,6 +85,7 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
           features: classroom.features ?? [],
           occupancy: classroom.occupancy ?? [],
           slots: freeSlots,
+          idfoto: classroom.idfoto ?? null,
         });
       }
     }

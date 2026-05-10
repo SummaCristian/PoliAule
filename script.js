@@ -151,6 +151,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.classList.add('samsung');
   }
 
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (!isSafari) {
+    document.documentElement.classList.add('no-safari');
+  }
+
   const header = document.querySelector('.header');
   const setHeaderHeight = () =>
     document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
@@ -281,7 +286,7 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
         const roomItem = document.createElement('li');
         roomItem.className = 'classroom-list-item-container';
         roomItem.dataset.status = room.status;
-        roomItem.innerHTML = buildCardForClassroom(room, building, from, to, isToday, date);
+        roomItem.appendChild(buildCardForClassroom(room, building, from, to, isToday, date));
         roomsList.appendChild(roomItem);
       });
       if (rooms.every(r => r.status === 'partially-free')) {

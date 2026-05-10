@@ -280,334 +280,17 @@
   transition: background-color 0.2s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-
-  contain: layout paint style;
+  
+   contain: layout paint style;
 }
 
-/* ── Photo card variant ─────────────────────────────────────── */
-
-.classroom-card--with-photo {
-  padding: 0;
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--text-color-primary) 12%, var(--background-color-secondary));
-  border: 1px solid color-mix(in srgb, white 14%, transparent);
-  box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  overflow: hidden;
-  isolation: isolate;
-  mask-image: radial-gradient(white, black);
-  -webkit-mask-image: -webkit-radial-gradient(white, black);
-}
-
-/* Blurred color wash — spans the full card, fades in once the photo loads.
-   This is the backdrop visible behind and below the real photo. */
-.classroom-card--with-photo::before {
-  content: '';
-  position: absolute;
-  inset: -36px;
-  background: var(--card-photo-url) center / cover no-repeat;
-  filter: blur(34px) saturate(1.55) brightness(0.48);
-  z-index: 0;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  border-radius: inherit;
-}
-
-.classroom-card--with-photo:has(.classroom-card-photo.loaded)::before {
-  opacity: 1;
-}
-
-/* The actual photo — fills the card but fades out toward the middle,
-   letting the blurred wash beneath carry the image feel downward. */
-.classroom-card-photo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
-  border-radius: inherit;
-  -webkit-mask-image: linear-gradient(to bottom, black 34%, transparent 68%);
-  mask-image: linear-gradient(to bottom, black 34%, transparent 68%);
-  opacity: 0;
-  transform: scale(1.03);
-  transition: opacity 0.5s ease, transform 0.45s ease;
-  z-index: 1;
-}
-
-.classroom-card-photo.loaded {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* Failed photo — show a muted placeholder icon */
-.classroom-card--with-photo.photo-failed::after {
-  content: 'hide_image';
-  font-family: 'Material Symbols Outlined';
-  font-size: 2rem;
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.25);
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Gradient scrim: light at top for the photo, deeper toward the bottom
-   where the blurred wash needs extra darkening for the timeline to read. */
-.classroom-card-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.16) 0%,
-    rgba(0, 0, 0, 0.06) 20%,
-    rgba(0, 0, 0, 0) 36%,
-    rgba(0, 0, 0, 0) 64%,
-    rgba(0, 0, 0, 0.36) 84%,
-    rgba(0, 0, 0, 0.68) 100%
-  );
-  transition: background 0.2s ease;
-}
-
-.classroom-card-overlay::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(130% 70% at 50% 0%, rgba(0, 0, 0, 0.54) 0%, rgba(0, 0, 0, 0.22) 34%, rgba(0, 0, 0, 0) 60%),
-    radial-gradient(120% 62% at 50% 0%, rgba(0, 0, 0, 0.52) 0%, rgba(0, 0, 0, 0.22) 44%, rgba(0, 0, 0, 0) 92%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0) 52%);
-  mix-blend-mode: multiply;
-  opacity: 0.74;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.classroom-card-overlay::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.16) 0%,
-    rgba(255, 255, 255, 0.06) 24%,
-    rgba(255, 255, 255, 0) 52%
-  );
-  mix-blend-mode: soft-light;
-  opacity: 0.36;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* All card content — header, timeline, features — stacked on top.
-   padding-top pushes it down, leaving a clear image band at the top. */
-.classroom-card-content {
-  position: relative;
-  z-index: 3;
-  padding: 6.85rem 1rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.56rem;
-}
-
-.classroom-card--with-photo .classroom-card-content {
-  padding-top: 12rem;
-}
-
-/* ── White text overrides for photo variant ─────────────────── */
-
-.classroom-card--with-photo .classroom-name {
-  color: #fff;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.72),
-    0 6px 16px rgba(0, 0, 0, 0.58),
-    0 0 1px rgba(0, 0, 0, 0.7);
-  letter-spacing: 0.01em;
-  line-height: 1.05;
-  max-width: 95%;
-}
-
-.classroom-card--with-photo .classroom-status-txt {
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.72),
-    0 4px 10px rgba(0, 0, 0, 0.42);
-  filter: none;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: 0;
-}
-
-.classroom-card--with-photo .classroom-detail-btn {
-  color: rgba(255, 255, 255, 0.86);
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.classroom-card--with-photo .classroom-feature-icon {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.classroom-card--with-photo .classroom-status-txt.free {
-  color: #79f2a1;
-}
-
-.classroom-card--with-photo .classroom-status-txt.free-soon {
-  color: #b9ff85;
-}
-
-.classroom-card--with-photo .classroom-status-txt.partially-free,
-.classroom-card--with-photo .classroom-status-txt.occupied-soon {
-  color: #ffd76b;
-}
-
-.classroom-card--with-photo .classroom-status-txt.not-free,
-.classroom-card--with-photo .classroom-status-txt.occupied {
-  color: #ff9b8f;
-}
-
-/* ── Timeline overrides for dark photo background ───────────── */
-
-.classroom-card--with-photo .classroom-timeline {
-  padding: 0.5rem 0 0;
-}
-
-.classroom-card--with-photo .timeline-bar {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: none;
-}
-
-.classroom-card--with-photo .timeline-query-region {
-  background: color-mix(in srgb, var(--text-color-accent) 28%, transparent);
-  border-color: color-mix(in srgb, var(--text-color-accent) 76%, transparent);
-}
-
-.classroom-card--with-photo .timeline-tick-label span {
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.classroom-card--with-photo .timeline-tick-label::before {
-  background: rgba(255, 255, 255, 0.44);
-}
-
-.classroom-card:not(.classroom-card--with-photo):hover {
+.classroom-card:hover {
   background-color: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
-}
-
-.classroom-card--with-photo:hover .classroom-card-overlay {
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.2) 0%,
-    rgba(0, 0, 0, 0.08) 22%,
-    rgba(0, 0, 0, 0) 38%,
-    rgba(0, 0, 0, 0) 62%,
-    rgba(0, 0, 0, 0.44) 84%,
-    rgba(0, 0, 0, 0.78) 100%
-  );
 }
 
 .classroom-card:hover .classroom-detail-btn {
   color: var(--text-color-accent);
   transform: translateX(4px);
-}
-
-.classroom-card--with-photo:hover .classroom-detail-btn {
-  color: rgba(255, 255, 255, 0.95);
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.34);
-}
-
-.classroom-card--with-photo:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--text-color-accent) 72%, white);
-  outline-offset: 3px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .classroom-card--with-photo::before {
-    filter: blur(34px) saturate(1.45) brightness(0.58);
-  }
-
-  .classroom-card-overlay {
-    background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.14) 0%,
-      rgba(0, 0, 0, 0.05) 20%,
-      rgba(0, 0, 0, 0) 36%,
-      rgba(0, 0, 0, 0) 64%,
-      rgba(0, 0, 0, 0.34) 84%,
-      rgba(0, 0, 0, 0.66) 100%
-    );
-  }
-
-  .classroom-card-overlay::before {
-    opacity: 0.64;
-  }
-
-  .classroom-card-overlay::after {
-    opacity: 0.18;
-  }
-}
-
-@media (prefers-color-scheme: light) {
-  .classroom-card--with-photo {
-    border: 1px solid color-mix(in srgb, black 7%, transparent);
-    box-shadow:
-      0 8px 22px rgba(18, 24, 40, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.34);
-  }
-
-  .classroom-card--with-photo::before {
-    filter: blur(30px) saturate(1.32) brightness(0.8);
-  }
-
-  .classroom-card-overlay {
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.09) 0%,
-      rgba(0, 0, 0, 0.06) 18%,
-      rgba(0, 0, 0, 0) 36%,
-      rgba(0, 0, 0, 0) 64%,
-      rgba(0, 0, 0, 0.24) 84%,
-      rgba(0, 0, 0, 0.54) 100%
-    );
-  }
-
-  .classroom-card-overlay::before {
-    opacity: 0.72;
-  }
-
-  .classroom-card--with-photo:hover .classroom-card-overlay {
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.11) 0%,
-      rgba(0, 0, 0, 0.08) 20%,
-      rgba(0, 0, 0, 0) 38%,
-      rgba(0, 0, 0, 0) 62%,
-      rgba(0, 0, 0, 0.28) 84%,
-      rgba(0, 0, 0, 0.58) 100%
-    );
-  }
-
-  .classroom-card-overlay::after {
-    opacity: 0.42;
-  }
-
 }
 
 .classroom-card-header {
@@ -618,22 +301,12 @@
   gap: 0.5rem;
 }
 
-.classroom-card--with-photo .classroom-card-header {
-  position: absolute;
-  top: 1rem;
-  left: 1.15rem;
-  right: 1.15rem;
-  z-index: 4;
-  align-items: center;
-}
-
 .classroom-card-header-left {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
   min-width: 0;
-  position: relative;
 }
 
 .classroom-detail-btn {
@@ -649,12 +322,6 @@
 
 .classroom-detail-btn .material-symbols-outlined {
   font-size: 1.5rem !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1em;
-  line-height: 1;
-  transform: translateX(0.02em);
 }
 
 .classroom-features {
@@ -662,15 +329,6 @@
   flex-direction: row;
   gap: 0.1rem;
   flex-shrink: 0;
-  justify-content: flex-end;
-}
-
-.classroom-card-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-height: 1.2rem;
 }
 
 .classroom-feature-icon {
@@ -683,10 +341,9 @@
   font-weight: 700;
   text-align: start;
   margin: 0;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-  line-height: 1.12;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   max-width: 100%;
 }
 
@@ -694,12 +351,9 @@
   font-size: 0.8rem;
   font-weight: 800;
   margin: 0;
-  flex: 1 1 auto;
-  min-width: 0;
+  flex-shrink: 0;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  line-height: 1.15;
-  text-wrap: balance;
 }
 
 .classroom-status-txt.free {
@@ -767,24 +421,6 @@
   border-top-color: var(--text-color-accent);
 }
 
-.timeline-time-indicator--edge-left {
-  transform: translateX(0);
-}
-
-.timeline-time-indicator--edge-left::after {
-  left: 12px;
-  transform: none;
-}
-
-.timeline-time-indicator--edge-right {
-  transform: translateX(-100%);
-}
-
-.timeline-time-indicator--edge-right::after {
-  left: calc(100% - 12px);
-  transform: none;
-}
-
 @media (prefers-color-scheme: dark) {
   .timeline-time-indicator:not(.timeline-time-indicator--now)::after {
     border-top-color: #28a745;
@@ -797,7 +433,7 @@
 
   opacity: 0;
   transform-origin: bottom center;
-  animation: today-indicator-appear 0.65s ease-out 0.35s forwards;
+  animation: today-indicator-appear 0.65s linear 0.35s forwards;
 }
 
 .timeline-time-indicator--now::after {

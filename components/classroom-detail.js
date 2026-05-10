@@ -4,7 +4,6 @@ import { haptics, defaultPatterns } from './haptics.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
 
 function minutesToTimeDisplay(minutes) {
   const d = new Date();
@@ -34,6 +33,8 @@ const HASH_PATTERN_V1 = /^#classroom\/(\d+)$/;
 
 // ---------- CLASS ----------
 
+const PHOTO_API = 'https://onlineservices.polimi.it/maps_rest/rest/syncro/rooms/foto';
+
 class ClassroomDetail {
   constructor() {
     this._overlay = null;
@@ -47,6 +48,7 @@ class ClassroomDetail {
     this._openedViaPushState = false;
     this._currentId = null;
     this._savedScrollPos = 0;
+    this._openAnimationFinished = Promise.resolve(); // resolves when the page-open animation ends
     this._queryContext = null;  // { date, from, to } when opened from Available Tab, else null
     this._nowTimer = null;
   }
@@ -115,9 +117,8 @@ class ClassroomDetail {
         : null;
 
       const featureIconEls = [...card.querySelectorAll('[data-feature-id]')];
-      const photoEl = card.querySelector('.search-card-photo.loaded, .classroom-card-photo.loaded') ?? null;
 
-      this._pendingTrigger = { nameEl, statusEl, queryContext, featureIconEls, photoEl };
+      this._pendingTrigger = { nameEl, statusEl, queryContext, featureIconEls };
       this._openedViaPushState = true;
       this._buildFlatIndex();
       const _entry = this._flatIndex?.get(id);
@@ -176,7 +177,7 @@ class ClassroomDetail {
 
   // ---------- OPEN ----------
 
-  async _doOpen(id, pending) {
+  _doOpen(id, pending) {
     if (!this._overlay) return;
     this._buildFlatIndex();
 
@@ -196,23 +197,6 @@ class ClassroomDetail {
     // skip the classroom-nav morph (same pattern as infoPage's fromDetail detection).
     const fromInfo = !!(this._backBtn && !this._backBtn.hidden);
 
-    // Photo VT: if the URL is already cached, pre-decode it so the detail photo
-    // is bitmap-ready when the VT snapshots the new state.
-    const idfoto = entry.classroom.idfoto;
-    const cachedPhotoUrl = idfoto ? photoUrlCache.get(idfoto) : null;
-    const validPhotoUrl = (cachedPhotoUrl && cachedPhotoUrl !== 'error') ? cachedPhotoUrl : null;
-    if (validPhotoUrl) {
-      const tmp = new Image();
-      tmp.src = validPhotoUrl;
-      await tmp.decode().catch(() => {});
-      if (this._currentId !== id) return; // navigated away during decode
-    }
-
-    const photoEl = pending?.photoEl ?? null;
-    const photoInDom = !!(photoEl && document.body.contains(photoEl));
-
-    let detailGradientEl = null;
-
     if (document.startViewTransition && this._tabbar) {
       // -- OLD state setup (before VT snapshot) --
       if (fromInfo) {
@@ -222,27 +206,13 @@ class ClassroomDetail {
         // Tabbar morphs into the back button (both live in the header, so it's a clean in-place swap)
         this._tabbar.style.viewTransitionName = 'classroom-nav';
       }
-      // Room name morphs into the overlay title.
-      // Strip search <mark> highlights first so the old-state snapshot is plain text.
-      if (nameEl) {
-        nameEl.querySelectorAll('mark').forEach(m => m.replaceWith(...m.childNodes));
-        nameEl.style.viewTransitionName = 'classroom-detail-name';
-      }
+      // Room name morphs into the overlay title
+      if (nameEl) nameEl.style.viewTransitionName = 'classroom-detail-name';
       if (statusEl) statusEl.style.viewTransitionName = 'classroom-status';
       // Feature icons morph into the detail feature chips
       const featureIconEls = pending?.featureIconEls ?? [];
       for (const el of featureIconEls) {
         el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
-      }
-      // Card photo morphs into the detail photo (only if already loaded in the card).
-      // Strip mask and force settled opacity/scale so the snapshot is clean even if
-      // the card photo load-in transition is still mid-flight.
-      if (photoInDom && validPhotoUrl) {
-        photoEl.style.setProperty('mask-image', 'none');
-        photoEl.style.setProperty('-webkit-mask-image', 'none');
-        photoEl.style.setProperty('opacity', '1');
-        photoEl.style.setProperty('transform', 'none');
-        photoEl.style.viewTransitionName = 'classroom-photo';
       }
 
       const vt = document.startViewTransition(() => {
@@ -257,7 +227,6 @@ class ClassroomDetail {
         if (nameEl) nameEl.style.viewTransitionName = '';
         if (statusEl) statusEl.style.viewTransitionName = '';
         for (const el of featureIconEls) el.style.viewTransitionName = '';
-        if (photoInDom) photoEl.style.viewTransitionName = '';
 
         // Show overlay and back button
         document.body.classList.add('detail-open');
@@ -281,57 +250,26 @@ class ClassroomDetail {
           if (iconEl) iconEl.style.viewTransitionName = `classroom-feature-${chip.dataset.featureId}`;
         });
 
-        // If URL was cached and pre-decoded, stamp it onto the detail photo right now so
-        // the VT new-state snapshot captures it fully rendered (no async wait needed).
-        // Also strip the mobile mask-image so the snapshot is a clean rectangle —
-        // the same treatment applied to the card photo on the old-state side.
-        if (validPhotoUrl) {
-          const detailImg = this._overlay.querySelector('.detail-photo');
-          const detailContainer = this._overlay.querySelector('.detail-photo-container');
-          if (detailImg) {
-            detailImg.src = validPhotoUrl;
-            detailImg.classList.add('loaded');
-            detailContainer?.classList.add('loaded');
-            detailImg.style.setProperty('mask-image', 'none');
-            detailImg.style.setProperty('-webkit-mask-image', 'none');
-            detailImg.style.viewTransitionName = 'classroom-photo';
-          }
-          detailGradientEl = this._overlay.querySelector('.detail-photo-gradient');
-          if (detailGradientEl) {
-            detailGradientEl.style.opacity = '0';
-          }
-        }
-
         // Load data immediately after rendering in the transition callback
         this._loadSchedule(id);
-        if (idfoto) this._loadPhoto(id, idfoto);
+        if (entry.classroom.idfoto) this._loadPhoto(id, entry.classroom.idfoto);
       });
+
+      // Store the VT promise so _loadPhoto can wait for the animation to finish
+      // before revealing the image. If the image is cached and decodes instantly,
+      // starting its reveal while the VT overlay is still active causes a flicker
+      // when the VT tears down its pseudo-elements.
+      this._openAnimationFinished = vt.finished.catch(() => {});
 
       const cleanup = () => {
         this._tabbar.style.viewTransitionName = '';
         if (nameEl) nameEl.style.viewTransitionName = '';
         if (statusEl) statusEl.style.viewTransitionName = '';
-        if (photoEl) {
-          photoEl.style.viewTransitionName = '';
-          photoEl.style.removeProperty('mask-image');
-          photoEl.style.removeProperty('-webkit-mask-image');
-          photoEl.style.removeProperty('opacity');
-          photoEl.style.removeProperty('transform');
-        }
         if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         this._overlay.querySelector('.detail-title')
           ?.style.setProperty('view-transition-name', '');
         this._overlay.querySelector('.detail-title-row .classroom-status-txt')
           ?.style.setProperty('view-transition-name', '');
-        const detailImgEl = this._overlay.querySelector('.detail-photo');
-        if (detailImgEl) {
-          detailImgEl.style.setProperty('view-transition-name', '');
-          detailImgEl.style.removeProperty('mask-image');
-          detailImgEl.style.removeProperty('-webkit-mask-image');
-        }
-        if (detailGradientEl) {
-          detailGradientEl.style.removeProperty('opacity');
-        }
         this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
           el.style.viewTransitionName = '';
         });
@@ -348,16 +286,6 @@ class ClassroomDetail {
       document.body.classList.add('detail-open');
       this._overlay.removeAttribute('hidden');
       this._renderContent(entry);
-      // Stamp cached photo immediately in the fallback path too
-      if (validPhotoUrl) {
-        const detailImg = this._overlay.querySelector('.detail-photo');
-        const detailContainer = this._overlay.querySelector('.detail-photo-container');
-        if (detailImg) {
-          detailImg.src = validPhotoUrl;
-          detailImg.classList.add('loaded');
-          detailContainer?.classList.add('loaded');
-        }
-      }
       if (this._backBtn) this._backBtn.removeAttribute('hidden');
       requestAnimationFrame(() => {
         this._overlay.classList.add('visible');
@@ -366,7 +294,7 @@ class ClassroomDetail {
 
       // Load data immediately after rendering in the fallback branch
       this._loadSchedule(id);
-      if (idfoto) this._loadPhoto(id, idfoto);
+      if (entry.classroom.idfoto) this._loadPhoto(id, entry.classroom.idfoto);
     }
   }
 
@@ -386,19 +314,6 @@ class ClassroomDetail {
     const featureIconEls = (this._openTrigger?.featureIconEls ?? [])
       .filter(el => document.body.contains(el));
 
-    const photoEl = this._openTrigger?.photoEl ?? null;
-    const photoInDom = !!(photoEl && document.body.contains(photoEl));
-    // content-visibility: auto skips rendering off-screen cards, which would make
-    // the VT new-state snapshot of the card photo blank. Force it visible here so
-    // the card's subtree is rendered when the VT captures it after scrollTo().
-    const photoCard = photoEl?.closest('.search-card--with-photo') ?? null;
-    const detailImg = this._overlay.querySelector('.detail-photo');
-    const detailImgLoaded = detailImg?.classList.contains('loaded');
-    let timelineEl = null;
-    let cardOverlayEl = null;
-    let photoMetaEl = null;
-    let arrowBtnEl = null;
-
     const cleanup = () => {
       this._overlay.innerHTML = '';
       this._openTrigger = null;
@@ -408,19 +323,9 @@ class ClassroomDetail {
       if (this._tabbar) this._tabbar.style.viewTransitionName = '';
       if (this._backBtn) this._backBtn.style.viewTransitionName = '';
       for (const el of featureIconEls) el.style.viewTransitionName = '';
-      if (photoEl) {
-        photoEl.style.viewTransitionName = '';
-        photoEl.style.removeProperty('mask-image');
-        photoEl.style.removeProperty('-webkit-mask-image');
-      }
-      if (photoMetaEl) photoMetaEl.style.viewTransitionName = '';
-      if (arrowBtnEl) arrowBtnEl.style.viewTransitionName = '';
-      if (photoCard) photoCard.style.removeProperty('content-visibility');
     };
 
     if (document.startViewTransition && this._tabbar) {
-      if (photoCard) photoCard.style.contentVisibility = 'visible';
-
       // -- OLD state setup --
       // Back button (in header) is the source; tabbar is the destination
       if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
@@ -431,18 +336,6 @@ class ClassroomDetail {
         const fid = el.closest('[data-feature-id]').dataset.featureId;
         el.style.viewTransitionName = `classroom-feature-${fid}`;
       });
-      // Detail photo is the OLD state source.
-      // Strip its mobile mask-image so the old-state snapshot is a clean rectangle,
-      // and strip the card photo mask for a clean new-state snapshot.
-      if (detailImgLoaded) {
-        detailImg.style.setProperty('mask-image', 'none');
-        detailImg.style.setProperty('-webkit-mask-image', 'none');
-        detailImg.style.viewTransitionName = 'classroom-photo';
-      }
-      if (photoInDom && detailImgLoaded) {
-        photoEl.style.setProperty('mask-image', 'none');
-        photoEl.style.setProperty('-webkit-mask-image', 'none');
-      }
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
@@ -453,7 +346,6 @@ class ClassroomDetail {
         this._overlay.classList.remove('visible');
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
         if (this._backBtn) this._backBtn.style.viewTransitionName = '';
-        if (detailImg) detailImg.style.viewTransitionName = '';
 
         // Restore and name the tabbar as the NEW state destination for classroom-nav
         this._tabbar.classList.remove('detail-open');
@@ -466,68 +358,12 @@ class ClassroomDetail {
         for (const el of featureIconEls) {
           el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
         }
-        // Card photo is the NEW state destination (mask already stripped above)
-        if (photoInDom && detailImgLoaded) {
-          photoEl.style.viewTransitionName = 'classroom-photo';
-          const photoCard = photoEl.closest('.classroom-card--with-photo, .search-card--with-photo');
-          timelineEl   = photoCard?.querySelector('.classroom-timeline') ?? null;
-          cardOverlayEl = photoCard?.querySelector('.classroom-card-overlay, .search-card-overlay') ?? null;
-          if (cardOverlayEl) cardOverlayEl.style.opacity = '0';
-          if (timelineEl) {
-            timelineEl.style.opacity = '0';
-            timelineEl.style.transform = 'translateY(10px)';
-          }
-          // Promote these unnamed card elements into the VT top layer so they sit
-          // above the morphing photo (DOM order gives them higher z-index).
-          // Without this they stay in normal flow, below the top layer, and appear
-          // to "jump" on top only when the VT ends.
-          photoMetaEl = photoCard?.querySelector('.search-card-photo-meta') ?? null;
-          arrowBtnEl  = photoCard?.querySelector('.search-card-arrow-button') ?? null;
-          if (photoMetaEl) photoMetaEl.style.viewTransitionName = 'search-card-photo-meta';
-          if (arrowBtnEl)  arrowBtnEl.style.viewTransitionName  = 'search-card-arrow-btn';
-        }
 
         // Restore scroll position so VT can morph back to the correct spot
         window.scrollTo(0, this._savedScrollPos);
       });
 
-      const OVERLAY_MS  = 220;
-      const TIMELINE_MS = 400;
-
-      vt.finished.then(() => {
-        cleanup();
-        requestAnimationFrame(() => {
-          // 1. Fade the card overlay in
-          if (cardOverlayEl) {
-            cardOverlayEl.style.transition = `opacity ${OVERLAY_MS}ms ease-in`;
-            cardOverlayEl.style.removeProperty('opacity');
-          }
-          // 2. After overlay is visible, slide + fade the timeline in
-          setTimeout(() => {
-            if (timelineEl) {
-              timelineEl.style.transition =
-                `opacity ${TIMELINE_MS}ms ease-out, transform ${TIMELINE_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`;
-              timelineEl.style.removeProperty('opacity');
-              timelineEl.style.removeProperty('transform');
-              setTimeout(() => {
-                timelineEl.style.removeProperty('transition');
-              }, TIMELINE_MS + 50);
-            }
-            if (cardOverlayEl) setTimeout(() => cardOverlayEl.style.removeProperty('transition'), OVERLAY_MS + 50);
-          }, OVERLAY_MS);
-        });
-      }).catch(() => {
-        cleanup();
-        if (cardOverlayEl) {
-          cardOverlayEl.style.removeProperty('opacity');
-          cardOverlayEl.style.removeProperty('transition');
-        }
-        if (timelineEl) {
-          timelineEl.style.removeProperty('opacity');
-          timelineEl.style.removeProperty('transform');
-          timelineEl.style.removeProperty('transition');
-        }
-      });
+      vt.finished.then(cleanup).catch(cleanup);
     } else {
       // Fallback: fade out overlay, swap back button for tabbar without animation
       this._overlay.classList.remove('visible');
@@ -704,9 +540,20 @@ class ClassroomDetail {
     if (this._currentId !== classroomId) return;
 
     try {
-      // Step 1: Resolve the photo URL (cached after first fetch; may also be pre-warmed by card thumbnails).
-      const url = await fetchPhotoUrl(idfoto);
-      if (url === 'error') throw new Error('Photo URL unavailable');
+      // Step 1: Fetch the fresh URL.
+      // The polimi API establishes a session/cookie here required for step 2.
+      const resp = await fetch(`${PHOTO_API}/${idfoto}`, { credentials: 'omit' });
+      if (!resp.ok) throw new Error(`URL fetch failed: ${resp.status}`);
+      const text = await resp.text();
+      const url = text.match(/https?:\/\/\S+/)?.[0];
+      if (!url) throw new Error('No URL in response');
+
+      // Guard against a compromised API returning a URL pointing to an arbitrary server.
+      // The browser would otherwise silently GET that URL, leaking the user's IP/fingerprint.
+      const parsedUrl = new URL(url);
+      if (parsedUrl.hostname !== 'docmanager.polimi.it' || parsedUrl.protocol !== 'https:') {
+        throw new Error(`Untrusted photo URL: ${parsedUrl.hostname}`);
+      }
 
       if (this._currentId !== classroomId) return;
 
@@ -723,20 +570,27 @@ class ClassroomDetail {
       const img = container?.querySelector('.detail-photo');
       if (!img) return;
 
-      // Already stamped by the ViewTransition (cached URL path) — nothing to do.
-      if (img.classList.contains('loaded')) return;
-
+      // Reset state for new attempt
       img.classList.remove('loaded');
       container.classList.remove('loaded');
 
-      // Step 2: load and decode, then reveal.
+      // Step 2: Assign to img.src, then wait for BOTH:
+      //   a) full image decode (so the bitmap is ready before the transition starts)
+      //   b) the page-open animation to finish (so a cached/fast image doesn't start
+      //      its reveal while the VT overlay is still active — that interaction causes
+      //      a flicker in Safari iOS when the VT tears down its pseudo-elements)
       img.src = url;
-      img.decode().then(() => {
+      Promise.all([
+        img.decode().catch(() => 'error'),
+        this._openAnimationFinished,
+      ]).then(([decodeResult]) => {
+        if (decodeResult === 'error') {
+          if (this._currentId === classroomId) container.remove();
+          return;
+        }
         if (this._currentId !== classroomId) return;
         img.classList.add('loaded');
         container.classList.add('loaded');
-      }).catch(() => {
-        if (this._currentId === classroomId) container.remove();
       });
     } catch (err) {
       console.error('Classroom photo load error:', err);

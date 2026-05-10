@@ -235,7 +235,7 @@ body.info-open .header-title-btn {
 
   /* Animation: pop in with the first message */
   opacity: 0;
-  transform: scale(0.75);
+  transform: scale(0);
 }
 
 .about-me-section.is-visible .about-me-photo {

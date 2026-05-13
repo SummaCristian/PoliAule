@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-13T06:44:20.020983",
+  "generated_at": "2026-05-13T12:24:54.045686",
   "date": "20260519",
   "campuses": [
     {
@@ -11342,7 +11342,12 @@
               "idfoto": 29060490,
               "seats": 61,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:00",
+                  "fine": "17:00"
+                }
+              ]
             },
             {
               "name": "T.2",
@@ -11402,7 +11407,12 @@
               "idfoto": 29060308,
               "seats": 40,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "18:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "T.4",
@@ -11596,7 +11606,12 @@
               "idfoto": 29060351,
               "seats": 120,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "07:00",
+                  "fine": "09:30"
+                }
+              ]
             },
             {
               "name": "B.0.5",
@@ -12160,7 +12175,16 @@
               "idfoto": 29060458,
               "seats": 120,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
+                  "inizio": "14:30",
+                  "fine": "19:00"
+                }
+              ]
             }
           ]
         },
@@ -12285,7 +12309,12 @@
               "idfoto": 29060317,
               "seats": 49,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:00",
+                  "fine": "13:30"
+                }
+              ]
             },
             {
               "name": "A.1.2",

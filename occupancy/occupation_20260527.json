@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-20T07:08:10.557105",
+  "generated_at": "2026-05-20T12:55:41.508327",
   "date": "20260527",
   "campuses": [
     {
@@ -8325,7 +8325,12 @@
               "idfoto": 48423,
               "seats": 112,
               "workstations": 56,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "10:15",
+                  "fine": "17:15"
+                }
+              ]
             }
           ]
         },
@@ -10455,6 +10460,10 @@
               "accessible_seats": 2,
               "workstations": 212,
               "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "12:15"
+                },
                 {
                   "inizio": "18:00",
                   "fine": "20:00"

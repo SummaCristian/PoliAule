@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-20T06:51:36.060066",
+  "generated_at": "2026-05-20T12:30:51.598345",
   "date": "20260521",
   "campuses": [
     {
@@ -11499,7 +11499,12 @@
               "idfoto": 29060351,
               "seats": 120,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:00",
+                  "fine": "12:00"
+                }
+              ]
             },
             {
               "name": "B.0.5",

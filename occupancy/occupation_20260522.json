@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-21T06:57:25.575722",
+  "generated_at": "2026-05-21T12:50:45.294959",
   "date": "20260522",
   "campuses": [
     {
@@ -6551,7 +6551,12 @@
               ],
               "idfoto": 4916861,
               "seats": 72,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "E.P.2",
@@ -6559,7 +6564,12 @@
               "features": [],
               "idfoto": 4916879,
               "seats": 30,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "E.P.3",
@@ -6573,7 +6583,12 @@
               ],
               "idfoto": 5455194,
               "seats": 30,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "18:15"
+                }
+              ]
             }
           ]
         }

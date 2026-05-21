@@ -338,12 +338,10 @@ class InfoPage {
             </div>
 
             <div class="info-meta">
-            <!--
               <a href="https://polinetwork.org/it/projects/" target="_blank" rel="noopener" class="polinetwork-chip">
                 <img src="https://polinetwork.org/favicon.ico" alt="PoliNetwork" draggable="false">
                 <span>${t('info.polinetwork')}</span>
               </a>
-              -->
               <p class="info-disclaimer">${t('footer.disclaimer5')}</p>
             </div>
 

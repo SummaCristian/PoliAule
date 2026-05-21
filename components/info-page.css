@@ -895,7 +895,7 @@ body.info-open .header-title-btn {
 .star-avatar::after {
   content: attr(data-login);
   position: absolute;
-  bottom: calc(100% + 5px);
+  bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%) translateY(4px);
   background: var(--text-color-primary);

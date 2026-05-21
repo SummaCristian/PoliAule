@@ -462,7 +462,9 @@ class InfoPage {
               </div>
               <div class="github-stats-grid">
                 <a href="https://github.com/SummaCristian/poliaule/stargazers" target="_blank" rel="noopener" class="github-stat-card">
-                  <span class="material-symbols-outlined github-stat-icon">star</span>
+                  <div class="star-avatars" data-github="stargazers">
+                    <span class="material-symbols-outlined github-stat-icon">star</span>
+                  </div>
                   <span class="github-stat-number" data-stat="stars">—</span>
                   <span class="github-stat-label">${t('info.github.stars')}</span>
                 </a>
@@ -612,11 +614,12 @@ class InfoPage {
       const base = `https://api.github.com/repos/${GITHUB_REPO}`;
       const hdrs = { headers: { Accept: 'application/vnd.github+json' } };
 
-      const [repoRes, commitsRes, langsRes, contribRes] = await Promise.all([
+      const [repoRes, commitsRes, langsRes, contribRes, stargazersRes] = await Promise.all([
         fetch(base, hdrs),
         fetch(`${base}/commits?per_page=1`, hdrs),
         fetch(`${base}/languages`, hdrs),
         fetch(`${base}/contributors?per_page=10`, hdrs),
+        fetch(`${base}/stargazers?per_page=3`, hdrs),
       ]);
 
       if (!repoRes.ok) throw new Error(`GitHub API ${repoRes.status}`);
@@ -631,12 +634,14 @@ class InfoPage {
 
       const langs = langsRes.ok ? await langsRes.json() : null;
       const contributors = contribRes.ok ? await contribRes.json() : null;
+      const stargazers = stargazersRes.ok ? await stargazersRes.json() : null;
 
       if (!this._cachedStats) this._cachedStats = {};
       this._cachedStats.repo = repo;
       this._cachedStats.commits = commits;
       if (langs) this._cachedStats.langs = langs;
       if (contributors?.length) this._cachedStats.contributors = contributors;
+      if (stargazers?.length) this._cachedStats.stargazers = stargazers;
 
       this._applyGithubStats(this._cachedStats);
       this._persistStatsCache();
@@ -651,7 +656,7 @@ class InfoPage {
     } catch { /* storage quota exceeded — not critical */ }
   }
 
-  _applyGithubStats({ repo, commits, langs, contributors }) {
+  _applyGithubStats({ repo, commits, langs, contributors, stargazers }) {
     if (!this._overlay) return;
 
     const grid = this._overlay.querySelector('.github-stats-grid');
@@ -668,6 +673,7 @@ class InfoPage {
 
     if (langs) this._renderLanguageBar(langs);
     if (contributors?.length) this._renderContributors(contributors);
+    if (stargazers?.length) this._renderStargazers(stargazers);
   }
 
   _renderLanguageBar(langs) {
@@ -696,7 +702,22 @@ class InfoPage {
     `;
   }
 
-_renderContributors(contributors) {
+  _renderStargazers(stargazers) {
+    const el = this._overlay?.querySelector('[data-github="stargazers"]');
+    if (!el) return;
+
+    const items = stargazers.slice(0, 3).map((u, i) => {
+      const login = escapeHtml(u.login);
+      const avatar = safeUrl(u.avatar_url);
+      return `<span class="star-avatar" data-login="${login}" style="z-index:${3 - i}">
+        <img src="${avatar}&s=48" alt="${login}" loading="lazy">
+      </span>`;
+    }).join('');
+
+    el.innerHTML = `<div class="star-avatar-stack">${items}</div>`;
+  }
+
+  _renderContributors(contributors) {
     const el = this._overlay?.querySelector('[data-github="contributors"]');
     if (!el) return;
 

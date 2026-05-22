@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-22T07:07:59.795572",
+  "generated_at": "2026-05-22T12:38:14.320494",
   "date": "20260528",
   "campuses": [
     {
@@ -12269,7 +12269,12 @@
               "features": [],
               "idfoto": 29060461,
               "seats": 40,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:00",
+                  "fine": "12:30"
+                }
+              ]
             },
             {
               "name": "M.2",

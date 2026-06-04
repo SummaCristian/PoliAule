@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-04T08:35:04.602516",
+  "generated_at": "2026-06-04T12:53:52.852947",
   "date": "20260606",
   "campuses": [
     {
@@ -54,7 +54,12 @@
               "idfoto": 27853006,
               "seats": 307,
               "accessible_seats": 2,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "2.0.2",
@@ -545,7 +550,12 @@
               "idfoto": 12258939,
               "seats": 267,
               "workstations": 248,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "10:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "3.1.1",
@@ -742,7 +752,12 @@
               "seats": 132,
               "accessible_seats": 2,
               "workstations": 134,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "3.1.4",
@@ -1423,7 +1438,12 @@
               ],
               "idfoto": 48328,
               "seats": 275,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "11:00",
+                  "fine": "17:00"
+                }
+              ]
             }
           ]
         },
@@ -1699,7 +1719,12 @@
               ],
               "idfoto": 48733,
               "seats": 280,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "12:15"
+                }
+              ]
             },
             {
               "name": "9.0.2",
@@ -1771,7 +1796,12 @@
               "idfoto": 5398748,
               "seats": 20,
               "workstations": 20,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "9.1.2",
@@ -1810,7 +1840,12 @@
               ],
               "idfoto": 48779,
               "seats": 288,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "12:15"
+                }
+              ]
             }
           ]
         },
@@ -2051,7 +2086,12 @@
               "idfoto": 48749,
               "seats": 86,
               "workstations": 43,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "III.B",
@@ -2120,7 +2160,12 @@
               "idfoto": 48751,
               "seats": 90,
               "workstations": 45,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "III.D",
@@ -2250,7 +2295,12 @@
               "idfoto": 48748,
               "seats": 104,
               "workstations": 52,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:45",
+                  "fine": "17:30"
+                }
+              ]
             },
             {
               "name": "U.1",
@@ -2285,7 +2335,12 @@
               "idfoto": 48753,
               "seats": 110,
               "workstations": 55,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:45",
+                  "fine": "17:30"
+                }
+              ]
             },
             {
               "name": "Y.1",
@@ -2496,7 +2551,12 @@
               "idfoto": 48754,
               "seats": 138,
               "workstations": 69,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "15:30",
+                  "fine": "18:30"
+                }
+              ]
             },
             {
               "name": "Z.2",
@@ -2556,7 +2616,12 @@
               "idfoto": 48742,
               "seats": 56,
               "workstations": 28,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "G.2",
@@ -2586,7 +2651,12 @@
               "idfoto": 48451,
               "seats": 82,
               "workstations": 41,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "G.3",
@@ -2962,7 +3032,12 @@
               ],
               "idfoto": 48609,
               "seats": 50,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "21:15"
+                }
+              ]
             }
           ]
         },
@@ -6976,7 +7051,12 @@
               "idfoto": 48764,
               "seats": 112,
               "workstations": 112,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "L.03",
@@ -7010,7 +7090,12 @@
               ],
               "idfoto": 48768,
               "seats": 188,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "L.04 - VIRTUAL LAB",
@@ -7078,7 +7163,12 @@
               ],
               "idfoto": 48770,
               "seats": 45,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "L.06",
@@ -7118,7 +7208,12 @@
               "idfoto": 48771,
               "seats": 224,
               "workstations": 224,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "L.07",
@@ -9400,7 +9495,12 @@
               "idfoto": 29060317,
               "seats": 49,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "18:00"
+                }
+              ]
             },
             {
               "name": "A.1.2",

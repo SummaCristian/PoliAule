@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-05T07:30:31.513926",
+  "generated_at": "2026-06-05T12:58:46.445177",
   "date": "20260612",
   "campuses": [
     {
@@ -566,6 +566,10 @@
               "seats": 174,
               "workstations": 175,
               "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "11:30"
+                },
                 {
                   "inizio": "11:30",
                   "fine": "15:00"
@@ -5456,7 +5460,12 @@
               ],
               "idfoto": 48782,
               "seats": 144,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "25.S.3",
@@ -9856,7 +9865,12 @@
               "idfoto": 29060490,
               "seats": 61,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:15",
+                  "fine": "16:15"
+                }
+              ]
             },
             {
               "name": "T.2",
@@ -9991,7 +10005,12 @@
               "idfoto": 29060333,
               "seats": 88,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.0.2",
@@ -10066,7 +10085,12 @@
               "idfoto": 29060342,
               "seats": 88,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "10:00",
+                  "fine": "13:00"
+                }
+              ]
             },
             {
               "name": "B.0.4",
@@ -10300,7 +10324,12 @@
               "idfoto": 29060406,
               "seats": 50,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.1.3",

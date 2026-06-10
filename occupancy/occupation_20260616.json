@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-09T13:01:17.845899",
+  "generated_at": "2026-06-10T07:26:22.572277",
   "date": "20260616",
   "campuses": [
     {
@@ -1558,6 +1558,10 @@
                 {
                   "inizio": "10:15",
                   "fine": "12:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "16:15"
                 }
               ]
             },
@@ -2680,7 +2684,12 @@
               "seats": 62,
               "accessible_seats": 1,
               "workstations": 31,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "Z.1 D.I.",

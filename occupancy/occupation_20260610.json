@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-10T07:09:35.770509",
+  "generated_at": "2026-06-10T12:59:10.688545",
   "date": "20260610",
   "campuses": [
     {
@@ -5564,7 +5564,12 @@
               ],
               "idfoto": -2147483648,
               "seats": 70,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "26.0.2",
@@ -5594,7 +5599,12 @@
               "idfoto": -2147483648,
               "seats": 76,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "26.0.3",
@@ -5624,7 +5634,12 @@
               "idfoto": -2147483648,
               "seats": 70,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "26.0.4",
@@ -5665,7 +5680,12 @@
               "seats": 107,
               "accessible_seats": 1,
               "workstations": 177,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "26.1.1",
@@ -5695,7 +5715,12 @@
               "idfoto": -2147483648,
               "seats": 207,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "26.1.2",
@@ -5730,7 +5755,12 @@
               "idfoto": 7036606,
               "seats": 138,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "26.1.3",
@@ -5770,7 +5800,12 @@
               "idfoto": 7036615,
               "seats": 122,
               "workstations": 120,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "26.1.4",
@@ -5810,7 +5845,12 @@
               "idfoto": 7036616,
               "seats": 134,
               "workstations": 131,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "26.1.5",
@@ -5839,7 +5879,12 @@
               ],
               "idfoto": -2147483648,
               "seats": 167,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "26.1.6",
@@ -5874,7 +5919,12 @@
               "idfoto": -2147483648,
               "seats": 167,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             }
           ]
         }
@@ -10405,7 +10455,12 @@
               ],
               "idfoto": 29060448,
               "seats": 120,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.2.4",

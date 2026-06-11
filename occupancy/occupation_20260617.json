@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-10T13:19:17.983305",
+  "generated_at": "2026-06-11T07:51:25.701021",
   "date": "20260617",
   "campuses": [
     {
@@ -1582,6 +1582,10 @@
                 {
                   "inizio": "09:15",
                   "fine": "11:15"
+                },
+                {
+                  "inizio": "12:15",
+                  "fine": "20:15"
                 }
               ]
             },
@@ -4979,6 +4983,10 @@
                 {
                   "inizio": "09:15",
                   "fine": "12:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -5312,7 +5320,12 @@
               ],
               "idfoto": 48788,
               "seats": 54,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "11:15",
+                  "fine": "17:15"
+                }
+              ]
             },
             {
               "name": "25.1.4",
@@ -7574,7 +7587,12 @@
               ],
               "idfoto": -2147483648,
               "seats": 126,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "B8.0.2",
@@ -10240,7 +10258,12 @@
               "idfoto": 29060338,
               "seats": 48,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:30",
+                  "fine": "16:30"
+                }
+              ]
             },
             {
               "name": "B.0.3",
@@ -10759,7 +10782,12 @@
               "seats": 90,
               "accessible_seats": 1,
               "workstations": 45,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "11:00",
+                  "fine": "13:30"
+                }
+              ]
             },
             {
               "name": "B.2.5",
@@ -11081,7 +11109,12 @@
               ],
               "idfoto": 29060475,
               "seats": 56,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:30",
+                  "fine": "16:00"
+                }
+              ]
             }
           ]
         }

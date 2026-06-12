@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-11T14:15:48.071396",
+  "generated_at": "2026-06-12T07:34:09.131890",
   "date": "20260616",
   "campuses": [
     {
@@ -58,6 +58,10 @@
                 {
                   "inizio": "08:00",
                   "fine": "11:30"
+                },
+                {
+                  "inizio": "11:30",
+                  "fine": "14:30"
                 },
                 {
                   "inizio": "15:00",
@@ -143,6 +147,10 @@
               "seats": 144,
               "workstations": 144,
               "occupancy": [
+                {
+                  "inizio": "11:15",
+                  "fine": "13:15"
+                },
                 {
                   "inizio": "13:15",
                   "fine": "18:15"
@@ -2574,7 +2582,12 @@
               "idfoto": 48747,
               "seats": 76,
               "workstations": 38,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "R.1",
@@ -2784,7 +2797,12 @@
               "idfoto": 48745,
               "seats": 92,
               "workstations": 46,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "13:15",
+                  "fine": "20:15"
+                }
+              ]
             },
             {
               "name": "O.2.1",
@@ -3413,6 +3431,10 @@
               "idfoto": 48331,
               "seats": 50,
               "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
                 {
                   "inizio": "14:15",
                   "fine": "18:15"
@@ -5151,6 +5173,10 @@
               "seats": 50,
               "occupancy": [
                 {
+                  "inizio": "09:15",
+                  "fine": "14:15"
+                },
+                {
                   "inizio": "15:00",
                   "fine": "18:30"
                 }
@@ -5231,6 +5257,10 @@
                 {
                   "inizio": "11:30",
                   "fine": "15:00"
+                },
+                {
+                  "inizio": "17:15",
+                  "fine": "18:15"
                 }
               ]
             },
@@ -8727,6 +8757,10 @@
               "seats": 160,
               "accessible_seats": 1,
               "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
                 {
                   "inizio": "15:00",
                   "fine": "18:30"

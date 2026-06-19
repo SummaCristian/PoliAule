@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-18T13:01:15.560760",
+  "generated_at": "2026-06-19T08:35:34.799235",
   "date": "20260620",
   "campuses": [
     {
@@ -2703,7 +2703,7 @@
               "seats": 300,
               "occupancy": [
                 {
-                  "inizio": "08:30",
+                  "inizio": "09:00",
                   "fine": "12:00"
                 }
               ]
@@ -2747,7 +2747,7 @@
               "seats": 300,
               "occupancy": [
                 {
-                  "inizio": "08:30",
+                  "inizio": "09:00",
                   "fine": "12:00"
                 }
               ]
@@ -2820,7 +2820,7 @@
               "seats": 300,
               "occupancy": [
                 {
-                  "inizio": "08:30",
+                  "inizio": "09:00",
                   "fine": "12:00"
                 }
               ]
@@ -2859,7 +2859,7 @@
               "seats": 300,
               "occupancy": [
                 {
-                  "inizio": "08:30",
+                  "inizio": "09:00",
                   "fine": "12:00"
                 }
               ]

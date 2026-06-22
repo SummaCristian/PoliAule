@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T09:18:24.578345",
+  "generated_at": "2026-06-22T15:48:17.863149",
   "date": "20260629",
   "campuses": [
     {
@@ -2383,12 +2383,7 @@
               ],
               "idfoto": 48750,
               "seats": 248,
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "11:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "III.C",

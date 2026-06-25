@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-25T07:00:50.026514",
+  "generated_at": "2026-06-25T12:35:54.392589",
   "date": "20260630",
   "campuses": [
     {
@@ -264,12 +264,7 @@
               ],
               "idfoto": 48632,
               "seats": 214,
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "15:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "2.1.5",
@@ -5122,8 +5117,8 @@
               "seats": 50,
               "occupancy": [
                 {
-                  "inizio": "08:00",
-                  "fine": "11:30"
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -5370,7 +5365,12 @@
               ],
               "idfoto": 48783,
               "seats": 141,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "15:00"
+                }
+              ]
             }
           ]
         },
@@ -6844,8 +6844,8 @@
               "accessible_seats": 1,
               "occupancy": [
                 {
-                  "inizio": "09:15",
-                  "fine": "13:15"
+                  "inizio": "10:15",
+                  "fine": "14:15"
                 }
               ]
             },
@@ -7862,10 +7862,6 @@
                 {
                   "inizio": "11:30",
                   "fine": "15:00"
-                },
-                {
-                  "inizio": "15:00",
-                  "fine": "18:30"
                 }
               ]
             },
@@ -9445,12 +9441,7 @@
               ],
               "idfoto": -2147483648,
               "seats": 180,
-              "occupancy": [
-                {
-                  "inizio": "15:00",
-                  "fine": "18:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.28.2.2",

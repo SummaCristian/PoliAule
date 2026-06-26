@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-25T12:35:54.392589",
+  "generated_at": "2026-06-26T07:06:31.295902",
   "date": "20260630",
   "campuses": [
     {
@@ -2031,6 +2031,10 @@
               "seats": 97,
               "occupancy": [
                 {
+                  "inizio": "10:15",
+                  "fine": "16:15"
+                },
+                {
                   "inizio": "18:45",
                   "fine": "23:59"
                 }
@@ -2800,16 +2804,7 @@
               "idfoto": 48429,
               "seats": 74,
               "workstations": 37,
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:00"
-                },
-                {
-                  "inizio": "14:00",
-                  "fine": "20:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "G.1",
@@ -3412,7 +3407,12 @@
               "seats": 93,
               "accessible_seats": 2,
               "workstations": 41,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "20:30"
+                }
+              ]
             },
             {
               "name": "B.2.3",
@@ -3987,6 +3987,10 @@
                 {
                   "inizio": "11:15",
                   "fine": "13:15"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "15:15"
                 }
               ]
             },
@@ -6867,7 +6871,12 @@
               "idfoto": 48410,
               "seats": 96,
               "workstations": 48,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "14:00",
+                  "fine": "18:00"
+                }
+              ]
             },
             {
               "name": "B2.2.15",
@@ -8318,6 +8327,10 @@
               "workstations": 230,
               "occupancy": [
                 {
+                  "inizio": "08:15",
+                  "fine": "12:15"
+                },
+                {
                   "inizio": "15:00",
                   "fine": "18:30"
                 }
@@ -8655,6 +8668,10 @@
               "workstations": 212,
               "occupancy": [
                 {
+                  "inizio": "09:15",
+                  "fine": "11:15"
+                },
+                {
                   "inizio": "11:30",
                   "fine": "15:00"
                 }
@@ -8866,6 +8883,10 @@
                 {
                   "inizio": "11:30",
                   "fine": "15:00"
+                },
+                {
+                  "inizio": "15:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -9004,7 +9025,7 @@
               "workstations": 103,
               "occupancy": [
                 {
-                  "inizio": "10:00",
+                  "inizio": "09:00",
                   "fine": "12:00"
                 },
                 {

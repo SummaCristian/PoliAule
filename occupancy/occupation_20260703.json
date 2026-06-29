@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T07:43:35.975901",
+  "generated_at": "2026-06-29T14:19:06.231183",
   "date": "20260703",
   "campuses": [
     {
@@ -871,12 +871,7 @@
               "seats": 88,
               "accessible_seats": 2,
               "workstations": 90,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "17:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.5",
@@ -973,7 +968,12 @@
               "seats": 96,
               "accessible_seats": 2,
               "workstations": 98,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "17:15"
+                }
+              ]
             },
             {
               "name": "3.1.7",
@@ -7545,12 +7545,7 @@
               ],
               "idfoto": 19611705,
               "seats": 172,
-              "occupancy": [
-                {
-                  "inizio": "11:30",
-                  "fine": "18:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.1.4",
@@ -7558,12 +7553,7 @@
               "features": [],
               "idfoto": 20950108,
               "seats": 144,
-              "occupancy": [
-                {
-                  "inizio": "11:30",
-                  "fine": "18:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.2.1",
@@ -7606,10 +7596,6 @@
                 {
                   "inizio": "08:00",
                   "fine": "11:30"
-                },
-                {
-                  "inizio": "11:30",
-                  "fine": "18:30"
                 }
               ]
             },
@@ -7831,6 +7817,10 @@
                 {
                   "inizio": "08:30",
                   "fine": "11:30"
+                },
+                {
+                  "inizio": "11:30",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -7993,6 +7983,10 @@
                 {
                   "inizio": "08:00",
                   "fine": "11:30"
+                },
+                {
+                  "inizio": "11:30",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -8252,6 +8246,10 @@
                 {
                   "inizio": "09:30",
                   "fine": "11:30"
+                },
+                {
+                  "inizio": "14:30",
+                  "fine": "17:00"
                 }
               ]
             },
@@ -8574,6 +8572,10 @@
               "accessible_seats": 2,
               "workstations": 212,
               "occupancy": [
+                {
+                  "inizio": "11:00",
+                  "fine": "13:00"
+                },
                 {
                   "inizio": "15:00",
                   "fine": "18:30"
@@ -10298,7 +10300,12 @@
               ],
               "idfoto": 29060448,
               "seats": 120,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "20:30"
+                }
+              ]
             },
             {
               "name": "B.2.4",
@@ -10579,12 +10586,7 @@
               "idfoto": -2147483648,
               "seats": 162,
               "accessible_seats": 1,
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "20:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "A.1.3",

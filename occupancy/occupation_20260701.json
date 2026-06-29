@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T11:56:16.843367",
+  "generated_at": "2026-06-29T07:36:55.079957",
   "date": "20260701",
   "campuses": [
     {
@@ -701,6 +701,10 @@
               "workstations": 39,
               "occupancy": [
                 {
+                  "inizio": "09:15",
+                  "fine": "14:15"
+                },
+                {
                   "inizio": "15:00",
                   "fine": "20:30"
                 }
@@ -1051,7 +1055,12 @@
               "seats": 117,
               "accessible_seats": 3,
               "workstations": 121,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "3.1.8",
@@ -2631,7 +2640,12 @@
               "seats": 62,
               "accessible_seats": 1,
               "workstations": 31,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "16:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "Z.1 D.I.",
@@ -4222,6 +4236,10 @@
                 {
                   "inizio": "08:00",
                   "fine": "11:30"
+                },
+                {
+                  "inizio": "14:15",
+                  "fine": "16:15"
                 }
               ]
             },
@@ -4959,6 +4977,10 @@
                 {
                   "inizio": "08:15",
                   "fine": "11:30"
+                },
+                {
+                  "inizio": "12:15",
+                  "fine": "16:15"
                 }
               ]
             },
@@ -6133,7 +6155,12 @@
               "idfoto": 48399,
               "seats": 108,
               "workstations": 54,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B2.1.3",

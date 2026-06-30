@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T14:15:45.173830",
+  "generated_at": "2026-06-30T07:03:29.339144",
   "date": "20260702",
   "campuses": [
     {
@@ -955,7 +955,12 @@
               "seats": 96,
               "accessible_seats": 2,
               "workstations": 98,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "3.1.7",
@@ -2536,12 +2541,7 @@
               "seats": 62,
               "accessible_seats": 1,
               "workstations": 31,
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "20:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "Z.1 D.I.",

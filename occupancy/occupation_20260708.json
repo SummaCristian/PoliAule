@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-02T12:29:49.429141",
+  "generated_at": "2026-07-03T06:44:47.429321",
   "date": "20260708",
   "campuses": [
     {
@@ -381,7 +381,12 @@
               "idfoto": 48635,
               "seats": 66,
               "workstations": 33,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "14:15"
+                }
+              ]
             },
             {
               "name": "2.2.3",
@@ -1098,7 +1103,12 @@
               ],
               "idfoto": 3344921,
               "seats": 68,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "3.2.1",
@@ -3402,7 +3412,12 @@
               ],
               "idfoto": 48609,
               "seats": 50,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                }
+              ]
             }
           ]
         },
@@ -8037,6 +8052,10 @@
               "seats": 45,
               "occupancy": [
                 {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                },
+                {
                   "inizio": "15:00",
                   "fine": "18:30"
                 }
@@ -8921,6 +8940,10 @@
               "accessible_seats": 1,
               "workstations": 154,
               "occupancy": [
+                {
+                  "inizio": "10:15",
+                  "fine": "12:15"
+                },
                 {
                   "inizio": "15:00",
                   "fine": "18:30"
@@ -10335,7 +10358,12 @@
               "idfoto": 29060446,
               "seats": 88,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "B.2.3",

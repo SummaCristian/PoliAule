@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-06T07:21:51.488588",
+  "generated_at": "2026-07-06T13:57:31.826584",
   "date": "20260709",
   "campuses": [
     {
@@ -612,6 +612,10 @@
               "workstations": 248,
               "occupancy": [
                 {
+                  "inizio": "09:00",
+                  "fine": "11:30"
+                },
+                {
                   "inizio": "15:00",
                   "fine": "18:30"
                 }
@@ -1158,7 +1162,12 @@
               "seats": 92,
               "accessible_seats": 2,
               "workstations": 94,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:00",
+                  "fine": "15:00"
+                }
+              ]
             },
             {
               "name": "3.2.2",
@@ -1401,10 +1410,6 @@
               "seats": 284,
               "occupancy": [
                 {
-                  "inizio": "08:30",
-                  "fine": "11:30"
-                },
-                {
                   "inizio": "11:30",
                   "fine": "15:00"
                 },
@@ -1569,12 +1574,7 @@
               ],
               "idfoto": 48614,
               "seats": 290,
-              "occupancy": [
-                {
-                  "inizio": "08:30",
-                  "fine": "11:30"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -1841,7 +1841,7 @@
               "accessible_seats": 4,
               "occupancy": [
                 {
-                  "inizio": "09:00",
+                  "inizio": "08:30",
                   "fine": "11:30"
                 },
                 {
@@ -3835,7 +3835,12 @@
               "seats": 93,
               "accessible_seats": 1,
               "workstations": 45,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "20:30"
+                }
+              ]
             },
             {
               "name": "B.4.4",

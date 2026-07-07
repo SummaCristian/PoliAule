@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-06T14:07:43.052257",
+  "generated_at": "2026-07-07T07:01:41.397322",
   "date": "20260713",
   "campuses": [
     {
@@ -1111,7 +1111,12 @@
               ],
               "idfoto": 3344921,
               "seats": 68,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "13:15",
+                  "fine": "15:15"
+                }
+              ]
             },
             {
               "name": "3.2.1",
@@ -7742,12 +7747,7 @@
               "features": [],
               "idfoto": 20950108,
               "seats": 144,
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "11:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.2.1",
@@ -7786,12 +7786,7 @@
               ],
               "idfoto": 19611707,
               "seats": 300,
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "11:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B8.2.2",
@@ -8266,10 +8261,6 @@
               "seats": 150,
               "occupancy": [
                 {
-                  "inizio": "08:00",
-                  "fine": "11:30"
-                },
-                {
                   "inizio": "11:30",
                   "fine": "15:00"
                 },
@@ -8480,6 +8471,10 @@
               "workstations": 230,
               "occupancy": [
                 {
+                  "inizio": "08:00",
+                  "fine": "11:30"
+                },
+                {
                   "inizio": "11:30",
                   "fine": "18:30"
                 }
@@ -8578,10 +8573,6 @@
               "seats": 160,
               "accessible_seats": 1,
               "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "11:30"
-                },
                 {
                   "inizio": "11:30",
                   "fine": "18:30"

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-07T12:36:42.768855",
+  "generated_at": "2026-07-08T05:53:31.837325",
   "date": "20260709",
   "campuses": [
     {
@@ -4804,7 +4804,12 @@
               ],
               "idfoto": 48535,
               "seats": 117,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "12:15"
+                }
+              ]
             },
             {
               "name": "21.S.4",
@@ -8849,12 +8854,7 @@
               "seats": 212,
               "accessible_seats": 2,
               "workstations": 212,
-              "occupancy": [
-                {
-                  "inizio": "15:00",
-                  "fine": "18:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "BL.27.0.4",
@@ -9108,6 +9108,10 @@
                 {
                   "inizio": "08:00",
                   "fine": "11:30"
+                },
+                {
+                  "inizio": "13:00",
+                  "fine": "16:00"
                 }
               ]
             },
@@ -9802,7 +9806,12 @@
               "idfoto": 29060490,
               "seats": 61,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:00",
+                  "fine": "12:00"
+                }
+              ]
             },
             {
               "name": "T.2",
@@ -10236,7 +10245,12 @@
               "idfoto": 29060406,
               "seats": 50,
               "accessible_seats": 1,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:00",
+                  "fine": "13:00"
+                }
+              ]
             },
             {
               "name": "B.1.3",

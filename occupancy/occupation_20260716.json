@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-09T07:08:47.994234",
+  "generated_at": "2026-07-10T07:01:38.149783",
   "date": "20260716",
   "campuses": [
     {
@@ -5289,6 +5289,10 @@
               "seats": 50,
               "occupancy": [
                 {
+                  "inizio": "09:15",
+                  "fine": "12:15"
+                },
+                {
                   "inizio": "15:00",
                   "fine": "18:30"
                 }
@@ -6872,7 +6876,12 @@
               "seats": 89,
               "accessible_seats": 1,
               "workstations": 89,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "B2.2.10",
@@ -9654,6 +9663,10 @@
               "seats": 180,
               "occupancy": [
                 {
+                  "inizio": "08:15",
+                  "fine": "13:15"
+                },
+                {
                   "inizio": "15:00",
                   "fine": "18:30"
                 }
@@ -10830,7 +10843,7 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "13:15"
+                  "fine": "20:30"
                 }
               ]
             },
@@ -10870,7 +10883,7 @@
               "occupancy": [
                 {
                   "inizio": "09:15",
-                  "fine": "20:30"
+                  "fine": "13:15"
                 }
               ]
             }

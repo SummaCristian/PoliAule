@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-13T06:18:36.695426",
+  "generated_at": "2026-07-13T12:36:13.084184",
   "date": "20260714",
   "campuses": [
     {
@@ -1087,6 +1087,10 @@
                 {
                   "inizio": "11:30",
                   "fine": "15:00"
+                },
+                {
+                  "inizio": "15:15",
+                  "fine": "17:15"
                 }
               ]
             },
@@ -3585,7 +3589,7 @@
               "workstations": 41,
               "occupancy": [
                 {
-                  "inizio": "09:15",
+                  "inizio": "10:15",
                   "fine": "20:30"
                 }
               ]
@@ -6347,12 +6351,7 @@
               "idfoto": 48799,
               "seats": 96,
               "workstations": 48,
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "20:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.1.8",
@@ -6466,10 +6465,6 @@
               "seats": 48,
               "workstations": 24,
               "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "13:15"
-                },
                 {
                   "inizio": "14:15",
                   "fine": "18:15"
@@ -6949,12 +6944,7 @@
               "idfoto": 48402,
               "seats": 90,
               "workstations": 45,
-              "occupancy": [
-                {
-                  "inizio": "09:15",
-                  "fine": "20:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.11",
@@ -8067,6 +8057,10 @@
                 {
                   "inizio": "11:30",
                   "fine": "15:00"
+                },
+                {
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -8187,10 +8181,6 @@
               "seats": 224,
               "workstations": 224,
               "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "11:30"
-                },
                 {
                   "inizio": "11:30",
                   "fine": "15:00"

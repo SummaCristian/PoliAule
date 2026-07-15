@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-15T05:45:23.998745",
+  "generated_at": "2026-07-15T11:47:46.579237",
   "date": "20260721",
   "campuses": [
     {
@@ -2381,7 +2381,12 @@
               "idfoto": 48752,
               "seats": 80,
               "workstations": 40,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "19:15"
+                }
+              ]
             },
             {
               "name": "O.1",

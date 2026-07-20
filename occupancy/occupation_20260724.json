@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-19T11:25:22.228029",
+  "generated_at": "2026-07-20T06:29:16.002930",
   "date": "20260724",
   "campuses": [
     {
@@ -8638,6 +8638,10 @@
               "accessible_seats": 1,
               "workstations": 103,
               "occupancy": [
+                {
+                  "inizio": "11:00",
+                  "fine": "13:00"
+                },
                 {
                   "inizio": "14:00",
                   "fine": "16:00"

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-22T05:51:50.567667",
+  "generated_at": "2026-07-22T11:52:18.131169",
   "date": "20260723",
   "campuses": [
     {
@@ -3420,7 +3420,12 @@
               "idfoto": 48438,
               "seats": 93,
               "workstations": 45,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:15",
+                  "fine": "18:15"
+                }
+              ]
             },
             {
               "name": "B.2.2",
@@ -4951,7 +4956,12 @@
               ],
               "idfoto": 48786,
               "seats": 50,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "10:15",
+                  "fine": "12:15"
+                }
+              ]
             },
             {
               "name": "25.1.2",
@@ -7763,12 +7773,7 @@
               ],
               "idfoto": 48768,
               "seats": 188,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "13:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "L.04 - VIRTUAL LAB",
@@ -7840,6 +7845,10 @@
                 {
                   "inizio": "08:30",
                   "fine": "14:00"
+                },
+                {
+                  "inizio": "15:00",
+                  "fine": "18:00"
                 }
               ]
             },
@@ -8056,6 +8065,10 @@
                 {
                   "inizio": "08:30",
                   "fine": "13:00"
+                },
+                {
+                  "inizio": "14:00",
+                  "fine": "15:00"
                 },
                 {
                   "inizio": "15:00",

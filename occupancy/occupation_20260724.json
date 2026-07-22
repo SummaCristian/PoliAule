@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-21T11:59:53.577772",
+  "generated_at": "2026-07-22T05:55:28.453376",
   "date": "20260724",
   "campuses": [
     {
@@ -523,6 +523,10 @@
                 {
                   "inizio": "08:00",
                   "fine": "11:30"
+                },
+                {
+                  "inizio": "15:00",
+                  "fine": "18:30"
                 }
               ]
             },
@@ -1330,12 +1334,7 @@
               ],
               "idfoto": 48437,
               "seats": 284,
-              "occupancy": [
-                {
-                  "inizio": "09:00",
-                  "fine": "11:30"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "5.0.2",
@@ -1489,12 +1488,7 @@
               ],
               "idfoto": 48614,
               "seats": 290,
-              "occupancy": [
-                {
-                  "inizio": "09:00",
-                  "fine": "11:30"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -2966,7 +2960,12 @@
               ],
               "idfoto": 48735,
               "seats": 300,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "09:00",
+                  "fine": "11:30"
+                }
+              ]
             },
             {
               "name": "T.1.3",
@@ -4315,12 +4314,7 @@
               ],
               "idfoto": 48612,
               "seats": 264,
-              "occupancy": [
-                {
-                  "inizio": "15:00",
-                  "fine": "18:30"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },
@@ -7658,7 +7652,12 @@
               "idfoto": 48771,
               "seats": 224,
               "workstations": 224,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "10:15",
+                  "fine": "13:15"
+                }
+              ]
             },
             {
               "name": "L.07",

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-24T06:03:45.005445",
+  "generated_at": "2026-07-24T11:56:42.160699",
   "date": "20260729",
   "campuses": [
     {
@@ -7249,7 +7249,12 @@
               ],
               "idfoto": 48769,
               "seats": 60,
-              "occupancy": []
+              "occupancy": [
+                {
+                  "inizio": "08:15",
+                  "fine": "21:00"
+                }
+              ]
             },
             {
               "name": "L.05 - D.I.",

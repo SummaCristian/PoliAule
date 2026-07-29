@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T06:00:16.468255",
+  "generated_at": "2026-07-29T12:12:39.518107",
   "date": "20260801",
   "campuses": [
     {
@@ -926,12 +926,7 @@
               "seats": 117,
               "accessible_seats": 3,
               "workstations": 121,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.1.8",
@@ -1032,12 +1027,7 @@
               "seats": 92,
               "accessible_seats": 2,
               "workstations": 94,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.2.2",
@@ -1083,12 +1073,7 @@
               "seats": 72,
               "accessible_seats": 2,
               "workstations": 74,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.2.3",
@@ -1134,12 +1119,7 @@
               "seats": 82,
               "accessible_seats": 2,
               "workstations": 84,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "3.2.4",
@@ -1185,12 +1165,7 @@
               "seats": 92,
               "accessible_seats": 2,
               "workstations": 94,
-              "occupancy": [
-                {
-                  "inizio": "08:15",
-                  "fine": "19:15"
-                }
-              ]
+              "occupancy": []
             }
           ]
         },

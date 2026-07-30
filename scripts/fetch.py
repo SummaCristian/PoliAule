@@ -63,6 +63,10 @@ def strip_tags(value: object) -> object:
     return value
 
 
+# Matches the leading building-number token of a classrooms.json building
+# name, e.g. "21" -> "21", "16B" -> "16B", "32.1" -> "32" (sub-room suffixes
+# after a '.' are dropped since scripts/fetch_opening_hours.py keys its
+# `buildings` dict by the bare "Edificio N" number, not the sub-room code).
 _BUILDING_ID_RE = re.compile(r"([a-z]*\d+[a-z]?)", re.IGNORECASE)
 
 
@@ -129,7 +133,12 @@ def all_buildings_closed(campuses: list[dict], opening_hours: dict, weekday: int
 
 
 def fetch_days(campuses: list[dict], opening_hours: dict) -> list[date]:
-    """Return the next 7 days starting today, excluding holidays and days every building is closed."""
+    """Return the next 7 days starting today, excluding holidays and days every building is closed.
+
+    A day is only skipped entirely when *every* building is closed, not just
+    because it's Sunday. BL27 is open every day of the week, so a blanket
+    day-of-week skip would silently miss real occupancy data.
+    """
     today = date.today()
     days = []
     i = 0

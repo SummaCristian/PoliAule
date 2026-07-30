@@ -15,12 +15,15 @@ export const SKIP_DAYS = [0] // Sunday
 // from a building's name (e.g. "32.1" -> "32", "B12" -> "B12", "16B" -> "16B").
 const BUILDING_ID_RE = /^([a-z]*\d+[a-z]?)/i;
 
+// Mirrors scripts/fetch.py's _building_hours_key(), so both sides resolve
+// the same building to the same opening-hours.json entry.
 function buildingHoursKey(building) {
   const match = BUILDING_ID_RE.exec(String(building.name ?? ''));
   return (match ? match[1] : String(building.name ?? '')).toUpperCase();
 }
 
 // Resolves a building's opening hours: explicit match > campus default > global default.
+// Mirrors scripts/fetch.py's resolve_building_hours().
 function resolveBuildingHours(building, campusId, openingHours) {
   const key = buildingHoursKey(building);
   if (openingHours.buildings[key]) return openingHours.buildings[key];
@@ -52,6 +55,8 @@ export async function fetchClassroomsData() {
           return res.json();
         })
         .catch(error => {
+          // Non-fatal: fall through with openingHours = null so classroomsData
+          // still loads (and gets used) even if opening hours can't be fetched.
           console.error('Error fetching opening hours data:', error);
           return null;
         }),

@@ -1,3 +1,12 @@
+"""
+Scrapes PoliMi's building opening-hours page and writes data/opening-hours.json.
+
+There's no JSON/PDF export for this data, just an HTML page that can change
+format without notice. validate() refuses to overwrite opening-hours.json
+unless the parse clears the MIN_* thresholds below, so a broken scrape just
+exits non-zero and leaves the last good file alone.
+"""
+
 import json
 import re
 import sys
@@ -41,7 +50,11 @@ IGNORED_DESCRIPTOR_SUBSTRINGS = [
     "agor",  # matches "Agorà"/"Agora"
 ]
 
+# Matches "Edificio 21", "Edificio B2, spazi studio, ...": the word right
+# after "Edificio" is the building id, so no need to anchor the whole cell.
 BUILDING_ID_RE = re.compile(r"edificio\s+([a-z0-9]+)", re.IGNORECASE)
+
+# Matches "7:30-21:00" / "07:30 - 21:00" style hour-range cells.
 TIME_RANGE_RE = re.compile(r"^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$")
 
 MONTHS_IT = {
@@ -51,6 +64,11 @@ MONTHS_IT = {
 }
 _MONTH_NAMES = "|".join(MONTHS_IT)
 
+# The closure announcement lists periods in three shapes: "dal 24 dicembre
+# 2026 al 5 gennaio 2027" (crosses months/years), "dal 10 al 21 agosto 2026"
+# (same month), "il 1 giugno 2026" (single day). parse_closure_sentence()
+# tries them most specific first, so the cross-month pattern doesn't lose a
+# match to the single-day one matching a substring of it.
 CLOSURE_RANGE_CROSS_RE = re.compile(
     rf"dal (\d{{1,2}}) ({_MONTH_NAMES}) (\d{{4}}) al (\d{{1,2}}) ({_MONTH_NAMES}) (\d{{4}})",
     re.IGNORECASE,
@@ -87,18 +105,27 @@ def parse_hours_cell(text: str) -> list[str] | None:
         return ["00:00", "23:59"]
     m = TIME_RANGE_RE.match(text)
     if not m:
-        return None  # e.g. "consulta gli orari" — no usable data
+        return None  # e.g. "consulta gli orari", no usable data
     h1, m1, h2, m2 = m.groups()
     return [f"{int(h1):02d}:{m1}", f"{int(h2):02d}:{m2}"]
 
 
 def is_ignored_descriptor(descriptor: str) -> bool:
+    """True if a row describes a library/sports/access space rather than classroom hours."""
     lowered = descriptor.lower()
     return any(s in lowered for s in IGNORED_DESCRIPTOR_SUBSTRINGS)
 
 
 def parse_hours_table(table, buildings: dict, campus_defaults: dict) -> None:
-    """Parse one campus hours table, filling `buildings` and `campus_defaults` in place."""
+    """Parse one campus hours table, filling `buildings` and `campus_defaults` in place.
+
+    Each table row is either:
+    - a "Tutti"/"Tutti gli altri spazi" catch-all row, which becomes a
+      campus-wide default (used by scripts/fetch.py and the frontend for any
+      building the page doesn't mention by number), or
+    - a row naming a specific "Edificio N", which becomes an explicit
+      per-building entry that takes priority over the campus default.
+    """
     rows = table.find_all("tr")[1:]  # skip header row
     for tr in rows:
         cells = [c.get_text(" ", strip=True) for c in tr.find_all(["td", "th"])]
@@ -126,7 +153,7 @@ def parse_hours_table(table, buildings: dict, campus_defaults: dict) -> None:
 
         mon_fri = parse_hours_cell(mon_fri_raw)
         if mon_fri is None:
-            continue  # not a real time range (e.g. "H24"/"consulta gli orari") — not classroom hours
+            continue  # not a real time range (e.g. "H24"/"consulta gli orari"), so not classroom hours
 
         building_id = match.group(1).upper()
         buildings[building_id] = {
@@ -137,7 +164,13 @@ def parse_hours_table(table, buildings: dict, campus_defaults: dict) -> None:
 
 
 def parse_closure_sentence(sentence: str) -> list[dict]:
-    """Parse the "l'Ateneo chiuderà... anche: ..." sentence into holiday_periods."""
+    """Parse the "l'Ateneo chiuderà... anche: ..." sentence into holiday_periods.
+
+    Tries the three date patterns most specific first, tracking which spans
+    are already consumed by an earlier match so the same closure doesn't get
+    counted twice (without that check, "dal 24 dicembre 2026 al 5 gennaio
+    2027" would also match the single-day pattern).
+    """
     periods = []
     consumed_spans = []
 
@@ -173,6 +206,13 @@ def parse_closure_sentence(sentence: str) -> list[dict]:
 
 
 def parse_page(html: str) -> dict:
+    """Parse the full page into {buildings, campus_defaults, holiday_periods}.
+
+    The page also has separate "portineria" (reception-desk) tables that
+    aren't classroom hours, so tables are picked by their header row
+    ("Campus | Edifici/spazi") rather than by position, in case the page
+    ever reorders them.
+    """
     soup = BeautifulSoup(html, "html.parser")
 
     buildings: dict = {}
@@ -184,11 +224,18 @@ def parse_page(html: str) -> dict:
         if header_cells[:2] == ["Campus", "Edifici / spazi"] or header_cells[:2] == ["Campus", "Edifici/spazi"]:
             parse_hours_table(table, buildings, campus_defaults_by_label)
 
+    # The page's campus_defaults are keyed by the label shown in the table
+    # (e.g. "Leonardo", "Bovisa"), which doesn't match data/classrooms.json's
+    # campus ids, so remap here to keep our ids the only thing consumers see.
     campus_defaults: dict = {}
     for label, hours in campus_defaults_by_label.items():
         for campus_id in PAGE_CAMPUS_LABEL_TO_IDS.get(label, []):
             campus_defaults[campus_id] = hours
 
+    # The holiday dates sit in one announcement sentence outside any table,
+    # e.g. "l'Ateneo chiuderà... anche: il 1 giugno 2026 dal 10 al 21 agosto
+    # 2026 dal 24 dicembre 2026 al 5 gennaio 2027." Isolate that sentence
+    # first so dates elsewhere on the page don't get picked up by mistake.
     text = soup.get_text(" ", strip=True)
     start = text.find("l'Ateneo chiuderà")
     if start == -1:
@@ -205,6 +252,7 @@ def parse_page(html: str) -> dict:
 
 
 def validate(parsed: dict) -> None:
+    """Reject an implausible parse rather than overwrite the last known-good file."""
     if len(parsed["buildings"]) < MIN_BUILDINGS:
         raise ScrapeError(
             f"Only parsed {len(parsed['buildings'])} buildings, expected at least {MIN_BUILDINGS}. "
@@ -222,6 +270,12 @@ def validate(parsed: dict) -> None:
 
 
 def main() -> int:
+    """Fetch, parse, validate, and write data/opening-hours.json.
+
+    Any failure (network error, unparseable page, failed validation) exits
+    non-zero without touching the existing output file, so a bad run of the
+    weekly GitHub Action never clobbers the last known-good data.
+    """
     try:
         response = httpx.get(SOURCE_URL, timeout=REQUEST_TIMEOUT, follow_redirects=True)
         response.raise_for_status()

@@ -38,18 +38,21 @@ graph TD
 
 Data never passes through a custom backend. The browser fetches occupancy JSON files the same way it fetches any static asset.
 
+A second, independent job (`scripts/fetch_opening_hours.py`, weekly rather than nightly) scrapes polimi.it for building opening hours and writes `data/opening-hours.json`. `fetch.py` reads it to decide which days to fetch, and the browser fetches it directly alongside the occupancy files. See [fetch_opening_hours.py](#fetch_opening_hourspy) below.
+
 ---
 
 ## Data Pipeline
 
 ### fetch.py
 
-Runs on a schedule (and can be triggered manually). For each of the next 7 non-Sunday, non-holiday days it:
+Runs on a schedule (and can be triggered manually). For each of the next 7 days it:
 
 1. Reads `data/classrooms.json` to get room IDs.
-2. GETs the occupancy endpoint for every room on each day.
-3. Writes one `occupancy/occupation_YYYYMMDD.json` per day, mirroring the classrooms structure plus an `occupancy` array of hourly slots.
-4. Deletes stale files (dates before today).
+2. Reads `data/opening-hours.json` to decide which days to fetch: a day is skipped only if every building is closed that weekday, or it falls in a holiday period.
+3. GETs the occupancy endpoint for every room on each remaining day.
+4. Writes one `occupancy/occupation_YYYYMMDD.json` per day, mirroring the classrooms structure plus an `occupancy` array of hourly slots.
+5. Deletes stale files (dates before today).
 
 ```mermaid
 sequenceDiagram
@@ -59,7 +62,7 @@ sequenceDiagram
     participant FS as occupancy/
 
     GHA->>PY: run
-    PY->>PY: fetch_days() - next 7 days (skip Sundays + holidays)
+    PY->>PY: fetch_days() - next 7 days (skip days every building is closed, and holidays)
     loop each day × each room
         PY->>API: GET occupancy/{id}/{date}
         API-->>PY: [{slot}, ...]
@@ -70,6 +73,19 @@ sequenceDiagram
 ```
 
 Rate limiting: 0.5 seconds between calls (skippable via `--no-delay`), 3 retries with 2 seconds backoff on failure.
+
+### fetch_opening_hours.py
+
+Runs weekly (Sunday 6 AM UTC), independent of `fetch.py`'s twice-daily schedule. Scrapes polimi.it's building opening-hours page and writes `data/opening-hours.json`, containing:
+
+- `buildings`: explicit per-building hours, keyed by the building number/code shown on the page (e.g. `"21"`, `"B12"`)
+- `campus_defaults`: fallback hours for a whole campus, from the page's "Tutti"/"Tutti gli altri spazi" rows
+- `holiday_periods`: closure date ranges parsed from the page's yearly closure announcement
+- `default_hours`: last-resort fallback for campuses the page doesn't cover at all (Cremona, Lecco, Mantova)
+
+The page has no JSON/PDF export and can change format without notice, so a parse that looks too small or missing key sections is rejected: the script exits non-zero and leaves the existing `data/opening-hours.json` untouched rather than committing bad data.
+
+Both `fetch.py` and the frontend resolve a building's hours the same way: an explicit match in `buildings`, else the building's campus in `campus_defaults`, else `default_hours`. `scripts/fetch.py`'s `resolve_building_hours()` and `available-rooms-script.js`'s `resolveBuildingHours()` implement this lookup independently, keyed off the same file, so there's no shared runtime dependency between the Python and JS sides.
 
 ### JSON schema (abbreviated)
 
@@ -137,6 +153,7 @@ graph TD
     SCS -->|imports| ARS
     SCS -->|imports| I18N
     ARS -->|fetches| JSON[("occupancy/*.json")]:::store
+    ARS -->|fetches| OH[("data/opening-hours.json")]:::store
 ```
 
 ### Key modules
@@ -144,7 +161,7 @@ graph TD
 | File | Responsibility |
 |---|---|
 | `script.js` | App shell: splash screen, tab routing, form wiring, campus picker init |
-| `available-rooms-script.js` | Fetches occupancy JSON, exposes `findAvailableClassrooms()` |
+| `available-rooms-script.js` | Fetches occupancy JSON and opening hours, exposes `findAvailableClassrooms()` |
 | `search-classrooms-script.js` | Search tab: full-text index, hierarchy navigation, classroom status |
 | `i18n.js` | Locale detection (browser / localStorage), `t()` translation helper |
 | `components/campus-picker.js` | Campus selector UI + popup |

@@ -39,7 +39,34 @@ GET /occupancy/occupation_YYYYMMDD.json
 
 Returns occupancy slots for all classrooms on a given date. Dates follow the `YYYYMMDD` format (e.g. `occupation_20260429.json`).
 
-Up to 7 files are available at any time, covering today through the next 6 days. Files are regenerated twice daily: around 3 AM UTC (4 AM Italian time) and 10 AM UTC (~12 PM Italian time). Sundays and university holiday periods (Christmas, Summer) are skipped; no file is generated for those dates.
+Up to 7 files are available at any time, covering today through the next 6 days. Files are regenerated twice daily: around 3 AM UTC (4 AM Italian time) and 10 AM UTC (~12 PM Italian time). A date is skipped (no file generated) if it falls in a university holiday period, or if every building is closed that weekday according to `/data/opening-hours.json` below.
+
+### Building opening hours
+
+```
+GET /data/opening-hours.json
+```
+
+Returns per-building opening hours, campus-wide defaults, and holiday closure periods, scraped weekly from PoliMi's official opening-hours page. Use this to know when a specific building (not just a specific room's booked slots) is actually open.
+
+```json
+{
+  "generated_at": "2026-07-30T11:58:36.196790",
+  "source_url": "https://www.polimi.it/campus-e-servizi/spazi-e-aule-studio/orari-di-apertura-edifici",
+  "holiday_periods": [
+    { "start": "2026-08-10", "end": "2026-08-21" }
+  ],
+  "buildings": {
+    "21": { "mon_fri": ["07:30", "20:30"], "sat": ["08:00", "14:00"], "sun": null }
+  },
+  "campus_defaults": {
+    "MIA01": { "mon_fri": ["07:00", "21:00"], "sat": ["07:00", "20:00"], "sun": null }
+  },
+  "default_hours": { "mon_fri": ["07:15", "20:15"], "sat": null, "sun": null }
+}
+```
+
+To resolve a given building's hours: look it up in `buildings` by its number/code (the leading alphanumeric token of its `name` in `classrooms.json`, e.g. `"32.1"` → `"32"`); if not found, look up its campus `id` in `campus_defaults`; if that's also missing, use `default_hours`. `null` for `sat`/`sun` means closed that day.
 
 ---
 
@@ -206,7 +233,7 @@ function safeUrl(url) {
 
 - **CORS**: files are served as static assets by Cloudflare Pages and are accessible from any origin via `fetch()`.
 - **Caching**: occupancy files are regenerated twice per day. Cache them for up to an hour on your side to stay reasonably fresh without hammering the CDN.
-- **Missing dates**: if a file for a given date does not exist (404), the date was skipped (Sunday or holiday) or the scheduled job has not run yet.
+- **Missing dates**: if a file for a given date does not exist (404), the date was skipped (every building closed that weekday, or a holiday) or the scheduled job has not run yet.
 - **Null fields**: optional fields (`idfoto`, `workstations`, `accessible_seats`, etc.) may be `null` if Politecnico did not provide them for a given room.
 
 ---

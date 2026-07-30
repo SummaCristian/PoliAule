@@ -11,35 +11,67 @@ export const SKIP_DAYS = [0] // Sunday
 
 // ----------  FETCHING LOGIC ----------
 
-// Fetches the classrooms data from the server and 
+// Extracts the identifier used to key openingHours.buildings/campus_defaults
+// from a building's name (e.g. "32.1" -> "32", "B12" -> "B12", "16B" -> "16B").
+const BUILDING_ID_RE = /^([a-z]*\d+[a-z]?)/i;
+
+// Mirrors scripts/fetch.py's _building_hours_key(), so both sides resolve
+// the same building to the same opening-hours.json entry.
+function buildingHoursKey(building) {
+  const match = BUILDING_ID_RE.exec(String(building.name ?? ''));
+  return (match ? match[1] : String(building.name ?? '')).toUpperCase();
+}
+
+// Resolves a building's opening hours: explicit match > campus default > global default.
+// Mirrors scripts/fetch.py's resolve_building_hours().
+function resolveBuildingHours(building, campusId, openingHours) {
+  const key = buildingHoursKey(building);
+  if (openingHours.buildings[key]) return openingHours.buildings[key];
+  if (openingHours.campus_defaults[campusId]) return openingHours.campus_defaults[campusId];
+  return openingHours.default_hours;
+}
+
+// Fetches the classrooms data from the server and
 // stores it in classroomsData.
-export async function fetchClassroomsData() { 
-  // Days to fetch (today + next 6 days)
-  const dates = [];
-  const cursor = new Date(); // Today
-
-  // Get the next 7 days, skipping the ones in SKIP_DAYS
-  while (dates.length < 7) {
-    if (!SKIP_DAYS.includes(cursor.getDay())) {
-      dates.push(new Date(cursor));
-    }
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  // Fetch all days in parallel and store the results in classroomsData
+export async function fetchClassroomsData() {
   try {
-    const results = (await Promise.allSettled(
-      dates.map(date =>
-        fetch(`/occupancy/occupation_${formatDateYYYYMMDD(date)}.json`)
-          .then(res => {
-            if (!res.ok) throw new Error(`Failed to load ${formatDateYYYYMMDD(date)}: ${res.status}`);
-            return res.json();
-          })
-      )
-    ))
-      .filter(r => r.status === 'fulfilled')
-      .map(r => r.value);
-    
+    const listRes = await fetch('/occupancy/list.json');
+    if (!listRes.ok) throw new Error(`Failed to load list.json: ${listRes.status}`);
+    const { dates } = await listRes.json();
+
+    const [results, openingHours] = await Promise.all([
+      Promise.allSettled(
+        dates.map(date =>
+          fetch(`/occupancy/occupation_${date}.json`)
+            .then(res => {
+              if (!res.ok) throw new Error(`Failed to load ${date}: ${res.status}`);
+              return res.json();
+            })
+        )
+      ).then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value)),
+      fetch('/data/opening-hours.json')
+        .then(res => {
+          if (!res.ok) throw new Error(`Failed to load opening-hours.json: ${res.status}`);
+          return res.json();
+        })
+        .catch(error => {
+          // Non-fatal: fall through with openingHours = null so classroomsData
+          // still loads (and gets used) even if opening hours can't be fetched.
+          console.error('Error fetching opening hours data:', error);
+          return null;
+        }),
+    ]);
+
+    if (openingHours) {
+      for (const day of results) {
+        for (const campus of day.campuses) {
+          for (const building of campus.buildings) {
+            building.hours = resolveBuildingHours(building, campus.id, openingHours);
+          }
+        }
+      }
+    }
+
     classroomsData.splice(0, classroomsData.length, ...results);
     console.log('All data loaded:', classroomsData);
   } catch (error) {
@@ -94,6 +126,7 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
           features: classroom.features ?? [],
           occupancy: classroom.occupancy ?? [],
           slots: freeSlots,
+          idfoto: classroom.idfoto ?? null,
         });
       }
     }

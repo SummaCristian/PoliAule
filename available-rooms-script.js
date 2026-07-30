@@ -11,6 +11,23 @@ export const SKIP_DAYS = [0] // Sunday
 
 // ----------  FETCHING LOGIC ----------
 
+// Extracts the identifier used to key openingHours.buildings/campus_defaults
+// from a building's name (e.g. "32.1" -> "32", "B12" -> "B12", "16B" -> "16B").
+const BUILDING_ID_RE = /^([a-z]*\d+[a-z]?)/i;
+
+function buildingHoursKey(building) {
+  const match = BUILDING_ID_RE.exec(String(building.name ?? ''));
+  return (match ? match[1] : String(building.name ?? '')).toUpperCase();
+}
+
+// Resolves a building's opening hours: explicit match > campus default > global default.
+function resolveBuildingHours(building, campusId, openingHours) {
+  const key = buildingHoursKey(building);
+  if (openingHours.buildings[key]) return openingHours.buildings[key];
+  if (openingHours.campus_defaults[campusId]) return openingHours.campus_defaults[campusId];
+  return openingHours.default_hours;
+}
+
 // Fetches the classrooms data from the server and
 // stores it in classroomsData.
 export async function fetchClassroomsData() {
@@ -19,17 +36,36 @@ export async function fetchClassroomsData() {
     if (!listRes.ok) throw new Error(`Failed to load list.json: ${listRes.status}`);
     const { dates } = await listRes.json();
 
-    const results = (await Promise.allSettled(
-      dates.map(date =>
-        fetch(`/occupancy/occupation_${date}.json`)
-          .then(res => {
-            if (!res.ok) throw new Error(`Failed to load ${date}: ${res.status}`);
-            return res.json();
-          })
-      )
-    ))
-      .filter(r => r.status === 'fulfilled')
-      .map(r => r.value);
+    const [results, openingHours] = await Promise.all([
+      Promise.allSettled(
+        dates.map(date =>
+          fetch(`/occupancy/occupation_${date}.json`)
+            .then(res => {
+              if (!res.ok) throw new Error(`Failed to load ${date}: ${res.status}`);
+              return res.json();
+            })
+        )
+      ).then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value)),
+      fetch('/data/opening-hours.json')
+        .then(res => {
+          if (!res.ok) throw new Error(`Failed to load opening-hours.json: ${res.status}`);
+          return res.json();
+        })
+        .catch(error => {
+          console.error('Error fetching opening hours data:', error);
+          return null;
+        }),
+    ]);
+
+    if (openingHours) {
+      for (const day of results) {
+        for (const campus of day.campuses) {
+          for (const building of campus.buildings) {
+            building.hours = resolveBuildingHours(building, campus.id, openingHours);
+          }
+        }
+      }
+    }
 
     classroomsData.splice(0, classroomsData.length, ...results);
     console.log('All data loaded:', classroomsData);

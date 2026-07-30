@@ -11,6 +11,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 CLASSROOMS_FILE = Path(__file__).parent.parent / "data" / "classrooms.json"
+OPENING_HOURS_FILE = Path(__file__).parent.parent / "data" / "opening-hours.json"
 OUTPUT_DIR = Path(__file__).parent.parent / "occupancy"
 BASE_URL = "https://onlineservices.polimi.it/maps_rest/rest/ricerca/aula/occupazione"
 
@@ -22,14 +23,14 @@ RETRY_DELAY = 2  # seconds between retries
 NEXT_DAYS_WINDOW = 7  # Number of days to fetch starting from today
 DELAY_BETWEEN_CALLS = 0.5  # seconds to wait between API calls
 
-# Days to skip entirely (0 = Monday, 6 = Sunday)
-SKIP_WEEKDAYS = {6}  # PoliMi is mostly closed on Sundays anyway.
-
-# Holiday periods: list of (start, end) tuples, both inclusive.
-HOLIDAY_PERIODS: list[tuple[date, date]] = [
+# Emergency fallback used only if data/opening-hours.json doesn't exist yet
+# (e.g. before scripts/fetch_opening_hours.py has ever run). Mirrors the
+# app's old hardcoded assumption: every building open every day except Sunday.
+FALLBACK_HOLIDAY_PERIODS: list[tuple[date, date]] = [
     (date(2025, 12, 24), date(2026, 1, 6)),  # Christmas Break
     (date(2025, 8, 1), date(2025, 8, 10)),  # Summer Break
 ]
+FALLBACK_DEFAULT_HOURS = {"mon_fri": ["00:00", "23:59"], "sat": ["00:00", "23:59"], "sun": None}
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -62,21 +63,81 @@ def strip_tags(value: object) -> object:
     return value
 
 
-def is_holiday(d: date) -> bool:
+_BUILDING_ID_RE = re.compile(r"([a-z]*\d+[a-z]?)", re.IGNORECASE)
+
+
+def load_opening_hours() -> dict:
+    """Load data/opening-hours.json, or an emergency fallback if it doesn't exist yet."""
+    if OPENING_HOURS_FILE.exists():
+        with open(OPENING_HOURS_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    print(f"  Warning: {OPENING_HOURS_FILE} not found, using hardcoded fallback hours.")
+    return {
+        "holiday_periods": [
+            {"start": start.isoformat(), "end": end.isoformat()}
+            for start, end in FALLBACK_HOLIDAY_PERIODS
+        ],
+        "buildings": {},
+        "campus_defaults": {},
+        "default_hours": FALLBACK_DEFAULT_HOURS,
+    }
+
+
+def _building_hours_key(building: dict) -> str:
+    """Extract the identifier used to key opening_hours['buildings'] from a classrooms.json building entry."""
+    name = str(building.get("name", ""))
+    match = _BUILDING_ID_RE.match(name)
+    return (match.group(1) if match else name).upper()
+
+
+def resolve_building_hours(building: dict, campus_id: str, opening_hours: dict) -> dict:
+    """Resolve a building's opening hours: explicit match > campus default > global default."""
+    key = _building_hours_key(building)
+    if key in opening_hours["buildings"]:
+        return opening_hours["buildings"][key]
+    if campus_id in opening_hours["campus_defaults"]:
+        return opening_hours["campus_defaults"][campus_id]
+    return opening_hours["default_hours"]
+
+
+def is_closed_on_weekday(hours: dict, weekday: int) -> bool:
+    """weekday follows date.weekday(): 0 = Monday ... 6 = Sunday."""
+    if weekday == 5:
+        return hours["sat"] is None
+    if weekday == 6:
+        return hours["sun"] is None
+    return hours["mon_fri"] is None
+
+
+def is_holiday(d: date, opening_hours: dict) -> bool:
     """Return True if the date falls within any of the defined holiday periods."""
-    return any(start <= d <= end for start, end in HOLIDAY_PERIODS)
+    return any(
+        date.fromisoformat(p["start"]) <= d <= date.fromisoformat(p["end"])
+        for p in opening_hours["holiday_periods"]
+    )
 
 
-def fetch_days() -> list[date]:
-    """Return the next 7 days starting today, excluding skipped weekdays and holidays."""
+def all_buildings_closed(campuses: list[dict], opening_hours: dict, weekday: int) -> bool:
+    """Return True if every building across every campus is closed on the given weekday."""
+    for campus in campuses:
+        campus_id = campus.get("id")
+        for building in campus["buildings"]:
+            hours = resolve_building_hours(building, campus_id, opening_hours)
+            if not is_closed_on_weekday(hours, weekday):
+                return False
+    return True
+
+
+def fetch_days(campuses: list[dict], opening_hours: dict) -> list[date]:
+    """Return the next 7 days starting today, excluding holidays and days every building is closed."""
     today = date.today()
     days = []
     i = 0
     while len(days) < NEXT_DAYS_WINDOW:
         d = today + timedelta(days=i)
-        if is_holiday(d):
+        if is_holiday(d, opening_hours):
             break  # If we hit a holiday, we stop fetching further days, as they are likely to be holidays too.
-        if d.weekday() not in SKIP_WEEKDAYS:
+        if not all_buildings_closed(campuses, opening_hours, d.weekday()):
             days.append(d)
         i += 1
     return days
@@ -173,8 +234,11 @@ def main():
     with open(CLASSROOMS_FILE, encoding="utf-8") as f:
         campuses = json.load(f)
 
+    # Load opening hours (scraped periodically by scripts/fetch_opening_hours.py)
+    opening_hours = load_opening_hours()
+
     # Determine days to fetch
-    days = fetch_days()
+    days = fetch_days(campuses, opening_hours)
 
     # If all next days are holidays or skipped weekdays, there's nothing to fetch, so we can exit early.
     if not days:

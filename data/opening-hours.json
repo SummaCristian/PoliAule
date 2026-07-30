@@ -1,0 +1,152 @@
+{
+  "generated_at": "2026-07-30T10:38:20.237685",
+  "source_url": "https://www.polimi.it/campus-e-servizi/spazi-e-aule-studio/orari-di-apertura-edifici",
+  "holiday_periods": [
+    {
+      "start": "2026-12-24",
+      "end": "2027-01-05"
+    },
+    {
+      "start": "2026-08-10",
+      "end": "2026-08-21"
+    },
+    {
+      "start": "2026-06-01",
+      "end": "2026-06-01"
+    }
+  ],
+  "buildings": {
+    "11": {
+      "mon_fri": [
+        "07:30",
+        "21:00"
+      ],
+      "sat": null,
+      "sun": null
+    },
+    "21": {
+      "mon_fri": [
+        "07:30",
+        "20:30"
+      ],
+      "sat": [
+        "08:00",
+        "14:00"
+      ],
+      "sun": null
+    },
+    "26": {
+      "mon_fri": [
+        "07:30",
+        "20:30"
+      ],
+      "sat": null,
+      "sun": null
+    },
+    "22": {
+      "mon_fri": [
+        "07:30",
+        "20:30"
+      ],
+      "sat": null,
+      "sun": null
+    },
+    "25": {
+      "mon_fri": [
+        "07:30",
+        "20:30"
+      ],
+      "sat": null,
+      "sun": null
+    },
+    "24": {
+      "mon_fri": [
+        "08:00",
+        "17:00"
+      ],
+      "sat": null,
+      "sun": null
+    },
+    "32": {
+      "mon_fri": [
+        "08:00",
+        "19:30"
+      ],
+      "sat": null,
+      "sun": null
+    },
+    "B2": {
+      "mon_fri": [
+        "07:30",
+        "20:45"
+      ],
+      "sat": [
+        "07:30",
+        "20:45"
+      ],
+      "sun": null
+    },
+    "B12": {
+      "mon_fri": [
+        "07:30",
+        "20:45"
+      ],
+      "sat": [
+        "07:30",
+        "20:45"
+      ],
+      "sun": null
+    },
+    "BL27": {
+      "mon_fri": [
+        "07:30",
+        "23:45"
+      ],
+      "sat": [
+        "07:30",
+        "23:45"
+      ],
+      "sun": [
+        "07:30",
+        "23:45"
+      ]
+    }
+  },
+  "campus_defaults": {
+    "MIA01": {
+      "mon_fri": [
+        "07:00",
+        "21:00"
+      ],
+      "sat": [
+        "07:00",
+        "20:00"
+      ],
+      "sun": null
+    },
+    "MIB01": {
+      "mon_fri": [
+        "07:30",
+        "20:45"
+      ],
+      "sat": null,
+      "sun": null
+    },
+    "MIB02": {
+      "mon_fri": [
+        "07:30",
+        "20:45"
+      ],
+      "sat": null,
+      "sun": null
+    }
+  },
+  "default_hours": {
+    "mon_fri": [
+      "07:15",
+      "20:15"
+    ],
+    "sat": null,
+    "sun": null
+  }
+}

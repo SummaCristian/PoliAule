@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-30T12:11:07.822357",
-  "date": "20260804",
+  "generated_at": "2026-07-30T12:03:57.847641",
+  "date": "20260802",
   "campuses": [
     {
       "name": "Leonardo",
@@ -5925,12 +5925,7 @@
               "idfoto": 48408,
               "seats": 78,
               "workstations": 39,
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "19:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.3",
@@ -5950,12 +5945,7 @@
               "idfoto": 48407,
               "seats": 112,
               "workstations": 56,
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "19:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.4",
@@ -5986,12 +5976,7 @@
               "seats": 64,
               "accessible_seats": 1,
               "workstations": 32,
-              "occupancy": [
-                {
-                  "inizio": "08:00",
-                  "fine": "19:00"
-                }
-              ]
+              "occupancy": []
             },
             {
               "name": "B2.2.5",

@@ -2,6 +2,7 @@ import { t, onLanguageSwitch } from './i18n.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { getClassroomStatusNow } from './available-rooms-script.js';
 import { fetchPhotoUrl } from './utils/photo.js';
+import { API_BASE } from './config.js';
 
 const supportsAnchor = CSS.supports('anchor-name: --a');
 
@@ -28,7 +29,7 @@ let activeDropdown = null;
 
 async function loadData() {
   if (classroomsData) return;
-  const res = await fetch('/data/classrooms.json');
+  const res = await fetch(`${API_BASE}/v1/classrooms`);
   classroomsData = await res.json();
 }
 

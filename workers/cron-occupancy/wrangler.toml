@@ -1,0 +1,41 @@
+name = "poliaule-cron-occupancy"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+# Prod: 3 AM and 10 AM UTC, matching the current GitHub Action schedule.
+[triggers]
+crons = ["0 3 * * *", "0 10 * * *"]
+
+[[r2_buckets]]
+binding = "DATA_BUCKET"
+bucket_name = "poliaule-data"
+
+[vars]
+IS_BETA = false
+
+# ---------------------------------------------------------------------------
+# Beta: same schedule, but gated by the CONFIG_KV `occupancy_backend_enabled`
+# flag (see src/index.ts). Deployed separately via `wrangler deploy --env beta`
+# so it can be iterated on independently of prod.
+# ---------------------------------------------------------------------------
+[env.beta]
+name = "poliaule-cron-occupancy-beta"
+
+[env.beta.triggers]
+crons = ["0 3 * * *", "0 10 * * *"]
+
+[[env.beta.r2_buckets]]
+binding = "DATA_BUCKET"
+bucket_name = "poliaule-data-beta"
+
+# Prod data is the copy source when the beta backend flag is off.
+[[env.beta.r2_buckets]]
+binding = "PROD_DATA_BUCKET"
+bucket_name = "poliaule-data"
+
+[[env.beta.kv_namespaces]]
+binding = "CONFIG_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID" # `wrangler kv namespace create poliaule-config`
+
+[env.beta.vars]
+IS_BETA = true

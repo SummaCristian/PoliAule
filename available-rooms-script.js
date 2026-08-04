@@ -1,3 +1,5 @@
+import { API_BASE } from './config.js';
+
 // ---------- DATA ----------
 
 // Data fetched from the API will be stored here,
@@ -35,23 +37,24 @@ function resolveBuildingHours(building, campusId, openingHours) {
 // stores it in classroomsData.
 export async function fetchClassroomsData() {
   try {
-    const listRes = await fetch('/occupancy/list.json');
-    if (!listRes.ok) throw new Error(`Failed to load list.json: ${listRes.status}`);
+    const listRes = await fetch(`${API_BASE}/v1/occupancy`);
+    if (!listRes.ok) throw new Error(`Failed to load occupancy list: ${listRes.status}`);
     const { dates } = await listRes.json();
 
     const [results, openingHours] = await Promise.all([
       Promise.allSettled(
-        dates.map(date =>
-          fetch(`/occupancy/occupation_${date}.json`)
+        dates.map(date => {
+          const isoDate = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+          return fetch(`${API_BASE}/v1/occupancy/${isoDate}`)
             .then(res => {
               if (!res.ok) throw new Error(`Failed to load ${date}: ${res.status}`);
               return res.json();
-            })
-        )
+            });
+        })
       ).then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value)),
-      fetch('/data/opening-hours.json')
+      fetch(`${API_BASE}/v1/opening-hours`)
         .then(res => {
-          if (!res.ok) throw new Error(`Failed to load opening-hours.json: ${res.status}`);
+          if (!res.ok) throw new Error(`Failed to load opening hours: ${res.status}`);
           return res.json();
         })
         .catch(error => {

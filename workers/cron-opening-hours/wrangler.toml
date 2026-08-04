@@ -1,0 +1,27 @@
+name = "poliaule-cron-opening-hours"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Weekly, Sunday 6 AM UTC — matches the current GitHub Action schedule.
+[triggers]
+crons = ["0 6 * * 0"]
+
+[[r2_buckets]]
+binding = "DATA_BUCKET"
+bucket_name = "poliaule-data"
+
+# ---------------------------------------------------------------------------
+# Beta: scrapes independently on the same schedule, no KV gate. Low ethical
+# stakes (public webpage, not the unofficial PoliMi REST API) — see the
+# migration plan for why this differs from cron-occupancy's beta gating.
+# ---------------------------------------------------------------------------
+[env.beta]
+name = "poliaule-cron-opening-hours-beta"
+
+[env.beta.triggers]
+crons = ["0 6 * * 0"]
+
+[[env.beta.r2_buckets]]
+binding = "DATA_BUCKET"
+bucket_name = "poliaule-data-beta"

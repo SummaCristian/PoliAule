@@ -4,7 +4,11 @@ import { serveR2Json } from "../r2-json";
 
 export const occupancy = new Hono<{ Bindings: Env }>();
 
-const OCCUPANCY_CACHE_CONTROL = "public, max-age=1800"; // regenerated twice daily; matches docs/api.md guidance
+// Data only changes when the Cron Worker runs (twice daily, ~7h apart), so a
+// 1h edge-cache TTL adds negligible staleness risk while cutting R2 reads
+// under sustained traffic compared to a shorter TTL. Matches docs/api.md's
+// "cache up to an hour" guidance for third-party consumers.
+const OCCUPANCY_CACHE_CONTROL = "public, max-age=3600";
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 // List of available dates (replaces /occupancy/list.json).

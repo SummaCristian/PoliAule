@@ -5,10 +5,13 @@ node_modules/
 dist/
 build/
 .cache/
+.wrangler/
 
 .env
 .env.local
 .env.*.local
+.dev.vars
+.dev.vars.*
 
 *.log
 npm-debug.log*

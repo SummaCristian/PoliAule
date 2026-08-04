@@ -1,6 +1,5 @@
-// Port of scripts/fetch_opening_hours.py. Mirrors its parsing logic and
-// "refuse to overwrite on implausible parse" safety property, but writes to
-// an R2 bucket instead of the local filesystem.
+// Port of scripts/fetch_opening_hours.py. Writes to an R2 bucket instead of
+// the local filesystem.
 
 import { parseHTML } from "linkedom";
 

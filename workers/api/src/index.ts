@@ -10,7 +10,6 @@ export interface Env {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Public API: accessible from any origin, same as the static files it replaces (docs/api.md).
 app.use("*", cors());
 
 app.route("/v1/classrooms", classrooms);

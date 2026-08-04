@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 # Weekly, Sunday 6 AM UTC — matches the current GitHub Action schedule.
 [triggers]
-crons = ["0 6 * * 0"]
+crons = ["0 6 * * 7"]
 
 [[r2_buckets]]
 binding = "DATA_BUCKET"
@@ -20,7 +20,7 @@ bucket_name = "poliaule-data"
 name = "poliaule-cron-opening-hours-beta"
 
 [env.beta.triggers]
-crons = ["0 6 * * 0"]
+crons = ["0 6 * * 7"]
 
 [[env.beta.r2_buckets]]
 binding = "DATA_BUCKET"

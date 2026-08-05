@@ -146,7 +146,7 @@
   "footer.whatsNew": "Cosa c'è di nuovo?",
   "footer.checkOnGitHub": "Vedi su GitHub",
   "footer.disclaimer5": "Non affiliato al Politecnico di Milano.",
-  "footer.versionInfo": "Version 1.1.0",
+  "footer.versionInfo": "Versione 1.1.0",
   "changelog.v1.1.0.item1": "Rifinite animazioni e transizioni per un'esperienza utente più fluida.",
   "changelog.v1.1.0.item2": "Riprogettate le schede delle aule per includere le immagini e un layout più moderno.",
   "changelog.v1.1.0.item3": "Riprogettato il backend: nuovi URL per le API, spostato lo storage dei dati su CloudFlare R2 buckets e rimosso il meccanismo delle commit giornaliere. PoliAule ora è più veloce, affidabile e scalabile che mai.",

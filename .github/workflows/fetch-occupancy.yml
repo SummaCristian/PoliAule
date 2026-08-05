@@ -14,24 +14,22 @@ on:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
-      - name: Checkout repository
+      # ---- main ----
+
+      - name: Checkout main
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: pip install httpx
 
-      - name: Run fetch script
+      - name: Run fetch script (main)
         env:
           PYTHONUNBUFFERED: 1
           NO_DELAY: ${{ inputs.no_delay }}
@@ -42,23 +40,73 @@ jobs:
             python scripts/fetch.py
           fi
 
-      - name: Commit and push fetched data
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add occupancy/
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "chore: update occupancy data $(date -u '+%Y-%m-%d')"
-          git push
+      - name: Set up Node
+        if: hashFiles('occupancy/*.json') != ''
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
 
-      - name: Sync beta with main
+      - name: Upload occupancy data to R2 (main)
+        if: hashFiles('occupancy/*.json') != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          git fetch origin beta
-          git checkout beta
-          git merge main --no-edit
-          if git push origin beta; then
-            echo "beta synced with main at $(git rev-parse --short HEAD)"
+          for f in occupancy/*.json; do
+            npx --yes wrangler@4 r2 object put "poliaule-data/$f" --file "$f" --content-type application/json --remote
+          done
+
+      # ---- beta ----
+
+      - name: Check beta backend flag
+        if: hashFiles('occupancy/*.json') != ''
+        id: beta_flag
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          ENABLED=$(npx --yes wrangler@4 kv key get occupancy_backend_enabled --namespace-id 986b15710c024bcd9ff32db69519a8e0 --remote 2>/dev/null) || ENABLED="false"
+          echo "enabled=$ENABLED" >> "$GITHUB_OUTPUT"
+
+      - name: Copy main's data to beta (flag off)
+        if: hashFiles('occupancy/*.json') != '' && steps.beta_flag.outputs.enabled != 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "Beta backend disabled, reusing main's fetch (no extra PoliMi calls)."
+          for f in occupancy/*.json; do
+            npx --yes wrangler@4 r2 object put "poliaule-data-beta/$f" --file "$f" --content-type application/json --remote
+          done
+
+      - name: Checkout beta
+        if: steps.beta_flag.outputs.enabled == 'true'
+        uses: actions/checkout@v6
+        with:
+          ref: beta
+          path: beta-checkout
+
+      - name: Run fetch script (beta)
+        if: steps.beta_flag.outputs.enabled == 'true'
+        env:
+          PYTHONUNBUFFERED: 1
+          NO_DELAY: ${{ inputs.no_delay }}
+        working-directory: beta-checkout
+        run: |
+          echo "Beta backend enabled, running beta's own scripts/fetch.py against PoliMi."
+          if [ "$NO_DELAY" = "true" ]; then
+            python scripts/fetch.py --no-delay
           else
-            echo "push to beta failed" >&2
-            exit 1
+            python scripts/fetch.py
           fi
+
+      - name: Upload occupancy data to R2 (beta)
+        if: steps.beta_flag.outputs.enabled == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        working-directory: beta-checkout
+        run: |
+          for f in occupancy/*.json; do
+            npx --yes wrangler@4 r2 object put "poliaule-data-beta/$f" --file "$f" --content-type application/json --remote
+          done

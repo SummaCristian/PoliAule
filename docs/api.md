@@ -1,28 +1,34 @@
 # PoliAule - Public Data API
 
-PoliAule pre-fetches classroom occupancy data from Politecnico di Milano every night and stores it as plain JSON files served by Cloudflare Pages. These files are publicly accessible. If you want to build something on top of PoliMi classroom data, you can use them directly instead of scraping Politecnico yourself.
+PoliAule pre-fetches classroom occupancy data from Politecnico di Milano every night and serves it through a small versioned REST API backed by Cloudflare Workers + R2. These endpoints are publicly accessible. If you want to build something on top of PoliMi classroom data, you can use them directly instead of scraping Politecnico yourself.
+
+> [!IMPORTANT]
+> PoliAule's API now has a new home!
+> If you were using it before August 2026 (v1.0.0), the old URLs won't work anymore.
+>
+> Please update to the new ones, and sorry for the disruption. Please note that the new URLs provide feature parity with the previous ones, just relocated. The URL format has slightly changed as well, but the REST architecture remains the same
 
 ---
 
 ## Endpoints
 
-All endpoints are under `https://poliaule.com` and require no authentication.
+All endpoints are under `https://api.poliaule.com` and require no authentication. A separate `https://api-beta.poliaule.com` serves the beta deployment with the same response shapes, though it may include in-progress changes.
 
 ### Static classroom metadata
 
 ```
-GET /data/classrooms.json
+GET /v1/classrooms
 ```
 
-Returns the full list of campuses, buildings, and classrooms with their static attributes (name, location, features, seat count). This file changes rarely and can be cached aggressively.
+Returns the full list of campuses, buildings, and classrooms with their static attributes (name, location, features, seat count). This data changes rarely and can be cached aggressively.
 
 ### Available dates
 
 ```
-GET /occupancy/list.json
+GET /v1/occupations
 ```
 
-Returns the list of dates for which an occupancy file currently exists. Fetch this first to know which dates are available before requesting individual files. A `generated_at` timestamp is also included to indicate when the last fetch occurred and how fresh the data is.
+Returns the list of dates for which occupancy data currently exists. Fetch this first to know which dates are available before requesting individual dates. A `generated_at` timestamp is also included to indicate when the last fetch occurred and how fresh the data is.
 
 ```json
 {
@@ -34,17 +40,17 @@ Returns the list of dates for which an occupancy file currently exists. Fetch th
 ### Daily occupancy
 
 ```
-GET /occupancy/occupation_YYYYMMDD.json
+GET /v1/occupations/:date
 ```
 
-Returns occupancy slots for all classrooms on a given date. Dates follow the `YYYYMMDD` format (e.g. `occupation_20260429.json`).
+Returns occupancy slots for all classrooms on a given date. `:date` is `YYYY-MM-DD` (e.g. `/v1/occupations/2026-04-29`).
 
-Up to 7 files are available at any time, covering today through the next 6 days. Files are regenerated twice daily: around 3 AM UTC (4 AM Italian time) and 10 AM UTC (~12 PM Italian time). A date is skipped (no file generated) if it falls in a university holiday period, or if every building is closed that weekday according to `/data/opening-hours.json` below.
+Up to 7 dates are available at any time, covering today through the next 6 days. Data is regenerated twice daily: around 3 AM UTC (4 AM Italian time) and 10 AM UTC (~12 PM Italian time). A date is skipped (no data generated) if it falls in a university holiday period, or if every building is closed that weekday according to `/v1/opening-hours` below.
 
 ### Building opening hours
 
 ```
-GET /data/opening-hours.json
+GET /v1/opening-hours
 ```
 
 Returns per-building opening hours, campus-wide defaults, and holiday closure periods, scraped weekly from PoliMi's official opening-hours page. Use this to know when a specific building (not just a specific room's booked slots) is actually open.
@@ -72,7 +78,7 @@ To resolve a given building's hours: look it up in `buildings` by its number/cod
 
 ## Response schemas
 
-### `/data/classrooms.json`
+### `/v1/classrooms`
 
 ```
 [                                   ← array of campuses
@@ -115,9 +121,9 @@ To resolve a given building's hours: look it up in `buildings` by its number/cod
 ]
 ```
 
-### `/occupancy/occupation_YYYYMMDD.json`
+### `/v1/occupations/:date`
 
-Same structure as `classrooms.json`, with a top-level metadata wrapper and an `occupancy` array added to each classroom. Campus-level metadata fields (`slug`, `city`, `group`) are **not** included in occupancy files — fetch `classrooms.json` for those.
+Same structure as `/v1/classrooms`, with a top-level metadata wrapper and an `occupancy` array added to each classroom. Campus-level metadata fields (`slug`, `city`, `group`) are **not** included here; fetch `/v1/classrooms` for those.
 
 ```
 {
@@ -231,9 +237,9 @@ function safeUrl(url) {
 
 ## Usage notes
 
-- **CORS**: files are served as static assets by Cloudflare Pages and are accessible from any origin via `fetch()`.
-- **Caching**: occupancy files are regenerated twice per day. Cache them for up to an hour on your side to stay reasonably fresh without hammering the CDN.
-- **Missing dates**: if a file for a given date does not exist (404), the date was skipped (every building closed that weekday, or a holiday) or the scheduled job has not run yet.
+- **CORS**: the API is served by a Cloudflare Worker and is accessible from any origin via `fetch()`.
+- **Caching**: occupancy data is regenerated twice per day. Cache responses for up to an hour on your side to stay reasonably fresh without hammering the API.
+- **Missing dates**: if a given date returns 404, the date was skipped (every building closed that weekday, or a holiday) or the scheduled job has not run yet.
 - **Null fields**: optional fields (`idfoto`, `workstations`, `accessible_seats`, etc.) may be `null` if Politecnico did not provide them for a given room.
 
 ---
@@ -241,8 +247,8 @@ function safeUrl(url) {
 ## Example: finding free rooms
 
 ```js
-const date = '20260429';
-const res = await fetch(`https://poliaule.com/occupancy/occupation_${date}.json`);
+const date = '2026-04-29';
+const res = await fetch(`https://api.poliaule.com/v1/occupations/${date}`);
 const { campuses } = await res.json();
 
 const campus = campuses.find(c => c.id === 'MIA01');

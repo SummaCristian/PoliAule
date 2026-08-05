@@ -19,7 +19,7 @@ Returns the full list of campuses, buildings, and classrooms with their static a
 ### Available dates
 
 ```
-GET /v1/occupancy
+GET /v1/occupations
 ```
 
 Returns the list of dates for which occupancy data currently exists. Fetch this first to know which dates are available before requesting individual dates. A `generated_at` timestamp is also included to indicate when the last fetch occurred and how fresh the data is.
@@ -34,10 +34,10 @@ Returns the list of dates for which occupancy data currently exists. Fetch this 
 ### Daily occupancy
 
 ```
-GET /v1/occupancy/:date
+GET /v1/occupations/:date
 ```
 
-Returns occupancy slots for all classrooms on a given date. `:date` is `YYYY-MM-DD` (e.g. `/v1/occupancy/2026-04-29`).
+Returns occupancy slots for all classrooms on a given date. `:date` is `YYYY-MM-DD` (e.g. `/v1/occupations/2026-04-29`).
 
 Up to 7 dates are available at any time, covering today through the next 6 days. Data is regenerated twice daily: around 3 AM UTC (4 AM Italian time) and 10 AM UTC (~12 PM Italian time). A date is skipped (no data generated) if it falls in a university holiday period, or if every building is closed that weekday according to `/v1/opening-hours` below.
 
@@ -115,7 +115,7 @@ To resolve a given building's hours: look it up in `buildings` by its number/cod
 ]
 ```
 
-### `/v1/occupancy/:date`
+### `/v1/occupations/:date`
 
 Same structure as `/v1/classrooms`, with a top-level metadata wrapper and an `occupancy` array added to each classroom. Campus-level metadata fields (`slug`, `city`, `group`) are **not** included here; fetch `/v1/classrooms` for those.
 
@@ -242,7 +242,7 @@ function safeUrl(url) {
 
 ```js
 const date = '2026-04-29';
-const res = await fetch(`https://api.poliaule.com/v1/occupancy/${date}`);
+const res = await fetch(`https://api.poliaule.com/v1/occupations/${date}`);
 const { campuses } = await res.json();
 
 const campus = campuses.find(c => c.id === 'MIA01');

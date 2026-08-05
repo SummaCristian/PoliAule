@@ -14,6 +14,6 @@ app.use("*", cors());
 
 app.route("/v1/classrooms", classrooms);
 app.route("/v1/opening-hours", openingHours);
-app.route("/v1/occupancy", occupancy);
+app.route("/v1/occupations", occupancy);
 
 export default app;

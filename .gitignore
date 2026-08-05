@@ -1,14 +1,21 @@
 .DS_Store
 Thumbs.db
 
+# Local output of scripts/fetch.py and fetch_opening_hours.py; uploaded to R2, not committed.
+occupancy/
+data/opening-hours.json
+
 node_modules/
 dist/
 build/
 .cache/
+.wrangler/
 
 .env
 .env.local
 .env.*.local
+.dev.vars
+.dev.vars.*
 
 *.log
 npm-debug.log*

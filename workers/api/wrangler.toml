@@ -1,0 +1,20 @@
+name = "poliaule-api"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+routes = [
+  { pattern = "api.poliaule.com", custom_domain = true }
+]
+
+[[r2_buckets]]
+binding = "DATA_BUCKET"
+bucket_name = "poliaule-data"
+
+[env.beta]
+name = "poliaule-api-beta"
+routes = [
+  { pattern = "api-beta.poliaule.com", custom_domain = true }
+]
+
+[[env.beta.r2_buckets]]
+binding = "DATA_BUCKET"
+bucket_name = "poliaule-data-beta"

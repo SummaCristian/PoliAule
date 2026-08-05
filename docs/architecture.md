@@ -1,6 +1,6 @@
 # PoliAule - Architecture
 
-PoliAule is a static web app that finds available classrooms at Politecnico di Milano. It has no custom server: a GitHub Actions job pre-fetches occupancy data nightly, the frontend reads those JSON files directly through the built-in REST API.
+PoliAule's frontend is a static site with no custom server of its own. GitHub Actions fetches occupancy and opening-hours data on a schedule, uploads it to Cloudflare R2, and a Cloudflare Worker (`workers/api`) serves it as a versioned REST API at `api.poliaule.com`. The frontend only ever talks to that API.
 
 ---
 
@@ -15,30 +15,33 @@ graph TD
     classDef cf fill:#ffedd5,stroke:#f97316,color:#7c2d12
     classDef browser fill:#ede9fe,stroke:#8b5cf6,color:#2e1065
 
-    subgraph CI ["Nightly CI"]
-        GHA["GitHub Actions"]:::ci
-        PY["scripts/fetch.py"]:::py
+    subgraph CI ["GitHub Actions (scheduled)"]
+        GHA["Workflows"]:::ci
+        PY["scripts/fetch.py +<br/>fetch_opening_hours.py"]:::py
     end
 
-    API["PoliMaps API"]:::api
-    JSON[("occupancy/*.json")]:::store
+    POLIMI_API["PoliMi occupancy API"]:::api
+    POLIMI_PAGE["polimi.it opening-hours page"]:::api
+    R2[("R2: poliaule-data")]:::store
 
     subgraph Delivery ["Delivery"]
-        CFP["Cloudflare Pages"]:::cf
+        WORKER["API Worker<br/>(workers/api)"]:::cf
+        PAGES["Cloudflare Pages"]:::cf
         BROWSER["Browser"]:::browser
     end
 
-    GHA -->|runs nightly| PY
-    PY -->|fetch per room/day| API
-    API -->|slot list| PY
-    PY -->|writes| JSON
-    JSON -->|served by| CFP
-    CFP -->|static files| BROWSER
+    GHA -->|runs| PY
+    PY -->|fetch per room/day| POLIMI_API
+    PY -->|scrape weekly| POLIMI_PAGE
+    PY -->|wrangler r2 object put| R2
+    R2 -->|binding| WORKER
+    WORKER -->|"/v1/* (JSON)"| BROWSER
+    PAGES -->|static HTML/JS/CSS| BROWSER
 ```
 
-Data never passes through a custom backend. The browser fetches occupancy JSON files the same way it fetches any static asset.
+Both fetch jobs run on GitHub Actions. Both write local JSON, then upload it to the `poliaule-data` R2 bucket via `wrangler r2 object put`. The API Worker binds that bucket and serves it over HTTP; see [api.md](./api.md) for the exact routes.
 
-A second, independent job (`scripts/fetch_opening_hours.py`, weekly rather than nightly) scrapes polimi.it for building opening hours and writes `data/opening-hours.json`. `fetch.py` reads it to decide which days to fetch, and the browser fetches it directly alongside the occupancy files. See [fetch_opening_hours.py](#fetch_opening_hourspy) below.
+`fetch.py` reads the freshly-written `data/opening-hours.json` locally to decide which days to fetch. The browser gets it through `/v1/opening-hours` on the API Worker.
 
 ---
 
@@ -51,15 +54,17 @@ Runs on a schedule (and can be triggered manually). For each of the next 7 days 
 1. Reads `data/classrooms.json` to get room IDs.
 2. Reads `data/opening-hours.json` to decide which days to fetch: a day is skipped only if every building is closed that weekday, or it falls in a holiday period.
 3. GETs the occupancy endpoint for every room on each remaining day.
-4. Writes one `occupancy/occupation_YYYYMMDD.json` per day, mirroring the classrooms structure plus an `occupancy` array of hourly slots.
-5. Deletes stale files (dates before today).
+4. Writes one `occupancy/occupation_YYYYMMDD.json` per day locally, mirroring the classrooms structure plus an `occupancy` array of hourly slots, plus `occupancy/list.json`.
+5. Deletes stale local files (dates before today).
+6. The GitHub Actions workflow uploads all of those files to the `poliaule-data` R2 bucket via `wrangler r2 object put --remote`. A separate R2 lifecycle rule expires occupancy objects a couple of days after they age out of the 7-day window, so nothing needs to explicitly delete stale objects from the bucket.
 
 ```mermaid
 sequenceDiagram
     participant GHA as GitHub Actions
     participant PY as fetch.py
     participant API as PoliMaps API
-    participant FS as occupancy/
+    participant FS as local occupancy/
+    participant R2 as R2 (poliaule-data)
 
     GHA->>PY: run
     PY->>PY: fetch_days() - next 7 days (skip days every building is closed, and holidays)
@@ -68,11 +73,12 @@ sequenceDiagram
         API-->>PY: [{slot}, ...]
         PY-->>PY: wait 0.5s (skipped with --no-delay)
     end
-    PY->>FS: write occupation_YYYYMMDD.json × 7
-    PY->>FS: delete files older than today
+    PY->>FS: write occupation_YYYYMMDD.json × 7 + list.json
+    PY->>FS: delete local files older than today
+    GHA->>R2: wrangler r2 object put (per file)
 ```
 
-Rate limiting: 0.5 seconds between calls (skippable via `--no-delay`), 3 retries with 2 seconds backoff on failure.
+Rate limiting: 0.5 seconds between calls (skippable via `--no-delay`), 3 retries with 2 seconds backoff on failure. See [Cloudflare Workers & R2](#cloudflare-workers--r2) below for what happens to this data next, including how `beta` gets its copy.
 
 ### fetch_opening_hours.py
 
@@ -83,7 +89,7 @@ Runs weekly (Sunday 6 AM UTC), independent of `fetch.py`'s twice-daily schedule.
 - `holiday_periods`: closure date ranges parsed from the page's yearly closure announcement
 - `default_hours`: last-resort fallback for campuses the page doesn't cover at all (Cremona, Lecco, Mantova)
 
-The page has no JSON/PDF export and can change format without notice, so a parse that looks too small or missing key sections is rejected: the script exits non-zero and leaves the existing `data/opening-hours.json` untouched rather than committing bad data.
+The page has no JSON/PDF export and can change format without notice, so a parse that looks too small or missing key sections is rejected: the script exits non-zero and leaves the existing `data/opening-hours.json` untouched rather than uploading bad data. The workflow then uploads the resulting file to both `poliaule-data` and `poliaule-data-beta` directly, with no beta-specific gating.
 
 Both `fetch.py` and the frontend resolve a building's hours the same way: an explicit match in `buildings`, else the building's campus in `campus_defaults`, else `default_hours`. `scripts/fetch.py`'s `resolve_building_hours()` and `available-rooms-script.js`'s `resolveBuildingHours()` implement this lookup independently, keyed off the same file, so there's no shared runtime dependency between the Python and JS sides.
 
@@ -102,9 +108,9 @@ occupation_YYYYMMDD.json
                 └── { inizio: "HH:MM", fine: "HH:MM" }
 ```
 
-`data/classrooms.json` has the same structure minus the `occupancy` field; it's the static source of truth for room metadata. 
+`data/classrooms.json` has the same structure minus the `occupancy` field; it's the static source of truth for room metadata, edited by hand and manually re-uploaded to R2 (`wrangler r2 object put`) whenever it changes. No script generates or fetches it.
 
-> Full schema and usage examples are in [api.md](./api.md).
+> Full schema, endpoint paths, and usage examples are in [api.md](./api.md).
 
 ---
 
@@ -122,6 +128,7 @@ graph TD
     classDef i18n fill:#fde68a,stroke:#f59e0b,color:#713f12
     classDef component fill:#ede9fe,stroke:#8b5cf6,color:#2e1065
     classDef store fill:#f1f5f9,stroke:#475569,color:#0f172a
+    classDef cf fill:#ffedd5,stroke:#f97316,color:#7c2d12
 
     IH["index.html"]:::entry
     SC["script.js"]:::shell
@@ -152,8 +159,8 @@ graph TD
     SC -->|registers| TT
     SCS -->|imports| ARS
     SCS -->|imports| I18N
-    ARS -->|fetches| JSON[("occupancy/*.json")]:::store
-    ARS -->|fetches| OH[("data/opening-hours.json")]:::store
+    ARS -->|fetches via config.js API_BASE| API["api.poliaule.com"]:::cf
+    SCS -->|fetches via config.js API_BASE| API
 ```
 
 ### Key modules
@@ -212,9 +219,20 @@ graph LR
     BETA -->|Cloudflare Pages| BETA_SITE
 ```
 
+### Cloudflare Workers & R2
+
+Two R2 buckets hold the fetched data: `poliaule-data` (prod) and `poliaule-data-beta` (beta). `workers/api` (a Hono app) binds one bucket per environment and serves it as the versioned REST API described in [api.md](./api.md), deployed as `poliaule-api` / `poliaule-api-beta`, on custom domains `api.poliaule.com` / `api-beta.poliaule.com`. It also caches responses at Cloudflare's edge (`caches.default`) so repeat requests for the same URL don't hit R2 at all.
+
+`config.js` holds the `API_BASE` the frontend fetches from; `scripts/build-beta.sh` overwrites it to point at `api-beta.poliaule.com` for the beta Pages build.
+
 ### Keeping beta in sync
 
-After each scheduled fetch commits new occupancy data to `main`, the Actions workflow checks out `beta` and merges `main` into it. That way `beta.poliaule.com` always serves fresh data, even when no code changes are in flight.
+Beta's occupancy data isn't independently fetched from PoliMi by default. After the GitHub Actions workflow fetches once for prod, it checks a Cloudflare KV flag (`occupancy_backend_enabled`, in the `poliaule-config` namespace):
+
+- **Off (default):** the same files just fetched for `poliaule-data` are re-uploaded to `poliaule-data-beta` as-is, with no second PoliMi request.
+- **On:** the workflow additionally checks out the `beta` branch's own copy of `scripts/fetch.py` and runs it as a second pass against PoliMi, uploading its output to `poliaule-data-beta` instead. This is for testing new fetch/transform logic in isolation before merging it into `main`.
+
+Opening hours has no such flag: it always uploads the same fetched output to both buckets.
 
 The app detects its environment from `location.hostname` at startup and shows a badge for `beta.poliaule.com` and local dev.
 

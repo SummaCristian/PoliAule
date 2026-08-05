@@ -166,8 +166,10 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 1.1.0-beta2",
+  "footer.versionInfo": "Version 1.1.0",
 
   "changelog.v1.1.0.item1": "Polished animations and transitions for a smoother user experience.",
-  "changelog.v1.1.0.item2": "Redesigned classroom cards to include pictures and a more modern layout."
+  "changelog.v1.1.0.item2": "Redesigned classroom cards to include pictures and a more modern layout.",
+  "changelog.v1.1.0.item3": "Overhauled the backend: new API URLs, moved to CloudFlare R2 buckets for storage, no more daily commits. PoliAule should be faster, more reliable and scalable than ever.",
+  "changelog.v1.1.0.item4": "Laid the foundation for new features to be added in the near future, with support for separate backend deployment for the beta version, which will allow me to test new features without affecting the stable version of the app. Stay tunes for what's coming next!"
 }

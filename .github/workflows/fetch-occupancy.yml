@@ -56,6 +56,25 @@ jobs:
             npx --yes wrangler@4 r2 object put "poliaule-data/$f" --file "$f" --content-type application/json --remote
           done
 
+      - name: Purge API cache (main)
+        if: hashFiles('occupancy/*.json') != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          URLS=$(for f in occupancy/*.json; do
+            key=$(basename "$f" .json)
+            if [ "$key" = "list" ]; then
+              echo "https://api.poliaule.com/v1/occupations"
+            else
+              d=${key#occupation_}
+              echo "https://api.poliaule.com/v1/occupations/${d:0:4}-${d:4:2}-${d:6:2}"
+            fi
+          done | jq -R . | jq -s '{files: .}')
+          curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/7ba55951cabeecf5f38d0c35762ea451/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$URLS"
+
       # ---- beta ----
 
       - name: Check beta backend flag
@@ -78,6 +97,25 @@ jobs:
           for f in occupancy/*.json; do
             npx --yes wrangler@4 r2 object put "poliaule-data-beta/$f" --file "$f" --content-type application/json --remote
           done
+
+      - name: Purge API cache (beta, flag off)
+        if: hashFiles('occupancy/*.json') != '' && steps.beta_flag.outputs.enabled != 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          URLS=$(for f in occupancy/*.json; do
+            key=$(basename "$f" .json)
+            if [ "$key" = "list" ]; then
+              echo "https://api-beta.poliaule.com/v1/occupations"
+            else
+              d=${key#occupation_}
+              echo "https://api-beta.poliaule.com/v1/occupations/${d:0:4}-${d:4:2}-${d:6:2}"
+            fi
+          done | jq -R . | jq -s '{files: .}')
+          curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/7ba55951cabeecf5f38d0c35762ea451/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$URLS"
 
       - name: Checkout beta
         if: steps.beta_flag.outputs.enabled == 'true'
@@ -110,3 +148,23 @@ jobs:
           for f in occupancy/*.json; do
             npx --yes wrangler@4 r2 object put "poliaule-data-beta/$f" --file "$f" --content-type application/json --remote
           done
+
+      - name: Purge API cache (beta, flag on)
+        if: steps.beta_flag.outputs.enabled == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        working-directory: beta-checkout
+        run: |
+          URLS=$(for f in occupancy/*.json; do
+            key=$(basename "$f" .json)
+            if [ "$key" = "list" ]; then
+              echo "https://api-beta.poliaule.com/v1/occupations"
+            else
+              d=${key#occupation_}
+              echo "https://api-beta.poliaule.com/v1/occupations/${d:0:4}-${d:4:2}-${d:6:2}"
+            fi
+          done | jq -R . | jq -s '{files: .}')
+          curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/7ba55951cabeecf5f38d0c35762ea451/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$URLS"

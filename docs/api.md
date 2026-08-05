@@ -2,6 +2,12 @@
 
 PoliAule pre-fetches classroom occupancy data from Politecnico di Milano every night and serves it through a small versioned REST API backed by Cloudflare Workers + R2. These endpoints are publicly accessible. If you want to build something on top of PoliMi classroom data, you can use them directly instead of scraping Politecnico yourself.
 
+> [!IMPORTANT]
+> PoliAule's API now has a new home!
+> If you were using it before August 2026 (v1.0.0), the old URLs won't work anymore.
+>
+> Please update to the new ones, and sorry for the disruption. Please note that the new URLs provide feature parity with the previous ones, just relocated. The URL format has slightly changed as well, but the REST architecture remains the same
+
 ---
 
 ## Endpoints

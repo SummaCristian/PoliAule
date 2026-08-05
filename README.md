@@ -54,12 +54,12 @@ A picture of the classroom will also help you avoid unwanted surprises (coff cof
 
 ## How it works
 
-Every night, a scheduled job pulls fresh occupancy data from the Politecnico di Milano API and stores it as static JSON files in this repository. When you open PoliAule, the app reads that cached data directly: no server involved, no requests to the official API from your browser.
+Twice a day, a scheduled job pulls fresh occupancy data from the Politecnico di Milano API and uploads it to Cloudflare R2. When you open PoliAule, the app fetches that data through a small REST API backed by R2, not from Politecnico directly.
 
 This keeps things fast for users and avoids hammering the upstream endpoint with every visit.
 
 ```
-Nightly GitHub Action → Politecnico API → occupancy JSON files → your browser
+GitHub Action → Politecnico API → Cloudflare R2 → API Worker → your browser
 ```
 
 ## Features

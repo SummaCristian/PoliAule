@@ -70,6 +70,13 @@ COURSE_CODE_RE = re.compile(r"\d{5,6}")
 # rather than let it get parsed as a professor's name.
 SECTION_RE = re.compile(r"^sez\.?\s*\S", re.IGNORECASE)
 
+# During exam sessions, Polimi appends a trailing "(ESAME)", "(ORALI)", or
+# "(ULTIMA PROVA IN ITINERE)" straight onto the last professor's name with no
+# separator, e.g. "GATTO ALBERTO (ESAME)". Pull it out and use it to flag the
+# whole entry as an exam rather than a lesson, instead of polluting the name.
+EXAM_SUFFIX_RE = re.compile(r"\s*\(([^)]*)\)\s*$")
+EXAM_KEYWORD_RE = re.compile(r"esame|orali?|prova in itinere", re.IGNORECASE)
+
 # Below this many parsed classroom rows, treat the page as unrecognized
 # (layout change, error page, empty campus) rather than trusting a near-empty result.
 MIN_CLASSROOM_ROWS = 1
@@ -92,10 +99,11 @@ def _minutes_to_hhmm(minutes: int) -> str:
 def parse_occupation_name(name: str) -> dict:
     """Split a scraped occupation name into course/code/professors.
 
-    About 9% of names have no course code at all (exams, events, tutoring
-    sessions, maintenance blocks, ...); those are returned as category
-    "OTHER" with the untouched string kept under "raw" rather than forced
-    into a course/professor shape that doesn't apply.
+    About 9% of names have no course code at all (events, tutoring sessions,
+    maintenance blocks, ...); those are returned as category "OTHER" with the
+    untouched string kept under "raw" rather than forced into a course/professor
+    shape that doesn't apply. During exam periods, category is "EXAM" instead
+    of "COURSE" for the same course/code/professors shape (see EXAM_KEYWORD_RE).
     """
     match = COURSE_CODE_RE.search(name)
     if not match:
@@ -109,8 +117,15 @@ def parse_occupation_name(name: str) -> dict:
     if tokens and SECTION_RE.match(tokens[0]):
         section = tokens.pop(0)
 
+    category = "COURSE"
+    if tokens:
+        exam_match = EXAM_SUFFIX_RE.search(tokens[-1])
+        if exam_match and EXAM_KEYWORD_RE.search(exam_match.group(1)):
+            tokens[-1] = EXAM_SUFFIX_RE.sub("", tokens[-1]).strip()
+            category = "EXAM"
+
     result = {
-        "category": "COURSE",
+        "category": category,
         "course": course,
         "code": int(match.group()),
         "professors": tokens,

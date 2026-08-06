@@ -149,10 +149,10 @@ Same structure as `/v1/classrooms`, with a top-level metadata wrapper and an `oc
                   // The fields below are scraped separately from onlineservices.polimi.it
                   // and merged in by start/end time; a slot keeps only inizio/fine when the
                   // scrape didn't cover it (network error, unrecognized campus, parse failure).
-                  category:     string | undefined         // "COURSE" | "OTHER"
+                  category:     string | undefined         // "COURSE" | "EXAM" | "OTHER"
                   idrichiesta:  number | undefined          // Polimi's internal booking id
 
-                  // category === "COURSE" only:
+                  // category === "COURSE" or "EXAM" only:
                   course:       string | undefined
                   code:         number | undefined          // course code, e.g. 54324
                   professors:   string[] | undefined

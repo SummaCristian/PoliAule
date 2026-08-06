@@ -95,8 +95,8 @@ Called by `fetch.py` (not run standalone in production, though it has its own CL
 
 Each parsed slot's name is then split by `parse_occupation_name()` into structured fields, anchored on the course code (a 5-6 digit number) since dash placement around it is inconsistent and integrated courses have extra dashes inside the course name itself:
 
-- Matches a code → `{category: "COURSE", course, code, professors: [...]}`, plus a `section` field when a `"Sez. A"`-style marker is present.
-- No code found (roughly 9% of entries during semester: exams, events, tutoring sessions, maintenance blocks, ...) → `{category: "OTHER", raw}`, keeping the untouched string rather than forcing it into a shape that doesn't fit.
+- Matches a code → `{category: "COURSE", course, code, professors: [...]}`, plus a `section` field when a `"Sez. A"`-style marker is present. During exam sessions the category is `"EXAM"` instead of `"COURSE"` (same fields): Polimi appends `(ESAME)`/`(ORALI)`/`(ULTIMA PROVA IN ITINERE)` straight onto the last professor's name, which gets stripped out and turned into the category rather than left in `professors`.
+- No code found (events, tutoring sessions, maintenance blocks, ...) → `{category: "OTHER", raw}`, keeping the untouched string rather than forcing it into a shape that doesn't fit.
 
 A campus that fails to scrape, or a page that comes back in an unrecognized shape, is skipped with a warning and never blocks the REST-based occupancy fetch: no-name occupancy slots are preferable to failing the whole run over a page layout change.
 
@@ -126,7 +126,7 @@ occupation_YYYYMMDD.json
             └── id, name, features[]
             └── occupancy[]          ← added by fetch.py; each entry is a BOOKED slot
                 └── { inizio: "HH:MM", fine: "HH:MM" }
-                └── + { category: "COURSE", course, code, professors[], section? }
+                └── + { category: "COURSE" | "EXAM", course, code, professors[], section? }
                       or { category: "OTHER", raw }, plus idrichiesta
                       ← merged in from fetch_occupation_names.py's scrape, when a match exists
 ```

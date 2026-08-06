@@ -5,12 +5,15 @@ import type { Context } from "hono";
 // in case a purge is ever missed, not the primary freshness mechanism.
 const EDGE_CACHE_CONTROL = "public, max-age=86400";
 
-// Sent to the browser: always revalidate before using a cached copy, so a
-// stale local response can never linger silently. Paired with ETag below,
-// an unchanged response comes back as a cheap 304 instead of a full refetch.
-const BROWSER_CACHE_CONTROL = "no-cache";
+// Sent to the browser: never serve a locally cached copy without asking the
+// edge again. We do NOT use conditional requests (ETag/If-None-Match) here:
+// cross-origin fetch()'s handling of 304 revalidation has proven inconsistent
+// across real browsers (reproduced on desktop Firefox and Safari mobile as
+// broken/stale loads), so every browser request always gets a full body back.
+// The edge cache above is what keeps this cheap.
+const BROWSER_CACHE_CONTROL = "no-store";
 
-/** Serves an R2 object as JSON, 404s if missing, 304s on a matching ETag. */
+/** Serves an R2 object as JSON, 404s if missing. */
 export async function serveR2Json(c: Context, bucket: R2Bucket, key: string) {
   const cache = caches.default;
   const cacheKey = new Request(c.req.url, c.req.raw);
@@ -31,17 +34,10 @@ export async function serveR2Json(c: Context, bucket: R2Bucket, key: string) {
     c.executionCtx.waitUntil(cache.put(cacheKey, edgeCached.clone()));
   }
 
-  const etag = edgeCached.headers.get("ETag");
-  const ifNoneMatch = c.req.header("If-None-Match");
-  if (etag && ifNoneMatch === etag) {
-    return new Response(null, { status: 304, headers: { "ETag": etag, "Cache-Control": BROWSER_CACHE_CONTROL } });
-  }
-
   return new Response(await edgeCached.clone().arrayBuffer(), {
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": BROWSER_CACHE_CONTROL,
-      "ETag": etag ?? "",
       "Last-Modified": edgeCached.headers.get("Last-Modified") ?? "",
     },
   });

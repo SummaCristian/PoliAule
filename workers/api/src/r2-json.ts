@@ -1,9 +1,12 @@
 import type { Context } from "hono";
 
-// Sent to the edge cache, not the browser: long-lived, since the GitHub Actions
-// workflows explicitly purge affected URLs on every write. This is a backstop
-// in case a purge is ever missed, not the primary freshness mechanism.
-const EDGE_CACHE_CONTROL = "public, max-age=86400";
+// Sent to the edge cache, not the browser. Short-lived on purpose: Cloudflare's
+// purge-by-URL API is not a hard guarantee (observed a purged URL still served
+// stale from an edge node hours later), so this TTL — not the purge call — is
+// what actually bounds staleness. The GitHub Actions workflows still purge on
+// every write, which makes refreshes feel instant in the common case, but
+// correctness no longer depends on that purge succeeding or propagating.
+const EDGE_CACHE_CONTROL = "public, max-age=180";
 
 // Sent to the browser: never serve a locally cached copy without asking the
 // edge again. We do NOT use conditional requests (ETag/If-None-Match) here:

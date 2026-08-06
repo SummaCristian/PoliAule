@@ -53,25 +53,34 @@ Runs on a schedule (and can be triggered manually). For each of the next 7 days 
 
 1. Reads `data/classrooms.json` to get room IDs.
 2. Reads `data/opening-hours.json` to decide which days to fetch: a day is skipped only if every building is closed that weekday, or it falls in a holiday period.
-3. GETs the occupancy endpoint for every room on each remaining day.
-4. Writes one `occupancy/occupation_YYYYMMDD.json` per day locally, mirroring the classrooms structure plus an `occupancy` array of hourly slots, plus `occupancy/list.json`.
-5. Deletes stale local files (dates before today).
-6. The GitHub Actions workflow uploads all of those files to the `poliaule-data` R2 bucket via `wrangler r2 object put --remote`. A separate R2 lifecycle rule expires occupancy objects a couple of days after they age out of the 7-day window, so nothing needs to explicitly delete stale objects from the bucket.
+3. For each remaining day, scrapes onlineservices.polimi.it's occupation-names page once per campus (`scripts/fetch_occupation_names.py`, see below) to build a lookup of course name/code/professors by classroom and time slot.
+4. GETs the occupancy endpoint for every room on each remaining day, then enriches each returned slot with the matching entry from that lookup, when one exists.
+5. Writes one `occupancy/occupation_YYYYMMDD.json` per day locally, mirroring the classrooms structure plus an `occupancy` array of hourly slots, plus `occupancy/list.json`.
+6. Deletes stale local files (dates before today).
+7. The GitHub Actions workflow uploads all of those files to the `poliaule-data` R2 bucket via `wrangler r2 object put --remote`. A separate R2 lifecycle rule expires occupancy objects a couple of days after they age out of the 7-day window, so nothing needs to explicitly delete stale objects from the bucket.
 
 ```mermaid
 sequenceDiagram
     participant GHA as GitHub Actions
     participant PY as fetch.py
+    participant NAMES as onlineservices.polimi.it
     participant API as PoliMaps API
     participant FS as local occupancy/
     participant R2 as R2 (poliaule-data)
 
     GHA->>PY: run
     PY->>PY: fetch_days() - next 7 days (skip days every building is closed, and holidays)
-    loop each day × each room
-        PY->>API: GET occupancy/{id}/{date}
-        API-->>PY: [{slot}, ...]
-        PY-->>PY: wait 0.5s (skipped with --no-delay)
+    loop each day
+        loop each campus
+            PY->>NAMES: GET occupation-names page
+            NAMES-->>PY: HTML (course name/code/professors per room+slot)
+        end
+        loop each room
+            PY->>API: GET occupancy/{id}/{date}
+            API-->>PY: [{slot}, ...]
+            PY-->>PY: enrich slot from name lookup (start/end match)
+            PY-->>PY: wait 0.5s (skipped with --no-delay)
+        end
     end
     PY->>FS: write occupation_YYYYMMDD.json × 7 + list.json
     PY->>FS: delete local files older than today
@@ -79,6 +88,17 @@ sequenceDiagram
 ```
 
 Rate limiting: 0.5 seconds between calls (skippable via `--no-delay`), 3 retries with 2 seconds backoff on failure. See [Cloudflare Workers & R2](#cloudflare-workers--r2) below for what happens to this data next, including how `beta` gets its copy.
+
+### fetch_occupation_names.py
+
+Called by `fetch.py` (not run standalone in production, though it has its own CLI for manual testing). The REST occupancy endpoint above only returns start/end times, no course name, so this module scrapes onlineservices.polimi.it's server-rendered occupation-names page instead, one request per campus per day, and parses the HTML table directly (no JSON API backs that page).
+
+Each parsed slot's name is then split by `parse_occupation_name()` into structured fields, anchored on the course code (a 5-6 digit number) since dash placement around it is inconsistent and integrated courses have extra dashes inside the course name itself:
+
+- Matches a code → `{category: "COURSE", course, code, professors: [...]}`, plus a `section` field when a `"Sez. A"`-style marker is present.
+- No code found (roughly 9% of entries during semester: exams, events, tutoring sessions, maintenance blocks, ...) → `{category: "OTHER", raw}`, keeping the untouched string rather than forcing it into a shape that doesn't fit.
+
+A campus that fails to scrape, or a page that comes back in an unrecognized shape, is skipped with a warning and never blocks the REST-based occupancy fetch: no-name occupancy slots are preferable to failing the whole run over a page layout change.
 
 ### fetch_opening_hours.py
 
@@ -106,6 +126,9 @@ occupation_YYYYMMDD.json
             └── id, name, features[]
             └── occupancy[]          ← added by fetch.py; each entry is a BOOKED slot
                 └── { inizio: "HH:MM", fine: "HH:MM" }
+                └── + { category: "COURSE", course, code, professors[], section? }
+                      or { category: "OTHER", raw }, plus idrichiesta
+                      ← merged in from fetch_occupation_names.py's scrape, when a match exists
 ```
 
 `data/classrooms.json` has the same structure minus the `occupancy` field; it's the static source of truth for room metadata, edited by hand and manually re-uploaded to R2 (`wrangler r2 object put`) whenever it changes. No script generates or fetches it.

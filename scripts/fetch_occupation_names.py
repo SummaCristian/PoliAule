@@ -58,6 +58,18 @@ IDRICHIESTA_RE = re.compile(r"idrichiesta=(\d+)")
 DETTAGLI_PREFIX_RE = re.compile(r"^Vedi dettagli:\s*")
 _HTML_TAG_RE = re.compile(r"<[^>]*>")
 
+# Course names are formatted as "COURSE NAME CODE - PROF1, PROF2", but the
+# dash before the professor(s) is inconsistently present, and integrated
+# courses ("corsi integrati") have extra " - " separators inside the course
+# name itself. The code is the only reliable anchor to split on.
+COURSE_CODE_RE = re.compile(r"\d{5,6}")
+
+# Some multi-section courses put a "Sez. A" (or "Sez. A I5 (1087)") token right
+# after the code, comma-separated alongside the professors with no marker of
+# its own, e.g. "057919 Sez. A,FAZZI ALBERTO,BORTOT DAVIDE". Pull it out
+# rather than let it get parsed as a professor's name.
+SECTION_RE = re.compile(r"^sez\.?\s*\S", re.IGNORECASE)
+
 # Below this many parsed classroom rows, treat the page as unrecognized
 # (layout change, error page, empty campus) rather than trusting a near-empty result.
 MIN_CLASSROOM_ROWS = 1
@@ -75,6 +87,37 @@ class ScrapeError(Exception):
 def _minutes_to_hhmm(minutes: int) -> str:
     h, m = divmod(minutes, 60)
     return f"{h:02d}:{m:02d}"
+
+
+def parse_occupation_name(name: str) -> dict:
+    """Split a scraped occupation name into course/code/professors.
+
+    About 9% of names have no course code at all (exams, events, tutoring
+    sessions, maintenance blocks, ...); those are returned as category
+    "OTHER" with the untouched string kept under "raw" rather than forced
+    into a course/professor shape that doesn't apply.
+    """
+    match = COURSE_CODE_RE.search(name)
+    if not match:
+        return {"category": "OTHER", "raw": name}
+
+    course = name[:match.start()].strip()
+    rest = name[match.end():].strip().lstrip("-").strip()
+    tokens = [p.strip() for p in rest.split(",") if p.strip()]
+
+    section = None
+    if tokens and SECTION_RE.match(tokens[0]):
+        section = tokens.pop(0)
+
+    result = {
+        "category": "COURSE",
+        "course": course,
+        "code": int(match.group()),
+        "professors": tokens,
+    }
+    if section:
+        result["section"] = section
+    return result
 
 
 def _strip_tags(value: str) -> str:

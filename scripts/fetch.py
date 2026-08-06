@@ -7,7 +7,7 @@ from datetime import date, timedelta, datetime
 from pathlib import Path
 from typing import cast
 
-from fetch_occupation_names import fetch_occupation_names
+from fetch_occupation_names import fetch_occupation_names, parse_occupation_name
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -231,7 +231,7 @@ def build_output(
                     match = room_names.get((slot.get("inizio"), slot.get("fine")))
                     if match:
                         if match["name"]:
-                            slot["name"] = match["name"]
+                            slot.update(parse_occupation_name(match["name"]))
                         if match["idrichiesta"]:
                             slot["idrichiesta"] = match["idrichiesta"]
 

@@ -22,7 +22,26 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run opening hours scraper
+        id: scrape
         run: python scripts/fetch_opening_hours.py
+
+      - name: Notify Telegram
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SCRAPE_OUTCOME: ${{ steps.scrape.outcome }}
+          SCRAPE_STATUS: ${{ steps.scrape.outputs.status }}
+          SCRAPE_MESSAGE: ${{ steps.scrape.outputs.message }}
+        run: |
+          if [ "$SCRAPE_OUTCOME" != "success" ] || [ "$SCRAPE_STATUS" = "failed" ]; then
+            TEXT=$(printf '⚠️ PoliAule opening-hours scrape\n%s' "${SCRAPE_MESSAGE:-Script crashed — check the Actions log.}")
+          else
+            TEXT=$(printf '✅ PoliAule opening-hours scrape\n%s' "$SCRAPE_MESSAGE")
+          fi
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode chat_id="${TELEGRAM_CHAT_ID}" \
+            --data-urlencode text="$TEXT"
 
       - name: Set up Node
         uses: actions/setup-node@v7

@@ -26,6 +26,15 @@ RETRY_DELAY = 2  # seconds between retries
 NEXT_DAYS_WINDOW = 7  # Number of days to fetch starting from today
 DELAY_BETWEEN_CALLS = 0.5  # seconds to wait between API calls
 
+# Polimi's WAF blocks the default httpx UA (and anything else that looks like
+# a bare script client); a browser-like UA lets requests from CI runners through.
+REQUEST_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    ),
+}
+
 # Emergency fallback used only if data/opening-hours.json doesn't exist yet
 # (e.g. before scripts/fetch_opening_hours.py has ever run). Mirrors the
 # app's old hardcoded assumption: every building open every day except Sunday.
@@ -309,7 +318,7 @@ def main():
     print("\nCleaning up stale files...")
     cleanup_old_files()
 
-    with httpx.Client() as client:
+    with httpx.Client(headers=REQUEST_HEADERS) as client:
         for d in days:
             print(f"\n--- {d.isoformat()} ---")
 

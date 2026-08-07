@@ -8,6 +8,7 @@ exits non-zero and leaves the last good file alone.
 """
 
 import json
+import os
 import re
 import sys
 from datetime import date, datetime
@@ -98,6 +99,17 @@ MIN_HOLIDAY_PERIODS = 1
 
 class ScrapeError(Exception):
     pass
+
+
+def write_github_output(status: str, message: str):
+    """Append a `status` and multi-line `message` output for the GitHub Actions step, if running in CI."""
+    output_path = os.environ.get("GITHUB_OUTPUT")
+    if not output_path:
+        return
+    delimiter = "FETCH_MESSAGE_EOF"
+    with open(output_path, "a", encoding="utf-8") as f:
+        f.write(f"status={status}\n")
+        f.write(f"message<<{delimiter}\n{message}\n{delimiter}\n")
 
 
 # ---------------------------------------------------------------------------
@@ -291,14 +303,18 @@ def main() -> int:
         )
         response.raise_for_status()
     except httpx.HTTPError as e:
-        print(f"Failed to fetch {SOURCE_URL}: {e}", file=sys.stderr)
+        message = f"Failed to fetch {SOURCE_URL}: {e}"
+        print(message, file=sys.stderr)
+        write_github_output("failed", message)
         return 1
 
     try:
         parsed = parse_page(response.text)
         validate(parsed)
     except ScrapeError as e:
-        print(f"Scrape validation failed, leaving existing data/opening-hours.json untouched: {e}", file=sys.stderr)
+        message = f"Scrape validation failed, leaving existing data/opening-hours.json untouched: {e}"
+        print(message, file=sys.stderr)
+        write_github_output("failed", message)
         return 1
 
     output = {
@@ -314,9 +330,13 @@ def main() -> int:
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
-    print(f"Written {len(parsed['buildings'])} buildings, "
-          f"{len(parsed['campus_defaults'])} campus defaults, "
-          f"{len(parsed['holiday_periods'])} holiday periods to {OUTPUT_FILE}")
+    message = (
+        f"Written {len(parsed['buildings'])} buildings, "
+        f"{len(parsed['campus_defaults'])} campus defaults, "
+        f"{len(parsed['holiday_periods'])} holiday periods to {OUTPUT_FILE}"
+    )
+    print(message)
+    write_github_output("ok", message)
     return 0
 
 

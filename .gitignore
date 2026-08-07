@@ -1,6 +1,9 @@
 .DS_Store
 Thumbs.db
 
+__pycache__/
+*.pyc
+
 # Local output of scripts/fetch.py and fetch_opening_hours.py; uploaded to R2, not committed.
 occupancy/
 data/opening-hours.json

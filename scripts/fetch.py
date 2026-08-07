@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import re
 import time
 import httpx
@@ -161,17 +162,32 @@ def fetch_days(campuses: list[dict], opening_hours: dict) -> list[date]:
     return days
 
 
-def fetch_occupancy(client: httpx.Client, room_id: int, d: date) -> list[dict] | None:
-    """Fetch occupancy for a single room on a single date. Returns None on failure."""
+def fetch_occupancy(
+    client: httpx.Client, room_id: int, room_name: str, d: date, failures: list[dict]
+) -> list[dict] | None:
+    """Fetch occupancy for a single room on a single date. Returns None on failure.
+
+    Appends a record to `failures` (room, date, error) if every retry attempt fails,
+    so the caller can report a status summary (e.g. which rooms hit a 403) once the run ends.
+    """
     url = f"{BASE_URL}/{room_id}/{d.strftime('%Y%m%d')}"  # date in YYYYMMDD format, e.g. 20260313 (March 13th, 2026)
 
+    last_error = "unknown error"
     # Retry logic: try up to MAX_RETRIES times with a delay in between
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             response = client.get(url, timeout=10)
             response.raise_for_status()
             return strip_tags(response.json())
+        except httpx.HTTPStatusError as e:
+            last_error = f"HTTP {e.response.status_code}"
+            print(
+                f"    Attempt {attempt}/{MAX_RETRIES} failed for room {room_id} on {d}: {e}"
+            )
+            if attempt < MAX_RETRIES:
+                time.sleep(RETRY_DELAY)
         except (httpx.HTTPError, httpx.TimeoutException) as e:
+            last_error = type(e).__name__
             print(
                 f"    Attempt {attempt}/{MAX_RETRIES} failed for room {room_id} on {d}: {e}"
             )
@@ -179,6 +195,7 @@ def fetch_occupancy(client: httpx.Client, room_id: int, d: date) -> list[dict] |
                 # Wait before retrying
                 time.sleep(RETRY_DELAY)
     print(f"    Skipping room {room_id} on {d} after {MAX_RETRIES} failed attempts.")
+    failures.append({"room": room_name, "id": room_id, "date": d.isoformat(), "error": last_error})
     return None  # Failed to fetch even after MAX_RETRIES attempts
 
 
@@ -187,7 +204,9 @@ def _pick(src: dict, *keys: str) -> dict:
     return {k: src[k] for k in keys if src.get(k) is not None}
 
 
-def build_output(campuses: list[dict], client: httpx.Client, d: date, no_delay: bool) -> dict:
+def build_output(
+    campuses: list[dict], client: httpx.Client, d: date, no_delay: bool, failures: list[dict]
+) -> dict:
     """Build the output JSON file, mirroring the classrooms structure, plus occupancy in each classroom."""
     result = []
     for campus in campuses:
@@ -199,7 +218,7 @@ def build_output(campuses: list[dict], client: httpx.Client, d: date, no_delay: 
             }
             for classroom in building["classrooms"]:
                 print(f"  Fetching room {classroom['name']} (id={classroom['id']})...")
-                occupancy = fetch_occupancy(client, classroom["id"], d)  # API Call
+                occupancy = fetch_occupancy(client, classroom["id"], classroom["name"], d, failures)  # API Call
                 building_out["classrooms"].append(
                     {
                         **_pick(classroom, "name", "id", "features",
@@ -221,6 +240,37 @@ def build_output(campuses: list[dict], client: httpx.Client, d: date, no_delay: 
         "date": d.strftime("%Y%m%d"),
         "campuses": result,
     }
+
+
+def write_github_output(status: str, message: str):
+    """Append a `status` and multi-line `message` output for the GitHub Actions step, if running in CI."""
+    output_path = os.environ.get("GITHUB_OUTPUT")
+    if not output_path:
+        return
+    delimiter = "FETCH_MESSAGE_EOF"
+    with open(output_path, "a", encoding="utf-8") as f:
+        f.write(f"status={status}\n")
+        f.write(f"message<<{delimiter}\n{message}\n{delimiter}\n")
+
+
+def summarize(days: list[date], failures: list[dict]) -> tuple[str, str]:
+    """Build a (status, message) pair describing the run, for the Telegram notification step."""
+    lines = [f"{len(days)} day(s) fetched: {', '.join(d.isoformat() for d in days)}."]
+    if not failures:
+        return "ok", "\n".join(lines)
+
+    by_error: dict[str, list[dict]] = {}
+    for f in failures:
+        by_error.setdefault(f["error"], []).append(f)
+
+    lines.append(f"{len(failures)} room-fetch(es) failed after {MAX_RETRIES} attempts:")
+    for error, group in sorted(by_error.items(), key=lambda kv: -len(kv[1])):
+        lines.append(f"- {error}: {len(group)} room(s)")
+        for f in group[:10]:
+            lines.append(f"    {f['room']} (id={f['id']}) on {f['date']}")
+        if len(group) > 10:
+            lines.append(f"    ...and {len(group) - 10} more")
+    return "failed", "\n".join(lines)
 
 
 def cleanup_old_files():
@@ -263,6 +313,7 @@ def main():
         print(
             "No days to fetch (all within holiday periods or skipped weekdays). Exiting."
         )
+        write_github_output("ok", "No days to fetch (all within holiday periods or skipped weekdays).")
         return
 
     print(f"Fetching occupancy for {len(days)} day(s): {[d.isoformat() for d in days]}")
@@ -274,12 +325,13 @@ def main():
     print("\nCleaning up stale files...")
     cleanup_old_files()
 
+    failures: list[dict] = []
     with httpx.Client(headers=REQUEST_HEADERS) as client:
         for d in days:
             print(f"\n--- {d.isoformat()} ---")
 
             # Build output for this day
-            output = build_output(campuses, client, d, args.no_delay)
+            output = build_output(campuses, client, d, args.no_delay, failures)
 
             # Create output file and write JSON
             out_path = OUTPUT_DIR / f"occupation_{d.strftime('%Y%m%d')}.json"
@@ -295,6 +347,9 @@ def main():
             "dates": [d.strftime("%Y%m%d") for d in days],
         }, f, ensure_ascii=False, indent=2)
     print(f"\nWritten date list to {list_path}")
+
+    status, message = summarize(days, failures)
+    write_github_output(status, message)
 
     print("\nDone.")
 

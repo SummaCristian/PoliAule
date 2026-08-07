@@ -66,13 +66,13 @@ COURSE_CODE_RE = re.compile(r"\d{5,6}")
 
 # Some multi-section courses put a "Sez. A" (or "Sez. A I5 (1087)") token right
 # after the code, comma-separated alongside the professors with no marker of
-# its own, e.g. "057919 Sez. A,FAZZI ALBERTO,BORTOT DAVIDE". Pull it out
+# its own, e.g. "057919 Sez. A,SURNAME NAME,SURNAME NAME". Pull it out
 # rather than let it get parsed as a professor's name.
 SECTION_RE = re.compile(r"^sez\.?\s*\S", re.IGNORECASE)
 
 # During exam sessions, Polimi appends a trailing "(ESAME)", "(ORALI)", or
 # "(ULTIMA PROVA IN ITINERE)" straight onto the last professor's name with no
-# separator, e.g. "GATTO ALBERTO (ESAME)". Pull it out and use it to flag the
+# separator, e.g. "SURNAME NAME (ESAME)". Pull it out and use it to flag the
 # whole entry as an exam rather than a lesson, instead of polluting the name.
 EXAM_SUFFIX_RE = re.compile(r"\s*\(([^)]*)\)\s*$")
 EXAM_KEYWORD_RE = re.compile(r"esame|orali?|prova in itinere", re.IGNORECASE)

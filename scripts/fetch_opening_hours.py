@@ -25,6 +25,15 @@ OUTPUT_FILE = Path(__file__).parent.parent / "data" / "opening-hours.json"
 
 REQUEST_TIMEOUT = 20  # seconds
 
+# Polimi's WAF blocks the default httpx UA; a browser-like UA lets requests
+# from CI runners through.
+REQUEST_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    ),
+}
+
 # Fallback used for buildings with no data on the source page at all
 # (e.g. Cremona, Lecco, Mantova campuses aren't covered by the page).
 DEFAULT_HOURS = {"mon_fri": ["07:15", "20:15"], "sat": None, "sun": None}
@@ -277,7 +286,9 @@ def main() -> int:
     weekly GitHub Action never clobbers the last known-good data.
     """
     try:
-        response = httpx.get(SOURCE_URL, timeout=REQUEST_TIMEOUT, follow_redirects=True)
+        response = httpx.get(
+            SOURCE_URL, timeout=REQUEST_TIMEOUT, follow_redirects=True, headers=REQUEST_HEADERS
+        )
         response.raise_for_status()
     except httpx.HTTPError as e:
         print(f"Failed to fetch {SOURCE_URL}: {e}", file=sys.stderr)

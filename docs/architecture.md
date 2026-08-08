@@ -227,7 +227,7 @@ Two R2 buckets hold the fetched data: `poliaule-data` (prod) and `poliaule-data-
 
 ### Keeping beta in sync
 
-Beta's occupancy data isn't independently fetched from PoliMi by default. After the GitHub Actions workflow fetches once for prod, it checks a Cloudflare KV flag (`occupancy_backend_enabled`, in the `poliaule-config` namespace):
+Beta's occupancy data isn't independently fetched from PoliMi by default. After the GitHub Actions workflow fetches once for prod, it checks the `BETA_OCCUPANCY_BACKEND_ENABLED` GitHub Actions repository variable:
 
 - **Off (default):** the same files just fetched for `poliaule-data` are re-uploaded to `poliaule-data-beta` as-is, with no second PoliMi request.
 - **On:** the workflow additionally checks out the `beta` branch's own copy of `scripts/fetch.py` and runs it as a second pass against PoliMi, uploading its output to `poliaule-data-beta` instead. This is for testing new fetch/transform logic in isolation before merging it into `main`.

@@ -102,11 +102,9 @@ jobs:
         if: hashFiles('occupancy/*.json') != ''
         id: beta_flag
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ENABLED: ${{ vars.BETA_OCCUPANCY_BACKEND_ENABLED }}
         run: |
-          ENABLED=$(npx --yes wrangler@4 kv key get occupancy_backend_enabled --namespace-id 986b15710c024bcd9ff32db69519a8e0 --remote 2>/dev/null) || ENABLED="false"
-          echo "enabled=$ENABLED" >> "$GITHUB_OUTPUT"
+          echo "enabled=${ENABLED:-false}" >> "$GITHUB_OUTPUT"
 
       - name: Copy main's data to beta (flag off)
         if: hashFiles('occupancy/*.json') != '' && steps.beta_flag.outputs.enabled != 'true'

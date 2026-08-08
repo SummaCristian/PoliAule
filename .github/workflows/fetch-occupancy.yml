@@ -30,6 +30,7 @@ jobs:
         run: pip install httpx
 
       - name: Run fetch script (main)
+        id: fetch_main
         env:
           PYTHONUNBUFFERED: 1
           NO_DELAY: ${{ inputs.no_delay }}
@@ -39,6 +40,26 @@ jobs:
           else
             python scripts/fetch.py
           fi
+
+      - name: Notify Telegram (main)
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FETCH_OUTCOME: ${{ steps.fetch_main.outcome }}
+          FETCH_STATUS: ${{ steps.fetch_main.outputs.status }}
+          FETCH_MESSAGE: ${{ steps.fetch_main.outputs.message }}
+        run: |
+          if [ "$FETCH_OUTCOME" != "success" ]; then
+            TEXT="❌ PoliAule fetch (main) crashed — check the Actions log."
+          elif [ "$FETCH_STATUS" = "failed" ]; then
+            TEXT=$(printf '⚠️ PoliAule fetch (main)\n%s' "$FETCH_MESSAGE")
+          else
+            TEXT=$(printf '✅ PoliAule fetch (main)\n%s' "$FETCH_MESSAGE")
+          fi
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode chat_id="${TELEGRAM_CHAT_ID}" \
+            --data-urlencode text="$TEXT"
 
       - name: Set up Node
         if: hashFiles('occupancy/*.json') != ''
@@ -81,11 +102,9 @@ jobs:
         if: hashFiles('occupancy/*.json') != ''
         id: beta_flag
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ENABLED: ${{ vars.BETA_OCCUPANCY_BACKEND_ENABLED }}
         run: |
-          ENABLED=$(npx --yes wrangler@4 kv key get occupancy_backend_enabled --namespace-id 986b15710c024bcd9ff32db69519a8e0 --remote 2>/dev/null) || ENABLED="false"
-          echo "enabled=$ENABLED" >> "$GITHUB_OUTPUT"
+          echo "enabled=${ENABLED:-false}" >> "$GITHUB_OUTPUT"
 
       - name: Copy main's data to beta (flag off)
         if: hashFiles('occupancy/*.json') != '' && steps.beta_flag.outputs.enabled != 'true'
@@ -125,6 +144,7 @@ jobs:
           path: beta-checkout
 
       - name: Run fetch script (beta)
+        id: fetch_beta
         if: steps.beta_flag.outputs.enabled == 'true'
         env:
           PYTHONUNBUFFERED: 1
@@ -137,6 +157,26 @@ jobs:
           else
             python scripts/fetch.py
           fi
+
+      - name: Notify Telegram (beta)
+        if: always() && steps.beta_flag.outputs.enabled == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FETCH_OUTCOME: ${{ steps.fetch_beta.outcome }}
+          FETCH_STATUS: ${{ steps.fetch_beta.outputs.status }}
+          FETCH_MESSAGE: ${{ steps.fetch_beta.outputs.message }}
+        run: |
+          if [ "$FETCH_OUTCOME" != "success" ]; then
+            TEXT="❌ PoliAule fetch (beta) crashed — check the Actions log."
+          elif [ "$FETCH_STATUS" = "failed" ]; then
+            TEXT=$(printf '⚠️ PoliAule fetch (beta)\n%s' "$FETCH_MESSAGE")
+          else
+            TEXT=$(printf '✅ PoliAule fetch (beta)\n%s' "$FETCH_MESSAGE")
+          fi
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode chat_id="${TELEGRAM_CHAT_ID}" \
+            --data-urlencode text="$TEXT"
 
       - name: Upload occupancy data to R2 (beta)
         if: steps.beta_flag.outputs.enabled == 'true'

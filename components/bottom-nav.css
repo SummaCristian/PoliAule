@@ -1,0 +1,227 @@
+/* ============================================================
+   BOTTOM PILL NAV
+   Ported from the DormMate case-study's spring pill tab bar
+   (sticky-top there → fixed-bottom here). Layout/mechanics only —
+   styling to be revisited to match the Figma design.
+   ============================================================ */
+
+.bn-wrapper {
+  --bn-bar-bg: #dddddd67;
+  --bn-pill-bg: rgba(218, 218, 218, 0.821);
+  --bn-pill-highlight: rgba(255, 255, 255, 0.3);
+  --bn-pill-border: rgba(255, 255, 255, 0.1);
+  --bn-shadow: var(--shadow);
+  --bn-tab-color: #555;
+  --bn-tab-active-color: var(--text-color-accent);
+
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+.bn-group {
+  position: relative;
+  flex: 1;
+  max-width: 260px;
+  transition: opacity 0.2s ease;
+}
+
+.bn-group--inactive .bn-active-row .bn-tab-content {
+  color: var(--bn-tab-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bn-wrapper {
+    --bn-bar-bg: rgba(71, 71, 71, 0.294);
+    --bn-pill-bg: #5e5e5e70;
+    --bn-pill-highlight: rgba(255, 255, 255, 0.08);
+    --bn-pill-border: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.bn-tabbar {
+  pointer-events: auto;
+  position: relative;
+
+  display: flex;
+  width: 100%;
+
+  background: var(--bn-bar-bg);
+  padding: 4px;
+  border-radius: 999px;
+
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px rgba(255, 255, 255, 0.1),
+    var(--bn-shadow);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.bn-tab-item {
+  flex: 1;
+  min-width: 0;
+  height: 56px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  color: var(--bn-tab-color);
+}
+
+.bn-tab-item:focus-visible {
+  outline: 2px solid var(--bn-tab-active-color);
+  outline-offset: -4px;
+  border-radius: 999px;
+}
+
+.bn-tab-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.bn-tab-label {
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.bn-pill-outer {
+  pointer-events: none;
+  position: absolute;
+  border-radius: 999px;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.12);
+  will-change: transform;
+  transform-origin: center;
+}
+
+.bn-pill-inner {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 999px;
+
+  background: var(--bn-pill-bg);
+
+  box-shadow:
+    inset 0 1px 0 var(--bn-pill-highlight),
+    inset 0 0 0 1px var(--bn-pill-border);
+}
+
+.bn-active-row {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  will-change: transform;
+}
+
+.bn-active-row .bn-tab-content {
+  color: var(--bn-tab-active-color);
+}
+
+.bn-active-row .material-symbols-outlined.bn-filled {
+  font-variation-settings: 'FILL' 1;
+}
+
+.bn-pill-hit {
+  pointer-events: auto;
+  position: absolute;
+  touch-action: none;
+  cursor: grab;
+  will-change: transform;
+  transform-origin: center;
+}
+
+.bn-pill-hit:active {
+  cursor: grabbing;
+}
+
+/* ---- Standalone Search button, split off from the group ---- */
+
+.bn-search-btn {
+  pointer-events: auto;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  background: var(--bn-bar-bg);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px rgba(255, 255, 255, 0.1),
+    var(--bn-shadow);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  color: var(--bn-tab-color);
+  will-change: transform;
+}
+
+.bn-search-btn:focus-visible {
+  outline: 2px solid var(--bn-tab-active-color);
+  outline-offset: -4px;
+}
+
+.bn-search-btn-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.bn-search-btn.active {
+  color: var(--bn-tab-active-color);
+}
+
+.bn-search-btn.active .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1;
+}
+
+.bn-search-btn.active .bn-tab-label {
+  font-weight: 700;
+}

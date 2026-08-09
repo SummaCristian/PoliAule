@@ -17,14 +17,20 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  /* Deliberately float clear of the safe area, not just flush against it —
+     iOS Safari's floating bottom bar seems to opaque-paint the safe strip
+     when a backdrop-filter'd fixed element sits exactly at its boundary.
+     24px clears the children's drop shadow (0 4px 20px) too, since a
+     fixed element's box-shadow is otherwise cut off at the true viewport
+     edge if there isn't enough raw clearance for it to render into. */
+  bottom: 20px;
   z-index: 20;
 
   display: flex;
   justify-content: space-between;
   align-items: center;
 
-  padding: 0.75rem 1.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.75rem 1.75rem 0;
   pointer-events: none;
 
   /* The pill is draggable; without this, a touch-drag starting on/near its

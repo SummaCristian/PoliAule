@@ -12,12 +12,11 @@ import { t, onLanguageSwitch } from '../i18n.js';
 import { DEFAULT_TAB_KEY, LAST_TAB_KEY, getStartupTabId } from './settings.js';
 
 const GROUP_TABS = [
-  { target: 'available-classrooms-container', icon: 'event_available', labelKey: 'tabs.available' },
-  { target: 'search-classrooms-container', icon: 'apartment', labelKey: 'tabs.campus' },
+  { target: 'available-classrooms-container', icon: 'hgi-calendar-03', labelKey: 'tabs.available' },
+  { target: 'search-classrooms-container', icon: 'hgi-university', labelKey: 'tabs.campus' },
 ];
 const SEARCH_TARGET = 'search-placeholder-container';
 
-const PILL_INSET = 4;
 const TAP_SCALE = 1.3;
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -71,6 +70,7 @@ class Spring {
 const wrapper = document.getElementById('bn-wrapper');
 const group = document.getElementById('bn-group');
 const bar = document.getElementById('bn-bar');
+const barItems = document.getElementById('bn-bar-items');
 const pill = document.getElementById('bn-pill');
 const pillHit = document.getElementById('bn-pill-hit');
 const activeRow = document.getElementById('bn-active-row');
@@ -88,16 +88,16 @@ GROUP_TABS.forEach((tab, i) => {
   btn.setAttribute('aria-controls', tab.target);
   btn.innerHTML = `
     <span class="bn-tab-content">
-      <span class="material-symbols-outlined">${tab.icon}</span>
+      <i class="hgi-stroke ${tab.icon}"></i>
       <span class="bn-tab-label" data-i18n="${tab.labelKey}">${tabLabel(tab)}</span>
     </span>`;
   btn.addEventListener('click', () => { if (searchActive || i !== groupIndex) animateGroupTap(i); });
-  bar.appendChild(btn);
+  barItems.appendChild(btn);
 
   const active = document.createElement('span');
   active.className = 'bn-tab-content bn-tab-active';
   active.innerHTML = `
-    <span class="material-symbols-outlined bn-filled">${tab.icon}</span>
+    <i class="hgi-stroke ${tab.icon}"></i>
     <span class="bn-tab-label" data-i18n="${tab.labelKey}">${tabLabel(tab)}</span>`;
   activeRow.appendChild(active);
 });
@@ -112,47 +112,108 @@ onLanguageSwitch(() => {
 });
 
 /* --- State + layout -------------------------------------------- */
+// Tabs hug their own content (icon + label), so unlike a uniform grid the
+// pill has to slide AND resize between anchors of different widths — each
+// anchor below is the pill's {x, w} for sitting exactly on top of one tab.
 let groupIndex = 0;
 let searchActive = false;
-let itemSize = 0;
 let didInit = false;
+let itemsW = 0, itemsH = 0, pillHeight = 0;
+let anchors = [];
 
-const slide = new Spring(0);
+const pillX = new Spring(0);
+const pillW = new Spring(0);
 const scale = new Spring(1);
 const searchScale = new Spring(1);
+
+function measureAnchors() {
+  const itemsRect = barItems.getBoundingClientRect();
+  // The pill is exactly as large as the item it sits on — the only inset
+  // gap comes from the bar's own padding, already excluded from itemsRect.
+  return Array.from(barItems.querySelectorAll('.bn-tab-item')).map(el => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left - itemsRect.left, w: r.width };
+  });
+}
+
+// Linear interpolation of the pill's width between the two anchors
+// bracketing x, so it morphs smoothly while sliding/dragging between
+// differently-sized tabs. clampedX intentionally ignores overshoot past
+// the first/last anchor so the width just holds steady there.
+function widthForX(x) {
+  const n = anchors.length;
+  const clampedX = Math.max(anchors[0].x, Math.min(anchors[n - 1].x, x));
+  for (let i = 0; i < n - 1; i++) {
+    const a = anchors[i], b = anchors[i + 1];
+    if (clampedX >= a.x && clampedX <= b.x) {
+      const f = (clampedX - a.x) / (b.x - a.x);
+      return a.w + f * (b.w - a.w);
+    }
+  }
+  return anchors[n - 1].w;
+}
 
 function layout() {
   const barRect = bar.getBoundingClientRect();
   const wrapRect = group.getBoundingClientRect();
-  const n = GROUP_TABS.length;
-  const left = barRect.left - wrapRect.left;
-  const top = barRect.top - wrapRect.top;
+  const itemsRect = barItems.getBoundingClientRect();
+  itemsW = itemsRect.width;
+  itemsH = itemsRect.height;
+  pillHeight = itemsH;
 
-  itemSize = barRect.width / n;
+  const left = itemsRect.left - wrapRect.left;
+  const top = itemsRect.top - wrapRect.top;
   for (const el of [pill, pillHit]) {
     el.style.left = left + 'px';
-    el.style.top = (top + 4) + 'px';
-    el.style.width = (itemSize - PILL_INSET * 2) + 'px';
-    el.style.height = (barRect.height - 8) + 'px';
+    el.style.top = top + 'px';
+    el.style.height = itemsH + 'px';
   }
-  activeRow.style.width = barRect.width + 'px';
-  activeRow.querySelectorAll('.bn-tab-active').forEach(el => {
-    el.style.width = itemSize + 'px';
-  });
+  activeRow.style.width = itemsW + 'px';
 
-  const target = groupIndex * itemSize + PILL_INSET;
-  if (!didInit) { slide.set(target); didInit = true; }
-  else slide.to(target, { stiffness: 1000, damping: 100 });
+  searchBtn.style.height = barRect.height + 'px';
+  searchBtn.style.width = barRect.height + 'px';
+
+  anchors = measureAnchors();
+  const a = anchors[groupIndex];
+  if (!didInit) {
+    pillX.set(a.x); pillW.set(a.w); didInit = true;
+  } else {
+    pillX.to(a.x, { stiffness: 1000, damping: 100 });
+    pillW.to(a.w, { stiffness: 1000, damping: 100 });
+  }
+  updateMask();
 }
 new ResizeObserver(layout).observe(bar);
 addEventListener('resize', layout);
 
+// Cuts a pill-shaped hole out of the gray icon/label layer, matching the
+// green pill's position/size exactly, so it doesn't show through the
+// pill's translucent background.
+function updateMask() {
+  if (!itemsW || !itemsH) return;
+  const w = pillW.value * scale.value;
+  const h = pillHeight * scale.value;
+  const r = h / 2;
+  const cx = pillX.value + pillW.value / 2;
+  const cy = itemsH / 2;
+  const x = cx - w / 2;
+  const y = cy - h / 2;
+  const d = `M0 0H${itemsW}V${itemsH}H0Z M${x + r} ${y}L${x + w - r} ${y}A${r} ${r} 0 0 1 ${x + w - r} ${y + h}L${x + r} ${y + h}A${r} ${r} 0 0 1 ${x + r} ${y}Z`;
+  const clip = `path(evenodd, "${d}")`;
+  barItems.style.clipPath = clip;
+  barItems.style.webkitClipPath = clip;
+}
+
 function render() {
-  const transform = `translateX(${slide.value}px) scale(${scale.value})`;
+  const w = pillW.value;
+  pill.style.width = w + 'px';
+  pillHit.style.width = w + 'px';
+  const transform = `translateX(${pillX.value}px) scale(${scale.value})`;
   pill.style.transform = transform;
   pillHit.style.transform = transform;
-  activeRow.style.transform = `translateX(${-slide.value}px)`;
+  activeRow.style.transform = `translateX(${-pillX.value}px)`;
   searchBtn.style.transform = `scale(${searchScale.value})`;
+  updateMask();
 }
 
 /* --- Tab-content switching (mirrors the old header tabbar's behavior) ------ */
@@ -204,9 +265,12 @@ function animateGroupTap(i) {
   setGroupActive(i);
   haptics.trigger(defaultPatterns.light);
 
-  const to = i * itemSize + PILL_INSET;
+  const a = anchors[i];
   scale.to(TAP_SCALE, { stiffness: 500, damping: 25, mass: 0.5 });
-  setTimeout(() => slide.to(to, { stiffness: 400, damping: 35, mass: 0.8 }), 50);
+  setTimeout(() => {
+    pillX.to(a.x, { stiffness: 400, damping: 35, mass: 0.8 });
+    pillW.to(a.w, { stiffness: 400, damping: 35, mass: 0.8 });
+  }, 50);
   setTimeout(() => scale.to(1, { stiffness: 350, damping: 30, mass: 0.8 }), 250);
 }
 
@@ -219,12 +283,16 @@ function animateSearchTap() {
 }
 
 /* --- Drag (PanResponder → Pointer Events), group pill only --------------- */
-let dragging = false, startX = 0, startY = 0, grantTime = 0, dragOrigin = 0;
+const DRAG_OVERSHOOT = 8;
+let dragging = false, startX = 0, startY = 0, grantTime = 0, dragOriginX = 0;
 let samples = [];
 
 const mainDelta = (e) => e.clientX - startX;
 const crossDelta = (e) => e.clientY - startY;
 const mainPos = (e) => e.clientX;
+
+const clampDragX = (x) => Math.max(anchors[0].x - DRAG_OVERSHOOT,
+  Math.min(anchors[anchors.length - 1].x + DRAG_OVERSHOOT, x));
 
 pillHit.addEventListener('pointerdown', (e) => {
   pillHit.setPointerCapture(e.pointerId);
@@ -232,8 +300,8 @@ pillHit.addEventListener('pointerdown', (e) => {
   startX = e.clientX; startY = e.clientY;
   grantTime = performance.now();
   samples = [{ p: mainPos(e), t: grantTime }];
-  slide.stop();
-  dragOrigin = slide.value;
+  pillX.stop(); pillW.stop();
+  dragOriginX = pillX.value;
   scale.to(TAP_SCALE, { stiffness: 500, damping: 25, mass: 0.5 });
 });
 
@@ -243,9 +311,9 @@ pillHit.addEventListener('pointermove', (e) => {
   samples.push({ p: mainPos(e), t: now });
   while (samples.length > 2 && now - samples[0].t > 100) samples.shift();
   if (now - grantTime < 50) return;
-  const max = (GROUP_TABS.length - 1) * itemSize + PILL_INSET + 8;
-  const target = Math.max(PILL_INSET - 8, Math.min(max, dragOrigin + mainDelta(e)));
-  slide.to(target, { stiffness: 1000, damping: 70, mass: 0.5 });
+  const x = clampDragX(dragOriginX + mainDelta(e));
+  pillX.to(x, { stiffness: 1000, damping: 70, mass: 0.5 });
+  pillW.to(widthForX(x), { stiffness: 1000, damping: 70, mass: 0.5 });
 });
 
 function release(e, terminated) {
@@ -254,15 +322,22 @@ function release(e, terminated) {
   const dMain = mainDelta(e), dCross = crossDelta(e);
   if (terminated || (Math.abs(dMain) < 8 && Math.abs(dCross) < 8)) {
     scale.to(1, { stiffness: 350, damping: 30, mass: 0.8 });
-    slide.to(groupIndex * itemSize + PILL_INSET, { stiffness: 400, damping: 38, mass: 0.8 });
+    const a = anchors[groupIndex];
+    pillX.to(a.x, { stiffness: 400, damping: 38, mass: 0.8 });
+    pillW.to(a.w, { stiffness: 400, damping: 38, mass: 0.8 });
     return;
   }
   const a = samples[0], b = samples[samples.length - 1];
   const v = b.t > a.t ? (b.p - a.p) / (b.t - a.t) : 0;
-  const projected = dragOrigin + dMain + v * 80;
-  const nearest = Math.max(0, Math.min(GROUP_TABS.length - 1,
-    Math.round((projected - PILL_INSET) / itemSize)));
-  slide.to(nearest * itemSize + PILL_INSET, { stiffness: 400, damping: 38, mass: 0.8 });
+  const projectedX = clampDragX(dragOriginX + dMain + v * 80);
+  let nearest = 0, bestDist = Infinity;
+  anchors.forEach((anchor, i) => {
+    const d = Math.abs(projectedX - anchor.x);
+    if (d < bestDist) { bestDist = d; nearest = i; }
+  });
+  const target = anchors[nearest];
+  pillX.to(target.x, { stiffness: 400, damping: 38, mass: 0.8 });
+  pillW.to(target.w, { stiffness: 400, damping: 38, mass: 0.8 });
   setTimeout(() => scale.to(1, { stiffness: 350, damping: 30, mass: 0.8 }), 200);
   if (searchActive || nearest !== groupIndex) {
     setGroupActive(nearest);

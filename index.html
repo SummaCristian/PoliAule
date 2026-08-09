@@ -37,10 +37,13 @@
   <link rel="stylesheet" href="./components/bottom-nav.css" />
 
   <!-- Nunito font -->
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Google Material Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+  <!-- HugeIcons (stroke-rounded) — used for the redesigned bottom nav, and going forward -->
+  <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css" />
 
   <!-- JS -->
   <script type="module" src="script.js" defer></script>
@@ -340,7 +343,9 @@
   <!-- Bottom pill nav (populated by components/bottom-nav.js) -->
   <div class="bn-wrapper" id="bn-wrapper">
     <div class="bn-group" id="bn-group">
-      <nav class="bn-tabbar" id="bn-bar" aria-label="Main navigation"></nav>
+      <nav class="bn-tabbar" id="bn-bar" aria-label="Main navigation">
+        <div class="bn-tabbar-items" id="bn-bar-items"></div>
+      </nav>
       <div class="bn-pill-outer" id="bn-pill" aria-hidden="true">
         <div class="bn-pill-inner">
           <div class="bn-active-row" id="bn-active-row"></div>
@@ -351,7 +356,7 @@
 
     <button class="bn-search-btn" id="bn-search-btn" type="button" aria-label="Search" data-target="search-placeholder-container">
       <span class="bn-search-btn-inner">
-        <span class="material-symbols-outlined">search</span>
+        <i class="hgi-stroke hgi-search-01"></i>
         <span class="bn-tab-label" data-i18n="tabs.search">Search</span>
       </span>
     </button>

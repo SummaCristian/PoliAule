@@ -1,16 +1,16 @@
 /* ============================================================
    BOTTOM PILL NAV
    Ported from the DormMate case-study's spring pill tab bar
-   (sticky-top there → fixed-bottom here). Layout/mechanics only —
-   styling to be revisited to match the Figma design.
+   (sticky-top there → fixed-bottom).
    ============================================================ */
 
 .bn-wrapper {
-  --bn-bar-bg: #dddddd67;
-  --bn-pill-bg: rgba(218, 218, 218, 0.821);
+  --bn-bar-bg: rgba(255, 255, 255, 0.8);
+  --bn-bar-outline: rgba(255, 255, 255, 0.25);
+  --bn-bar-shadow: rgba(0, 0, 0, 0.25);
+  --bn-pill-bg: rgba(0, 0, 0, 0.08);
   --bn-pill-highlight: rgba(255, 255, 255, 0.3);
   --bn-pill-border: rgba(255, 255, 255, 0.1);
-  --bn-shadow: var(--shadow);
   --bn-tab-color: #555;
   --bn-tab-active-color: var(--text-color-accent);
 
@@ -21,18 +21,21 @@
   z-index: 20;
 
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
 
-  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.75rem 1.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
   pointer-events: none;
+
+  /* The pill is draggable; without this, a touch-drag starting on/near its
+     label text triggers the browser's native text-selection/callout instead. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .bn-group {
   position: relative;
-  flex: 1;
-  max-width: 260px;
   transition: opacity 0.2s ease;
 }
 
@@ -42,8 +45,10 @@
 
 @media (prefers-color-scheme: dark) {
   .bn-wrapper {
-    --bn-bar-bg: rgba(71, 71, 71, 0.294);
-    --bn-pill-bg: #5e5e5e70;
+    --bn-bar-bg: rgba(0, 0, 0, 0.8);
+    --bn-bar-outline: rgba(0, 0, 0, 0.25);
+    --bn-bar-shadow: rgba(0, 0, 0, 0.45);
+    --bn-pill-bg: rgba(255, 255, 255, 0.08);
     --bn-pill-highlight: rgba(255, 255, 255, 0.08);
     --bn-pill-border: rgba(255, 255, 255, 0.06);
   }
@@ -53,32 +58,33 @@
   pointer-events: auto;
   position: relative;
 
-  display: flex;
-  width: 100%;
-
   background: var(--bn-bar-bg);
   padding: 4px;
   border-radius: 999px;
 
   box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px rgba(255, 255, 255, 0.1),
-    var(--bn-shadow);
+    0 0 0 1px var(--bn-bar-outline),
+    0 4px 20px 0 var(--bn-bar-shadow);
 
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Buttons live in their own layer so a pill-shaped hole can be clipped
+   out of them (hiding the gray icon/label under the pill) without also
+   cutting into the bar's own translucent background/blur above. */
+.bn-tabbar-items {
+  display: flex;
+  width: 100%;
 }
 
 .bn-tab-item {
-  flex: 1;
-  min-width: 0;
-  height: 56px;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+
+  padding: 0.625rem 1.1875rem;
 
   background: none;
   border: none;
@@ -99,13 +105,20 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 0.5rem;
   pointer-events: none;
 }
 
+.bn-tab-content .hgi-stroke {
+  font-size: 1.125rem;
+  /* hgi-stroke is a single-weight monoline font (no bold cut available via
+     the CDN) — faking extra weight by thickening the glyph's own stroke. */
+  -webkit-text-stroke: 0.4px currentColor;
+}
+
 .bn-tab-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 0.625rem;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -131,6 +144,9 @@
 
   background: var(--bn-pill-bg);
 
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+
   box-shadow:
     inset 0 1px 0 var(--bn-pill-highlight),
     inset 0 0 0 1px var(--bn-pill-border);
@@ -152,8 +168,10 @@
   color: var(--bn-tab-active-color);
 }
 
-.bn-active-row .material-symbols-outlined.bn-filled {
-  font-variation-settings: 'FILL' 1;
+.bn-tab-active {
+  /* Matches .bn-tab-item's own padding so this duplicate hugs to the exact
+     same width as the gray item it sits on top of. */
+  padding: 0.625rem 1.1875rem;
 }
 
 .bn-pill-hit {
@@ -179,9 +197,9 @@
   align-items: center;
   justify-content: center;
 
-  width: 64px;
-  height: 64px;
-  padding: 0;
+  /* Width/height are set from JS (bottom-nav.js layout()) to match the
+     group tabbar's own rendered height exactly, forming a perfect circle. */
+  padding: 1.1875rem;
   border: none;
   border-radius: 999px;
   cursor: pointer;
@@ -189,12 +207,11 @@
 
   background: var(--bn-bar-bg);
   box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px rgba(255, 255, 255, 0.1),
-    var(--bn-shadow);
+    0 0 0 1px var(--bn-bar-outline),
+    0 4px 20px 0 var(--bn-bar-shadow);
 
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 
   color: var(--bn-tab-color);
   will-change: transform;
@@ -210,18 +227,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 0.5rem;
   pointer-events: none;
+}
+
+.bn-search-btn-inner .hgi-stroke {
+  font-size: 1.125rem;
+  -webkit-text-stroke: 0.4px currentColor;
 }
 
 .bn-search-btn.active {
   color: var(--bn-tab-active-color);
 }
 
-.bn-search-btn.active .material-symbols-outlined {
-  font-variation-settings: 'FILL' 1;
-}
-
 .bn-search-btn.active .bn-tab-label {
-  font-weight: 700;
+  font-weight: 800;
 }

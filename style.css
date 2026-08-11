@@ -699,6 +699,10 @@ label {
   justify-content: space-between;
 
   padding: 1rem;
+  /* --bottom-nav-height is only the pill bar's own rendered height; the bar
+     also floats 20px clear of the viewport edge (see .bn-wrapper's
+     `bottom: 20px`), so that offset has to be added back in here. */
+  padding-bottom: calc(var(--bottom-nav-height, 88px) + 20px);
 }
 
 .version-info-button>label {

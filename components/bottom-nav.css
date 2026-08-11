@@ -249,3 +249,57 @@
 .bn-search-btn.active .bn-tab-label {
   font-weight: 800;
 }
+
+/* ============================================================
+   DESKTOP: vertical rail, pinned top-left
+   Same markup/JS, just re-flowed onto the cross axis — bottom-nav.js
+   mirrors this breakpoint via matchMedia to swap its x/y math.
+   ============================================================ */
+@media (min-width: 600px) {
+  .bn-wrapper {
+    top: calc(var(--header-height, 80px) + 20px);
+    left: 20px;
+    right: auto;
+    bottom: auto;
+
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 1rem;
+
+    padding: 0;
+  }
+
+  .bn-tabbar-items {
+    flex-direction: column;
+  }
+
+  .bn-tab-item,
+  .bn-tab-active {
+    /* Swapped from the mobile 0.625rem/1.1875rem pair, and bumped a touch
+       for the larger icon/label below. */
+    padding: 1.25rem 0.75rem;
+  }
+
+  .bn-tab-content .hgi-stroke {
+    font-size: 1.3rem;
+  }
+
+  .bn-tab-label {
+    font-size: 0.75rem;
+  }
+
+  .bn-active-row {
+    bottom: auto;
+    right: 0;
+    flex-direction: column;
+  }
+
+  .bn-search-btn {
+    padding: 1rem;
+  }
+
+  .bn-search-btn-inner .hgi-stroke {
+    font-size: 1.3rem;
+  }
+}

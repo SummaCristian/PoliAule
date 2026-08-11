@@ -705,6 +705,14 @@ label {
   padding-bottom: calc(var(--bottom-nav-height, 88px) + 20px);
 }
 
+@media (min-width: 600px) {
+  /* Rail moves to the top-left at this width, so the bottom clearance above
+     no longer applies (see the matching breakpoint in bottom-nav.css). */
+  .footer {
+    padding-bottom: 1rem;
+  }
+}
+
 .version-info-button>label {
   text-decoration: underline;
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -728,10 +736,24 @@ label {
   flex-direction: column;
 }
 
+@media (min-width: 600px) {
+  .body-container {
+    padding-bottom: 0;
+  }
+}
+
 .tab-content {
   padding: 0 1rem;
 
   display: none;
+}
+
+@media (min-width: 600px) {
+  .tab-content {
+    /* Clears the fixed side rail: its own left offset (20px) + its measured
+       width (--side-nav-width, kept live by bottom-nav.js) + breathing room. */
+    padding-left: calc(20px + var(--side-nav-width, 88px) + 1.5rem);
+  }
 }
 
 .tab-content.visible {
@@ -1368,7 +1390,9 @@ are rendered as solid colors
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto 1fr;
     column-gap: 1.5rem;
-    padding: 0 2rem;
+    /* Don't reset padding-left here — it's carrying the side rail's
+       clearance from the .tab-content rule at the 600px breakpoint. */
+    padding-right: 2rem;
   }
 
   #available-classrooms-container>.section-header {

@@ -1,6 +1,10 @@
 {
   "tabs.available": "Available",
+  "tabs.campus": "Campus",
   "tabs.search": "Search",
+
+  "searchPlaceholder.title": "Search",
+  "searchPlaceholder.subtitle": "Coming soon.",
 
   "available.title": "Available Classrooms",
   "available.subtitle": "Find which classrooms are available right now or at any other moment throughout the day.",
@@ -110,7 +114,7 @@
   "settings.defaultTab.desc": "Which tab to open when you launch PoliAule.",
   "settings.defaultTab.available": "Available",
   "settings.defaultTab.last": "Last",
-  "settings.defaultTab.search": "Search",
+  "settings.defaultTab.search": "Campus",
 
   "detail.features": "Features",
   "detail.currentStatus": "Current status",

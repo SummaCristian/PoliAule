@@ -176,10 +176,15 @@ body.detail-open .tab-content * {
 
 /* ── Header ─────────────────────────────────────────────────────── */
 
-/* Back button lives in .header-nav-row, pinned to the left while tabbar stays centered */
+/* Back button lives in .header-nav-row, pinned to the left. It's taken out of
+   flow (absolute), so .header-nav-row has no in-flow content to size itself
+   against — align-items:center can't center an out-of-flow child against an
+   empty row. Center it explicitly instead, relative to the row's own box. */
 #detail-back-btn {
   position: absolute;
   left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 10; /* Ensure it stays above the immersive photo */
 }
 
@@ -1339,9 +1344,10 @@ body.detail-open .tab-content * {
 }
 
 /* ── Tabbar hidden state (when detail overlay is open) ───────────── */
-/* Uses !important to override the animation-fill-mode: forwards from .slide-in-top */
+/* Targets .bn-wrapper (not .bn-tabbar) so the standalone search button
+   and pill hide along with the tab group. */
 
-.tabbar.detail-open {
+.bn-wrapper.detail-open {
   opacity: 0 !important;
   pointer-events: none !important;
 }
@@ -1352,23 +1358,6 @@ body.detail-open .tab-content * {
   /* Suppress the CSS opacity fallback transition when VT is available */
   #classroom-detail-overlay {
     transition: none;
-  }
-
-  /* Shared element: tabbar shrinks and morphs into the back button (and reverses on close) */
-  ::view-transition-group(classroom-nav) {
-    animation-duration: 0.42s;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  ::view-transition-old(classroom-nav) {
-    animation-duration: 0.2s;
-    animation-timing-function: ease-out;
-  }
-
-  ::view-transition-new(classroom-nav) {
-    animation-duration: 0.35s;
-    animation-timing-function: ease-in;
-    animation-delay: 0.1s;
   }
 
   /* Shared element: classroom name morphs card → overlay title */

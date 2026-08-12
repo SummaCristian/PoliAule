@@ -1,6 +1,10 @@
 {
   "tabs.available": "Disponibili",
+  "tabs.campus": "Campus",
   "tabs.search": "Cerca",
+
+  "searchPlaceholder.title": "Cerca",
+  "searchPlaceholder.subtitle": "Prossimamente.",
   "available.title": "Aule Disponibili",
   "available.subtitle": "Trova quali aule sono disponibili adesso o in qualsiasi altro momento della giornata.",
   "form.campusTitle": "Seleziona Campus",
@@ -97,7 +101,7 @@
   "settings.defaultTab.desc": "Quale tab aprire all'avvio di PoliAule.",
   "settings.defaultTab.available": "Libere",
   "settings.defaultTab.last": "Ultima",
-  "settings.defaultTab.search": "Cerca",
+  "settings.defaultTab.search": "Campus",
   "detail.features": "Dotazioni",
   "detail.currentStatus": "Stato attuale",
   "detail.noFeatures": "Nessuna dotazione",

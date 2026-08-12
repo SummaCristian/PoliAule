@@ -143,8 +143,23 @@ Same structure as `/v1/classrooms`, with a top-level metadata wrapper and an `oc
               ...
               occupancy: [   // list of BOOKED time slots (not free slots)
                 {
-                  inizio: string   // start time, "HH:MM"
-                  fine:   string   // end time,   "HH:MM"
+                  inizio: string        // start time, "HH:MM"
+                  fine:   string        // end time,   "HH:MM"
+
+                  // The fields below are scraped separately from onlineservices.polimi.it
+                  // and merged in by start/end time; a slot keeps only inizio/fine when the
+                  // scrape didn't cover it (network error, unrecognized campus, parse failure).
+                  category:     string | undefined         // "COURSE" | "EXAM" | "OTHER"
+                  idrichiesta:  number | undefined          // Polimi's internal booking id
+
+                  // category === "COURSE" or "EXAM" only:
+                  course:       string | undefined
+                  code:         number | undefined          // course code, e.g. 54324
+                  professors:   string[] | undefined
+                  section:      string | undefined          // e.g. "Sez. A", only present for multi-section courses
+
+                  // category === "OTHER" only (exams, events, tutoring, maintenance, ...):
+                  raw:          string | undefined          // the unparsed scraped name
                 }
               ]
             }

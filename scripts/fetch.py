@@ -6,6 +6,9 @@ import time
 import httpx
 from datetime import date, timedelta, datetime
 from pathlib import Path
+from typing import cast
+
+from fetch_occupation_names import fetch_occupation_names, parse_occupation_name
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -57,7 +60,7 @@ def strip_tags(value: object) -> object:
     If the upstream Polimi API were ever compromised, it could embed HTML/script
     tags in field values (classroom names, building names, etc.). Third-party
     consumers who render those strings without escaping would be vulnerable to
-    XSS. Stripping tags here — at the ingestion boundary — neutralises the
+    XSS. Stripping tags here, at the ingestion boundary, neutralises the
     payload before it reaches anyone downstream, without breaking our own
     frontend (which still applies escapeHtml() at render time).
 
@@ -134,7 +137,7 @@ def is_holiday(d: date, opening_hours: dict) -> bool:
 def all_buildings_closed(campuses: list[dict], opening_hours: dict, weekday: int) -> bool:
     """Return True if every building across every campus is closed on the given weekday."""
     for campus in campuses:
-        campus_id = campus.get("id")
+        campus_id = cast(str, campus.get("id"))
         for building in campus["buildings"]:
             hours = resolve_building_hours(building, campus_id, opening_hours)
             if not is_closed_on_weekday(hours, weekday):
@@ -178,7 +181,7 @@ def fetch_occupancy(
         try:
             response = client.get(url, timeout=10)
             response.raise_for_status()
-            return strip_tags(response.json())
+            return cast("list[dict]", strip_tags(response.json()))
         except httpx.HTTPStatusError as e:
             last_error = f"HTTP {e.response.status_code}"
             print(
@@ -204,8 +207,37 @@ def _pick(src: dict, *keys: str) -> dict:
     return {k: src[k] for k in keys if src.get(k) is not None}
 
 
+def build_name_lookup(campuses: list[dict], client: httpx.Client, d: date, no_delay: bool) -> dict:
+    """Scrape onlineservices.polimi.it's occupation-names page for every campus (one
+    request each, not per-room) and return {idaula: {(inizio, fine): {"name", "idrichiesta"}}}.
+
+    Best-effort: a campus that fails to scrape (network error, a campus this
+    endpoint doesn't cover at all e.g. Mantova, or the page layout changing in a
+    way the parser doesn't expect) is skipped with a warning. Catches broadly
+    (not just httpx.HTTPError/ScrapeError) since this scraper is built against
+    unversioned HTML that Polimi could change at any time; no-name occupations
+    are preferable to crashing the whole fetch run over it.
+    """
+    lookup: dict[int, dict[tuple[str, str], dict]] = {}
+    for campus in campuses:
+        csic = campus.get("id")
+        if not csic:
+            continue
+        try:
+            per_room = fetch_occupation_names(client, csic, d)
+        except Exception as e:
+            print(f"  Warning: name scrape failed for {csic}: {e}")
+            continue
+        for idaula, occupations in per_room.items():
+            lookup[idaula] = {(o["start"], o["end"]): o for o in occupations}
+        if not no_delay:
+            time.sleep(DELAY_BETWEEN_CALLS)
+    return lookup
+
+
 def build_output(
-    campuses: list[dict], client: httpx.Client, d: date, no_delay: bool, failures: list[dict]
+    campuses: list[dict], client: httpx.Client, d: date, no_delay: bool,
+    name_lookup: dict, failures: list[dict]
 ) -> dict:
     """Build the output JSON file, mirroring the classrooms structure, plus occupancy in each classroom."""
     result = []
@@ -219,6 +251,17 @@ def build_output(
             for classroom in building["classrooms"]:
                 print(f"  Fetching room {classroom['name']} (id={classroom['id']})...")
                 occupancy = fetch_occupancy(client, classroom["id"], classroom["name"], d, failures)  # API Call
+
+                # Enrich each slot with the course name/idrichiesta scraped above, when available.
+                room_names = name_lookup.get(classroom["id"], {})
+                for slot in occupancy or []:
+                    match = room_names.get((slot.get("inizio"), slot.get("fine")))
+                    if match:
+                        if match["name"]:
+                            slot.update(parse_occupation_name(match["name"]))
+                        if match["idrichiesta"]:
+                            slot["idrichiesta"] = match["idrichiesta"]
+
                 building_out["classrooms"].append(
                     {
                         **_pick(classroom, "name", "id", "features",
@@ -330,8 +373,12 @@ def main():
         for d in days:
             print(f"\n--- {d.isoformat()} ---")
 
+            # Scrape course names for the day first (cheap, one request per campus)
+            print("  Scraping occupation names...")
+            name_lookup = build_name_lookup(campuses, client, d, args.no_delay)
+
             # Build output for this day
-            output = build_output(campuses, client, d, args.no_delay, failures)
+            output = build_output(campuses, client, d, args.no_delay, name_lookup, failures)
 
             # Create output file and write JSON
             out_path = OUTPUT_DIR / f"occupation_{d.strftime('%Y%m%d')}.json"

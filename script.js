@@ -32,7 +32,7 @@ import { buildCardForClassroom } from './components/classroom-list.js';
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, DEFAULT_TAB_KEY, LAST_TAB_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY, getStartupTabId } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY } from './components/settings.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -58,19 +58,16 @@ function dismissSplash() {
       // Also name the header title/badge so they morph directly into the hero
       const titleEl = document.querySelector('.header-title');
       const badgeEl = document.getElementById('env-badge');
-      const tabbar  = document.querySelector('.tabbar');
       if (titleEl) titleEl.style.viewTransitionName = 'info-title';
       if (badgeEl && !badgeEl.hidden) {
         badgeEl.style.lineHeight = '1';
         badgeEl.style.viewTransitionName = 'info-badge';
       }
-      if (tabbar) tabbar.style.viewTransitionName = 'classroom-nav';
 
       const vt = document.startViewTransition(() => {
         splashLogo.style.viewTransitionName = '';
         if (titleEl) titleEl.style.viewTransitionName = '';
         if (badgeEl) { badgeEl.style.lineHeight = ''; badgeEl.style.viewTransitionName = ''; }
-        if (tabbar)  tabbar.style.viewTransitionName = '';
 
         overlay.remove();
         revealHeader();
@@ -168,70 +165,7 @@ document.querySelectorAll('.button-primary').forEach(btn => {
 });
 
 // ---------- TAB BAR ----------
-// Setup the Tab bar to switch between tabs
-const tabbar = document.querySelector(".tabbar");
-const tabs = document.querySelectorAll(".tab");
-const indicator = document.querySelector(".tab-indicator");
-
-const contentContainers = document.querySelectorAll(".tab-content");
-
-tabbar.style.setProperty("--tabs", tabs.length);
-
-// Show a given tab and hide the other(s)
-function showContent(targetId) {
-  contentContainers.forEach(container => {
-    if (container.id === targetId) {
-      requestAnimationFrame(() => container.classList.add('visible'));
-    } else {
-      container.classList.remove('visible');
-    }
-  });
-}
-
-// Assign click handlers to tabs
-tabs.forEach((tab, index) => {
-  tab.addEventListener("click", () => {
-
-    // Show the corresponding content
-    const targetId = tab.dataset.target;
-    showContent(targetId);
-
-    // Always scroll to top on tab change
-    window.scrollTo(0, 0);
-
-    // Haptic feedback
-    haptics.trigger(defaultPatterns.light)
-
-    // Update active tab and indicator
-    document.querySelector(".tab.active")?.classList.remove("active");
-    tab.classList.add("active");
-
-    indicator.style.transform = `translateX(${index * 100}%)`;
-
-    // Persist last-used tab when that mode is active
-    if (localStorage.getItem(DEFAULT_TAB_KEY) === 'last') {
-      localStorage.setItem(LAST_TAB_KEY, targetId);
-    }
-  });
-});
-
-// Apply the startup tab preference
-{
-  const startupId = getStartupTabId();
-  if (startupId !== 'available-classrooms-container') {
-    const startupTab = [...tabs].find(t => t.dataset.target === startupId);
-    if (startupTab) {
-      const idx = [...tabs].indexOf(startupTab);
-      showContent(startupId);
-      document.querySelector(".tab.active")?.classList.remove("active");
-      startupTab.classList.add("active");
-      indicator.style.transition = 'none';
-      indicator.style.transform = `translateX(${idx * 100}%)`;
-      indicator.getBoundingClientRect(); // force reflow
-      indicator.style.transition = '';
-    }
-  }
-}
+// Tab switching is owned by components/bottom-nav.js (the bottom pill nav).
 
 // ---------- BUILDING CARD ----------
 

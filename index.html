@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>PoliAule</title>
   <meta name="description" content="A website to find available classrooms around Politecnico di Milano" />
 
@@ -34,12 +34,16 @@
   <link rel="stylesheet" href="./components/search-classrooms.css" />
   <link rel="stylesheet" href="./components/classroom-detail.css" />
   <link rel="stylesheet" href="./components/info-page.css" />
+  <link rel="stylesheet" href="./components/bottom-nav.css" />
 
   <!-- Nunito font -->
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Google Material Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+  <!-- HugeIcons (stroke-rounded) — used for the redesigned bottom nav, and going forward -->
+  <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css" />
 
   <!-- JS -->
   <script type="module" src="script.js" defer></script>
@@ -47,6 +51,7 @@
   <script type="module" src="./components/popover.js" defer></script>
   <script type="module" src="./components/haptics.js" defer></script>
   <script type="module" src="./components/classroom-list.js" defer></script>
+  <script type="module" src="./components/bottom-nav.js" defer></script>
 
 </head>
 
@@ -101,18 +106,6 @@
         <span class="detail-back-label" data-i18n="search.back">Back</span>
       </button>
 
-      <div class="tabbar slide-in-top">
-        <div class="tab-indicator"></div>
-
-        <button class="tab active" data-target="available-classrooms-container">
-          <span class="material-symbols-outlined">event_available</span>
-          <span data-i18n="tabs.available">Available</span>
-        </button>
-        <button class="tab" data-target="search-classrooms-container">
-          <span class="material-symbols-outlined">search</span>
-          <span data-i18n="tabs.search">Search</span>
-        </button>
-      </div>
     </div>
 
   </header>
@@ -277,6 +270,16 @@
 
     </div>
 
+    <!-- Search (placeholder) -->
+    <div id="search-placeholder-container" class="tab-content">
+      <div class="section-header">
+        <h3 class="section-header-title" data-i18n="searchPlaceholder.title">Search</h3>
+        <p class="section-header-subtitle secondary" data-i18n="searchPlaceholder.subtitle">
+          Coming soon.
+        </p>
+      </div>
+    </div>
+
     <!-- Classroom Detail Panel (sibling to tab-content divs, shown in-place) -->
     <div id="classroom-detail-overlay" hidden></div>
 
@@ -298,10 +301,7 @@
         <h2 class="popover-subtitle" data-i18n="footer.whatsNew">What's new?</h2>
 
         <ul>
-          <li data-i18n="changelog.v1.1.0.item1"></li>
-          <li data-i18n="changelog.v1.1.0.item2"></li>
-          <li data-i18n="changelog.v1.1.0.item3"></li>
-          <li data-i18n="changelog.v1.1.0.item4"></li>
+          <li data-i18n="changelog.item1"></li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">
@@ -335,6 +335,28 @@
   <div id="data-fetch-indicator-popover" class="popover">
     <div class="arrow" data-arrow></div>
     <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
+  </div>
+
+  <!-- Bottom pill nav (populated by components/bottom-nav.js) -->
+  <div class="bn-wrapper" id="bn-wrapper">
+    <div class="bn-group" id="bn-group">
+      <nav class="bn-tabbar" id="bn-bar" aria-label="Main navigation">
+        <div class="bn-tabbar-items" id="bn-bar-items"></div>
+      </nav>
+      <div class="bn-pill-outer" id="bn-pill" aria-hidden="true">
+        <div class="bn-pill-inner">
+          <div class="bn-active-row" id="bn-active-row"></div>
+        </div>
+      </div>
+      <div class="bn-pill-hit" id="bn-pill-hit"></div>
+    </div>
+
+    <button class="bn-search-btn" id="bn-search-btn" type="button" aria-label="Search" data-target="search-placeholder-container">
+      <span class="bn-search-btn-inner">
+        <i class="hgi-stroke hgi-search-01"></i>
+        <span class="bn-tab-label" data-i18n="tabs.search">Search</span>
+      </span>
+    </button>
   </div>
 
 </body>

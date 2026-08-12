@@ -55,7 +55,7 @@ class ClassroomDetail {
   init(staticData) {
     this._staticData = staticData;
     this._overlay = document.getElementById('classroom-detail-overlay');
-    this._tabbar = document.querySelector('.tabbar');
+    this._tabbar = document.querySelector('.bn-wrapper');
     this._backBtn = document.getElementById('detail-back-btn');
 
     this._backBtn?.addEventListener('click', () => {
@@ -192,8 +192,8 @@ class ClassroomDetail {
 
     const nameEl = pending?.nameEl ?? null;
     const statusEl = pending?.statusEl ?? null;
-    // When returning from info page, tabbar is already hidden and backBtn already visible —
-    // skip the classroom-nav morph (same pattern as infoPage's fromDetail detection).
+    // When returning from info page, the back button is already visible and info's own
+    // hero elements should morph into the header instead of touching the tabbar.
     const fromInfo = !!(this._backBtn && !this._backBtn.hidden);
 
     // Photo VT: if the URL is already cached, pre-decode it so the detail photo
@@ -213,14 +213,11 @@ class ClassroomDetail {
 
     let detailGradientEl = null;
 
-    if (document.startViewTransition && this._tabbar) {
+    if (document.startViewTransition) {
       // -- OLD state setup (before VT snapshot) --
       if (fromInfo) {
         // Info overlay is still visible — name its hero elements so they morph into the header.
         infoPage._prepareReturnVT();
-      } else {
-        // Tabbar morphs into the back button (both live in the header, so it's a clean in-place swap)
-        this._tabbar.style.viewTransitionName = 'classroom-nav';
       }
       // Room name morphs into the overlay title.
       // Strip search <mark> highlights first so the old-state snapshot is plain text.
@@ -250,8 +247,7 @@ class ClassroomDetail {
         if (fromInfo) {
           // Close info overlay and name header elements as NEW state morph targets.
           infoPage._applyReturnVT();
-        } else {
-          this._tabbar.style.viewTransitionName = '';
+        } else if (this._tabbar) {
           this._tabbar.classList.add('detail-open');
         }
         if (nameEl) nameEl.style.viewTransitionName = '';
@@ -269,10 +265,8 @@ class ClassroomDetail {
         // Reset scroll for the new view
         window.scrollTo(0, 0);
 
-        // Back button in the header is the NEW state destination for classroom-nav
         const titleEl = this._overlay.querySelector('.detail-title');
         const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
-        if (!fromInfo && this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
         if (titleEl) titleEl.style.viewTransitionName = 'classroom-detail-name';
         if (detailStatusEl) detailStatusEl.style.viewTransitionName = 'classroom-status';
         // Morph icon → icon inside chip (same size both ends → clean positional move)
@@ -308,7 +302,6 @@ class ClassroomDetail {
       });
 
       const cleanup = () => {
-        this._tabbar.style.viewTransitionName = '';
         if (nameEl) nameEl.style.viewTransitionName = '';
         if (statusEl) statusEl.style.viewTransitionName = '';
         if (photoEl) {
@@ -318,7 +311,6 @@ class ClassroomDetail {
           photoEl.style.removeProperty('opacity');
           photoEl.style.removeProperty('transform');
         }
-        if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         this._overlay.querySelector('.detail-title')
           ?.style.setProperty('view-transition-name', '');
         this._overlay.querySelector('.detail-title-row .classroom-status-txt')
@@ -405,8 +397,6 @@ class ClassroomDetail {
       this._queryContext = null;
       if (nameEl) nameEl.style.viewTransitionName = '';
       if (statusEl) statusEl.style.viewTransitionName = '';
-      if (this._tabbar) this._tabbar.style.viewTransitionName = '';
-      if (this._backBtn) this._backBtn.style.viewTransitionName = '';
       for (const el of featureIconEls) el.style.viewTransitionName = '';
       if (photoEl) {
         photoEl.style.viewTransitionName = '';
@@ -418,12 +408,10 @@ class ClassroomDetail {
       if (photoCard) photoCard.style.removeProperty('content-visibility');
     };
 
-    if (document.startViewTransition && this._tabbar) {
+    if (document.startViewTransition) {
       if (photoCard) photoCard.style.contentVisibility = 'visible';
 
       // -- OLD state setup --
-      // Back button (in header) is the source; tabbar is the destination
-      if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
       if (titleEl && nameInDom) titleEl.style.viewTransitionName = 'classroom-detail-name';
       if (detailStatusEl && statusInDom) detailStatusEl.style.viewTransitionName = 'classroom-status';
       // Chip icons are the OLD state sources
@@ -452,12 +440,10 @@ class ClassroomDetail {
         this._overlay.setAttribute('hidden', '');
         this._overlay.classList.remove('visible');
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
-        if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         if (detailImg) detailImg.style.viewTransitionName = '';
 
-        // Restore and name the tabbar as the NEW state destination for classroom-nav
-        this._tabbar.classList.remove('detail-open');
-        this._tabbar.style.viewTransitionName = 'classroom-nav';
+        // Restore the tabbar (plain fade, no shared element — it no longer sits in the header)
+        if (this._tabbar) this._tabbar.classList.remove('detail-open');
 
         // Room name morphs back too
         if (nameInDom) nameEl.style.viewTransitionName = 'classroom-detail-name';

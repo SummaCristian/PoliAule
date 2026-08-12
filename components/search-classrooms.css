@@ -893,9 +893,10 @@ mark {
 
 @media (min-width: 1100px) {
   #search-classrooms-container.visible {
-    padding: 0 2rem;
+    /* Don't reset padding-left here — it's carrying the side rail's
+       clearance from the .tab-content rule at the 600px breakpoint. */
+    padding-right: 2rem;
     max-width: 960px;
-    margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
   }

@@ -58,19 +58,16 @@ function dismissSplash() {
       // Also name the header title/badge so they morph directly into the hero
       const titleEl = document.querySelector('.header-title');
       const badgeEl = document.getElementById('env-badge');
-      const tabbar  = document.querySelector('.tabbar');
       if (titleEl) titleEl.style.viewTransitionName = 'info-title';
       if (badgeEl && !badgeEl.hidden) {
         badgeEl.style.lineHeight = '1';
         badgeEl.style.viewTransitionName = 'info-badge';
       }
-      if (tabbar) tabbar.style.viewTransitionName = 'classroom-nav';
 
       const vt = document.startViewTransition(() => {
         splashLogo.style.viewTransitionName = '';
         if (titleEl) titleEl.style.viewTransitionName = '';
         if (badgeEl) { badgeEl.style.lineHeight = ''; badgeEl.style.viewTransitionName = ''; }
-        if (tabbar)  tabbar.style.viewTransitionName = '';
 
         overlay.remove();
         revealHeader();

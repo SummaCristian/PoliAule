@@ -36,7 +36,7 @@ class InfoPage {
 
   init() {
     this._overlay = document.getElementById('info-page-overlay');
-    this._tabbar = document.querySelector('.tabbar');
+    this._tabbar = document.querySelector('.bn-wrapper');
     this._backBtn = document.getElementById('detail-back-btn');
     this._logoEl = document.querySelector('.header-logo');
     this._titleEl = document.querySelector('.header-title');
@@ -117,10 +117,7 @@ class InfoPage {
     this._overlay.removeAttribute('hidden');
     this._renderContent(showBadge);
     this._overlay.classList.add('visible');
-    if (this._backBtn) {
-      this._backBtn.removeAttribute('hidden');
-      this._backBtn.style.viewTransitionName = 'classroom-nav';
-    }
+    if (this._backBtn) this._backBtn.removeAttribute('hidden');
 
     const heroIcon  = this._overlay.querySelector('.info-hero-icon');
     const heroTitle = this._overlay.querySelector('.info-hero-title');
@@ -141,13 +138,12 @@ class InfoPage {
     const titleEl = this._titleEl;
     const badgeEl = this._badgeEl?.hidden === false ? this._badgeEl : null;
     const showBadge = !!badgeEl;
-    // When navigating from the detail page, the back button is already visible and
-    // the tabbar is already hidden — skip the classroom-nav morph to avoid conflicting VTs.
+    // When navigating from the detail page, the back button is already visible —
+    // info's own hero elements still need to morph in, but the tabbar stays untouched.
     const fromDetail = this._backBtn != null && !this._backBtn.hidden;
     this._openedFromDetail = fromDetail;
 
-    if (document.startViewTransition && this._tabbar) {
-      if (!fromDetail) this._tabbar.style.viewTransitionName = 'classroom-nav';
+    if (document.startViewTransition) {
       if (logoEl) logoEl.style.viewTransitionName = 'info-logo';
       if (titleEl) titleEl.style.viewTransitionName = 'info-title';
       if (badgeEl) {
@@ -156,7 +152,6 @@ class InfoPage {
       }
 
       const vt = document.startViewTransition(() => {
-        if (!fromDetail) this._tabbar.style.viewTransitionName = '';
         if (logoEl) logoEl.style.viewTransitionName = '';
         if (titleEl) titleEl.style.viewTransitionName = '';
         if (badgeEl) {
@@ -164,15 +159,12 @@ class InfoPage {
           badgeEl.style.viewTransitionName = '';
         }
 
-        this._tabbar.classList.add('detail-open');
+        this._tabbar?.classList.add('detail-open');
         document.body.classList.add('info-open');
         this._overlay.removeAttribute('hidden');
         this._renderContent(showBadge);
         this._overlay.classList.add('visible');
-        if (this._backBtn) {
-          this._backBtn.removeAttribute('hidden');
-          if (!fromDetail) this._backBtn.style.viewTransitionName = 'classroom-nav';
-        }
+        if (this._backBtn) this._backBtn.removeAttribute('hidden');
 
         // Reset scroll for the new view
         window.scrollTo(0, 0);
@@ -221,14 +213,12 @@ class InfoPage {
       }
     };
 
-    if (document.startViewTransition && this._tabbar) {
-      if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
+    if (document.startViewTransition) {
       if (heroIcon) heroIcon.style.viewTransitionName = 'info-logo';
       if (heroTitle) heroTitle.style.viewTransitionName = 'info-title';
       if (heroBadge) heroBadge.style.viewTransitionName = 'info-badge';
 
       const vt = document.startViewTransition(() => {
-        if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         if (heroIcon) heroIcon.style.viewTransitionName = '';
         if (heroTitle) heroTitle.style.viewTransitionName = '';
         if (heroBadge) heroBadge.style.viewTransitionName = '';
@@ -238,8 +228,7 @@ class InfoPage {
         this._overlay.classList.remove('visible');
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
 
-        this._tabbar.classList.remove('detail-open');
-        this._tabbar.style.viewTransitionName = 'classroom-nav';
+        this._tabbar?.classList.remove('detail-open');
 
         if (logoEl) logoEl.style.viewTransitionName = 'info-logo';
         if (titleEl) titleEl.style.viewTransitionName = 'info-title';
@@ -310,8 +299,6 @@ class InfoPage {
     if (heroIcon) heroIcon.style.viewTransitionName = '';
     if (heroTitle) heroTitle.style.viewTransitionName = '';
     if (heroBadge) heroBadge.style.viewTransitionName = '';
-    if (this._tabbar) this._tabbar.style.viewTransitionName = '';
-    if (this._backBtn) this._backBtn.style.viewTransitionName = '';
   }
 
   _renderContent(showBadge) {

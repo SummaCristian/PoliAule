@@ -69,11 +69,11 @@ body.detail-open .tab-content * {
     height: 38vh;
     min-height: 280px;
     border-radius: 0;
-    /* Cancel body-container's 1rem padding (-1rem), then extend an extra 3.5rem up
-       into the header-nav-row zone (0.5rem padding-top + ~3rem content/padding-bottom).
-       The nav-row has no background so the photo shows through it;
-       the solid header-top-line-container blocks it above. */
-    margin-top: -5.2rem;
+    /* Cancel body-container's 0.5rem padding-top, then extend further up
+       into the header-nav-row zone (3.5rem tall while the detail panel is
+       open) so the photo shows through it; the solid header-top-line-container
+       blocks it above. */
+    margin-top: -4.7rem;
     box-shadow: none;
   }
 }

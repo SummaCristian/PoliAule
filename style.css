@@ -669,11 +669,17 @@ label {
   align-items: center;
   justify-content: center;
   padding: 0 1rem;
-  /* The back button is absolutely positioned (out of flow), so this row has
-     no in-flow content to size itself against — without an explicit height
-     it collapses to ~0 and the button (vertically centered via its own
-     top:50%/translateY) ends up overflowing it top and bottom. 3.5rem gives
-     the button (34px tall) comfortable clearance from the header bar above. */
+  /* Collapses to 0 by default so it doesn't eat space in the header when the
+     back button isn't shown. The back button is absolutely positioned (out
+     of flow), so once it's visible this row has no in-flow content to size
+     itself against — without an explicit height it collapses to ~0 and the
+     button (vertically centered via its own top:50%/translateY) ends up
+     overflowing it top and bottom. 3.5rem gives the button (34px tall)
+     comfortable clearance from the header bar above. */
+}
+
+body.detail-open .header-nav-row,
+body.info-open .header-nav-row {
   min-height: 3.5rem;
 }
 
@@ -734,7 +740,7 @@ label {
 
 /* Tab content */
 .body-container {
-  padding-top: 1rem;
+  padding-top: 0.5rem;
   padding-bottom: var(--bottom-nav-height, 88px);
 
   flex: 1;

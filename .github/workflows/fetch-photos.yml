@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '0 5 1 * *'  # Once a month, 1st at 5am UTC (clear of daily occupancy 3am/10am and weekly opening-hours Sunday 6am)
   workflow_dispatch:      # Allow manual runs from the GitHub Actions tab
+    inputs:
+      no_delay:
+        description: 'Skip delay between API calls'
+        type: boolean
+        default: false
 
 jobs:
   fetch:
@@ -13,8 +18,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Restore photo manifest from previous run
-        uses: actions/cache@v4
+      # Restore-only (not the combined actions/cache action): the manifest is only
+      # trustworthy if it reflects what's actually in R2, so it must be saved
+      # explicitly at the end, gated on the upload+purge steps having succeeded
+      # (see "Save photo manifest" below) - not automatically on job completion,
+      # which would also fire after a failed upload and permanently mark
+      # never-uploaded photos as "unchanged" on every future run.
+      - name: Restore photo manifest from last successful run
+        uses: actions/cache/restore@v4
         with:
           path: photos/manifest.json
           key: photo-manifest-${{ github.run_id }}
@@ -30,7 +41,15 @@ jobs:
 
       - name: Run photo fetcher
         id: fetch
-        run: python scripts/fetch_photos.py
+        env:
+          PYTHONUNBUFFERED: 1
+          NO_DELAY: ${{ inputs.no_delay }}
+        run: |
+          if [ "$NO_DELAY" = "true" ]; then
+            python scripts/fetch_photos.py --no-delay
+          else
+            python scripts/fetch_photos.py
+          fi
 
       - name: Notify Telegram
         if: always()
@@ -88,3 +107,13 @@ jobs:
               -H "Content-Type: application/json" \
               --data "$URLS"
           done
+
+      # Only persisted when everything before it (fetch, upload, purge) succeeded,
+      # so a partial failure forces a retry next run instead of the manifest
+      # silently drifting from what's actually in R2 (see the restore step above).
+      - name: Save photo manifest for next run
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: photos/manifest.json
+          key: photo-manifest-${{ github.run_id }}

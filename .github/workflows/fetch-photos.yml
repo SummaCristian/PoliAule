@@ -36,6 +36,7 @@ jobs:
       - name: Run photo fetcher
         id: fetch
         env:
+          PYTHONUNBUFFERED: 1
           NO_DELAY: ${{ inputs.no_delay }}
         run: |
           if [ "$NO_DELAY" = "true" ]; then

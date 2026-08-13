@@ -1164,9 +1164,6 @@ ul li::marker {
   background: var(--background-color-secondary);
   color: var(--text-color-primary);
 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-
   border-radius: 12px;
   box-shadow: var(--bevel), var(--shadow);
 
@@ -1473,7 +1470,6 @@ are rendered as solid colors
 
 .samsung .bn-tabbar,
 .samsung .bn-search-btn,
-.samsung .popover,
 .samsung .header-button {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;

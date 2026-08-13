@@ -631,7 +631,7 @@ label {
   font-size: var(--text-200);
   font-weight: bold;
 
-  background: var(--accent-gradient);
+  background: var(--text-color-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

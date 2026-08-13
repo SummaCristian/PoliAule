@@ -222,13 +222,9 @@ document.addEventListener('mousemove', e => {
 
 // ---------- PHOTO ----------
 
-async function _loadCardPhoto(idfoto, card) {
+async function _loadCardPhoto(classroomId, card) {
   const img = card.querySelector('.classroom-card-photo');
-  const url = await fetchPhotoUrl(idfoto);
-  if (url === 'error') {
-    card.classList.add('photo-failed');
-    return;
-  }
+  const url = await fetchPhotoUrl(classroomId);
   card.style.setProperty('--card-photo-url', `url("${url}")`);
   img.onerror = () => card.classList.add('photo-failed');
   img.src = url;
@@ -239,8 +235,7 @@ const _photoObserver = new IntersectionObserver((entries) => {
   for (const entry of entries) {
     if (!entry.isIntersecting) continue;
     _photoObserver.unobserve(entry.target);
-    const idfoto = parseInt(entry.target.dataset.idfoto, 10);
-    if (idfoto) _loadCardPhoto(idfoto, entry.target);
+    if (entry.target.dataset.idfoto) _loadCardPhoto(entry.target.dataset.openClassroom, entry.target);
   }
 }, { rootMargin: '300px' });
 

@@ -1,0 +1,90 @@
+name: Fetch Classroom Photos
+
+on:
+  schedule:
+    - cron: '0 5 1 * *'  # Once a month, 1st at 5am UTC (clear of daily occupancy 3am/10am and weekly opening-hours Sunday 6am)
+  workflow_dispatch:      # Allow manual runs from the GitHub Actions tab
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Restore photo manifest from previous run
+        uses: actions/cache@v4
+        with:
+          path: photos/manifest.json
+          key: photo-manifest-${{ github.run_id }}
+          restore-keys: photo-manifest-
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run photo fetcher
+        id: fetch
+        run: python scripts/fetch_photos.py
+
+      - name: Notify Telegram
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FETCH_OUTCOME: ${{ steps.fetch.outcome }}
+          FETCH_STATUS: ${{ steps.fetch.outputs.status }}
+          FETCH_MESSAGE: ${{ steps.fetch.outputs.message }}
+        run: |
+          if [ "$FETCH_OUTCOME" != "success" ]; then
+            TEXT="❌ PoliAule photo fetch crashed — check the Actions log."
+          elif [ "$FETCH_STATUS" = "failed" ]; then
+            TEXT=$(printf '⚠️ PoliAule photo fetch\n%s' "$FETCH_MESSAGE")
+          else
+            TEXT=$(printf '✅ PoliAule photo fetch\n%s' "$FETCH_MESSAGE")
+          fi
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode chat_id="${TELEGRAM_CHAT_ID}" \
+            --data-urlencode text="$TEXT"
+
+      - name: Set up Node
+        if: hashFiles('photos/*.jpg') != ''
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Upload changed photos to R2
+        if: hashFiles('photos/*.jpg') != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          for f in photos/*.jpg; do
+            npx --yes wrangler@4 r2 object put "poliaule-data/$f" --file "$f" --content-type image/jpeg --remote
+            npx --yes wrangler@4 r2 object put "poliaule-data-beta/$f" --file "$f" --content-type image/jpeg --remote
+          done
+
+      - name: Purge API cache for changed photos
+        if: hashFiles('photos/*.jpg') != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          # Cloudflare's purge-by-URL API accepts at most 30 files per call.
+          ls photos/*.jpg | xargs -n1 basename | sed 's/\.jpg$//' | while read -r id; do
+            echo "https://api.poliaule.com/v1/photos/${id}"
+            echo "https://api-beta.poliaule.com/v1/photos/${id}"
+          done > /tmp/purge-urls.txt
+
+          split -l 30 /tmp/purge-urls.txt /tmp/purge-batch-
+          for batch in /tmp/purge-batch-*; do
+            URLS=$(jq -R . "$batch" | jq -s '{files: .}')
+            curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/7ba55951cabeecf5f38d0c35762ea451/purge_cache" \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data "$URLS"
+          done

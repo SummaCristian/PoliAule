@@ -21,7 +21,7 @@
   --badge-bg: var(--text-color-accent);
   background: var(--badge-bg);
   color: white;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 2px 9px;
 
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -89,7 +89,7 @@
 
 .trs-bar {
   height: 3rem;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -276,7 +276,7 @@
 
   background: #2196F3;
   color: white;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 2px 8px;
 
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

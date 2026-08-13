@@ -5,9 +5,6 @@
    ============================================================ */
 
 .bn-wrapper {
-  --bn-bar-bg: rgba(255, 255, 255, 0.8);
-  --bn-bar-outline: rgba(255, 255, 255, 0.25);
-  --bn-bar-shadow: rgba(0, 0, 0, 0.25);
   --bn-pill-bg: rgba(0, 0, 0, 0.08);
   --bn-pill-highlight: rgba(255, 255, 255, 0.3);
   --bn-pill-border: rgba(255, 255, 255, 0.1);
@@ -58,9 +55,6 @@
 
 @media (prefers-color-scheme: dark) {
   .bn-wrapper {
-    --bn-bar-bg: rgba(0, 0, 0, 0.8);
-    --bn-bar-outline: rgba(0, 0, 0, 0.25);
-    --bn-bar-shadow: rgba(0, 0, 0, 0.45);
     --bn-pill-bg: rgba(255, 255, 255, 0.08);
     --bn-pill-highlight: rgba(255, 255, 255, 0.08);
     --bn-pill-border: rgba(255, 255, 255, 0.06);
@@ -71,16 +65,16 @@
   pointer-events: auto;
   position: relative;
 
-  background: var(--bn-bar-bg);
+  background: var(--glass-tint);
   padding: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 
   box-shadow:
-    0 0 0 1px var(--bn-bar-outline),
-    0 4px 16px 0 var(--bn-bar-shadow);
+    0 0 0 1px var(--glass-outline),
+    0 4px 16px 0 var(--glass-shadow-color);
 
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
 }
 
 /* Buttons live in their own layer so a pill-shaped hole can be clipped
@@ -214,17 +208,17 @@
      group tabbar's own rendered height exactly, forming a perfect circle. */
   padding: 1.1875rem;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 
-  background: var(--bn-bar-bg);
+  background: var(--glass-tint);
   box-shadow:
-    0 0 0 1px var(--bn-bar-outline),
-    0 4px 20px 0 var(--bn-bar-shadow);
+    0 0 0 1px var(--glass-outline),
+    0 4px 20px 0 var(--glass-shadow-color);
 
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
 
   color: var(--bn-tab-color);
   will-change: transform;

@@ -5,7 +5,7 @@
   background-color: var(--background-color-secondary);
   border: 4px solid var(--background-color-secondary);
 
-  border-radius: 1.5rem;
+  border-radius: var(--radius-xl);
 
   display: flex;
   flex-direction: column;
@@ -27,7 +27,7 @@
   gap: 0.25rem;
 
   padding: 0.25rem 0.75rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 40%, transparent);
   background: color-mix(in srgb, var(--text-color-accent) 15%, transparent);
   color: var(--text-color-accent);
@@ -122,7 +122,7 @@
 
 .building-card {
   background-color: var(--background-color);
-  border-radius: 1.5rem;
+  border-radius: var(--radius-xl);
   padding: 0.75rem;
   box-shadow: var(--shadow);
 
@@ -228,7 +228,7 @@
 .classroom-list-item-container {
   padding: 1rem;
 
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
 
   background-color: var(--background-color-secondary);
 
@@ -276,7 +276,7 @@
   cursor: pointer;
   padding: 1rem;
   margin: -1rem; /* Offset the container padding to fill it completely */
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
   transition: background-color 0.2s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -288,7 +288,7 @@
 
 .classroom-card--with-photo {
   padding: 0;
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--text-color-primary) 12%, var(--background-color-secondary));
   border: 1px solid color-mix(in srgb, white 14%, transparent);
   box-shadow:
@@ -452,11 +452,13 @@
   color: rgba(255, 255, 255, 0.86);
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
+  /* Fixed white tint, same reasoning as .search-card-arrow-button: this
+     sits on a classroom photo, not the page background. */
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
 }
 
 .classroom-card--with-photo .classroom-feature-icon {
@@ -738,7 +740,7 @@
 
   background: var(--text-color-accent);
   color: white;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 2px 8px;
   font-size: 0.7rem;
   font-weight: 800;
@@ -872,7 +874,7 @@
   background: var(--background-color);
   color: var(--text-color-primary);
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 18%, transparent);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   padding: 3px 8px;
   font-size: 0.72rem;
   font-weight: bold;
@@ -960,7 +962,7 @@
   gap: 0.25rem;
 
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 
   font-size: 0.82rem;
   font-weight: 600;

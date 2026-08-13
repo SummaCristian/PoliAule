@@ -56,11 +56,17 @@
     0 1px 2px rgba(0, 0, 0, 0.06),
     0 4px 12px rgba(0, 0, 0, 0.08);
 
-  /* Radius scale */
+  /* Radius scale — matches the values already in use across components,
+     not an invented step size. Nested/concentric corners (an inner element
+     whose radius is derived from its parent's radius minus padding, so the
+     curves stay parallel) are intentionally NOT put on this scale — forcing
+     a fixed token there breaks the concentric relationship. */
   --radius-xs: 4px;
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 22px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
   --radius-pill: 999px;
 
   /* Elevation */
@@ -77,19 +83,17 @@
   --text-xl: 1.75rem;
   --text-display: 2.25rem;
 
-  /* Glass material — shared "frosted" surface used by the tabbar, back
-     buttons, and any translucent chrome sitting over photos/content.
-     --glass-tint is derived from the existing theme tokens so it adapts
-     automatically; the highlight/outline stay white-based in both themes
-     (an edge-lit rim reads correctly on both light and dark fills) and
-     only dim their opacity for dark mode below. */
-  --glass-tint: color-mix(in srgb, var(--background-color-secondary) 78%, transparent);
-  --glass-saturate: 160%;
+  /* Glass material — the tabbar's recipe (bn-tabbar, pre-tokenization) is
+     the canonical source for this; every other translucent surface should
+     match it, not the other way around. No saturate() — the tabbar never
+     had one. */
+  --glass-tint: rgba(255, 255, 255, 0.8);
+  --glass-outline: rgba(255, 255, 255, 0.25);
+  --glass-shadow-color: rgba(0, 0, 0, 0.25);
+  --glass-highlight: inset 1px 1px 0 rgba(255, 255, 255, 0.35);
   --glass-blur-sm: 4px;
   --glass-blur-md: 8px;
   --glass-blur-lg: 18px;
-  --glass-highlight: inset 1px 1px 0 rgba(255, 255, 255, 0.35);
-  --glass-outline: 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -121,8 +125,10 @@
     --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.55);
     --elevation-3: 0 12px 28px -6px rgba(0, 0, 0, 0.65);
 
+    --glass-tint: rgba(0, 0, 0, 0.8);
+    --glass-outline: rgba(0, 0, 0, 0.25);
+    --glass-shadow-color: rgba(0, 0, 0, 0.45);
     --glass-highlight: inset 1px 1px 0 rgba(255, 255, 255, 0.08);
-    --glass-outline: 0 0 0 1px rgba(255, 255, 255, 0.06);
   }
 }
 
@@ -638,8 +644,12 @@ label {
 .header-button {
   width: 3rem;
   height: 3rem;
-  border-radius: 50%;
-  background: transparent;
+  border-radius: var(--radius-pill);
+
+  /* Same glass material as the tabbar/back button. */
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
 
   color: var(--text-color-secondary);
 
@@ -650,9 +660,10 @@ label {
   border-color: transparent;
 
   box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 0 1px var(--glass-outline),
+    var(--glass-highlight),
     inset -1px -1px rgba(255, 255, 255, 0.1),
-    var(--shadow);
+    0 4px 16px 0 var(--glass-shadow-color);
 
   cursor: pointer;
 
@@ -662,7 +673,7 @@ label {
     scale 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &:hover {
-    background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+    background: color-mix(in srgb, var(--text-color-primary) 12%, var(--glass-tint));
     scale: 1.1;
   }
 }

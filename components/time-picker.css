@@ -139,7 +139,7 @@
   gap: 0.3rem;
   flex-shrink: 0;
   padding: 0.35rem 0.65rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: none;
   cursor: pointer;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -380,7 +380,7 @@
 .tp-popup__time-input::-webkit-datetime-edit-hour-field:focus,
 .tp-popup__time-input::-webkit-datetime-edit-minute-field:focus {
   background: color-mix(in srgb, var(--text-color-accent) 25%, transparent);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   color: var(--text-color-accent);
   outline: none;
 }

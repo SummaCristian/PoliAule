@@ -84,7 +84,7 @@ body.detail-open .tab-content * {
     width: 92%;
     max-width: 720px;
     aspect-ratio: 16 / 9;
-    border-radius: 1.5rem;
+    border-radius: var(--radius-xl);
     margin-top: 0.5rem;
     box-shadow: var(--shadow);
   }
@@ -350,18 +350,20 @@ body.detail-open .tab-content * {
   align-items: center;
   gap: 0.125rem;
   padding: 0.375rem 0.875rem 0.375rem 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: none;
-  
-  /* Use a more opaque, theme-aware background with strong blur to ensure contrast over images */
-  background: color-mix(in srgb, var(--background-color-secondary) 82%, transparent);
+
+  /* Same glass material as the tabbar, blurred harder since this sits
+     directly over classroom photos and needs the extra contrast. */
+  background: var(--glass-tint);
   box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 1px var(--glass-outline),
+    var(--glass-highlight),
     inset -1px -1px 0 rgba(255, 255, 255, 0.1),
-    var(--shadow);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  
+    0 4px 16px 0 var(--glass-shadow-color);
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+
   color: var(--text-color-primary);
   font-size: 0.875rem;
   font-weight: 600;
@@ -375,12 +377,11 @@ body.detail-open .tab-content * {
 
 @media (prefers-color-scheme: dark) {
   .detail-back-btn {
-    /* Slightly less opaque in dark mode to feel more "glassy" but still legible */
-    background: color-mix(in srgb, var(--background-color-secondary) 72%, transparent);
     box-shadow:
-      inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 1px var(--glass-outline),
+      var(--glass-highlight),
       inset -1px -1px 0 rgba(255, 255, 255, 0.03),
-      var(--shadow);
+      0 4px 16px 0 var(--glass-shadow-color);
   }
 }
 
@@ -510,7 +511,7 @@ body.detail-open .tab-content * {
   gap: 0.375rem;
   padding: 0.4rem 0.875rem 0.4rem 0.625rem;
   background: var(--background-color-secondary);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-color-primary);
@@ -555,7 +556,7 @@ body.detail-open .tab-content * {
   gap: 0.75rem;
 
   background-color: var(--background-color-secondary);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.75rem 0.5rem;
 
   box-shadow:
@@ -591,7 +592,7 @@ body.detail-open .tab-content * {
 
     background: var(--text-color-accent);
     color: white;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 3px 10px;
     font-size: 0.72rem;
     font-weight: 800;
@@ -686,7 +687,7 @@ body.detail-open .tab-content * {
   position: relative;
   height: 2.625rem;
   background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 10%, transparent);
   transition: border-color 0.2s ease, background-color 0.2s ease;
@@ -699,7 +700,7 @@ body.detail-open .tab-content * {
   /* Increased side gaps for better separation between consecutive blocks */
   left: calc(var(--block-start) + 2px);
   width: calc(var(--block-size) - 4px);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: var(--busy-gradient);
   opacity: 0.85;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
@@ -731,7 +732,7 @@ body.detail-open .tab-content * {
   background: #2196F3;
   color: white;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 0.7rem;
   font-weight: 800;
   box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
@@ -803,7 +804,7 @@ body.detail-open .tab-content * {
   transform: translateX(-50%);
   background: var(--text-color-accent);
   color: white;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 2px 8px;
   font-size: 0.7rem;
   font-weight: 800;
@@ -847,7 +848,7 @@ body.detail-open .tab-content * {
   background: var(--background-color);
   color: var(--text-color-primary);
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 18%, transparent);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   padding: 3px 8px;
   font-size: 0.72rem;
   font-weight: bold;
@@ -969,7 +970,7 @@ body.detail-open .tab-content * {
 
     background: var(--text-color-accent);
     color: white;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 2px 10px;
     font-size: 0.72rem;
     font-weight: 800;
@@ -1176,7 +1177,7 @@ body.detail-open .tab-content * {
   .detail-schedule-bar {
     height: var(--schedule-bar-height);
     width: 100%;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-md);
   }
 
   /* Blocks: vertical positioning using the CSS vars */
@@ -1285,7 +1286,7 @@ body.detail-open .tab-content * {
     transform: translateY(-50%);
     background: var(--text-color-accent);
     color: white;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 2px 8px;
     font-size: 0.7rem;
     font-weight: 800;

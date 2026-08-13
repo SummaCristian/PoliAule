@@ -346,6 +346,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await document.fonts.ready;
     document.querySelector('.time-pickers-container').style.opacity = '1';
     document.getElementById('available-classrooms-form').removeAttribute('data-loading');
+    document.querySelector('campus-chip-picker')?.removeAttribute('data-loading');
 
     const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
     if (autoSearchEnabled) {

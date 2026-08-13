@@ -1044,69 +1044,9 @@ body.info-open .header-nav-row {
   }
 }
 
-.campus-chips-skeleton,
 .date-picker-skeleton,
 .time-pickers-skeleton {
   display: none;
-}
-
-form[data-loading] .campus-chips-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.campus-section-sk {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  align-items: flex-start;
-}
-
-.campus-label-sk {
-  height: 0.9rem;
-  border-radius: 4px;
-}
-
-.campus-section-sk:nth-child(1) .campus-label-sk {
-  width: 3rem;
-}
-
-.campus-section-sk:nth-child(2) .campus-label-sk {
-  width: 4rem;
-}
-
-.campus-row-sk {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.campus-row-sk>div {
-  height: 2.3rem;
-  border-radius: 999px;
-}
-
-/* Milan row: Città Studi, Bovisa */
-.campus-section-sk:nth-child(1) .campus-row-sk>div:nth-child(1) {
-  width: 7rem;
-}
-
-.campus-section-sk:nth-child(1) .campus-row-sk>div:nth-child(2) {
-  width: 4.5rem;
-}
-
-/* Other row: Cremona, Lecco, Mantova */
-.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(1) {
-  width: 5.5rem;
-}
-
-.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(2) {
-  width: 4.5rem;
-}
-
-.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(3) {
-  width: 5.5rem;
 }
 
 form[data-loading] .date-picker-skeleton {
@@ -1146,8 +1086,6 @@ form[data-loading] .time-pickers-skeleton>div:last-child {
   opacity: 0.5;
 }
 
-form[data-loading] .campus-label-sk,
-form[data-loading] .campus-row-sk>div,
 form[data-loading] .date-picker-skeleton>div,
 form[data-loading] .time-pickers-skeleton>div {
   background: linear-gradient(90deg,

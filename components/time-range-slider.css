@@ -92,7 +92,7 @@
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-groove);
   position: relative;
   overflow: visible;
   user-select: none;
@@ -284,7 +284,7 @@
   font-weight: 800;
   letter-spacing: 0.01em;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+  box-shadow: var(--glow-info);
 
   pointer-events: auto;
   user-select: none;

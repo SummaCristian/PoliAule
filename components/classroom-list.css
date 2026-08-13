@@ -745,7 +745,7 @@
   font-size: 0.7rem;
   font-weight: 800;
   white-space: nowrap;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+  box-shadow: var(--glow-accent);
 
   user-select: none;
   z-index: 10;
@@ -795,7 +795,7 @@
 
 .timeline-time-indicator--now {
   background: #2196F3;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+  box-shadow: var(--glow-info);
 
   opacity: 0;
   transform-origin: bottom center;
@@ -811,7 +811,7 @@
   height: 2.2rem;
   border-radius: 1.1rem;
   background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-groove);
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
 }

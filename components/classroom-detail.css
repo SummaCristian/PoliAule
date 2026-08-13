@@ -559,10 +559,7 @@ body.detail-open .tab-content * {
   border-radius: var(--radius-pill);
   padding: 0.75rem 0.5rem;
 
-  box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px rgba(255, 255, 255, 0.1),
-    var(--shadow);
+  box-shadow: var(--bevel), var(--shadow);
 }
 
 /* Override date-element-container sizing to fit the vertical pill */
@@ -598,7 +595,7 @@ body.detail-open .tab-content * {
     font-weight: 800;
     white-space: nowrap;
     cursor: default;
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+    box-shadow: var(--glow-accent);
 
     opacity: 0;
     animation: detail-today-indicator-appear 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
@@ -735,7 +732,7 @@ body.detail-open .tab-content * {
   border-radius: var(--radius-pill);
   font-size: 0.7rem;
   font-weight: 800;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+  box-shadow: var(--glow-info);
 }
 
 /* Arrow for the now indicator at the top */
@@ -809,7 +806,7 @@ body.detail-open .tab-content * {
   font-size: 0.7rem;
   font-weight: 800;
   white-space: nowrap;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+  box-shadow: var(--glow-accent);
   user-select: none;
   z-index: 10;
   pointer-events: none;
@@ -976,7 +973,7 @@ body.detail-open .tab-content * {
     font-weight: 800;
     white-space: nowrap;
     cursor: pointer;
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+    box-shadow: var(--glow-accent);
     transform-origin: bottom center;
 
     opacity: 0;
@@ -1065,7 +1062,7 @@ body.detail-open .tab-content * {
     transform-origin: left center;
     background: #2196F3;
     color: white;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+    box-shadow: var(--glow-info);
     animation: now-indicator-appear-mobile 0.65s linear 0.35s forwards;
   }
 
@@ -1291,7 +1288,7 @@ body.detail-open .tab-content * {
     font-size: 0.7rem;
     font-weight: 800;
     white-space: nowrap;
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+    box-shadow: var(--glow-accent);
     user-select: none;
     z-index: 10;
     pointer-events: none;

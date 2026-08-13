@@ -94,6 +94,15 @@
   --glass-blur-sm: 4px;
   --glass-blur-md: 8px;
   --glass-blur-lg: 18px;
+
+  /* Repeated shadow/glow patterns, extracted only where the literal value
+     was byte-identical across multiple files — not a general elevation
+     scale, just naming duplication that already existed. */
+  --bevel: inset 1px 1px 0 rgba(255, 255, 255, 0.3), inset -1px -1px rgba(255, 255, 255, 0.1);
+  --glow-accent: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+  --glow-info: 0 2px 8px rgba(33, 150, 243, 0.4);
+  --shadow-groove: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-dim: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1099,10 +1108,7 @@ form[data-loading] .date-picker-skeleton {
   margin-top: 2rem;
   align-self: center;
   background-color: var(--background-color-secondary);
-  box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px rgba(255, 255, 255, 0.1),
-    var(--shadow);
+  box-shadow: var(--bevel), var(--shadow);
 }
 
 form[data-loading] .date-picker-skeleton>div {
@@ -1162,10 +1168,7 @@ ul li::marker {
   -webkit-backdrop-filter: blur(12px);
 
   border-radius: 12px;
-  box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px rgba(255, 255, 255, 0.1),
-    var(--shadow);
+  box-shadow: var(--bevel), var(--shadow);
 
   opacity: 0;
   transform: scale(0.78) translateY(var(--popover-closed-ty, -6px));

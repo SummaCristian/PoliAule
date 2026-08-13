@@ -77,10 +77,7 @@
   border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 20%, transparent);
   color: var(--text-color-primary);
 
-  box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px 0 rgba(255, 255, 255, 0.1),
-    var(--shadow);
+  box-shadow: var(--bevel), var(--shadow);
 
   cursor: pointer;
   user-select: none;
@@ -100,8 +97,7 @@
     scale: 1.02;
     background: color-mix(in srgb, var(--text-color-accent) 8%, var(--background-color-secondary));
     box-shadow:
-      inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-      inset -1px -1px 0 rgba(255, 255, 255, 0.1),
+      var(--bevel),
       0 4px 20px color-mix(in srgb, var(--text-color-accent) 20%, transparent),
       var(--shadow);
   }

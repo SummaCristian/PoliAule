@@ -33,7 +33,7 @@
   color: var(--text-color-accent);
 
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   font-weight: 700;
   cursor: pointer;
 
@@ -46,7 +46,7 @@
 }
 
 .results-filter-btn .material-symbols-outlined {
-  font-size: 1rem !important;
+  font-size: var(--text-100) !important;
 }
 
 .available-classrooms-container.hide-partial [data-status="partially-free"] {
@@ -56,7 +56,7 @@
 .building-all-partial-hidden {
   display: none;
   padding: 0.75rem 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--text-85);
   color: var(--text-secondary, #888);
   text-align: center;
 }
@@ -81,7 +81,7 @@
 }
 
 .empty-container-title {
-  font-size: 1.5rem;
+  font-size: var(--text-150);
   font-weight: 700;
 
   color: var(--text-color-secondary);
@@ -91,7 +91,7 @@
 }
 
 .empty-container-subtitle {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   font-weight: 630;
 
   color: var(--text-color-secondary);
@@ -163,7 +163,7 @@
 }
 
 .building-name {
-  font-size: 1.75rem;
+  font-size: var(--text-175);
   font-weight: 700;
   margin: 0;
 }
@@ -183,7 +183,7 @@
 }
 
 .building-count {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 700;
 }
 
@@ -192,7 +192,7 @@
 .building-count.not-free       { color: var(--color-status-busy); }
 
 .building-count-sep {
-  font-size: 0.65rem;
+  font-size: var(--text-70);
   color: color-mix(in srgb, var(--text-color-primary) 25%, transparent);
 }
 
@@ -345,7 +345,7 @@
 .classroom-card--with-photo.photo-failed::after {
   content: 'hide_image';
   font-family: 'Material Symbols Outlined';
-  font-size: 2rem;
+  font-size: var(--text-200);
   position: absolute;
   inset: 0;
   display: flex;
@@ -650,7 +650,7 @@
 }
 
 .classroom-detail-btn .material-symbols-outlined {
-  font-size: 1.5rem !important;
+  font-size: var(--text-150) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -676,7 +676,7 @@
 }
 
 .classroom-feature-icon {
-  font-size: 1.1rem !important;
+  font-size: var(--text-110) !important;
   color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
 }
 
@@ -693,7 +693,7 @@
 }
 
 .classroom-status-txt {
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   font-weight: 800;
   margin: 0;
   flex: 1 1 auto;
@@ -742,7 +742,7 @@
   color: white;
   border-radius: var(--radius-pill);
   padding: 2px 8px;
-  font-size: 0.7rem;
+  font-size: var(--text-70);
   font-weight: 800;
   white-space: nowrap;
   box-shadow: var(--glow-accent);
@@ -754,7 +754,7 @@
 @media (prefers-color-scheme: dark) {
   .timeline-time-indicator:not(.timeline-time-indicator--now) {
     /* Use a slightly darker/more saturated green for better white text contrast on dark background */
-    background: #28a745;
+    background: var(--color-accent-dark);
     box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
   }
 }
@@ -789,12 +789,12 @@
 
 @media (prefers-color-scheme: dark) {
   .timeline-time-indicator:not(.timeline-time-indicator--now)::after {
-    border-top-color: #28a745;
+    border-top-color: var(--color-accent-dark);
   }
 }
 
 .timeline-time-indicator--now {
-  background: #2196F3;
+  background: var(--color-now);
   box-shadow: var(--glow-info);
 
   opacity: 0;
@@ -803,7 +803,7 @@
 }
 
 .timeline-time-indicator--now::after {
-  border-top-color: #2196F3;
+  border-top-color: var(--color-now);
 }
 
 .timeline-bar {
@@ -876,7 +876,7 @@
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 18%, transparent);
   border-radius: var(--radius-sm);
   padding: 3px 8px;
-  font-size: 0.72rem;
+  font-size: var(--text-72);
   font-weight: bold;
   white-space: nowrap;
   box-shadow: var(--shadow);
@@ -964,7 +964,7 @@
   padding: 0.2rem 0.6rem;
   border-radius: var(--radius-pill);
 
-  font-size: 0.82rem;
+  font-size: var(--text-80);
   font-weight: 600;
   color: var(--text-color-accent);
 
@@ -973,5 +973,5 @@
 }
 
 .classroom-slot-icon {
-  font-size: 0.95rem !important;
+  font-size: var(--text-100) !important;
 }

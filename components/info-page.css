@@ -112,7 +112,7 @@ body.info-open .header-title-btn {
 .info-hero-badge {
   margin: 0;
   padding: 0;
-  font-size: 1rem;
+  font-size: var(--text-100);
   line-height: 1;
 }
 
@@ -264,7 +264,7 @@ body.info-open .header-title-btn {
   padding: 0 0.9rem; /* Vertically collapsed by default */
   border-radius: 1.15rem;
   max-width: 75%;
-  font-size: 0.95rem;
+  font-size: var(--text-100);
   line-height: 1.4;
   text-align: left;
   margin: 0;
@@ -520,7 +520,7 @@ body.info-open .header-title-btn {
 }
 
 .info-disclaimer {
-  font-size: 0.78rem;
+  font-size: var(--text-80);
   color: var(--text-color-secondary);
   opacity: 0.6;
   margin: 0;
@@ -534,7 +534,7 @@ body.info-open .header-title-btn {
   padding: 0.35rem 0.75rem 0.35rem 0.45rem;
   border-radius: var(--radius-2xl);
   text-decoration: none;
-  font-size: 0.85rem;
+  font-size: var(--text-85);
   font-weight: 500;
   color: #1156ae;
   background-color: color-mix(in srgb, #1156ae 10%, var(--background-color-secondary));
@@ -637,7 +637,7 @@ body.info-open .header-title-btn {
 }
 
 .info-badge .badge-text .top-text {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 700;
   letter-spacing: 0.02rem;
   opacity: 0.9;
@@ -653,7 +653,7 @@ body.info-open .header-title-btn {
 }
 
 .info-badge .badge-description {
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   font-weight: 500;
   opacity: 0.75;
   margin-top: 5px;
@@ -666,7 +666,7 @@ body.info-open .header-title-btn {
   right: 0.6rem;
   background: #f1e05a;
   color: #000;
-  font-size: 0.7rem;
+  font-size: var(--text-70);
   font-weight: 900;
   padding: 2px 8px;
   border-radius: 6px;
@@ -709,7 +709,7 @@ body.info-open .header-title-btn {
   align-items: center;
   gap: 0.35rem;
   flex-shrink: 0;
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-weight: 600;
   color: var(--text-color-secondary);
   text-decoration: none;
@@ -834,11 +834,11 @@ body.info-open .header-title-btn {
 }
 
 .github-stat-date {
-  font-size: 1rem;
+  font-size: var(--text-100);
 }
 
 .github-stat-label {
-  font-size: 0.7rem;
+  font-size: var(--text-70);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -954,7 +954,7 @@ body.info-open .header-title-btn {
   align-items: center;
   gap: 0.4rem;
   margin-bottom: 0.75rem;
-  font-size: 0.85rem;
+  font-size: var(--text-85);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -963,7 +963,7 @@ body.info-open .header-title-btn {
 }
 
 .github-subsection-header .material-symbols-outlined {
-  font-size: 1rem;
+  font-size: var(--text-100);
   background: var(--accent-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -977,7 +977,7 @@ body.info-open .header-title-btn {
   align-items: center;
   gap: 0.4rem;
   align-self: flex-start;
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   font-weight: 600;
   color: color-mix(in srgb, #e5534b 85%, var(--text-color-primary));
   text-decoration: none;
@@ -991,7 +991,7 @@ body.info-open .header-title-btn {
 }
 
 .create-issue-btn .material-symbols-outlined {
-  font-size: 1.1rem;
+  font-size: var(--text-110);
 }
 
 @media (hover: hover) {
@@ -1068,7 +1068,7 @@ body.info-open .header-title-btn {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.8rem;
+  font-size: var(--text-80);
 }
 
 .lang-dot {
@@ -1147,13 +1147,13 @@ body.info-open .header-title-btn {
 }
 
 .contributor-login {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   font-weight: 700;
   color: var(--text-color-primary);
 }
 
 .contributor-count {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   color: var(--text-color-secondary);
   opacity: 0.7;
 }
@@ -1200,7 +1200,7 @@ body.info-open .header-title-btn {
 }
 
 .info-pwa-title-row > .material-symbols-outlined {
-  font-size: 2rem;
+  font-size: var(--text-200);
   background: var(--accent-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1213,7 +1213,7 @@ body.info-open .header-title-btn {
 }
 
 .info-pwa-subtitle {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   color: var(--text-color-secondary);
   margin: 0;
   line-height: 1.4;
@@ -1291,7 +1291,7 @@ body.info-open .header-title-btn {
 }
 
 .pwa-tab .material-symbols-outlined {
-  font-size: 1.1rem !important;
+  font-size: var(--text-110) !important;
   color: inherit;
   background: none;
   -webkit-text-fill-color: currentColor;
@@ -1362,7 +1362,7 @@ body.info-open .header-title-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   font-weight: 700;
   color: var(--text-color-primary);
   margin-bottom: 0.85rem;
@@ -1376,7 +1376,7 @@ body.info-open .header-title-btn {
 }
 
 .info-pwa-card-title .material-symbols-outlined {
-  font-size: 1.2rem !important;
+  font-size: var(--text-125) !important;
   color: var(--text-color-secondary);
   background: none;
   -webkit-text-fill-color: var(--text-color-secondary);
@@ -1391,7 +1391,7 @@ body.info-open .header-title-btn {
 }
 
 .info-pwa-steps li {
-  font-size: 0.83rem;
+  font-size: var(--text-85);
   color: var(--text-color-secondary);
   line-height: 1.45;
 }

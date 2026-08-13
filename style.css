@@ -14,7 +14,7 @@
   background: var(--text-color-primary);
   color: var(--background-color);
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 0.68rem;
+  font-size: var(--text-70);
   font-weight: 600;
   white-space: nowrap;
   pointer-events: none;
@@ -74,14 +74,23 @@
   --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.16);
   --elevation-3: 0 12px 28px -6px rgba(0, 0, 0, 0.24);
 
-  /* Type scale */
-  --text-caption: 0.72rem;
-  --text-sm: 0.85rem;
-  --text-base: 1rem;
-  --text-md: 1.1rem;
-  --text-lg: 1.35rem;
-  --text-xl: 1.75rem;
-  --text-display: 2.25rem;
+  /* Type scale — the 12 sizes actually used 5+ times across components,
+     not an invented scale. Values used ≤4 times were snapped into the
+     nearest step here only when within ~0.03–0.05rem (imperceptible);
+     anything farther off (one-off hero sizes, icon-specific px values)
+     was left as a literal rather than forced to fit. */
+  --text-70: 0.7rem;
+  --text-72: 0.72rem;
+  --text-75: 0.75rem;
+  --text-80: 0.8rem;
+  --text-85: 0.85rem;
+  --text-90: 0.9rem;
+  --text-100: 1rem;
+  --text-110: 1.1rem;
+  --text-125: 1.25rem;
+  --text-150: 1.5rem;
+  --text-175: 1.75rem;
+  --text-200: 2rem;
 
   /* Glass material — the tabbar's recipe (bn-tabbar, pre-tokenization) is
      the canonical source for this; every other translucent surface should
@@ -103,6 +112,16 @@
   --glow-info: 0 2px 8px rgba(33, 150, 243, 0.4);
   --shadow-groove: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-dim: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+  /* "Now" marker blue — fixed by design, doesn't react to theme (verified:
+     no dark-mode override exists anywhere it's used). */
+  --color-now: #2196f3;
+
+  /* Darker/more-saturated green used only inside dark-mode blocks for the
+     today/now indicators, for better white-text contrast than
+     --text-color-accent's dark value gives (per the original comments). */
+  --color-accent-dark: #28a745;
+  --color-accent-dark-hover: #218838;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -251,7 +270,7 @@ html:has(.splash-overlay) {
 .splash-loading-label {
   position: absolute;
   bottom: 3.5rem;
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -314,7 +333,7 @@ html:has(.splash-overlay) {
 }
 
 .splash-error-title {
-  font-size: 1.1rem;
+  font-size: var(--text-110);
   font-weight: 700;
   color: var(--text-color-primary);
   opacity: 0;
@@ -322,7 +341,7 @@ html:has(.splash-overlay) {
 }
 
 .splash-error-subtitle {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   color: var(--text-color-secondary);
   margin-bottom: 1rem;
   opacity: 0;
@@ -363,19 +382,19 @@ h2 {
 }
 
 h3 {
-  font-size: 1.75rem;
+  font-size: var(--text-175);
   font-weight: 600;
   color: var(--text-color-primary);
 }
 
 h4 {
-  font-size: 1.5rem;
+  font-size: var(--text-150);
   font-weight: 500;
   color: var(--text-color-primary);
 }
 
 p {
-  font-size: 1rem;
+  font-size: var(--text-100);
   color: var(--text-color-primary);
 }
 
@@ -384,34 +403,34 @@ a {
 }
 
 .body-text {
-  font-size: 1rem;
+  font-size: var(--text-100);
   color: var(--text-color-primary);
 }
 
 .body-small-text {
-  font-size: 0.85rem;
+  font-size: var(--text-85);
   color: var(--text-color-primary);
 }
 
 .caption-text {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   color: var(--text-color-primary);
 }
 
 label {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: medium;
   color: var(--text-color-primary);
 }
 
 .quote-text {
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-style: italic;
   color: var(--text-color-primary);
 }
 
 .button-text {
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   font-weight: medium;
   color: var(--text-color-primary);
 }
@@ -454,7 +473,7 @@ label {
 
 .info-box-icon {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--text-150);
 }
 
 .info-box-title {
@@ -471,7 +490,7 @@ label {
 
 .info-box-content {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   color: color-mix(in srgb, #d4820a 80%, var(--text-color-primary));
   font-weight: 600;
 }
@@ -618,7 +637,7 @@ label {
 }
 
 .header-title {
-  font-size: 2rem;
+  font-size: var(--text-200);
   font-weight: bold;
 
   background: var(--accent-gradient);
@@ -776,11 +795,11 @@ label {
   align-items: center;
   gap: 0.35rem;
   margin-top: 0.75rem;
-  font-size: 0.85rem;
+  font-size: var(--text-85);
 }
 
 .data-reload-icon {
-  font-size: 1rem;
+  font-size: var(--text-100);
   transition: transform 0.3s ease;
 }
 
@@ -971,7 +990,7 @@ body.info-open .header-nav-row {
 }
 
 .section-header-title {
-  font-size: 2rem;
+  font-size: var(--text-200);
   font-weight: bold;
 }
 
@@ -981,30 +1000,30 @@ body.info-open .header-nav-row {
 
 @media (max-width: 600px) {
   .section-header-title {
-    font-size: 1.75rem;
+    font-size: var(--text-175);
   }
 
   .section-header-subtitle {
-    font-size: 1rem;
+    font-size: var(--text-100);
   }
 }
 
 .subsection-header-title {
-  font-size: 1.5rem;
+  font-size: var(--text-150);
   font-weight: 600;
 }
 
 .subsection-header-subtitle {
-  font-size: 0.85rem;
+  font-size: var(--text-85);
 }
 
 @media (max-width: 600px) {
   .subsection-header-title {
-    font-size: 1.25rem;
+    font-size: var(--text-125);
   }
 
   .subsection-header-subtitle {
-    font-size: 0.75rem;
+    font-size: var(--text-75);
   }
 }
 
@@ -1261,7 +1280,7 @@ ul li::marker {
 }
 
 .popover-subtitle {
-  font-size: 1.2rem;
+  font-size: var(--text-125);
 
   margin: 0 0 0.5rem 0;
 }
@@ -1293,7 +1312,7 @@ ul li::marker {
 }
 
 .popover ul li {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   color: var(--text-color-secondary);
   padding-left: 16px;
   position: relative;
@@ -1343,7 +1362,7 @@ ul li::marker {
 }
 
 .hero-text {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
 }
 
 /* Dark mode */
@@ -1370,7 +1389,7 @@ ul li::marker {
   align-items: center;
   justify-content: center;
 
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-weight: bold;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -1497,24 +1516,24 @@ are rendered as solid colors
 /* ── Desktop two-column layout (Available screen) ── */
 @media (min-width: 1100px) {
   .section-header-title {
-    font-size: 1.75rem;
+    font-size: var(--text-175);
   }
 
   .section-header-subtitle {
-    font-size: 1.1rem;
+    font-size: var(--text-110);
   }
 
   .subsection-header-title {
-    font-size: 1.25rem;
+    font-size: var(--text-125);
   }
 
   .building-name {
-    font-size: 1.5rem;
+    font-size: var(--text-150);
   }
 
   .classroom-name,
   .classroom-status-txt {
-    font-size: 1.25rem;
+    font-size: var(--text-125);
   }
 
   #available-classrooms-container.visible {

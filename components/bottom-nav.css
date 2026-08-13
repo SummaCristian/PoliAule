@@ -117,7 +117,7 @@
 }
 
 .bn-tab-content .hgi-stroke {
-  font-size: 1.125rem;
+  font-size: var(--text-110);
   /* hgi-stroke is a single-weight monoline font (no bold cut available via
      the CDN) — faking extra weight by thickening the glyph's own stroke. */
   -webkit-text-stroke: 0.4px currentColor;
@@ -239,7 +239,7 @@
 }
 
 .bn-search-btn-inner .hgi-stroke {
-  font-size: 1.125rem;
+  font-size: var(--text-110);
   -webkit-text-stroke: 0.4px currentColor;
 }
 
@@ -284,11 +284,11 @@
   }
 
   .bn-tab-content .hgi-stroke {
-    font-size: 1.3rem;
+    font-size: var(--text-125);
   }
 
   .bn-tab-label {
-    font-size: 0.75rem;
+    font-size: var(--text-75);
   }
 
   .bn-active-row {
@@ -302,6 +302,6 @@
   }
 
   .bn-search-btn-inner .hgi-stroke {
-    font-size: 1.3rem;
+    font-size: var(--text-125);
   }
 }

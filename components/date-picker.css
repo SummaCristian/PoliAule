@@ -102,7 +102,7 @@
   color: white;
   border-radius: var(--radius-pill);
   padding: 2px 10px;
-  font-size: 0.72rem;
+  font-size: var(--text-72);
   font-weight: 800;
   white-space: nowrap;
   cursor: pointer;
@@ -140,14 +140,14 @@
 @media (prefers-color-scheme: dark) {
   #today-indicator {
     /* Use a slightly darker/more saturated green for better white text contrast on dark background */
-    background: #28a745;
+    background: var(--color-accent-dark);
     box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
   }
   #today-indicator::after {
-    border-top-color: #28a745;
+    border-top-color: var(--color-accent-dark);
   }
   #today-indicator:hover {
-    background: #218838;
+    background: var(--color-accent-dark-hover);
   }
 }
 

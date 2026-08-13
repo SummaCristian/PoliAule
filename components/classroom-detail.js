@@ -199,12 +199,17 @@ class ClassroomDetail {
     // Photo VT: if the URL is already cached, pre-decode it so the detail photo
     // is bitmap-ready when the VT snapshots the new state.
     const hasPhoto = !!entry.classroom.idfoto;
-    const validPhotoUrl = hasPhoto ? (photoUrlCache.get(id) ?? null) : null;
+    let validPhotoUrl = hasPhoto ? (photoUrlCache.get(id) ?? null) : null;
     if (validPhotoUrl) {
       const tmp = new Image();
       tmp.src = validPhotoUrl;
-      await tmp.decode().catch(() => {});
+      const decoded = await tmp.decode().then(() => true).catch(() => false);
       if (this._currentId !== id) return; // navigated away during decode
+      // Decode failed (e.g. a 404 from a stale idfoto) — don't stamp a broken image as
+      // "loaded" below. Leaving validPhotoUrl unset lets _loadPhoto()'s own error path
+      // (which removes the photo container entirely) run normally instead of being
+      // skipped via its "already loaded" short-circuit.
+      if (!decoded) validPhotoUrl = null;
     }
 
     const photoEl = pending?.photoEl ?? null;

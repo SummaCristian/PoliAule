@@ -18,8 +18,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Restore photo manifest from previous run
-        uses: actions/cache@v4
+      # Restore-only (not the combined actions/cache action): the manifest is only
+      # trustworthy if it reflects what's actually in R2, so it must be saved
+      # explicitly at the end, gated on the upload+purge steps having succeeded
+      # (see "Save photo manifest" below) - not automatically on job completion,
+      # which would also fire after a failed upload and permanently mark
+      # never-uploaded photos as "unchanged" on every future run.
+      - name: Restore photo manifest from last successful run
+        uses: actions/cache/restore@v4
         with:
           path: photos/manifest.json
           key: photo-manifest-${{ github.run_id }}
@@ -101,3 +107,13 @@ jobs:
               -H "Content-Type: application/json" \
               --data "$URLS"
           done
+
+      # Only persisted when everything before it (fetch, upload, purge) succeeded,
+      # so a partial failure forces a retry next run instead of the manifest
+      # silently drifting from what's actually in R2 (see the restore step above).
+      - name: Save photo manifest for next run
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: photos/manifest.json
+          key: photo-manifest-${{ github.run_id }}

@@ -55,6 +55,41 @@
   --shadow:
     0 1px 2px rgba(0, 0, 0, 0.06),
     0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* Radius scale */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.14);
+  --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.16);
+  --elevation-3: 0 12px 28px -6px rgba(0, 0, 0, 0.24);
+
+  /* Type scale */
+  --text-caption: 0.72rem;
+  --text-sm: 0.85rem;
+  --text-base: 1rem;
+  --text-md: 1.1rem;
+  --text-lg: 1.35rem;
+  --text-xl: 1.75rem;
+  --text-display: 2.25rem;
+
+  /* Glass material — shared "frosted" surface used by the tabbar, back
+     buttons, and any translucent chrome sitting over photos/content.
+     --glass-tint is derived from the existing theme tokens so it adapts
+     automatically; the highlight/outline stay white-based in both themes
+     (an edge-lit rim reads correctly on both light and dark fills) and
+     only dim their opacity for dark mode below. */
+  --glass-tint: color-mix(in srgb, var(--background-color-secondary) 78%, transparent);
+  --glass-saturate: 160%;
+  --glass-blur-sm: 4px;
+  --glass-blur-md: 8px;
+  --glass-blur-lg: 18px;
+  --glass-highlight: inset 1px 1px 0 rgba(255, 255, 255, 0.35);
+  --glass-outline: 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -81,6 +116,13 @@
     --shadow:
       0 1px 2px rgba(0, 0, 0, 0.3),
       0 4px 12px rgba(0, 0, 0, 0.6);
+
+    --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.5);
+    --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.55);
+    --elevation-3: 0 12px 28px -6px rgba(0, 0, 0, 0.65);
+
+    --glass-highlight: inset 1px 1px 0 rgba(255, 255, 255, 0.08);
+    --glass-outline: 0 0 0 1px rgba(255, 255, 255, 0.06);
   }
 }
 

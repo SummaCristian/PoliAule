@@ -4,9 +4,10 @@ Thumbs.db
 __pycache__/
 *.pyc
 
-# Local output of scripts/fetch.py and fetch_opening_hours.py; uploaded to R2, not committed.
+# Local output of scripts/fetch.py, fetch_opening_hours.py, and fetch_photos.py; uploaded to R2, not committed.
 occupancy/
 data/opening-hours.json
+photos/
 
 node_modules/
 dist/

@@ -79,14 +79,9 @@ function _releasePhotoSlot() {
   if (next) next(); else _photoSem.slots++;
 }
 
-async function _loadCardPhoto(idfoto, img) {
+async function _loadCardPhoto(classroomId, img) {
   const card = img.closest('.search-card--with-photo');
-  // Resolve the redirect URL first (cheap text fetch, no slot needed)
-  const url = await fetchPhotoUrl(idfoto);
-  if (url === 'error') {
-    card?.classList.add('photo-failed');
-    return;
-  }
+  const url = await fetchPhotoUrl(classroomId);
 
   // Gate the heavy image download + decode through the semaphore
   await _acquirePhotoSlot();
@@ -109,9 +104,8 @@ const _photoObserver = new IntersectionObserver((entries) => {
   for (const entry of entries) {
     if (!entry.isIntersecting) continue;
     _photoObserver.unobserve(entry.target);
-    const idfoto = parseInt(entry.target.dataset.idfoto, 10);
     const img = entry.target.querySelector('.search-card-photo');
-    if (img && idfoto) _loadCardPhoto(idfoto, img);
+    if (img && entry.target.dataset.idfoto) _loadCardPhoto(entry.target.dataset.openClassroom, img);
   }
 }, { rootMargin: '150px' });
 

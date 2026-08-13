@@ -74,6 +74,14 @@ Returns per-building opening hours, campus-wide defaults, and holiday closure pe
 
 To resolve a given building's hours: look it up in `buildings` by its number/code (the leading alphanumeric token of its `name` in `classrooms.json`, e.g. `"32.1"` → `"32"`); if not found, look up its campus `id` in `campus_defaults`; if that's also missing, use `default_hours`. `null` for `sat`/`sun` means closed that day.
 
+### Classroom photos
+
+```
+GET /v1/photos/:id
+```
+
+Returns the classroom's photo as a JPEG image. `:id` is the classroom's stable `id` from `/v1/classrooms` (not PoliMi's internal `idfoto`). Only classrooms with a non-null `idfoto` have a photo; requesting any other id returns 404. Photos are re-fetched from PoliMi once a month, so responses are cacheable for a long time (`Cache-Control: public, max-age=2592000, immutable`).
+
 ---
 
 ## Response schemas

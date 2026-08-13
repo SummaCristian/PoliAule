@@ -82,7 +82,7 @@ class ClassroomDetail {
       const scrollY = window.scrollY;
       this._renderContent(entry);
       this._loadSchedule(this._currentId);
-      if (entry.classroom.idfoto) this._loadPhoto(this._currentId, entry.classroom.idfoto);
+      if (entry.classroom.idfoto) this._loadPhoto(this._currentId);
       window.scrollTo(0, scrollY);
     });
 
@@ -198,9 +198,8 @@ class ClassroomDetail {
 
     // Photo VT: if the URL is already cached, pre-decode it so the detail photo
     // is bitmap-ready when the VT snapshots the new state.
-    const idfoto = entry.classroom.idfoto;
-    const cachedPhotoUrl = idfoto ? photoUrlCache.get(idfoto) : null;
-    const validPhotoUrl = (cachedPhotoUrl && cachedPhotoUrl !== 'error') ? cachedPhotoUrl : null;
+    const hasPhoto = !!entry.classroom.idfoto;
+    const validPhotoUrl = hasPhoto ? (photoUrlCache.get(id) ?? null) : null;
     if (validPhotoUrl) {
       const tmp = new Image();
       tmp.src = validPhotoUrl;
@@ -304,7 +303,7 @@ class ClassroomDetail {
 
         // Load data immediately after rendering in the transition callback
         this._loadSchedule(id);
-        if (idfoto) this._loadPhoto(id, idfoto);
+        if (hasPhoto) this._loadPhoto(id);
       });
 
       const cleanup = () => {
@@ -366,7 +365,7 @@ class ClassroomDetail {
 
       // Load data immediately after rendering in the fallback branch
       this._loadSchedule(id);
-      if (idfoto) this._loadPhoto(id, idfoto);
+      if (hasPhoto) this._loadPhoto(id);
     }
   }
 
@@ -669,7 +668,7 @@ class ClassroomDetail {
     this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {
       haptics.trigger(defaultPatterns.light);
       this._loadSchedule(classroom.id);
-      if (classroom.idfoto) this._loadPhoto(classroom.id, classroom.idfoto);
+      if (classroom.idfoto) this._loadPhoto(classroom.id);
     });
 
     // 3D tilt on desktop photo
@@ -700,13 +699,12 @@ class ClassroomDetail {
 
   // ---------- RENDER: HERO PHOTO ----------
 
-  async _loadPhoto(classroomId, idfoto) {
+  async _loadPhoto(classroomId) {
     if (this._currentId !== classroomId) return;
 
     try {
       // Step 1: Resolve the photo URL (cached after first fetch; may also be pre-warmed by card thumbnails).
-      const url = await fetchPhotoUrl(idfoto);
-      if (url === 'error') throw new Error('Photo URL unavailable');
+      const url = await fetchPhotoUrl(classroomId);
 
       if (this._currentId !== classroomId) return;
 

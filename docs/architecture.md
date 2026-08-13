@@ -181,7 +181,9 @@ graph TD
 
 ### Classroom photos
 
-Classroom photos are fetched on-demand when the user opens a detail page, not at startup. If the classroom has an `idfoto` field in the data, `ClassroomDetail._loadPhoto()` fires a single request at that point. Nothing is preloaded or cached beyond the browser's own HTTP cache.
+`scripts/fetch_photos.py` resolves and downloads every classroom's photo from PoliMi once a month, uploads changed ones to R2 under `photos/<classroom_id>.jpg`, and serves them through the API Worker at `GET /v1/photos/:id` (keyed by the classroom's own `id`, not PoliMi's internal `idfoto`). A local `photos/manifest.json` (MD5 per classroom, persisted across runs via `actions/cache`) lets the job skip re-uploading and re-purging photos that haven't changed.
+
+The frontend still loads photos on-demand when a classroom card scrolls into view or a detail page opens (`ClassroomDetail._loadPhoto()`, `utils/photo.js`'s `fetchPhotoUrl()`), but now that's just building a URL against our own API instead of calling PoliMi directly — the response is edge- and browser-cacheable for 30 days (`Cache-Control: public, max-age=2592000, immutable`), matching the fetch cadence.
 
 ### Localization
 

@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { classrooms } from "./routes/classrooms";
 import { openingHours } from "./routes/opening-hours";
 import { occupancy } from "./routes/occupancy";
+import { photos } from "./routes/photos";
 
 export interface Env {
   DATA_BUCKET: R2Bucket;
@@ -15,5 +16,6 @@ app.use("*", cors());
 app.route("/v1/classrooms", classrooms);
 app.route("/v1/opening-hours", openingHours);
 app.route("/v1/occupations", occupancy);
+app.route("/v1/photos", photos);
 
 export default app;

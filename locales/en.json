@@ -170,7 +170,8 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 2.0.0-beta1",
+  "footer.versionInfo": "Version 2.0.0-beta2",
 
-  "changelog.item1": "Redesigned the tab bar"
+  "changelog.item1": "Redesigned the tab bar",
+  "changelog.item2": "Redesigned header bar"
 }

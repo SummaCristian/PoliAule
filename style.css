@@ -422,6 +422,18 @@ label {
 /* --- Styles --- */
 
 /* Header */
+.header-top-strip {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+
+  height: 11px;
+
+  background-color: var(--background-color);
+}
+
 .header {
   padding-top: calc(env(safe-area-inset-top));
 
@@ -430,7 +442,7 @@ label {
   gap: 0;
 
   position: sticky;
-  top: 0;
+  top: 11px;
   left: 0;
   right: 0;
   z-index: 1000;
@@ -440,7 +452,66 @@ label {
   isolation: isolate;
 }
 
+.header-blur-layers {
+  position: absolute;
+  inset: 0;
+  bottom: -2rem;
+
+  pointer-events: none;
+  /* Negative so it paints behind header-top-line-container's own (non-
+     positioned) content without needing z-index on every sibling — scoped
+     to that container's stacking context via its position+z-index below. */
+  z-index: -1;
+}
+
+.header-blur-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.header-blur-layer:nth-child(1) {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+}
+
+.header-blur-layer:nth-child(2) {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+}
+
+.header-blur-layer:nth-child(3) {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+}
+
+.header-blur-layer:nth-child(4) {
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 100%);
+}
+
+.header-fade-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(to bottom,
+    var(--background-color) 0%,
+    color-mix(in srgb, var(--background-color) 70%, transparent) 45%,
+    color-mix(in srgb, var(--background-color) 25%, transparent) 70%,
+    transparent 100%);
+}
+
 .header-top-line-container {
+  position: relative;
+  z-index: 1;
+
   padding: 0 1rem;
 
   display: flex;
@@ -449,10 +520,6 @@ label {
   justify-content: space-between;
 
   line-height: 2rem;
-
-  background: var(--background-color);
-
-  box-shadow: var(--shadow);
 }
 
 .header-title-container {
@@ -665,6 +732,7 @@ label {
 
 .header-nav-row {
   position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;

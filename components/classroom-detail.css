@@ -357,10 +357,9 @@ body.detail-open .tab-content * {
      directly over classroom photos and needs the extra contrast. */
   background: var(--glass-tint);
   box-shadow:
-    0 0 0 1px var(--glass-outline),
+    0 0 0 0.1px var(--glass-outline),
     var(--glass-highlight),
-    inset -1px -1px 0 rgba(255, 255, 255, 0.1),
-    0 4px 16px 0 var(--glass-shadow-color);
+    0 4px 20px 0 var(--glass-shadow-color);
   backdrop-filter: blur(var(--glass-blur-lg));
   -webkit-backdrop-filter: blur(var(--glass-blur-lg));
 
@@ -378,10 +377,9 @@ body.detail-open .tab-content * {
 @media (prefers-color-scheme: dark) {
   .detail-back-btn {
     box-shadow:
-      0 0 0 1px var(--glass-outline),
+      0 0 0 0.1px var(--glass-outline),
       var(--glass-highlight),
-      inset -1px -1px 0 rgba(255, 255, 255, 0.03),
-      0 4px 16px 0 var(--glass-shadow-color);
+      0 4px 20px 0 var(--glass-shadow-color);
   }
 }
 

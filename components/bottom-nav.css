@@ -70,8 +70,9 @@
   border-radius: var(--radius-pill);
 
   box-shadow:
-    0 0 0 1px var(--glass-outline),
-    0 4px 16px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 20px 0 var(--glass-shadow-color);
 
   backdrop-filter: blur(var(--glass-blur-sm));
   -webkit-backdrop-filter: blur(var(--glass-blur-sm));
@@ -214,7 +215,8 @@
 
   background: var(--glass-tint);
   box-shadow:
-    0 0 0 1px var(--glass-outline),
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
     0 4px 20px 0 var(--glass-shadow-color);
 
   backdrop-filter: blur(var(--glass-blur-sm));

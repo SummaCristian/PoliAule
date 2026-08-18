@@ -94,9 +94,14 @@
   --glass-tint: rgba(223, 223, 223, 0.8);
   --glass-outline: rgba(0, 0, 0, 0.25);
   --glass-shadow-color: rgba(0, 0, 0, 0.25);
+  /* The specular rim along the top and bottom edges. Plain white here; the
+     HDR block below pushes it past white on displays that have the headroom
+     (see the --glass-specular override under `dynamic-range: high`). Dark
+     mode redefines --glass-highlight wholesale and doesn't use this. */
+  --glass-specular: rgb(255 255 255);
   --glass-highlight:
-    inset 0 1px 2px 0 rgba(255, 255, 255, 1),
-    inset 0 -1px 2px 0 rgba(255, 255, 255, 1),
+    inset 0 1px 2px 0 var(--glass-specular),
+    inset 0 -1px 2px 0 var(--glass-specular),
     inset 1px 0 2px 0 rgba(0, 0, 0, 0.25),
     inset -1px 0 2px 0 rgba(0, 0, 0, 0.25);
   --glass-blur-sm: 4px;
@@ -156,6 +161,34 @@
       inset 0 -1px 2px 0 rgba(255, 255, 255, 0.2),
       inset 1px 0 2px 0 rgba(0, 0, 0, 0.75),
       inset -1px 0 2px 0 rgba(0, 0, 0, 0.75);
+  }
+}
+
+/* HDR specular highlights.
+
+   In light mode the glass rim was already rgb(255 255 255) — the brightest
+   colour SDR can express — so against a light background it barely reads as a
+   highlight at all. On a display with dynamic range to spare we spend it here:
+   components above 100% in display-p3 are extended-range values, and the
+   compositor takes them past reference white instead of clamping.
+
+   Gated on `dynamic-range: high` rather than left to clamp on its own, so SDR
+   displays keep the exact previous value and the effect is one token to tune.
+   Requires an HDR-capable display *and* the browser actually driving it in HDR
+   (Chrome/Edge 136+, Safari 26+); everywhere else the media query simply
+   doesn't match.
+
+   The @supports is load-bearing, not belt-and-braces: the media query shipped
+   before color() did (Chrome 98 vs 111), so a browser in that gap would store
+   an unparseable value in --glass-specular. Custom properties aren't validated
+   until substitution, so that wouldn't fall back through the cascade — it
+   would invalidate the whole box-shadow at computed-value time and drop it to
+   `none`, taking the outline and drop shadow with it. */
+@media (dynamic-range: high) {
+  @supports (color: color(display-p3 1 1 1)) {
+    :root {
+      --glass-specular: color(display-p3 200% 200% 200%);
+    }
   }
 }
 

@@ -345,6 +345,8 @@ body.detail-open .tab-content * {
 }
 
 .detail-back-btn {
+  position: relative;
+
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -359,7 +361,7 @@ body.detail-open .tab-content * {
   box-shadow:
     0 0 0 0.1px var(--glass-outline),
     var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
+    0 4px 40px 0 var(--glass-shadow-color);
   backdrop-filter: blur(var(--glass-blur-lg));
   -webkit-backdrop-filter: blur(var(--glass-blur-lg));
 
@@ -374,12 +376,31 @@ body.detail-open .tab-content * {
   color-scheme: light dark;
 }
 
+/* Outside 0.5px gradient stroke — same recipe as .header-button::after
+   in style.css. */
+.detail-back-btn::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
 @media (prefers-color-scheme: dark) {
   .detail-back-btn {
     box-shadow:
       0 0 0 0.1px var(--glass-outline),
       var(--glass-highlight),
-      0 4px 20px 0 var(--glass-shadow-color);
+      0 4px 40px 0 var(--glass-shadow-color);
   }
 }
 

@@ -91,22 +91,37 @@
      the canonical source for this; every other translucent surface should
      match it, not the other way around. No saturate() — the tabbar never
      had one. */
-  --glass-tint: rgba(223, 223, 223, 0.8);
+  --glass-tint: rgba(250, 250, 250, 0.7);
   --glass-outline: rgba(0, 0, 0, 0.25);
-  --glass-shadow-color: rgba(0, 0, 0, 0.25);
+  --glass-shadow-color: rgba(0, 0, 0, 0.1);
   /* The specular rim along the top and bottom edges. Plain white here; the
      HDR block below pushes it past white on displays that have the headroom
      (see the --glass-specular override under `dynamic-range: high`). Dark
      mode redefines --glass-highlight wholesale and doesn't use this. */
   --glass-specular: rgb(255 255 255);
   --glass-highlight:
-    inset 0 1px 2px 0 var(--glass-specular),
-    inset 0 -1px 2px 0 var(--glass-specular),
+    inset -1px 0 2px 0 rgba(0, 0, 0, 0.25),
     inset 1px 0 2px 0 rgba(0, 0, 0, 0.25),
-    inset -1px 0 2px 0 rgba(0, 0, 0, 0.25);
+    inset 0 -1px 2px 0 var(--glass-specular),
+    inset 0 1px 2px 0 var(--glass-specular),
+    inset 0 -8px 4px 0 rgba(0, 0, 0, 0.02),
+    inset 0 8px 4px 0 rgba(0, 0, 0, 0.02);
   --glass-blur-sm: 4px;
   --glass-blur-md: 8px;
   --glass-blur-lg: 18px;
+
+  /* Outside 0.5px gradient stroke, top to bottom (Figma's outside-stroke
+     equivalent). Applied per glass surface via a masked ::after ring —
+     see .header-button::after below for the shared recipe. */
+  --glass-stroke-gradient: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(94, 94, 94, 0.25) 25%,
+    rgba(94, 94, 94, 0.8) 50%,
+    rgba(94, 94, 94, 0.25) 75%,
+    rgba(255, 255, 255, 1) 100%
+  );
+  --glass-stroke-opacity: 0.8;
 
   /* Repeated shadow/glow patterns, extracted only where the literal value
      was byte-identical across multiple files — not a general elevation
@@ -153,14 +168,24 @@
       0 1px 2px rgba(0, 0, 0, 0.3),
       0 4px 12px rgba(0, 0, 0, 0.6);
 
-    --glass-tint: rgba(41, 41, 41, 0.8);
+    --glass-tint: rgba(21, 21, 21, 0.8);
     --glass-outline: rgba(255, 255, 255, 0.25);
-    --glass-shadow-color: rgba(0, 0, 0, 0.5);
+    --glass-shadow-color: rgba(0, 0, 0, 0.1);
     --glass-highlight:
-      inset 0 1px 2px 0 rgba(255, 255, 255, 0.2),
-      inset 0 -1px 2px 0 rgba(255, 255, 255, 0.2),
+      inset -1px 0 2px 0 rgba(0, 0, 0, 0.75),
       inset 1px 0 2px 0 rgba(0, 0, 0, 0.75),
-      inset -1px 0 2px 0 rgba(0, 0, 0, 0.75);
+      inset 0 -1px 2px 0 rgba(255, 255, 255, 0.2),
+      inset 0 1px 2px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -8px 4px 0 rgba(255, 255, 255, 0.02),
+      inset 0 8px 4px 0 rgba(255, 255, 255, 0.02);
+    --glass-stroke-gradient: linear-gradient(
+      to bottom,
+      rgba(223, 223, 223, 0.35) 0%,
+      rgba(41, 41, 41, 0.5) 25%,
+      rgba(0, 0, 0, 1) 50%,
+      rgba(41, 41, 41, 0.5) 75%,
+      rgba(223, 223, 223, 0.35) 100%
+    );
   }
 }
 
@@ -702,6 +727,8 @@ label {
 }
 
 .header-button {
+  position: relative;
+
   width: 3rem;
   height: 3rem;
   border-radius: var(--radius-pill);
@@ -722,19 +749,44 @@ label {
   box-shadow:
     0 0 0 0.1px var(--glass-outline),
     var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
+    0 4px 40px 0 var(--glass-shadow-color);
 
   cursor: pointer;
 
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease,
-    scale 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &:hover {
     background: color-mix(in srgb, var(--text-color-primary) 12%, var(--glass-tint));
-    scale: 1.1;
+    transform: scale(1.1);
   }
+}
+
+/* Outside 0.5px gradient stroke (Figma's "outside stroke") without
+   affecting layout. header-button is a true circle (fixed equal
+   width/height), so the ring is masked with a radial-gradient rather than
+   the padding + mask-composite: exclude trick used on the pill-shaped
+   surfaces (.bn-tabbar::after, .detail-back-btn::after) — that box-corner
+   technique has a seam at the four cardinal points of a perfect circle
+   (border-radius: 999px on a square box), rendered as a bright spot/arc
+   instead of a clean ring. A radial-gradient mask is exact Euclidean
+   distance from the center, so it doesn't hit that seam. .bn-search-btn is
+   also a true circle and uses the same fix (see bottom-nav.css). */
+.header-button::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
 }
 
 .pulse-indicator {

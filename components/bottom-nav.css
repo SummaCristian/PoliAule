@@ -72,10 +72,29 @@
   box-shadow:
     0 0 0 0.1px var(--glass-outline),
     var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
+    0 4px 40px 0 var(--glass-shadow-color);
 
   backdrop-filter: blur(var(--glass-blur-sm));
   -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .header-button::after
+   in style.css. */
+.bn-tabbar::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
 }
 
 /* Buttons live in their own layer so a pill-shaped hole can be clipped
@@ -135,13 +154,49 @@
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+/* Selector (active-tab pill) — flat color while at rest, no shadow,
+   highlight, blur or stroke; the full glass treatment (below) only kicks
+   in while it's lifted, i.e. mid tap-to-navigate or drag-to-navigate
+   animation (see bottom-nav.js render(), which toggles bn-pill--lifted
+   off var(scale.value)). */
 .bn-pill-outer {
   pointer-events: none;
   position: absolute;
   border-radius: 999px;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.12);
   will-change: transform;
   transform-origin: center;
+  transition: box-shadow 0.15s ease;
+}
+
+.bn-pill-outer.bn-pill--lifted {
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .header-button::after in
+   style.css, only shown while lifted. */
+.bn-pill-outer::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+.bn-pill-outer.bn-pill--lifted::after {
+  opacity: var(--glass-stroke-opacity);
 }
 
 .bn-pill-inner {
@@ -152,6 +207,10 @@
 
   background: var(--bn-pill-bg);
 
+  transition: backdrop-filter 0.15s ease, -webkit-backdrop-filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bn-pill-outer.bn-pill--lifted .bn-pill-inner {
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
 
@@ -198,6 +257,8 @@
 /* ---- Standalone Search button, split off from the group ---- */
 
 .bn-search-btn {
+  position: relative;
+
   pointer-events: auto;
   flex-shrink: 0;
 
@@ -217,13 +278,33 @@
   box-shadow:
     0 0 0 0.1px var(--glass-outline),
     var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
+    0 4px 40px 0 var(--glass-shadow-color);
 
   backdrop-filter: blur(var(--glass-blur-sm));
   -webkit-backdrop-filter: blur(var(--glass-blur-sm));
 
   color: var(--bn-tab-color);
   will-change: transform;
+}
+
+/* Outside 0.5px gradient stroke — true circle (equal width/height, set
+   from JS), so this uses the same radial-gradient mask as
+   .header-button::after in style.css, not the pill-shaped box-mask
+   technique below (.bn-tabbar::after) — that one seams at the cardinal
+   points on a perfect circle. */
+.bn-search-btn::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
 }
 
 .bn-search-btn:focus-visible {

@@ -143,6 +143,13 @@ jobs:
           ref: beta
           path: beta-checkout
 
+      - name: Install Python dependencies (beta)
+        if: steps.beta_flag.outputs.enabled == 'true'
+        working-directory: beta-checkout
+        run: pip install -r requirements.txt
+
+
+
       - name: Run fetch script (beta)
         id: fetch_beta
         if: steps.beta_flag.outputs.enabled == 'true'

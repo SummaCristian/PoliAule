@@ -221,7 +221,10 @@
      Search tab's flat list — this is the mitigation for the GPU/compositing
      cost that used to force per-building lazy rendering here. */
   content-visibility: auto;
-  contain-intrinsic-size: auto 210px;
+  /* No "auto" keyword: a fixed placeholder the browser can trust outright,
+     instead of one it must actually render the card once to learn (which
+     defeats the point of skipping on first reveal — see conversation notes). */
+  contain-intrinsic-size: 210px;
 }
 
 /* ── Photo card variant ─────────────────────────────────────── */
@@ -238,7 +241,7 @@
   isolation: isolate;
   mask-image: radial-gradient(white, black);
   -webkit-mask-image: -webkit-radial-gradient(white, black);
-  contain-intrinsic-size: auto 320px;
+  contain-intrinsic-size: 320px;
 }
 
 /* Blurred color wash — spans the full card, fades in once the photo loads.

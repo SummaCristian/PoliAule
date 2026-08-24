@@ -170,9 +170,11 @@ document.querySelectorAll('.button-primary').forEach(btn => {
 
 // ---------- BUILDING CARD ----------
 
-// Builds a <li> containing a building card with its room cards inside.
-// Returns the element and the next cardIndex for stagger sequencing.
-function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = false, date = null) {
+// Builds one building's section of the results grid: a full-width header
+// followed by that building's room cards, as a flat list of <li> nodes to
+// append directly into the outer <ul>. Returns the nodes and the next
+// cardIndex for stagger-animation sequencing.
+function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday = false, date = null) {
   const buildingName = building.name;
   const countParts = [
     rooms.filter(r => r.status === 'free').length ? `<span class="building-count free">${rooms.filter(r => r.status === 'free').length} ${t('status.free')}</span>` : '',
@@ -180,111 +182,32 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
     rooms.filter(r => r.status === 'not-free').length ? `<span class="building-count not-free">${rooms.filter(r => r.status === 'not-free').length} ${t('status.occupied')}</span>` : '',
   ].filter(Boolean).join('<span class="building-count-sep">·</span>');
 
-  const buildingCard = document.createElement('div');
-  buildingCard.className = 'building-card collapsed';
+  const allPartial = rooms.every(r => r.status === 'partially-free');
 
-  // Use current cardIndex for the building's delay only (rooms rendered lazily)
-  const buildingIndex = cardIndex++;
-
-  buildingCard.innerHTML = `
-    <div class="building-card-header">
-      <div class="building-card-header-text">
-        <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}${building.altName ? ` <small class="building-alt-name">${escapeHtml(building.altName)}</small>` : ''}</h3>
-        <div class="building-counts">${countParts}</div>
-      </div>
-      <span class="material-symbols-outlined building-chevron">expand_more</span>
-    </div>
+  const headerLi = document.createElement('li');
+  headerLi.className = 'building-section-header';
+  if (allPartial) headerLi.dataset.allPartial = 'true';
+  headerLi.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
+  headerLi.innerHTML = `
+    <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}${building.altName ? ` <small class="building-alt-name">${escapeHtml(building.altName)}</small>` : ''}</h3>
+    <div class="building-counts">${countParts}</div>
   `;
+  cardIndex++;
 
-  const body = document.createElement('div');
-  body.className = 'building-card-body';
+  const nodes = [headerLi];
 
-  const roomsList = document.createElement('ul');
-  roomsList.className = 'list-inner-container';
-
-  body.appendChild(roomsList);
-  buildingCard.appendChild(body);
-
-  buildingCard.addEventListener('click', (e) => {
-    if (!buildingCard.classList.contains('collapsed') && e.target.closest('.building-card-body')) return;
-    const isCollapsed = buildingCard.classList.contains('collapsed');
-
-    if (isCollapsed) {
-      const scrollContainer = buildingCard.closest('#available-classrooms-results');
-      const containerIsScrollable = scrollContainer &&
-        ['auto', 'scroll'].includes(getComputedStyle(scrollContainer).overflowY);
-
-      // Snapshot position before DOM changes
-      const cardTopBefore = buildingCard.getBoundingClientRect().top;
-
-      rooms.forEach(room => {
-        const roomItem = document.createElement('li');
-        roomItem.className = 'classroom-list-item-container';
-        roomItem.dataset.status = room.status;
-        roomItem.appendChild(buildCardForClassroom(room, building, from, to, isToday, date));
-        roomsList.appendChild(roomItem);
-      });
-      if (rooms.every(r => r.status === 'partially-free')) {
-        const emptyState = document.createElement('li');
-        emptyState.className = 'building-all-partial-hidden';
-        emptyState.textContent = t('results.allPartialHidden');
-        roomsList.appendChild(emptyState);
-      }
-      buildingCard.closest('.list-outer-container')
-        ?.querySelectorAll('.building-card:not(.collapsed)')
-        .forEach(card => {
-          if (card !== buildingCard) {
-            card.classList.add('collapsed');
-            card.querySelector('.list-inner-container').replaceChildren();
-          }
-        });
-      buildingCard.classList.remove('collapsed');
-      haptics.trigger(defaultPatterns.light);
-
-      // getBoundingClientRect() forces a synchronous reflow — cardTopAfter reflects
-      // the final layout (CSS transitions don't affect layout values, only visuals).
-      // Instantly compensate for any shift so the card stays visually in place.
-      const cardTopAfter = buildingCard.getBoundingClientRect().top;
-      const delta = cardTopAfter - cardTopBefore;
-      if (delta !== 0) {
-        if (containerIsScrollable) {
-          scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop + delta);
-        } else {
-          window.scrollBy(0, delta);
-        }
-      }
-
-      // Now smooth-scroll the card to the top of the visible area
-      requestAnimationFrame(() => {
-        if (containerIsScrollable) {
-          const top = buildingCard.getBoundingClientRect().top
-            - scrollContainer.getBoundingClientRect().top
-            + scrollContainer.scrollTop - 8;
-          scrollContainer.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-        } else {
-          const header = document.querySelector('.header');
-          const offset = (header?.offsetHeight ?? 0) + 8;
-          const top = buildingCard.getBoundingClientRect().top + window.scrollY - offset;
-          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-        }
-      });
-    } else {
-      buildingCard.classList.add('collapsed');
-      haptics.trigger(defaultPatterns.light);
-      const onCollapsed = e => {
-        if (e.propertyName !== 'grid-template-rows') return;
-        body.removeEventListener('transitionend', onCollapsed);
-        roomsList.replaceChildren();
-      };
-      body.addEventListener('transitionend', onCollapsed);
-    }
+  rooms.forEach(room => {
+    const roomItem = document.createElement('li');
+    roomItem.className = 'classroom-list-item-container';
+    roomItem.dataset.status = room.status;
+    const cardEl = buildCardForClassroom(room, building, from, to, isToday, date);
+    cardEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
+    roomItem.appendChild(cardEl);
+    nodes.push(roomItem);
+    cardIndex++;
   });
 
-  const li = document.createElement('li');
-  li.style.animationDelay = `${Math.min(buildingIndex * 40, 300)}ms`;
-  li.appendChild(buildingCard);
-  if (rooms.every(r => r.status === 'partially-free')) li.dataset.allPartial = 'true';
-  return { li, cardIndex };
+  return { nodes, cardIndex };
 }
 
 // ---------- DATA FETCHING ----------
@@ -424,7 +347,6 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   const showPartialSaved = localStorage.getItem(SHOW_PARTIAL_KEY);
   const showPartialDefault = showPartialSaved === null ? true : showPartialSaved === 'true';
   const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
-  let originalBuildingOrder = [];
   if (hasPartial) {
     const toggleBtn = document.createElement('button');
     toggleBtn.className = showPartialDefault ? 'results-filter-btn active' : 'results-filter-btn';
@@ -434,11 +356,6 @@ function renderAvailableClassroomsResults(results, date, from, to) {
       haptics.trigger(defaultPatterns.light);
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
-      if (!isActive) {
-        list.querySelectorAll('li[data-all-partial]').forEach(item => list.appendChild(item));
-      } else {
-        originalBuildingOrder.forEach(item => list.appendChild(item));
-      }
     });
     filterRow.appendChild(toggleBtn);
     container.appendChild(filterRow);
@@ -453,11 +370,10 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   let cardIndex = 0;
   results.forEach(buildingResult => {
-    const { li, cardIndex: next } = createBuildingItem(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date);
+    const { nodes, cardIndex: next } = buildBuildingSection(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date);
     cardIndex = next;
-    list.appendChild(li);
+    nodes.forEach(node => list.appendChild(node));
   });
-  originalBuildingOrder = [...list.children];
 
   container.appendChild(list);
 

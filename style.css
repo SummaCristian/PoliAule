@@ -989,7 +989,12 @@ body.info-open .header-nav-row {
 .tab-content {
   padding: 0 1rem;
 
-  display: none;
+  /* content-visibility:hidden instead of display:none: it still keeps the
+     subtree out of layout/paint, but (unlike display:none) doesn't remove it
+     from the render tree, so content-visibility:auto on descendants (e.g.
+     .classroom-card) keeps working — switching tabs doesn't force a full
+     "unhide and lay out everything" pass over the tab being shown. */
+  content-visibility: hidden;
 }
 
 @media (min-width: 600px) {
@@ -1001,6 +1006,8 @@ body.info-open .header-nav-row {
 }
 
 .tab-content.visible {
+  content-visibility: visible;
+
   flex: 1;
   display: flex;
   flex-direction: column;

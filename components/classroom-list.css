@@ -53,16 +53,11 @@
   display: none;
 }
 
-.building-all-partial-hidden {
+/* Hide a building's header too when every one of its rooms is partially-free
+   (and therefore already hidden above) — otherwise an empty header would be
+   left dangling with no cards under it. */
+.available-classrooms-container.hide-partial [data-all-partial="true"] {
   display: none;
-  padding: 0.75rem 0.5rem;
-  font-size: var(--text-85);
-  color: var(--text-secondary, #888);
-  text-align: center;
-}
-
-.available-classrooms-container.hide-partial .building-all-partial-hidden {
-  display: block;
 }
 
 .available-classrooms-container.empty {
@@ -110,56 +105,23 @@
   gap: 1rem;
 }
 
-.list-inner-container {
-  list-style: none;
-  margin: 0;
-  padding: 0.75rem 0.5rem;
-
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.building-card {
-  background-color: var(--background-color);
-  border-radius: var(--radius-xl);
-  padding: 0.75rem;
-  box-shadow: var(--shadow);
-
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  
-  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.building-card-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.25rem 0.5rem 0.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
-  cursor: pointer;
-  user-select: none;
-}
-
-.building-card.collapsed .building-card-header {
-  border-bottom-color: transparent;
-  padding-bottom: 0.25rem;
-}
-
-.building-card.collapsed {
-  gap: 0;
-  cursor: pointer;
-}
-
-.building-card-header-text {
+/* EXPERIMENT: flat rendering — a lightweight, non-interactive section header
+   between buildings, replacing the old collapsible .building-card. Every
+   classroom card is now a direct sibling in .list-outer-container instead of
+   being nested (and lazily created/destroyed) inside a per-building body. */
+.building-section-header {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  padding: 0.25rem 0.5rem 0.5rem;
   text-align: start;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+
+  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.building-section-header:not(:first-child) {
+  margin-top: 0.5rem;
 }
 
 .building-name {
@@ -196,35 +158,6 @@
   color: color-mix(in srgb, var(--text-color-primary) 25%, transparent);
 }
 
-.building-chevron {
-  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  flex-shrink: 0;
-  transform: rotate(-180deg);
-}
-
-.building-card.collapsed .building-chevron {
-  transform: rotate(0deg);
-}
-
-.building-card-body {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
-  overflow: hidden;
-  min-height: 0;
-}
-
-.building-card.collapsed .building-card-body {
-  grid-template-rows: 0fr;
-  opacity: 0;
-}
-
-.building-card-body > .list-inner-container {
-  overflow: hidden;
-  min-height: 0;
-}
-
 .classroom-list-item-container {
   padding: 1rem;
 
@@ -245,7 +178,7 @@
 /* Prevent re-triggering the staggered animation after the first load */
 .list-outer-container.appeared .classroom-list-item-container,
 .list-outer-container.appeared > li,
-.list-outer-container.appeared .building-card {
+.list-outer-container.appeared .building-section-header {
   animation: none !important;
 }
 
@@ -282,6 +215,13 @@
   -webkit-tap-highlight-color: transparent;
 
   contain: layout paint style;
+  /* EXPERIMENT: with cards now all rendered up front (see buildBuildingSection
+     in script.js) instead of one building at a time, skip layout/paint for
+     off-screen cards the same way search-classrooms.css already does for the
+     Search tab's flat list — this is the mitigation for the GPU/compositing
+     cost that used to force per-building lazy rendering here. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 210px;
 }
 
 /* ── Photo card variant ─────────────────────────────────────── */
@@ -298,6 +238,7 @@
   isolation: isolate;
   mask-image: radial-gradient(white, black);
   -webkit-mask-image: -webkit-radial-gradient(white, black);
+  contain-intrinsic-size: auto 320px;
 }
 
 /* Blurred color wash — spans the full card, fades in once the photo loads.

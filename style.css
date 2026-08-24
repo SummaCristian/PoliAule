@@ -989,12 +989,11 @@ body.info-open .header-nav-row {
 .tab-content {
   padding: 0 1rem;
 
-  /* EXPERIMENT: content-visibility:hidden instead of display:none. Unlike
-     display:none, this keeps the subtree in the render tree (just skipped),
-     so content-visibility:auto on descendants (e.g. .classroom-card) keeps
-     working as intended: switching tabs no longer forces a full "unhide and
-     lay out everything" pass over the previously-hidden tab, which display:
-     none toggling did regardless of what individual cards declared. */
+  /* content-visibility:hidden instead of display:none: it still keeps the
+     subtree out of layout/paint, but (unlike display:none) doesn't remove it
+     from the render tree, so content-visibility:auto on descendants (e.g.
+     .classroom-card) keeps working — switching tabs doesn't force a full
+     "unhide and lay out everything" pass over the tab being shown. */
   content-visibility: hidden;
 }
 

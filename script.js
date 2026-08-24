@@ -170,12 +170,10 @@ document.querySelectorAll('.button-primary').forEach(btn => {
 
 // ---------- BUILDING CARD ----------
 
-// Builds a <li> containing a building card with its room cards inside.
-// Returns the element and the next cardIndex for stagger sequencing.
-// EXPERIMENT: flat rendering — every classroom card is created up front instead
-// of lazily per expanded building. Returns the flat list of <li> nodes (one
-// section header per building, followed by that building's room cards) to
-// append directly into the outer <ul>.
+// Builds one building's section of the results grid: a full-width header
+// followed by that building's room cards, as a flat list of <li> nodes to
+// append directly into the outer <ul>. Returns the nodes and the next
+// cardIndex for stagger-animation sequencing.
 function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday = false, date = null) {
   const buildingName = building.name;
   const countParts = [
@@ -202,8 +200,9 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     const roomItem = document.createElement('li');
     roomItem.className = 'classroom-list-item-container';
     roomItem.dataset.status = room.status;
-    roomItem.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
-    roomItem.appendChild(buildCardForClassroom(room, building, from, to, isToday, date));
+    const cardEl = buildCardForClassroom(room, building, from, to, isToday, date);
+    cardEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
+    roomItem.appendChild(cardEl);
     nodes.push(roomItem);
     cardIndex++;
   });

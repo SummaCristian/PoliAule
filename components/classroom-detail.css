@@ -1071,8 +1071,14 @@ body.detail-open .tab-content * {
     text-align: right;
   }
 
-  /* Now indicator: outside the bar, to the right, arrow pointing left */
+  /* Now indicator: outside the bar, to the right, arrow pointing left.
+     position/padding/etc. used to come from a shared, unscoped
+     .timeline-time-indicator base rule in classroom-list.css that no longer
+     exists (that file's own timeline was replaced by a simpler status bar) —
+     declaring them here directly instead of relying on that cross-file
+     dependency. */
   .detail-schedule-bar-wrapper .timeline-time-indicator--now {
+    position: absolute;
     display: block;
     left: calc(100% + 0.5rem);
     right: auto;
@@ -1081,7 +1087,14 @@ body.detail-open .tab-content * {
     transform-origin: left center;
     background: var(--color-now);
     color: white;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-70);
+    font-weight: 800;
+    white-space: nowrap;
     box-shadow: var(--glow-info);
+    user-select: none;
+    z-index: 10;
     animation: now-indicator-appear-mobile 0.65s linear 0.35s forwards;
   }
 

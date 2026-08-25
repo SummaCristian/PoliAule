@@ -5,15 +5,6 @@
 
   position: relative;
 
-  /* Same reason .bn-wrapper has its own transform in bottom-nav.css (there
-     it's the translateY that positions the bar; here it's a no-op
-     translateZ(0)): without a transform on the shared ancestor of both
-     .date-picker-container and .date-indicator, Safari doesn't promote
-     that subtree into one composited layer, and the indicator's nested
-     backdrop-filter silently fails to render on top of the container's own
-     — Chrome composites it fine either way. */
-  transform: translateZ(0);
-
   /* The pill is draggable (see pill-selector.js); without this, a
      touch-drag starting on/near a day's text triggers the browser's native
      text-selection/callout instead — same fix as .bn-wrapper in
@@ -41,8 +32,8 @@
      clipping and the outer box-shadow/::after stroke below can live
      directly on this element. */
   background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
   border-radius: var(--radius-pill);
   padding: 0.5rem 0.75rem;
 

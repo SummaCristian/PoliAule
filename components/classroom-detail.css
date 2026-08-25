@@ -1072,11 +1072,6 @@ body.detail-open .tab-content * {
   .detail-schedule-day-selector {
     display: flex;
     flex-direction: column;
-    /* Same Safari nested-backdrop-filter fix as .date-picker in
-       date-picker.css: this is the shared ancestor of .date-picker-container
-       and .date-indicator here too, and needs its own transform for Safari
-       to composite the indicator's lift-blur on top of the container's own. */
-    transform: translateZ(0);
     align-items: center;
     width: 100%;
     overflow: visible;

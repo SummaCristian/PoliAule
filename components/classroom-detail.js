@@ -126,7 +126,7 @@ class ClassroomDetail {
       window.scrollTo(0, scrollY);
     });
 
-    // Click delegation — handles both available-tab info buttons and search-tab cards
+    // Click delegation — handles classroom cards on both the available and campus tabs
     document.addEventListener('click', (e) => {
       const trigger = e.target.closest('[data-open-classroom]');
       if (!trigger) return;
@@ -136,7 +136,7 @@ class ClassroomDetail {
       const id = parseInt(trigger.dataset.openClassroom);
 
       // The whole card morphs into the whole page (VT shared element).
-      const card = trigger.closest('.classroom-card, .search-card--classroom') ?? trigger;
+      const card = trigger.closest('.classroom-card') ?? trigger;
 
       const queryDate = card.dataset.queryDate ?? null;
       const queryFrom = card.dataset.queryFrom ?? null;

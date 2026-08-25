@@ -22,19 +22,33 @@ const _photoObserver = new IntersectionObserver((entries) => {
 
 // ---------- CARD ----------
 
+const STATUS_KEYS = {
+  'free': 'status.free',
+  'partially-free': 'status.partiallyFree',
+  'occupied': 'status.occupied',
+  'free-soon': 'status.freeSoon',
+  'occupied-soon': 'status.occupiedSoon',
+};
+
 // Builds and returns a Card DOM element for the classroom passed as parameter.
 // Every card shares the same footprint (aspect-ratio-based, see .classroom-card
 // in classroom-list.css) so they lay out cleanly in the results grid, whether
 // or not the room has a photo.
-export function buildCardForClassroom(classroom, building, fromTime, toTime, isToday = false, date = null) {
+//
+// fromTime/toTime/date are optional — pass them when the card represents a
+// specific query time range (Available tab) so opening the classroom detail
+// page preserves that context; omit them (e.g. Campus tab browsing) to open
+// the detail page with no query context, showing status relative to now.
+export function buildCardForClassroom(classroom, building, fromTime = null, toTime = null, isToday = false, date = null) {
   const hasPhoto = !!classroom.idfoto;
-  const statusLabel = classroom.status === 'free' ? t('status.free') : t('status.partiallyFree');
+  const statusKey = STATUS_KEYS[classroom.status];
+  const statusLabel = statusKey ? t(statusKey) : '';
 
   const el = document.createElement('div');
   el.className = hasPhoto ? 'classroom-card classroom-card--photo' : 'classroom-card classroom-card--plain';
   el.dataset.openClassroom = classroom.id;
-  el.dataset.queryFrom = fromTime;
-  el.dataset.queryTo = toTime;
+  if (fromTime) el.dataset.queryFrom = fromTime;
+  if (toTime) el.dataset.queryTo = toTime;
   if (date) el.dataset.queryDate = date;
   el.setAttribute('role', 'button');
   el.setAttribute('tabindex', '0');
@@ -45,7 +59,7 @@ export function buildCardForClassroom(classroom, building, fromTime, toTime, isT
       <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${escapeHtml(classroom.name)}</h4>
       <div class="classroom-card-meta-row">
         <p class="classroom-card-building">${t('building.prefix')} ${escapeHtml(building.name)}${building.altName ? ` · ${escapeHtml(building.altName)}` : ''}</p>
-        <span class="classroom-status-txt ${classroom.status}">${statusLabel}</span>
+        ${statusLabel ? `<span class="classroom-status-txt ${classroom.status}">${statusLabel}</span>` : ''}
       </div>
     </div>
   `;

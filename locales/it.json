@@ -109,6 +109,7 @@
   "detail.disabledSeats": "Posti disabili",
   "detail.weeklySchedule": "Orario settimanale",
   "detail.occupied": "Occupata",
+  "detail.examLabel": "Esame",
   "detail.noData": "Nessun dato disponibile",
   "info.body.intro": "<strong>PoliAule</strong> è un'applicazione web progettata per aiutare gli studenti a trovare aule disponibili nei campus del <strong>Politecnico di Milano</strong>.",
   "info.body.parag1": "Creata dagli studenti per gli studenti, <strong>PoliAule</strong> è un progetto gratuito e open-source che mira a facilitare la ricerca di un posto dove studiare, collaborare o semplicemente fare una pausa tra le lezioni. Che tu abbia bisogno di un posto tranquillo per concentrarti, un'aula con delle prese o semplicemente vuoi controllare se il tuo angolo di studio preferito è libero, <strong>PoliAule</strong> è qui per aiutarti.",

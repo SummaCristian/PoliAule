@@ -123,6 +123,7 @@
   "detail.disabledSeats": "Accessible seats",
   "detail.weeklySchedule": "Weekly Schedule",
   "detail.occupied": "Occupied",
+  "detail.examLabel": "Exam",
   "detail.noData": "No schedule data available",
 
   "info.body.intro": "<strong>PoliAule</strong> is a web app that helps students find available classrooms across <strong>Politecnico di Milano</strong> campuses.",

@@ -5,6 +5,7 @@ import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
+import { DynamicPopover } from './popover.js';
 
 function minutesToTimeDisplay(minutes) {
   const d = new Date();
@@ -29,6 +30,36 @@ function timeToMinutes(time) {
   return h * 60 + m;
 }
 
+// Builds the popover body for a single occupancy slot. Course/exam slots carry
+// structured fields (course, code, professors, section); anything the scrape
+// couldn't parse only has `raw`; very old cached data may only have `name`.
+function buildOccupationPopoverHtml(slot) {
+  const timeRange = `${minutesToTimeDisplay(timeToMinutes(slot.inizio))} – ${minutesToTimeDisplay(timeToMinutes(slot.fine))}`;
+
+  let titleText;
+  const metaLines = [];
+
+  if (slot.category === 'COURSE' || slot.category === 'EXAM') {
+    titleText = slot.course ?? slot.name ?? t('detail.occupied');
+    if (slot.category === 'EXAM') {
+      metaLines.push(`<span class="timeline-popover-badge">${t('detail.examLabel')}</span>`);
+    }
+    if (slot.code != null) metaLines.push(`<span>${escapeHtml(String(slot.code))}</span>`);
+    if (slot.section) metaLines.push(`<span>${escapeHtml(slot.section)}</span>`);
+    if (Array.isArray(slot.professors) && slot.professors.length) {
+      metaLines.push(`<span>${escapeHtml(slot.professors.join(', '))}</span>`);
+    }
+  } else {
+    titleText = slot.raw ?? slot.name ?? t('detail.occupied');
+  }
+
+  return `
+    <div class="timeline-popover-time">${timeRange}</div>
+    <div class="timeline-popover-title">${escapeHtml(titleText)}</div>
+    ${metaLines.length ? `<div class="timeline-popover-meta">${metaLines.join('')}</div>` : ''}
+  `;
+}
+
 const HASH_PATTERN    = /^#classroom\/([^\/]+)\/(.+)$/;
 const HASH_PATTERN_V1 = /^#classroom\/(\d+)$/;
 
@@ -49,6 +80,7 @@ class ClassroomDetail {
     this._savedScrollPos = 0;
     this._queryContext = null;  // { date, from, to } when opened from Available Tab, else null
     this._nowTimer = null;
+    this._timelinePopoverCleanup = null; // removes the previous _loadSchedule's document-level listener
   }
 
   // Called from script.js after all data is loaded.
@@ -738,6 +770,8 @@ class ClassroomDetail {
 
   _loadSchedule(classroomId) {
     clearInterval(this._nowTimer);
+    this._timelinePopoverCleanup?.();
+    this._timelinePopoverCleanup = null;
     const data = occupancyData;
     const container = document.getElementById('detail-schedule-container');
 
@@ -804,6 +838,10 @@ class ClassroomDetail {
         queryToDisplay   = minutesToTimeDisplay(qTo);
       }
 
+      // Populated as blocks are built; a block's data-slot-idx indexes into this
+      // so the popover can look up its full metadata without re-parsing the DOM.
+      const scheduleSlots = [];
+
       const _dayParts = days.map(({ dayData, date }) => {
         const isSunday = !dayData;
 
@@ -843,7 +881,8 @@ class ClassroomDetail {
           if (e <= s) return '';
           const left  = ((s - DAY_START) / total * 100).toFixed(2);
           const width = ((e - s)         / total * 100).toFixed(2);
-          return `<div class="detail-schedule-block" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
+          const slotIdx = scheduleSlots.push(slot) - 1;
+          return `<div class="detail-schedule-block" data-slot-idx="${slotIdx}" tabindex="0" role="button" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
         }).join('');
 
         const queryOverlayHtml = isQueryDay && queryFromPct !== null
@@ -941,6 +980,10 @@ class ClassroomDetail {
             </div>
           </div>
         </div>
+        <div id="detail-timeline-popover" class="popover timeline-occupation-popover" role="tooltip">
+          <div class="arrow" data-arrow></div>
+          <div class="timeline-popover-body"></div>
+        </div>
       `;
 
       if (localStorage.getItem('poliAule_hideSundays') === 'true') {
@@ -999,6 +1042,7 @@ class ClassroomDetail {
             return;
           }
           haptics.trigger(defaultPatterns.light);
+          hideOccupationPopover();
           selectScheduleDay(parseInt(chip.dataset.dayIndex));
         });
       });
@@ -1131,6 +1175,67 @@ class ClassroomDetail {
           _activeBar = null;
         }
       });
+
+      // ---------- TIMELINE OCCUPATION POPOVER ----------
+      const timelinePopoverEl = container.querySelector('#detail-timeline-popover');
+      const timelinePopoverBody = timelinePopoverEl?.querySelector('.timeline-popover-body') ?? null;
+      const timelinePopover = timelinePopoverEl ? new DynamicPopover(timelinePopoverEl, { placement: 'top' }) : null;
+
+      const showOccupationPopover = (blockEl) => {
+        if (!timelinePopover || !timelinePopoverBody) return;
+        const slot = scheduleSlots[Number(blockEl.dataset.slotIdx)];
+        if (!slot) return;
+        timelinePopoverBody.innerHTML = buildOccupationPopoverHtml(slot);
+        timelinePopover.show(blockEl);
+      };
+      const hideOccupationPopover = () => timelinePopover?.hide();
+
+      if (timelinePopover) {
+        // Desktop hover
+        let _hoveredBlock = null;
+        container.addEventListener('pointerover', e => {
+          if (e.pointerType && e.pointerType !== 'mouse') return;
+          const block = e.target.closest?.('.detail-schedule-block');
+          if (!block || block === _hoveredBlock) return;
+          _hoveredBlock = block;
+          showOccupationPopover(block);
+        });
+        container.addEventListener('pointerout', e => {
+          if (e.pointerType && e.pointerType !== 'mouse') return;
+          const block = e.target.closest?.('.detail-schedule-block');
+          if (!block || block !== _hoveredBlock) return;
+          _hoveredBlock = null;
+          hideOccupationPopover();
+        });
+
+        // Keyboard focus (mirrors hover for accessibility)
+        container.addEventListener('focusin', e => {
+          const block = e.target.closest?.('.detail-schedule-block');
+          if (block) showOccupationPopover(block);
+        });
+        container.addEventListener('focusout', e => {
+          const block = e.target.closest?.('.detail-schedule-block');
+          if (block) hideOccupationPopover();
+        });
+
+        // Tap / click toggles — this is the primary interaction on mobile
+        container.addEventListener('click', e => {
+          const block = e.target.closest?.('.detail-schedule-block');
+          if (!block) { hideOccupationPopover(); return; }
+          e.stopPropagation();
+          haptics.trigger(defaultPatterns.light);
+          if (timelinePopover.trigger === block) hideOccupationPopover();
+          else showOccupationPopover(block);
+        });
+
+        // Close on any interaction outside the schedule area (e.g. tapping the
+        // room title or scrolling the page on a non-anchor-positioning browser).
+        const onDocClick = e => {
+          if (!container.contains(e.target)) hideOccupationPopover();
+        };
+        document.addEventListener('click', onDocClick);
+        this._timelinePopoverCleanup = () => document.removeEventListener('click', onDocClick);
+      }
     } catch (err) {
       console.error('ClassroomDetail: Error rendering schedule:', err);
       container.innerHTML = `<p class="secondary">${t('detail.noData')}</p>`;

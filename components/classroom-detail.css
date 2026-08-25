@@ -78,15 +78,18 @@ body.detail-open .tab-content * {
   }
 }
 
-/* Desktop "Card" style */
+/* Desktop "Hero Header" style — full width like mobile, not a bounded card.
+   A bounded card here would make the card→page VT zoom read as "a giant
+   photo appeared" instead of "the page opened," since the photo would be
+   the only shape distinguishable from the (same-colored) page background. */
 @media (min-width: 600px) {
   .detail-photo-container {
-    width: 92%;
-    max-width: 720px;
-    aspect-ratio: 16 / 9;
-    border-radius: var(--radius-xl);
-    margin-top: 0.5rem;
-    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: none;
+    aspect-ratio: 21 / 9;
+    border-radius: 0;
+    margin-top: 0;
+    box-shadow: none;
   }
 }
 
@@ -101,12 +104,6 @@ body.detail-open .tab-content * {
   }
 }
 
-@media (min-width: 600px) {
-  .detail-photo-container.loaded {
-    box-shadow: var(--shadow);
-  }
-}
-
 .detail-photo {
   display: block;
   width: 100%;
@@ -117,15 +114,11 @@ body.detail-open .tab-content * {
   opacity: 0;
   transform: scale(1.05);
   transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
-@media (max-width: 599px) {
-  .detail-photo {
-    /* Use a mask to fade out the image itself at the bottom to avoid "line" artifacts
-       between the image and the background blur layer. */
-    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
-  }
+  /* Use a mask to fade out the image itself at the bottom to avoid "line" artifacts
+     between the image and the background blur layer. */
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
 }
 
 .detail-photo.loaded {
@@ -139,39 +132,34 @@ body.detail-open .tab-content * {
 .detail-photo-gradient {
   position: absolute;
   inset: 0;
+  top: auto;
+  height: 180px;
   opacity: 0;
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
+
+  mask-image: linear-gradient(to top,
+    black 0%,
+    black 20%,
+    rgba(0, 0, 0, 0.5) 60%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to top,
+    black 0%,
+    black 20%,
+    rgba(0, 0, 0, 0.5) 60%,
+    transparent 100%
+  );
+
+  background: linear-gradient(to top,
+    var(--background-color) 0%,
+    color-mix(in srgb, var(--background-color) 80%, transparent) 30%,
+    transparent 100%
+  );
 }
 
 .detail-photo.loaded + .detail-photo-gradient {
   opacity: 1;
-}
-
-@media (max-width: 599px) {
-  .detail-photo-gradient {
-    top: auto;
-    height: 180px;
-
-    mask-image: linear-gradient(to top,
-      black 0%,
-      black 20%,
-      rgba(0, 0, 0, 0.5) 60%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(to top,
-      black 0%,
-      black 20%,
-      rgba(0, 0, 0, 0.5) 60%,
-      transparent 100%
-    );
-
-    background: linear-gradient(to top,
-      var(--background-color) 0%,
-      color-mix(in srgb, var(--background-color) 80%, transparent) 30%,
-      transparent 100%
-    );
-  }
 }
 
 /* ── Header ─────────────────────────────────────────────────────── */
@@ -1492,23 +1480,13 @@ body.detail-open .tab-content * {
 /* ── View Transition animation overrides ──────────────────────────── */
 
 @supports (view-transition-name: none) {
-  /* Suppress the CSS opacity fallback transition when VT is available */
-  #classroom-detail-overlay {
+  /* Suppress the CSS opacity fallback transition when VT is available.
+     Must match/exceed the base rule's specificity (#id:not([hidden]) = 1,1,0),
+     otherwise this loses the cascade and the fallback fade keeps running
+     underneath the VT snapshot, fighting it once the transition hands back
+     to the live DOM. */
+  #classroom-detail-overlay:not([hidden]) {
     transition: none;
-  }
-
-  /* Shared element: classroom name morphs card → overlay title */
-  ::view-transition-group(classroom-detail-name) {
-    animation-duration: 0.35s;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* With fit-content on both elements the boxes are near-identical in size,
-     so the group is essentially a position-only morph with minimal scaling. */
-  ::view-transition-old(classroom-detail-name),
-  ::view-transition-new(classroom-detail-name) {
-    animation-duration: 0.35s;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Root cross-fade (for everything else: background, tabbar, etc.) */
@@ -1517,41 +1495,22 @@ body.detail-open .tab-content * {
     animation-duration: 0.25s;
   }
 
-  /* Shared element: classroom photo card → detail hero */
-  ::view-transition-group(classroom-photo) {
-    animation-duration: 0.45s;
+  /* Shared element: whole card morphs into the whole page (SwiftUI .zoom-style).
+     Group (size/position) and both snapshots (opacity cross-fade) share the same
+     duration/easing — a mismatch here makes the shorter one snap back to full
+     opacity before the transition ends, reading as a sudden pop instead of a fade. */
+  ::view-transition-group(classroom-detail-zoom) {
+    animation-duration: 0.5s;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden; /* clip both snapshots to the group's morphing bounds */
   }
 
-  /* Old snapshot (card photo): fade out quickly so it doesn't ghost behind the new image */
-  ::view-transition-old(classroom-photo) {
-    animation-duration: 0.2s;
-    animation-timing-function: ease-in;
-    object-fit: cover;
-    width: 100%;
-    height: 100%;
-  }
-
-  /* New snapshot (detail photo): match the group's spring so it reveals with the morph */
-  ::view-transition-new(classroom-photo) {
-    animation-duration: 0.45s;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    object-fit: cover;
-    width: 100%;
-    height: 100%;
-  }
-
-  /* Card meta elements (building info, arrow button): promoted to top layer during
-     close so they sit above the morphing photo (DOM order gives them higher z-index).
-     Fade in as the photo settles — no old state, so this is a reveal-only animation. */
-  ::view-transition-new(search-card-photo-meta),
-  ::view-transition-new(search-card-arrow-btn) {
-    animation-duration: 0.45s;
+  ::view-transition-old(classroom-detail-zoom),
+  ::view-transition-new(classroom-detail-zoom) {
+    animation-duration: 0.5s;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     animation-fill-mode: both;
   }
-
 }
 
 @media (max-width: 599px) and (prefers-color-scheme: dark) {

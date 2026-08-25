@@ -74,7 +74,7 @@ class ClassroomDetail {
     this._staticData = null;       // classrooms.json hierarchy
     this._flatIndex = null;       // Map<id, { classroom, building, campus }>
     this._slugIndex = null;       // Map<"campus-slug\x00name", { classroom, building, campus }>
-    this._pendingTrigger = null;   // { nameEl } stored by click handler before hashchange fires
+    this._pendingTrigger = null;   // { cardEl } stored by click handler before hashchange fires
     this._openTrigger = null;   // same, kept for reverse morph on close
     this._openedViaPushState = false;
     this._currentId = null;
@@ -135,10 +135,8 @@ class ClassroomDetail {
 
       const id = parseInt(trigger.dataset.openClassroom);
 
-      // Name and status elements that will morph into the overlay
+      // The whole card morphs into the whole page (VT shared element).
       const card = trigger.closest('.classroom-card, .search-card--classroom') ?? trigger;
-      const nameEl = card.querySelector('.classroom-name, .search-card-name') ?? null;
-      const statusEl = card.querySelector('.classroom-status-txt') ?? null;
 
       const queryDate = card.dataset.queryDate ?? null;
       const queryFrom = card.dataset.queryFrom ?? null;
@@ -147,10 +145,7 @@ class ClassroomDetail {
         ? { date: queryDate, from: queryFrom, to: queryTo }
         : null;
 
-      const featureIconEls = [...card.querySelectorAll('[data-feature-id]')];
-      const photoEl = card.querySelector('.search-card-photo.loaded, .classroom-card-photo.loaded') ?? null;
-
-      this._pendingTrigger = { nameEl, statusEl, queryContext, featureIconEls, photoEl };
+      this._pendingTrigger = { queryContext, cardEl: card };
       this._openedViaPushState = true;
       this._buildFlatIndex();
       const _entry = this._flatIndex?.get(id);
@@ -238,8 +233,6 @@ class ClassroomDetail {
     // Save scroll position for when we return
     this._savedScrollPos = window.scrollY;
 
-    const nameEl = pending?.nameEl ?? null;
-    const statusEl = pending?.statusEl ?? null;
     // When returning from info page, the back button is already visible and info's own
     // hero elements should morph into the header instead of touching the tabbar.
     const fromInfo = !!(this._backBtn && !this._backBtn.hidden);
@@ -260,77 +253,36 @@ class ClassroomDetail {
       if (!decoded) validPhotoUrl = null;
     }
 
-    const photoEl = pending?.photoEl ?? null;
-    const photoInDom = !!(photoEl && document.body.contains(photoEl));
-
-    let detailGradientEl = null;
-
     if (document.startViewTransition) {
-      // -- OLD state setup (before VT snapshot) --
-      if (fromInfo) {
-        // Info overlay is still visible — name its hero elements so they morph into the header.
-        infoPage._prepareReturnVT();
-      }
-      // Room name morphs into the overlay title.
-      // Strip search <mark> highlights first so the old-state snapshot is plain text.
-      if (nameEl) {
-        nameEl.querySelectorAll('mark').forEach(m => m.replaceWith(...m.childNodes));
-        nameEl.style.viewTransitionName = 'classroom-detail-name';
-      }
-      if (statusEl) statusEl.style.viewTransitionName = 'classroom-status';
-      // Feature icons morph into the detail feature chips
-      const featureIconEls = pending?.featureIconEls ?? [];
-      for (const el of featureIconEls) {
-        el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
-      }
-      // Card photo morphs into the detail photo (only if already loaded in the card).
-      // Strip mask and force settled opacity/scale so the snapshot is clean even if
-      // the card photo load-in transition is still mid-flight.
-      if (photoInDom && validPhotoUrl) {
-        photoEl.style.setProperty('mask-image', 'none');
-        photoEl.style.setProperty('-webkit-mask-image', 'none');
-        photoEl.style.setProperty('opacity', '1');
-        photoEl.style.setProperty('transform', 'none');
-        photoEl.style.viewTransitionName = 'classroom-photo';
-      }
+      // -- Whole-card zoom: one shared element, the card's own bounding box
+      // morphs straight into the full page (SwiftUI .zoom-style), rather than
+      // morphing name/photo/icons independently. --
+      const cardEl = pending?.cardEl ?? null;
+      const cardInDom = !!(cardEl && document.body.contains(cardEl));
+      if (fromInfo) infoPage._prepareReturnVT();
+      if (cardInDom) cardEl.style.viewTransitionName = 'classroom-detail-zoom';
 
       const vt = document.startViewTransition(() => {
-        // -- DOM changes (defines NEW state) --
         if (fromInfo) {
-          // Close info overlay and name header elements as NEW state morph targets.
           infoPage._applyReturnVT();
         } else if (this._tabbar) {
           this._tabbar.classList.add('detail-open');
         }
-        if (nameEl) nameEl.style.viewTransitionName = '';
-        if (statusEl) statusEl.style.viewTransitionName = '';
-        for (const el of featureIconEls) el.style.viewTransitionName = '';
-        if (photoInDom) photoEl.style.viewTransitionName = '';
+        if (cardInDom) cardEl.style.viewTransitionName = '';
 
-        // Show overlay and back button
         document.body.classList.add('detail-open');
         this._overlay.removeAttribute('hidden');
         this._renderContent(entry);
         this._overlay.classList.add('visible');
         if (this._backBtn) this._backBtn.removeAttribute('hidden');
-
-        // Reset scroll for the new view
         window.scrollTo(0, 0);
 
-        const titleEl = this._overlay.querySelector('.detail-title');
-        const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
-        if (titleEl) titleEl.style.viewTransitionName = 'classroom-detail-name';
-        if (detailStatusEl) detailStatusEl.style.viewTransitionName = 'classroom-status';
-        // Morph icon → icon inside chip (same size both ends → clean positional move)
-        this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id]').forEach(chip => {
-          const iconEl = chip.querySelector('.material-symbols-outlined');
-          if (iconEl) iconEl.style.viewTransitionName = `classroom-feature-${chip.dataset.featureId}`;
-        });
+        // Force a synchronous layout flush before naming the overlay, so its
+        // flex-resolved size (siblings hidden via .detail-open above) is fully
+        // settled at the exact moment the VT captures the "new" state geometry.
+        void this._overlay.offsetHeight;
+        this._overlay.style.viewTransitionName = 'classroom-detail-zoom';
 
-        // If URL was cached and pre-decoded, stamp it onto the detail photo right now so
-        // the VT new-state snapshot captures it fully rendered (no async wait needed).
-        // Also strip the mobile mask-image so the snapshot is a clean rectangle —
-        // the same treatment applied to the card photo on the old-state side.
         if (validPhotoUrl) {
           const detailImg = this._overlay.querySelector('.detail-photo');
           const detailContainer = this._overlay.querySelector('.detail-photo-container');
@@ -338,47 +290,16 @@ class ClassroomDetail {
             detailImg.src = validPhotoUrl;
             detailImg.classList.add('loaded');
             detailContainer?.classList.add('loaded');
-            detailImg.style.setProperty('mask-image', 'none');
-            detailImg.style.setProperty('-webkit-mask-image', 'none');
-            detailImg.style.viewTransitionName = 'classroom-photo';
-          }
-          detailGradientEl = this._overlay.querySelector('.detail-photo-gradient');
-          if (detailGradientEl) {
-            detailGradientEl.style.opacity = '0';
           }
         }
 
-        // Load data immediately after rendering in the transition callback
         this._loadSchedule(id);
         if (hasPhoto) this._loadPhoto(id);
       });
 
       const cleanup = () => {
-        if (nameEl) nameEl.style.viewTransitionName = '';
-        if (statusEl) statusEl.style.viewTransitionName = '';
-        if (photoEl) {
-          photoEl.style.viewTransitionName = '';
-          photoEl.style.removeProperty('mask-image');
-          photoEl.style.removeProperty('-webkit-mask-image');
-          photoEl.style.removeProperty('opacity');
-          photoEl.style.removeProperty('transform');
-        }
-        this._overlay.querySelector('.detail-title')
-          ?.style.setProperty('view-transition-name', '');
-        this._overlay.querySelector('.detail-title-row .classroom-status-txt')
-          ?.style.setProperty('view-transition-name', '');
-        const detailImgEl = this._overlay.querySelector('.detail-photo');
-        if (detailImgEl) {
-          detailImgEl.style.setProperty('view-transition-name', '');
-          detailImgEl.style.removeProperty('mask-image');
-          detailImgEl.style.removeProperty('-webkit-mask-image');
-        }
-        if (detailGradientEl) {
-          detailGradientEl.style.removeProperty('opacity');
-        }
-        this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
-          el.style.viewTransitionName = '';
-        });
+        this._overlay.style.viewTransitionName = '';
+        if (cardEl) cardEl.style.viewTransitionName = '';
         if (fromInfo) infoPage._cleanupReturnVT();
       };
       vt.finished.then(cleanup).catch(cleanup);
@@ -421,68 +342,27 @@ class ClassroomDetail {
 
     this._currentId = null;
 
-    const nameEl = this._openTrigger?.nameEl ?? null;
-    const statusEl = this._openTrigger?.statusEl ?? null;
-    const titleEl = this._overlay.querySelector('.detail-title');
-    const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
-    const nameInDom = nameEl && document.body.contains(nameEl);
-    const statusInDom = statusEl && document.body.contains(statusEl);
-    const featureIconEls = (this._openTrigger?.featureIconEls ?? [])
-      .filter(el => document.body.contains(el));
-
-    const photoEl = this._openTrigger?.photoEl ?? null;
-    const photoInDom = !!(photoEl && document.body.contains(photoEl));
-    // content-visibility: auto skips rendering off-screen cards, which would make
-    // the VT new-state snapshot of the card photo blank. Force it visible here so
-    // the card's subtree is rendered when the VT captures it after scrollTo().
-    const photoCard = photoEl?.closest('.search-card--with-photo') ?? null;
-    const detailImg = this._overlay.querySelector('.detail-photo');
-    const detailImgLoaded = detailImg?.classList.contains('loaded');
-    let timelineEl = null;
-    let cardOverlayEl = null;
-    let photoMetaEl = null;
-    let arrowBtnEl = null;
+    const cardEl = this._openTrigger?.cardEl ?? null;
+    const cardInDom = !!(cardEl && document.body.contains(cardEl));
 
     const cleanup = () => {
       this._overlay.innerHTML = '';
       this._openTrigger = null;
       this._queryContext = null;
-      if (nameEl) nameEl.style.viewTransitionName = '';
-      if (statusEl) statusEl.style.viewTransitionName = '';
-      for (const el of featureIconEls) el.style.viewTransitionName = '';
-      if (photoEl) {
-        photoEl.style.viewTransitionName = '';
-        photoEl.style.removeProperty('mask-image');
-        photoEl.style.removeProperty('-webkit-mask-image');
+      this._overlay.style.viewTransitionName = '';
+      if (cardEl) {
+        cardEl.style.viewTransitionName = '';
+        cardEl.style.removeProperty('content-visibility');
       }
-      if (photoMetaEl) photoMetaEl.style.viewTransitionName = '';
-      if (arrowBtnEl) arrowBtnEl.style.viewTransitionName = '';
-      if (photoCard) photoCard.style.removeProperty('content-visibility');
     };
 
     if (document.startViewTransition) {
-      if (photoCard) photoCard.style.contentVisibility = 'visible';
+      // content-visibility: auto skips rendering off-screen cards, which would make
+      // the VT new-state snapshot blank. Force it visible here so the card's
+      // subtree is rendered when the VT captures it after scrollTo().
+      if (cardInDom) cardEl.style.contentVisibility = 'visible';
 
-      // -- OLD state setup --
-      if (titleEl && nameInDom) titleEl.style.viewTransitionName = 'classroom-detail-name';
-      if (detailStatusEl && statusInDom) detailStatusEl.style.viewTransitionName = 'classroom-status';
-      // Chip icons are the OLD state sources
-      this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
-        const fid = el.closest('[data-feature-id]').dataset.featureId;
-        el.style.viewTransitionName = `classroom-feature-${fid}`;
-      });
-      // Detail photo is the OLD state source.
-      // Strip its mobile mask-image so the old-state snapshot is a clean rectangle,
-      // and strip the card photo mask for a clean new-state snapshot.
-      if (detailImgLoaded) {
-        detailImg.style.setProperty('mask-image', 'none');
-        detailImg.style.setProperty('-webkit-mask-image', 'none');
-        detailImg.style.viewTransitionName = 'classroom-photo';
-      }
-      if (photoInDom && detailImgLoaded) {
-        photoEl.style.setProperty('mask-image', 'none');
-        photoEl.style.setProperty('-webkit-mask-image', 'none');
-      }
+      this._overlay.style.viewTransitionName = 'classroom-detail-zoom';
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
@@ -492,80 +372,24 @@ class ClassroomDetail {
         this._overlay.setAttribute('hidden', '');
         this._overlay.classList.remove('visible');
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
-        if (detailImg) detailImg.style.viewTransitionName = '';
+        this._overlay.style.viewTransitionName = '';
 
         // Restore the tabbar (plain fade, no shared element — it no longer sits in the header)
         if (this._tabbar) this._tabbar.classList.remove('detail-open');
 
-        // Room name morphs back too
-        if (nameInDom) nameEl.style.viewTransitionName = 'classroom-detail-name';
-        if (statusInDom) statusEl.style.viewTransitionName = 'classroom-status';
-        // Card icons are the NEW state destinations
-        for (const el of featureIconEls) {
-          el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
-        }
-        // Card photo is the NEW state destination (mask already stripped above)
-        if (photoInDom && detailImgLoaded) {
-          photoEl.style.viewTransitionName = 'classroom-photo';
-          const photoCard = photoEl.closest('.classroom-card--with-photo, .search-card--with-photo');
-          timelineEl   = photoCard?.querySelector('.classroom-timeline') ?? null;
-          cardOverlayEl = photoCard?.querySelector('.classroom-card-overlay, .search-card-overlay') ?? null;
-          if (cardOverlayEl) cardOverlayEl.style.opacity = '0';
-          if (timelineEl) {
-            timelineEl.style.opacity = '0';
-            timelineEl.style.transform = 'translateY(10px)';
-          }
-          // Promote these unnamed card elements into the VT top layer so they sit
-          // above the morphing photo (DOM order gives them higher z-index).
-          // Without this they stay in normal flow, below the top layer, and appear
-          // to "jump" on top only when the VT ends.
-          photoMetaEl = photoCard?.querySelector('.search-card-photo-meta') ?? null;
-          arrowBtnEl  = photoCard?.querySelector('.search-card-arrow-button') ?? null;
-          if (photoMetaEl) photoMetaEl.style.viewTransitionName = 'search-card-photo-meta';
-          if (arrowBtnEl)  arrowBtnEl.style.viewTransitionName  = 'search-card-arrow-btn';
-        }
-
         // Restore scroll position so VT can morph back to the correct spot
         window.scrollTo(0, this._savedScrollPos);
-      });
 
-      const OVERLAY_MS  = 220;
-      const TIMELINE_MS = 400;
-
-      vt.finished.then(() => {
-        cleanup();
-        requestAnimationFrame(() => {
-          // 1. Fade the card overlay in
-          if (cardOverlayEl) {
-            cardOverlayEl.style.transition = `opacity ${OVERLAY_MS}ms ease-in`;
-            cardOverlayEl.style.removeProperty('opacity');
-          }
-          // 2. After overlay is visible, slide + fade the timeline in
-          setTimeout(() => {
-            if (timelineEl) {
-              timelineEl.style.transition =
-                `opacity ${TIMELINE_MS}ms ease-out, transform ${TIMELINE_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`;
-              timelineEl.style.removeProperty('opacity');
-              timelineEl.style.removeProperty('transform');
-              setTimeout(() => {
-                timelineEl.style.removeProperty('transition');
-              }, TIMELINE_MS + 50);
-            }
-            if (cardOverlayEl) setTimeout(() => cardOverlayEl.style.removeProperty('transition'), OVERLAY_MS + 50);
-          }, OVERLAY_MS);
-        });
-      }).catch(() => {
-        cleanup();
-        if (cardOverlayEl) {
-          cardOverlayEl.style.removeProperty('opacity');
-          cardOverlayEl.style.removeProperty('transition');
-        }
-        if (timelineEl) {
-          timelineEl.style.removeProperty('opacity');
-          timelineEl.style.removeProperty('transform');
-          timelineEl.style.removeProperty('transition');
+        // Force a synchronous layout flush before naming the card, so its
+        // resolved position/size (list re-scrolled above) is fully settled at
+        // the exact moment the VT captures the "new" state geometry.
+        if (cardInDom) {
+          void cardEl.offsetHeight;
+          cardEl.style.viewTransitionName = 'classroom-detail-zoom';
         }
       });
+
+      vt.finished.then(cleanup).catch(cleanup);
     } else {
       // Fallback: fade out overlay, swap back button for tabbar without animation
       this._overlay.classList.remove('visible');
@@ -710,30 +534,6 @@ class ClassroomDetail {
       if (classroom.idfoto) this._loadPhoto(classroom.id);
     });
 
-    // 3D tilt on desktop photo
-    const photoContainer = this._overlay.querySelector('.detail-photo-container');
-    if (photoContainer) {
-      const wideEnough = window.matchMedia('(min-width: 600px)');
-
-      photoContainer.addEventListener('pointermove', (e) => {
-        if (e.pointerType !== 'mouse' || !wideEnough.matches) return;
-        const rect = photoContainer.getBoundingClientRect();
-        const dx = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
-        const dy = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
-        const tiltX = -dy * 5;
-        const tiltY =  dx * 5;
-        photoContainer.style.transition = 'transform 0.08s ease-out, box-shadow 0.08s ease-out';
-        photoContainer.style.transform  = `perspective(900px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.02)`;
-        photoContainer.style.boxShadow  = '0 24px 64px rgba(0,0,0,0.28)';
-      });
-
-      photoContainer.addEventListener('pointerleave', (e) => {
-        if (e.pointerType !== 'mouse') return;
-        photoContainer.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease';
-        photoContainer.style.transform  = '';
-        photoContainer.style.boxShadow  = '';
-      });
-    }
   }
 
   // ---------- RENDER: HERO PHOTO ----------

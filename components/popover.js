@@ -41,6 +41,7 @@ async function computeFloatingPosition(trigger, popover, arrowEl, options) {
       top: arrowY != null ? `${arrowY}px` : '',
       [staticSide]: '-5px',
     });
+    arrowEl.dataset.side = staticSide;
 
     // Set transform-origin to point at the arrow
     const side = placement.split('-')[0];
@@ -88,6 +89,7 @@ function updateAnchorOriginAndArrow(trigger, popover, arrowEl) {
 
   if (arrowEl) {
     arrowEl.style.left = `${originX - 5}px`;
+    const side = isAbove ? 'bottom' : 'top';
     if (isAbove) {
       arrowEl.style.top = 'auto';
       arrowEl.style.bottom = '-5px';
@@ -95,6 +97,7 @@ function updateAnchorOriginAndArrow(trigger, popover, arrowEl) {
       arrowEl.style.top = '-5px';
       arrowEl.style.bottom = 'auto';
     }
+    arrowEl.dataset.side = side;
   }
 }
 

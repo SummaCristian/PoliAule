@@ -227,11 +227,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Init info page overlay immediately — no data dependency
     infoPage.init();
 
-    // Fetch occupancy data and classroom directory in parallel
-    await Promise.all([
-      fetchClassroomsData(),
-      initSearchTab(),
-    ]);
+    // Only the static classroom directory blocks the splash — it's what the
+    // page shell (campus picker, search tab, classroom detail) is built from.
+    // Occupancy data is fetched separately in the background (see
+    // initOccupancyData below) and fills in its own skeleton once ready.
+    await initSearchTab();
 
     // Init classroom detail overlay (hash routing + VT morph)
     classroomDetail.init(staticClassroomsData);
@@ -241,19 +241,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyPreferredCampusIfEnabled();
     applyRememberLastCampusIfEnabled();
 
-    // After fetching, use the data to set the only
-    // valid dates into the date picker
-    setupDatePicker(() => preferInitialDate);
     // Setup the time pickers to ensure valid time ranges
+    // (these don't depend on occupancy data)
     setupTimePickers();
-
     initTimePickers();
     initTimeRangeSlider();
-    setupLiveSearch();
 
-    // Setup the data fetch indicator and language switch handler immediately —
-    // these don't depend on fonts and shouldn't wait for the splash to dismiss
-    setupDataFetchIndicator();
+    // Setup the language switch handler immediately — doesn't depend on
+    // fonts and shouldn't wait for the splash to dismiss
     onLanguageSwitch(() => {
       setupDataFetchIndicatorText(true);
       setupDatePicker(() => preferInitialDate);
@@ -265,19 +260,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
+    // Kick off occupancy fetching in the background. It doesn't block the
+    // splash — the date picker/results area stay in their skeleton/loading
+    // state until it resolves.
+    initOccupancyData();
+
     // Wait for fonts so time pickers render correctly, then dismiss splash.
-    // By this point all data is fetched and every component is populated.
     await document.fonts.ready;
     document.querySelector('.time-pickers-container').style.opacity = '1';
-    document.getElementById('available-classrooms-form').removeAttribute('data-loading');
     document.querySelector('campus-chip-picker')?.removeAttribute('data-loading');
-
-    const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
-    if (autoSearchEnabled) {
-      document.getElementById('available-classrooms-form').dispatchEvent(
-        new Event('submit', { cancelable: true, bubbles: true })
-      );
-    }
 
     clearTimeout(_initTimeoutId);
     const elapsed = Date.now() - _splashStartTime;
@@ -292,6 +283,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(showSplashError, remaining);
   }
 });
+
+// Fetches occupancy data in the background (independent of the splash
+// screen) and populates everything that depends on it once it's ready.
+async function initOccupancyData() {
+  await fetchClassroomsData();
+
+  // Use the fetched data to set the only valid dates into the date picker
+  setupDatePicker(() => preferInitialDate);
+  document.getElementById('available-classrooms-form').removeAttribute('data-loading');
+
+  setupDataFetchIndicator();
+  setupLiveSearch();
+
+  const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
+  if (autoSearchEnabled) {
+    document.getElementById('available-classrooms-form').dispatchEvent(
+      new Event('submit', { cancelable: true, bubbles: true })
+    );
+  }
+}
 
 // ---------- FORM 1: AVAILABLE CLASSROOMS ----------
 // Setup the 'Available Classrooms' form

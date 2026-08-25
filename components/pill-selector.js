@@ -30,13 +30,14 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
   // both already position:relative. The indicator (+ hit overlay) live here
   // as container's siblings, not its children — same relationship as
   // .bn-pill-outer/.bn-pill-hit being siblings of .bn-tabbar rather than
-  // nested inside it. Nested, container's own ::after stroke (generated as
-  // if it were its last child) would paint above the indicator's lifted
-  // glass instead of below it.
+  // nested inside it, and already marked up that way (not reparented at
+  // runtime): Safari doesn't reliably recompute an element's backdrop-filter
+  // root after it's moved out from under a backdrop-filter'd ancestor via
+  // JS, which silently killed the indicator's lift-blur there.
   const wrapper = container.parentElement;
 
-  const indicator = wrapper.querySelector(':scope > .date-indicator') || container.querySelector('.date-indicator');
-  wrapper.appendChild(indicator); // (re)adopt as wrapper's last child, after `container`
+  const indicator = wrapper.querySelector(':scope > .date-indicator');
+  wrapper.appendChild(indicator); // move after `container` in case of re-init (refresh() re-runs this)
 
   // Wrap the real cells in their own layer so a pill-shaped hole can be
   // clipped out of them while the indicator is lifted (see updateMask()

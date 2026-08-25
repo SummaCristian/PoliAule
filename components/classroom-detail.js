@@ -981,9 +981,9 @@ class ClassroomDetail {
         <div class="detail-schedule-day-selector">
           <div class="detail-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
           <div class="date-picker-container detail-schedule-picker">
-            <div class="date-indicator"></div>
             ${selectorItemsHtml}
           </div>
+          <div class="date-indicator"></div>
         </div>
         <div class="detail-schedule-inner">
           <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}${queryTicksHtml}</div>

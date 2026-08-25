@@ -4,6 +4,16 @@
   flex-direction: column;
 
   position: relative;
+
+  /* The pill is draggable (see pill-selector.js); without this, a
+     touch-drag starting on/near a day's text triggers the browser's native
+     text-selection/callout instead — same fix as .bn-wrapper in
+     bottom-nav.css. Scoped to the whole wrapper, not just
+     .date-picker-container, since the indicator/hit/active-row now live
+     here as its siblings. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .date-picker-container {
@@ -371,6 +381,18 @@
   transition: color 0.2s ease;
 
   -webkit-tap-highlight-color: transparent;
+
+  /* Every date cell — the Available tab, the details page's mobile chip
+     selector, and its desktop vertical labels pill all share this class —
+     shouldn't be selectable/long-press-copyable text, tap-to-select or
+     drag-to-select (see pill-selector.js) is the only interaction. Also
+     set on the picker wrappers themselves (.date-picker,
+     .detail-schedule-day-selector) since this alone wouldn't cover the
+     indicator/hit's own duplicate text layer, which lives outside this
+     element — see the notes there. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .date-element-container.date-skipped {

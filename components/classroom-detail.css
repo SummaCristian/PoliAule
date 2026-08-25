@@ -1077,6 +1077,14 @@ body.detail-open .tab-content * {
     overflow: visible;
     position: relative;
     padding-top: 2rem; /* room for the today indicator pill above the picker */
+
+    /* The chip picker is draggable (see pill-selector.js); without this, a
+       touch-drag starting on/near a day's text triggers the browser's
+       native text-selection/callout instead — same fix as .date-picker in
+       date-picker.css / .bn-wrapper in bottom-nav.css. */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .detail-today-indicator {

@@ -10,6 +10,7 @@
 import { haptics, defaultPatterns } from './haptics.js';
 import { t, onLanguageSwitch } from '../i18n.js';
 import { DEFAULT_TAB_KEY, LAST_TAB_KEY, getStartupTabId } from './settings.js';
+import { Spring, onSpringFrame } from '../utils/spring.js';
 
 const GROUP_TABS = [
   { target: 'available-classrooms-container', icon: 'hgi-calendar-03', labelKey: 'tabs.available' },
@@ -19,8 +20,6 @@ const SEARCH_TARGET = 'search-placeholder-container';
 
 const TAP_SCALE = 1.3;
 
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 // Desktop swaps the bar from a horizontal bottom bar to a vertical rail
 // pinned top-left (see bottom-nav.css's matching breakpoint) — all the pill
 // sliding/morphing math below is written generically against a "main axis"
@@ -29,50 +28,7 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const desktopMQ = matchMedia('(min-width: 600px)');
 const isVertical = () => desktopMQ.matches;
 
-/* --- Spring engine ------------------------------------------ */
-const springs = new Set();
-let rafId = null, lastT = 0;
-
-function loop(t) {
-  const dt = Math.min((t - lastT) / 1000, 0.064);
-  lastT = t;
-  let busy = false;
-  for (const s of springs) if (s.step(dt)) busy = true;
-  render();
-  rafId = busy ? requestAnimationFrame(loop) : null;
-}
-function wake() {
-  if (rafId == null) { lastT = performance.now(); rafId = requestAnimationFrame(loop); }
-}
-
-class Spring {
-  constructor(value = 0) {
-    this.value = value; this.v = 0; this.target = value;
-    this.k = 300; this.c = 30; this.m = 1; this.resting = true;
-    springs.add(this);
-  }
-  to(target, { stiffness = 300, damping = 30, mass = 1 } = {}) {
-    if (reducedMotion) return this.set(target);
-    this.target = target; this.k = stiffness; this.c = damping; this.m = mass;
-    this.resting = false; wake();
-  }
-  set(value) { this.value = value; this.target = value; this.v = 0; this.resting = true; wake(); }
-  stop() { this.target = this.value; this.v = 0; this.resting = true; }
-  step(dt) {
-    if (this.resting) return false;
-    const n = Math.max(1, Math.ceil(dt / 0.004));
-    const h = dt / n;
-    for (let i = 0; i < n; i++) {
-      const F = -this.k * (this.value - this.target) - this.c * this.v;
-      this.v += (F / this.m) * h;
-      this.value += this.v * h;
-    }
-    if (Math.abs(this.v) < 0.05 && Math.abs(this.value - this.target) < 0.05) {
-      this.value = this.target; this.v = 0; this.resting = true;
-    }
-    return !this.resting;
-  }
-}
+onSpringFrame(render);
 
 /* --- DOM ------------------------------------------------------ */
 const wrapper = document.getElementById('bn-wrapper');

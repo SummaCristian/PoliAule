@@ -565,8 +565,11 @@ body.detail-open .tab-content * {
   margin-bottom: 0.25rem;
 }
 
-/* Left pill: vertical date picker clone */
+/* Left pill: vertical date picker clone. Same glass material as
+   .date-picker-container (components/date-picker.css) — see the recipe
+   note at :root's --glass-tint definition in style.css. */
 .detail-schedule-labels-pill {
+  position: relative;
   flex-shrink: 0;
   width: 3.75rem;
   display: flex;
@@ -574,11 +577,47 @@ body.detail-open .tab-content * {
   justify-content: space-between;
   gap: 0.75rem;
 
-  background-color: var(--background-color-secondary);
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
   border-radius: var(--radius-pill);
   padding: 0.75rem 0.5rem;
 
-  box-shadow: var(--bevel), var(--shadow);
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .date-picker-container::after
+   in date-picker.css. */
+.detail-schedule-labels-pill::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .detail-schedule-labels-pill {
+    background: color-mix(in srgb, var(--background-color-secondary) 95%, black);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .detail-schedule-labels-pill {
+      background: color-mix(in srgb, var(--background-color-secondary) 95%, white);
+    }
+  }
 }
 
 /* Override date-element-container sizing to fit the vertical pill */

@@ -6,6 +6,7 @@ import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
 import { DynamicPopover } from './popover.js';
+import { createPillSelector } from './pill-selector.js';
 
 function minutesToTimeDisplay(minutes) {
   const d = new Date();
@@ -1016,51 +1017,32 @@ class ClassroomDetail {
         });
       }, 60_000);
 
-      // --- Mobile day selector interaction ---
+      // --- Mobile day selector interaction (drag/spring physics ported
+      // from bottom-nav.js's tab pill — see pill-selector.js) ---
       const pickerContainer = container.querySelector('.detail-schedule-picker');
-      const indicatorEl = pickerContainer.querySelector('.date-indicator');
       const todayIndicatorEl = container.querySelector('.detail-today-indicator');
       const gridEl = container.querySelector('.detail-schedule-bars');
       const rowEls = gridEl.querySelectorAll('.detail-schedule-row');
 
-      function placeSelectorIndicator(chipEl) {
-        const paddingLeft = parseFloat(getComputedStyle(pickerContainer).paddingLeft);
-        const x = chipEl.offsetLeft - paddingLeft;
-        indicatorEl.style.setProperty('--indicator-x', `${x}px`);
-        indicatorEl.style.width = `${chipEl.offsetWidth}px`;
-        indicatorEl.style.height = `${chipEl.offsetHeight}px`;
-        indicatorEl.style.transform = `translateX(${x}px)`;
-        indicatorEl.style.opacity = '1';
-      }
-
       let selectedDayIndex = 0;
 
-      function selectScheduleDay(index) {
-        selectedDayIndex = index;
-        pickerContainer.querySelectorAll('.date-element-container').forEach(c => c.classList.remove('active'));
-        const chip = pickerContainer.querySelector(`[data-day-index="${index}"]`);
-        if (chip) {
-          chip.classList.add('active');
-          placeSelectorIndicator(chip);
-        }
-        rowEls.forEach((row, i) => row.classList.toggle('selected', i === index));
-      }
-
-      pickerContainer.querySelectorAll('.date-element-container').forEach(chip => {
-        chip.addEventListener('click', () => {
-          if (chip.classList.contains('date-skipped')) {
-            indicatorEl.classList.remove('shake');
-            void indicatorEl.offsetWidth; // force reflow to restart animation
-            indicatorEl.classList.add('shake');
-            indicatorEl.addEventListener('animationend', () => indicatorEl.classList.remove('shake'), { once: true });
-            haptics.trigger(defaultPatterns.error);
-            return;
+      const daySelector = createPillSelector(pickerContainer, {
+        onSelect(chip, { silent }) {
+          const index = parseInt(chip.dataset.dayIndex);
+          selectedDayIndex = index;
+          rowEls.forEach((row, i) => row.classList.toggle('selected', i === index));
+          if (!silent) {
+            haptics.trigger(defaultPatterns.light);
+            hideOccupationPopover();
           }
-          haptics.trigger(defaultPatterns.light);
-          hideOccupationPopover();
-          selectScheduleDay(parseInt(chip.dataset.dayIndex));
-        });
+        },
       });
+      daySelector.refresh();
+
+      function selectScheduleDay(index, opts) {
+        const chip = pickerContainer.querySelector(`[data-day-index="${index}"]`);
+        if (chip) daySelector.selectElement(chip, opts);
+      }
 
       // Auto-select: prefer the queried day when coming from the Available Tab,
       // otherwise today, or next available day if after 20:15, or first available
@@ -1078,7 +1060,7 @@ class ClassroomDetail {
       } else {
         initialDayIndex = days.findIndex(d => d.dayData !== null);
       }
-      selectScheduleDay(Math.max(0, initialDayIndex));
+      selectScheduleDay(Math.max(0, initialDayIndex), { silent: true, animate: false });
 
       // Today indicator: position the pill above the today chip (mobile only)
       function positionDetailTodayIndicator() {
@@ -1095,10 +1077,7 @@ class ClassroomDetail {
         todayIndicatorEl.style.top  = `${top}px`;
       }
       todayIndicatorEl?.addEventListener('click', () => {
-        if (todayDayIndex >= 0) {
-          haptics.trigger(defaultPatterns.light);
-          selectScheduleDay(todayDayIndex);
-        }
+        if (todayDayIndex >= 0) selectScheduleDay(todayDayIndex);
       });
       positionDetailTodayIndicator();
 
@@ -1128,7 +1107,8 @@ class ClassroomDetail {
       const mobileQuery = window.matchMedia('(max-width: 599px)');
       mobileQuery.addEventListener('change', e => {
         if (e.matches) {
-          selectScheduleDay(selectedDayIndex);
+          daySelector.refresh();
+          selectScheduleDay(selectedDayIndex, { silent: true, animate: false });
           positionDetailTodayIndicator();
         } else {
           positionDesktopTodayIndicator();

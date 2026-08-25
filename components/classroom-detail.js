@@ -169,6 +169,21 @@ class ClassroomDetail {
     }
   }
 
+  // Called by script.js once occupancy data has finished loading in the
+  // background, so a detail page opened before that (e.g. via a direct link)
+  // fills in its status badge and timeline instead of staying stuck on
+  // "no data".
+  refreshOccupancy() {
+    if (this._currentId === null) return;
+    const entry = this._flatIndex?.get(this._currentId);
+    if (!entry) return;
+    const scrollY = window.scrollY;
+    this._renderContent(entry);
+    this._loadSchedule(this._currentId);
+    if (entry.classroom.idfoto) this._loadPhoto(this._currentId);
+    window.scrollTo(0, scrollY);
+  }
+
   // ---------- HASH ROUTING ----------
 
   _onHashChange() {

@@ -296,6 +296,10 @@ async function initOccupancyData() {
   setupDataFetchIndicator();
   setupLiveSearch();
 
+  // If a classroom detail page was opened before occupancy data arrived
+  // (e.g. a direct link), fill in its status badge and timeline now.
+  classroomDetail.refreshOccupancy();
+
   const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
   if (autoSearchEnabled) {
     document.getElementById('available-classrooms-form').dispatchEvent(

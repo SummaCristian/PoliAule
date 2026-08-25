@@ -1243,13 +1243,25 @@ class ClassroomDetail {
           else showOccupationPopover(block);
         });
 
-        // Close on any interaction outside the schedule area (e.g. tapping the
-        // room title or scrolling the page on a non-anchor-positioning browser).
+        // Close on any interaction outside the schedule area (e.g. tapping the room title).
         const onDocClick = e => {
           if (!container.contains(e.target)) hideOccupationPopover();
         };
         document.addEventListener('click', onDocClick);
-        this._timelinePopoverCleanup = () => document.removeEventListener('click', onDocClick);
+
+        // Close on scroll. The popover is positioned in fixed/viewport coordinates
+        // and doesn't track the trigger as the page scrolls, so once the trigger
+        // moves the popover would otherwise be left floating over the wrong spot.
+        // On desktop this already happens implicitly (scrolling moves the hovered
+        // block out from under a stationary cursor, firing pointerout), but a tap
+        // on mobile leaves the popover open with no such gesture to close it.
+        const onScroll = () => hideOccupationPopover();
+        window.addEventListener('scroll', onScroll, { capture: true, passive: true });
+
+        this._timelinePopoverCleanup = () => {
+          document.removeEventListener('click', onDocClick);
+          window.removeEventListener('scroll', onScroll, { capture: true });
+        };
       }
     } catch (err) {
       console.error('ClassroomDetail: Error rendering schedule:', err);

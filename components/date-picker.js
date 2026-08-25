@@ -132,6 +132,17 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
   window.addEventListener('resize', repositionAll);
   new ResizeObserver(repositionAll).observe(container.closest('.date-picker'));
 
+  // Belt-and-suspenders alongside the ResizeObserver above: while the
+  // Available tab is hidden (content-visibility:hidden), any refresh() call
+  // — e.g. the auto-select pass below, which can run in the background
+  // while the user is still on the Campus tab — measures offsetTop/offsetLeft
+  // against an unlaid-out subtree and bakes wrong coordinates into the
+  // indicator's inline styles. ResizeObserver doesn't reliably fire when
+  // content-visibility flips back to visible in every browser, so also
+  // recompute explicitly once bottom-nav.js confirms this tab is visible.
+  document.getElementById('available-classrooms-container')
+    ?.addEventListener('tabvisible', repositionAll);
+
   // Apply initial hide-sundays state
   const hideSundaysContainer = container.closest('.date-picker');
   if (localStorage.getItem('poliAule_hideSundays') === 'true') {

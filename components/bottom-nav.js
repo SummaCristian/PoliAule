@@ -226,7 +226,17 @@ function render() {
 function showContent(targetId) {
   contentContainers.forEach(container => {
     if (container.id === targetId) {
-      requestAnimationFrame(() => container.classList.add('visible'));
+      requestAnimationFrame(() => {
+        container.classList.add('visible');
+        // content-visibility:hidden->visible doesn't reliably fire
+        // ResizeObserver on descendants across browsers (e.g. Safari), so
+        // anything that measured its own layout (offsetTop/offsetWidth)
+        // while this tab was hidden — like the date picker's sliding
+        // indicator — can be left with stale coordinates baked into inline
+        // styles. Let listeners (date-picker.js) recompute now that this
+        // subtree is actually laid out again.
+        container.dispatchEvent(new CustomEvent('tabvisible', { bubbles: true }));
+      });
     } else {
       container.classList.remove('visible');
     }

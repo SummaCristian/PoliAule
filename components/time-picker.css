@@ -77,10 +77,7 @@
   border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 20%, transparent);
   color: var(--text-color-primary);
 
-  box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px 0 rgba(255, 255, 255, 0.1),
-    var(--shadow);
+  box-shadow: var(--bevel), var(--shadow);
 
   cursor: pointer;
   user-select: none;
@@ -100,8 +97,7 @@
     scale: 1.02;
     background: color-mix(in srgb, var(--text-color-accent) 8%, var(--background-color-secondary));
     box-shadow:
-      inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-      inset -1px -1px 0 rgba(255, 255, 255, 0.1),
+      var(--bevel),
       0 4px 20px color-mix(in srgb, var(--text-color-accent) 20%, transparent),
       var(--shadow);
   }
@@ -139,11 +135,11 @@
   gap: 0.3rem;
   flex-shrink: 0;
   padding: 0.35rem 0.65rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: none;
   cursor: pointer;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: 0.78rem;
+  font-size: var(--text-80);
   font-weight: 700;
   letter-spacing: 0.03em;
   background: color-mix(in srgb, var(--text-color-accent) 14%, transparent);
@@ -243,7 +239,7 @@
 }
 
 .tp-card__label {
-  font-size: 0.72rem;
+  font-size: var(--text-72);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -307,7 +303,7 @@
 }
 
 .tp-popup__title {
-  font-size: 0.72rem;
+  font-size: var(--text-72);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -380,7 +376,7 @@
 .tp-popup__time-input::-webkit-datetime-edit-hour-field:focus,
 .tp-popup__time-input::-webkit-datetime-edit-minute-field:focus {
   background: color-mix(in srgb, var(--text-color-accent) 25%, transparent);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   color: var(--text-color-accent);
   outline: none;
 }

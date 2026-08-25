@@ -29,7 +29,6 @@
   <link rel="stylesheet" href="./components/time-picker.css" />
   <link rel="stylesheet" href="./components/time-range-slider.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
-  <link rel="stylesheet" href="./components/campus-picker.css" />
   <link rel="stylesheet" href="./components/settings.css" />
   <link rel="stylesheet" href="./components/search-classrooms.css" />
   <link rel="stylesheet" href="./components/classroom-detail.css" />
@@ -70,8 +69,17 @@
   </noscript>
 
   <!-- Header -->
+  <div class="header-top-strip" aria-hidden="true"></div>
   <header class="header">
     <div class="header-top-line-container">
+      <div class="header-blur-layers" aria-hidden="true">
+        <div class="header-blur-layer"></div>
+        <div class="header-blur-layer"></div>
+        <div class="header-blur-layer"></div>
+        <div class="header-blur-layer"></div>
+        <div class="header-fade-overlay"></div>
+      </div>
+
       <div class="header-title-container">
         <button class="header-title-btn" id="info-trigger" aria-label="About PoliAule">
           <img src="/favicons/main/logo.png" class="header-logo">
@@ -138,25 +146,9 @@
           </div>
         </label>
 
-        <input type="hidden" id="campus-picker" name="campus" />
-        <div id="campus-chips" class="campus-chips"></div>
-        <div class="campus-chips-skeleton" aria-hidden="true">
-          <div class="campus-section-sk">
-            <div class="campus-label-sk"></div>
-            <div class="campus-row-sk">
-              <div></div>
-              <div></div>
-            </div>
-          </div>
-          <div class="campus-section-sk">
-            <div class="campus-label-sk"></div>
-            <div class="campus-row-sk">
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-          </div>
-        </div>
+        <campus-chip-picker data-loading>
+          <input type="hidden" id="campus-picker" name="campus" />
+        </campus-chip-picker>
 
         <!-- Date picker -->
         <div class="date-picker">
@@ -302,6 +294,11 @@
 
         <ul>
           <li data-i18n="changelog.item1"></li>
+          <li data-i18n="changelog.item2"></li>
+          <li data-i18n="changelog.item3"></li>
+          <li data-i18n="changelog.item4"></li>
+          <li data-i18n="changelog.item5"></li>
+          <li data-i18n="changelog.item6"></li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">

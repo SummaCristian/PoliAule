@@ -7,6 +7,7 @@ import { t, getLocale, setLocale, onLanguageSwitch, animateI18nElement } from '.
 import { classroomsData } from '../available-rooms-script.js';
 import { selectCampusById } from './campus-picker.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
+import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
 
 const TRANSITION_DURATION = 420;
 
@@ -686,6 +687,30 @@ function buildPopup() {
         </div>
       </div>
 
+      ${IS_STABLE_BUILD ? '' : `
+      <div class="settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__icon-badge">
+            <span class="material-symbols-outlined">dns</span>
+          </div>
+          <span class="settings-section__header-label" data-i18n="settings.sectionBackend">${t('settings.sectionBackend')}</span>
+        </div>
+        <div class="settings-group">
+          <div class="settings-row" data-use-beta-backend-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #5856D6">
+                <span class="material-symbols-outlined">science</span>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.useBetaBackend">${t('settings.useBetaBackend')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.useBetaBackendDesc">${t('settings.useBetaBackendDesc')}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      `}
+
     </div>
   `;
 
@@ -871,6 +896,21 @@ function buildPopup() {
   });
 
   positionDefaultTabIndicatorFn = positionDefaultTabIndicator;
+
+  // Wire Use Beta Backend toggle (non-stable builds only, default: true)
+  const useBetaBackendRow = popup.querySelector('[data-use-beta-backend-row]');
+  if (useBetaBackendRow) {
+    const useBetaBackendSaved = localStorage.getItem(USE_BETA_BACKEND_KEY);
+    const useBetaBackendOn = useBetaBackendSaved === null ? true : useBetaBackendSaved === 'true';
+    const useBetaBackendToggle = buildToggle(useBetaBackendOn);
+    useBetaBackendRow.appendChild(useBetaBackendToggle);
+    useBetaBackendToggle.addEventListener('click', () => {
+      const isOn = !useBetaBackendToggle.classList.contains('on');
+      setToggleState(useBetaBackendToggle, isOn);
+      localStorage.setItem(USE_BETA_BACKEND_KEY, String(isOn));
+      haptics.trigger(defaultPatterns.light);
+    });
+  }
 
   return { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, retranslateCampus };
 }

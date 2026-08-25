@@ -25,6 +25,7 @@ import { infoPage } from './components/info-page.js';
 import { initTimePickers } from './components/time-picker.js';
 import { initTimeRangeSlider } from './components/time-range-slider.js';
 import { setupCampusPicker } from './components/campus-picker.js';
+import { setupDatePicker } from './components/date-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
@@ -169,9 +170,11 @@ document.querySelectorAll('.button-primary').forEach(btn => {
 
 // ---------- BUILDING CARD ----------
 
-// Builds a <li> containing a building card with its room cards inside.
-// Returns the element and the next cardIndex for stagger sequencing.
-function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = false, date = null) {
+// Builds one building's section of the results grid: a full-width header
+// followed by that building's room cards, as a flat list of <li> nodes to
+// append directly into the outer <ul>. Returns the nodes and the next
+// cardIndex for stagger-animation sequencing.
+function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday = false, date = null) {
   const buildingName = building.name;
   const countParts = [
     rooms.filter(r => r.status === 'free').length ? `<span class="building-count free">${rooms.filter(r => r.status === 'free').length} ${t('status.free')}</span>` : '',
@@ -179,111 +182,32 @@ function createBuildingItem(building, rooms, from, to, cardIndex = 0, isToday = 
     rooms.filter(r => r.status === 'not-free').length ? `<span class="building-count not-free">${rooms.filter(r => r.status === 'not-free').length} ${t('status.occupied')}</span>` : '',
   ].filter(Boolean).join('<span class="building-count-sep">·</span>');
 
-  const buildingCard = document.createElement('div');
-  buildingCard.className = 'building-card collapsed';
+  const allPartial = rooms.every(r => r.status === 'partially-free');
 
-  // Use current cardIndex for the building's delay only (rooms rendered lazily)
-  const buildingIndex = cardIndex++;
-
-  buildingCard.innerHTML = `
-    <div class="building-card-header">
-      <div class="building-card-header-text">
-        <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}${building.altName ? ` <small class="building-alt-name">${escapeHtml(building.altName)}</small>` : ''}</h3>
-        <div class="building-counts">${countParts}</div>
-      </div>
-      <span class="material-symbols-outlined building-chevron">expand_more</span>
-    </div>
+  const headerLi = document.createElement('li');
+  headerLi.className = 'building-section-header';
+  if (allPartial) headerLi.dataset.allPartial = 'true';
+  headerLi.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
+  headerLi.innerHTML = `
+    <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}${building.altName ? ` <small class="building-alt-name">${escapeHtml(building.altName)}</small>` : ''}</h3>
+    <div class="building-counts">${countParts}</div>
   `;
+  cardIndex++;
 
-  const body = document.createElement('div');
-  body.className = 'building-card-body';
+  const nodes = [headerLi];
 
-  const roomsList = document.createElement('ul');
-  roomsList.className = 'list-inner-container';
-
-  body.appendChild(roomsList);
-  buildingCard.appendChild(body);
-
-  buildingCard.addEventListener('click', (e) => {
-    if (!buildingCard.classList.contains('collapsed') && e.target.closest('.building-card-body')) return;
-    const isCollapsed = buildingCard.classList.contains('collapsed');
-
-    if (isCollapsed) {
-      const scrollContainer = buildingCard.closest('#available-classrooms-results');
-      const containerIsScrollable = scrollContainer &&
-        ['auto', 'scroll'].includes(getComputedStyle(scrollContainer).overflowY);
-
-      // Snapshot position before DOM changes
-      const cardTopBefore = buildingCard.getBoundingClientRect().top;
-
-      rooms.forEach(room => {
-        const roomItem = document.createElement('li');
-        roomItem.className = 'classroom-list-item-container';
-        roomItem.dataset.status = room.status;
-        roomItem.appendChild(buildCardForClassroom(room, building, from, to, isToday, date));
-        roomsList.appendChild(roomItem);
-      });
-      if (rooms.every(r => r.status === 'partially-free')) {
-        const emptyState = document.createElement('li');
-        emptyState.className = 'building-all-partial-hidden';
-        emptyState.textContent = t('results.allPartialHidden');
-        roomsList.appendChild(emptyState);
-      }
-      buildingCard.closest('.list-outer-container')
-        ?.querySelectorAll('.building-card:not(.collapsed)')
-        .forEach(card => {
-          if (card !== buildingCard) {
-            card.classList.add('collapsed');
-            card.querySelector('.list-inner-container').replaceChildren();
-          }
-        });
-      buildingCard.classList.remove('collapsed');
-      haptics.trigger(defaultPatterns.light);
-
-      // getBoundingClientRect() forces a synchronous reflow — cardTopAfter reflects
-      // the final layout (CSS transitions don't affect layout values, only visuals).
-      // Instantly compensate for any shift so the card stays visually in place.
-      const cardTopAfter = buildingCard.getBoundingClientRect().top;
-      const delta = cardTopAfter - cardTopBefore;
-      if (delta !== 0) {
-        if (containerIsScrollable) {
-          scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop + delta);
-        } else {
-          window.scrollBy(0, delta);
-        }
-      }
-
-      // Now smooth-scroll the card to the top of the visible area
-      requestAnimationFrame(() => {
-        if (containerIsScrollable) {
-          const top = buildingCard.getBoundingClientRect().top
-            - scrollContainer.getBoundingClientRect().top
-            + scrollContainer.scrollTop - 8;
-          scrollContainer.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-        } else {
-          const header = document.querySelector('.header');
-          const offset = (header?.offsetHeight ?? 0) + 8;
-          const top = buildingCard.getBoundingClientRect().top + window.scrollY - offset;
-          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-        }
-      });
-    } else {
-      buildingCard.classList.add('collapsed');
-      haptics.trigger(defaultPatterns.light);
-      const onCollapsed = e => {
-        if (e.propertyName !== 'grid-template-rows') return;
-        body.removeEventListener('transitionend', onCollapsed);
-        roomsList.replaceChildren();
-      };
-      body.addEventListener('transitionend', onCollapsed);
-    }
+  rooms.forEach(room => {
+    const roomItem = document.createElement('li');
+    roomItem.className = 'classroom-list-item-container';
+    roomItem.dataset.status = room.status;
+    const cardEl = buildCardForClassroom(room, building, from, to, isToday, date);
+    cardEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
+    roomItem.appendChild(cardEl);
+    nodes.push(roomItem);
+    cardIndex++;
   });
 
-  const li = document.createElement('li');
-  li.style.animationDelay = `${Math.min(buildingIndex * 40, 300)}ms`;
-  li.appendChild(buildingCard);
-  if (rooms.every(r => r.status === 'partially-free')) li.dataset.allPartial = 'true';
-  return { li, cardIndex };
+  return { nodes, cardIndex };
 }
 
 // ---------- DATA FETCHING ----------
@@ -303,11 +227,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Init info page overlay immediately — no data dependency
     infoPage.init();
 
-    // Fetch occupancy data and classroom directory in parallel
-    await Promise.all([
-      fetchClassroomsData(),
-      initSearchTab(),
-    ]);
+    // Only the static classroom directory blocks the splash — it's what the
+    // page shell (campus picker, search tab, classroom detail) is built from.
+    // Occupancy data is fetched separately in the background (see
+    // initOccupancyData below) and fills in its own skeleton once ready.
+    await initSearchTab();
 
     // Init classroom detail overlay (hash routing + VT morph)
     classroomDetail.init(staticClassroomsData);
@@ -317,22 +241,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyPreferredCampusIfEnabled();
     applyRememberLastCampusIfEnabled();
 
-    // After fetching, use the data to set the only
-    // valid dates into the date picker
-    setupDatePicker(classroomsData);
     // Setup the time pickers to ensure valid time ranges
+    // (these don't depend on occupancy data)
     setupTimePickers();
-
     initTimePickers();
     initTimeRangeSlider();
-    setupLiveSearch();
 
-    // Setup the data fetch indicator and language switch handler immediately —
-    // these don't depend on fonts and shouldn't wait for the splash to dismiss
-    setupDataFetchIndicator();
+    // Setup the language switch handler immediately — doesn't depend on
+    // fonts and shouldn't wait for the splash to dismiss
     onLanguageSwitch(() => {
       setupDataFetchIndicatorText(true);
-      setupDatePicker();
+      setupDatePicker(() => preferInitialDate);
       const container = document.getElementById('available-classrooms-results');
       if (!container.classList.contains('empty')) {
         document.getElementById('available-classrooms-form').dispatchEvent(
@@ -341,18 +260,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
+    // Kick off occupancy fetching in the background. It doesn't block the
+    // splash — the date picker/results area stay in their skeleton/loading
+    // state until it resolves.
+    initOccupancyData();
+
     // Wait for fonts so time pickers render correctly, then dismiss splash.
-    // By this point all data is fetched and every component is populated.
     await document.fonts.ready;
     document.querySelector('.time-pickers-container').style.opacity = '1';
-    document.getElementById('available-classrooms-form').removeAttribute('data-loading');
-
-    const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
-    if (autoSearchEnabled) {
-      document.getElementById('available-classrooms-form').dispatchEvent(
-        new Event('submit', { cancelable: true, bubbles: true })
-      );
-    }
+    document.querySelector('campus-chip-picker')?.removeAttribute('data-loading');
 
     clearTimeout(_initTimeoutId);
     const elapsed = Date.now() - _splashStartTime;
@@ -367,6 +283,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(showSplashError, remaining);
   }
 });
+
+// Fetches occupancy data in the background (independent of the splash
+// screen) and populates everything that depends on it once it's ready.
+async function initOccupancyData() {
+  await fetchClassroomsData();
+
+  // Use the fetched data to set the only valid dates into the date picker
+  setupDatePicker(() => preferInitialDate);
+  document.getElementById('available-classrooms-form').removeAttribute('data-loading');
+
+  setupDataFetchIndicator();
+  setupLiveSearch();
+
+  // If a classroom detail page was opened before occupancy data arrived
+  // (e.g. a direct link), fill in its status badge and timeline now.
+  classroomDetail.refreshOccupancy();
+
+  const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
+  if (autoSearchEnabled) {
+    document.getElementById('available-classrooms-form').dispatchEvent(
+      new Event('submit', { cancelable: true, bubbles: true })
+    );
+  }
+}
 
 // ---------- FORM 1: AVAILABLE CLASSROOMS ----------
 // Setup the 'Available Classrooms' form
@@ -422,7 +362,6 @@ function renderAvailableClassroomsResults(results, date, from, to) {
   const showPartialSaved = localStorage.getItem(SHOW_PARTIAL_KEY);
   const showPartialDefault = showPartialSaved === null ? true : showPartialSaved === 'true';
   const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
-  let originalBuildingOrder = [];
   if (hasPartial) {
     const toggleBtn = document.createElement('button');
     toggleBtn.className = showPartialDefault ? 'results-filter-btn active' : 'results-filter-btn';
@@ -432,11 +371,6 @@ function renderAvailableClassroomsResults(results, date, from, to) {
       haptics.trigger(defaultPatterns.light);
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
-      if (!isActive) {
-        list.querySelectorAll('li[data-all-partial]').forEach(item => list.appendChild(item));
-      } else {
-        originalBuildingOrder.forEach(item => list.appendChild(item));
-      }
     });
     filterRow.appendChild(toggleBtn);
     container.appendChild(filterRow);
@@ -451,11 +385,10 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   let cardIndex = 0;
   results.forEach(buildingResult => {
-    const { li, cardIndex: next } = createBuildingItem(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date);
+    const { nodes, cardIndex: next } = buildBuildingSection(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date);
     cardIndex = next;
-    list.appendChild(li);
+    nodes.forEach(node => list.appendChild(node));
   });
-  originalBuildingOrder = [...list.children];
 
   container.appendChild(list);
 
@@ -485,196 +418,6 @@ const TIME_MAX_MINS = 20 * 60 + 15; // 20:15
 
 // Set by setupTimePickers when the current time is after 20:15 (need tomorrow's date)
 let preferInitialDate = null;
-
-// Sets the allowed dates into the date picker,
-// and populates the custom UI and the hidden select with the available dates
-function setupDatePicker() {
-  const datePicker = document.getElementById('date-picker');
-  const availableDates = classroomsData.map(day => day.date);
-  const toInputFormat = d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
-  const formatLocal = d => [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0')
-  ].join('-');
-
-  // --- Populate the date picker UI ---
-  const container = document.querySelector('.date-picker-container');
-  const indicator = container.querySelector('.date-indicator');
-
-  // Derive single-letter day names from the current locale (Sun=0 … Sat=6).
-  const dayFormatter = new Intl.DateTimeFormat(getLocale(), { weekday: 'narrow' });
-  const DAY_NAMES = Array.from({ length: 7 }, (_, i) =>
-    dayFormatter.format(new Date(2000, 0, 2 + i)) // Jan 2 2000 = Sunday
-  );
-
-  // Clear any hardcoded elements, keep only the indicator
-  container.querySelectorAll('.date-element-container').forEach(el => el.remove());
-
-  // Generate every day from min to max, including skipped ones
-  const allDates = [];
-  const parseLocalFromKey = key => {
-    const [y, m, d] = [key.slice(0, 4), key.slice(4, 6), key.slice(6, 8)].map(Number);
-    return new Date(y, m - 1, d);
-  };
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const dataStart = parseLocalFromKey(availableDates.at(0));
-  const cursor = today < dataStart ? today : dataStart;
-  const end = parseLocalFromKey(availableDates.at(-1));
-
-  while (cursor <= end) {
-    allDates.push(formatLocal(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  allDates.forEach((dateStr, index) => {
-    const date = new Date(dateStr);
-    const dayOfWeek = DAY_NAMES[date.getDay()];
-    const dayNumber = date.getDate();
-    const isSunday = date.getDay() === 0;
-    const isSkipped = !availableDates.includes(dateStr.replace(/-/g, ''));
-
-    // Only add valid dates to the hidden select
-    if (!isSkipped) {
-      datePicker.insertAdjacentHTML('beforeend',
-        `<option value="${dateStr}">${dateStr}</option>`
-      );
-    }
-
-    // Add the visual element regardless, dimming skipped days
-    const el = document.createElement('div');
-    el.className = `date-element-container${isSkipped ? ' date-skipped' : ''}`;
-    el.dataset.date = dateStr;
-    el.dataset.index = index;
-    el.innerHTML = `
-      <span class="date-day-of-week ${isSunday ? 'date-sunday' : ''}">${dayOfWeek}</span>
-      <span class="date-number">${dayNumber}</span>
-    `;
-    container.appendChild(el);
-  });
-
-  // --- Indicator logic ---
-  const elements = container.querySelectorAll('.date-element-container');
-
-  function placeIndicator(el) {
-    // Use offsetLeft/offsetWidth/offsetHeight instead of getBoundingClientRect()
-    // so that CSS transform animations on ancestor elements (e.g. the tab appear
-    // animation's scale(0.95)) don't skew the measurements.
-    const paddingLeft = parseFloat(getComputedStyle(container).paddingLeft);
-    const x = el.offsetLeft - paddingLeft;
-
-    // Store x as a CSS variable so the shake keyframe can reference it
-    indicator.style.setProperty('--indicator-x', `${x}px`);
-    indicator.style.width = `${el.offsetWidth}px`;
-    indicator.style.height = `${el.offsetHeight}px`;
-    indicator.style.transform = `translateX(${x}px)`;
-    indicator.style.opacity = '1';
-  }
-
-  function selectDateElement(el) {
-    if (el.classList.contains('date-skipped')) {
-      // Shake the indicator in place
-      indicator.classList.remove('shake');
-      void indicator.offsetWidth; // force reflow to restart animation
-      indicator.classList.add('shake');
-      indicator.addEventListener('animationend', () => indicator.classList.remove('shake'), { once: true });
-
-      // Haptic feedback
-      haptics.trigger(defaultPatterns.error);
-
-      return;
-    }
-
-    elements.forEach(e => e.classList.remove('active'));
-    el.classList.add('active');
-
-    placeIndicator(el);
-
-    datePicker.value = el.dataset.date;
-    datePicker.dispatchEvent(new Event('change', { bubbles: true }));
-
-    // Haptic feedback
-    haptics.trigger([
-      { duration: 30 },
-      { delay: 60, duration: 40, intensity: 1 },
-    ])
-
-  }
-
-  elements.forEach(el => {
-    el.addEventListener('click', () => selectDateElement(el));
-  });
-
-
-  document.getElementById('today-indicator').addEventListener('click', () => {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
-    if (todayEl) selectDateElement(todayEl);
-  });
-
-  // Position the "Today" popover above the today cell
-  function positionTodayIndicator() {
-    const today = new Date();
-    const todayStr = formatLocal(today);
-    const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
-    const todayIndicator = document.getElementById('today-indicator');
-
-    if (!todayEl) {
-      todayIndicator.classList.add('hidden');
-      return;
-    }
-
-    todayIndicator.classList.remove('hidden');
-
-    // Use offsetTop/offsetLeft (layout values) instead of getBoundingClientRect()
-    // so that CSS transform animations on ancestor elements (e.g. the tab appear
-    // animation's scale(0.95)) don't skew the measurements.
-    const cellCenterX = container.offsetLeft + todayEl.offsetLeft + todayEl.offsetWidth / 2;
-    const topOffset = container.offsetTop - todayIndicator.offsetHeight - 8;
-
-    todayIndicator.style.left = `${cellCenterX}px`;
-    todayIndicator.style.top = `${topOffset}px`;
-  }
-
-  function repositionAll() {
-    const activeEl = container.querySelector('.date-element-container.active');
-    if (activeEl) placeIndicator(activeEl);
-    positionTodayIndicator();
-  }
-
-  window.addEventListener('resize', repositionAll);
-  new ResizeObserver(repositionAll).observe(container.closest('.date-picker'));
-
-  // Apply initial hide-sundays state
-  const hideSundaysContainer = container.closest('.date-picker');
-  if (localStorage.getItem('poliAule_hideSundays') === 'true') {
-    hideSundaysContainer.classList.add('date-picker--hide-sundays');
-  }
-  window.addEventListener('hidesundayschange', e => {
-    hideSundaysContainer.classList.toggle('date-picker--hide-sundays', e.detail.hidden);
-    repositionAll();
-  });
-
-  // Auto-select today if available, otherwise fall back to the first available date
-  // Wait for fonts to load to ensure accurate element measurements
-  document.fonts.ready.then(() => {
-    requestAnimationFrame(() => {
-      // Auto-select preferred date (tomorrow when after 20:15) or first available
-      const preferred = preferInitialDate
-        && [...elements].find(el => el.dataset.date === preferInitialDate && !el.classList.contains('date-skipped'));
-      const firstAvailable = [...elements].find(el => !el.classList.contains('date-skipped'));
-      if (preferred || firstAvailable) selectDateElement(preferred || firstAvailable);
-
-      positionTodayIndicator();
-
-      // Show the container now that dates are populated and positioned
-      container.style.opacity = '1';
-    });
-  });
-}
 
 // Sets up the time pickers to ensure that the 'to' time
 // is always at least 1 hour after the 'from' time, within 07:15–20:15
@@ -865,7 +608,7 @@ async function reloadOccupancyData() {
   const indicator = document.getElementById('data-fetch-indicator');
   indicator.classList.remove('green', 'yellow', 'red');
   setupDataFetchIndicator();
-  setupDatePicker(classroomsData);
+  setupDatePicker(() => preferInitialDate);
 
   const resultsContainer = document.getElementById('available-classrooms-results');
   if (resultsContainer && !resultsContainer.classList.contains('empty')) {

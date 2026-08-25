@@ -133,7 +133,7 @@
 /* ── Large title ────────────────────────────────────────────────────────────── */
 
 .settings-popup__title {
-  font-size: 1.75rem;      /* 28px — Apple "Tile Heading" scale */
+  font-size: var(--text-175);      /* 28px — Apple "Tile Heading" scale */
   font-weight: 700;
   line-height: 1.14;
   letter-spacing: -0.01em;
@@ -172,11 +172,11 @@
 }
 
 .settings-section__icon-badge .material-symbols-outlined {
-  font-size: 1rem !important;
+  font-size: var(--text-100) !important;
 }
 
 .settings-section__header-label {
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-weight: bold;
   color: color-mix(in srgb, var(--text-color-primary) 48%, transparent);
 }
@@ -231,7 +231,7 @@
 
 .settings-row__label {
   flex: 1;
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-weight: 400;
   letter-spacing: -0.014em;
   color: var(--text-color-primary);
@@ -254,7 +254,7 @@
   position: absolute;
   top: 3px;
   left: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--background-color-secondary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14), 0 1px 2px rgba(0, 0, 0, 0.08);
   pointer-events: none;
@@ -271,7 +271,7 @@
   justify-content: center;
   gap: 3px;
   padding: 0.4rem 0.625rem;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: none;
   background: transparent;
   color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
@@ -285,12 +285,12 @@
 }
 
 .settings-lang-btn__flag {
-  font-size: 1rem;
+  font-size: var(--text-100);
   line-height: 1;
 }
 
 .settings-lang-btn__name {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 600;
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -302,7 +302,7 @@
 
 /* Icon inside a segmented control button */
 .settings-seg-icon {
-  font-size: 1.1rem !important;
+  font-size: var(--text-110) !important;
   line-height: 1;
 }
 
@@ -334,7 +334,7 @@
 }
 
 .settings-row__sublabel {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 400;
   color: color-mix(in srgb, var(--text-color-primary) 48%, transparent);
   letter-spacing: -0.01em;
@@ -350,7 +350,7 @@
   position: relative;
   width: 61px;
   height: 31px;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   /* iOS 26: glass track — translucent fill + visible stroke */
   background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
   box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--text-color-primary) 18%, transparent);
@@ -407,7 +407,7 @@
 .settings-stepper__btn {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: none;
   background: transparent;
   color: var(--text-color-primary);
@@ -438,7 +438,7 @@
 .settings-stepper__value {
   min-width: 2.25rem;
   text-align: center;
-  font-size: 0.8125rem;
+  font-size: var(--text-80);
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text-color-primary);
@@ -489,7 +489,7 @@
 }
 
 .settings-warning__text {
-  font-size: 0.78rem;
+  font-size: var(--text-80);
   font-weight: 600;
   line-height: 1.35;
   color: #CC7A00;
@@ -515,10 +515,10 @@
   -webkit-appearance: none;
   background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 0.5rem 2rem 0.5rem 0.75rem;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: 0.9375rem;
+  font-size: var(--text-90);
   font-weight: 500;
   color: var(--text-color-primary);
   cursor: pointer;

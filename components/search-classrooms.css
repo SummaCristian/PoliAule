@@ -22,7 +22,7 @@ mark {
   gap: 0.5rem;
 
   background-color: var(--background-color-secondary);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.75rem 1.25rem;
   box-shadow: var(--shadow);
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 6%, transparent);
@@ -43,7 +43,7 @@ mark {
 
 .search-bar-wrapper .material-symbols-outlined {
   color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
-  font-size: 1.25rem !important;
+  font-size: var(--text-125) !important;
   flex-shrink: 0;
 }
 
@@ -53,7 +53,7 @@ mark {
   outline: none;
   background: transparent;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-weight: 500;
   color: var(--text-color-primary);
 }
@@ -87,7 +87,7 @@ mark {
 }
 
 .search-clear-btn .material-symbols-outlined {
-  font-size: 1rem !important;
+  font-size: var(--text-100) !important;
 }
 
 /* Show only when the input has content (placeholder is hidden) */
@@ -104,7 +104,7 @@ mark {
 
   background-color: var(--background-color-secondary);
   border: 4px solid var(--background-color-secondary);
-  border-radius: 1.5rem;
+  border-radius: var(--radius-xl);
 
   display: flex;
   flex-direction: column;
@@ -146,9 +146,9 @@ mark {
   background: none;
   border: none;
   padding: 0.2rem 0.4rem;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 0.85rem;
+  font-size: var(--text-85);
   font-weight: 700;
   color: var(--text-color-accent);
   cursor: pointer;
@@ -171,7 +171,7 @@ mark {
 
 /* Dropdown indicator chevron */
 .breadcrumb-chevron {
-  font-size: 0.85rem !important;
+  font-size: var(--text-85) !important;
   opacity: 0.6;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -181,7 +181,7 @@ mark {
 }
 
 .breadcrumb-sep {
-  font-size: 0.85rem;
+  font-size: var(--text-85);
   font-weight: 600;
   color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
   user-select: none;
@@ -247,7 +247,7 @@ mark {
   width: 100%;
   padding: 0.5rem 0.6rem;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   background: none;
   cursor: pointer;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -273,7 +273,7 @@ mark {
 }
 
 .breadcrumb-dropdown-label {
-  font-size: 0.875rem;
+  font-size: var(--text-90);
   font-weight: 700;
   color: var(--text-color-primary);
   white-space: nowrap;
@@ -286,13 +286,13 @@ mark {
 }
 
 .breadcrumb-dropdown-sublabel {
-  font-size: 0.72rem;
+  font-size: var(--text-72);
   font-weight: 600;
   color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
 }
 
 .breadcrumb-dropdown-check {
-  font-size: 1rem !important;
+  font-size: var(--text-100) !important;
   color: var(--text-color-accent);
   flex-shrink: 0;
 }
@@ -310,12 +310,12 @@ mark {
 }
 
 .search-level-header-icon {
-  font-size: 1.1rem !important;
+  font-size: var(--text-110) !important;
   color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
 }
 
 .search-level-header-text {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 800;
   color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
   text-transform: uppercase;
@@ -403,7 +403,7 @@ mark {
 
   background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
   border: none;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   color: var(--text-color-accent);
   cursor: pointer;
 
@@ -419,7 +419,7 @@ mark {
 }
 
 .search-level-back-btn .material-symbols-outlined {
-  font-size: 1.25rem !important;
+  font-size: var(--text-125) !important;
 }
 
 .search-card-header {
@@ -436,7 +436,7 @@ mark {
 }
 
 .search-card-status .classroom-status-txt {
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -450,13 +450,13 @@ mark {
 
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 0.75rem;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--text-color-accent) 10%, transparent);
   color: var(--text-color-accent);
 }
 
 .search-card-icon-wrapper .material-symbols-outlined {
-  font-size: 1.5rem !important;
+  font-size: var(--text-150) !important;
 }
 
 .search-card-info {
@@ -467,7 +467,7 @@ mark {
 }
 
 .search-card-name {
-  font-size: 1.5rem;
+  font-size: var(--text-150);
   font-weight: 700;
   color: var(--text-color-primary);
   line-height: 1.2;
@@ -479,7 +479,7 @@ mark {
 }
 
 .search-card--campus .search-card-name {
-  font-size: 1.15rem;
+  font-size: var(--text-110);
 }
 
 .search-card-alt-name {
@@ -489,7 +489,7 @@ mark {
 }
 
 .search-card-subtitle {
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   font-weight: 700;
   opacity: 0.8;
 }
@@ -504,13 +504,13 @@ mark {
 }
 
 .search-card-meta {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 700;
   color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
 }
 
 .search-card-meta.small {
-  font-size: 0.7rem;
+  font-size: var(--text-70);
   font-weight: 600;
 }
 
@@ -521,13 +521,13 @@ mark {
 }
 
 .search-card-meta-icon {
-  font-size: 0.8rem !important;
+  font-size: var(--text-80) !important;
   flex-shrink: 0;
   opacity: 0.8;
 }
 
 .search-card-arrow {
-  font-size: 1.1rem !important;
+  font-size: var(--text-110) !important;
   color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
   transition: transform 0.2s ease, color 0.2s ease;
 }
@@ -619,7 +619,7 @@ mark {
 .search-card--with-photo.photo-failed::after {
   content: 'hide_image';
   font-family: 'Material Symbols Outlined';
-  font-size: 2rem;
+  font-size: var(--text-200);
   position: absolute;
   inset: 0;
   display: flex;
@@ -764,20 +764,23 @@ mark {
   flex-shrink: 0;
   width: 2rem;
   height: 2rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Fixed white tint (not the theme-reactive --glass-tint): this chip always
+     sits on top of a classroom photo, not the page background, so it needs
+     to read against arbitrary photo colors rather than adapt to the theme. */
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
   color: rgba(255, 255, 255, 0.9);
 }
 
 .search-card-arrow-button .search-card-arrow {
   color: inherit;
-  font-size: 1.2rem !important;
+  font-size: var(--text-125) !important;
   transform: translateX(0.02em);
 }
 
@@ -788,7 +791,7 @@ mark {
 }
 
 .search-card--classroom .search-card-icon-wrapper .material-symbols-outlined {
-  font-size: 1.2rem !important;
+  font-size: var(--text-125) !important;
 }
 
 .search-card-features {
@@ -800,7 +803,7 @@ mark {
 }
 
 .search-card-feature-icon {
-  font-size: 1rem !important;
+  font-size: var(--text-100) !important;
   color: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
 }
 
@@ -863,7 +866,7 @@ mark {
 
 .search-too-many-notice {
   text-align: center;
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
   padding: 0.75rem 1rem 0.25rem;
 }

@@ -254,6 +254,11 @@ function render() {
     : `translateX(${pillPos.value}px) scale(${scale.value})`;
   pill.style.transform = transform;
   pillHit.style.transform = transform;
+  // Full glass look only while actually lifted (mid tap or drag spring);
+  // flat color at rest. Checking scale.value directly (rather than
+  // scale.resting) also covers reduced-motion, where to() snaps the value
+  // straight to its target instead of animating toward it.
+  pill.classList.toggle('bn-pill--lifted', scale.value > 1.001);
   activeRow.style.transform = vertical
     ? `translateY(${-pillPos.value}px)`
     : `translateX(${-pillPos.value}px)`;

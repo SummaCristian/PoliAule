@@ -12,12 +12,3 @@ cp favicons/beta/web-app-manifest-512x512.png favicons/main/web-app-manifest-512
 cp favicons/beta/site.webmanifest favicons/main/site.webmanifest
 
 echo "Beta icons in place."
-
-echo "Beta build: pointing config.js at the beta API..."
-
-cat > config.js << 'EOF'
-// API base URL. Overwritten for the beta build by scripts/build-beta.sh.
-export const API_BASE = 'https://api-beta.poliaule.com';
-EOF
-
-echo "Beta API base in place."

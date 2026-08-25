@@ -1,3 +1,16 @@
+/* style.css's global `*, *:before, *:after { box-sizing: inherit }` reset
+   (off a border-box :root) can't reach into this shadow root either —
+   restated locally so padding+width math here matches the rest of the app. */
+:host {
+  box-sizing: border-box;
+}
+
+:host *,
+:host *::before,
+:host *::after {
+  box-sizing: inherit;
+}
+
 /* ── Campus chips ── */
 .campus-chips {
   display: flex;
@@ -5,11 +18,109 @@
   gap: 0.6rem;
 }
 
+/* ── Skeleton loading state ──────────────────────────────────────────────
+   The `data-loading` attribute lives on the ancestor <form> in the light
+   DOM; a shadow root's stylesheet can't select outside its own tree, so
+   script.js mirrors that attribute onto <campus-chip-picker> itself (see
+   the removeAttribute call next to the form's) and everything here keys
+   off :host([data-loading]) instead. */
+
+.campus-chips-skeleton {
+  display: none;
+}
+
+:host([data-loading]) .campus-chips-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.campus-section-sk {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.campus-label-sk {
+  height: 0.9rem;
+  border-radius: var(--radius-xs);
+}
+
+.campus-section-sk:nth-child(1) .campus-label-sk {
+  width: 3rem;
+}
+
+.campus-section-sk:nth-child(2) .campus-label-sk {
+  width: 4rem;
+}
+
+.campus-row-sk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.campus-row-sk>div {
+  height: 2.3rem;
+  border-radius: var(--radius-pill);
+}
+
+/* Milan row: Città Studi, Bovisa */
+.campus-section-sk:nth-child(1) .campus-row-sk>div:nth-child(1) {
+  width: 7rem;
+}
+
+.campus-section-sk:nth-child(1) .campus-row-sk>div:nth-child(2) {
+  width: 4.5rem;
+}
+
+/* Other row: Cremona, Lecco, Mantova */
+.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(1) {
+  width: 5.5rem;
+}
+
+.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(2) {
+  width: 4.5rem;
+}
+
+.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(3) {
+  width: 5.5rem;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 200% center;
+  }
+
+  to {
+    background-position: -200% center;
+  }
+}
+
+:host([data-loading]) .campus-label-sk,
+:host([data-loading]) .campus-row-sk>div {
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--text-color-primary) 6%, transparent) 25%,
+      color-mix(in srgb, var(--text-color-primary) 12%, transparent) 50%,
+      color-mix(in srgb, var(--text-color-primary) 6%, transparent) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s linear infinite;
+}
+
 .campus-chips-section {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   align-items: flex-start;
+}
+
+/* Was previously covered by style.css's generic `label {...}` rule; that
+   type selector can't reach in here now, so it's restated locally. */
+.campus-chips-section label {
+  font-size: var(--text-75);
+  font-weight: medium;
+  color: var(--text-color-primary);
 }
 
 .campus-chips-row {
@@ -20,9 +131,9 @@
 
 .campus-chip {
   padding: 0.4rem 1rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-weight: 600;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -114,7 +225,7 @@
   background: none;
   border: none;
 
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   font-weight: 600;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -192,7 +303,7 @@
   position: absolute;
   left: 0; /* anchor; visual position driven by translateX */
   inset-block: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--text-color-accent) 18%, transparent);
   border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 40%, transparent);
   pointer-events: none;
@@ -204,9 +315,9 @@
 
 .campus-subchip {
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   font-weight: 600;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;

@@ -14,7 +14,7 @@
   background: var(--text-color-primary);
   color: var(--background-color);
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 0.68rem;
+  font-size: var(--text-70);
   font-weight: 600;
   white-space: nowrap;
   pointer-events: none;
@@ -55,6 +55,92 @@
   --shadow:
     0 1px 2px rgba(0, 0, 0, 0.06),
     0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* Radius scale — matches the values already in use across components,
+     not an invented step size. Nested/concentric corners (an inner element
+     whose radius is derived from its parent's radius minus padding, so the
+     curves stay parallel) are intentionally NOT put on this scale — forcing
+     a fixed token there breaks the concentric relationship. */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-pill: 999px;
+
+  /* Type scale — the 12 sizes actually used 5+ times across components,
+     not an invented scale. Values used ≤4 times were snapped into the
+     nearest step here only when within ~0.03–0.05rem (imperceptible);
+     anything farther off (one-off hero sizes, icon-specific px values)
+     was left as a literal rather than forced to fit. */
+  --text-70: 0.7rem;
+  --text-72: 0.72rem;
+  --text-75: 0.75rem;
+  --text-80: 0.8rem;
+  --text-85: 0.85rem;
+  --text-90: 0.9rem;
+  --text-100: 1rem;
+  --text-110: 1.1rem;
+  --text-125: 1.25rem;
+  --text-150: 1.5rem;
+  --text-175: 1.75rem;
+  --text-200: 2rem;
+
+  /* Glass material — the tabbar's recipe (bn-tabbar, pre-tokenization) is
+     the canonical source for this; every other translucent surface should
+     match it, not the other way around. No saturate() — the tabbar never
+     had one. */
+  --glass-tint: rgba(250, 250, 250, 0.7);
+  --glass-outline: rgba(0, 0, 0, 0.25);
+  --glass-shadow-color: rgba(0, 0, 0, 0.1);
+  /* The specular rim along the top and bottom edges. Plain white here; the
+     HDR block below pushes it past white on displays that have the headroom
+     (see the --glass-specular override under `dynamic-range: high`). Dark
+     mode redefines --glass-highlight wholesale and doesn't use this. */
+  --glass-specular: rgb(255 255 255);
+  --glass-highlight:
+    inset -1px 0 2px 0 rgba(0, 0, 0, 0.25),
+    inset 1px 0 2px 0 rgba(0, 0, 0, 0.25),
+    inset 0 -1px 2px 0 var(--glass-specular),
+    inset 0 1px 2px 0 var(--glass-specular),
+    inset 0 -8px 4px 0 rgba(0, 0, 0, 0.02),
+    inset 0 8px 4px 0 rgba(0, 0, 0, 0.02);
+  --glass-blur-sm: 4px;
+  --glass-blur-md: 8px;
+  --glass-blur-lg: 18px;
+
+  /* Outside 0.5px gradient stroke, top to bottom (Figma's outside-stroke
+     equivalent). Applied per glass surface via a masked ::after ring —
+     see .header-button::after below for the shared recipe. */
+  --glass-stroke-gradient: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(94, 94, 94, 0.25) 25%,
+    rgba(94, 94, 94, 0.8) 50%,
+    rgba(94, 94, 94, 0.25) 75%,
+    rgba(255, 255, 255, 1) 100%
+  );
+  --glass-stroke-opacity: 0.8;
+
+  /* Repeated shadow/glow patterns, extracted only where the literal value
+     was byte-identical across multiple files — not a general elevation
+     scale, just naming duplication that already existed. */
+  --bevel: inset 1px 1px 0 rgba(255, 255, 255, 0.3), inset -1px -1px rgba(255, 255, 255, 0.1);
+  --glow-accent: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
+  --glow-info: 0 2px 8px rgba(33, 150, 243, 0.4);
+  --shadow-groove: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-dim: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+  /* "Now" marker blue — fixed by design, doesn't react to theme (verified:
+     no dark-mode override exists anywhere it's used). */
+  --color-now: #2196f3;
+
+  /* Darker/more-saturated green used only inside dark-mode blocks for the
+     today/now indicators, for better white-text contrast than
+     --text-color-accent's dark value gives (per the original comments). */
+  --color-accent-dark: #28a745;
+  --color-accent-dark-hover: #218838;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -81,6 +167,53 @@
     --shadow:
       0 1px 2px rgba(0, 0, 0, 0.3),
       0 4px 12px rgba(0, 0, 0, 0.6);
+
+    --glass-tint: rgba(21, 21, 21, 0.8);
+    --glass-outline: rgba(255, 255, 255, 0.25);
+    --glass-shadow-color: rgba(0, 0, 0, 0.1);
+    --glass-highlight:
+      inset -1px 0 2px 0 rgba(0, 0, 0, 0.75),
+      inset 1px 0 2px 0 rgba(0, 0, 0, 0.75),
+      inset 0 -1px 2px 0 rgba(255, 255, 255, 0.2),
+      inset 0 1px 2px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -8px 4px 0 rgba(255, 255, 255, 0.02),
+      inset 0 8px 4px 0 rgba(255, 255, 255, 0.02);
+    --glass-stroke-gradient: linear-gradient(
+      to bottom,
+      rgba(223, 223, 223, 0.35) 0%,
+      rgba(41, 41, 41, 0.5) 25%,
+      rgba(0, 0, 0, 1) 50%,
+      rgba(41, 41, 41, 0.5) 75%,
+      rgba(223, 223, 223, 0.35) 100%
+    );
+  }
+}
+
+/* HDR specular highlights.
+
+   In light mode the glass rim was already rgb(255 255 255) — the brightest
+   colour SDR can express — so against a light background it barely reads as a
+   highlight at all. On a display with dynamic range to spare we spend it here:
+   components above 100% in display-p3 are extended-range values, and the
+   compositor takes them past reference white instead of clamping.
+
+   Gated on `dynamic-range: high` rather than left to clamp on its own, so SDR
+   displays keep the exact previous value and the effect is one token to tune.
+   Requires an HDR-capable display *and* the browser actually driving it in HDR
+   (Chrome/Edge 136+, Safari 26+); everywhere else the media query simply
+   doesn't match.
+
+   The @supports is load-bearing, not belt-and-braces: the media query shipped
+   before color() did (Chrome 98 vs 111), so a browser in that gap would store
+   an unparseable value in --glass-specular. Custom properties aren't validated
+   until substitution, so that wouldn't fall back through the cascade — it
+   would invalidate the whole box-shadow at computed-value time and drop it to
+   `none`, taking the outline and drop shadow with it. */
+@media (dynamic-range: high) {
+  @supports (color: color(display-p3 1 1 1)) {
+    :root {
+      --glass-specular: color(display-p3 200% 200% 200%);
+    }
   }
 }
 
@@ -194,7 +327,7 @@ html:has(.splash-overlay) {
 .splash-loading-label {
   position: absolute;
   bottom: 3.5rem;
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -257,7 +390,7 @@ html:has(.splash-overlay) {
 }
 
 .splash-error-title {
-  font-size: 1.1rem;
+  font-size: var(--text-110);
   font-weight: 700;
   color: var(--text-color-primary);
   opacity: 0;
@@ -265,7 +398,7 @@ html:has(.splash-overlay) {
 }
 
 .splash-error-subtitle {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   color: var(--text-color-secondary);
   margin-bottom: 1rem;
   opacity: 0;
@@ -306,19 +439,19 @@ h2 {
 }
 
 h3 {
-  font-size: 1.75rem;
+  font-size: var(--text-175);
   font-weight: 600;
   color: var(--text-color-primary);
 }
 
 h4 {
-  font-size: 1.5rem;
+  font-size: var(--text-150);
   font-weight: 500;
   color: var(--text-color-primary);
 }
 
 p {
-  font-size: 1rem;
+  font-size: var(--text-100);
   color: var(--text-color-primary);
 }
 
@@ -327,34 +460,34 @@ a {
 }
 
 .body-text {
-  font-size: 1rem;
+  font-size: var(--text-100);
   color: var(--text-color-primary);
 }
 
 .body-small-text {
-  font-size: 0.85rem;
+  font-size: var(--text-85);
   color: var(--text-color-primary);
 }
 
 .caption-text {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   color: var(--text-color-primary);
 }
 
 label {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: medium;
   color: var(--text-color-primary);
 }
 
 .quote-text {
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-style: italic;
   color: var(--text-color-primary);
 }
 
 .button-text {
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   font-weight: medium;
   color: var(--text-color-primary);
 }
@@ -397,7 +530,7 @@ label {
 
 .info-box-icon {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--text-150);
 }
 
 .info-box-title {
@@ -414,7 +547,7 @@ label {
 
 .info-box-content {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   color: color-mix(in srgb, #d4820a 80%, var(--text-color-primary));
   font-weight: 600;
 }
@@ -422,6 +555,18 @@ label {
 /* --- Styles --- */
 
 /* Header */
+.header-top-strip {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+
+  height: 11px;
+
+  background-color: var(--background-color);
+}
+
 .header {
   padding-top: calc(env(safe-area-inset-top));
 
@@ -430,7 +575,7 @@ label {
   gap: 0;
 
   position: sticky;
-  top: 0;
+  top: 11px;
   left: 0;
   right: 0;
   z-index: 1000;
@@ -440,7 +585,66 @@ label {
   isolation: isolate;
 }
 
+.header-blur-layers {
+  position: absolute;
+  inset: 0;
+  bottom: -2rem;
+
+  pointer-events: none;
+  /* Negative so it paints behind header-top-line-container's own (non-
+     positioned) content without needing z-index on every sibling — scoped
+     to that container's stacking context via its position+z-index below. */
+  z-index: -1;
+}
+
+.header-blur-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.header-blur-layer:nth-child(1) {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+}
+
+.header-blur-layer:nth-child(2) {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+}
+
+.header-blur-layer:nth-child(3) {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+}
+
+.header-blur-layer:nth-child(4) {
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 100%);
+}
+
+.header-fade-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(to bottom,
+    var(--background-color) 0%,
+    color-mix(in srgb, var(--background-color) 70%, transparent) 45%,
+    color-mix(in srgb, var(--background-color) 25%, transparent) 70%,
+    transparent 100%);
+}
+
 .header-top-line-container {
+  position: relative;
+  z-index: 1;
+
   padding: 0 1rem;
 
   display: flex;
@@ -449,10 +653,6 @@ label {
   justify-content: space-between;
 
   line-height: 2rem;
-
-  background: var(--background-color);
-
-  box-shadow: var(--shadow);
 }
 
 .header-title-container {
@@ -494,10 +694,10 @@ label {
 }
 
 .header-title {
-  font-size: 2rem;
+  font-size: var(--text-200);
   font-weight: bold;
 
-  background: var(--accent-gradient);
+  background: var(--text-color-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -527,10 +727,16 @@ label {
 }
 
 .header-button {
+  position: relative;
+
   width: 3rem;
   height: 3rem;
-  border-radius: 50%;
-  background: transparent;
+  border-radius: var(--radius-pill);
+
+  /* Same glass material as the tabbar/back button. */
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
 
   color: var(--text-color-secondary);
 
@@ -541,21 +747,46 @@ label {
   border-color: transparent;
 
   box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px rgba(255, 255, 255, 0.1),
-    var(--shadow);
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
 
   cursor: pointer;
 
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease,
-    scale 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &:hover {
-    background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
-    scale: 1.1;
+    background: color-mix(in srgb, var(--text-color-primary) 12%, var(--glass-tint));
+    transform: scale(1.1);
   }
+}
+
+/* Outside 0.5px gradient stroke (Figma's "outside stroke") without
+   affecting layout. header-button is a true circle (fixed equal
+   width/height), so the ring is masked with a radial-gradient rather than
+   the padding + mask-composite: exclude trick used on the pill-shaped
+   surfaces (.bn-tabbar::after, .detail-back-btn::after) — that box-corner
+   technique has a seam at the four cardinal points of a perfect circle
+   (border-radius: 999px on a square box), rendered as a bright spot/arc
+   instead of a clean ring. A radial-gradient mask is exact Euclidean
+   distance from the center, so it doesn't hit that seam. .bn-search-btn is
+   also a true circle and uses the same fix (see bottom-nav.css). */
+.header-button::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
 }
 
 .pulse-indicator {
@@ -647,11 +878,11 @@ label {
   align-items: center;
   gap: 0.35rem;
   margin-top: 0.75rem;
-  font-size: 0.85rem;
+  font-size: var(--text-85);
 }
 
 .data-reload-icon {
-  font-size: 1rem;
+  font-size: var(--text-100);
   transition: transform 0.3s ease;
 }
 
@@ -665,6 +896,7 @@ label {
 
 .header-nav-row {
   position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -757,7 +989,12 @@ body.info-open .header-nav-row {
 .tab-content {
   padding: 0 1rem;
 
-  display: none;
+  /* content-visibility:hidden instead of display:none: it still keeps the
+     subtree out of layout/paint, but (unlike display:none) doesn't remove it
+     from the render tree, so content-visibility:auto on descendants (e.g.
+     .classroom-card) keeps working — switching tabs doesn't force a full
+     "unhide and lay out everything" pass over the tab being shown. */
+  content-visibility: hidden;
 }
 
 @media (min-width: 600px) {
@@ -769,6 +1006,8 @@ body.info-open .header-nav-row {
 }
 
 .tab-content.visible {
+  content-visibility: visible;
+
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -841,7 +1080,7 @@ body.info-open .header-nav-row {
 }
 
 .section-header-title {
-  font-size: 2rem;
+  font-size: var(--text-200);
   font-weight: bold;
 }
 
@@ -851,30 +1090,30 @@ body.info-open .header-nav-row {
 
 @media (max-width: 600px) {
   .section-header-title {
-    font-size: 1.75rem;
+    font-size: var(--text-175);
   }
 
   .section-header-subtitle {
-    font-size: 1rem;
+    font-size: var(--text-100);
   }
 }
 
 .subsection-header-title {
-  font-size: 1.5rem;
+  font-size: var(--text-150);
   font-weight: 600;
 }
 
 .subsection-header-subtitle {
-  font-size: 0.85rem;
+  font-size: var(--text-85);
 }
 
 @media (max-width: 600px) {
   .subsection-header-title {
-    font-size: 1.25rem;
+    font-size: var(--text-125);
   }
 
   .subsection-header-subtitle {
-    font-size: 0.75rem;
+    font-size: var(--text-75);
   }
 }
 
@@ -904,69 +1143,9 @@ body.info-open .header-nav-row {
   }
 }
 
-.campus-chips-skeleton,
 .date-picker-skeleton,
 .time-pickers-skeleton {
   display: none;
-}
-
-form[data-loading] .campus-chips-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.campus-section-sk {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  align-items: flex-start;
-}
-
-.campus-label-sk {
-  height: 0.9rem;
-  border-radius: 4px;
-}
-
-.campus-section-sk:nth-child(1) .campus-label-sk {
-  width: 3rem;
-}
-
-.campus-section-sk:nth-child(2) .campus-label-sk {
-  width: 4rem;
-}
-
-.campus-row-sk {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.campus-row-sk>div {
-  height: 2.3rem;
-  border-radius: 999px;
-}
-
-/* Milan row: Città Studi, Bovisa */
-.campus-section-sk:nth-child(1) .campus-row-sk>div:nth-child(1) {
-  width: 7rem;
-}
-
-.campus-section-sk:nth-child(1) .campus-row-sk>div:nth-child(2) {
-  width: 4.5rem;
-}
-
-/* Other row: Cremona, Lecco, Mantova */
-.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(1) {
-  width: 5.5rem;
-}
-
-.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(2) {
-  width: 4.5rem;
-}
-
-.campus-section-sk:nth-child(2) .campus-row-sk>div:nth-child(3) {
-  width: 5.5rem;
 }
 
 form[data-loading] .date-picker-skeleton {
@@ -978,10 +1157,7 @@ form[data-loading] .date-picker-skeleton {
   margin-top: 2rem;
   align-self: center;
   background-color: var(--background-color-secondary);
-  box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px rgba(255, 255, 255, 0.1),
-    var(--shadow);
+  box-shadow: var(--bevel), var(--shadow);
 }
 
 form[data-loading] .date-picker-skeleton>div {
@@ -1009,8 +1185,6 @@ form[data-loading] .time-pickers-skeleton>div:last-child {
   opacity: 0.5;
 }
 
-form[data-loading] .campus-label-sk,
-form[data-loading] .campus-row-sk>div,
 form[data-loading] .date-picker-skeleton>div,
 form[data-loading] .time-pickers-skeleton>div {
   background: linear-gradient(90deg,
@@ -1037,14 +1211,8 @@ ul li::marker {
   background: var(--background-color-secondary);
   color: var(--text-color-primary);
 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-
   border-radius: 12px;
-  box-shadow:
-    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
-    inset -1px -1px rgba(255, 255, 255, 0.1),
-    var(--shadow);
+  box-shadow: var(--bevel), var(--shadow);
 
   opacity: 0;
   transform: scale(0.78) translateY(var(--popover-closed-ty, -6px));
@@ -1140,7 +1308,7 @@ ul li::marker {
 }
 
 .popover-subtitle {
-  font-size: 1.2rem;
+  font-size: var(--text-125);
 
   margin: 0 0 0.5rem 0;
 }
@@ -1172,7 +1340,7 @@ ul li::marker {
 }
 
 .popover ul li {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   color: var(--text-color-secondary);
   padding-left: 16px;
   position: relative;
@@ -1222,7 +1390,7 @@ ul li::marker {
 }
 
 .hero-text {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
 }
 
 /* Dark mode */
@@ -1249,7 +1417,7 @@ ul li::marker {
   align-items: center;
   justify-content: center;
 
-  font-size: 1rem;
+  font-size: var(--text-100);
   font-weight: bold;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -1349,7 +1517,6 @@ are rendered as solid colors
 
 .samsung .bn-tabbar,
 .samsung .bn-search-btn,
-.samsung .popover,
 .samsung .header-button {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -1377,24 +1544,24 @@ are rendered as solid colors
 /* ── Desktop two-column layout (Available screen) ── */
 @media (min-width: 1100px) {
   .section-header-title {
-    font-size: 1.75rem;
+    font-size: var(--text-175);
   }
 
   .section-header-subtitle {
-    font-size: 1.1rem;
+    font-size: var(--text-110);
   }
 
   .subsection-header-title {
-    font-size: 1.25rem;
+    font-size: var(--text-125);
   }
 
   .building-name {
-    font-size: 1.5rem;
+    font-size: var(--text-150);
   }
 
   .classroom-name,
   .classroom-status-txt {
-    font-size: 1.25rem;
+    font-size: var(--text-125);
   }
 
   #available-classrooms-container.visible {

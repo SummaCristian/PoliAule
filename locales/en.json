@@ -115,6 +115,9 @@
   "settings.defaultTab.available": "Available",
   "settings.defaultTab.last": "Last",
   "settings.defaultTab.search": "Campus",
+  "settings.sectionBackend": "Backend",
+  "settings.useBetaBackend": "Use Beta Backend",
+  "settings.useBetaBackendDesc": "Fetch data from the beta API instead of the stable one.",
 
   "detail.features": "Features",
   "detail.currentStatus": "Current status",
@@ -123,6 +126,7 @@
   "detail.disabledSeats": "Accessible seats",
   "detail.weeklySchedule": "Weekly Schedule",
   "detail.occupied": "Occupied",
+  "detail.examLabel": "Exam",
   "detail.noData": "No schedule data available",
 
   "info.body.intro": "<strong>PoliAule</strong> is a web app that helps students find available classrooms across <strong>Politecnico di Milano</strong> campuses.",
@@ -170,7 +174,12 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 2.0.0-beta1",
+  "footer.versionInfo": "Version 2.0.0-beta3",
 
-  "changelog.item1": "Redesigned the tab bar"
+  "changelog.item1": "Redesigned the tab bar",
+  "changelog.item2": "Redesigned header bar",
+  "changelog.item3": "Redesigned the classroom cards",
+  "changelog.item4": "(Temporary) removed the per-building clustering and accordion-based list of available classrooms",
+  "changelog.item5": "Reduced the waiting time for the splash screen",
+  "changelog.item6": "Added occupation metadata popover: tap on an occupation in the timeline to see the reason for the occupation (class, exam, etc.) and the course name if available."
 }

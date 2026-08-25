@@ -65,7 +65,7 @@ jobs:
         if: hashFiles('occupancy/*.json') != ''
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Upload occupancy data to R2 (main)
         if: hashFiles('occupancy/*.json') != ''

@@ -5,7 +5,7 @@
   background-color: var(--background-color-secondary);
   border: 4px solid var(--background-color-secondary);
 
-  border-radius: 1.5rem;
+  border-radius: var(--radius-xl);
 
   display: flex;
   flex-direction: column;
@@ -27,13 +27,13 @@
   gap: 0.25rem;
 
   padding: 0.25rem 0.75rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 40%, transparent);
   background: color-mix(in srgb, var(--text-color-accent) 15%, transparent);
   color: var(--text-color-accent);
 
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 0.8rem;
+  font-size: var(--text-80);
   font-weight: 700;
   cursor: pointer;
 
@@ -46,23 +46,18 @@
 }
 
 .results-filter-btn .material-symbols-outlined {
-  font-size: 1rem !important;
+  font-size: var(--text-100) !important;
 }
 
 .available-classrooms-container.hide-partial [data-status="partially-free"] {
   display: none;
 }
 
-.building-all-partial-hidden {
+/* Hide a building's header too when every one of its rooms is partially-free
+   (and therefore already hidden above) — otherwise an empty header would be
+   left dangling with no cards under it. */
+.available-classrooms-container.hide-partial [data-all-partial="true"] {
   display: none;
-  padding: 0.75rem 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-secondary, #888);
-  text-align: center;
-}
-
-.available-classrooms-container.hide-partial .building-all-partial-hidden {
-  display: block;
 }
 
 .available-classrooms-container.empty {
@@ -81,7 +76,7 @@
 }
 
 .empty-container-title {
-  font-size: 1.5rem;
+  font-size: var(--text-150);
   font-weight: 700;
 
   color: var(--text-color-secondary);
@@ -91,7 +86,7 @@
 }
 
 .empty-container-subtitle {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   font-weight: 630;
 
   color: var(--text-color-secondary);
@@ -100,70 +95,38 @@
   margin: 0 3rem;
 }
 
+/* Grid of cards — every classroom card is a direct sibling here (rendered up
+   front, see buildBuildingSection in script.js), with a full-width section
+   header before each building's run of cards. */
 .list-outer-container {
   list-style: none;
   margin: 0;
   padding: 0.25rem;
 
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.list-inner-container {
-  list-style: none;
-  margin: 0;
-  padding: 0.75rem 0.5rem;
-
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
   gap: 0.75rem;
 }
 
-.building-card {
-  background-color: var(--background-color);
-  border-radius: 1.5rem;
-  padding: 0.75rem;
-  box-shadow: var(--shadow);
+.building-section-header {
+  grid-column: 1 / -1;
 
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  
-  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.building-card-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.25rem 0.5rem 0.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
-  cursor: pointer;
-  user-select: none;
-}
-
-.building-card.collapsed .building-card-header {
-  border-bottom-color: transparent;
-  padding-bottom: 0.25rem;
-}
-
-.building-card.collapsed {
-  gap: 0;
-  cursor: pointer;
-}
-
-.building-card-header-text {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  padding: 0.25rem 0.5rem 0.5rem;
   text-align: start;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+
+  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.building-section-header:not(:first-child) {
+  margin-top: 0.5rem;
 }
 
 .building-name {
-  font-size: 1.75rem;
+  font-size: var(--text-175);
   font-weight: 700;
   margin: 0;
 }
@@ -183,7 +146,7 @@
 }
 
 .building-count {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 700;
 }
 
@@ -192,60 +155,24 @@
 .building-count.not-free       { color: var(--color-status-busy); }
 
 .building-count-sep {
-  font-size: 0.65rem;
+  font-size: var(--text-70);
   color: color-mix(in srgb, var(--text-color-primary) 25%, transparent);
 }
 
-.building-chevron {
-  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  flex-shrink: 0;
-  transform: rotate(-180deg);
-}
-
-.building-card.collapsed .building-chevron {
-  transform: rotate(0deg);
-}
-
-.building-card-body {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
-  overflow: hidden;
-  min-height: 0;
-}
-
-.building-card.collapsed .building-card-body {
-  grid-template-rows: 0fr;
-  opacity: 0;
-}
-
-.building-card-body > .list-inner-container {
-  overflow: hidden;
-  min-height: 0;
-}
-
+/* Each card is a grid item directly — no extra wrapper box (the old
+   .classroom-list-item-container padding/shadow chrome moved onto the card
+   itself, since the card is no longer full-width and needs its own bounds). */
 .classroom-list-item-container {
-  padding: 1rem;
+  display: contents;
+}
 
-  border-radius: 1rem;
-
-  background-color: var(--background-color-secondary);
-
-  box-shadow: var(--shadow);
-
+.classroom-list-item-container .classroom-card {
   animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  transition: scale 0.15s ease;
-
-  &:hover {
-    scale: 1.025;
-  }
 }
 
 /* Prevent re-triggering the staggered animation after the first load */
-.list-outer-container.appeared .classroom-list-item-container,
-.list-outer-container.appeared > li,
-.list-outer-container.appeared .building-card {
+.list-outer-container.appeared .classroom-card,
+.list-outer-container.appeared .building-section-header {
   animation: none !important;
 }
 
@@ -267,439 +194,195 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   CLASSROOM CARD
+   Ported from the Figma "Classroom Card / Portrait" component: a photo with
+   a gradient fade to a solid, readable footer instead of the old design's
+   second blurred copy of the photo and mix-blend-mode overlay. The card's
+   chrome reuses the project's existing --glass-* tokens instead of one-off
+   shadow values, per the Figma spec's own Glass effect names.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Outer box: carries the box-shadow (highlight + drop shadow) and the
+   gradient stroke ring. Deliberately NOT overflow:hidden — box-shadow is
+   clipped by overflow on the element that declares it, not just its
+   children, so the shadow has to live on an unclipped box. The photo is
+   clipped to the rounded corners by the inner .classroom-card-clip instead. */
 .classroom-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  position: relative;
+  aspect-ratio: 154 / 196;
   text-align: start;
 
+  padding: 0;
+  border-radius: var(--radius-lg);
+
   cursor: pointer;
-  padding: 1rem;
-  margin: -1rem; /* Offset the container padding to fill it completely */
-  border-radius: 1rem;
-  transition: background-color 0.2s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 
-  contain: layout paint style;
+  background-color: var(--background-color-secondary);
+  /* Only the two non-inset parts here — outline hairline and drop shadow,
+     both painted outside the box, so they're unaffected by whatever's
+     inside. The inset highlight moved to ::before (see below): inset
+     shadows paint behind child content by default, and .classroom-card-clip
+     (the photo) is fully opaque, so an inset shadow declared here would be
+     invisible on any photo card. */
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    0 4px 40px 0 var(--glass-shadow-color);
+
+  transition: transform 0.15s ease;
+
+  content-visibility: auto;
+  /* "auto" keyword: this card also carries aspect-ratio, so a fixed guess
+     that doesn't match the grid's actual column width caused a real bug —
+     a size mismatch between the guessed and rendered box could make a
+     card's very first IntersectionObserver callback (photo lazy-load) get
+     silently dropped. Earlier profiling showed no measurable perf cost
+     either way, so "auto" (remember the real size after first layout) is
+     the safe choice here.
+     Explicit width AND height (not one value reused for both) matching the
+     card's actual 154:196 proportions — a square-ish single-value guess was
+     visibly wrong on width, and while the card is transitioning between
+     skipped/relevant (e.g. mid-scroll on Safari), the photo can briefly
+     render against that wrong placeholder size, showing as a squeezed
+     sliver via object-fit: cover. */
+  contain-intrinsic-size: auto 155px auto 197px;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--text-color-accent) 72%, white);
+    outline-offset: 3px;
+  }
 }
 
-/* ── Photo card variant ─────────────────────────────────────── */
-
-.classroom-card--with-photo {
-  padding: 0;
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--text-color-primary) 12%, var(--background-color-secondary));
-  border: 1px solid color-mix(in srgb, white 14%, transparent);
-  box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+.classroom-card-clip {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   overflow: hidden;
   isolation: isolate;
-  mask-image: radial-gradient(white, black);
-  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
-/* Blurred color wash — spans the full card, fades in once the photo loads.
-   This is the backdrop visible behind and below the real photo. */
-.classroom-card--with-photo::before {
-  content: '';
+/* Inset highlight, repainted here (on top of .classroom-card-clip's photo)
+   instead of as part of .classroom-card's own box-shadow — see the note
+   there. This pseudo has no content of its own, so it never blocks clicks
+   or covers the photo underneath it visually beyond its shadow. */
+.classroom-card::before {
+  content: "";
   position: absolute;
-  inset: -36px;
-  background: var(--card-photo-url) center / cover no-repeat;
-  filter: blur(34px) saturate(1.55) brightness(0.48);
-  z-index: 0;
-  opacity: 0;
-  transition: opacity 0.5s ease;
+  inset: 0;
   border-radius: inherit;
+  box-shadow: var(--glass-highlight);
+  pointer-events: none;
+  z-index: 1;
 }
 
-.classroom-card--with-photo:has(.classroom-card-photo.loaded)::before {
-  opacity: 1;
+/* Outside 0.5px gradient stroke — same recipe as .header-button::after /
+   .bn-tabbar::after in style.css / bottom-nav.css. */
+.classroom-card::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
 }
 
-/* The actual photo — fills the card but fades out toward the middle,
-   letting the blurred wash beneath carry the image feel downward. */
 .classroom-card-photo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center center;
-  border-radius: inherit;
-  -webkit-mask-image: linear-gradient(to bottom, black 34%, transparent 68%);
-  mask-image: linear-gradient(to bottom, black 34%, transparent 68%);
   opacity: 0;
-  transform: scale(1.03);
-  transition: opacity 0.5s ease, transform 0.45s ease;
-  z-index: 1;
+  transition: opacity 0.4s ease;
 }
 
 .classroom-card-photo.loaded {
   opacity: 1;
-  transform: scale(1);
 }
 
-/* Failed photo — show a muted placeholder icon */
-.classroom-card--with-photo.photo-failed::after {
+/* Failed photo — hide the broken <img> and show a muted placeholder icon instead */
+.classroom-card--photo.photo-failed .classroom-card-photo {
+  display: none;
+}
+
+.classroom-card--photo.photo-failed::before {
   content: 'hide_image';
   font-family: 'Material Symbols Outlined';
-  font-size: 2rem;
+  font-size: var(--text-200);
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.25);
+  color: color-mix(in srgb, var(--text-color-primary) 20%, transparent);
   z-index: 0;
   pointer-events: none;
 }
 
-/* Gradient scrim: light at top for the photo, deeper toward the bottom
-   where the blurred wash needs extra darkening for the timeline to read. */
-.classroom-card-overlay {
+/* Gradient overlay laid across the full card — exact stops from the Figma
+   component — fading the photo to a solid, readable footer. */
+.classroom-card-scrim {
   position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.16) 0%,
-    rgba(0, 0, 0, 0.06) 20%,
-    rgba(0, 0, 0, 0) 36%,
-    rgba(0, 0, 0, 0) 64%,
-    rgba(0, 0, 0, 0.36) 84%,
-    rgba(0, 0, 0, 0.68) 100%
-  );
-  transition: background 0.2s ease;
-}
-
-.classroom-card-overlay::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(130% 70% at 50% 0%, rgba(0, 0, 0, 0.54) 0%, rgba(0, 0, 0, 0.22) 34%, rgba(0, 0, 0, 0) 60%),
-    radial-gradient(120% 62% at 50% 0%, rgba(0, 0, 0, 0.52) 0%, rgba(0, 0, 0, 0.22) 44%, rgba(0, 0, 0, 0) 92%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0) 52%);
-  mix-blend-mode: multiply;
-  opacity: 0.74;
-  z-index: 0;
+  /* 1px bleed past the true edges (clipped precisely by .classroom-card-clip's
+     overflow:hidden) — guards against a sub-pixel rounding gap at the card's
+     bottom edge on some mobile DPR/zoom combos, where inset:0 can land a
+     hair short of the actual box and let the photo show through. */
+  inset: -1px;
   pointer-events: none;
-}
 
-.classroom-card-overlay::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.16) 0%,
-    rgba(255, 255, 255, 0.06) 24%,
-    rgba(255, 255, 255, 0) 52%
+    rgba(217, 217, 217, 0) 53%,
+    rgba(217, 217, 217, 0.8) 80%,
+    rgba(217, 217, 217, 1) 89%
   );
-  mix-blend-mode: soft-light;
-  opacity: 0.36;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* All card content — header, timeline, features — stacked on top.
-   padding-top pushes it down, leaving a clear image band at the top. */
-.classroom-card-content {
-  position: relative;
-  z-index: 3;
-  padding: 6.85rem 1rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.56rem;
-}
-
-.classroom-card--with-photo .classroom-card-content {
-  padding-top: 12rem;
-}
-
-/* ── White text overrides for photo variant ─────────────────── */
-
-.classroom-card--with-photo .classroom-name {
-  color: #fff;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.72),
-    0 6px 16px rgba(0, 0, 0, 0.58),
-    0 0 1px rgba(0, 0, 0, 0.7);
-  letter-spacing: 0.01em;
-  line-height: 1.05;
-  max-width: 95%;
-}
-
-.classroom-card--with-photo .classroom-status-txt {
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.72),
-    0 4px 10px rgba(0, 0, 0, 0.42);
-  filter: none;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: 0;
-}
-
-.classroom-card--with-photo .classroom-detail-btn {
-  color: rgba(255, 255, 255, 0.86);
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.classroom-card--with-photo .classroom-feature-icon {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.classroom-card--with-photo .classroom-status-txt.free {
-  color: #79f2a1;
-}
-
-.classroom-card--with-photo .classroom-status-txt.free-soon {
-  color: #b9ff85;
-}
-
-.classroom-card--with-photo .classroom-status-txt.partially-free,
-.classroom-card--with-photo .classroom-status-txt.occupied-soon {
-  color: #ffd76b;
-}
-
-.classroom-card--with-photo .classroom-status-txt.not-free,
-.classroom-card--with-photo .classroom-status-txt.occupied {
-  color: #ff9b8f;
-}
-
-/* ── Timeline overrides for dark photo background ───────────── */
-
-.classroom-card--with-photo .classroom-timeline {
-  padding: 0.5rem 0 0;
-}
-
-.classroom-card--with-photo .timeline-bar {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: none;
-}
-
-.classroom-card--with-photo .timeline-query-region {
-  background: color-mix(in srgb, var(--text-color-accent) 28%, transparent);
-  border-color: color-mix(in srgb, var(--text-color-accent) 76%, transparent);
-}
-
-.classroom-card--with-photo .timeline-tick-label span {
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.classroom-card--with-photo .timeline-tick-label::before {
-  background: rgba(255, 255, 255, 0.44);
-}
-
-.classroom-card:not(.classroom-card--with-photo):hover {
-  background-color: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
-}
-
-.classroom-card--with-photo:hover .classroom-card-overlay {
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.2) 0%,
-    rgba(0, 0, 0, 0.08) 22%,
-    rgba(0, 0, 0, 0) 38%,
-    rgba(0, 0, 0, 0) 62%,
-    rgba(0, 0, 0, 0.44) 84%,
-    rgba(0, 0, 0, 0.78) 100%
-  );
-}
-
-.classroom-card:hover .classroom-detail-btn {
-  color: var(--text-color-accent);
-  transform: translateX(4px);
-}
-
-.classroom-card--with-photo:hover .classroom-detail-btn {
-  color: rgba(255, 255, 255, 0.95);
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.34);
-}
-
-.classroom-card--with-photo:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--text-color-accent) 72%, white);
-  outline-offset: 3px;
 }
 
 @media (prefers-color-scheme: dark) {
-  .classroom-card--with-photo::before {
-    filter: blur(34px) saturate(1.45) brightness(0.58);
-  }
-
-  .classroom-card-overlay {
+  .classroom-card-scrim {
     background: linear-gradient(
       to bottom,
-      rgba(0, 0, 0, 0.14) 0%,
-      rgba(0, 0, 0, 0.05) 20%,
-      rgba(0, 0, 0, 0) 36%,
-      rgba(0, 0, 0, 0) 64%,
-      rgba(0, 0, 0, 0.34) 84%,
-      rgba(0, 0, 0, 0.66) 100%
+      rgba(26, 26, 26, 0) 53%,
+      rgba(26, 26, 26, 0.8) 80%,
+      rgba(26, 26, 26, 1) 89%
     );
   }
-
-  .classroom-card-overlay::before {
-    opacity: 0.64;
-  }
-
-  .classroom-card-overlay::after {
-    opacity: 0.18;
-  }
 }
 
-@media (prefers-color-scheme: light) {
-  .classroom-card--with-photo {
-    border: 1px solid color-mix(in srgb, black 7%, transparent);
-    box-shadow:
-      0 8px 22px rgba(18, 24, 40, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.34);
-  }
-
-  .classroom-card--with-photo::before {
-    filter: blur(30px) saturate(1.32) brightness(0.8);
-  }
-
-  .classroom-card-overlay {
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.09) 0%,
-      rgba(0, 0, 0, 0.06) 18%,
-      rgba(0, 0, 0, 0) 36%,
-      rgba(0, 0, 0, 0) 64%,
-      rgba(0, 0, 0, 0.24) 84%,
-      rgba(0, 0, 0, 0.54) 100%
-    );
-  }
-
-  .classroom-card-overlay::before {
-    opacity: 0.72;
-  }
-
-  .classroom-card--with-photo:hover .classroom-card-overlay {
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.11) 0%,
-      rgba(0, 0, 0, 0.08) 20%,
-      rgba(0, 0, 0, 0) 38%,
-      rgba(0, 0, 0, 0) 62%,
-      rgba(0, 0, 0, 0.28) 84%,
-      rgba(0, 0, 0, 0.58) 100%
-    );
-  }
-
-  .classroom-card-overlay::after {
-    opacity: 0.42;
-  }
-
-}
-
-.classroom-card-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.classroom-card--with-photo .classroom-card-header {
-  position: absolute;
-  top: 1rem;
-  left: 1.15rem;
-  right: 1.15rem;
-  z-index: 4;
-  align-items: center;
-}
-
-.classroom-card-header-left {
+.classroom-card-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  min-width: 0;
-  position: relative;
-}
-
-.classroom-detail-btn {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  color: var(--text-color-secondary);
-  transition: color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.classroom-detail-btn .material-symbols-outlined {
-  font-size: 1.5rem !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1em;
-  line-height: 1;
-  transform: translateX(0.02em);
-}
-
-.classroom-features {
-  display: flex;
-  flex-direction: row;
-  gap: 0.1rem;
-  flex-shrink: 0;
   justify-content: flex-end;
-}
-
-.classroom-card-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-height: 1.2rem;
-}
-
-.classroom-feature-icon {
-  font-size: 1.1rem !important;
-  color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
-}
-
-.classroom-name {
-  font-size: 1.4rem;
-  font-weight: 700;
-  text-align: start;
-  margin: 0;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-  line-height: 1.12;
-  max-width: 100%;
+  gap: 0.1rem;
 }
 
 .classroom-status-txt {
-  font-size: 0.8rem;
+  flex: 0 0 auto;
+  font-size: var(--text-80);
   font-weight: 800;
   margin: 0;
-  flex: 1 1 auto;
-  min-width: 0;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   line-height: 1.15;
-  text-wrap: balance;
+  white-space: nowrap;
 }
 
 .classroom-status-txt.free {
@@ -720,256 +403,31 @@
   color: var(--color-status-busy);
 }
 
-.classroom-timeline {
-  padding: 1rem;
-  
-  contain: layout paint;
-}
-
-.timeline-bar-wrapper {
-  position: relative;
-  padding-top: 1.8rem;
-}
-
-.timeline-time-indicator {
-  position: absolute;
-  top: 0.1rem;
-  transform: translateX(-50%);
-
-  background: var(--text-color-accent);
-  color: white;
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 0.7rem;
+.classroom-name {
+  font-size: var(--text-150);
   font-weight: 800;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
-
-  user-select: none;
-  z-index: 10;
-}
-
-@media (prefers-color-scheme: dark) {
-  .timeline-time-indicator:not(.timeline-time-indicator--now) {
-    /* Use a slightly darker/more saturated green for better white text contrast on dark background */
-    background: #28a745;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
-  }
-}
-
-.timeline-time-indicator::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 4px solid transparent;
-  border-top-color: var(--text-color-accent);
-}
-
-.timeline-time-indicator--edge-left {
-  transform: translateX(0);
-}
-
-.timeline-time-indicator--edge-left::after {
-  left: 12px;
-  transform: none;
-}
-
-.timeline-time-indicator--edge-right {
-  transform: translateX(-100%);
-}
-
-.timeline-time-indicator--edge-right::after {
-  left: calc(100% - 12px);
-  transform: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  .timeline-time-indicator:not(.timeline-time-indicator--now)::after {
-    border-top-color: #28a745;
-  }
-}
-
-.timeline-time-indicator--now {
-  background: #2196F3;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
-
-  opacity: 0;
-  transform-origin: bottom center;
-  animation: today-indicator-appear 0.65s ease-out 0.35s forwards;
-}
-
-.timeline-time-indicator--now::after {
-  border-top-color: #2196F3;
-}
-
-.timeline-bar {
-  position: relative;
-  height: 2.2rem;
-  border-radius: 1.1rem;
-  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
-}
-
-.timeline-query-region {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  background: color-mix(in srgb, var(--text-color-accent) 4%, transparent);
-  border-left: 1.5px dashed color-mix(in srgb, var(--text-color-accent) 40%, transparent);
-  border-right: 1.5px dashed color-mix(in srgb, var(--text-color-accent) 40%, transparent);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.timeline-block {
-  position: absolute;
-  top: 2px;
-  bottom: 2px;
-  border-radius: 6px;
-  z-index: 2;
-  transition: opacity 0.2s ease;
-}
-
-.timeline-block--busy.timeline-block--query {
-  background: var(--busy-gradient);
-  border: 1px solid color-mix(in srgb, var(--color-status-busy) 20%, black);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.timeline-block--busy.timeline-block--context {
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 4px,
-    color-mix(in srgb, var(--color-status-busy) 25%, transparent) 4px,
-    color-mix(in srgb, var(--color-status-busy) 25%, transparent) 8px
-  );
-  border: 1px solid color-mix(in srgb, var(--color-status-busy) 15%, transparent);
-  opacity: 0.8;
-}
-
-.timeline-block--seamless-left {
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
-  border-left: none !important;
-}
-
-.timeline-block--seamless-right {
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-  border-right: none !important;
-}
-
-.timeline-bar-wrapper .timeline-hover-cursor {
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-
-  background: var(--background-color);
+  margin: 0;
   color: var(--text-color-primary);
-  border: 1px solid color-mix(in srgb, var(--text-color-primary) 18%, transparent);
-  border-radius: 0.5rem;
-  padding: 3px 8px;
-  font-size: 0.72rem;
-  font-weight: bold;
-  white-space: nowrap;
-  box-shadow: var(--shadow);
-
-  pointer-events: none;
-  user-select: none;
-  z-index: 10;
-}
-
-/* Border triangle (1px larger, in border color, sits behind the fill triangle) */
-.timeline-bar-wrapper .timeline-hover-cursor::before {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
-}
-
-/* Fill triangle (covers the border triangle except the bottom tip) */
-.timeline-bar-wrapper .timeline-hover-cursor::after {
-  content: '';
-  position: absolute;
-  top: calc(100% - 1px);
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: var(--background-color);
-}
-
-.timeline-bar .timeline-hover-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  transform: translateX(-50%);
-  background: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
-  pointer-events: none;
-  z-index: 5;
-}
-
-.timeline-ticks {
-  position: relative;
-  height: 1.2rem;
-  margin-top: 0.2rem;
-}
-
-.timeline-tick-label {
-  position: absolute;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  user-select: none;
-}
-
-.timeline-tick-label::before {
-  content: '';
-  display: block;
-  width: 1px;
-  height: 3px;
-  background: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
-}
-
-.timeline-tick-label span {
-  font-size: 0.62rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.classroom-slots {
+.classroom-card-meta-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-.classroom-slot-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-color-accent);
-
-  background: color-mix(in srgb, var(--text-color-accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--text-color-accent) 30%, transparent);
-}
-
-.classroom-slot-icon {
-  font-size: 0.95rem !important;
+.classroom-card-building {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--text-80);
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

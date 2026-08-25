@@ -1,5 +1,5 @@
 import { t } from '../i18n.js';
-import { escapeHtml } from '../utils/html.js';
+import { escapeHtml, highlight } from '../utils/html.js';
 import { fetchPhotoUrl } from '../utils/photo.js';
 
 // ---------- PHOTO ----------
@@ -39,7 +39,10 @@ const STATUS_KEYS = {
 // specific query time range (Available tab) so opening the classroom detail
 // page preserves that context; omit them (e.g. Campus tab browsing) to open
 // the detail page with no query context, showing status relative to now.
-export function buildCardForClassroom(classroom, building, fromTime = null, toTime = null, isToday = false, date = null) {
+//
+// query is optional — pass the user's search text (Campus tab's search box)
+// to wrap matching text in the name/building line with <mark>.
+export function buildCardForClassroom(classroom, building, fromTime = null, toTime = null, isToday = false, date = null, query = '') {
   const hasPhoto = !!classroom.idfoto;
   const statusKey = STATUS_KEYS[classroom.status];
   const statusLabel = statusKey ? t(statusKey) : '';
@@ -54,11 +57,13 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
   el.setAttribute('tabindex', '0');
   el.setAttribute('aria-label', `View details for ${escapeHtml(classroom.name)}`);
 
+  const buildingLine = building.altName ? `${building.name} · ${building.altName}` : building.name;
+
   const contentHtml = `
     <div class="classroom-card-content">
-      <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${escapeHtml(classroom.name)}</h4>
+      <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${highlight(classroom.name, query)}</h4>
       <div class="classroom-card-meta-row">
-        <p class="classroom-card-building">${t('building.prefix')} ${escapeHtml(building.name)}${building.altName ? ` · ${escapeHtml(building.altName)}` : ''}</p>
+        <p class="classroom-card-building">${t('building.prefix')} ${highlight(buildingLine, query)}</p>
         ${statusLabel ? `<span class="classroom-status-txt ${classroom.status}">${statusLabel}</span>` : ''}
       </div>
     </div>

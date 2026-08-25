@@ -78,6 +78,21 @@ export function escapeHtml(str) {
  * or `<`, so a bare safeUrl() call is acceptable there, but the belt-and-suspenders
  * form is always correct.
  */
+/**
+ * Escapes `text` and wraps every case-insensitive occurrence of `query` in it
+ * with <mark>. Returns plain escaped HTML when query is empty.
+ *
+ * Used to highlight the part of a classroom/building/campus name that matched
+ * a user's search query (e.g. in the Campus tab's search results).
+ */
+export function highlight(text, query) {
+  const safe = escapeHtml(text);
+  if (!query) return safe;
+  // Escape special regex chars, then allow spaces to also match dots (for x.y.z names queried as "x y z")
+  const safeQ = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '[\\s.]');
+  return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<mark>$1</mark>');
+}
+
 export function safeUrl(url) {
   try {
     return new URL(url).protocol === 'https:' ? url : '#';

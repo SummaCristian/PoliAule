@@ -92,9 +92,9 @@ function buildBuildingCard(building) {
 // Classroom cards reuse the exact card built for the Available tab
 // (components/classroom-list.js), rather than the bespoke search-card markup
 // used for campus/building cards above.
-function buildClassroomCard(room, building) {
+function buildClassroomCard(room, building, query = '') {
   const status = getClassroomStatusNow(room.id);
-  return buildCardForClassroom({ ...room, status }, building);
+  return buildCardForClassroom({ ...room, status }, building, null, null, false, null, query);
 }
 
 // ---------- BREADCRUMB DROPDOWN ----------
@@ -421,7 +421,7 @@ function renderSearchResults(query) {
   visible.forEach(room => grid.appendChild(buildClassroomCard(room, {
     name: room.buildingName,
     altName: [room.buildingAltName, room.campusName].filter(Boolean).join(' · '),
-  })));
+  }, query.trim())));
 
   container.appendChild(grid);
 

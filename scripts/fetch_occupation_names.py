@@ -40,13 +40,33 @@ from bs4 import BeautifulSoup
 CLASSROOMS_FILE = Path(__file__).parent.parent / "data" / "classrooms.json"
 BASE_URL = "https://onlineservices.polimi.it/spazi/spazi/controller/OccupazioniGiornoEsatto.do"
 
-# data/classrooms.json's campus "id" is normally also the "csic" query param this
-# page expects, but Mantova is the one exception: classrooms.json uses "MNG01"
-# while the site's own site-selector dropdown (spazi___..._sede) uses "MNI" for
-# Mantova. "MNG01" 404s with "Non e' stata specificata nessuna ubicazione!".
+# The page's own "csic" <select> splits each Sede into many address-level
+# sub-locations (e.g. under Milano Città Studi: MIA01 = Piazza Leonardo da
+# Vinci 32, MIA02 = Via Bonardi, MIA03 = Via Bassini, MIA06 = Via Colombo 40,
+# ...), plus one umbrella value per Sede (MIA, MIB, CRG, LCF, MNI, ...) that
+# unions every address under it in a single response. data/classrooms.json's
+# campus "id" is one specific address-level value (chosen when that campus
+# entry was first added), which silently excludes every other address at the
+# same Sede - e.g. querying "MIA01" alone never returns classrooms in the Via
+# Bonardi buildings, because that request never asks for that address at all.
+# Always resolve to the umbrella value instead, so nothing at the same Sede
+# is missed. (Mantova is also a special case: classrooms.json uses "MNG01",
+# which 404s here with "Non e' stata specificata nessuna ubicazione!"; the
+# umbrella value for Mantova is "MNI".)
 CSIC_OVERRIDES = {
-    "MNG01": "MNI",
+    "MIA01": "MIA",   # Leonardo -> Milano Città Studi (umbrella)
+    "MIA06": "MIA",   # Colombo -> Milano Città Studi (umbrella)
+    "MIB02": "MIB",   # Durando -> Milano Bovisa (umbrella)
+    "MIB01": "MIB",   # La Masa -> Milano Bovisa (umbrella)
+    "CRG02": "CRG",   # Cremona -> Cremona (umbrella)
+    "LCF04": "LCF",   # Lecco -> Lecco (umbrella)
+    "MNG01": "MNI",   # Mantova -> Mantova (umbrella)
 }
+
+# Multiple campus ids now resolve to the same umbrella csic (e.g. Leonardo and
+# Colombo both resolve to "MIA"), so cache by (resolved csic, date) to avoid
+# fetching the same page twice in one run.
+_page_cache: dict[tuple[str, date], dict[int, list[dict]]] = {}
 
 REQUEST_TIMEOUT = 20  # seconds
 
@@ -213,9 +233,20 @@ def parse_occupation_page(html: str) -> dict[int, list[dict]]:
 
 
 def fetch_occupation_names(client: httpx.Client, csic: str, d: date) -> dict[int, list[dict]]:
-    """Fetch and parse the occupation-names page for one campus (csic) and date."""
+    """Fetch and parse the occupation-names page for one campus (csic) and date.
+
+    Resolves csic to its umbrella Sede value first (see CSIC_OVERRIDES), then
+    serves repeat calls for the same resolved (csic, date) - e.g. Leonardo and
+    Colombo both resolving to "MIA" - from an in-process cache instead of
+    re-fetching the same page.
+    """
+    resolved_csic = CSIC_OVERRIDES.get(csic, csic)
+    cache_key = (resolved_csic, d)
+    if cache_key in _page_cache:
+        return _page_cache[cache_key]
+
     params = {
-        "csic": CSIC_OVERRIDES.get(csic, csic),
+        "csic": resolved_csic,
         "categoria": "tutte",
         "tipologia": "tutte",
         "giorno_day": str(d.day),
@@ -226,7 +257,9 @@ def fetch_occupation_names(client: httpx.Client, csic: str, d: date) -> dict[int
     }
     response = client.get(BASE_URL, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
-    return parse_occupation_page(response.text)
+    result = parse_occupation_page(response.text)
+    _page_cache[cache_key] = result
+    return result
 
 
 def all_campus_ids() -> list[str]:

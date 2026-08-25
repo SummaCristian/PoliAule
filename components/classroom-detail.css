@@ -16,6 +16,20 @@
   will-change: opacity;
 }
 
+/* Extend this element's own box up behind the header (cancelling the shift
+   with matching padding, so children keep their normal position) — matches
+   .detail-photo-container's negative margin below; only relevant when a
+   photo is actually there to fill that reserved space. A VT names and
+   snapshots THIS element for the card→page zoom, and that snapshot is
+   clipped to its own layout box; without this, the photo's negative margin
+   overflows past that box and is simply absent from the animating snapshot,
+   only appearing once the transition ends and the real, unclipped DOM
+   takes over. */
+#classroom-detail-overlay:not([hidden]):has(.detail-photo-container) {
+  margin-top: calc(-1 * var(--header-height, 84px) - 0.5rem);
+  padding-top: calc(var(--header-height, 84px) + 0.5rem);
+}
+
 #classroom-detail-overlay.visible {
   opacity: 1;
 }
@@ -58,6 +72,14 @@ body.detail-open .tab-content * {
   flex-shrink: 0;
 
   transition: box-shadow 0.4s ease, background-color 0.4s ease;
+
+  /* Cancel body-container's 0.5rem padding-top, then extend further up by
+     the header's own live-measured height (--header-height, kept in sync by
+     a ResizeObserver in script.js — it already grows for the 3.5rem
+     header-nav-row while the detail panel is open) so the photo shows
+     through the blurred header instead of sitting below it. Using the real
+     height instead of a fixed guess keeps this correct at every breakpoint. */
+  margin-top: calc(-1 * var(--header-height, 84px) - 0.5rem);
 }
 
 /* Mobile "Hero Header" style */
@@ -69,11 +91,6 @@ body.detail-open .tab-content * {
     height: 38vh;
     min-height: 280px;
     border-radius: 0;
-    /* Cancel body-container's 0.5rem padding-top, then extend further up
-       into the header-nav-row zone (3.5rem tall while the detail panel is
-       open) so the photo shows through it; the solid header-top-line-container
-       blocks it above. */
-    margin-top: -4.7rem;
     box-shadow: none;
   }
 }
@@ -88,7 +105,6 @@ body.detail-open .tab-content * {
     max-width: none;
     aspect-ratio: 21 / 9;
     border-radius: 0;
-    margin-top: 0;
     box-shadow: none;
   }
 }
@@ -1489,10 +1505,39 @@ body.detail-open .tab-content * {
     transition: none;
   }
 
-  /* Root cross-fade (for everything else: background, tabbar, etc.) */
+  /* Root cross-fade (for everything else: background, tabbar, etc. — the
+     header is pinned separately below, since backdrop-filter can't stay
+     "live" during a VT and freezing it into root would show the wrong,
+     pre-transition blur for most of the animation). */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation-duration: 0.25s;
+  }
+
+  /* The header is a constant translucent/blurred overlay, not changing
+     content — pin it with no animation so its frozen snapshot is just
+     whichever state (old or new) is already correct, instead of cross-fading
+     between "blurring the small card" and "blurring the full photo." Give it
+     a z-index above the card/photo group so it still paints on top, matching
+     its live stacking order. */
+  ::view-transition-group(app-header) {
+    animation: none;
+    z-index: 2;
+  }
+
+  /* Force opacity directly rather than just disabling the animation — with
+     only animation:none, the UA's default cross-fade keyframes can still
+     apply their *starting* values (old visible, new invisible) and never
+     resolve until the whole transition ends, which is exactly the "back
+     button lingers" bug this is pinning against. */
+  ::view-transition-old(app-header) {
+    animation: none;
+    opacity: 0;
+  }
+
+  ::view-transition-new(app-header) {
+    animation: none;
+    opacity: 1;
   }
 
   /* Shared element: whole card morphs into the whole page (SwiftUI .zoom-style).

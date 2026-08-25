@@ -259,6 +259,15 @@ class ClassroomDetail {
       // morphing name/photo/icons independently. --
       const cardEl = pending?.cardEl ?? null;
       const cardInDom = !!(cardEl && document.body.contains(cardEl));
+      // The header is a constant translucent/blurred overlay, not content that
+      // changes — it doesn't need to cross-fade with the rest of "root". But
+      // a VT freezes everything (including backdrop-filter's live sampling)
+      // into snapshots, so lumped into root it would show the frozen *old*
+      // blur (behind the small card) for the whole animation. Naming it
+      // separately, pinned with no animation, freezes its own snapshot at the
+      // already-correct *new* blur (behind the full-size photo) from frame one.
+      const headerEl = document.querySelector('.header');
+      if (headerEl) headerEl.style.viewTransitionName = 'app-header';
       if (fromInfo) infoPage._prepareReturnVT();
       if (cardInDom) cardEl.style.viewTransitionName = 'classroom-detail-zoom';
 
@@ -271,6 +280,16 @@ class ClassroomDetail {
         if (cardInDom) cardEl.style.viewTransitionName = '';
 
         document.body.classList.add('detail-open');
+        // --header-height is normally kept live by a ResizeObserver (script.js),
+        // but that callback fires asynchronously — too late for the VT, which
+        // snapshots the "new" state synchronously right after this callback
+        // returns. Without this, the photo's margin-top (which reads that var)
+        // uses the stale, pre-detail-open header height for the whole
+        // animation, so the "tucked behind the header" look only snaps in
+        // once the transition ends and the real DOM/ResizeObserver catch up.
+        if (headerEl) {
+          document.documentElement.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
+        }
         this._overlay.removeAttribute('hidden');
         this._renderContent(entry);
         this._overlay.classList.add('visible');
@@ -300,6 +319,7 @@ class ClassroomDetail {
       const cleanup = () => {
         this._overlay.style.viewTransitionName = '';
         if (cardEl) cardEl.style.viewTransitionName = '';
+        if (headerEl) headerEl.style.viewTransitionName = '';
         if (fromInfo) infoPage._cleanupReturnVT();
       };
       vt.finished.then(cleanup).catch(cleanup);
@@ -344,12 +364,14 @@ class ClassroomDetail {
 
     const cardEl = this._openTrigger?.cardEl ?? null;
     const cardInDom = !!(cardEl && document.body.contains(cardEl));
+    const headerEl = document.querySelector('.header');
 
     const cleanup = () => {
       this._overlay.innerHTML = '';
       this._openTrigger = null;
       this._queryContext = null;
       this._overlay.style.viewTransitionName = '';
+      if (headerEl) headerEl.style.viewTransitionName = '';
       if (cardEl) {
         cardEl.style.viewTransitionName = '';
         cardEl.style.removeProperty('content-visibility');
@@ -362,6 +384,11 @@ class ClassroomDetail {
       // subtree is rendered when the VT captures it after scrollTo().
       if (cardInDom) cardEl.style.contentVisibility = 'visible';
 
+      // See _doOpen: the header is pinned as its own group so its frozen
+      // snapshot always shows the already-correct blur, instead of being
+      // lumped into root and frozen mid-way through the wrong state.
+      if (headerEl) headerEl.style.viewTransitionName = 'app-header';
+
       this._overlay.style.viewTransitionName = 'classroom-detail-zoom';
 
       const vt = document.startViewTransition(() => {
@@ -373,6 +400,9 @@ class ClassroomDetail {
         this._overlay.classList.remove('visible');
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
         this._overlay.style.viewTransitionName = '';
+        if (headerEl) {
+          document.documentElement.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
+        }
 
         // Restore the tabbar (plain fade, no shared element — it no longer sits in the header)
         if (this._tabbar) this._tabbar.classList.remove('detail-open');

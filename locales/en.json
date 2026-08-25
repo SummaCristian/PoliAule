@@ -180,5 +180,6 @@
   "changelog.item2": "Redesigned header bar",
   "changelog.item3": "Redesigned the classroom cards",
   "changelog.item4": "(Temporary) removed the per-building clustering and accordion-based list of available classrooms",
-  "changelog.item5": "Reduced the waiting time for the splash screen"
+  "changelog.item5": "Reduced the waiting time for the splash screen",
+  "changelog.item6": "Added occupation metadata popover: tap on an occupation in the timeline to see the reason for the occupation (class, exam, etc.) and the course name if available."
 }

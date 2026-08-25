@@ -159,5 +159,6 @@
   "changelog.item2": "Ridisegnata la barra superiore",
   "changelog.item3": "Ridisegnate le schede delle aule",
   "changelog.item4": "(Temporaneo) rimosso il raggruppamento per edificio e l'elenco ad accordion delle aule disponibili",
-  "changelog.item5": "Tempo di attesa ridotto per la schermata iniziale"
+  "changelog.item5": "Tempo di attesa ridotto per la schermata iniziale",
+  "changelog.item6": "Aggiunto popover con metadati sull'occupazione: tocca un'occupazione nella timeline per vedere la motivazione dell'occupazione (lezione, esame, ecc.) e il nome del corso se disponibile"
 }

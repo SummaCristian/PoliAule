@@ -115,6 +115,9 @@
   "settings.defaultTab.available": "Available",
   "settings.defaultTab.last": "Last",
   "settings.defaultTab.search": "Campus",
+  "settings.sectionBackend": "Backend",
+  "settings.useBetaBackend": "Use Beta Backend",
+  "settings.useBetaBackendDesc": "Fetch data from the beta API instead of the stable one.",
 
   "detail.features": "Features",
   "detail.currentStatus": "Current status",

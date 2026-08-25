@@ -1,4 +1,4 @@
-import { API_BASE } from './config.js';
+import { getApiBase } from './config.js';
 
 // ---------- DATA ----------
 
@@ -37,7 +37,8 @@ function resolveBuildingHours(building, campusId, openingHours) {
 // stores it in classroomsData.
 export async function fetchClassroomsData() {
   try {
-    const listRes = await fetch(`${API_BASE}/v1/occupations`);
+    const apiBase = getApiBase();
+    const listRes = await fetch(`${apiBase}/v1/occupations`);
     if (!listRes.ok) throw new Error(`Failed to load occupancy list: ${listRes.status}`);
     const { dates } = await listRes.json();
 
@@ -45,14 +46,14 @@ export async function fetchClassroomsData() {
       Promise.allSettled(
         dates.map(date => {
           const isoDate = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
-          return fetch(`${API_BASE}/v1/occupations/${isoDate}`)
+          return fetch(`${apiBase}/v1/occupations/${isoDate}`)
             .then(res => {
               if (!res.ok) throw new Error(`Failed to load ${date}: ${res.status}`);
               return res.json();
             });
         })
       ).then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value)),
-      fetch(`${API_BASE}/v1/opening-hours`)
+      fetch(`${apiBase}/v1/opening-hours`)
         .then(res => {
           if (!res.ok) throw new Error(`Failed to load opening hours: ${res.status}`);
           return res.json();

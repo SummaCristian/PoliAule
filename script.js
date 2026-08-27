@@ -252,6 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     onLanguageSwitch(() => {
       setupDataFetchIndicatorText(true);
       setupDatePicker(() => preferInitialDate);
+      document.querySelector('campus-chip-picker')?.retranslate();
       const container = document.getElementById('available-classrooms-results');
       if (!container.classList.contains('empty')) {
         document.getElementById('available-classrooms-form').dispatchEvent(

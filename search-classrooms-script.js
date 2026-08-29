@@ -439,6 +439,27 @@ function renderSearchResults(query) {
   });
 }
 
+// Jump straight to one building's classroom list — used by the "Available"
+// tab's building-header button. Matches by id when present, else by name.
+// Returns false if the campus/building can't be found in the static directory.
+export function navigateToBuilding(campusId, buildingId, buildingName) {
+  if (!classroomsData) return false;
+  const campus = classroomsData.find(c => c.id === campusId);
+  if (!campus) return false;
+  const building = campus.buildings.find(b =>
+    (buildingId != null && b.id === buildingId) || b.name === buildingName);
+  if (!building) return false;
+
+  const searchInput = document.getElementById('classroom-search-input');
+  if (searchInput && searchInput.value) {
+    searchInput.value = '';
+    isSearchActive = false;
+  }
+
+  renderClassrooms(campus, building);
+  return true;
+}
+
 function restoreHierarchy() {
   isSearchActive = false;
   const { level, campus, building } = hierarchyState;

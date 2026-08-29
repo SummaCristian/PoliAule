@@ -18,7 +18,8 @@ import {
   SKIP_DAYS
 } from './available-rooms-script.js';
 
-import { initSearchTab, classroomsData as staticClassroomsData } from './search-classrooms-script.js';
+import { initSearchTab, navigateToBuilding, classroomsData as staticClassroomsData } from './search-classrooms-script.js';
+import { activateGroupTab } from './components/bottom-nav.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
 
@@ -174,13 +175,8 @@ document.querySelectorAll('.button-primary').forEach(btn => {
 // followed by that building's room cards, as a flat list of <li> nodes to
 // append directly into the outer <ul>. Returns the nodes and the next
 // cardIndex for stagger-animation sequencing.
-function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday = false, date = null) {
+function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday = false, date = null, campusId = null) {
   const buildingName = building.name;
-  const countParts = [
-    rooms.filter(r => r.status === 'free').length ? `<span class="building-count free">${rooms.filter(r => r.status === 'free').length} ${t('status.free')}</span>` : '',
-    rooms.filter(r => r.status === 'partially-free').length ? `<span class="building-count partially-free">${rooms.filter(r => r.status === 'partially-free').length} ${t('status.partial')}</span>` : '',
-    rooms.filter(r => r.status === 'not-free').length ? `<span class="building-count not-free">${rooms.filter(r => r.status === 'not-free').length} ${t('status.occupied')}</span>` : '',
-  ].filter(Boolean).join('<span class="building-count-sep">·</span>');
 
   const allPartial = rooms.every(r => r.status === 'partially-free');
 
@@ -189,10 +185,38 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   if (allPartial) headerLi.dataset.allPartial = 'true';
   headerLi.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
   headerLi.innerHTML = `
-    <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}${building.altName ? ` <small class="building-alt-name">${escapeHtml(building.altName)}</small>` : ''}</h3>
-    <div class="building-counts">${countParts}</div>
+    <div class="building-section-titles">
+      <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</h3>
+      ${building.altName ? `<p class="building-alt-name">${escapeHtml(building.altName)}</p>` : ''}
+    </div>
+    <button class="header-button building-section-btn" type="button" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
+      <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
+    </button>
   `;
   cardIndex++;
+
+  // Jump to this building's page in the Campus tab. The tab has to be made
+  // visible *before* renderClassrooms runs — building the grid while the tab
+  // is still content-visibility:hidden makes every card first lay out at a
+  // zero-width container, and content-visibility:auto then caches that wrong
+  // intrinsic size (cards balloon after the next view transition).
+  headerLi.querySelector('.building-section-btn').addEventListener('click', () => {
+    const campus = staticClassroomsData?.find(c => c.id === campusId);
+    const target = campus?.buildings.find(b =>
+      (building.id != null && b.id === building.id) || b.name === building.name);
+    if (!campus || !target) return;
+
+    haptics.trigger(defaultPatterns.light);
+
+    const campusTab = document.getElementById('search-classrooms-container');
+    const go = () => navigateToBuilding(campusId, building.id ?? null, building.name);
+    if (campusTab.classList.contains('visible')) {
+      go();
+    } else {
+      campusTab.addEventListener('tabvisible', go, { once: true });
+    }
+    activateGroupTab('search-classrooms-container');
+  });
 
   const nodes = [headerLi];
 
@@ -335,11 +359,11 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   const results = findAvailableClassrooms(campus, date, from, to);
 
   // Render results
-  renderAvailableClassroomsResults(results, date, from, to);
+  renderAvailableClassroomsResults(results, date, from, to, campus);
 });
 
 // Builds the UI to show the results of the 'Available Classrooms' form submission,
-function renderAvailableClassroomsResults(results, date, from, to) {
+function renderAvailableClassroomsResults(results, date, from, to, campusId = null) {
   const container = document.getElementById('available-classrooms-results');
   container.dataset.searched = 'true';
   container.innerHTML = ''; // Clear previous results
@@ -386,7 +410,7 @@ function renderAvailableClassroomsResults(results, date, from, to) {
 
   let cardIndex = 0;
   results.forEach(buildingResult => {
-    const { nodes, cardIndex: next } = buildBuildingSection(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date);
+    const { nodes, cardIndex: next } = buildBuildingSection(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date, campusId);
     cardIndex = next;
     nodes.forEach(node => list.appendChild(node));
   });

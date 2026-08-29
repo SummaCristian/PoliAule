@@ -229,6 +229,14 @@ html {
   overflow-x: hidden;
   overflow-y: auto;
 
+  /* Always reserve the scrollbar's width. Opening the classroom detail
+     collapses every .tab-content to height:0, which removes the page
+     scrollbar; closing it brings the scrollbar back. Without a stable
+     gutter that ~15px swing changes the content width, and grids sized
+     with repeat(auto-fill, ...) (Campus building page, Available results)
+     resolve to a different column count before vs. after the transition. */
+  scrollbar-gutter: stable;
+
   background-color: transparent;
 }
 

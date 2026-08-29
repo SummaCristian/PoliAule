@@ -298,6 +298,13 @@ function animateSearchTap() {
   setTimeout(() => searchScale.to(1, { stiffness: 350, damping: 30, mass: 0.8 }), 250);
 }
 
+/* --- Programmatic tab activation (e.g. the building header's jump button) - */
+export function activateGroupTab(target) {
+  const i = GROUP_TABS.findIndex(tab => tab.target === target);
+  if (i === -1 || (!searchActive && i === groupIndex)) return;
+  animateGroupTap(i);
+}
+
 /* --- Drag (PanResponder → Pointer Events), group pill only --------------- */
 const DRAG_OVERSHOOT = 8;
 let dragging = false, startX = 0, startY = 0, grantTime = 0, dragOriginPos = 0;

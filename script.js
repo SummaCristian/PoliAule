@@ -3,6 +3,7 @@ window.scrollTo(0, 0);
 
 const h = location.hostname;
 const envLabel = h === 'beta.poliaule.com' ? 'Beta'
+               : h === 'dev.poliaule.com'  ? 'Dev'
                : h === 'poliaule.com'      ? null
                :                             'Local';
 if (envLabel) {

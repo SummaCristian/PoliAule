@@ -95,14 +95,22 @@
   margin: 0 3rem;
 }
 
-/* Grid of cards — every classroom card is a direct sibling here (rendered up
-   front, see buildBuildingSection in script.js), with a full-width section
-   header before each building's run of cards. */
+/* Results list — a vertical stack of per-building <li> sections (see
+   buildBuildingSection in script.js). Each section is its own card grid, so
+   its sticky header is confined to that section's box: a new building's
+   header pushes the previous one out of the sticky slot (list-style)
+   instead of every header piling up at the top. */
 .list-outer-container {
   list-style: none;
   margin: 0;
   padding: 0.25rem;
 
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.building-section {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
   gap: 0.75rem;
@@ -111,26 +119,78 @@
 .building-section-header {
   grid-column: 1 / -1;
 
+  /* Clears the app header's blur bleed (.header-blur-layers runs ~2rem below
+     the header box, uncounted by --header-height) so the glass title pill
+     isn't softened by it. */
+  position: sticky;
+  top: calc(var(--header-height, 84px) + 2rem);
+  z-index: 2;
+
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.25rem 0.5rem 0.5rem;
+  padding: 0.25rem;
   text-align: start;
 
-  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* `backwards`, not `both`: the end keyframe is the natural resting state,
+     and letting `filter: blur(0)` linger as an applied filter breaks the
+     glass button's nested backdrop-filter in Safari (same reason
+     .tab-content.visible drops `forwards`). */
+  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
-.building-section-header:not(:first-child) {
-  margin-top: 0.5rem;
+@media (min-width: 1100px) {
+  /* No mask on the scroll panel here: a `mask` on an ancestor disables
+     `backdrop-filter` on descendants in Chromium, which kills the glass
+     title pill's blur. The app header's fade overlay already covers the
+     panel's top, so the hard overflow edge isn't visible anyway. */
+  .building-section-header {
+    top: 0.5rem;
+  }
 }
 
+/* Glass pill around the name + altName group, so the sticky label reads
+   cleanly over the cards scrolling beneath it. Same --glass-* material as
+   .header-button / the classroom cards. */
 .building-section-titles {
+  position: relative;
+
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 0;
+
+  padding: 0.5rem 1.05rem;
+  border-radius: var(--radius-pill);
+
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .classroom-card::after. */
+.building-section-titles::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
 }
 
 .building-section-btn {
@@ -145,6 +205,7 @@
 .building-name {
   font-size: 18px;
   font-weight: 700;
+  line-height: 1.2;
   color: rgba(0, 0, 0, 0.5);
   margin: 0;
 }
@@ -152,6 +213,7 @@
 .building-alt-name {
   font-size: 12px;
   font-weight: 600;
+  line-height: 1.1;
   color: rgba(0, 0, 0, 0.5);
   margin: 0;
 }

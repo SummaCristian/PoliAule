@@ -171,20 +171,25 @@ document.querySelectorAll('.button-primary').forEach(btn => {
 
 // ---------- BUILDING CARD ----------
 
-// Builds one building's section of the results grid: a full-width header
-// followed by that building's room cards, as a flat list of <li> nodes to
-// append directly into the outer <ul>. Returns the nodes and the next
-// cardIndex for stagger-animation sequencing.
+// Builds one building's section: a single <li class="building-section"> (its
+// own card grid) holding a sticky header followed by that building's room
+// cards, to append directly into the outer <ul>. Returns { node, cardIndex }
+// (the next cardIndex feeds the stagger-animation sequencing).
 function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday = false, date = null, campusId = null) {
   const buildingName = building.name;
 
   const allPartial = rooms.every(r => r.status === 'partially-free');
 
-  const headerLi = document.createElement('li');
-  headerLi.className = 'building-section-header';
-  if (allPartial) headerLi.dataset.allPartial = 'true';
-  headerLi.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
-  headerLi.innerHTML = `
+  // One <li> per building: its own card grid, so the sticky header stays
+  // confined to this section (see .building-section in classroom-list.css).
+  const section = document.createElement('li');
+  section.className = 'building-section';
+  if (allPartial) section.dataset.allPartial = 'true';
+
+  const headerEl = document.createElement('div');
+  headerEl.className = 'building-section-header';
+  headerEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
+  headerEl.innerHTML = `
     <div class="building-section-titles">
       <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</h3>
       ${building.altName ? `<p class="building-alt-name">${escapeHtml(building.altName)}</p>` : ''}
@@ -194,13 +199,14 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     </button>
   `;
   cardIndex++;
+  section.appendChild(headerEl);
 
   // Jump to this building's page in the Campus tab. The tab has to be made
   // visible *before* renderClassrooms runs — building the grid while the tab
   // is still content-visibility:hidden makes every card first lay out at a
   // zero-width container, and content-visibility:auto then caches that wrong
   // intrinsic size (cards balloon after the next view transition).
-  headerLi.querySelector('.building-section-btn').addEventListener('click', () => {
+  headerEl.querySelector('.building-section-btn').addEventListener('click', () => {
     const campus = staticClassroomsData?.find(c => c.id === campusId);
     const target = campus?.buildings.find(b =>
       (building.id != null && b.id === building.id) || b.name === building.name);
@@ -218,20 +224,18 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     activateGroupTab('search-classrooms-container');
   });
 
-  const nodes = [headerLi];
-
   rooms.forEach(room => {
-    const roomItem = document.createElement('li');
+    const roomItem = document.createElement('div');
     roomItem.className = 'classroom-list-item-container';
     roomItem.dataset.status = room.status;
     const cardEl = buildCardForClassroom(room, building, from, to, isToday, date);
     cardEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
     roomItem.appendChild(cardEl);
-    nodes.push(roomItem);
+    section.appendChild(roomItem);
     cardIndex++;
   });
 
-  return { nodes, cardIndex };
+  return { node: section, cardIndex };
 }
 
 // ---------- DATA FETCHING ----------
@@ -410,9 +414,9 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
 
   let cardIndex = 0;
   results.forEach(buildingResult => {
-    const { nodes, cardIndex: next } = buildBuildingSection(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date, campusId);
+    const { node, cardIndex: next } = buildBuildingSection(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date, campusId);
     cardIndex = next;
-    nodes.forEach(node => list.appendChild(node));
+    list.appendChild(node);
   });
 
   container.appendChild(list);

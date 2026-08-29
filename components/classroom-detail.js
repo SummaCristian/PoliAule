@@ -372,6 +372,7 @@ class ClassroomDetail {
       this._queryContext = null;
       this._overlay.style.viewTransitionName = '';
       if (headerEl) headerEl.style.viewTransitionName = '';
+      document.documentElement.classList.remove('header-vt-fixed');
       if (cardEl) {
         cardEl.style.viewTransitionName = '';
         cardEl.style.removeProperty('content-visibility');
@@ -402,6 +403,13 @@ class ClassroomDetail {
         this._overlay.style.viewTransitionName = '';
         if (headerEl) {
           document.documentElement.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
+          // Safari captures a position:sticky element's ::view-transition-group at
+          // its unstuck flow position, so this new-state snapshot of the header
+          // would land off-screen whenever the list was scrolled. Pin it with
+          // position:fixed (viewport-relative, captured correctly) for the
+          // duration of this transition; the matching CSS gives .body-container a
+          // compensating padding-top so nothing shifts. Cleared in cleanup().
+          document.documentElement.classList.add('header-vt-fixed');
         }
 
         // Restore the tabbar (plain fade, no shared element — it no longer sits in the header)

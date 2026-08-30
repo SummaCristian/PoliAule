@@ -1559,9 +1559,17 @@ body.detail-open .tab-content * {
     z-index: 2;
   }
 
-  /* No cross-fade: both snapshots stay fully opaque and the new one (stacked on
-     top by document order) is what shows. Testing whether position:fixed alone
-     keeps the header in place; the forced opacity:0-on-old pin is removed. */
+  /* Show ONLY the "old" header snapshot for the whole transition — no
+     cross-fade. The header is a constant translucent overlay (its fade/blur is
+     identical before and after), but Safari captures the "new" snapshot ~10%
+     short on the right: it's measured mid-layout, inside the busy
+     startViewTransition update callback, so its fade/blur paint stops partway
+     across while the snapshot box stays full width — leaving a strip of
+     un-faded photo down the right edge for the whole animation. The "old"
+     snapshot is taken from the settled page and is always full width. The only
+     thing "old" lacks is the back button / taller nav row, and that just
+     appears when the live DOM takes over at the end — imperceptible against
+     the 0.5s morph. */
   ::view-transition-old(app-header) {
     animation: none;
     opacity: 1;
@@ -1569,7 +1577,7 @@ body.detail-open .tab-content * {
 
   ::view-transition-new(app-header) {
     animation: none;
-    opacity: 1;
+    opacity: 0;
   }
 
   /* Safari snapshots a position:sticky element's ::view-transition-group at its

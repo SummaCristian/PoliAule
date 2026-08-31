@@ -116,15 +116,20 @@
 
     </div>
 
-    <div class="header-nav-row">
-      <button id="detail-back-btn" class="detail-back-btn" hidden>
-        <span class="material-symbols-outlined">chevron_left</span>
-        <span class="detail-back-label" data-i18n="search.back">Back</span>
-      </button>
-
-    </div>
+    <!-- Reserves the 3.5rem nav-row band in the header layout (see
+         .header-nav-row); the back button itself is a sibling of <header>
+         below, not a child, so Safari never bakes it into the
+         ::view-transition-old(app-header) snapshot (it doesn't subtract
+         descendants with their own view-transition-name), which left a
+         frozen ghost of the button during the close transition. -->
+    <div class="header-nav-row"></div>
 
   </header>
+
+  <button id="detail-back-btn" class="detail-back-btn" hidden>
+    <span class="material-symbols-outlined">chevron_left</span>
+    <span class="detail-back-label" data-i18n="search.back">Back</span>
+  </button>
 
 
   <!-- Rest of the UI under the header -->

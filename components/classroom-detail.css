@@ -9,11 +9,19 @@
   flex-direction: column;
   flex: 1;
   background: var(--background-color);
+}
 
-  /* Fallback fade-in for browsers without View Transitions */
-  opacity: 0;
-  transition: opacity 0.22s ease;
-  will-change: opacity;
+/* Fallback fade-in for browsers without View Transitions only. When VT IS
+   supported, `will-change: opacity` here promoted the overlay to its own
+   compositing layer, and Firefox (and Safari, until scrolled) then would not
+   composite the classroom photo into the header's backdrop-filter — the
+   progressive blur under the header on the detail page rendered blank. */
+@supports not (view-transition-name: none) {
+  #classroom-detail-overlay:not([hidden]) {
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    will-change: opacity;
+  }
 }
 
 /* Extend this element's own box up behind the header (cancelling the shift
@@ -180,16 +188,17 @@ body.detail-open .tab-content * {
 
 /* ── Header ─────────────────────────────────────────────────────── */
 
-/* Back button lives in .header-nav-row, pinned to the left. It's taken out of
-   flow (absolute), so .header-nav-row has no in-flow content to size itself
-   against — align-items:center can't center an out-of-flow child against an
-   empty row. Center it explicitly instead, relative to the row's own box. */
+/* Back button is a sibling of <header> (not a child — see index.html) so it
+   stays out of the app-header VT snapshot. Position it fixed over the empty
+   .header-nav-row band: the header is sticky at top:11px, and the nav row is
+   the bottom 3.5rem of it, so its vertical centre sits at
+   11px + --header-height - 1.75rem. */
 #detail-back-btn {
-  position: absolute;
+  position: fixed;
   left: 1rem;
-  top: 50%;
+  top: calc(11px + var(--header-height, 84px) - 1.75rem);
   transform: translateY(-50%);
-  z-index: 10; /* Ensure it stays above the immersive photo */
+  z-index: 1002; /* above .header (z-index: 1000) and the immersive photo */
 }
 
 #detail-back-btn[hidden] {
@@ -1598,15 +1607,18 @@ body.detail-open .tab-content * {
      lands off-screen whenever the list was scrolled (it "disappears" mid-
      animation, then snaps back). While .header-vt-fixed is set (see
      classroom-detail.js _doClose) pin the header with position:fixed — which is
-     viewport-relative and captured correctly — and add an equal padding-top to
-     .body-container so removing the header from flow shifts nothing. Scoped
+     viewport-relative and captured correctly — and add a compensating
+     padding-top to .body-container so removing the header from flow shifts
+     nothing: its normal 1.5rem padding PLUS the header height it just lost.
+     (Getting this wrong by the 1rem difference vs. the base padding made the
+     page behind jump a few px up on open and back down on close.) Scoped
      away from non-Safari (.no-safari), which doesn't have the bug. */
   :root:not(.no-safari).header-vt-fixed .header {
     position: fixed;
   }
 
   :root:not(.no-safari).header-vt-fixed .body-container {
-    padding-top: calc(0.5rem + var(--header-height, 0px));
+    padding-top: calc(1.5rem + var(--header-height, 0px));
   }
 
   /* Shared element: whole card morphs into the whole page (SwiftUI .zoom-style).

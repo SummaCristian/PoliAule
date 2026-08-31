@@ -980,7 +980,9 @@ body.info-open .header-nav-row {
 
 /* Tab content */
 .body-container {
-  padding-top: 0.5rem;
+  /* Clears the header blur/fade layer's -2rem overhang so the first section's
+     title (e.g. Favourites) isn't blurred at the top. */
+  padding-top: 1.5rem;
   padding-bottom: var(--bottom-nav-height, 88px);
 
   flex: 1;

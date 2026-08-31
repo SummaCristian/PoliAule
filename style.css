@@ -1098,8 +1098,27 @@ body.info-open .header-nav-row {
 }
 
 .section-header-title {
-  font-size: var(--text-200);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  font-size: 18px;
   font-weight: bold;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.section-header-title-icon {
+  flex: none;
+  font-size: 1em;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .section-header-title {
+    color: rgba(255, 255, 255, 0.5);
+  }
 }
 
 .section-header-subtitle {
@@ -1644,27 +1663,32 @@ are rendered as solid colors
   #available-classrooms-container.visible {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto 1fr;
     column-gap: 1.5rem;
     /* Don't reset padding-left here — it's carrying the side rail's
        clearance from the .tab-content rule at the 600px breakpoint. */
     padding-right: 2rem;
   }
 
-  #available-classrooms-container>.section-header {
+  #available-classrooms-container>.favourites-section {
     grid-column: 1;
     grid-row: 1;
   }
 
-  #available-classrooms-form {
+  #available-classrooms-container>.section-header {
     grid-column: 1;
     grid-row: 2;
+  }
+
+  #available-classrooms-form {
+    grid-column: 1;
+    grid-row: 3;
     align-self: start;
   }
 
   #available-classrooms-results {
     grid-column: 2;
-    grid-row: 1 / span 2;
+    grid-row: 1 / span 3;
     align-self: start;
 
     position: sticky;

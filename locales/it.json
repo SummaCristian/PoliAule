@@ -5,8 +5,9 @@
 
   "searchPlaceholder.title": "Cerca",
   "searchPlaceholder.subtitle": "Prossimamente.",
-  "available.title": "Aule Disponibili",
+  "available.title": "Aule Libere",
   "available.subtitle": "Trova quali aule sono disponibili adesso o in qualsiasi altro momento della giornata.",
+  "favourites.title": "Preferite",
   "form.campusTitle": "Seleziona Campus",
   "form.campusSubtitle": "Dove vuoi trovare un'aula disponibile?",
   "form.datetimeTitle": "Seleziona Data e Ora",

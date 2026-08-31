@@ -125,42 +125,26 @@
     <!-- Available Classrooms -->
     <div id="available-classrooms-container" class="tab-content visible">
 
-      <div class="section-header">
-        <h3 class="section-header-title" data-i18n="available.title">Available Classrooms</h3>
-        <p class="section-header-subtitle secondary" data-i18n="available.subtitle">
-          Find which classrooms are available right now or at any other
-          moment throughout the day.
-        </p>
+      <!-- Favourite Classrooms -->
+      <div class="favourites-section">
+        <div class="section-header">
+          <h3 class="section-header-title"><i class="hgi-stroke hgi-star section-header-title-icon" aria-hidden="true"></i><span data-i18n="favourites.title">Favourites</span></h3>
+        </div>
+      </div>
 
+      <div class="section-header">
+        <h3 class="section-header-title"><i class="hgi-stroke hgi-calendar-03 section-header-title-icon" aria-hidden="true"></i><span data-i18n="available.title">Available Classrooms</span></h3>
       </div>
 
       <form id="available-classrooms-form" class="form" data-loading>
 
         <!-- Campus Picker -->
-        <label for="campus-selection">
-          <div class="section-header">
-            <h4 class="subsection-header-title" data-i18n="form.campusTitle">Select Campus</h4>
-            <p class="subsection-header-subtitle secondary" data-i18n="form.campusSubtitle">
-              Where do you want to find an available classroom?
-            </p>
-          </div>
-        </label>
-
         <campus-chip-picker data-loading>
           <input type="hidden" id="campus-picker" name="campus" />
         </campus-chip-picker>
 
         <!-- Date picker -->
         <div class="date-picker">
-          <label for="date-picker">
-            <div class="section-header">
-              <h4 class="subsection-header-title" data-i18n="form.datetimeTitle">Select Date and Time</h4>
-              <p class="subsection-header-subtitle secondary" data-i18n="form.datetimeSubtitle">
-                For which day and between what times do you want to find an available classroom?
-              </p>
-            </div>
-          </label>
-
           <select id="date-picker" name="date" hidden></select>
 
           <div id="today-indicator" class="hidden" aria-hidden="true" data-i18n="datepicker.today">Today</div>
@@ -178,40 +162,15 @@
         <div class="time-pickers-container">
           <!-- From time picker -->
           <div class="time-picker">
-            <label for="from-time-picker">
-              <div class="section-header">
-                <h4 class="subsection-header-title" data-i18n="form.fromTitle">From</h4>
-                <p class="subsection-header-subtitle secondary" data-i18n="form.fromSubtitle">
-                  From which time do you need a classroom?
-                </p>
-              </div>
-            </label>
-
             <input type="time" id="from-time-picker" name="from" min="07:15" max="20:15" />
           </div>
 
           <!-- To time picker -->
           <div class="time-picker">
-            <label for="to-time-picker">
-              <div class="section-header">
-                <h4 class="subsection-header-title" data-i18n="form.toTitle">To:</h4>
-                <p class="subsection-header-subtitle secondary" data-i18n="form.toSubtitle">
-                  Until which time do you need a classroom?
-                </p>
-              </div>
-            </label>
-
             <input type="time" id="to-time-picker" name="to" min="07:15" max="20:15" />
           </div>
 
         </div>
-
-        <!-- Submit button -->
-        <button class="button-primary" type="submit">
-          <span class="material-symbols-outlined">search</span>
-          <span data-i18n="form.findButton">Find classrooms</span>
-        </button>
-
       </form>
 
       <div id="available-classrooms-results" class="available-classrooms-container empty">

@@ -6,7 +6,9 @@
   "searchPlaceholder.title": "Search",
   "searchPlaceholder.subtitle": "Coming soon.",
 
-  "available.title": "Available Classrooms",
+  "favourites.title": "Favourites",
+
+  "available.title": "Available",
   "available.subtitle": "Find which classrooms are available right now or at any other moment throughout the day.",
 
   "form.campusTitle": "Select Campus",

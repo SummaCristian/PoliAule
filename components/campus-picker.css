@@ -13,14 +13,12 @@
 }
 
 /* ── Local theme palette ──────────────────────────────────────────────────
-   The ::picker(select) popup renders in the top layer; inheriting the
-   design-token custom properties across the shadow boundary AND into the
-   top layer proved unreliable (option text stayed light in dark mode on
-   Chrome). So this component carries its own concrete palette, kept in
-   sync with style.css by hand. The --cp-glass-* values mirror style.css's
-   glass tokens (minus the HDR --glass-specular push, which targets :root
-   only). `color-scheme` also makes the native fallback control follow the
-   theme. */
+   The dropdown renders in the top layer (native Popover API); inheriting the
+   design-token custom properties across the shadow boundary AND into the top
+   layer proved unreliable (option text stayed light in dark mode on Chrome).
+   So this component carries its own concrete palette, kept in sync with
+   style.css by hand. The --cp-glass-* values mirror style.css's glass tokens
+   (minus the HDR --glass-specular push, which targets :root only). */
 :host {
   color-scheme: light dark;
 
@@ -85,13 +83,6 @@
   }
 }
 
-.campus-select {
-  width: fit-content;
-  max-width: 100%;
-  font-family: "Nunito", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
 /* ── Skeleton loading state ────────────────────────────────────────────────
    `data-loading` lives on the ancestor <form> in the light DOM; script.js
    mirrors it onto <campus-chip-picker> so this stylesheet can key off it. */
@@ -120,315 +111,308 @@
   to   { background-position: -200% center; }
 }
 
-/* ── Customizable select (base-select) ────────────────────────────────────
-   Gated on support; without it the bare <select> renders as the platform's
-   native control (styled only by `color-scheme` above). The glass material
-   only applies here — a native control can't carry it. */
-@supports (appearance: base-select) {
+/* ── Hidden native <select> ───────────────────────────────────────────────
+   The real form control / data model. Mirrored onto the light-DOM hidden
+   <input name="campus"> and the source of the `change` event. Kept in the
+   layout (not display:none) so it stays a submittable control, but visually
+   gone. The custom listbox below is the actual UI. */
+.cp-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  pointer-events: none;
+}
 
-  .campus-select,
-  .campus-select::picker(select) {
-    appearance: base-select;
+/* ── Closed control — glass button, hugs its content ────────────────────── */
+.campus-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-pill);
+
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  text-align: left;
+  color: var(--cp-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  background: var(--cp-glass-tint);
+  -webkit-backdrop-filter: blur(var(--cp-glass-blur));
+  backdrop-filter: blur(var(--cp-glass-blur));
+
+  box-shadow:
+    0 0 0 0.1px var(--cp-glass-outline),
+    var(--cp-glass-highlight),
+    0 4px 40px 0 var(--cp-glass-shadow-color);
+
+  transition: box-shadow 0.2s ease,
+    background 0.2s ease,
+    transform var(--press-out-dur) var(--ease-spring);
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .popover::after in
+   style.css (rounded rect → mask-composite ring, not the circle mask). */
+.campus-select::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+  background: var(--cp-glass-stroke);
+  opacity: var(--cp-glass-stroke-opacity);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.campus-select:hover {
+  background: color-mix(in srgb, var(--cp-text) 10%, var(--cp-glass-tint));
+}
+
+/* Bouncy press feedback — see --press-* tokens in style.css. Scales the
+   whole glass button (material, stroke ring and shadow move together): it
+   snaps down fast on touch and springs back with an overshoot on release
+   (the spring easing lives on the base rule's transform transition). */
+.campus-select:active {
+  transform: scale(var(--press-scale));
+  transition: box-shadow 0.2s ease,
+    background 0.2s ease,
+    transform var(--press-in-dur) var(--press-in-ease);
+}
+
+/* Ring while the dropdown is open (mirrors the old :open state). */
+.campus-select[aria-expanded="true"] {
+  box-shadow:
+    0 0 0 0.1px var(--cp-glass-outline),
+    var(--cp-glass-highlight),
+    0 4px 40px 0 var(--cp-glass-shadow-color),
+    0 0 0 3px var(--cp-accent-row);
+}
+
+.campus-select:focus-visible {
+  outline: 2px solid var(--cp-accent);
+  outline-offset: 2px;
+}
+
+.campus-select__icon,
+.campus-select__chevron {
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.campus-select__icon {
+  color: var(--cp-text-75);
+}
+
+.campus-select__chevron {
+  color: var(--cp-text-50);
+  transition: transform 0.2s ease;
+}
+
+.campus-select[aria-expanded="true"] .campus-select__chevron {
+  transform: rotate(180deg);
+}
+
+/* Label ("CAMPUS") stacked over the campus name, gap 1, line-height = size */
+.campus-select__box {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.campus-select__label {
+  font-size: 8px;
+  line-height: 8px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--cp-text-50);
+}
+
+.campus-select__value {
+  font-size: 14px;
+  line-height: 14px;
+  font-weight: 700;
+  color: var(--cp-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Dropdown — glass, native Popover API (top layer) ───────────────────── */
+.cp-popup {
+  /* floating-ui writes left/top; strip the UA popover centring + border. */
+  position: fixed;
+  margin: 0;
+  inset: auto;
+  border: 0;
+  padding: 16px;
+
+  box-sizing: border-box;
+  width: 176px;
+  max-width: calc(100vw - 16px);
+  max-height: min(60vh, 24rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 16px;
+  scrollbar-width: thin;
+  text-align: left; /* body sets text-align:center; popovers inherit it */
+
+  background: var(--cp-glass-tint);
+  -webkit-backdrop-filter: blur(var(--cp-glass-blur));
+  backdrop-filter: blur(var(--cp-glass-blur));
+  color: var(--cp-text);
+
+  /* No ::after ring on a top-layer popover — the rim is the 0.1px outline
+     in the shadow stack instead. */
+  box-shadow:
+    0 0 0 0.1px var(--cp-glass-outline),
+    var(--cp-glass-highlight),
+    0 12px 40px 0 var(--cp-glass-shadow-color);
+
+  /* Closed / exit state. transform-origin is set from JS to point at the
+     trigger. `overlay`/`display` are transitioned with allow-discrete so the
+     popup stays in the top layer for the whole exit animation instead of
+     being yanked out (and clipped) the instant hidePopover() runs. */
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s cubic-bezier(0.4, 0, 1, 1),
+    overlay 0.18s allow-discrete,
+    display 0.18s allow-discrete;
+}
+
+.cp-popup:focus-visible {
+  outline: none;
+}
+
+/* Open resting state + springy entry (overshoot via --ease-spring). The
+   longer duration here only applies to the enter transition. */
+.cp-popup:popover-open {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 0.16s ease,
+    transform var(--press-out-dur) var(--ease-spring),
+    overlay var(--press-out-dur) allow-discrete,
+    display var(--press-out-dur) allow-discrete;
+}
+
+@starting-style {
+  .cp-popup:popover-open {
+    opacity: 0;
+    transform: scale(0.9);
   }
+}
 
-  /* ── Closed control — glass, hugs its content ── */
-  .campus-select {
-    position: relative;
-    display: inline-flex;
-    padding: 0;
-    border: none;
-    border-radius: var(--radius-pill);
+/* ── Section headers ── 8px between the two sections. */
+.cp-section-label {
+  padding: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cp-text-50);
+}
 
-    background: var(--cp-glass-tint);
-    -webkit-backdrop-filter: blur(var(--cp-glass-blur));
-    backdrop-filter: blur(var(--cp-glass-blur));
-    color: var(--cp-text);
+.cp-section:not(:first-child) {
+  margin-top: 8px;
+}
 
-    box-shadow:
-      0 0 0 0.1px var(--cp-glass-outline),
-      var(--cp-glass-highlight),
-      0 4px 40px 0 var(--cp-glass-shadow-color);
+/* ── Options ──
+   The check <i> always occupies its 18px slot (visibility toggled) so names
+   line up whether or not the row is selected. */
+.cp-popup [role="option"] {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  color: var(--cp-text);
+  cursor: pointer;
+}
 
-    transition: box-shadow 0.2s ease,
-      transform var(--press-out-dur) var(--ease-spring);
-  }
+.campus-option__check {
+  flex-shrink: 0;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--cp-accent);
+  visibility: hidden;
+}
 
-  /* Outside 0.5px gradient stroke — same recipe as .popover::after in
-     style.css (rounded rect → mask-composite ring, not the circle mask). */
-  .campus-select::after {
-    content: "";
-    position: absolute;
-    inset: -0.5px;
-    border-radius: inherit;
-    padding: 0.5px;
-    background: var(--cp-glass-stroke);
-    opacity: var(--cp-glass-stroke-opacity);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
+.cp-popup [role="option"][aria-selected="true"] .campus-option__check {
+  visibility: visible;
+}
 
-  .campus-select:hover {
-    background: color-mix(in srgb, var(--cp-text) 10%, var(--cp-glass-tint));
-  }
+.campus-option__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  line-height: 1.2;
+}
 
-  /* Bouncy press feedback — see --press-* tokens in style.css. Scale the
-     whole glass control (not just the inner button) so the material,
-     stroke ring and shadow all move together. */
-  .campus-select:active {
-    transform: scale(var(--press-scale));
-    transition: box-shadow 0.2s ease,
-      transform var(--press-in-dur) var(--press-in-ease);
-  }
+.campus-option__name,
+.campus-option__area {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  -webkit-text-stroke: 0.5px var(--cp-hairline);
+  paint-order: stroke fill;
+}
 
-  /* The open popup stays put; don't let a lingering :active shrink it. */
-  .campus-select:open {
-    transform: none;
-  }
+.campus-option__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cp-text);
+}
 
-  .campus-select:open {
-    box-shadow:
-      0 0 0 0.1px var(--cp-glass-outline),
-      var(--cp-glass-highlight),
-      0 4px 40px 0 var(--cp-glass-shadow-color),
-      0 0 0 3px var(--cp-accent-row);
-  }
+.campus-option__area {
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--cp-text-50);
+}
 
-  .campus-select:focus-visible {
-    outline: 2px solid var(--cp-accent);
-    outline-offset: 2px;
-  }
+/* Selected row — accent fill + 0.25px outside hairline */
+.cp-popup [role="option"][aria-selected="true"] {
+  background: var(--cp-accent-row);
+  box-shadow: 0 0 0 0.25px var(--cp-hairline);
+}
 
-  .campus-select button {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-    padding: 8px 16px;
-    border: none;
-    background: none;
-    font: inherit;
-    color: inherit;
-    text-align: left;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
+.cp-popup [role="option"][aria-selected="true"] .campus-option__name {
+  color: var(--cp-accent);
+  -webkit-text-stroke: 0;
+}
 
-  /* We draw our own chevron in the button. */
-  .campus-select::picker-icon {
-    display: none;
-  }
+.cp-popup [role="option"][aria-selected="true"] .campus-option__area {
+  color: color-mix(in srgb, var(--cp-accent) 75%, transparent);
+  -webkit-text-stroke: 0;
+}
 
-  .campus-select__icon,
+/* Keyboard-active / hovered row (not the committed selection). */
+.cp-popup [role="option"].is-active:not([aria-selected="true"]),
+.cp-popup [role="option"]:hover:not([aria-selected="true"]) {
+  background: var(--cp-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-popup,
+  .cp-popup:popover-open,
   .campus-select__chevron {
-    flex-shrink: 0;
-    font-size: 18px;
-    line-height: 1;
-  }
-
-  .campus-select__icon {
-    color: var(--cp-text-75);
-  }
-
-  .campus-select__chevron {
-    color: var(--cp-text-50);
-    transition: transform 0.2s ease;
-  }
-
-  .campus-select:open .campus-select__chevron {
-    transform: rotate(180deg);
-  }
-
-  /* Label ("CAMPUS") stacked over the campus name, gap 1, line-height = size */
-  .campus-select__box {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-  }
-
-  .campus-select__label {
-    font-size: 8px;
-    line-height: 8px;
-    font-weight: 400;
-    text-transform: uppercase;
-    color: var(--cp-text-50);
-  }
-
-  .campus-select__value {
-    font-size: 14px;
-    line-height: 14px;
-    font-weight: 700;
-    color: var(--cp-text);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* Only the campus name belongs in the closed control — not its area line
-     or the (cloned) selected-state check icon. */
-  .campus-select__value .campus-option__area,
-  .campus-select__value .campus-option__check {
-    display: none;
-  }
-
-  .campus-select__value .campus-option__name {
-    font: inherit;
-    color: inherit;
-    -webkit-text-stroke: 0;
-  }
-
-  /* ── Popup — glass ── */
-  .campus-select::picker(select) {
-    box-sizing: border-box;
-    width: 159px;
-    max-height: min(60vh, 24rem);
-    padding: 16px;
-    border: none;
-    border-radius: 16px;
-
-    background: var(--cp-glass-tint);
-    -webkit-backdrop-filter: blur(var(--cp-glass-blur));
-    backdrop-filter: blur(var(--cp-glass-blur));
-    color: var(--cp-text);
-
-    /* No ::after ring here — a pseudo-element can't sit on ::picker(select) —
-       so the rim is the 0.1px outline in the shadow stack instead. */
-    box-shadow:
-      0 0 0 0.1px var(--cp-glass-outline),
-      var(--cp-glass-highlight),
-      0 12px 40px 0 var(--cp-glass-shadow-color);
-
-    scrollbar-width: thin;
-  }
-
-  /* Entry animation only — resting state stays fully visible so that an
-     engine without @starting-style / discrete transitions still shows it. */
-  @starting-style {
-    .campus-select::picker(select) {
-      opacity: 0;
-      transform: translateY(-6px) scale(0.98);
-    }
-  }
-
-  .campus-select::picker(select) {
-    transition: opacity 0.16s ease, transform 0.16s ease;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .campus-select::picker(select),
-    .campus-select__chevron {
-      transition: none;
-    }
-  }
-
-  /* ── Section headers ── 8px between the two sections.
-     Chromium draws a separator rule above each <optgroup> label in the
-     picker — suppress it (border + the UA ::before). */
-  .campus-select optgroup {
-    padding: 0;
-    margin: 0;
-    border: 0;
-  }
-
-  .campus-select optgroup::before {
-    display: none;
-  }
-
-  .campus-select optgroup:not(:first-of-type) {
-    margin-top: 8px;
-  }
-
-  .campus-select legend {
-    padding: 0 0 4px;
-    border: 0;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--cp-text-50);
-  }
-
-  /* ── Options ──
-     The check <i> always occupies its 18px slot (visibility toggled) so names
-     line up whether or not the row is selected. The UA ::checkmark is
-     suppressed in favour of the Hugeicons glyph. */
-  .campus-select option {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px;
-    border-radius: 8px;
-    color: var(--cp-text);
-    cursor: pointer;
-  }
-
-  .campus-select option::checkmark {
-    display: none;
-  }
-
-  .campus-option__check {
-    flex-shrink: 0;
-    font-size: 18px;
-    line-height: 1;
-    color: var(--cp-accent);
-    visibility: hidden;
-  }
-
-  .campus-select option:checked .campus-option__check {
-    visibility: visible;
-  }
-
-  .campus-option__text {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-    line-height: 1.2;
-  }
-
-  .campus-option__name,
-  .campus-option__area {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    -webkit-text-stroke: 0.5px var(--cp-hairline);
-    paint-order: stroke fill;
-  }
-
-  .campus-option__name {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--cp-text);
-  }
-
-  .campus-option__area {
-    font-size: 8px;
-    font-weight: 600;
-    color: var(--cp-text-50);
-  }
-
-  /* Selected row — accent fill + 0.25px outside hairline */
-  .campus-select option:checked {
-    background: var(--cp-accent-row);
-    box-shadow: 0 0 0 0.25px var(--cp-hairline);
-  }
-
-  .campus-select option:checked .campus-option__name {
-    color: var(--cp-accent);
-    -webkit-text-stroke: 0;
-  }
-
-  .campus-select option:checked .campus-option__area {
-    color: color-mix(in srgb, var(--cp-accent) 75%, transparent);
-    -webkit-text-stroke: 0;
-  }
-
-  .campus-select option:hover:not(:checked),
-  .campus-select option:focus:not(:checked),
-  .campus-select option:active:not(:checked) {
-    background: var(--cp-hover);
-    outline: none;
+    transition: none;
   }
 }

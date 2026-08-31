@@ -5,6 +5,7 @@ import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
+import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { DynamicPopover } from './popover.js';
 import { createPillSelector } from './pill-selector.js';
 
@@ -71,6 +72,7 @@ class ClassroomDetail {
     this._overlay = null;
     this._tabbar = null;
     this._backBtn = null;
+    this._favBtn = null;
     this._staticData = null;       // classrooms.json hierarchy
     this._flatIndex = null;       // Map<id, { classroom, building, campus }>
     this._slugIndex = null;       // Map<"campus-slug\x00name", { classroom, building, campus }>
@@ -90,6 +92,15 @@ class ClassroomDetail {
     this._overlay = document.getElementById('classroom-detail-overlay');
     this._tabbar = document.querySelector('.bn-wrapper');
     this._backBtn = document.getElementById('detail-back-btn');
+    this._favBtn = document.getElementById('favourite-btn');
+
+    this._favBtn?.addEventListener('click', () => {
+      if (this._currentId === null) return;
+      haptics.trigger(defaultPatterns.light);
+      toggleFavourite(this._currentId);
+      this._syncFavBtn();
+    });
+    window.addEventListener('favourites-changed', () => this._syncFavBtn());
 
     this._backBtn?.addEventListener('click', () => {
       haptics.trigger(defaultPatterns.light);
@@ -163,6 +174,20 @@ class ClassroomDetail {
         this._doOpen(id, null);
       }
     }
+  }
+
+  // Reflects the current classroom's favourite state on the header star button.
+  _syncFavBtn() {
+    if (!this._favBtn || this._currentId === null) return;
+    const fav = isFavourite(this._currentId);
+    // .favourite-btn--active tints the star yellow (see style.css); the outline
+    // hgi-star is swapped for a filled star SVG.
+    this._favBtn.classList.toggle('favourite-btn--active', fav);
+    this._favBtn.setAttribute('aria-label', t(fav ? 'favourite.remove' : 'favourite.add'));
+    this._favBtn.setAttribute('aria-pressed', fav ? 'true' : 'false');
+    this._favBtn.innerHTML = fav
+      ? FILLED_STAR_SVG
+      : '<i class="hgi-stroke hgi-star" aria-hidden="true"></i>';
   }
 
   // Called by script.js once occupancy data has finished loading in the
@@ -294,6 +319,7 @@ class ClassroomDetail {
         this._renderContent(entry);
         this._overlay.classList.add('visible');
         if (this._backBtn) this._backBtn.removeAttribute('hidden');
+        if (this._favBtn) { this._favBtn.removeAttribute('hidden'); this._syncFavBtn(); }
         window.scrollTo(0, 0);
 
         // Force a synchronous layout flush before naming the overlay, so its
@@ -344,6 +370,7 @@ class ClassroomDetail {
         }
       }
       if (this._backBtn) this._backBtn.removeAttribute('hidden');
+      if (this._favBtn) { this._favBtn.removeAttribute('hidden'); this._syncFavBtn(); }
       requestAnimationFrame(() => {
         this._overlay.classList.add('visible');
         window.scrollTo(0, 0);
@@ -400,6 +427,7 @@ class ClassroomDetail {
         this._overlay.setAttribute('hidden', '');
         this._overlay.classList.remove('visible');
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
+        if (this._favBtn) this._favBtn.setAttribute('hidden', '');
         this._overlay.style.viewTransitionName = '';
         if (headerEl) {
           document.documentElement.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
@@ -433,6 +461,7 @@ class ClassroomDetail {
       this._overlay.classList.remove('visible');
       if (this._tabbar) this._tabbar.classList.remove('detail-open');
       if (this._backBtn) this._backBtn.setAttribute('hidden', '');
+      if (this._favBtn) this._favBtn.setAttribute('hidden', '');
       const hide = () => {
         document.body.classList.remove('detail-open');
         this._overlay.setAttribute('hidden', '');

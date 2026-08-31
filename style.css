@@ -797,6 +797,34 @@ label {
   pointer-events: none;
 }
 
+/* Favourite toggle: only ever visible on the classroom detail page.
+   .header-button sets `display: flex`, which outranks the `hidden` attribute's
+   UA `display: none`, so visibility is driven from `body.detail-open` here
+   instead (the JS `hidden` toggle is kept as a harmless belt-and-braces). */
+#favourite-btn {
+  display: none;
+}
+
+body.detail-open #favourite-btn {
+  display: flex;
+}
+
+/* hgi-star outline by default, filled yellow star when the current classroom
+   is favourited (icon swapped in JS, see classroom-detail.js). */
+#favourite-btn .hgi-star {
+  font-size: 1.375rem;
+}
+
+#favourite-btn .star-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: block;
+}
+
+#favourite-btn.favourite-btn--active {
+  color: #f0b429;
+}
+
 .pulse-indicator {
   --pulse-color: var(--text-color-secondary);
 }
@@ -1675,6 +1703,11 @@ are rendered as solid colors
   #available-classrooms-container>.favourites-section {
     grid-column: 1;
     grid-row: 1;
+    /* The carousel's non-shrinking cards give it a wide min-content size;
+       without this, Chrome lets that inflate the 1fr track and squeeze the
+       results column. (Firefox already treats the scroll container as
+       shrinkable.) */
+    min-width: 0;
   }
 
   #available-classrooms-container>.section-header {

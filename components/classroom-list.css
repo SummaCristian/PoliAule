@@ -497,3 +497,61 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Favourite marker — only rendered when buildCardForClassroom is called with
+   showFavouriteStar, and only visible once the card carries .classroom-card--fav
+   (kept in sync by utils/favourites.js). Hidden in the Favourites carousel,
+   where the arg is omitted. */
+.classroom-card-fav-star {
+  display: none;
+  position: absolute;
+  /* Match the .classroom-card-content inset so the star lines up with the
+     name / building text below it. */
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 3;
+  line-height: 0;
+  color: #f0b429;
+  pointer-events: none;
+  /* Stronger drop shadow so the star reads over bright photos, on top of the
+     contrast stroke on the glyph itself. */
+  filter:
+    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 6px rgba(0, 0, 0, 0.4));
+}
+
+.classroom-card-fav-star .star-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  overflow: visible; /* don't clip the contrast stroke at the viewBox edge */
+}
+
+/* Thin contrasting outline painted behind the yellow fill via
+   paint-order: stroke — keeps the star readable over photos. Fallback is a
+   manual black-on-light / white-on-dark swap; where contrast-color() is
+   supported it derives the same choice from the card surface automatically. */
+.classroom-card-fav-star .star-icon path {
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 2.5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .classroom-card-fav-star .star-icon path {
+    stroke: rgba(255, 255, 255, 0.65);
+  }
+}
+
+@supports (color: contrast-color(white)) {
+  .classroom-card-fav-star .star-icon path {
+    stroke: color-mix(
+      in srgb,
+      contrast-color(var(--background-color-secondary)) 60%,
+      transparent
+    );
+  }
+}
+
+.classroom-card--fav .classroom-card-fav-star {
+  display: block;
+}

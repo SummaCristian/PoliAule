@@ -1,0 +1,120 @@
+/* Favourites carousel on the Available page (index.html .favourites-section) */
+
+.favourites-section {
+  /* Sums with the following .section-header's 1rem top padding for a 36px
+     gap between the Favourites and Available sections. */
+  margin-bottom: 1.25rem;
+}
+
+.favourites-carousel {
+  /* Distance from the section edge to where the header text sits. The carousel
+     bleeds out by this much (negative margin) and pads back in by the same, so
+     its first/last card lines up with the header while *scrolled* cards run
+     out to the container edge — and, on desktop, slide behind the glass side
+     rail (see the media query). Mobile: matches .tab-content's 1rem padding. */
+  --fade-left: 1rem;
+  --fade-right: 1rem;
+
+  /* Visual fade-ramp width, kept separate from the bleed above: on desktop the
+     bleed is large (past the side rail) but the ramp stays short so cards read
+     crisp *behind* the rail's blur and only dissolve at the very edge. Must be
+     <= the matching --fade so a card at rest never looks faded. */
+  --mask-left: var(--fade-left);
+  --mask-right: var(--fade-right);
+
+  /* overflow-x: auto forces overflow-y to clip too, and the mask clips to the
+     border-box — both would cut off the cards' 40px-blur drop shadows top &
+     bottom. Reserve vertical room with padding (grows the border-box) and pull
+     it back out with an equal negative margin, so nothing moves. Needs to
+     exceed the shadow's reach (~40px). */
+  --shadow-room: 3rem;
+
+  display: flex;
+  /* Don't stretch cards to the row height — that would give them a definite
+     height and cancel their aspect-ratio. Let width (flex-basis) drive it. */
+  align-items: flex-start;
+  gap: 0.75rem;
+
+  min-width: 0; /* allow the scroller to be narrower than its cards (Chrome) */
+
+  margin-top: calc(0.75rem - var(--shadow-room));
+  margin-bottom: calc(-1 * var(--shadow-room));
+  margin-left: calc(-1 * var(--fade-left));
+  margin-right: calc(-1 * var(--fade-right));
+  padding-block: var(--shadow-room);
+  padding-left: var(--fade-left);
+  padding-right: var(--fade-right);
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  /* Native auto-centering: proximity settles onto the nearest card when a
+     flick's momentum ends near one, without interrupting the inertia. */
+  scroll-snap-type: x proximity;
+
+  scrollbar-width: none;
+
+  /* Soft fade at both edges so cards scrolling in/out and half-visible ones
+     dissolve rather than hard-clip. The mask sits on the scroll viewport, so
+     it stays pinned to the edges while content scrolls under it. Ramp widths
+     match the paddings, so a card at rest starts exactly where the mask is
+     already fully opaque. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--mask-left),
+    #000 calc(100% - var(--mask-right)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--mask-left),
+    #000 calc(100% - var(--mask-right)),
+    transparent
+  );
+}
+
+.favourites-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.favourites-carousel > .classroom-card {
+  scroll-snap-align: center;
+  /* Keep these roughly the size of an Available-results card
+     (grid min track is 9.5rem) rather than letting them balloon. */
+  flex: 0 0 clamp(9.5rem, 42vw, 11rem);
+  height: auto; /* height comes from width × aspect-ratio, like in the grid */
+
+  /* The grid uses content-visibility: auto for long lists; here there are only
+     a handful of favourites and the scroller's height depends on the cards, so
+     skipped off-screen cards make the container jump on the first scroll.
+     Render them normally. */
+  content-visibility: visible;
+  contain-intrinsic-size: auto;
+}
+
+.favourites-empty {
+  margin: 0.5rem 0 0;
+  font-size: var(--text-90, 0.9rem);
+}
+
+/* On the desktop two-column grid the section sits in column 1 / row 1
+   (see style.css). The right edge is the middle of the page (column gap), so
+   only the left side bleeds — all the way past the fixed glass side rail, so
+   scrolled cards pass behind its blur. --fade-left mirrors .tab-content's
+   desktop padding-left (rail offset + measured width + breathing room). */
+@media (min-width: 600px) {
+  .favourites-carousel {
+    --fade-left: calc(20px + var(--side-nav-width, 88px) + 1.5rem);
+    --fade-right: 1.5rem;
+    --mask-left: 1.5rem;
+    --mask-right: 1.5rem;
+    margin-right: 0;
+  }
+
+  .favourites-carousel > .classroom-card {
+    flex-basis: 10.5rem;
+  }
+}

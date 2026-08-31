@@ -7,6 +7,9 @@
   "searchPlaceholder.subtitle": "Coming soon.",
 
   "favourites.title": "Favourites",
+  "favourites.empty": "Star a classroom to pin it here.",
+  "favourite.add": "Add to favourites",
+  "favourite.remove": "Remove from favourites",
 
   "available.title": "Available",
   "available.subtitle": "Find which classrooms are available right now or at any other moment throughout the day.",

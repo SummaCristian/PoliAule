@@ -31,6 +31,7 @@ import { setupDatePicker } from './components/date-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
+import { initFavourites, renderFavourites } from './components/favourites.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import { escapeHtml } from './utils/html.js';
@@ -229,7 +230,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     const roomItem = document.createElement('div');
     roomItem.className = 'classroom-list-item-container';
     roomItem.dataset.status = room.status;
-    const cardEl = buildCardForClassroom(room, building, from, to, isToday, date);
+    const cardEl = buildCardForClassroom(room, building, from, to, isToday, date, '', true);
     cardEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
     roomItem.appendChild(cardEl);
     section.appendChild(roomItem);
@@ -265,6 +266,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Init classroom detail overlay (hash routing + VT morph)
     classroomDetail.init(staticClassroomsData);
 
+    // Favourites carousel on the Available page
+    initFavourites(staticClassroomsData);
+
     // Setup the campus picker with the available ones
     setupCampusPicker(staticClassroomsData);
     applyPreferredCampusIfEnabled();
@@ -282,6 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setupDataFetchIndicatorText(true);
       setupDatePicker(() => preferInitialDate);
       document.querySelector('campus-chip-picker')?.retranslate();
+      renderFavourites();
       const container = document.getElementById('available-classrooms-results');
       if (!container.classList.contains('empty')) {
         document.getElementById('available-classrooms-form').dispatchEvent(
@@ -329,6 +334,7 @@ async function initOccupancyData() {
   // If a classroom detail page was opened before occupancy data arrived
   // (e.g. a direct link), fill in its status badge and timeline now.
   classroomDetail.refreshOccupancy();
+  renderFavourites();
 
   const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
   if (autoSearchEnabled) {

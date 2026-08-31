@@ -94,7 +94,7 @@ function buildBuildingCard(building) {
 // used for campus/building cards above.
 function buildClassroomCard(room, building, query = '') {
   const status = getClassroomStatusNow(room.id);
-  return buildCardForClassroom({ ...room, status }, building, null, null, false, null, query);
+  return buildCardForClassroom({ ...room, status }, building, null, null, false, null, query, true);
 }
 
 // ---------- BREADCRUMB DROPDOWN ----------

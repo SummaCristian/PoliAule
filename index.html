@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="./components/classroom-detail.css" />
   <link rel="stylesheet" href="./components/info-page.css" />
   <link rel="stylesheet" href="./components/bottom-nav.css" />
+  <link rel="stylesheet" href="./components/favourites.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -93,6 +94,13 @@
 
       <div class="header-buttons-container splash-header-item">
 
+        <!-- Favourite toggle (only shown on the classroom detail page).
+             Content is swapped between the hgi-star outline and a filled star
+             by classroomDetail._syncFavBtn(). -->
+        <button id="favourite-btn" class="header-button" hidden aria-label="Add to favourites">
+          <i class="hgi-stroke hgi-star" aria-hidden="true"></i>
+        </button>
+
         <!-- Data Fetch Indicator -->
         <button class="header-button" data-popover="data-fetch-indicator-popover" data-popover-shift-padding="16">
           <div id="data-fetch-indicator" class="pulse-indicator"></div>
@@ -130,6 +138,8 @@
         <div class="section-header">
           <h3 class="section-header-title"><i class="hgi-stroke hgi-star section-header-title-icon" aria-hidden="true"></i><span data-i18n="favourites.title">Favourites</span></h3>
         </div>
+        <div id="favourites-carousel" class="favourites-carousel" hidden></div>
+        <p id="favourites-empty" class="favourites-empty secondary" data-i18n="favourites.empty">Star a classroom to pin it here.</p>
       </div>
 
       <div class="section-header">

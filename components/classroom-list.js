@@ -1,6 +1,7 @@
 import { t } from '../i18n.js';
 import { escapeHtml, highlight } from '../utils/html.js';
 import { fetchPhotoUrl } from '../utils/photo.js';
+import { isFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 
 // ---------- PHOTO ----------
 
@@ -42,7 +43,12 @@ const STATUS_KEYS = {
 //
 // query is optional — pass the user's search text (Campus tab's search box)
 // to wrap matching text in the name/building line with <mark>.
-export function buildCardForClassroom(classroom, building, fromTime = null, toTime = null, isToday = false, date = null, query = '') {
+//
+// showFavouriteStar is optional — pass true (Available results, Campus/Search
+// results) to render a top-right star marker when the room is a favourite, and
+// to opt the card into live updates from favourites.js. Omit it in the
+// Favourites carousel itself, where every card is already a favourite.
+export function buildCardForClassroom(classroom, building, fromTime = null, toTime = null, isToday = false, date = null, query = '', showFavouriteStar = false) {
   const hasPhoto = !!classroom.idfoto;
   const statusKey = STATUS_KEYS[classroom.status];
   const statusLabel = statusKey ? t(statusKey) : '';
@@ -56,6 +62,14 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
   el.setAttribute('role', 'button');
   el.setAttribute('tabindex', '0');
   el.setAttribute('aria-label', `View details for ${escapeHtml(classroom.name)}`);
+
+  if (showFavouriteStar) {
+    el.dataset.favStar = '';
+    if (isFavourite(classroom.id)) el.classList.add('classroom-card--fav');
+  }
+  const favStarHtml = showFavouriteStar
+    ? `<span class="classroom-card-fav-star" aria-hidden="true">${FILLED_STAR_SVG}</span>`
+    : '';
 
   const buildingLine = building.altName ? `${building.name} · ${building.altName}` : building.name;
 
@@ -76,11 +90,12 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
         <img class="classroom-card-photo" alt="">
         <div class="classroom-card-scrim"></div>
         ${contentHtml}
+        ${favStarHtml}
       </div>
     `;
     _photoObserver.observe(el);
   } else {
-    el.innerHTML = `<div class="classroom-card-clip">${contentHtml}</div>`;
+    el.innerHTML = `<div class="classroom-card-clip">${contentHtml}${favStarHtml}</div>`;
   }
 
   return el;

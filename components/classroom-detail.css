@@ -1518,6 +1518,18 @@ body.detail-open .tab-content * {
   50% { opacity: 0.8; }
 }
 
+/* Detail-only header controls (back button, favourite toggle) scaling in/out
+   in step with the page morph. */
+@keyframes header-ctl-scale-in {
+  from { opacity: 0; transform: scale(0.3); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes header-ctl-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.3); }
+}
+
 /* ── Tabbar hidden state (when detail overlay is open) ───────────── */
 /* Targets .bn-wrapper (not .bn-tabbar) so the standalone search button
    and pill hide along with the tab group. */
@@ -1611,6 +1623,41 @@ body.detail-open .tab-content * {
     animation-duration: 0.5s;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     animation-fill-mode: both;
+  }
+
+  /* Detail-only header controls get their own VT groups (pulled out of the
+     pinned `app-header` snapshot) so they scale in on open / out on close,
+     on top of the header, in step with the page morph — instead of popping
+     when the live DOM takes over at the end. The `:only-child` guard keeps
+     the animation to genuine enter/exit: on a detail↔info move where the back
+     button stays put, both snapshots exist and it just morphs in place. */
+  #detail-back-btn { view-transition-name: detail-back-btn; }
+  #favourite-btn   { view-transition-name: favourite-btn; }
+
+  ::view-transition-group(detail-back-btn),
+  ::view-transition-group(favourite-btn) {
+    z-index: 3; /* above ::view-transition-group(app-header), which is 2 */
+  }
+
+  ::view-transition-new(detail-back-btn):only-child,
+  ::view-transition-new(favourite-btn):only-child {
+    animation: header-ctl-scale-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    transform-origin: center;
+  }
+
+  ::view-transition-old(detail-back-btn):only-child,
+  ::view-transition-old(favourite-btn):only-child {
+    animation: header-ctl-scale-out 0.2s ease-in both;
+    transform-origin: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-new(detail-back-btn):only-child,
+  ::view-transition-new(favourite-btn):only-child,
+  ::view-transition-old(detail-back-btn):only-child,
+  ::view-transition-old(favourite-btn):only-child {
+    animation: none;
   }
 }
 

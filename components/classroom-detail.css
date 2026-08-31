@@ -374,7 +374,7 @@ body.detail-open .tab-content * {
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease, transform var(--press-out-dur) var(--ease-spring);
   
   /* Ensure the button and its content adapt their internal rendering to the theme */
   color-scheme: light dark;
@@ -425,7 +425,8 @@ body.detail-open .tab-content * {
 }
 
 .detail-back-btn:active {
-  transform: scale(0.95);
+  transform: scale(var(--press-scale));
+  transition: background 0.15s ease, transform var(--press-in-dur) var(--press-in-ease);
 }
 
 .detail-back-btn .material-symbols-outlined {

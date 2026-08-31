@@ -132,6 +132,16 @@
   --shadow-groove: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-dim: 0 1px 2px rgba(0, 0, 0, 0.5);
 
+  /* Bouncy press feedback shared by the glass buttons (header, campus
+     picker, back button, search FAB). The moment a button is touched it
+     snaps down fast and linearly; on release it springs back with an
+     overshoot via the spring easing over a longer duration. */
+  --press-scale: 0.9;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --press-in-dur: 0.11s;
+  --press-in-ease: cubic-bezier(0.3, 0, 0.4, 1);
+  --press-out-dur: 0.5s;
+
   /* "Now" marker blue — fixed by design, doesn't react to theme (verified:
      no dark-mode override exists anywhere it's used). */
   --color-now: #2196f3;
@@ -378,6 +388,13 @@ html:has(.splash-overlay) {
   .splash-loading-label,
   .splash-loading-label::after {
     animation: none;
+  }
+
+  /* Keep the press feedback, drop the springy overshoot. */
+  :root {
+    --ease-spring: ease;
+    --press-in-ease: ease;
+    --press-out-dur: 0.15s;
   }
 }
 
@@ -764,11 +781,19 @@ label {
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease,
-    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform var(--press-out-dur) var(--ease-spring);
 
   &:hover {
     background: color-mix(in srgb, var(--text-color-primary) 12%, var(--glass-tint));
     transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(var(--press-scale));
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform var(--press-in-dur) var(--press-in-ease);
   }
 }
 

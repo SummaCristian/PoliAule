@@ -1159,7 +1159,12 @@ body.info-open .header-nav-row {
   gap: 4px;
   font-size: 18px;
   font-weight: bold;
-  color: rgba(0, 0, 0, 0.5);
+  /* Solid color + opacity, not rgba() alpha: Safari drops the alpha channel
+     of an inherited color on the HugeIcons ::before glyph (stacking context
+     from blur/view-transitions), so the icon rendered at full opacity while
+     the text was at 50%. opacity dims both identically. */
+  color: #000;
+  opacity: 0.5;
 }
 
 .section-header-title-icon {
@@ -1172,7 +1177,7 @@ body.info-open .header-nav-row {
 
 @media (prefers-color-scheme: dark) {
   .section-header-title {
-    color: rgba(255, 255, 255, 0.5);
+    color: #fff;
   }
 }
 

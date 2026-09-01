@@ -3,6 +3,13 @@
   "tabs.campus": "Campus",
   "tabs.search": "Search",
 
+  "shortcuts.title": "Keyboard shortcuts",
+  "shortcuts.search": "Open search",
+  "shortcuts.tabAvailable": "Available tab",
+  "shortcuts.tabCampus": "Campus tab",
+  "shortcuts.settings": "Open settings",
+  "shortcuts.help": "Show this list",
+
   "searchPlaceholder.title": "Search",
   "searchPlaceholder.subtitle": "Coming soon.",
 
@@ -185,5 +192,6 @@
   "footer.versionInfo": "Version 2.0.0-beta5",
 
   "changelog.item1": "Redesigned the search screen",
-  "changelog.item2": "Added search for lessons and exams"
+  "changelog.item2": "Added search for lessons and exams",
+  "changelog.item3": "Added keyboard shortcuts"
 }

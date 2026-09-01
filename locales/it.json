@@ -3,6 +3,13 @@
   "tabs.campus": "Campus",
   "tabs.search": "Cerca",
 
+  "shortcuts.title": "Scorciatoie da tastiera",
+  "shortcuts.search": "Apri la ricerca",
+  "shortcuts.tabAvailable": "Scheda Disponibili",
+  "shortcuts.tabCampus": "Scheda Campus",
+  "shortcuts.settings": "Apri le impostazioni",
+  "shortcuts.help": "Mostra questo elenco",
+
   "searchPlaceholder.title": "Cerca",
   "searchPlaceholder.subtitle": "Prossimamente.",
   "available.title": "Aule Libere",
@@ -163,5 +170,6 @@
   "footer.disclaimer5": "Non affiliato al Politecnico di Milano.",
   "footer.versionInfo": "Versione 2.0.0-beta5",
   "changelog.item1": "Ridisegnata la schermata di ricerca",
-  "changelog.item2": "Aggiunta la ricerca per lezione o esame"
+  "changelog.item2": "Aggiunta la ricerca per lezione o esame",
+  "changelog.item3": "Aggiunte scorciatoie da tastiera"
 }

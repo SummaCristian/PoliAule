@@ -39,6 +39,7 @@ import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18
 import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY } from './components/settings.js';
+import { initKeybindings } from './components/keybindings.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -255,6 +256,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyTranslations();
 
     initSettings();
+
+    // Desktop keyboard shortcuts (no-ops on touch / narrow viewports)
+    initKeybindings();
 
     // Init info page overlay immediately — no data dependency
     infoPage.init();

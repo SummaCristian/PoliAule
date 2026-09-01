@@ -311,9 +311,12 @@ html:has(.splash-overlay) {
 }
 
 .splash-logo {
-  width: 10rem;
+  /* Match the header logo's sizing model (height-driven, width auto) so the
+     splash → header view transition is a pure uniform scale. A fixed square
+     box here letterboxes the non-square artwork, which makes the shared
+     element land at the wrong size/position and jump at the end. */
+  width: auto;
   height: 10rem;
-  object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
   will-change: transform;
@@ -438,10 +441,18 @@ html:has(.splash-overlay) {
 /* Splash logo View Transition */
 @supports (view-transition-name: none) {
   /* Pure positional morph — suppress the default cross-fade so it reads as
-     one image moving rather than two images dissolving into each other. */
-  ::view-transition-old(splash-icon),
+     one image moving rather than two images dissolving into each other.
+     The splash logo and the header logo are the same artwork, so we keep
+     only the "old" snapshot visible (it scales with the group) and hide the
+     "new" one entirely — otherwise both are painted at full opacity at
+     different sizes and you see two icons stacked during the morph. */
+  ::view-transition-old(splash-icon) {
+    animation: none;
+  }
+
   ::view-transition-new(splash-icon) {
     animation: none;
+    opacity: 0;
   }
 
   ::view-transition-group(splash-icon) {

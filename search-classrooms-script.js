@@ -12,8 +12,6 @@ let searchIndex = null;
 
 // Hierarchy navigation state
 let hierarchyState = { level: 0, campus: null, building: null };
-let isSearchActive = false;
-let searchDebounce = null;
 let activeDropdown = null;
 
 // ---------- DATA ----------
@@ -22,6 +20,40 @@ async function loadData() {
   if (classroomsData) return;
   const res = await fetch(`${getApiBase()}/v1/classrooms`);
   classroomsData = await res.json();
+}
+
+// Text search — the search bar itself lives in the search overlay
+// (components/search-overlay.js); this module just owns the data + card
+// builders it drives. `ensureSearchData()` is idempotent and safe to call
+// before the Campus tab has finished initialising.
+export async function ensureSearchData() {
+  await loadData();
+  if (!searchIndex) searchIndex = buildSearchIndex();
+}
+
+export function runClassroomSearch(query) {
+  if (!classroomsData) return { visible: [], total: 0, capped: false };
+  if (!searchIndex) searchIndex = buildSearchIndex();
+  const q = query.trim().toLowerCase();
+  const qDotted = q.replace(/\s+/g, '.');
+  const results = searchIndex.filter(room =>
+    room.name.toLowerCase().includes(q) ||
+    room.name.toLowerCase().includes(qDotted) ||
+    room.buildingName.toLowerCase().includes(q) ||
+    (room.buildingAltName && room.buildingAltName.toLowerCase().includes(q)) ||
+    room.campusName.toLowerCase().includes(q)
+  );
+  const capped = results.length > SEARCH_MAX_RESULTS;
+  return { visible: capped ? results.slice(0, SEARCH_MAX_RESULTS) : results, total: results.length, capped };
+}
+
+// Results span multiple campuses, so fold the campus name into the building
+// line (the card only has room for one line of building/location context).
+export function buildSearchResultCard(room, query = '') {
+  return buildClassroomCard(room, {
+    name: room.buildingName,
+    altName: [room.buildingAltName, room.campusName].filter(Boolean).join(' · '),
+  }, query.trim());
 }
 
 function buildSearchIndex() {
@@ -379,65 +411,7 @@ function renderClassrooms(campus, building) {
   });
 }
 
-const SEARCH_MAX_RESULTS = 40;
-
-function renderSearchResults(query) {
-  closeActiveDropdown();
-  setLevelHeader('meeting_room', 'search.headerClassrooms');
-  if (!searchIndex) searchIndex = buildSearchIndex();
-
-  const q = query.trim().toLowerCase();
-  const qDotted = q.replace(/\s+/g, '.');
-  const results = searchIndex.filter(room =>
-    room.name.toLowerCase().includes(q) ||
-    room.name.toLowerCase().includes(qDotted) ||
-    room.buildingName.toLowerCase().includes(q) ||
-    (room.buildingAltName && room.buildingAltName.toLowerCase().includes(q)) ||
-    room.campusName.toLowerCase().includes(q)
-  );
-
-  const container = document.getElementById('search-results-container');
-  container.innerHTML = '';
-
-  if (results.length === 0) {
-    const state = document.createElement('div');
-    state.className = 'search-empty-state';
-    state.innerHTML = `
-      <span class="material-symbols-outlined empty-container-icon">search_off</span>
-      <p class="empty-container-title">${t('search.emptyTitle')}</p>
-      <p class="empty-container-subtitle">${t('search.emptySubtitle')}</p>
-    `;
-    container.appendChild(state);
-    return;
-  }
-
-  const capped = results.length > SEARCH_MAX_RESULTS;
-  const visible = capped ? results.slice(0, SEARCH_MAX_RESULTS) : results;
-
-  const grid = document.createElement('div');
-  grid.className = 'search-grid search-grid--classroom';
-  // Results span multiple campuses, so fold the campus name into the building
-  // line (the card only has room for one line of building/location context).
-  visible.forEach(room => grid.appendChild(buildClassroomCard(room, {
-    name: room.buildingName,
-    altName: [room.buildingAltName, room.campusName].filter(Boolean).join(' · '),
-  }, query.trim())));
-
-  container.appendChild(grid);
-
-  if (capped) {
-    const notice = document.createElement('p');
-    notice.className = 'search-too-many-notice';
-    notice.textContent = t('search.tooManyResults').replace('{n}', SEARCH_MAX_RESULTS);
-    container.appendChild(notice);
-  }
-
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      grid.classList.add('appeared');
-    }, 400);
-  });
-}
+export const SEARCH_MAX_RESULTS = 40;
 
 // Jump straight to one building's classroom list — used by the "Available"
 // tab's building-header button. Matches by id when present, else by name.
@@ -450,18 +424,11 @@ export function navigateToBuilding(campusId, buildingId, buildingName) {
     (buildingId != null && b.id === buildingId) || b.name === buildingName);
   if (!building) return false;
 
-  const searchInput = document.getElementById('classroom-search-input');
-  if (searchInput && searchInput.value) {
-    searchInput.value = '';
-    isSearchActive = false;
-  }
-
   renderClassrooms(campus, building);
   return true;
 }
 
 function restoreHierarchy() {
-  isSearchActive = false;
   const { level, campus, building } = hierarchyState;
   if (level === 0) renderCampuses();
   else if (level === 1) renderBuildings(campus);
@@ -474,36 +441,5 @@ export async function initSearchTab() {
   await loadData();
   renderCampuses();
 
-  const searchInput = document.getElementById('classroom-search-input');
-
-  document.getElementById('classroom-search-clear').addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
-    searchInput.value = '';
-    searchInput.dispatchEvent(new Event('input'));
-    searchInput.focus();
-  });
-
-  searchInput.addEventListener('input', () => {
-    clearTimeout(searchDebounce);
-    const query = searchInput.value;
-
-    if (!query.trim()) {
-      if (isSearchActive) restoreHierarchy();
-      return;
-    }
-
-    isSearchActive = true;
-    closeActiveDropdown();
-    document.getElementById('search-breadcrumb').classList.add('hidden');
-    searchDebounce = setTimeout(() => renderSearchResults(query), 200);
-  });
-
-  onLanguageSwitch(() => {
-    const query = searchInput.value;
-    if (isSearchActive && query.trim()) {
-      renderSearchResults(query);
-    } else {
-      restoreHierarchy();
-    }
-  });
+  onLanguageSwitch(() => restoreHierarchy());
 }

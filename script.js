@@ -21,6 +21,7 @@ import {
 
 import { initSearchTab, navigateToBuilding, classroomsData as staticClassroomsData } from './search-classrooms-script.js';
 import { activateGroupTab } from './components/bottom-nav.js';
+import { initSearchOverlay } from './components/search-overlay.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
 
@@ -257,6 +258,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Init info page overlay immediately — no data dependency
     infoPage.init();
+
+    // Search overlay (bottom-nav FAB) — lazy-loads its data on first open
+    initSearchOverlay();
 
     // Only the static classroom directory blocks the splash — it's what the
     // page shell (campus picker, search tab, classroom detail) is built from.

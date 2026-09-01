@@ -31,6 +31,7 @@
   <link rel="stylesheet" href="./components/classroom-list.css" />
   <link rel="stylesheet" href="./components/settings.css" />
   <link rel="stylesheet" href="./components/search-classrooms.css" />
+  <link rel="stylesheet" href="./components/search-overlay.css" />
   <link rel="stylesheet" href="./components/classroom-detail.css" />
   <link rel="stylesheet" href="./components/info-page.css" />
   <link rel="stylesheet" href="./components/bottom-nav.css" />
@@ -208,23 +209,6 @@
         </p>
       </div>
 
-      <!-- Search bar -->
-      <div class="search-bar-wrapper">
-        <span class="material-symbols-outlined">search</span>
-        <input
-          type="text"
-          id="classroom-search-input"
-          class="search-input"
-          data-i18n-attr="placeholder:search.inputPlaceholder"
-          placeholder="e.g. 2.0.1, Trifoglio..."
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <button id="classroom-search-clear" class="search-clear-btn" type="button" tabindex="-1" aria-label="Clear search">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-
       <!-- Results box: breadcrumb + card grid -->
       <div class="search-results-box">
         <nav id="search-breadcrumb" class="search-breadcrumb hidden" aria-label="breadcrumb">
@@ -234,16 +218,6 @@
         <div id="search-results-container"></div>
       </div>
 
-    </div>
-
-    <!-- Search (placeholder) -->
-    <div id="search-placeholder-container" class="tab-content">
-      <div class="section-header">
-        <h3 class="section-header-title" data-i18n="searchPlaceholder.title">Search</h3>
-        <p class="section-header-subtitle secondary" data-i18n="searchPlaceholder.subtitle">
-          Coming soon.
-        </p>
-      </div>
     </div>
 
     <!-- Classroom Detail Panel (sibling to tab-content divs, shown in-place) -->
@@ -305,6 +279,33 @@
     <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
   </div>
 
+  <!-- Search overlay (opened by the bottom-nav search FAB; floats over the current tab) -->
+  <div id="search-overlay" class="search-overlay-backdrop" hidden>
+    <div class="search-overlay-panel" role="dialog" aria-modal="true" aria-label="Search classrooms">
+      <div class="search-overlay-header">
+        <div class="search-bar-wrapper liquid-glass">
+          <span class="material-symbols-outlined">search</span>
+          <input
+            type="text"
+            id="classroom-search-input"
+            class="search-input"
+            data-i18n-attr="placeholder:search.inputPlaceholder"
+            placeholder="e.g. 2.0.1, Trifoglio..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button id="classroom-search-clear" class="search-clear-btn" type="button" tabindex="-1" aria-label="Clear search">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <button id="search-overlay-close" class="search-overlay-close liquid-glass" type="button" aria-label="Close search">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div id="search-overlay-results" class="search-overlay-results"></div>
+    </div>
+  </div>
+
   <!-- Bottom pill nav (populated by components/bottom-nav.js) -->
   <div class="bn-wrapper" id="bn-wrapper">
     <div class="bn-group" id="bn-group">
@@ -319,7 +320,7 @@
       <div class="bn-pill-hit" id="bn-pill-hit"></div>
     </div>
 
-    <button class="bn-search-btn liquid-glass" id="bn-search-btn" type="button" aria-label="Search" data-target="search-placeholder-container">
+    <button class="bn-search-btn liquid-glass" id="bn-search-btn" type="button" aria-label="Search">
       <span class="bn-search-btn-inner">
         <i class="hgi-stroke hgi-search-01"></i>
         <span class="bn-tab-label" data-i18n="tabs.search">Search</span>

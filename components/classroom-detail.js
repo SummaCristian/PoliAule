@@ -296,6 +296,10 @@ class ClassroomDetail {
       if (fromInfo) infoPage._prepareReturnVT();
       if (cardInDom) cardEl.style.viewTransitionName = 'classroom-detail-zoom';
 
+      // Strip the glass blur off the scaling header controls for the transition
+      // (see .header-ctl-vt in classroom-detail.css).
+      document.documentElement.classList.add('header-ctl-vt');
+
       const vt = document.startViewTransition(() => {
         if (fromInfo) {
           infoPage._applyReturnVT();
@@ -346,6 +350,7 @@ class ClassroomDetail {
         this._overlay.style.viewTransitionName = '';
         if (cardEl) cardEl.style.viewTransitionName = '';
         if (headerEl) headerEl.style.viewTransitionName = '';
+        document.documentElement.classList.remove('header-ctl-vt');
         if (fromInfo) infoPage._cleanupReturnVT();
       };
       vt.finished.then(cleanup).catch(cleanup);
@@ -400,6 +405,7 @@ class ClassroomDetail {
       this._overlay.style.viewTransitionName = '';
       if (headerEl) headerEl.style.viewTransitionName = '';
       document.documentElement.classList.remove('header-vt-fixed');
+      document.documentElement.classList.remove('header-ctl-vt');
       if (cardEl) {
         cardEl.style.viewTransitionName = '';
         cardEl.style.removeProperty('content-visibility');
@@ -418,6 +424,10 @@ class ClassroomDetail {
       if (headerEl) headerEl.style.viewTransitionName = 'app-header';
 
       this._overlay.style.viewTransitionName = 'classroom-detail-zoom';
+
+      // Strip the glass blur off the scaling header controls for the transition
+      // (see .header-ctl-vt in classroom-detail.css).
+      document.documentElement.classList.add('header-ctl-vt');
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --

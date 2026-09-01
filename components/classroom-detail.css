@@ -1530,6 +1530,19 @@ body.detail-open .tab-content * {
 
 /* Detail-only header controls (back button, favourite toggle) scaling in/out
    in step with the page morph. */
+
+/* Safari doesn't rasterize backdrop-filter into a ::view-transition snapshot —
+   it re-composites the blur live at the snapshot's original size, ignoring the
+   scale-in/out transform, so a stale blurred rectangle hangs in the header
+   while the button itself scales. Drop the blur on these controls for the
+   duration of their enter/exit VT (`header-ctl-vt` is toggled on <html> in
+   classroom-detail.js); the glass tint + stroke alone carry the ~0.3s move. */
+.header-ctl-vt #favourite-btn,
+.header-ctl-vt #detail-back-btn {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 @keyframes header-ctl-scale-in {
   from { opacity: 0; transform: scale(0.3); }
   to   { opacity: 1; transform: scale(1); }

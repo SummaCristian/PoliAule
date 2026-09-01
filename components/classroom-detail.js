@@ -137,6 +137,28 @@ class ClassroomDetail {
       window.scrollTo(0, scrollY);
     });
 
+    // Press feedback — the card scales down while the pointer is held (mouse or
+    // touch), then springs into the open transition on release. The pressed
+    // class is deliberately NOT cleared on pointerup: the click handler below
+    // fires synchronously right after, starts the View Transition, and the VT
+    // captures the card's "old" snapshot while it's still scaled down, so the
+    // zoom animation is a continuous motion out of the pressed state rather than
+    // a jump back to full size first. A deferred cleanup (rAF) removes it after
+    // the click has had its turn; pointercancel/leave (drag-away, scroll) drop
+    // it immediately since no click will follow.
+    const clearPressed = () => {
+      document.querySelectorAll('.classroom-card--pressed')
+        .forEach((c) => c.classList.remove('classroom-card--pressed'));
+    };
+    document.addEventListener('pointerdown', (e) => {
+      const trigger = e.target.closest('[data-open-classroom]');
+      if (!trigger) return;
+      const card = trigger.closest('.classroom-card') ?? trigger;
+      card.classList.add('classroom-card--pressed');
+    });
+    document.addEventListener('pointerup', () => requestAnimationFrame(clearPressed));
+    document.addEventListener('pointercancel', clearPressed);
+
     // Click delegation — handles classroom cards on both the available and campus tabs
     document.addEventListener('click', (e) => {
       const trigger = e.target.closest('[data-open-classroom]');

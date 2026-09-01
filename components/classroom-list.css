@@ -319,6 +319,15 @@
     transform: scale(1.02);
   }
 
+  /* Held down (see classroom-detail.js press handler). Snappier transition in
+     than the shared 0.15s so the feedback feels immediate; the release hands
+     off to the View Transition mid-scale. Doubled specificity to win over
+     :hover on desktop. */
+  &.classroom-card--pressed {
+    transform: scale(0.96);
+    transition: transform 0.1s ease;
+  }
+
   &:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--text-color-accent) 72%, white);
     outline-offset: 3px;

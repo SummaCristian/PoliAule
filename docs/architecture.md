@@ -204,7 +204,7 @@ graph TD
 
 ### Classroom photos
 
-`scripts/fetch_photos.py` resolves and downloads every classroom's photo from PoliMi once a month, uploads changed ones to R2 under `photos/<classroom_id>.jpg`, and serves them through the API Worker at `GET /v1/photos/:id` (keyed by the classroom's own `id`, not PoliMi's internal `idfoto`). A local `photos/manifest.json` (MD5 per classroom, persisted across runs via `actions/cache`) lets the job skip re-uploading and re-purging photos that haven't changed.
+`scripts/fetch_photos.py` resolves and downloads every classroom's photo from PoliMi once a month, uploads changed ones to R2 under `photos/<classroom_id>.jpg`, and serves them through the API Worker at `GET /v1/photos/:id` (keyed by the classroom's own `id`, not PoliMi's internal `idfoto`). A `photos/manifest.json` (MD5 per classroom) lets the job skip re-uploading and re-purging photos that haven't changed; it's stored in R2 alongside the photos (`photos/manifest.json`), downloaded at the start of each run and re-uploaded at the end once upload+purge succeed. It is not kept in `actions/cache` because GitHub evicts caches untouched for 7 days, which this monthly job would always exceed.
 
 The frontend still loads photos on-demand when a classroom card scrolls into view or a detail page opens (`ClassroomDetail._loadPhoto()`, `utils/photo.js`'s `fetchPhotoUrl()`), but now that's just building a URL against our own API instead of calling PoliMi directly — the response is edge- and browser-cacheable for 30 days (`Cache-Control: public, max-age=2592000, immutable`), matching the fetch cadence.
 

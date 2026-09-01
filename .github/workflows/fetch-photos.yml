@@ -18,18 +18,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      # Restore-only (not the combined actions/cache action): the manifest is only
-      # trustworthy if it reflects what's actually in R2, so it must be saved
-      # explicitly at the end, gated on the upload+purge steps having succeeded
-      # (see "Save photo manifest" below) - not automatically on job completion,
-      # which would also fire after a failed upload and permanently mark
-      # never-uploaded photos as "unchanged" on every future run.
-      - name: Restore photo manifest from last successful run
-        uses: actions/cache/restore@v4
+      # The manifest lives in R2 next to the photos, not in actions/cache:
+      # this job runs monthly, and GitHub evicts any cache entry untouched for
+      # 7 days, so a cache-backed manifest would always be gone by the next run
+      # and every photo would look "new". Keeping it in R2 also makes it the
+      # single source of truth for what's actually uploaded. It's downloaded
+      # here and re-uploaded at the end, gated on upload+purge having succeeded
+      # (see "Save photo manifest" below) so a partial failure forces a full
+      # retry next run instead of the manifest drifting from R2.
+      - name: Set up Node
+        uses: actions/setup-node@v7
         with:
-          path: photos/manifest.json
-          key: photo-manifest-${{ github.run_id }}
-          restore-keys: photo-manifest-
+          node-version: 24
+
+      - name: Restore photo manifest from R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p photos
+          if npx --yes wrangler@4 r2 object get "poliaule-data/photos/manifest.json" \
+              --file photos/manifest.json --remote; then
+            echo "Restored manifest with $(jq 'length' photos/manifest.json) entries."
+          else
+            echo "No manifest in R2 yet (first run?) - treating every photo as new."
+            rm -f photos/manifest.json
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -71,12 +85,6 @@ jobs:
             --data-urlencode chat_id="${TELEGRAM_CHAT_ID}" \
             --data-urlencode text="$TEXT"
 
-      - name: Set up Node
-        if: hashFiles('photos/*.jpg') != ''
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-
       - name: Upload changed photos to R2
         if: hashFiles('photos/*.jpg') != ''
         env:
@@ -111,9 +119,15 @@ jobs:
       # Only persisted when everything before it (fetch, upload, purge) succeeded,
       # so a partial failure forces a retry next run instead of the manifest
       # silently drifting from what's actually in R2 (see the restore step above).
-      - name: Save photo manifest for next run
+      # fetch_photos.py always rewrites manifest.json, carrying unchanged hashes
+      # forward, so this is a complete snapshot even on a no-change run.
+      - name: Save photo manifest to R2
         if: success()
-        uses: actions/cache/save@v4
-        with:
-          path: photos/manifest.json
-          key: photo-manifest-${{ github.run_id }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          for bucket in poliaule-data poliaule-data-beta; do
+            npx --yes wrangler@4 r2 object put "$bucket/photos/manifest.json" \
+              --file photos/manifest.json --content-type application/json --remote
+          done

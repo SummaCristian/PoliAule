@@ -609,10 +609,10 @@ class ClassroomDetail {
     if (this._currentId !== classroomId) return;
 
     try {
-      // Step 1: Resolve the photo URL (cached after first fetch; may also be pre-warmed by card thumbnails).
-      const url = await fetchPhotoUrl(classroomId);
-
-      if (this._currentId !== classroomId) return;
+      // The photo URL is a plain, stable route (/v1/photos/:id). Once it's been
+      // resolved for this room this session (an earlier open, or a card thumbnail),
+      // it sits in photoUrlCache and its bytes are almost certainly in the HTTP cache.
+      const cachedUrl = photoUrlCache.get(classroomId);
 
       // Ensure we have a container for the photo (it might have been removed on previous error)
       let container = this._overlay.querySelector('.detail-photo-container');
@@ -627,13 +627,29 @@ class ClassroomDetail {
       const img = container?.querySelector('.detail-photo');
       if (!img) return;
 
-      // Already stamped by the ViewTransition (cached URL path) — nothing to do.
+      // Already revealed (by the ViewTransition, or an earlier call) — nothing to do.
       if (img.classList.contains('loaded')) return;
 
-      img.classList.remove('loaded');
-      container.classList.remove('loaded');
+      if (cachedUrl) {
+        // This <img> is fresh from a full re-render (occupancy refresh, language
+        // switch) that dropped the previous element and its decoded bitmap. Going
+        // through the async decode path below would leave it at opacity:0 for a
+        // frame and then replay the 0.6s fade/zoom intro on a photo that never
+        // changed — the "blink". Stamp src + `loaded` synchronously (same task as
+        // the innerHTML that created it, so it's painted only once, already
+        // revealed). onerror still culls a genuinely broken URL (stale idfoto).
+        img.onerror = () => { if (this._currentId === classroomId) container?.remove(); };
+        img.classList.add('loaded');
+        container.classList.add('loaded');
+        img.src = cachedUrl;
+        return;
+      }
 
-      // Step 2: load and decode, then reveal.
+      // First time we've needed this room's photo this session — resolve, load,
+      // decode, then reveal with the intro transition.
+      const url = await fetchPhotoUrl(classroomId);
+      if (this._currentId !== classroomId) return;
+
       img.src = url;
       img.decode().then(() => {
         if (this._currentId !== classroomId) return;

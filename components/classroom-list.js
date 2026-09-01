@@ -1,6 +1,6 @@
 import { t } from '../i18n.js';
 import { escapeHtml, highlight } from '../utils/html.js';
-import { fetchPhotoUrl } from '../utils/photo.js';
+import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
 import { isFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 
 // ---------- PHOTO ----------
@@ -17,7 +17,7 @@ const _photoObserver = new IntersectionObserver((entries) => {
   for (const entry of entries) {
     if (!entry.isIntersecting) continue;
     _photoObserver.unobserve(entry.target);
-    if (entry.target.dataset.idfoto) _loadCardPhoto(entry.target.dataset.openClassroom, entry.target);
+    if (entry.target.dataset.idfoto) _loadCardPhoto(Number(entry.target.dataset.openClassroom), entry.target);
   }
 }, { rootMargin: '300px' });
 
@@ -85,15 +85,26 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
 
   if (hasPhoto) {
     el.dataset.idfoto = classroom.idfoto;
+    // If we've already resolved this room's photo URL this session (a previous
+    // render of this card, or the detail page), its bytes are almost certainly in
+    // the HTTP cache. Render the <img> already pointing at it and already marked
+    // `loaded`, so a re-render (filter change, occupancy refresh, favourites
+    // update) rebuilds the card without replaying the 0.4s opacity fade — the
+    // "blink". Fresh rooms still stream in lazily via the observer.
+    const cachedUrl = photoUrlCache.get(classroom.id);
     el.innerHTML = `
       <div class="classroom-card-clip">
-        <img class="classroom-card-photo" alt="">
+        <img class="classroom-card-photo${cachedUrl ? ' loaded' : ''}" alt=""${cachedUrl ? ` src="${escapeHtml(cachedUrl)}"` : ''}>
         <div class="classroom-card-scrim"></div>
         ${contentHtml}
         ${favStarHtml}
       </div>
     `;
-    _photoObserver.observe(el);
+    if (cachedUrl) {
+      el.querySelector('.classroom-card-photo').onerror = () => el.classList.add('photo-failed');
+    } else {
+      _photoObserver.observe(el);
+    }
   } else {
     el.innerHTML = `<div class="classroom-card-clip">${contentHtml}${favStarHtml}</div>`;
   }

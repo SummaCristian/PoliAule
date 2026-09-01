@@ -197,6 +197,96 @@ html.search-vt .bn-search-btn {
   padding: 0;
 }
 
+/* ── Section labels (Classrooms / Lessons & exams) ─────────────────── */
+
+.search-section-label {
+  font-size: var(--text-75);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+  padding: 0 0.25rem 0.5rem;
+}
+
+.search-section-label:not(:first-child) {
+  margin-top: 1.25rem;
+}
+
+/* ── Lesson / exam result cards ────────────────────────────────────── */
+
+.search-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.search-event-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  padding: 1rem;
+  border-radius: var(--radius-lg, 1rem);
+  background-color: var(--background-color-secondary);
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.search-event-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.search-event-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-95);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-color-primary);
+}
+
+/* .timeline-popover-meta / .timeline-popover-badge come from
+   classroom-detail.css (always loaded) — reused verbatim here. */
+
+.search-event-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+.search-event-session {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  text-align: start;
+
+  padding: 0.5rem 0.7rem;
+  border: none;
+  border-radius: var(--radius-md, 0.75rem);
+  background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
+  cursor: pointer;
+}
+
+.search-event-session .ses-when {
+  font-size: var(--text-80);
+  font-weight: 700;
+  color: var(--text-color-accent);
+}
+
+.search-event-session .ses-where {
+  font-size: var(--text-75);
+  font-weight: 600;
+}
+
+.search-event-more {
+  font-size: var(--text-72);
+  font-weight: 600;
+  padding: 0.15rem 0.7rem 0;
+}
+
 /* The classroom cards run large for this context on a phone — scale the grid
    down a touch. (zoom keeps layout/hit-testing correct, unlike transform.) */
 @media (max-width: 599px) {

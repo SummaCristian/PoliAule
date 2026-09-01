@@ -1,6 +1,6 @@
 import { t, onLanguageSwitch } from './i18n.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
-import { getClassroomStatusNow } from './available-rooms-script.js';
+import { getClassroomStatusNow, classroomsData as occupancyDays } from './available-rooms-script.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { getApiBase } from './config.js';
 
@@ -66,6 +66,126 @@ function buildSearchIndex() {
     }
   }
   return index;
+}
+
+// ---------- OCCUPATION (lesson / exam) SEARCH ----------
+//
+// Searches the loaded occupancy data (available-rooms-script.js, up to 7 days)
+// for slots whose course name, code, section, professors, or raw string match
+// the query. Identical events (same course/code/professors, recurring across
+// days and rooms) are folded into one group with a list of sessions.
+
+export const OCC_MAX_GROUPS = 24;
+const OCC_MAX_SESSIONS = 6;
+
+let occIndex = null;
+let occIndexDayCount = -1;
+
+export function hasOccupationData() {
+  return occupancyDays.length > 0;
+}
+
+// Occupancy JSON stores the day as "YYYYMMDD"; normalise to ISO so Date() and
+// Intl can parse it.
+function isoDate(d) {
+  const s = String(d ?? '');
+  return /^\d{8}$/.test(s) ? `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}` : s;
+}
+
+function buildOccupationIndex() {
+  const rows = [];
+  for (const day of occupancyDays) {
+    const date = isoDate(day.date);
+    for (const campus of day.campuses ?? []) {
+      for (const building of campus.buildings ?? []) {
+        for (const room of building.classrooms ?? []) {
+          for (const slot of room.occupancy ?? []) {
+            if (!slot.inizio || !slot.fine) continue;
+            const professors = Array.isArray(slot.professors) ? slot.professors : [];
+            const title = slot.course ?? slot.raw ?? slot.name ?? '';
+            rows.push({
+              date,
+              inizio: slot.inizio,
+              fine: slot.fine,
+              category: slot.category ?? null,
+              isExam: slot.category === 'EXAM',
+              title,
+              code: slot.code ?? null,
+              section: slot.section ?? null,
+              professors,
+              roomId: room.id,
+              roomName: room.name,
+              buildingName: building.name,
+              buildingAltName: building.altName,
+              campusName: campus.name,
+              haystack: [
+                title,
+                slot.code != null ? String(slot.code) : '',
+                slot.section ?? '',
+                professors.join(' '),
+                slot.raw ?? '',
+                slot.name ?? '',
+              ].join('  ').toLowerCase(),
+            });
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function ensureOccIndex() {
+  if (!occIndex || occIndexDayCount !== occupancyDays.length) {
+    occIndex = buildOccupationIndex();
+    occIndexDayCount = occupancyDays.length;
+  }
+}
+
+export function runOccupationSearch(query) {
+  ensureOccIndex();
+  const q = query.trim().toLowerCase();
+  if (!q || occIndex.length === 0) return { groups: [], total: 0, capped: false, maxSessions: OCC_MAX_SESSIONS };
+
+  // Codes are stored as ints, so a leading zero the user typed ("061182") is
+  // gone from the haystack ("61182") — match on both.
+  const qAlt = q.replace(/^0+/, '');
+  const matched = occIndex.filter(r =>
+    r.haystack.includes(q) || (qAlt && qAlt !== q && r.haystack.includes(qAlt)));
+
+  const groups = new Map();
+  for (const r of matched) {
+    const key = [r.category, r.code, r.title, r.section, r.professors.join(',')].join('|').toLowerCase();
+    let g = groups.get(key);
+    if (!g) {
+      g = {
+        title: r.title, code: r.code, section: r.section,
+        professors: r.professors, isExam: r.isExam, sessions: [],
+      };
+      groups.set(key, g);
+    }
+    g.sessions.push({
+      date: r.date, inizio: r.inizio, fine: r.fine,
+      roomId: r.roomId, roomName: r.roomName,
+      buildingName: r.buildingName, buildingAltName: r.buildingAltName, campusName: r.campusName,
+    });
+  }
+
+  const list = [...groups.values()];
+  for (const g of list) {
+    g.sessions.sort((a, b) => (a.date + a.inizio).localeCompare(b.date + b.inizio));
+    g.sessionCount = g.sessions.length;
+  }
+  list.sort((a, b) =>
+    (a.sessions[0].date + a.sessions[0].inizio).localeCompare(b.sessions[0].date + b.sessions[0].inizio));
+
+  const capped = list.length > OCC_MAX_GROUPS;
+  return {
+    groups: capped ? list.slice(0, OCC_MAX_GROUPS) : list,
+    total: list.length,
+    capped,
+    maxSessions: OCC_MAX_SESSIONS,
+  };
 }
 
 // ---------- TEXT HIGHLIGHT ----------

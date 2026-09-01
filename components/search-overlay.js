@@ -3,13 +3,18 @@
 // page. It owns only the presentation/UX; the actual classroom text search
 // (data, index, card builders) lives in search-classrooms-script.js.
 
-import { t, onLanguageSwitch } from '../i18n.js';
+import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { haptics, defaultPatterns } from './haptics.js';
+import { escapeHtml, highlight } from '../utils/html.js';
+import { createTimeFormatter } from '../utils/time-format.js';
 import {
   ensureSearchData,
   runClassroomSearch,
   buildSearchResultCard,
+  runOccupationSearch,
+  hasOccupationData,
   SEARCH_MAX_RESULTS,
+  OCC_MAX_GROUPS,
 } from '../search-classrooms-script.js';
 
 const DEBOUNCE_MS = 200;
@@ -41,20 +46,40 @@ let isOpen = false;
 let debounce = null;
 let savedScrollPos = 0;
 
+let occRecheckTimer = null;
+
 function renderResults(query) {
   _renderResults(query);
   requestAnimationFrame(syncHeaderClearance);
 }
 
+function sectionLabel(text) {
+  const el = document.createElement('div');
+  el.className = 'search-section-label';
+  el.textContent = text;
+  return el;
+}
+
+function tooManyNotice(n) {
+  const p = document.createElement('p');
+  p.className = 'search-too-many-notice';
+  p.textContent = t('search.tooManyResults').replace('{n}', n);
+  return p;
+}
+
 function _renderResults(query) {
   const q = query.trim();
   resultsEl.innerHTML = '';
+  clearTimeout(occRecheckTimer);
 
   if (!q) return; // idle: empty results area, placeholder styling handles the hint
 
-  const { visible, capped } = runClassroomSearch(q);
+  const rooms = runClassroomSearch(q);
+  const events = runOccupationSearch(q);
+  const hasRooms = rooms.visible.length > 0;
+  const hasEvents = events.groups.length > 0;
 
-  if (visible.length === 0) {
+  if (!hasRooms && !hasEvents) {
     const state = document.createElement('div');
     state.className = 'search-empty-state';
     state.innerHTML = `
@@ -63,22 +88,101 @@ function _renderResults(query) {
       <p class="empty-container-subtitle">${t('search.emptySubtitle')}</p>
     `;
     resultsEl.appendChild(state);
+    if (!hasOccupationData()) scheduleOccRecheck(query);
     return;
   }
 
-  const grid = document.createElement('div');
-  grid.className = 'search-grid search-grid--classroom';
-  visible.forEach(room => grid.appendChild(buildSearchResultCard(room, q)));
-  resultsEl.appendChild(grid);
-
-  if (capped) {
-    const notice = document.createElement('p');
-    notice.className = 'search-too-many-notice';
-    notice.textContent = t('search.tooManyResults').replace('{n}', SEARCH_MAX_RESULTS);
-    resultsEl.appendChild(notice);
+  if (hasRooms) {
+    if (hasEvents) resultsEl.appendChild(sectionLabel(t('search.sectionClassrooms')));
+    const grid = document.createElement('div');
+    grid.className = 'search-grid search-grid--classroom';
+    rooms.visible.forEach(room => grid.appendChild(buildSearchResultCard(room, q)));
+    resultsEl.appendChild(grid);
+    if (rooms.capped) resultsEl.appendChild(tooManyNotice(SEARCH_MAX_RESULTS));
+    requestAnimationFrame(() => setTimeout(() => grid.classList.add('appeared'), 400));
   }
 
-  requestAnimationFrame(() => setTimeout(() => grid.classList.add('appeared'), 400));
+  if (hasEvents) {
+    resultsEl.appendChild(sectionLabel(t('search.sectionEvents')));
+    const list = document.createElement('div');
+    list.className = 'search-event-list';
+    const dateFmt = new Intl.DateTimeFormat(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
+    const timeFmt = createTimeFormatter();
+    events.groups.forEach(g => list.appendChild(buildEventCard(g, events.maxSessions, q, dateFmt, timeFmt)));
+    resultsEl.appendChild(list);
+    if (events.capped) resultsEl.appendChild(tooManyNotice(OCC_MAX_GROUPS));
+  }
+
+  // Occupancy data loads in the background — if it isn't here yet, the events
+  // section is missing; re-run the search once it arrives.
+  if (!hasOccupationData()) scheduleOccRecheck(query);
+}
+
+function fmtTime(hhmm, timeFmt) {
+  const [h, m] = String(hhmm).split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return String(hhmm ?? '');
+  return timeFmt.format(new Date(2000, 0, 1, h, m));
+}
+
+function fmtDate(iso, dateFmt) {
+  const d = new Date(`${iso}T00:00`);
+  return Number.isNaN(d.getTime()) ? String(iso ?? '') : dateFmt.format(d);
+}
+
+function buildEventCard(g, maxSessions, query, dateFmt, timeFmt) {
+  const card = document.createElement('div');
+  card.className = 'search-event-card';
+
+  const head = document.createElement('div');
+  head.className = 'search-event-head';
+  head.innerHTML =
+    `<span class="search-event-title">${highlight(g.title || t('detail.occupied'), query)}</span>` +
+    (g.isExam ? `<span class="timeline-popover-badge">${t('detail.examLabel')}</span>` : '');
+  card.appendChild(head);
+
+  const meta = [];
+  if (g.code != null) meta.push(String(g.code).padStart(6, '0'));
+  if (g.section) meta.push(g.section);
+  if (g.professors.length) meta.push(g.professors.join(', '));
+  if (meta.length) {
+    const m = document.createElement('div');
+    m.className = 'timeline-popover-meta';
+    m.innerHTML = meta.map(x => `<span>${highlight(x, query)}</span>`).join('');
+    card.appendChild(m);
+  }
+
+  const sessions = document.createElement('div');
+  sessions.className = 'search-event-sessions';
+  g.sessions.slice(0, maxSessions).forEach(s => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'search-event-session liquid-glass';
+    b.dataset.openClassroom = s.roomId;
+    b.innerHTML =
+      `<span class="ses-when">${escapeHtml(fmtDate(s.date, dateFmt))} · ` +
+      `${escapeHtml(fmtTime(s.inizio, timeFmt))}–${escapeHtml(fmtTime(s.fine, timeFmt))}</span>` +
+      `<span class="ses-where secondary">${escapeHtml(s.roomName)} · ` +
+      `${escapeHtml(s.buildingAltName || s.buildingName)}</span>`;
+    sessions.appendChild(b);
+  });
+  if (g.sessionCount > maxSessions) {
+    const more = document.createElement('p');
+    more.className = 'search-event-more secondary';
+    more.textContent = t('search.moreSessions').replace('{n}', g.sessionCount - maxSessions);
+    sessions.appendChild(more);
+  }
+  card.appendChild(sessions);
+  return card;
+}
+
+function scheduleOccRecheck(query, tries = 0) {
+  clearTimeout(occRecheckTimer);
+  if (tries > 6) return;
+  occRecheckTimer = setTimeout(() => {
+    if (!isOpen || input.value !== query) return;
+    if (hasOccupationData()) renderResults(query);
+    else scheduleOccRecheck(query, tries + 1);
+  }, 1200);
 }
 
 // Hide the header only once the results box has actually grown tall enough to
@@ -125,6 +229,7 @@ function conceal() {
   overlay.setAttribute('hidden', '');
   document.body.classList.remove('search-overlay-open');
   document.body.classList.remove('search-covers-header');
+  clearTimeout(occRecheckTimer);
   stopViewportTracking();
   window.scrollTo(0, savedScrollPos);
 }

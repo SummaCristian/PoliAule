@@ -40,7 +40,10 @@
 
   "search.title": "Search Classroom",
   "search.subtitle": "Browse campuses and buildings to find any classroom.",
-  "search.inputPlaceholder": "e.g. 2.0.1, Trifoglio...",
+  "search.inputPlaceholder": "Room, course, professor, code…",
+  "search.sectionClassrooms": "Classrooms",
+  "search.sectionEvents": "Lessons & exams",
+  "search.moreSessions": "+{n} more sessions",
   "search.allCampuses": "All campuses",
   "search.back": "Back",
   "building.prefix": "Building",

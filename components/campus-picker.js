@@ -7,6 +7,7 @@ import {
   autoUpdate,
 } from "https://cdn.jsdelivr.net/npm/@floating-ui/dom@1/+esm";
 import { haptics, defaultPatterns } from './haptics.js';
+import { attachLiquidGlass } from './liquid-glass.js';
 import { t } from '../i18n.js';
 
 const TEMPLATE = document.createElement('template');
@@ -69,6 +70,7 @@ export class CampusChipPicker extends HTMLElement {
     this.#labelEl = shadow.querySelector('.campus-select__label');
     this.#hiddenInput = this.querySelector('input[type="hidden"]');
 
+    attachLiquidGlass(this.#trigger);
     this.#trigger.addEventListener('click', () => this.#toggle());
     this.#trigger.addEventListener('keydown', (e) => this.#onTriggerKeydown(e));
     this.#popup.addEventListener('keydown', (e) => this.#onKeydown(e));

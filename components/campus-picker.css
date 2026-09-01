@@ -158,9 +158,7 @@
     var(--cp-glass-highlight),
     0 4px 40px 0 var(--cp-glass-shadow-color);
 
-  transition: box-shadow 0.2s ease,
-    background 0.2s ease,
-    transform var(--press-out-dur) var(--ease-spring);
+  transition: box-shadow 0.2s ease, background 0.2s ease;
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .popover::after in
@@ -179,19 +177,64 @@
   pointer-events: none;
 }
 
-.campus-select:hover {
-  background: color-mix(in srgb, var(--cp-text) 10%, var(--cp-glass-tint));
+/* Press feedback, swipe-deform and the lit hover state are the shared
+   .liquid-glass behaviour (components/liquid-glass.{css,js}). Its rules can't
+   reach into this shadow root, so the parts that must apply here are
+   duplicated below; the JS half is wired via attachLiquidGlass() in
+   campus-picker.js. */
+.campus-select.liquid-glass {
+  translate: 0 0;
+  scale: 1;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition:
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    translate var(--press-out-dur) var(--ease-spring),
+    scale var(--press-out-dur) var(--ease-spring),
+    filter 0.2s ease;
 }
 
-/* Bouncy press feedback — see --press-* tokens in style.css. Scales the
-   whole glass button (material, stroke ring and shadow move together): it
-   snaps down fast on touch and springs back with an overshoot on release
-   (the spring easing lives on the base rule's transform transition). */
-.campus-select:active {
-  transform: scale(var(--press-scale));
-  transition: box-shadow 0.2s ease,
-    background 0.2s ease,
-    transform var(--press-in-dur) var(--press-in-ease);
+/* Raised for the whole interaction incl. the spring-back (.lg-settling,
+   dropped by liquid-glass.js once it's home). */
+.campus-select.liquid-glass.lg-pressing,
+.campus-select.liquid-glass.lg-dragging,
+.campus-select.liquid-glass.lg-settling {
+  z-index: 9999;
+}
+
+.campus-select.liquid-glass.lg-pressing {
+  transition:
+    box-shadow 0.2s ease, background 0.2s ease,
+    translate var(--press-in-dur) var(--press-in-ease),
+    scale var(--press-in-dur) var(--press-in-ease),
+    filter 0.2s ease;
+}
+
+.campus-select.liquid-glass.lg-dragging {
+  transition:
+    box-shadow 0.2s ease, background 0.2s ease,
+    translate 0s, scale 0s, filter 0.2s ease;
+}
+
+@media (hover: hover) {
+  .campus-select.liquid-glass:hover {
+    scale: 1.03;
+  }
+}
+
+.campus-select.liquid-glass:hover,
+.campus-select.liquid-glass.lg-pressing,
+.campus-select.liquid-glass.lg-dragging {
+  filter: brightness(1.1) saturate(1.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-select.liquid-glass:hover {
+    scale: 1;
+  }
 }
 
 /* Ring while the dropdown is open (mirrors the old :open state). */

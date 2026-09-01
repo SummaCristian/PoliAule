@@ -31,6 +31,7 @@ import { setupDatePicker } from './components/date-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
+import { initLiquidGlass } from './components/liquid-glass.js';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
@@ -192,11 +193,11 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   headerEl.className = 'building-section-header';
   headerEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
   headerEl.innerHTML = `
-    <div class="building-section-titles">
+    <div class="building-section-titles liquid-glass">
       <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</h3>
       ${building.altName ? `<p class="building-alt-name">${escapeHtml(building.altName)}</p>` : ''}
     </div>
-    <button class="header-button building-section-btn" type="button" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
+    <button class="header-button building-section-btn liquid-glass" type="button" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
       <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
     </button>
   `;
@@ -265,6 +266,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Init classroom detail overlay (hash routing + VT morph)
     classroomDetail.init(staticClassroomsData);
+
+    // Delegated press / swipe-deform for every .liquid-glass control
+    initLiquidGlass();
 
     // Favourites carousel on the Available page
     initFavourites(staticClassroomsData);

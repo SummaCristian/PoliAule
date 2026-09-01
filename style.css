@@ -780,21 +780,10 @@ label {
 
   transition:
     background-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform var(--press-out-dur) var(--ease-spring);
+    box-shadow 0.2s ease;
 
-  &:hover {
-    background: color-mix(in srgb, var(--text-color-primary) 12%, var(--glass-tint));
-    transform: scale(1.1);
-  }
-
-  &:active {
-    transform: scale(var(--press-scale));
-    transition:
-      background-color 0.2s ease,
-      box-shadow 0.2s ease,
-      transform var(--press-in-dur) var(--press-in-ease);
-  }
+  /* Lit hover state, press feedback and the swipe-deform are all handled by
+     the shared .liquid-glass rules (components/liquid-glass.{css,js}). */
 }
 
 /* Outside 0.5px gradient stroke (Figma's "outside stroke") without

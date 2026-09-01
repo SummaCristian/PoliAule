@@ -548,7 +548,7 @@ class ClassroomDetail {
       .map(({ id }) => {
         const { icon, key } = FEATURE_ICONS[id];
         return `
-          <div class="detail-feature-chip" data-feature-id="${id}">
+          <div class="detail-feature-chip liquid-glass" data-feature-id="${id}">
             <span class="material-symbols-outlined">${icon}</span>
             <span>${t(key)}</span>
           </div>`;
@@ -911,7 +911,7 @@ class ClassroomDetail {
             </div>
           </div>
         </div>
-        <div id="detail-timeline-popover" class="popover timeline-occupation-popover" role="tooltip">
+        <div id="detail-timeline-popover" class="popover timeline-occupation-popover liquid-glass" role="tooltip">
           <div class="arrow" data-arrow></div>
           <div class="timeline-popover-body"></div>
         </div>

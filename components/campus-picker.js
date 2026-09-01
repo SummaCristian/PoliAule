@@ -367,11 +367,10 @@ export class CampusChipPicker extends HTMLElement {
     s.width = '';
     s.height = 'auto';
     const width = this.#popup.offsetWidth;
-    const height = Math.min(
-      this.#inner.scrollHeight,
-      Math.round(window.innerHeight * 0.6),
-      24 * 16,
-    );
+    // Grow to fit the whole list; only cap (→ scroll) when it can't fit the
+    // viewport. `shift({ padding: 8 })` below keeps a full-height panel on
+    // screen.
+    const height = Math.min(this.#inner.scrollHeight, window.innerHeight - 16);
     s.height = `${height}px`;
 
     const { x, y } = await computePosition(this.#trigger, this.#popup, {

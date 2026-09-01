@@ -82,17 +82,32 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
   const elements = container.querySelectorAll('.date-element-container');
 
   const pillSelector = createPillSelector(container, {
-    onSelect(el) {
+    onSelect(el, { silent = false } = {}) {
       datePicker.value = el.dataset.date;
       datePicker.dispatchEvent(new Event('change', { bubbles: true }));
 
-      // Haptic feedback
+      // Haptic feedback (skipped for programmatic/silent placement, e.g. the
+      // deferred re-anchor when the wrapping <date-chip-picker> popup opens)
+      if (silent) return;
       haptics.trigger([
         { duration: 30 },
         { delay: 60, duration: 40, intensity: 1 },
       ]);
     },
   });
+
+  // When this picker lives inside <date-chip-picker>, its cells have zero size
+  // while the popup is closed, so the initial auto-select below can't place the
+  // sliding indicator. Re-anchor it from the committed <select> value once the
+  // cells actually have a layout (the popup open triggers the ResizeObserver
+  // wired in repositionAll).
+  function reanchorFromValue() {
+    if (pillSelector.activeElement) return;
+    const el = [...container.querySelectorAll('.date-element-container')].find(
+      e => e.dataset.date === datePicker.value && !e.classList.contains('date-skipped')
+    );
+    if (el) pillSelector.selectElement(el, { silent: true, animate: false });
+  }
 
   document.getElementById('today-indicator').addEventListener('click', () => {
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -126,6 +141,7 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
 
   function repositionAll() {
     pillSelector.refresh();
+    reanchorFromValue();
     positionTodayIndicator();
   }
 

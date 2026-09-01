@@ -29,6 +29,7 @@ import { initTimePickers } from './components/time-picker.js';
 import { initTimeRangeSlider } from './components/time-range-slider.js';
 import { setupCampusPicker } from './components/campus-picker.js';
 import { setupDatePicker } from './components/date-picker.js';
+import './components/date-chip-picker.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
@@ -339,6 +340,7 @@ async function initOccupancyData() {
   // Use the fetched data to set the only valid dates into the date picker
   setupDatePicker(() => preferInitialDate);
   document.getElementById('available-classrooms-form').removeAttribute('data-loading');
+  document.querySelector('date-chip-picker')?.removeAttribute('data-loading');
 
   setupDataFetchIndicator();
   setupLiveSearch();

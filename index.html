@@ -26,6 +26,7 @@
   <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />
+  <link rel="stylesheet" href="./components/date-chip-picker.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
   <link rel="stylesheet" href="./components/time-range-slider.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
@@ -161,17 +162,17 @@
           <input type="hidden" id="campus-picker" name="campus" />
         </campus-chip-picker>
 
-        <!-- Date picker -->
-        <div class="date-picker">
-          <select id="date-picker" name="date" hidden></select>
+        <!-- Date picker — compact glass pill that morphs into a popup holding
+             the sliding picker below (see components/date-chip-picker.js). -->
+        <date-chip-picker data-loading>
+          <div class="date-picker">
+            <select id="date-picker" name="date" hidden></select>
 
-          <div id="today-indicator" class="hidden" aria-hidden="true" data-i18n="datepicker.today">Today</div>
-          <div class="date-picker-container"></div>
-          <div class="date-indicator"></div>
-          <div class="date-picker-skeleton" aria-hidden="true">
-            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            <div id="today-indicator" class="hidden" aria-hidden="true" data-i18n="datepicker.today">Today</div>
+            <div class="date-picker-container"></div>
+            <div class="date-indicator"></div>
           </div>
-        </div>
+        </date-chip-picker>
 
         <div class="time-pickers-skeleton" aria-hidden="true">
           <div></div>

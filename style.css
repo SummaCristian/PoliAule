@@ -610,6 +610,21 @@ label {
   isolation: isolate;
 }
 
+/* Opaque fill behind the status-bar safe area. The blur/fade layers live
+   inside .header-top-line-container, which starts below .header's
+   safe-area padding, so that strip has no background of its own. On most
+   browsers the status bar hides it; in a Safari iOS PWA the safe area is
+   transparent and page content is visible scrolling underneath. */
+.header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: env(safe-area-inset-top);
+  background-color: var(--background-color);
+  z-index: 0;
+  pointer-events: none;
+}
+
 .header-blur-layers {
   position: absolute;
   inset: 0;

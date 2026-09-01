@@ -86,15 +86,21 @@ export class DateChipPicker extends HTMLElement {
     `;
     this.#inner = this.#popup.querySelector('.dcp-popup__inner');
 
-    // Assemble. Everything stays inside this element (which lives inside the
-    // <form>) so the hidden #date-picker <select> the sliding picker owns
-    // remains a submittable form field. The popup/overlay are position:fixed,
-    // so they still render against the viewport — same as <campus-chip-picker>,
-    // whose fixed panel likewise lives in the form subtree.
+    // Assemble.
+    //  - The hidden #date-picker <select> is lifted to be a direct child of
+    //    this element (still inside the <form>) so it stays a submittable
+    //    field once the rest of .date-picker moves away.
+    //  - The overlay + morphing popup are appended to <body>, NOT kept inside
+    //    this element: the sticky picker bar is a stacking context, and a
+    //    position:fixed + backdrop-filter panel trapped inside one makes iOS
+    //    Safari paint the bottom safe-area toolbar opaque and leave it stuck
+    //    even after the panel closes. At the document root they composite
+    //    cleanly.
+    if (this.#hiddenSelect) this.insertBefore(this.#hiddenSelect, this.#datePicker);
     this.insertBefore(this.#trigger, this.#datePicker);
     this.#inner.appendChild(this.#datePicker);
-    this.appendChild(this.#overlay);
-    this.appendChild(this.#popup);
+    document.body.appendChild(this.#overlay);
+    document.body.appendChild(this.#popup);
 
     // ── Wiring ──────────────────────────────────────────────────────
     this.#trigger.addEventListener('click', () => this.#toggle());
@@ -167,8 +173,9 @@ export class DateChipPicker extends HTMLElement {
     const height = Math.min(this.#inner.scrollHeight, vh - PAD * 2);
     s.transition = prev;
 
+    const DROP = 8; // expanded panel settles 0.5rem below the trigger
     const left = Math.max(PAD, Math.min(r.left, vw - width - PAD));
-    const top = Math.max(PAD, Math.min(r.top, vh - height - PAD));
+    const top = Math.max(PAD, Math.min(r.top + DROP, vh - height - PAD));
     return { left, top, width, height, borderRadius: '22px' };
   }
 

@@ -613,7 +613,7 @@ label {
 .header-blur-layers {
   position: absolute;
   inset: 0;
-  bottom: -2rem;
+  bottom: -0.5rem;
 
   pointer-events: none;
   /* Negative so it paints behind header-top-line-container's own (non-
@@ -1240,6 +1240,17 @@ body.info-open .header-nav-row {
   color: var(--text-color-primary);
 }
 
+/* On mobile the picker form sticks under the header so the campus / date /
+   time controls stay reachable while scrolling the results below. No
+   background of its own — it sits inside the header's blur/fade overhang, and
+   the glass pills let the results scroll through behind them. (Desktop lays
+   the form out in a static grid column — overridden at the 600px breakpoint.) */
+#available-classrooms-form {
+  position: sticky;
+  top: calc(var(--header-height, 84px) + 0.75rem);
+  z-index: 10;
+}
+
 /* ── Skeleton loading states ──────────────────────────────────── */
 
 @keyframes skeleton-shimmer {
@@ -1761,6 +1772,9 @@ are rendered as solid colors
     grid-column: 1;
     grid-row: 3;
     align-self: start;
+
+    /* Not sticky on desktop — the results column scrolls on its own. */
+    position: static;
   }
 
   #available-classrooms-results {

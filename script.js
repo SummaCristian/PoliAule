@@ -166,6 +166,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
   setHeaderHeight();
   new ResizeObserver(setHeaderHeight).observe(header);
+
+  // Live height of the sticky picker bar (mobile), so the results' sticky
+  // per-building headers can park directly beneath it instead of overlapping.
+  const pickerBar = document.getElementById('available-classrooms-form');
+  if (pickerBar) {
+    const setPickerBarHeight = () =>
+      document.documentElement.style.setProperty('--picker-bar-height', `${pickerBar.offsetHeight}px`);
+    setPickerBarHeight();
+    new ResizeObserver(setPickerBarHeight).observe(pickerBar);
+  }
 })
 
 document.querySelectorAll('.button-primary').forEach(btn => {

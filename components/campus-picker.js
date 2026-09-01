@@ -8,10 +8,16 @@ import { haptics, defaultPatterns } from './haptics.js';
 import { attachLiquidGlass } from './liquid-glass.js';
 import { t } from '../i18n.js';
 
-const TEMPLATE = document.createElement('template');
-TEMPLATE.innerHTML = `
+const STYLE_LINKS = `
   <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css">
   <link rel="stylesheet" href="./components/campus-picker.css">
+`;
+
+// The trigger (pill + skeleton) lives in a shadow root on <campus-chip-picker>
+// itself, inside the sticky picker bar.
+const TRIGGER_TEMPLATE = document.createElement('template');
+TRIGGER_TEMPLATE.innerHTML = `
+  ${STYLE_LINKS}
 
   <select class="cp-native" tabindex="-1" aria-hidden="true"></select>
 
@@ -25,6 +31,19 @@ TEMPLATE.innerHTML = `
     <i class="hgi-stroke hgi-arrow-down-01 campus-select__chevron" aria-hidden="true"></i>
   </button>
 
+  <div class="campus-select-skeleton" aria-hidden="true"></div>
+`;
+
+// The overlay + morphing panel live in a SECOND shadow root, on a host element
+// appended to <body>. That keeps the panel (a position:fixed + backdrop-filter
+// element) out of the sticky picker bar's stacking context — nested inside one,
+// iOS Safari repaints the bottom safe-area toolbar opaque and leaves it stuck —
+// while preserving shadow-scoped styling. Same escape as the date picker's
+// document.body.appendChild, just with encapsulation kept.
+const PANEL_TEMPLATE = document.createElement('template');
+PANEL_TEMPLATE.innerHTML = `
+  ${STYLE_LINKS}
+
   <div class="cp-overlay" hidden></div>
   <div id="cp-listbox" class="cp-popup" role="listbox" tabindex="-1" aria-label="Campus">
     <div class="cp-popup__inner">
@@ -34,8 +53,6 @@ TEMPLATE.innerHTML = `
       </div>
     </div>
   </div>
-
-  <div class="campus-select-skeleton" aria-hidden="true"></div>
 `;
 
 const TYPEAHEAD_RESET_MS = 500;
@@ -48,7 +65,7 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 // hidden native <select> in the shadow root stays the data model and the real
 // form control — it's mirrored onto the light-DOM hidden <input name="campus">
 // and is what fires the `change` event. The glass <button> trigger and the
-// top-layer `popover` listbox are the UI, driven off that <select>.
+// portaled listbox panel are the UI, driven off that <select>.
 //
 // Form-association can't reach into the shadow root, so the submittable field
 // stays a hidden <input> in the light DOM (declared in index.html); the
@@ -65,6 +82,8 @@ export class CampusChipPicker extends HTMLElement {
   #inner = null;
   #titleEl = null;
   #overlay = null;
+  #panelHost = null;     // <body>-level host element for the panel shadow root
+  #panelRoot = null;     // its shadow root (holds #overlay + #popup)
   #isOpen = false;
   #isAnimating = false;
   #scrollLocked = false;
@@ -82,18 +101,29 @@ export class CampusChipPicker extends HTMLElement {
 
   connectedCallback() {
     if (this.shadowRoot) return; // already initialized (re-parenting, etc.)
+
+    // ── Trigger root (on this element, inside the sticky picker bar) ──────
     const shadow = this.attachShadow({ mode: 'open' });
-    shadow.appendChild(TEMPLATE.content.cloneNode(true));
+    shadow.appendChild(TRIGGER_TEMPLATE.content.cloneNode(true));
 
     this.#select = shadow.querySelector('.cp-native');
     this.#trigger = shadow.querySelector('.campus-select');
-    this.#popup = shadow.querySelector('.cp-popup');
-    this.#inner = shadow.querySelector('.cp-popup__inner');
-    this.#titleEl = shadow.querySelector('.cp-popup__title-text');
-    this.#overlay = shadow.querySelector('.cp-overlay');
     this.#valueEl = shadow.querySelector('.campus-select__value');
     this.#labelEl = shadow.querySelector('.campus-select__label');
     this.#hiddenInput = this.querySelector('input[type="hidden"]');
+
+    // ── Panel root (on a <body>-level host, outside every ancestor
+    //    stacking context) ────────────────────────────────────────────────
+    this.#panelHost = document.createElement('div');
+    this.#panelHost.className = 'cp-panel-host';
+    this.#panelRoot = this.#panelHost.attachShadow({ mode: 'open' });
+    this.#panelRoot.appendChild(PANEL_TEMPLATE.content.cloneNode(true));
+    document.body.appendChild(this.#panelHost);
+
+    this.#popup = this.#panelRoot.querySelector('.cp-popup');
+    this.#inner = this.#panelRoot.querySelector('.cp-popup__inner');
+    this.#titleEl = this.#panelRoot.querySelector('.cp-popup__title-text');
+    this.#overlay = this.#panelRoot.querySelector('.cp-overlay');
 
     attachLiquidGlass(this.#trigger);
     this.#trigger.addEventListener('click', () => this.#toggle());
@@ -106,6 +136,9 @@ export class CampusChipPicker extends HTMLElement {
 
   disconnectedCallback() {
     this.#unlockScroll();
+    // The panel host is deliberately left on <body> across a disconnect —
+    // this element is only ever re-parented, never destroyed, and the
+    // connectedCallback guard would skip re-creating it anyway.
   }
 
   // Programmatically selects a campus by ID. No-op if the ID isn't available.
@@ -326,7 +359,7 @@ export class CampusChipPicker extends HTMLElement {
   }
 
   // Final resting box of the panel: full width, natural (capped) height,
-  // top edge anchored to the trigger's top so it reads as the pill growing
+  // top edge 0.5rem below the trigger's top so it reads as the pill growing
   // downward into the panel.
   async #panelTarget() {
     const s = this.#popup.style;
@@ -345,7 +378,7 @@ export class CampusChipPicker extends HTMLElement {
       strategy: 'fixed',
       placement: 'bottom-start',
       middleware: [
-        offset(({ rects }) => -rects.reference.height), // top-align with the trigger
+        offset(({ rects }) => 8 - rects.reference.height), // 0.5rem below the trigger's top
         flip({ padding: 8 }),
         shift({ padding: 8 }),
       ],
@@ -422,8 +455,8 @@ export class CampusChipPicker extends HTMLElement {
     this.#trigger.setAttribute('aria-expanded', 'false');
     this.#clearTypeahead();
 
-    const returnFocus = this.shadowRoot.activeElement === this.#popup
-      || this.#popup.contains(this.shadowRoot.activeElement);
+    const returnFocus = this.#panelRoot.activeElement === this.#popup
+      || this.#popup.contains(this.#panelRoot.activeElement);
 
     this.#popup.classList.remove('cp-popup--open');
     this.#overlay.classList.remove('is-active');
@@ -481,7 +514,10 @@ export class CampusChipPicker extends HTMLElement {
     if (this.#scrollLocked) return;
     this.#scrollLocked = true;
     this.#preventScroll = (e) => {
-      if (this.#inner.contains(e.target) && this.#inner.scrollHeight > this.#inner.clientHeight) return;
+      // e.target is retargeted to the panel host once the event reaches
+      // window — use composedPath to see into the shadow tree.
+      const overInner = e.composedPath().includes(this.#inner);
+      if (overInner && this.#inner.scrollHeight > this.#inner.clientHeight) return;
       e.preventDefault();
     };
     window.addEventListener('wheel', this.#preventScroll, { passive: false });

@@ -1222,7 +1222,6 @@ body.info-open .header-nav-row {
   align-items: flex-start;
   gap: 0.75rem;
   width: 100%;
-  margin-top: 0.5rem;
 }
 
 /* <campus-chip-picker> / <date-chip-picker> are display:block custom elements;
@@ -1249,6 +1248,8 @@ body.info-open .header-nav-row {
   position: sticky;
   top: calc(var(--header-height, 84px) + 0.75rem);
   z-index: 10;
+
+  gap: 8px;
 }
 
 /* ── Skeleton loading states ──────────────────────────────────── */
@@ -1775,6 +1776,7 @@ are rendered as solid colors
 
     /* Not sticky on desktop — the results column scrolls on its own. */
     position: static;
+    gap: 1rem;
   }
 
   #available-classrooms-results {

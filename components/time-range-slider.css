@@ -1,8 +1,71 @@
 /* ── Time Range Slider ─────────────────────────────────────────────────────── */
 
+/* Glass panel around the slider — same material/stroke recipe as the campus /
+   date picker panels and .date-picker-container (see style.css :root
+   --glass-*). */
 .trs-wrapper {
+  position: relative;
   width: 100%;
-  padding: 0.25rem 0.75rem 0.5rem;
+  padding: 0.75rem 1rem 0.5rem;
+  border-radius: 22px;
+
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  backdrop-filter: blur(var(--glass-blur-sm));
+
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .date-picker-container::after */
+.trs-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .trs-wrapper {
+    background: color-mix(in srgb, var(--background-color-secondary) 95%, black);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .trs-wrapper {
+      background: color-mix(in srgb, var(--background-color-secondary) 95%, white);
+    }
+  }
+}
+
+/* Title row — icon + "Time", matching .cp-popup__title / .dcp-popup__title */
+.trs-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 0 0.25rem;
+
+  font-size: 16px;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  text-align: start;
+}
+
+.trs-title-icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .trs-bar-wrapper {

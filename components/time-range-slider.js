@@ -65,6 +65,14 @@ function buildSlider(fromInput, toInput) {
   const wrapper    = document.createElement('div');
   wrapper.className = 'trs-wrapper';
 
+  // Title row — same icon + word treatment as the campus / date picker panels.
+  const title = document.createElement('div');
+  title.className = 'trs-title';
+  title.setAttribute('aria-hidden', 'true');
+  title.innerHTML =
+    `<i class="hgi-stroke hgi-clock-01 trs-title-icon"></i>` +
+    `<span class="trs-title-text" data-i18n="timepicker.timeLabel">${t('timepicker.timeLabel')}</span>`;
+
   const barWrapper = document.createElement('div');
   barWrapper.className = 'trs-bar-wrapper';
 
@@ -113,7 +121,7 @@ function buildSlider(fromInput, toInput) {
 
   bar.append(range, fromHandle, toHandle);
   barWrapper.append(fromBadge, toBadge, bar, ticks);
-  wrapper.append(barWrapper);
+  wrapper.append(title, barWrapper);
 
   // ── Geometry helpers ──────────────────────────────────────────────────────
 

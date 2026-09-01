@@ -161,8 +161,7 @@
   "footer.whatsNew": "Cosa c'è di nuovo?",
   "footer.checkOnGitHub": "Vedi su GitHub",
   "footer.disclaimer5": "Non affiliato al Politecnico di Milano.",
-  "footer.versionInfo": "Versione 2.0.0-beta4",
-  "changelog.item1": "Ridisegnata la sezione dei risultati delle aule disponibili",
-  "changelog.item2": "Aggiunte le aule preferite",
-  "changelog.item3": "Rivisitato il materiale simil-vetro: ora risponde ai tocchi e ai gesti e sembra più vivo che mai"
+  "footer.versionInfo": "Versione 2.0.0-beta5",
+  "changelog.item1": "Ridisegnata la schermata di ricerca",
+  "changelog.item2": "Aggiunta la ricerca per lezione o esame"
 }

@@ -182,9 +182,8 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 2.0.0-beta4",
+  "footer.versionInfo": "Version 2.0.0-beta5",
 
-  "changelog.item1": "Redesigned the available classrooms results section",
-  "changelog.item2": "Added favourite classrooms",
-  "changelog.item3": "Tweaked the glass material: it now responds to taps and gestures and feels more alive than ever"
+  "changelog.item1": "Redesigned the search screen",
+  "changelog.item2": "Added search for lessons and exams"
 }

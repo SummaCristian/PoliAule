@@ -42,6 +42,11 @@ let debounce = null;
 let savedScrollPos = 0;
 
 function renderResults(query) {
+  _renderResults(query);
+  requestAnimationFrame(syncHeaderClearance);
+}
+
+function _renderResults(query) {
   const q = query.trim();
   resultsEl.innerHTML = '';
 
@@ -76,6 +81,16 @@ function renderResults(query) {
   requestAnimationFrame(() => setTimeout(() => grid.classList.add('appeared'), 400));
 }
 
+// Hide the header only once the results box has actually grown tall enough to
+// reach up behind it (body.search-covers-header, consumed by the mobile CSS).
+// opacity:0 on the header doesn't change its box, so this can't oscillate.
+function syncHeaderClearance() {
+  const header = document.querySelector('.header');
+  if (!header || !panel || !isOpen) return;
+  const covers = panel.getBoundingClientRect().top < header.getBoundingClientRect().bottom + 8;
+  document.body.classList.toggle('search-covers-header', covers);
+}
+
 // Mobile pins the search field just above the on-screen keyboard. iOS Safari
 // doesn't shrink the layout viewport for the keyboard, so `position: fixed;
 // bottom` alone would sit behind it — track visualViewport and expose the
@@ -85,6 +100,7 @@ function onViewportResize() {
   if (!vv) return;
   const kb = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
   overlay.style.setProperty('--search-kb', kb + 'px');
+  requestAnimationFrame(syncHeaderClearance);
 }
 
 function startViewportTracking() {
@@ -108,6 +124,7 @@ function conceal() {
   overlay.classList.remove('visible');
   overlay.setAttribute('hidden', '');
   document.body.classList.remove('search-overlay-open');
+  document.body.classList.remove('search-covers-header');
   stopViewportTracking();
   window.scrollTo(0, savedScrollPos);
 }
@@ -194,6 +211,20 @@ export function closeSearchOverlay() {
   }
 }
 
+// Drop the overlay with no transition of its own — for when the click that
+// dismisses it also navigates somewhere that runs its own transition (info
+// page, classroom detail), so the two don't fight.
+function dismissInstant() {
+  if (!isOpen) return;
+  isOpen = false;
+  clearTimeout(debounce);
+  input.blur();
+  const fab = fabEl();
+  if (fab) fab.style.viewTransitionName = '';
+  document.documentElement.classList.remove('search-vt');
+  conceal();
+}
+
 export function initSearchOverlay() {
   overlay = document.getElementById('search-overlay');
   if (!overlay) return;
@@ -221,6 +252,20 @@ export function initSearchOverlay() {
   // overlay out of the way so the card → page morph isn't behind the blur.
   resultsEl.addEventListener('click', (e) => {
     if (e.target.closest('[data-open-classroom]')) closeSearchOverlay();
+  });
+
+  // The header sits above the overlay (z-index), so its controls stay
+  // clickable while search is open. Any such click (info page, settings, …)
+  // should take the overlay down first — the destination runs its own
+  // transition. Capture phase so this beats the buttons' own handlers.
+  document.querySelector('.header')?.addEventListener('click', () => {
+    if (isOpen) dismissInstant();
+  }, true);
+
+  // Safety net: any other hash route opened while we're open takes it down too
+  // (isOpen is already false by here for the result-card path above).
+  window.addEventListener('hashchange', () => {
+    if (isOpen && location.hash) dismissInstant();
   });
 
   clearBtn.addEventListener('click', () => {

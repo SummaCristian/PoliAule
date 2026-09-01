@@ -31,6 +31,19 @@ body.search-overlay-open {
   overflow: hidden;
 }
 
+/* No scrim element — instead the tab behind just recedes. The class is toggled
+   inside the open/close view-transition callback, so the root cross-fade
+   animates this; the transition is the no-VT fallback. */
+.tab-content.visible,
+.footer {
+  transition: opacity 0.2s ease;
+}
+
+body.search-overlay-open .tab-content.visible,
+body.search-overlay-open .footer {
+  opacity: 0.4;
+}
+
 /* Mobile: the whole pill nav steps aside while the overlay is open — the
    search bar takes its spot at the bottom. (Desktop keeps the side rail —
    see the 600px block, where only the FAB is hidden.) */
@@ -49,7 +62,8 @@ html.search-vt .header-blur-layer,
 html.search-vt .bn-tabbar,
 html.search-vt .bn-search-btn,
 html.search-vt .search-overlay-header .search-bar-wrapper,
-html.search-vt .search-overlay-close {
+html.search-vt .search-overlay-close,
+html.search-vt .search-overlay-results {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
@@ -155,20 +169,51 @@ html.search-vt .bn-search-btn {
 
 /* ── Results ────────────────────────────────────────────────────────── */
 
+/* Results live in their own glass container rather than floating loose on
+   the page. */
 .search-overlay-results {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 0.5rem;
+
+  padding: 1.75rem; /* 28px all around */
+  border-radius: var(--radius-xl);
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
 }
 
+/* Nothing to show yet — collapse the container so it isn't an empty glass slab. */
 .search-overlay-results:empty {
   display: none;
 }
 
 .search-overlay-results .search-grid {
-  padding: 0.25rem;
+  padding: 0;
+}
+
+/* The classroom cards run large for this context on a phone — scale the grid
+   down a touch. (zoom keeps layout/hit-testing correct, unlike transform.) */
+@media (max-width: 599px) {
+  .search-overlay-results .search-grid--classroom {
+    zoom: 0.72;
+  }
+
+  /* Hide the app header on mobile only once the results box has actually
+     grown up behind it (toggled from search-overlay.js). */
+  body.search-overlay-open.search-covers-header .header {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  body.search-overlay-open .header {
+    transition: opacity 0.2s ease;
+  }
 }
 
 /* ── FAB ⇄ search-bar morph (View Transitions) ─────────────────────── */

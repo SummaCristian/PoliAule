@@ -904,7 +904,7 @@ class ClassroomDetail {
           <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}${queryTicksHtml}</div>
           <div class="detail-schedule-grid">
             <div class="detail-desktop-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
-            <div class="detail-schedule-labels-pill">${labelsHtml}</div>
+            <div class="detail-schedule-labels-pill liquid-glass">${labelsHtml}</div>
             <div class="detail-schedule-bars">
               <div class="detail-schedule-grid-lines">${gridLinesHtml}</div>
               ${rowsHtml}

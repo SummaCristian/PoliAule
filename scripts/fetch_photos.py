@@ -6,10 +6,11 @@ a short-lived signed token, then download the bytes from that URL. Both calls ne
 browser-like User-Agent or Polimi's WAF rejects them (same as fetch.py/fetch_opening_hours.py).
 
 To avoid re-uploading and re-purging 291 unchanged images every month, each photo's MD5 is
-compared against photos/manifest.json (restored from the previous run via actions/cache in
-the workflow). Only new/changed photos are written to disk; the workflow then only uploads
-and purges what's on disk, and this script always rewrites manifest.json so unchanged hashes
-carry forward to the next run.
+compared against photos/manifest.json (downloaded from R2 at the start of the workflow run,
+where it lives next to the photos as the single source of truth for what's uploaded; a
+7-day actions/cache eviction window can't outlast this monthly job). Only new/changed photos
+are written to disk; the workflow then only uploads and purges what's on disk, and this
+script always rewrites manifest.json so unchanged hashes carry forward to the next run.
 """
 
 import argparse

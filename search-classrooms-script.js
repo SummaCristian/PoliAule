@@ -1,19 +1,10 @@
 import { t, onLanguageSwitch } from './i18n.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { getClassroomStatusNow } from './available-rooms-script.js';
-import { fetchPhotoUrl } from './utils/photo.js';
+import { buildCardForClassroom } from './components/classroom-list.js';
 import { getApiBase } from './config.js';
 
 const supportsAnchor = CSS.supports('anchor-name: --a');
-
-const FEATURE_ICONS = {
-  4:   { icon: 'videocam',            key: 'features.videoProjector' },
-  5:   { icon: 'mic',                 key: 'features.radioMic' },
-  6:   { icon: 'blinds',              key: 'features.dimmable' },
-  7:   { icon: 'cable',               key: 'features.wiredDesk' },
-  142: { icon: 'electrical_services', key: 'features.powerOutlets' },
-  223: { icon: 'video_call',          key: 'features.videoconf' },
-};
 
 
 export let classroomsData = null;
@@ -52,62 +43,6 @@ function escapeHtml(str) {
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
   ));
 }
-
-// Wraps every case-insensitive occurrence of `query` in `text` with <mark>.
-// Returns plain escaped HTML when query is empty.
-function highlight(text, query) {
-  const safe = escapeHtml(text);
-  if (!query) return safe;
-  // Escape special regex chars, then allow spaces to also match dots (for x.y.z names queried as "x y z")
-  const safeQ = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '[\\s.]');
-  return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<mark>$1</mark>');
-}
-
-// ---------- PHOTO THUMBNAILS ----------
-
-// Limit simultaneous image downloads+decodes to avoid OOM crashes on iOS Safari
-// when large result sets (100+ cards) trigger many loads at once.
-const _photoSem = { slots: 4, queue: [] };
-function _acquirePhotoSlot() {
-  return new Promise(resolve => {
-    if (_photoSem.slots > 0) { _photoSem.slots--; resolve(); }
-    else _photoSem.queue.push(resolve);
-  });
-}
-function _releasePhotoSlot() {
-  const next = _photoSem.queue.shift();
-  if (next) next(); else _photoSem.slots++;
-}
-
-async function _loadCardPhoto(classroomId, img) {
-  const card = img.closest('.search-card--with-photo');
-  const url = await fetchPhotoUrl(classroomId);
-
-  // Gate the heavy image download + decode through the semaphore
-  await _acquirePhotoSlot();
-  try {
-    img.onerror = () => card?.classList.add('photo-failed');
-    img.src = url;
-    // Set --photo-url only after decode so the ::before pseudo-element reuses the
-    // already-decoded bitmap instead of triggering a second parallel decode.
-    await img.decode();
-    card?.style.setProperty('--photo-url', `url("${url}")`);
-    img.classList.add('loaded');
-  } catch {
-    card?.classList.add('photo-failed');
-  } finally {
-    _releasePhotoSlot();
-  }
-}
-
-const _photoObserver = new IntersectionObserver((entries) => {
-  for (const entry of entries) {
-    if (!entry.isIntersecting) continue;
-    _photoObserver.unobserve(entry.target);
-    const img = entry.target.querySelector('.search-card-photo');
-    if (img && entry.target.dataset.idfoto) _loadCardPhoto(entry.target.dataset.openClassroom, img);
-  }
-}, { rootMargin: '150px' });
 
 // ---------- CARD BUILDERS ----------
 
@@ -154,72 +89,12 @@ function buildBuildingCard(building) {
   return btn;
 }
 
-function buildClassroomCard(room, query = '') {
-  const featuresHtml = (room.features ?? [])
-    .filter(f => FEATURE_ICONS[f.id])
-    .map(f => `<span class="material-symbols-outlined search-card-feature-icon" data-feature-id="${f.id}" data-tooltip="${t(FEATURE_ICONS[f.id].key)}">${FEATURE_ICONS[f.id].icon}</span>`)
-    .join('');
-
+// Classroom cards reuse the exact card built for the Available tab
+// (components/classroom-list.js), rather than the bespoke search-card markup
+// used for campus/building cards above.
+function buildClassroomCard(room, building, query = '') {
   const status = getClassroomStatusNow(room.id);
-  let statusText = '';
-  if (status) {
-    const statusKeys = {
-      'free': 'status.free',
-      'occupied': 'status.occupied',
-      'free-soon': 'status.freeSoon',
-      'occupied-soon': 'status.occupiedSoon'
-    };
-    statusText = `<h4 class="classroom-status-txt ${status}">${t(statusKeys[status])}</h4>`;
-  }
-
-  const el = document.createElement('button');
-  el.dataset.openClassroom = room.id;
-
-  if (room.idfoto) {
-    el.className = 'search-card search-card--classroom search-card--with-photo';
-    el.dataset.idfoto = room.idfoto;
-    el.innerHTML = `
-      <img class="search-card-photo" alt="">
-      <div class="search-card-overlay"></div>
-      <div class="search-card-content">
-        <div class="search-card-photo-header">
-          <span class="search-card-name" title="${escapeHtml(room.name)}">${highlight(room.name, query)}</span>
-          <span class="search-card-arrow-button" aria-hidden="true">
-            <span class="material-symbols-outlined search-card-arrow">chevron_right</span>
-          </span>
-        </div>
-        <div class="search-card-photo-meta">
-          ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
-          ${room.campusName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusName, query)}</span>` : ''}
-        </div>
-        <div class="search-card-photo-bottom">
-          ${statusText ? `<div class="search-card-status search-card-status--photo">${statusText}</div>` : ''}
-          ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
-        </div>
-      </div>
-    `;
-    _photoObserver.observe(el);
-  } else {
-    el.className = 'search-card search-card--classroom';
-    el.innerHTML = `
-      <div class="search-card-header">
-        <div class="search-card-icon-wrapper">
-          <span class="material-symbols-outlined">meeting_room</span>
-        </div>
-        <div class="search-card-info">
-          <span class="search-card-name" title="${escapeHtml(room.name)}">${highlight(room.name, query)}</span>
-          <div class="search-card-status">
-            ${statusText}
-          </div>
-          ${room.buildingName ? `<span class="search-card-meta secondary search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">domain</span>${highlight(room.buildingName + (room.buildingAltName ? ' · ' + room.buildingAltName : ''), query)}</span>` : ''}
-          ${room.campusName ? `<span class="search-card-meta secondary small search-card-meta--with-icon"><span class="material-symbols-outlined search-card-meta-icon">location_on</span>${highlight(room.campusName, query)}</span>` : ''}
-        </div>
-      </div>
-      ${featuresHtml ? `<div class="search-card-features">${featuresHtml}</div>` : ''}
-    `;
-  }
-
-  return el;
+  return buildCardForClassroom({ ...room, status }, building, null, null, false, null, query, true);
 }
 
 // ---------- BREADCRUMB DROPDOWN ----------
@@ -491,7 +366,7 @@ function renderClassrooms(campus, building) {
 
   // Don't add context meta (building/campus) since breadcrumb already shows it
   building.classrooms.forEach(room => {
-    grid.appendChild(buildClassroomCard(room));
+    grid.appendChild(buildClassroomCard(room, building));
   });
 
   container.innerHTML = '';
@@ -541,7 +416,12 @@ function renderSearchResults(query) {
 
   const grid = document.createElement('div');
   grid.className = 'search-grid search-grid--classroom';
-  visible.forEach(room => grid.appendChild(buildClassroomCard(room, query.trim())));
+  // Results span multiple campuses, so fold the campus name into the building
+  // line (the card only has room for one line of building/location context).
+  visible.forEach(room => grid.appendChild(buildClassroomCard(room, {
+    name: room.buildingName,
+    altName: [room.buildingAltName, room.campusName].filter(Boolean).join(' · '),
+  }, query.trim())));
 
   container.appendChild(grid);
 
@@ -557,6 +437,27 @@ function renderSearchResults(query) {
       grid.classList.add('appeared');
     }, 400);
   });
+}
+
+// Jump straight to one building's classroom list — used by the "Available"
+// tab's building-header button. Matches by id when present, else by name.
+// Returns false if the campus/building can't be found in the static directory.
+export function navigateToBuilding(campusId, buildingId, buildingName) {
+  if (!classroomsData) return false;
+  const campus = classroomsData.find(c => c.id === campusId);
+  if (!campus) return false;
+  const building = campus.buildings.find(b =>
+    (buildingId != null && b.id === buildingId) || b.name === buildingName);
+  if (!building) return false;
+
+  const searchInput = document.getElementById('classroom-search-input');
+  if (searchInput && searchInput.value) {
+    searchInput.value = '';
+    isSearchActive = false;
+  }
+
+  renderClassrooms(campus, building);
+  return true;
 }
 
 function restoreHierarchy() {

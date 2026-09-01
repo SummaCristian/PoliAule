@@ -1,0 +1,108 @@
+/* Liquid-glass press / swipe-deform + "lit" hover, shared by every glass
+   surface that carries the `liquid-glass` class (see components/liquid-glass.js).
+
+   Motion goes on the independent `translate` / `scale` properties, not
+   `transform`, so it stacks on top of whatever `transform` an element already
+   uses (the back button's fixed `translateY(-50%)` centring, the search FAB's
+   activation-pop spring). Non-affine warp isn't possible in CSS — the "liquid"
+   read comes from translate + a directional squash-and-stretch, not a mesh.
+
+   Every surface claims its touch gestures (`touch-action: none`) so a drag
+   always deforms rather than scrolling the page. That's fine here because
+   they're all small targets — the pill is a short label, the popovers are
+   compact panels with no inner scroll — so there's always somewhere else to
+   start a page scroll, exactly as with the header buttons. */
+
+.liquid-glass {
+  translate: 0 0;
+  scale: 1;
+
+  /* The spring lives here; JS just writes target values frame to frame. */
+  transition:
+    translate var(--press-out-dur) var(--ease-spring),
+    scale var(--press-out-dur) var(--ease-spring),
+    filter 0.2s ease;
+
+  touch-action: none;
+
+  /* No long-press cruft: text selection, the iOS callout menu, tap flash. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Raised above every neighbour for the whole interaction — press, drag, AND
+   the spring-back (`.lg-settling`, removed by liquid-glass.js once the bounce
+   has finished) — so a still-deformed element never slips behind what it was
+   overlapping. z-index isn't reliably transitionable (auto isn't a number),
+   hence the JS-held class rather than a delayed transition. */
+.liquid-glass.lg-pressing,
+.liquid-glass.lg-dragging,
+.liquid-glass.lg-settling {
+  z-index: 9999;
+}
+
+/* Snap down fast the moment it's touched. */
+.liquid-glass.lg-pressing {
+  transition:
+    translate var(--press-in-dur) var(--press-in-ease),
+    scale var(--press-in-dur) var(--press-in-ease),
+    filter 0.2s ease;
+}
+
+/* Track the finger 1:1 while dragging — the spring only applies on release. */
+.liquid-glass.lg-dragging {
+  transition: translate 0s, scale 0s, filter 0.2s ease;
+}
+
+/* Hover / press "lit" state: a gentle lift plus a brightness + saturation
+   boost so the glass reads as catching more light, instead of the old
+   darken-the-tint hover. */
+@media (hover: hover) {
+  /* The popover is pinned to its trigger — brighten it on hover, but don't
+     lift it (a scale would drift it off the anchor). */
+  .liquid-glass:not(.popover):hover {
+    scale: 1.045;
+  }
+}
+
+.liquid-glass:hover,
+.liquid-glass.lg-pressing,
+.liquid-glass.lg-dragging {
+  filter: brightness(1.11) saturate(1.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass:hover {
+    scale: 1;
+  }
+}
+
+/* The popover animates its own scale-in on `transform`; keep that transition
+   alive alongside the deform's translate/scale (the generic .liquid-glass
+   rule above would otherwise replace it wholesale). */
+.popover.liquid-glass {
+  transition:
+    opacity 120ms ease-out,
+    transform 200ms cubic-bezier(0.34, 1.3, 0.64, 1),
+    translate var(--press-out-dur) var(--ease-spring),
+    scale var(--press-out-dur) var(--ease-spring),
+    filter 0.2s ease;
+}
+
+.popover.liquid-glass.lg-pressing {
+  transition:
+    opacity 120ms ease-out,
+    transform 200ms cubic-bezier(0.34, 1.3, 0.64, 1),
+    translate var(--press-in-dur) var(--press-in-ease),
+    scale var(--press-in-dur) var(--press-in-ease),
+    filter 0.2s ease;
+}
+
+.popover.liquid-glass.lg-dragging {
+  transition:
+    opacity 120ms ease-out,
+    transform 200ms cubic-bezier(0.34, 1.3, 0.64, 1),
+    translate 0s, scale 0s, filter 0.2s ease;
+}

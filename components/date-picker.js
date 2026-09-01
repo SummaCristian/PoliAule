@@ -1,6 +1,7 @@
 import { getLocale } from '../i18n.js';
-import { haptics, defaultPatterns } from './haptics.js';
+import { haptics } from './haptics.js';
 import { classroomsData } from '../available-rooms-script.js';
+import { createPillSelector } from './pill-selector.js';
 
 // Sets the allowed dates into the date picker,
 // and populates the custom UI and the hidden select with the available dates.
@@ -21,7 +22,6 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
 
   // --- Populate the date picker UI ---
   const container = document.querySelector('.date-picker-container');
-  const indicator = container.querySelector('.date-indicator');
 
   // Derive single-letter day names from the current locale (Sun=0 … Sat=6).
   const dayFormatter = new Intl.DateTimeFormat(getLocale(), { weekday: 'narrow' });
@@ -77,63 +77,27 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
     container.appendChild(el);
   });
 
-  // --- Indicator logic ---
+  // --- Indicator logic (drag/spring physics ported from bottom-nav.js's
+  // tab pill — see pill-selector.js) ---
   const elements = container.querySelectorAll('.date-element-container');
 
-  function placeIndicator(el) {
-    // Use offsetLeft/offsetWidth/offsetHeight instead of getBoundingClientRect()
-    // so that CSS transform animations on ancestor elements (e.g. the tab appear
-    // animation's scale(0.95)) don't skew the measurements.
-    const paddingLeft = parseFloat(getComputedStyle(container).paddingLeft);
-    const x = el.offsetLeft - paddingLeft;
-
-    // Store x as a CSS variable so the shake keyframe can reference it
-    indicator.style.setProperty('--indicator-x', `${x}px`);
-    indicator.style.width = `${el.offsetWidth}px`;
-    indicator.style.height = `${el.offsetHeight}px`;
-    indicator.style.transform = `translateX(${x}px)`;
-    indicator.style.opacity = '1';
-  }
-
-  function selectDateElement(el) {
-    if (el.classList.contains('date-skipped')) {
-      // Shake the indicator in place
-      indicator.classList.remove('shake');
-      void indicator.offsetWidth; // force reflow to restart animation
-      indicator.classList.add('shake');
-      indicator.addEventListener('animationend', () => indicator.classList.remove('shake'), { once: true });
+  const pillSelector = createPillSelector(container, {
+    onSelect(el) {
+      datePicker.value = el.dataset.date;
+      datePicker.dispatchEvent(new Event('change', { bubbles: true }));
 
       // Haptic feedback
-      haptics.trigger(defaultPatterns.error);
-
-      return;
-    }
-
-    elements.forEach(e => e.classList.remove('active'));
-    el.classList.add('active');
-
-    placeIndicator(el);
-
-    datePicker.value = el.dataset.date;
-    datePicker.dispatchEvent(new Event('change', { bubbles: true }));
-
-    // Haptic feedback
-    haptics.trigger([
-      { duration: 30 },
-      { delay: 60, duration: 40, intensity: 1 },
-    ])
-
-  }
-
-  elements.forEach(el => {
-    el.addEventListener('click', () => selectDateElement(el));
+      haptics.trigger([
+        { duration: 30 },
+        { delay: 60, duration: 40, intensity: 1 },
+      ]);
+    },
   });
-
 
   document.getElementById('today-indicator').addEventListener('click', () => {
     const todayStr = new Date().toISOString().slice(0, 10);
     const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
-    if (todayEl) selectDateElement(todayEl);
+    if (todayEl) pillSelector.selectElement(todayEl);
   });
 
   // Position the "Today" popover above the today cell
@@ -161,13 +125,23 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
   }
 
   function repositionAll() {
-    const activeEl = container.querySelector('.date-element-container.active');
-    if (activeEl) placeIndicator(activeEl);
+    pillSelector.refresh();
     positionTodayIndicator();
   }
 
   window.addEventListener('resize', repositionAll);
   new ResizeObserver(repositionAll).observe(container.closest('.date-picker'));
+
+  // Belt-and-suspenders alongside the ResizeObserver above: while the
+  // Available tab is hidden (content-visibility:hidden), any refresh() call
+  // — e.g. the auto-select pass below, which can run in the background
+  // while the user is still on the Campus tab — measures offsetTop/offsetLeft
+  // against an unlaid-out subtree and bakes wrong coordinates into the
+  // indicator's inline styles. ResizeObserver doesn't reliably fire when
+  // content-visibility flips back to visible in every browser, so also
+  // recompute explicitly once bottom-nav.js confirms this tab is visible.
+  document.getElementById('available-classrooms-container')
+    ?.addEventListener('tabvisible', repositionAll);
 
   // Apply initial hide-sundays state
   const hideSundaysContainer = container.closest('.date-picker');
@@ -183,12 +157,16 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
   // Wait for fonts to load to ensure accurate element measurements
   document.fonts.ready.then(() => {
     requestAnimationFrame(() => {
+      // Measure anchors only once fonts are loaded, same reasoning as the
+      // auto-select below: font swap can shift cell widths/positions.
+      pillSelector.refresh();
+
       // Auto-select preferred date (tomorrow when after 20:15) or first available
       const preferInitialDate = getPreferInitialDate();
       const preferred = preferInitialDate
         && [...elements].find(el => el.dataset.date === preferInitialDate && !el.classList.contains('date-skipped'));
       const firstAvailable = [...elements].find(el => !el.classList.contains('date-skipped'));
-      if (preferred || firstAvailable) selectDateElement(preferred || firstAvailable);
+      if (preferred || firstAvailable) pillSelector.selectElement(preferred || firstAvailable, { animate: false });
 
       positionTodayIndicator();
 

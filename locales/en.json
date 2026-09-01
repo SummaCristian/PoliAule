@@ -6,7 +6,12 @@
   "searchPlaceholder.title": "Search",
   "searchPlaceholder.subtitle": "Coming soon.",
 
-  "available.title": "Available Classrooms",
+  "favourites.title": "Favourites",
+  "favourites.empty": "Star a classroom to pin it here.",
+  "favourite.add": "Add to favourites",
+  "favourite.remove": "Remove from favourites",
+
+  "available.title": "Available",
   "available.subtitle": "Find which classrooms are available right now or at any other moment throughout the day.",
 
   "form.campusTitle": "Select Campus",
@@ -174,12 +179,9 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 2.0.0-beta3",
+  "footer.versionInfo": "Version 2.0.0-beta4",
 
-  "changelog.item1": "Redesigned the tab bar",
-  "changelog.item2": "Redesigned header bar",
-  "changelog.item3": "Redesigned the classroom cards",
-  "changelog.item4": "(Temporary) removed the per-building clustering and accordion-based list of available classrooms",
-  "changelog.item5": "Reduced the waiting time for the splash screen",
-  "changelog.item6": "Added occupation metadata popover: tap on an occupation in the timeline to see the reason for the occupation (class, exam, etc.) and the course name if available."
+  "changelog.item1": "Redesigned the available classrooms results section",
+  "changelog.item2": "Added favourite classrooms",
+  "changelog.item3": "Tweaked the glass material: it now responds to taps and gestures and feels more alive than ever"
 }

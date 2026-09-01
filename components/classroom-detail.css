@@ -9,11 +9,33 @@
   flex-direction: column;
   flex: 1;
   background: var(--background-color);
+}
 
-  /* Fallback fade-in for browsers without View Transitions */
-  opacity: 0;
-  transition: opacity 0.22s ease;
-  will-change: opacity;
+/* Fallback fade-in for browsers without View Transitions only. When VT IS
+   supported, `will-change: opacity` here promoted the overlay to its own
+   compositing layer, and Firefox (and Safari, until scrolled) then would not
+   composite the classroom photo into the header's backdrop-filter — the
+   progressive blur under the header on the detail page rendered blank. */
+@supports not (view-transition-name: none) {
+  #classroom-detail-overlay:not([hidden]) {
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    will-change: opacity;
+  }
+}
+
+/* Extend this element's own box up behind the header (cancelling the shift
+   with matching padding, so children keep their normal position) — matches
+   .detail-photo-container's negative margin below; only relevant when a
+   photo is actually there to fill that reserved space. A VT names and
+   snapshots THIS element for the card→page zoom, and that snapshot is
+   clipped to its own layout box; without this, the photo's negative margin
+   overflows past that box and is simply absent from the animating snapshot,
+   only appearing once the transition ends and the real, unclipped DOM
+   takes over. */
+#classroom-detail-overlay:not([hidden]):has(.detail-photo-container) {
+  margin-top: calc(-1 * var(--header-height, 84px) - 0.5rem);
+  padding-top: calc(var(--header-height, 84px) + 0.5rem);
 }
 
 #classroom-detail-overlay.visible {
@@ -58,6 +80,14 @@ body.detail-open .tab-content * {
   flex-shrink: 0;
 
   transition: box-shadow 0.4s ease, background-color 0.4s ease;
+
+  /* Cancel body-container's 0.5rem padding-top, then extend further up by
+     the header's own live-measured height (--header-height, kept in sync by
+     a ResizeObserver in script.js — it already grows for the 3.5rem
+     header-nav-row while the detail panel is open) so the photo shows
+     through the blurred header instead of sitting below it. Using the real
+     height instead of a fixed guess keeps this correct at every breakpoint. */
+  margin-top: calc(-1 * var(--header-height, 84px) - 0.5rem);
 }
 
 /* Mobile "Hero Header" style */
@@ -69,24 +99,21 @@ body.detail-open .tab-content * {
     height: 38vh;
     min-height: 280px;
     border-radius: 0;
-    /* Cancel body-container's 0.5rem padding-top, then extend further up
-       into the header-nav-row zone (3.5rem tall while the detail panel is
-       open) so the photo shows through it; the solid header-top-line-container
-       blocks it above. */
-    margin-top: -4.7rem;
     box-shadow: none;
   }
 }
 
-/* Desktop "Card" style */
+/* Desktop "Hero Header" style — full width like mobile, not a bounded card.
+   A bounded card here would make the card→page VT zoom read as "a giant
+   photo appeared" instead of "the page opened," since the photo would be
+   the only shape distinguishable from the (same-colored) page background. */
 @media (min-width: 600px) {
   .detail-photo-container {
-    width: 92%;
-    max-width: 720px;
-    aspect-ratio: 16 / 9;
-    border-radius: var(--radius-xl);
-    margin-top: 0.5rem;
-    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: none;
+    aspect-ratio: 21 / 9;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 
@@ -101,12 +128,6 @@ body.detail-open .tab-content * {
   }
 }
 
-@media (min-width: 600px) {
-  .detail-photo-container.loaded {
-    box-shadow: var(--shadow);
-  }
-}
-
 .detail-photo {
   display: block;
   width: 100%;
@@ -117,15 +138,11 @@ body.detail-open .tab-content * {
   opacity: 0;
   transform: scale(1.05);
   transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
-@media (max-width: 599px) {
-  .detail-photo {
-    /* Use a mask to fade out the image itself at the bottom to avoid "line" artifacts
-       between the image and the background blur layer. */
-    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
-  }
+  /* Use a mask to fade out the image itself at the bottom to avoid "line" artifacts
+     between the image and the background blur layer. */
+  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
 }
 
 .detail-photo.loaded {
@@ -139,53 +156,49 @@ body.detail-open .tab-content * {
 .detail-photo-gradient {
   position: absolute;
   inset: 0;
+  top: auto;
+  height: 180px;
   opacity: 0;
   transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
+
+  mask-image: linear-gradient(to top,
+    black 0%,
+    black 20%,
+    rgba(0, 0, 0, 0.5) 60%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to top,
+    black 0%,
+    black 20%,
+    rgba(0, 0, 0, 0.5) 60%,
+    transparent 100%
+  );
+
+  background: linear-gradient(to top,
+    var(--background-color) 0%,
+    color-mix(in srgb, var(--background-color) 80%, transparent) 30%,
+    transparent 100%
+  );
 }
 
 .detail-photo.loaded + .detail-photo-gradient {
   opacity: 1;
 }
 
-@media (max-width: 599px) {
-  .detail-photo-gradient {
-    top: auto;
-    height: 180px;
-
-    mask-image: linear-gradient(to top,
-      black 0%,
-      black 20%,
-      rgba(0, 0, 0, 0.5) 60%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(to top,
-      black 0%,
-      black 20%,
-      rgba(0, 0, 0, 0.5) 60%,
-      transparent 100%
-    );
-
-    background: linear-gradient(to top,
-      var(--background-color) 0%,
-      color-mix(in srgb, var(--background-color) 80%, transparent) 30%,
-      transparent 100%
-    );
-  }
-}
-
 /* ── Header ─────────────────────────────────────────────────────── */
 
-/* Back button lives in .header-nav-row, pinned to the left. It's taken out of
-   flow (absolute), so .header-nav-row has no in-flow content to size itself
-   against — align-items:center can't center an out-of-flow child against an
-   empty row. Center it explicitly instead, relative to the row's own box. */
+/* Back button is a sibling of <header> (not a child — see index.html) so it
+   stays out of the app-header VT snapshot. Position it fixed over the empty
+   .header-nav-row band: the header is sticky at top:11px, and the nav row is
+   the bottom 3.5rem of it, so its vertical centre sits at
+   11px + --header-height - 1.75rem. */
 #detail-back-btn {
-  position: absolute;
+  position: fixed;
   left: 1rem;
-  top: 50%;
+  top: calc(11px + var(--header-height, 84px) - 1.75rem);
   transform: translateY(-50%);
-  z-index: 10; /* Ensure it stays above the immersive photo */
+  z-index: 1002; /* above .header (z-index: 1000) and the immersive photo */
 }
 
 #detail-back-btn[hidden] {
@@ -370,7 +383,7 @@ body.detail-open .tab-content * {
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease;
   
   /* Ensure the button and its content adapt their internal rendering to the theme */
   color-scheme: light dark;
@@ -416,13 +429,10 @@ body.detail-open .tab-content * {
   }
 }
 
-.detail-back-btn:hover {
-  background: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
-}
-
-.detail-back-btn:active {
-  transform: scale(0.95);
-}
+/* Lit hover, press feedback and swipe-deform: shared .liquid-glass rules
+   (components/liquid-glass.{css,js}). The base rule keeps its own
+   `transform: translateY(-50%)` centring — .liquid-glass drives `translate`
+   and `scale` separately, so the two compose. */
 
 .detail-back-btn .material-symbols-outlined {
   font-size: var(--text-125);
@@ -525,16 +535,50 @@ body.detail-open .tab-content * {
 }
 
 .detail-feature-chip {
+  position: relative;
+
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
   padding: 0.4rem 0.875rem 0.4rem 0.625rem;
-  background: var(--background-color-secondary);
   border-radius: var(--radius-pill);
   font-size: var(--text-90);
   font-weight: 600;
   color: var(--text-color-primary);
-  box-shadow: var(--shadow);
+
+  /* Same glass material as .detail-back-btn — see the recipe note at
+     :root's --glass-tint definition in style.css. */
+  background: var(--glass-tint);
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .detail-back-btn::after. */
+.detail-feature-chip::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .detail-feature-chip {
+    background: color-mix(in srgb, var(--background-color-secondary) 95%, black);
+  }
 }
 
 .detail-feature-chip .material-symbols-outlined {
@@ -565,8 +609,11 @@ body.detail-open .tab-content * {
   margin-bottom: 0.25rem;
 }
 
-/* Left pill: vertical date picker clone */
+/* Left pill: vertical date picker clone. Same glass material as
+   .date-picker-container (components/date-picker.css) — see the recipe
+   note at :root's --glass-tint definition in style.css. */
 .detail-schedule-labels-pill {
+  position: relative;
   flex-shrink: 0;
   width: 3.75rem;
   display: flex;
@@ -574,11 +621,47 @@ body.detail-open .tab-content * {
   justify-content: space-between;
   gap: 0.75rem;
 
-  background-color: var(--background-color-secondary);
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
   border-radius: var(--radius-pill);
   padding: 0.75rem 0.5rem;
 
-  box-shadow: var(--bevel), var(--shadow);
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .date-picker-container::after
+   in date-picker.css. */
+.detail-schedule-labels-pill::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .detail-schedule-labels-pill {
+    background: color-mix(in srgb, var(--background-color-secondary) 95%, black);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .detail-schedule-labels-pill {
+      background: color-mix(in srgb, var(--background-color-secondary) 95%, white);
+    }
+  }
 }
 
 /* Override date-element-container sizing to fit the vertical pill */
@@ -1038,6 +1121,14 @@ body.detail-open .tab-content * {
     overflow: visible;
     position: relative;
     padding-top: 2rem; /* room for the today indicator pill above the picker */
+
+    /* The chip picker is draggable (see pill-selector.js); without this, a
+       touch-drag starting on/near a day's text triggers the browser's
+       native text-selection/callout instead — same fix as .date-picker in
+       date-picker.css / .bn-wrapper in bottom-nav.css. */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .detail-today-indicator {
@@ -1433,6 +1524,31 @@ body.detail-open .tab-content * {
   50% { opacity: 0.8; }
 }
 
+/* Detail-only header controls (back button, favourite toggle) scaling in/out
+   in step with the page morph. */
+
+/* Safari doesn't rasterize backdrop-filter into a ::view-transition snapshot —
+   it re-composites the blur live at the snapshot's original size, ignoring the
+   scale-in/out transform, so a stale blurred rectangle hangs in the header
+   while the button itself scales. Drop the blur on these controls for the
+   duration of their enter/exit VT (`header-ctl-vt` is toggled on <html> in
+   classroom-detail.js); the glass tint + stroke alone carry the ~0.3s move. */
+.header-ctl-vt #favourite-btn,
+.header-ctl-vt #detail-back-btn {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+@keyframes header-ctl-scale-in {
+  from { opacity: 0; transform: scale(0.3); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes header-ctl-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.3); }
+}
+
 /* ── Tabbar hidden state (when detail overlay is open) ───────────── */
 /* Targets .bn-wrapper (not .bn-tabbar) so the standalone search button
    and pill hide along with the tab group. */
@@ -1445,66 +1561,126 @@ body.detail-open .tab-content * {
 /* ── View Transition animation overrides ──────────────────────────── */
 
 @supports (view-transition-name: none) {
-  /* Suppress the CSS opacity fallback transition when VT is available */
-  #classroom-detail-overlay {
+  /* Suppress the CSS opacity fallback transition when VT is available.
+     Must match/exceed the base rule's specificity (#id:not([hidden]) = 1,1,0),
+     otherwise this loses the cascade and the fallback fade keeps running
+     underneath the VT snapshot, fighting it once the transition hands back
+     to the live DOM. */
+  #classroom-detail-overlay:not([hidden]) {
     transition: none;
   }
 
-  /* Shared element: classroom name morphs card → overlay title */
-  ::view-transition-group(classroom-detail-name) {
-    animation-duration: 0.35s;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* With fit-content on both elements the boxes are near-identical in size,
-     so the group is essentially a position-only morph with minimal scaling. */
-  ::view-transition-old(classroom-detail-name),
-  ::view-transition-new(classroom-detail-name) {
-    animation-duration: 0.35s;
-    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* Root cross-fade (for everything else: background, tabbar, etc.) */
+  /* Root cross-fade (for everything else: background, tabbar, etc. — the
+     header is pinned separately below, since backdrop-filter can't stay
+     "live" during a VT and freezing it into root would show the wrong,
+     pre-transition blur for most of the animation). */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation-duration: 0.25s;
   }
 
-  /* Shared element: classroom photo card → detail hero */
-  ::view-transition-group(classroom-photo) {
-    animation-duration: 0.45s;
+  /* The header is a constant translucent/blurred overlay, not changing
+     content — pin it with no animation so its frozen snapshot is just
+     whichever state (old or new) is already correct, instead of cross-fading
+     between "blurring the small card" and "blurring the full photo." Give it
+     a z-index above the card/photo group so it still paints on top, matching
+     its live stacking order. */
+  ::view-transition-group(app-header) {
+    animation: none;
+    z-index: 2;
+  }
+
+  /* Show ONLY the "old" header snapshot for the whole transition — no
+     cross-fade. The header is a constant translucent overlay (its fade/blur is
+     identical before and after), but Safari captures the "new" snapshot ~10%
+     short on the right: it's measured mid-layout, inside the busy
+     startViewTransition update callback, so its fade/blur paint stops partway
+     across while the snapshot box stays full width — leaving a strip of
+     un-faded photo down the right edge for the whole animation. The "old"
+     snapshot is taken from the settled page and is always full width. The only
+     thing "old" lacks is the back button / taller nav row, and that just
+     appears when the live DOM takes over at the end — imperceptible against
+     the 0.5s morph. */
+  ::view-transition-old(app-header) {
+    animation: none;
+    opacity: 1;
+  }
+
+  ::view-transition-new(app-header) {
+    animation: none;
+    opacity: 0;
+  }
+
+  /* Safari snapshots a position:sticky element's ::view-transition-group at its
+     unstuck flow position, so the header's new-state snapshot on detail-close
+     lands off-screen whenever the list was scrolled (it "disappears" mid-
+     animation, then snaps back). While .header-vt-fixed is set (see
+     classroom-detail.js _doClose) pin the header with position:fixed — which is
+     viewport-relative and captured correctly — and add a compensating
+     padding-top to .body-container so removing the header from flow shifts
+     nothing: its normal 1.5rem padding PLUS the header height it just lost.
+     (Getting this wrong by the 1rem difference vs. the base padding made the
+     page behind jump a few px up on open and back down on close.) Scoped
+     away from non-Safari (.no-safari), which doesn't have the bug. */
+  :root:not(.no-safari).header-vt-fixed .header {
+    position: fixed;
+  }
+
+  :root:not(.no-safari).header-vt-fixed .body-container {
+    padding-top: calc(1.5rem + var(--header-height, 0px));
+  }
+
+  /* Shared element: whole card morphs into the whole page (SwiftUI .zoom-style).
+     Group (size/position) and both snapshots (opacity cross-fade) share the same
+     duration/easing — a mismatch here makes the shorter one snap back to full
+     opacity before the transition ends, reading as a sudden pop instead of a fade. */
+  ::view-transition-group(classroom-detail-zoom) {
+    animation-duration: 0.5s;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden; /* clip both snapshots to the group's morphing bounds */
   }
 
-  /* Old snapshot (card photo): fade out quickly so it doesn't ghost behind the new image */
-  ::view-transition-old(classroom-photo) {
-    animation-duration: 0.2s;
-    animation-timing-function: ease-in;
-    object-fit: cover;
-    width: 100%;
-    height: 100%;
-  }
-
-  /* New snapshot (detail photo): match the group's spring so it reveals with the morph */
-  ::view-transition-new(classroom-photo) {
-    animation-duration: 0.45s;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    object-fit: cover;
-    width: 100%;
-    height: 100%;
-  }
-
-  /* Card meta elements (building info, arrow button): promoted to top layer during
-     close so they sit above the morphing photo (DOM order gives them higher z-index).
-     Fade in as the photo settles — no old state, so this is a reveal-only animation. */
-  ::view-transition-new(search-card-photo-meta),
-  ::view-transition-new(search-card-arrow-btn) {
-    animation-duration: 0.45s;
+  ::view-transition-old(classroom-detail-zoom),
+  ::view-transition-new(classroom-detail-zoom) {
+    animation-duration: 0.5s;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     animation-fill-mode: both;
   }
 
+  /* Detail-only header controls get their own VT groups (pulled out of the
+     pinned `app-header` snapshot) so they scale in on open / out on close,
+     on top of the header, in step with the page morph — instead of popping
+     when the live DOM takes over at the end. The `:only-child` guard keeps
+     the animation to genuine enter/exit: on a detail↔info move where the back
+     button stays put, both snapshots exist and it just morphs in place. */
+  #detail-back-btn { view-transition-name: detail-back-btn; }
+  #favourite-btn   { view-transition-name: favourite-btn; }
+
+  ::view-transition-group(detail-back-btn),
+  ::view-transition-group(favourite-btn) {
+    z-index: 3; /* above ::view-transition-group(app-header), which is 2 */
+  }
+
+  ::view-transition-new(detail-back-btn):only-child,
+  ::view-transition-new(favourite-btn):only-child {
+    animation: header-ctl-scale-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    transform-origin: center;
+  }
+
+  ::view-transition-old(detail-back-btn):only-child,
+  ::view-transition-old(favourite-btn):only-child {
+    animation: header-ctl-scale-out 0.2s ease-in both;
+    transform-origin: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-new(detail-back-btn):only-child,
+  ::view-transition-new(favourite-btn):only-child,
+  ::view-transition-old(detail-back-btn):only-child,
+  ::view-transition-old(favourite-btn):only-child {
+    animation: none;
+  }
 }
 
 @media (max-width: 599px) and (prefers-color-scheme: dark) {

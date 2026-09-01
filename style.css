@@ -132,6 +132,16 @@
   --shadow-groove: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-dim: 0 1px 2px rgba(0, 0, 0, 0.5);
 
+  /* Bouncy press feedback shared by the glass buttons (header, campus
+     picker, back button, search FAB). The moment a button is touched it
+     snaps down fast and linearly; on release it springs back with an
+     overshoot via the spring easing over a longer duration. */
+  --press-scale: 0.9;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --press-in-dur: 0.11s;
+  --press-in-ease: cubic-bezier(0.3, 0, 0.4, 1);
+  --press-out-dur: 0.5s;
+
   /* "Now" marker blue — fixed by design, doesn't react to theme (verified:
      no dark-mode override exists anywhere it's used). */
   --color-now: #2196f3;
@@ -228,6 +238,14 @@ html {
 
   overflow-x: hidden;
   overflow-y: auto;
+
+  /* Always reserve the scrollbar's width. Opening the classroom detail
+     collapses every .tab-content to height:0, which removes the page
+     scrollbar; closing it brings the scrollbar back. Without a stable
+     gutter that ~15px swing changes the content width, and grids sized
+     with repeat(auto-fill, ...) (Campus building page, Available results)
+     resolve to a different column count before vs. after the transition. */
+  scrollbar-gutter: stable;
 
   background-color: transparent;
 }
@@ -370,6 +388,13 @@ html:has(.splash-overlay) {
   .splash-loading-label,
   .splash-loading-label::after {
     animation: none;
+  }
+
+  /* Keep the press feedback, drop the springy overshoot. */
+  :root {
+    --ease-spring: ease;
+    --press-in-ease: ease;
+    --press-out-dur: 0.15s;
   }
 }
 
@@ -755,13 +780,10 @@ label {
 
   transition:
     background-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow 0.2s ease;
 
-  &:hover {
-    background: color-mix(in srgb, var(--text-color-primary) 12%, var(--glass-tint));
-    transform: scale(1.1);
-  }
+  /* Lit hover state, press feedback and the swipe-deform are all handled by
+     the shared .liquid-glass rules (components/liquid-glass.{css,js}). */
 }
 
 /* Outside 0.5px gradient stroke (Figma's "outside stroke") without
@@ -787,6 +809,34 @@ label {
   mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
 
   pointer-events: none;
+}
+
+/* Favourite toggle: only ever visible on the classroom detail page.
+   .header-button sets `display: flex`, which outranks the `hidden` attribute's
+   UA `display: none`, so visibility is driven from `body.detail-open` here
+   instead (the JS `hidden` toggle is kept as a harmless belt-and-braces). */
+#favourite-btn {
+  display: none;
+}
+
+body.detail-open #favourite-btn {
+  display: flex;
+}
+
+/* hgi-star outline by default, filled yellow star when the current classroom
+   is favourited (icon swapped in JS, see classroom-detail.js). */
+#favourite-btn .hgi-star {
+  font-size: 1.375rem;
+}
+
+#favourite-btn .star-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: block;
+}
+
+#favourite-btn.favourite-btn--active {
+  color: #f0b429;
 }
 
 .pulse-indicator {
@@ -972,7 +1022,9 @@ body.info-open .header-nav-row {
 
 /* Tab content */
 .body-container {
-  padding-top: 0.5rem;
+  /* Clears the header blur/fade layer's -2rem overhang so the first section's
+     title (e.g. Favourites) isn't blurred at the top. */
+  padding-top: 1.5rem;
   padding-bottom: var(--bottom-nav-height, 88px);
 
   flex: 1;
@@ -1012,7 +1064,17 @@ body.info-open .header-nav-row {
   display: flex;
   flex-direction: column;
 
-  animation: appear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* No `forwards`: with it, the frozen final keyframe leaves `filter:
+     blur(0)` / `transform: scale(1,1)` permanently applied as live
+     properties (not `none`) once the animation ends. Safari treats even a
+     no-op filter like that as an active filter root and refuses to
+     composite a *nested* backdrop-filter underneath it (e.g. the date
+     picker's lifted indicator blurring inside its already-blurred
+     container) — Firefox doesn't have this quirk. Nothing else here sets
+     filter/transform at rest, so dropping `forwards` reverts them to
+     `none` after the 0.3s animation completes, which is visually identical
+     but stops blocking descendants' own backdrop-filter in Safari. */
+  animation: appear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes appear {
@@ -1080,8 +1142,32 @@ body.info-open .header-nav-row {
 }
 
 .section-header-title {
-  font-size: var(--text-200);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  font-size: 18px;
   font-weight: bold;
+  /* Solid color + opacity, not rgba() alpha: Safari drops the alpha channel
+     of an inherited color on the HugeIcons ::before glyph (stacking context
+     from blur/view-transitions), so the icon rendered at full opacity while
+     the text was at 50%. opacity dims both identically. */
+  color: #000;
+  opacity: 0.5;
+}
+
+.section-header-title-icon {
+  flex: none;
+  font-size: 1em;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .section-header-title {
+    color: #fff;
+  }
 }
 
 .section-header-subtitle {
@@ -1208,11 +1294,18 @@ ul li::marker {
 
   padding: 12px 16px;
 
-  background: var(--background-color-secondary);
+  /* Same glass material as the tabbar/header-button — see the recipe note
+     at :root's --glass-tint definition. */
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-md));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md));
   color: var(--text-color-primary);
 
   border-radius: 12px;
-  box-shadow: var(--bevel), var(--shadow);
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
 
   opacity: 0;
   transform: scale(0.78) translateY(var(--popover-closed-ty, -6px));
@@ -1224,6 +1317,37 @@ ul li::marker {
     transform 200ms cubic-bezier(0.34, 1.3, 0.64, 1);
 
   will-change: opacity, transform;
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .detail-back-btn::after
+   in classroom-detail.css. */
+.popover::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .popover {
+    background: color-mix(in srgb, var(--background-color-secondary) 95%, black);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .popover {
+      background: color-mix(in srgb, var(--background-color-secondary) 95%, white);
+    }
+  }
 }
 
 @media (max-width: 600px) {
@@ -1244,8 +1368,29 @@ ul li::marker {
   width: 10px;
   height: 10px;
   background: inherit;
+  /* Matches the popover's own glass blur so the part of the triangle poking
+     out past the box reads as the same material rather than a flat chip of
+     color. (A `clip-path: path()` notch cut directly into the popover body
+     was tried instead — merging the two into one shape — but Chromium
+     doesn't reliably paint backdrop-filter/background into the part of a
+     clip-path that extends past the element's own box: a notch pointing
+     "after" the box painted solid, one pointing "before" it painted as a
+     near-invisible sliver. Not something to build the arrow's visibility on.) */
+  backdrop-filter: inherit;
+  -webkit-backdrop-filter: inherit;
   transform: rotate(45deg);
 }
+
+/* The arrow is a rotated square straddling the popover's edge — half of it
+   sits behind the popover box, half pokes out. Left unclipped, that inner
+   half paints flat (no highlight/stroke) on top of the glass box's own edge
+   decoration, showing as a seam. Clipping to just the outward-pointing
+   triangle removes it. popover.js sets data-side to match the box edge the
+   arrow is attached to (see `_updateAnchorOriginAndArrow`/`computeFloatingPosition`). */
+.arrow[data-side="top"] { clip-path: polygon(0 0, 100% 0, 0 100%); }
+.arrow[data-side="bottom"] { clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+.arrow[data-side="left"] { clip-path: polygon(0 0, 0 100%, 100% 100%); }
+.arrow[data-side="right"] { clip-path: polygon(0 0, 100% 0, 100% 100%); }
 
 @supports (anchor-name: --a) {
   .popover {
@@ -1567,27 +1712,37 @@ are rendered as solid colors
   #available-classrooms-container.visible {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto 1fr;
     column-gap: 1.5rem;
     /* Don't reset padding-left here — it's carrying the side rail's
        clearance from the .tab-content rule at the 600px breakpoint. */
     padding-right: 2rem;
   }
 
-  #available-classrooms-container>.section-header {
+  #available-classrooms-container>.favourites-section {
     grid-column: 1;
     grid-row: 1;
+    /* The carousel's non-shrinking cards give it a wide min-content size;
+       without this, Chrome lets that inflate the 1fr track and squeeze the
+       results column. (Firefox already treats the scroll container as
+       shrinkable.) */
+    min-width: 0;
+  }
+
+  #available-classrooms-container>.section-header {
+    grid-column: 1;
+    grid-row: 2;
   }
 
   #available-classrooms-form {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
     align-self: start;
   }
 
   #available-classrooms-results {
     grid-column: 2;
-    grid-row: 1 / span 2;
+    grid-row: 1 / span 3;
     align-self: start;
 
     position: sticky;

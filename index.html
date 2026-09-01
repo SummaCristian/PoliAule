@@ -34,6 +34,8 @@
   <link rel="stylesheet" href="./components/classroom-detail.css" />
   <link rel="stylesheet" href="./components/info-page.css" />
   <link rel="stylesheet" href="./components/bottom-nav.css" />
+  <link rel="stylesheet" href="./components/favourites.css" />
+  <link rel="stylesheet" href="./components/liquid-glass.css" />
 
   <!-- Nunito font -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -61,7 +63,7 @@
     <span class="splash-loading-label">Loading</span>
   </div>
 
-  <!-- NoScript Overlay (clients with JS disabled) -->
+<!-- NoScript Overlay (clients with JS disabled) -->
   <noscript>
     <div class="noscript-overlay">
       <p>PoliAule requires JavaScript to work. Please enable it in your browser settings.</p>
@@ -93,13 +95,20 @@
 
       <div class="header-buttons-container splash-header-item">
 
+        <!-- Favourite toggle (only shown on the classroom detail page).
+             Content is swapped between the hgi-star outline and a filled star
+             by classroomDetail._syncFavBtn(). -->
+        <button id="favourite-btn" class="header-button liquid-glass" hidden aria-label="Add to favourites">
+          <i class="hgi-stroke hgi-star" aria-hidden="true"></i>
+        </button>
+
         <!-- Data Fetch Indicator -->
-        <button class="header-button" data-popover="data-fetch-indicator-popover" data-popover-shift-padding="16">
+        <button class="header-button liquid-glass" data-popover="data-fetch-indicator-popover" data-popover-shift-padding="16">
           <div id="data-fetch-indicator" class="pulse-indicator"></div>
         </button>
 
         <!-- Settings button -->
-        <button id="settings-btn" class="header-button" aria-label="Settings">
+        <button id="settings-btn" class="header-button liquid-glass" aria-label="Settings">
           <span class="material-symbols-outlined">settings</span>
         </button>
 
@@ -108,15 +117,20 @@
 
     </div>
 
-    <div class="header-nav-row">
-      <button id="detail-back-btn" class="detail-back-btn" hidden>
-        <span class="material-symbols-outlined">chevron_left</span>
-        <span class="detail-back-label" data-i18n="search.back">Back</span>
-      </button>
-
-    </div>
+    <!-- Reserves the 3.5rem nav-row band in the header layout (see
+         .header-nav-row); the back button itself is a sibling of <header>
+         below, not a child, so Safari never bakes it into the
+         ::view-transition-old(app-header) snapshot (it doesn't subtract
+         descendants with their own view-transition-name), which left a
+         frozen ghost of the button during the close transition. -->
+    <div class="header-nav-row"></div>
 
   </header>
+
+  <button id="detail-back-btn" class="detail-back-btn liquid-glass" hidden>
+    <span class="material-symbols-outlined">chevron_left</span>
+    <span class="detail-back-label" data-i18n="search.back">Back</span>
+  </button>
 
 
   <!-- Rest of the UI under the header -->
@@ -125,48 +139,33 @@
     <!-- Available Classrooms -->
     <div id="available-classrooms-container" class="tab-content visible">
 
-      <div class="section-header">
-        <h3 class="section-header-title" data-i18n="available.title">Available Classrooms</h3>
-        <p class="section-header-subtitle secondary" data-i18n="available.subtitle">
-          Find which classrooms are available right now or at any other
-          moment throughout the day.
-        </p>
+      <!-- Favourite Classrooms -->
+      <div class="favourites-section">
+        <div class="section-header">
+          <h3 class="section-header-title"><i class="hgi-stroke hgi-star section-header-title-icon" aria-hidden="true"></i><span data-i18n="favourites.title">Favourites</span></h3>
+        </div>
+        <div id="favourites-carousel" class="favourites-carousel" hidden></div>
+        <p id="favourites-empty" class="favourites-empty secondary" data-i18n="favourites.empty">Star a classroom to pin it here.</p>
+      </div>
 
+      <div class="section-header">
+        <h3 class="section-header-title"><i class="hgi-stroke hgi-calendar-03 section-header-title-icon" aria-hidden="true"></i><span data-i18n="available.title">Available Classrooms</span></h3>
       </div>
 
       <form id="available-classrooms-form" class="form" data-loading>
 
         <!-- Campus Picker -->
-        <label for="campus-selection">
-          <div class="section-header">
-            <h4 class="subsection-header-title" data-i18n="form.campusTitle">Select Campus</h4>
-            <p class="subsection-header-subtitle secondary" data-i18n="form.campusSubtitle">
-              Where do you want to find an available classroom?
-            </p>
-          </div>
-        </label>
-
         <campus-chip-picker data-loading>
           <input type="hidden" id="campus-picker" name="campus" />
         </campus-chip-picker>
 
         <!-- Date picker -->
         <div class="date-picker">
-          <label for="date-picker">
-            <div class="section-header">
-              <h4 class="subsection-header-title" data-i18n="form.datetimeTitle">Select Date and Time</h4>
-              <p class="subsection-header-subtitle secondary" data-i18n="form.datetimeSubtitle">
-                For which day and between what times do you want to find an available classroom?
-              </p>
-            </div>
-          </label>
-
           <select id="date-picker" name="date" hidden></select>
 
           <div id="today-indicator" class="hidden" aria-hidden="true" data-i18n="datepicker.today">Today</div>
-          <div class="date-picker-container">
-            <div class="date-indicator"></div>
-          </div>
+          <div class="date-picker-container"></div>
+          <div class="date-indicator"></div>
           <div class="date-picker-skeleton" aria-hidden="true">
             <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
           </div>
@@ -179,40 +178,15 @@
         <div class="time-pickers-container">
           <!-- From time picker -->
           <div class="time-picker">
-            <label for="from-time-picker">
-              <div class="section-header">
-                <h4 class="subsection-header-title" data-i18n="form.fromTitle">From</h4>
-                <p class="subsection-header-subtitle secondary" data-i18n="form.fromSubtitle">
-                  From which time do you need a classroom?
-                </p>
-              </div>
-            </label>
-
             <input type="time" id="from-time-picker" name="from" min="07:15" max="20:15" />
           </div>
 
           <!-- To time picker -->
           <div class="time-picker">
-            <label for="to-time-picker">
-              <div class="section-header">
-                <h4 class="subsection-header-title" data-i18n="form.toTitle">To:</h4>
-                <p class="subsection-header-subtitle secondary" data-i18n="form.toSubtitle">
-                  Until which time do you need a classroom?
-                </p>
-              </div>
-            </label>
-
             <input type="time" id="to-time-picker" name="to" min="07:15" max="20:15" />
           </div>
 
         </div>
-
-        <!-- Submit button -->
-        <button class="button-primary" type="submit">
-          <span class="material-symbols-outlined">search</span>
-          <span data-i18n="form.findButton">Find classrooms</span>
-        </button>
-
       </form>
 
       <div id="available-classrooms-results" class="available-classrooms-container empty">
@@ -284,7 +258,7 @@
     <button class="transparent-button version-info-button" data-popover="version-info-popover">
       <label class="secondary" data-i18n="footer.versionInfo"></label>
     </button>
-    <div id="version-info-popover" class="popover">
+    <div id="version-info-popover" class="popover liquid-glass">
       <div class="arrow" data-arrow></div>
 
       <img src="/favicons/main/logo.png" class="changelog-logo" />
@@ -296,9 +270,6 @@
           <li data-i18n="changelog.item1"></li>
           <li data-i18n="changelog.item2"></li>
           <li data-i18n="changelog.item3"></li>
-          <li data-i18n="changelog.item4"></li>
-          <li data-i18n="changelog.item5"></li>
-          <li data-i18n="changelog.item6"></li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">
@@ -329,7 +300,7 @@
   </footer>
 
   <!-- Popovers that need viewport-relative positioning live here, outside any positioned ancestor -->
-  <div id="data-fetch-indicator-popover" class="popover">
+  <div id="data-fetch-indicator-popover" class="popover liquid-glass">
     <div class="arrow" data-arrow></div>
     <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
   </div>
@@ -348,7 +319,7 @@
       <div class="bn-pill-hit" id="bn-pill-hit"></div>
     </div>
 
-    <button class="bn-search-btn" id="bn-search-btn" type="button" aria-label="Search" data-target="search-placeholder-container">
+    <button class="bn-search-btn liquid-glass" id="bn-search-btn" type="button" aria-label="Search" data-target="search-placeholder-container">
       <span class="bn-search-btn-inner">
         <i class="hgi-stroke hgi-search-01"></i>
         <span class="bn-tab-label" data-i18n="tabs.search">Search</span>

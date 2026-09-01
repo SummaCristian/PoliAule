@@ -5,8 +5,12 @@
 
   "searchPlaceholder.title": "Cerca",
   "searchPlaceholder.subtitle": "Prossimamente.",
-  "available.title": "Aule Disponibili",
+  "available.title": "Aule Libere",
   "available.subtitle": "Trova quali aule sono disponibili adesso o in qualsiasi altro momento della giornata.",
+  "favourites.title": "Preferite",
+  "favourites.empty": "Aggiungi un'aula ai preferiti per ritrovarla qui.",
+  "favourite.add": "Aggiungi ai preferiti",
+  "favourite.remove": "Rimuovi dai preferiti",
   "form.campusTitle": "Seleziona Campus",
   "form.campusSubtitle": "Dove vuoi trovare un'aula disponibile?",
   "form.datetimeTitle": "Seleziona Data e Ora",
@@ -154,11 +158,8 @@
   "footer.whatsNew": "Cosa c'è di nuovo?",
   "footer.checkOnGitHub": "Vedi su GitHub",
   "footer.disclaimer5": "Non affiliato al Politecnico di Milano.",
-  "footer.versionInfo": "Versione 2.0.0-beta2",
-  "changelog.item1": "Ridisegnata la tab bar",
-  "changelog.item2": "Ridisegnata la barra superiore",
-  "changelog.item3": "Ridisegnate le schede delle aule",
-  "changelog.item4": "(Temporaneo) rimosso il raggruppamento per edificio e l'elenco ad accordion delle aule disponibili",
-  "changelog.item5": "Tempo di attesa ridotto per la schermata iniziale",
-  "changelog.item6": "Aggiunto popover con metadati sull'occupazione: tocca un'occupazione nella timeline per vedere la motivazione dell'occupazione (lezione, esame, ecc.) e il nome del corso se disponibile"
+  "footer.versionInfo": "Versione 2.0.0-beta4",
+  "changelog.item1": "Ridisegnata la sezione dei risultati delle aule disponibili",
+  "changelog.item2": "Aggiunte le aule preferite",
+  "changelog.item3": "Rivisitato il materiale simil-vetro: ora risponde ai tocchi e ai gesti e sembra più vivo che mai"
 }

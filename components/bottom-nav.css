@@ -65,6 +65,10 @@
   pointer-events: auto;
   position: relative;
 
+  /* A swipe anywhere on the bar — including the unselected tabs — belongs to
+     the pill, not the page behind it (same as .bn-pill-hit). */
+  touch-action: none;
+
   background: var(--glass-tint);
   padding: 4px;
   border-radius: var(--radius-pill);
@@ -116,6 +120,7 @@
   background: none;
   border: none;
   cursor: pointer;
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 
   color: var(--bn-tab-color);
@@ -341,7 +346,9 @@
    ============================================================ */
 @media (min-width: 600px) {
   .bn-wrapper {
-    top: calc(var(--header-height, 80px) + 20px);
+    /* +2rem clears the header blur/fade layer's overhang (.header-blur-layers
+       is inset:0 with bottom:-2rem), which would otherwise blur the rail's top. */
+    top: calc(var(--header-height, 80px) + 2rem + 20px);
     left: 20px;
     right: auto;
     bottom: auto;

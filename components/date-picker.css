@@ -4,6 +4,16 @@
   flex-direction: column;
 
   position: relative;
+
+  /* The pill is draggable (see pill-selector.js); without this, a
+     touch-drag starting on/near a day's text triggers the browser's native
+     text-selection/callout instead — same fix as .bn-wrapper in
+     bottom-nav.css. Scoped to the whole wrapper, not just
+     .date-picker-container, since the indicator/hit/active-row now live
+     here as its siblings. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .date-picker-container {
@@ -15,9 +25,21 @@
   max-width: 50rem;
   align-self: center;
 
-  background-color: var(--background-color-secondary);
+  /* A swipe anywhere on the row — including the unselected day cells —
+     belongs to the indicator, not the page behind it (same as
+     .date-indicator-hit). */
+  touch-action: none;
+
+  /* Same glass material as the tabbar/popover — see the recipe note at
+     :root's --glass-tint definition in style.css. No overflow:hidden here
+     (unlike a card): the sliding indicator and day cells never exceed the
+     pill's bounds on their own, same as .bn-tabbar, so nothing needs
+     clipping and the outer box-shadow/::after stroke below can live
+     directly on this element. */
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
   border-radius: var(--radius-pill);
-  overflow: hidden;
   padding: 0.5rem 0.75rem;
 
   margin-top: 2rem;
@@ -28,7 +50,41 @@
   opacity: 0; /* Hidden until JS populates dates */
   transition: opacity 0.4s ease;
 
-  box-shadow: var(--bevel), var(--shadow);
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .bn-tabbar::after in
+   bottom-nav.css. */
+.date-picker-container::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .date-picker-container {
+    background: color-mix(in srgb, var(--background-color-secondary) 95%, black);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .date-picker-container {
+      background: color-mix(in srgb, var(--background-color-secondary) 95%, white);
+    }
+  }
 }
 
 @media (max-width: 600px) {
@@ -37,31 +93,164 @@
   }
 }
 
+/* Real day cells live in here, not directly in .date-picker-container —
+   purely so pill-selector.js can clip a pill-shaped hole out of just this
+   layer while the indicator is lifted (see updateMask() there), without
+   touching the container's own glass background/stroke. Same reason
+   .bn-tabbar-items exists in bottom-nav.css. Created dynamically by
+   pill-selector.js. */
+.date-picker-items {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+/* Selector pill — literal copy of .bn-pill-outer/.bn-pill-inner in
+   bottom-nav.css: flat local-tint color at rest (from .date-indicator-inner
+   below — this element itself carries no background, same as
+   .bn-pill-outer), full glass treatment only while lifted (mid tap/drag,
+   per scale.value in pill-selector.js's render()). pill-selector.js also
+   moves this element (+ its hit overlay) out to be a sibling of
+   .date-picker-container, not a child — same as .bn-pill-outer/.bn-pill-hit
+   being siblings of .bn-tabbar rather than nested inside it. Nested, the
+   container's own ::after stroke (generated as its last child) would paint
+   above the indicator's lifted glass instead of below it. */
 .date-indicator {
   position: absolute;
   opacity: 0; /* Hidden until JS positions it */
-
-  background: rgba(218, 218, 218, 0.821);
   border-radius: var(--radius-pill);
+  transform-origin: center;
+  transition: box-shadow 0.15s ease;
 
+  /* Position/scale are driven every frame by the spring in
+     pill-selector.js (components/pill-selector.js), same as bottom-nav's
+     pill — a CSS transition here would fight the per-frame inline
+     transform instead of the spring easing it. */
+  will-change: transform;
+}
+
+.date-indicator.date-indicator--lifted {
   box-shadow:
-    var(--bevel),
-    0 1px 2px rgba(0, 0, 0, 0.12),
-    0 0 0 0.5px rgba(0, 0, 0, 0.04);
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
 
-  will-change: transform, width;
-  transition:
-    transform 0.3s cubic-bezier(0.34, 1.32, 0.64, 1),
-    width 0.3s cubic-bezier(0.34, 1.12, 0.64, 1);
+/* Outside 0.5px gradient stroke, only shown while lifted — same recipe as
+   .bn-pill-outer::after in bottom-nav.css. */
+.date-indicator::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 
   pointer-events: none;
 }
 
+.date-indicator.date-indicator--lifted::after {
+  opacity: var(--glass-stroke-opacity);
+}
+
+/* Inner layer: clips the active-row filmstrip to the indicator's own box,
+   and — literally as in .bn-pill-inner — carries the pill's actual color at
+   all times (not just while lifted), plus the extra blur/highlight/border
+   once lifted. */
+.date-indicator-inner {
+  /* Literal copy of .bn-wrapper's --bn-pill-* tokens in bottom-nav.css
+     (that pill's own material is deliberately subtler/more transparent
+     than this project's shared --glass-* tokens, so it isn't reused here) —
+     scoped to this element itself rather than a shared ancestor, since
+     pill-selector.js moves this whole subtree between different parents
+     (.date-picker vs. .detail-schedule-day-selector). */
+  --dp-pill-bg: rgba(0, 0, 0, 0.08);
+  --dp-pill-highlight: rgba(255, 255, 255, 0.3);
+  --dp-pill-border: rgba(255, 255, 255, 0.1);
+
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+
+  background: var(--dp-pill-bg);
+  transition: backdrop-filter 0.15s ease, -webkit-backdrop-filter 0.15s ease, box-shadow 0.15s ease;
+}
+
 @media (prefers-color-scheme: dark) {
-  .date-indicator {
-    background: #5e5e5e70;
-    box-shadow: var(--shadow-dim);
+  .date-indicator-inner {
+    --dp-pill-bg: rgba(255, 255, 255, 0.08);
+    --dp-pill-highlight: rgba(255, 255, 255, 0.08);
+    --dp-pill-border: rgba(255, 255, 255, 0.06);
   }
+}
+
+.date-indicator--lifted .date-indicator-inner {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+
+  box-shadow:
+    inset 0 1px 0 var(--dp-pill-highlight),
+    inset 0 0 0 1px var(--dp-pill-border);
+}
+
+/* One accent-colored duplicate of every cell, pinned to that cell's own
+   anchor (not flex-laid-out, so it can't drift a sub-pixel from the real
+   space-between layout it's shadowing) — see rebuildActiveRow() in
+   pill-selector.js. Only the sliver currently under the indicator's own
+   (possibly grown) footprint is ever visible, through the hole clipped
+   into .date-picker-items. Same role as .bn-active-row. */
+.date-indicator-active-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  pointer-events: none;
+}
+
+.date-indicator-cell {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+}
+
+.date-indicator-cell .date-day-of-week,
+.date-indicator-cell .date-number {
+  color: var(--text-color-accent);
+  font-weight: bold;
+  opacity: 1;
+}
+
+/* Invisible drag/tap target laid exactly over the indicator (see
+   pill-selector.js) — same role as .bn-pill-hit in bottom-nav.css. Needs
+   its own layer with pointer-events:auto since .date-indicator itself stays
+   pointer-events:none so it never blocks the cells under it. */
+.date-indicator-hit {
+  position: absolute;
+  z-index: 2;
+  /* above .date-element-container.active's z-index: 1 */
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  will-change: transform;
+}
+
+.date-indicator-hit:active {
+  cursor: grabbing;
 }
 
 @keyframes date-indicator-shake {
@@ -197,6 +386,18 @@
   transition: color 0.2s ease;
 
   -webkit-tap-highlight-color: transparent;
+
+  /* Every date cell — the Available tab, the details page's mobile chip
+     selector, and its desktop vertical labels pill all share this class —
+     shouldn't be selectable/long-press-copyable text, tap-to-select or
+     drag-to-select (see pill-selector.js) is the only interaction. Also
+     set on the picker wrappers themselves (.date-picker,
+     .detail-schedule-day-selector) since this alone wouldn't cover the
+     indicator/hit's own duplicate text layer, which lives outside this
+     element — see the notes there. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .date-element-container.date-skipped {
@@ -207,11 +408,13 @@
   display: none;
 }
 
-.date-element-container.active .date-day-of-week,
-.date-element-container.active .date-number {
-  color: var(--text-color-accent);
-  font-weight: bold;
-}
+/* No .active-based coloring here on purpose: unlike a plain class toggle,
+   the accent color for "the selected day" now comes solely from
+   .date-indicator-cell (see pill-selector.js) showing through the hole
+   masked into .date-picker-items — same as bottom-nav's tabbar, where only
+   the pill's own mask reveals the colored label, never a standalone class.
+   A parallel .active-class color here would show as a second, independently
+   stuck-in-place green cell while dragging the indicator elsewhere. */
 
 .date-day-of-week {
   font-weight: bold;

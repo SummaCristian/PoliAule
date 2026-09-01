@@ -5,7 +5,9 @@ import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
+import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { DynamicPopover } from './popover.js';
+import { createPillSelector } from './pill-selector.js';
 
 function minutesToTimeDisplay(minutes) {
   const d = new Date();
@@ -70,10 +72,11 @@ class ClassroomDetail {
     this._overlay = null;
     this._tabbar = null;
     this._backBtn = null;
+    this._favBtn = null;
     this._staticData = null;       // classrooms.json hierarchy
     this._flatIndex = null;       // Map<id, { classroom, building, campus }>
     this._slugIndex = null;       // Map<"campus-slug\x00name", { classroom, building, campus }>
-    this._pendingTrigger = null;   // { nameEl } stored by click handler before hashchange fires
+    this._pendingTrigger = null;   // { cardEl } stored by click handler before hashchange fires
     this._openTrigger = null;   // same, kept for reverse morph on close
     this._openedViaPushState = false;
     this._currentId = null;
@@ -89,6 +92,15 @@ class ClassroomDetail {
     this._overlay = document.getElementById('classroom-detail-overlay');
     this._tabbar = document.querySelector('.bn-wrapper');
     this._backBtn = document.getElementById('detail-back-btn');
+    this._favBtn = document.getElementById('favourite-btn');
+
+    this._favBtn?.addEventListener('click', () => {
+      if (this._currentId === null) return;
+      haptics.trigger(defaultPatterns.light);
+      toggleFavourite(this._currentId);
+      this._syncFavBtn();
+    });
+    window.addEventListener('favourites-changed', () => this._syncFavBtn());
 
     this._backBtn?.addEventListener('click', () => {
       haptics.trigger(defaultPatterns.light);
@@ -125,7 +137,29 @@ class ClassroomDetail {
       window.scrollTo(0, scrollY);
     });
 
-    // Click delegation — handles both available-tab info buttons and search-tab cards
+    // Press feedback — the card scales down while the pointer is held (mouse or
+    // touch), then springs into the open transition on release. The pressed
+    // class is deliberately NOT cleared on pointerup: the click handler below
+    // fires synchronously right after, starts the View Transition, and the VT
+    // captures the card's "old" snapshot while it's still scaled down, so the
+    // zoom animation is a continuous motion out of the pressed state rather than
+    // a jump back to full size first. A deferred cleanup (rAF) removes it after
+    // the click has had its turn; pointercancel/leave (drag-away, scroll) drop
+    // it immediately since no click will follow.
+    const clearPressed = () => {
+      document.querySelectorAll('.classroom-card--pressed')
+        .forEach((c) => c.classList.remove('classroom-card--pressed'));
+    };
+    document.addEventListener('pointerdown', (e) => {
+      const trigger = e.target.closest('[data-open-classroom]');
+      if (!trigger) return;
+      const card = trigger.closest('.classroom-card') ?? trigger;
+      card.classList.add('classroom-card--pressed');
+    });
+    document.addEventListener('pointerup', () => requestAnimationFrame(clearPressed));
+    document.addEventListener('pointercancel', clearPressed);
+
+    // Click delegation — handles classroom cards on both the available and campus tabs
     document.addEventListener('click', (e) => {
       const trigger = e.target.closest('[data-open-classroom]');
       if (!trigger) return;
@@ -134,10 +168,8 @@ class ClassroomDetail {
 
       const id = parseInt(trigger.dataset.openClassroom);
 
-      // Name and status elements that will morph into the overlay
-      const card = trigger.closest('.classroom-card, .search-card--classroom') ?? trigger;
-      const nameEl = card.querySelector('.classroom-name, .search-card-name') ?? null;
-      const statusEl = card.querySelector('.classroom-status-txt') ?? null;
+      // The whole card morphs into the whole page (VT shared element).
+      const card = trigger.closest('.classroom-card') ?? trigger;
 
       const queryDate = card.dataset.queryDate ?? null;
       const queryFrom = card.dataset.queryFrom ?? null;
@@ -146,10 +178,7 @@ class ClassroomDetail {
         ? { date: queryDate, from: queryFrom, to: queryTo }
         : null;
 
-      const featureIconEls = [...card.querySelectorAll('[data-feature-id]')];
-      const photoEl = card.querySelector('.search-card-photo.loaded, .classroom-card-photo.loaded') ?? null;
-
-      this._pendingTrigger = { nameEl, statusEl, queryContext, featureIconEls, photoEl };
+      this._pendingTrigger = { queryContext, cardEl: card };
       this._openedViaPushState = true;
       this._buildFlatIndex();
       const _entry = this._flatIndex?.get(id);
@@ -167,6 +196,20 @@ class ClassroomDetail {
         this._doOpen(id, null);
       }
     }
+  }
+
+  // Reflects the current classroom's favourite state on the header star button.
+  _syncFavBtn() {
+    if (!this._favBtn || this._currentId === null) return;
+    const fav = isFavourite(this._currentId);
+    // .favourite-btn--active tints the star yellow (see style.css); the outline
+    // hgi-star is swapped for a filled star SVG.
+    this._favBtn.classList.toggle('favourite-btn--active', fav);
+    this._favBtn.setAttribute('aria-label', t(fav ? 'favourite.remove' : 'favourite.add'));
+    this._favBtn.setAttribute('aria-pressed', fav ? 'true' : 'false');
+    this._favBtn.innerHTML = fav
+      ? FILLED_STAR_SVG
+      : '<i class="hgi-stroke hgi-star" aria-hidden="true"></i>';
   }
 
   // Called by script.js once occupancy data has finished loading in the
@@ -237,8 +280,6 @@ class ClassroomDetail {
     // Save scroll position for when we return
     this._savedScrollPos = window.scrollY;
 
-    const nameEl = pending?.nameEl ?? null;
-    const statusEl = pending?.statusEl ?? null;
     // When returning from info page, the back button is already visible and info's own
     // hero elements should morph into the header instead of touching the tabbar.
     const fromInfo = !!(this._backBtn && !this._backBtn.hidden);
@@ -259,77 +300,60 @@ class ClassroomDetail {
       if (!decoded) validPhotoUrl = null;
     }
 
-    const photoEl = pending?.photoEl ?? null;
-    const photoInDom = !!(photoEl && document.body.contains(photoEl));
-
-    let detailGradientEl = null;
-
     if (document.startViewTransition) {
-      // -- OLD state setup (before VT snapshot) --
-      if (fromInfo) {
-        // Info overlay is still visible — name its hero elements so they morph into the header.
-        infoPage._prepareReturnVT();
-      }
-      // Room name morphs into the overlay title.
-      // Strip search <mark> highlights first so the old-state snapshot is plain text.
-      if (nameEl) {
-        nameEl.querySelectorAll('mark').forEach(m => m.replaceWith(...m.childNodes));
-        nameEl.style.viewTransitionName = 'classroom-detail-name';
-      }
-      if (statusEl) statusEl.style.viewTransitionName = 'classroom-status';
-      // Feature icons morph into the detail feature chips
-      const featureIconEls = pending?.featureIconEls ?? [];
-      for (const el of featureIconEls) {
-        el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
-      }
-      // Card photo morphs into the detail photo (only if already loaded in the card).
-      // Strip mask and force settled opacity/scale so the snapshot is clean even if
-      // the card photo load-in transition is still mid-flight.
-      if (photoInDom && validPhotoUrl) {
-        photoEl.style.setProperty('mask-image', 'none');
-        photoEl.style.setProperty('-webkit-mask-image', 'none');
-        photoEl.style.setProperty('opacity', '1');
-        photoEl.style.setProperty('transform', 'none');
-        photoEl.style.viewTransitionName = 'classroom-photo';
-      }
+      // -- Whole-card zoom: one shared element, the card's own bounding box
+      // morphs straight into the full page (SwiftUI .zoom-style), rather than
+      // morphing name/photo/icons independently. --
+      const cardEl = pending?.cardEl ?? null;
+      const cardInDom = !!(cardEl && document.body.contains(cardEl));
+      // The header is a constant translucent/blurred overlay, not content that
+      // changes — it doesn't need to cross-fade with the rest of "root". But
+      // a VT freezes everything (including backdrop-filter's live sampling)
+      // into snapshots, so lumped into root it would show the frozen *old*
+      // blur (behind the small card) for the whole animation. Naming it
+      // separately, pinned with no animation, freezes its own snapshot at the
+      // already-correct *new* blur (behind the full-size photo) from frame one.
+      const headerEl = document.querySelector('.header');
+      if (headerEl) headerEl.style.viewTransitionName = 'app-header';
+      if (fromInfo) infoPage._prepareReturnVT();
+      if (cardInDom) cardEl.style.viewTransitionName = 'classroom-detail-zoom';
+
+      // Strip the glass blur off the scaling header controls for the transition
+      // (see .header-ctl-vt in classroom-detail.css).
+      document.documentElement.classList.add('header-ctl-vt');
 
       const vt = document.startViewTransition(() => {
-        // -- DOM changes (defines NEW state) --
         if (fromInfo) {
-          // Close info overlay and name header elements as NEW state morph targets.
           infoPage._applyReturnVT();
         } else if (this._tabbar) {
           this._tabbar.classList.add('detail-open');
         }
-        if (nameEl) nameEl.style.viewTransitionName = '';
-        if (statusEl) statusEl.style.viewTransitionName = '';
-        for (const el of featureIconEls) el.style.viewTransitionName = '';
-        if (photoInDom) photoEl.style.viewTransitionName = '';
+        if (cardInDom) cardEl.style.viewTransitionName = '';
 
-        // Show overlay and back button
         document.body.classList.add('detail-open');
+        // --header-height is normally kept live by a ResizeObserver (script.js),
+        // but that callback fires asynchronously — too late for the VT, which
+        // snapshots the "new" state synchronously right after this callback
+        // returns. Without this, the photo's margin-top (which reads that var)
+        // uses the stale, pre-detail-open header height for the whole
+        // animation, so the "tucked behind the header" look only snaps in
+        // once the transition ends and the real DOM/ResizeObserver catch up.
+        if (headerEl) {
+          document.documentElement.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
+        }
         this._overlay.removeAttribute('hidden');
         this._renderContent(entry);
         this._overlay.classList.add('visible');
         if (this._backBtn) this._backBtn.removeAttribute('hidden');
-
-        // Reset scroll for the new view
+        if (this._favBtn) { this._favBtn.removeAttribute('hidden'); this._syncFavBtn(); }
         window.scrollTo(0, 0);
 
-        const titleEl = this._overlay.querySelector('.detail-title');
-        const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
-        if (titleEl) titleEl.style.viewTransitionName = 'classroom-detail-name';
-        if (detailStatusEl) detailStatusEl.style.viewTransitionName = 'classroom-status';
-        // Morph icon → icon inside chip (same size both ends → clean positional move)
-        this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id]').forEach(chip => {
-          const iconEl = chip.querySelector('.material-symbols-outlined');
-          if (iconEl) iconEl.style.viewTransitionName = `classroom-feature-${chip.dataset.featureId}`;
-        });
+        // Force a synchronous layout flush before naming the overlay, so its
+        // flex-resolved size (siblings hidden via .detail-open above) is fully
+        // settled at the exact moment the VT captures the "new" state geometry.
+        void this._overlay.offsetHeight;
+        this._overlay.style.viewTransitionName = 'classroom-detail-zoom';
 
-        // If URL was cached and pre-decoded, stamp it onto the detail photo right now so
-        // the VT new-state snapshot captures it fully rendered (no async wait needed).
-        // Also strip the mobile mask-image so the snapshot is a clean rectangle —
-        // the same treatment applied to the card photo on the old-state side.
         if (validPhotoUrl) {
           const detailImg = this._overlay.querySelector('.detail-photo');
           const detailContainer = this._overlay.querySelector('.detail-photo-container');
@@ -337,47 +361,18 @@ class ClassroomDetail {
             detailImg.src = validPhotoUrl;
             detailImg.classList.add('loaded');
             detailContainer?.classList.add('loaded');
-            detailImg.style.setProperty('mask-image', 'none');
-            detailImg.style.setProperty('-webkit-mask-image', 'none');
-            detailImg.style.viewTransitionName = 'classroom-photo';
-          }
-          detailGradientEl = this._overlay.querySelector('.detail-photo-gradient');
-          if (detailGradientEl) {
-            detailGradientEl.style.opacity = '0';
           }
         }
 
-        // Load data immediately after rendering in the transition callback
         this._loadSchedule(id);
         if (hasPhoto) this._loadPhoto(id);
       });
 
       const cleanup = () => {
-        if (nameEl) nameEl.style.viewTransitionName = '';
-        if (statusEl) statusEl.style.viewTransitionName = '';
-        if (photoEl) {
-          photoEl.style.viewTransitionName = '';
-          photoEl.style.removeProperty('mask-image');
-          photoEl.style.removeProperty('-webkit-mask-image');
-          photoEl.style.removeProperty('opacity');
-          photoEl.style.removeProperty('transform');
-        }
-        this._overlay.querySelector('.detail-title')
-          ?.style.setProperty('view-transition-name', '');
-        this._overlay.querySelector('.detail-title-row .classroom-status-txt')
-          ?.style.setProperty('view-transition-name', '');
-        const detailImgEl = this._overlay.querySelector('.detail-photo');
-        if (detailImgEl) {
-          detailImgEl.style.setProperty('view-transition-name', '');
-          detailImgEl.style.removeProperty('mask-image');
-          detailImgEl.style.removeProperty('-webkit-mask-image');
-        }
-        if (detailGradientEl) {
-          detailGradientEl.style.removeProperty('opacity');
-        }
-        this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
-          el.style.viewTransitionName = '';
-        });
+        this._overlay.style.viewTransitionName = '';
+        if (cardEl) cardEl.style.viewTransitionName = '';
+        if (headerEl) headerEl.style.viewTransitionName = '';
+        document.documentElement.classList.remove('header-ctl-vt');
         if (fromInfo) infoPage._cleanupReturnVT();
       };
       vt.finished.then(cleanup).catch(cleanup);
@@ -402,6 +397,7 @@ class ClassroomDetail {
         }
       }
       if (this._backBtn) this._backBtn.removeAttribute('hidden');
+      if (this._favBtn) { this._favBtn.removeAttribute('hidden'); this._syncFavBtn(); }
       requestAnimationFrame(() => {
         this._overlay.classList.add('visible');
         window.scrollTo(0, 0);
@@ -420,68 +416,40 @@ class ClassroomDetail {
 
     this._currentId = null;
 
-    const nameEl = this._openTrigger?.nameEl ?? null;
-    const statusEl = this._openTrigger?.statusEl ?? null;
-    const titleEl = this._overlay.querySelector('.detail-title');
-    const detailStatusEl = this._overlay.querySelector('.detail-title-row .classroom-status-txt');
-    const nameInDom = nameEl && document.body.contains(nameEl);
-    const statusInDom = statusEl && document.body.contains(statusEl);
-    const featureIconEls = (this._openTrigger?.featureIconEls ?? [])
-      .filter(el => document.body.contains(el));
-
-    const photoEl = this._openTrigger?.photoEl ?? null;
-    const photoInDom = !!(photoEl && document.body.contains(photoEl));
-    // content-visibility: auto skips rendering off-screen cards, which would make
-    // the VT new-state snapshot of the card photo blank. Force it visible here so
-    // the card's subtree is rendered when the VT captures it after scrollTo().
-    const photoCard = photoEl?.closest('.search-card--with-photo') ?? null;
-    const detailImg = this._overlay.querySelector('.detail-photo');
-    const detailImgLoaded = detailImg?.classList.contains('loaded');
-    let timelineEl = null;
-    let cardOverlayEl = null;
-    let photoMetaEl = null;
-    let arrowBtnEl = null;
+    const cardEl = this._openTrigger?.cardEl ?? null;
+    const cardInDom = !!(cardEl && document.body.contains(cardEl));
+    const headerEl = document.querySelector('.header');
 
     const cleanup = () => {
       this._overlay.innerHTML = '';
       this._openTrigger = null;
       this._queryContext = null;
-      if (nameEl) nameEl.style.viewTransitionName = '';
-      if (statusEl) statusEl.style.viewTransitionName = '';
-      for (const el of featureIconEls) el.style.viewTransitionName = '';
-      if (photoEl) {
-        photoEl.style.viewTransitionName = '';
-        photoEl.style.removeProperty('mask-image');
-        photoEl.style.removeProperty('-webkit-mask-image');
+      this._overlay.style.viewTransitionName = '';
+      if (headerEl) headerEl.style.viewTransitionName = '';
+      document.documentElement.classList.remove('header-vt-fixed');
+      document.documentElement.classList.remove('header-ctl-vt');
+      if (cardEl) {
+        cardEl.style.viewTransitionName = '';
+        cardEl.style.removeProperty('content-visibility');
       }
-      if (photoMetaEl) photoMetaEl.style.viewTransitionName = '';
-      if (arrowBtnEl) arrowBtnEl.style.viewTransitionName = '';
-      if (photoCard) photoCard.style.removeProperty('content-visibility');
     };
 
     if (document.startViewTransition) {
-      if (photoCard) photoCard.style.contentVisibility = 'visible';
+      // content-visibility: auto skips rendering off-screen cards, which would make
+      // the VT new-state snapshot blank. Force it visible here so the card's
+      // subtree is rendered when the VT captures it after scrollTo().
+      if (cardInDom) cardEl.style.contentVisibility = 'visible';
 
-      // -- OLD state setup --
-      if (titleEl && nameInDom) titleEl.style.viewTransitionName = 'classroom-detail-name';
-      if (detailStatusEl && statusInDom) detailStatusEl.style.viewTransitionName = 'classroom-status';
-      // Chip icons are the OLD state sources
-      this._overlay.querySelectorAll('.detail-feature-chip[data-feature-id] .material-symbols-outlined').forEach(el => {
-        const fid = el.closest('[data-feature-id]').dataset.featureId;
-        el.style.viewTransitionName = `classroom-feature-${fid}`;
-      });
-      // Detail photo is the OLD state source.
-      // Strip its mobile mask-image so the old-state snapshot is a clean rectangle,
-      // and strip the card photo mask for a clean new-state snapshot.
-      if (detailImgLoaded) {
-        detailImg.style.setProperty('mask-image', 'none');
-        detailImg.style.setProperty('-webkit-mask-image', 'none');
-        detailImg.style.viewTransitionName = 'classroom-photo';
-      }
-      if (photoInDom && detailImgLoaded) {
-        photoEl.style.setProperty('mask-image', 'none');
-        photoEl.style.setProperty('-webkit-mask-image', 'none');
-      }
+      // See _doOpen: the header is pinned as its own group so its frozen
+      // snapshot always shows the already-correct blur, instead of being
+      // lumped into root and frozen mid-way through the wrong state.
+      if (headerEl) headerEl.style.viewTransitionName = 'app-header';
+
+      this._overlay.style.viewTransitionName = 'classroom-detail-zoom';
+
+      // Strip the glass blur off the scaling header controls for the transition
+      // (see .header-ctl-vt in classroom-detail.css).
+      document.documentElement.classList.add('header-ctl-vt');
 
       const vt = document.startViewTransition(() => {
         // -- DOM changes (defines NEW state) --
@@ -491,85 +459,41 @@ class ClassroomDetail {
         this._overlay.setAttribute('hidden', '');
         this._overlay.classList.remove('visible');
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
-        if (detailImg) detailImg.style.viewTransitionName = '';
+        if (this._favBtn) this._favBtn.setAttribute('hidden', '');
+        this._overlay.style.viewTransitionName = '';
+        if (headerEl) {
+          document.documentElement.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
+          // Safari captures a position:sticky element's ::view-transition-group at
+          // its unstuck flow position, so this new-state snapshot of the header
+          // would land off-screen whenever the list was scrolled. Pin it with
+          // position:fixed (viewport-relative, captured correctly) for the
+          // duration of this transition; the matching CSS gives .body-container a
+          // compensating padding-top so nothing shifts. Cleared in cleanup().
+          document.documentElement.classList.add('header-vt-fixed');
+        }
 
         // Restore the tabbar (plain fade, no shared element — it no longer sits in the header)
         if (this._tabbar) this._tabbar.classList.remove('detail-open');
 
-        // Room name morphs back too
-        if (nameInDom) nameEl.style.viewTransitionName = 'classroom-detail-name';
-        if (statusInDom) statusEl.style.viewTransitionName = 'classroom-status';
-        // Card icons are the NEW state destinations
-        for (const el of featureIconEls) {
-          el.style.viewTransitionName = `classroom-feature-${el.dataset.featureId}`;
-        }
-        // Card photo is the NEW state destination (mask already stripped above)
-        if (photoInDom && detailImgLoaded) {
-          photoEl.style.viewTransitionName = 'classroom-photo';
-          const photoCard = photoEl.closest('.classroom-card--with-photo, .search-card--with-photo');
-          timelineEl   = photoCard?.querySelector('.classroom-timeline') ?? null;
-          cardOverlayEl = photoCard?.querySelector('.classroom-card-overlay, .search-card-overlay') ?? null;
-          if (cardOverlayEl) cardOverlayEl.style.opacity = '0';
-          if (timelineEl) {
-            timelineEl.style.opacity = '0';
-            timelineEl.style.transform = 'translateY(10px)';
-          }
-          // Promote these unnamed card elements into the VT top layer so they sit
-          // above the morphing photo (DOM order gives them higher z-index).
-          // Without this they stay in normal flow, below the top layer, and appear
-          // to "jump" on top only when the VT ends.
-          photoMetaEl = photoCard?.querySelector('.search-card-photo-meta') ?? null;
-          arrowBtnEl  = photoCard?.querySelector('.search-card-arrow-button') ?? null;
-          if (photoMetaEl) photoMetaEl.style.viewTransitionName = 'search-card-photo-meta';
-          if (arrowBtnEl)  arrowBtnEl.style.viewTransitionName  = 'search-card-arrow-btn';
-        }
-
         // Restore scroll position so VT can morph back to the correct spot
         window.scrollTo(0, this._savedScrollPos);
-      });
 
-      const OVERLAY_MS  = 220;
-      const TIMELINE_MS = 400;
-
-      vt.finished.then(() => {
-        cleanup();
-        requestAnimationFrame(() => {
-          // 1. Fade the card overlay in
-          if (cardOverlayEl) {
-            cardOverlayEl.style.transition = `opacity ${OVERLAY_MS}ms ease-in`;
-            cardOverlayEl.style.removeProperty('opacity');
-          }
-          // 2. After overlay is visible, slide + fade the timeline in
-          setTimeout(() => {
-            if (timelineEl) {
-              timelineEl.style.transition =
-                `opacity ${TIMELINE_MS}ms ease-out, transform ${TIMELINE_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`;
-              timelineEl.style.removeProperty('opacity');
-              timelineEl.style.removeProperty('transform');
-              setTimeout(() => {
-                timelineEl.style.removeProperty('transition');
-              }, TIMELINE_MS + 50);
-            }
-            if (cardOverlayEl) setTimeout(() => cardOverlayEl.style.removeProperty('transition'), OVERLAY_MS + 50);
-          }, OVERLAY_MS);
-        });
-      }).catch(() => {
-        cleanup();
-        if (cardOverlayEl) {
-          cardOverlayEl.style.removeProperty('opacity');
-          cardOverlayEl.style.removeProperty('transition');
-        }
-        if (timelineEl) {
-          timelineEl.style.removeProperty('opacity');
-          timelineEl.style.removeProperty('transform');
-          timelineEl.style.removeProperty('transition');
+        // Force a synchronous layout flush before naming the card, so its
+        // resolved position/size (list re-scrolled above) is fully settled at
+        // the exact moment the VT captures the "new" state geometry.
+        if (cardInDom) {
+          void cardEl.offsetHeight;
+          cardEl.style.viewTransitionName = 'classroom-detail-zoom';
         }
       });
+
+      vt.finished.then(cleanup).catch(cleanup);
     } else {
       // Fallback: fade out overlay, swap back button for tabbar without animation
       this._overlay.classList.remove('visible');
       if (this._tabbar) this._tabbar.classList.remove('detail-open');
       if (this._backBtn) this._backBtn.setAttribute('hidden', '');
+      if (this._favBtn) this._favBtn.setAttribute('hidden', '');
       const hide = () => {
         document.body.classList.remove('detail-open');
         this._overlay.setAttribute('hidden', '');
@@ -624,7 +548,7 @@ class ClassroomDetail {
       .map(({ id }) => {
         const { icon, key } = FEATURE_ICONS[id];
         return `
-          <div class="detail-feature-chip" data-feature-id="${id}">
+          <div class="detail-feature-chip liquid-glass" data-feature-id="${id}">
             <span class="material-symbols-outlined">${icon}</span>
             <span>${t(key)}</span>
           </div>`;
@@ -709,30 +633,6 @@ class ClassroomDetail {
       if (classroom.idfoto) this._loadPhoto(classroom.id);
     });
 
-    // 3D tilt on desktop photo
-    const photoContainer = this._overlay.querySelector('.detail-photo-container');
-    if (photoContainer) {
-      const wideEnough = window.matchMedia('(min-width: 600px)');
-
-      photoContainer.addEventListener('pointermove', (e) => {
-        if (e.pointerType !== 'mouse' || !wideEnough.matches) return;
-        const rect = photoContainer.getBoundingClientRect();
-        const dx = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
-        const dy = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
-        const tiltX = -dy * 5;
-        const tiltY =  dx * 5;
-        photoContainer.style.transition = 'transform 0.08s ease-out, box-shadow 0.08s ease-out';
-        photoContainer.style.transform  = `perspective(900px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.02)`;
-        photoContainer.style.boxShadow  = '0 24px 64px rgba(0,0,0,0.28)';
-      });
-
-      photoContainer.addEventListener('pointerleave', (e) => {
-        if (e.pointerType !== 'mouse') return;
-        photoContainer.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease';
-        photoContainer.style.transform  = '';
-        photoContainer.style.boxShadow  = '';
-      });
-    }
   }
 
   // ---------- RENDER: HERO PHOTO ----------
@@ -741,10 +641,10 @@ class ClassroomDetail {
     if (this._currentId !== classroomId) return;
 
     try {
-      // Step 1: Resolve the photo URL (cached after first fetch; may also be pre-warmed by card thumbnails).
-      const url = await fetchPhotoUrl(classroomId);
-
-      if (this._currentId !== classroomId) return;
+      // The photo URL is a plain, stable route (/v1/photos/:id). Once it's been
+      // resolved for this room this session (an earlier open, or a card thumbnail),
+      // it sits in photoUrlCache and its bytes are almost certainly in the HTTP cache.
+      const cachedUrl = photoUrlCache.get(classroomId);
 
       // Ensure we have a container for the photo (it might have been removed on previous error)
       let container = this._overlay.querySelector('.detail-photo-container');
@@ -759,13 +659,29 @@ class ClassroomDetail {
       const img = container?.querySelector('.detail-photo');
       if (!img) return;
 
-      // Already stamped by the ViewTransition (cached URL path) — nothing to do.
+      // Already revealed (by the ViewTransition, or an earlier call) — nothing to do.
       if (img.classList.contains('loaded')) return;
 
-      img.classList.remove('loaded');
-      container.classList.remove('loaded');
+      if (cachedUrl) {
+        // This <img> is fresh from a full re-render (occupancy refresh, language
+        // switch) that dropped the previous element and its decoded bitmap. Going
+        // through the async decode path below would leave it at opacity:0 for a
+        // frame and then replay the 0.6s fade/zoom intro on a photo that never
+        // changed — the "blink". Stamp src + `loaded` synchronously (same task as
+        // the innerHTML that created it, so it's painted only once, already
+        // revealed). onerror still culls a genuinely broken URL (stale idfoto).
+        img.onerror = () => { if (this._currentId === classroomId) container?.remove(); };
+        img.classList.add('loaded');
+        container.classList.add('loaded');
+        img.src = cachedUrl;
+        return;
+      }
 
-      // Step 2: load and decode, then reveal.
+      // First time we've needed this room's photo this session — resolve, load,
+      // decode, then reveal with the intro transition.
+      const url = await fetchPhotoUrl(classroomId);
+      if (this._currentId !== classroomId) return;
+
       img.src = url;
       img.decode().then(() => {
         if (this._currentId !== classroomId) return;
@@ -980,22 +896,22 @@ class ClassroomDetail {
         <div class="detail-schedule-day-selector">
           <div class="detail-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
           <div class="date-picker-container detail-schedule-picker">
-            <div class="date-indicator"></div>
             ${selectorItemsHtml}
           </div>
+          <div class="date-indicator"></div>
         </div>
         <div class="detail-schedule-inner">
           <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}${queryTicksHtml}</div>
           <div class="detail-schedule-grid">
             <div class="detail-desktop-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
-            <div class="detail-schedule-labels-pill">${labelsHtml}</div>
+            <div class="detail-schedule-labels-pill liquid-glass">${labelsHtml}</div>
             <div class="detail-schedule-bars">
               <div class="detail-schedule-grid-lines">${gridLinesHtml}</div>
               ${rowsHtml}
             </div>
           </div>
         </div>
-        <div id="detail-timeline-popover" class="popover timeline-occupation-popover" role="tooltip">
+        <div id="detail-timeline-popover" class="popover timeline-occupation-popover liquid-glass" role="tooltip">
           <div class="arrow" data-arrow></div>
           <div class="timeline-popover-body"></div>
         </div>
@@ -1016,51 +932,32 @@ class ClassroomDetail {
         });
       }, 60_000);
 
-      // --- Mobile day selector interaction ---
+      // --- Mobile day selector interaction (drag/spring physics ported
+      // from bottom-nav.js's tab pill — see pill-selector.js) ---
       const pickerContainer = container.querySelector('.detail-schedule-picker');
-      const indicatorEl = pickerContainer.querySelector('.date-indicator');
       const todayIndicatorEl = container.querySelector('.detail-today-indicator');
       const gridEl = container.querySelector('.detail-schedule-bars');
       const rowEls = gridEl.querySelectorAll('.detail-schedule-row');
 
-      function placeSelectorIndicator(chipEl) {
-        const paddingLeft = parseFloat(getComputedStyle(pickerContainer).paddingLeft);
-        const x = chipEl.offsetLeft - paddingLeft;
-        indicatorEl.style.setProperty('--indicator-x', `${x}px`);
-        indicatorEl.style.width = `${chipEl.offsetWidth}px`;
-        indicatorEl.style.height = `${chipEl.offsetHeight}px`;
-        indicatorEl.style.transform = `translateX(${x}px)`;
-        indicatorEl.style.opacity = '1';
-      }
-
       let selectedDayIndex = 0;
 
-      function selectScheduleDay(index) {
-        selectedDayIndex = index;
-        pickerContainer.querySelectorAll('.date-element-container').forEach(c => c.classList.remove('active'));
-        const chip = pickerContainer.querySelector(`[data-day-index="${index}"]`);
-        if (chip) {
-          chip.classList.add('active');
-          placeSelectorIndicator(chip);
-        }
-        rowEls.forEach((row, i) => row.classList.toggle('selected', i === index));
-      }
-
-      pickerContainer.querySelectorAll('.date-element-container').forEach(chip => {
-        chip.addEventListener('click', () => {
-          if (chip.classList.contains('date-skipped')) {
-            indicatorEl.classList.remove('shake');
-            void indicatorEl.offsetWidth; // force reflow to restart animation
-            indicatorEl.classList.add('shake');
-            indicatorEl.addEventListener('animationend', () => indicatorEl.classList.remove('shake'), { once: true });
-            haptics.trigger(defaultPatterns.error);
-            return;
+      const daySelector = createPillSelector(pickerContainer, {
+        onSelect(chip, { silent }) {
+          const index = parseInt(chip.dataset.dayIndex);
+          selectedDayIndex = index;
+          rowEls.forEach((row, i) => row.classList.toggle('selected', i === index));
+          if (!silent) {
+            haptics.trigger(defaultPatterns.light);
+            hideOccupationPopover();
           }
-          haptics.trigger(defaultPatterns.light);
-          hideOccupationPopover();
-          selectScheduleDay(parseInt(chip.dataset.dayIndex));
-        });
+        },
       });
+      daySelector.refresh();
+
+      function selectScheduleDay(index, opts) {
+        const chip = pickerContainer.querySelector(`[data-day-index="${index}"]`);
+        if (chip) daySelector.selectElement(chip, opts);
+      }
 
       // Auto-select: prefer the queried day when coming from the Available Tab,
       // otherwise today, or next available day if after 20:15, or first available
@@ -1078,7 +975,7 @@ class ClassroomDetail {
       } else {
         initialDayIndex = days.findIndex(d => d.dayData !== null);
       }
-      selectScheduleDay(Math.max(0, initialDayIndex));
+      selectScheduleDay(Math.max(0, initialDayIndex), { silent: true, animate: false });
 
       // Today indicator: position the pill above the today chip (mobile only)
       function positionDetailTodayIndicator() {
@@ -1095,10 +992,7 @@ class ClassroomDetail {
         todayIndicatorEl.style.top  = `${top}px`;
       }
       todayIndicatorEl?.addEventListener('click', () => {
-        if (todayDayIndex >= 0) {
-          haptics.trigger(defaultPatterns.light);
-          selectScheduleDay(todayDayIndex);
-        }
+        if (todayDayIndex >= 0) selectScheduleDay(todayDayIndex);
       });
       positionDetailTodayIndicator();
 
@@ -1128,7 +1022,8 @@ class ClassroomDetail {
       const mobileQuery = window.matchMedia('(max-width: 599px)');
       mobileQuery.addEventListener('change', e => {
         if (e.matches) {
-          selectScheduleDay(selectedDayIndex);
+          daySelector.refresh();
+          selectScheduleDay(selectedDayIndex, { silent: true, animate: false });
           positionDetailTodayIndicator();
         } else {
           positionDesktopTodayIndicator();
@@ -1243,13 +1138,25 @@ class ClassroomDetail {
           else showOccupationPopover(block);
         });
 
-        // Close on any interaction outside the schedule area (e.g. tapping the
-        // room title or scrolling the page on a non-anchor-positioning browser).
+        // Close on any interaction outside the schedule area (e.g. tapping the room title).
         const onDocClick = e => {
           if (!container.contains(e.target)) hideOccupationPopover();
         };
         document.addEventListener('click', onDocClick);
-        this._timelinePopoverCleanup = () => document.removeEventListener('click', onDocClick);
+
+        // Close on scroll. The popover is positioned in fixed/viewport coordinates
+        // and doesn't track the trigger as the page scrolls, so once the trigger
+        // moves the popover would otherwise be left floating over the wrong spot.
+        // On desktop this already happens implicitly (scrolling moves the hovered
+        // block out from under a stationary cursor, firing pointerout), but a tap
+        // on mobile leaves the popover open with no such gesture to close it.
+        const onScroll = () => hideOccupationPopover();
+        window.addEventListener('scroll', onScroll, { capture: true, passive: true });
+
+        this._timelinePopoverCleanup = () => {
+          document.removeEventListener('click', onDocClick);
+          window.removeEventListener('scroll', onScroll, { capture: true });
+        };
       }
     } catch (err) {
       console.error('ClassroomDetail: Error rendering schedule:', err);

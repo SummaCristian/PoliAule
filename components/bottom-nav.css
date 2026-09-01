@@ -65,6 +65,10 @@
   pointer-events: auto;
   position: relative;
 
+  /* A swipe anywhere on the bar — including the unselected tabs — belongs to
+     the pill, not the page behind it (same as .bn-pill-hit). */
+  touch-action: none;
+
   background: var(--glass-tint);
   padding: 4px;
   border-radius: var(--radius-pill);
@@ -116,6 +120,7 @@
   background: none;
   border: none;
   cursor: pointer;
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 
   color: var(--bn-tab-color);

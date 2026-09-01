@@ -25,6 +25,11 @@
   max-width: 50rem;
   align-self: center;
 
+  /* A swipe anywhere on the row — including the unselected day cells —
+     belongs to the indicator, not the page behind it (same as
+     .date-indicator-hit). */
+  touch-action: none;
+
   /* Same glass material as the tabbar/popover — see the recipe note at
      :root's --glass-tint definition in style.css. No overflow:hidden here
      (unlike a card): the sliding indicator and day cells never exceed the

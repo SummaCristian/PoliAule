@@ -11,8 +11,20 @@ import { Spring, onSpringFrame } from '../utils/spring.js';
 import { haptics, defaultPatterns } from './haptics.js';
 
 const TAP_SCALE = 1.6;
-const DRAG_OVERSHOOT = 8;
+const DRAG_OVERSHOOT = 8;      // hard clamp used only for the release projection
 const LIFT_THRESHOLD = 1.001;
+const RAIL_GIVE = 11;          // elastic px the pill can be pulled past the end anchors
+const CROSS_GIVE = 5;         // elastic px the pill can be pulled off its rail (vertical)
+const STRETCH_GAIN = 0.9;      // pill speed (px/ms) → deform ratio
+const STRETCH_MAX = 0.26;      // cap on that ratio
+const CONTAINER_FOLLOW = 0.12;     // fraction of the drag the whole row trails by
+const CONTAINER_GIVE = 8;          // px cap along the row (wide, so more than the tab bar)
+const CONTAINER_GIVE_CROSS = 5;    // px cap across it (vertical)
+
+// Asymptotic rubber-band: x can grow without bound, the result approaches
+// ±give but never reaches it. Matches the swipe-deform falloff in
+// liquid-glass.js.
+const rubber = (x, give) => (x * give) / (give + Math.abs(x));
 
 // container: the `.date-picker-container` element (already position:relative,
 // already holding a `.date-indicator` child and some `.date-element-container`
@@ -80,7 +92,17 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
   let originX = 0, originY = 0;
 
   const pos = new Spring(0);
+  const posCross = new Spring(0); // off-rail (vertical) offset, springs back to 0 on release
+  const containerOff = new Spring(0);   // whole-row trail along the row
+  const containerCross = new Spring(0); // ...and across it (soft springs, they lag fast scrolls)
   const scale = new Spring(1);
+
+  // Per-frame velocity of the rendered pill → an inertia squash-and-stretch
+  // while it's lifted (faster move = more deformed, stretched along the
+  // direction of travel). Smoothed frame-to-frame so it eases rather than
+  // jitters; zeroed whenever the pill isn't lifted.
+  let lastRenderT = performance.now();
+  let lastPosX = 0, lastPosY = 0, smoothStretch = 0;
 
   // Recompute anchors from the current `.date-element-container` children.
   // Call after (re)generating the cells, and whenever their layout can shift
@@ -134,15 +156,49 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
   }
 
   function render() {
+    const nowT = performance.now();
+    const gap = nowT - lastRenderT;
+    lastRenderT = nowT;
+    // The shared RAF loop pauses when nothing's animating; on the first frame
+    // after it restarts there's no meaningful velocity, so re-sync instead of
+    // dividing a stale delta.
+    if (gap > 100 || gap <= 0) {
+      lastPosX = pos.value;
+      lastPosY = posCross.value;
+      smoothStretch = 0;
+    }
+    const dt = Math.min(Math.max(gap, 1), 64);
+    const vx = (pos.value - lastPosX) / dt;
+    const vy = (posCross.value - lastPosY) / dt;
+    lastPosX = pos.value;
+    lastPosY = posCross.value;
+
+    const lifted = scale.value > LIFT_THRESHOLD;
+    const speed = Math.hypot(vx, vy);
+    const targetStretch = lifted ? Math.min(speed * STRETCH_GAIN, STRETCH_MAX) : 0;
+    smoothStretch = lifted ? smoothStretch + (targetStretch - smoothStretch) * 0.3 : 0;
+    const ux = speed > 1e-3 ? Math.abs(vx) / speed : 1;
+    const uy = speed > 1e-3 ? Math.abs(vy) / speed : 0;
+    const stX = smoothStretch * ux;
+    const stY = smoothStretch * uy;
+
+    const s = scale.value;
+    const sx = s * (1 + stX - 0.5 * stY);
+    const sy = s * (1 + stY - 0.5 * stX);
+
     // The shake keyframes (date-indicator-shake in date-picker.css) read
     // --indicator-x to know the base position to rotate/jitter around.
     indicator.style.setProperty('--indicator-x', `${pos.value}px`);
-    indicator.style.transform = `translateX(${pos.value}px) scale(${scale.value})`;
+    indicator.style.transform =
+      `translate(${pos.value}px, ${posCross.value}px) scale(${sx}, ${sy})`;
     indicator.style.opacity = activeIndex >= 0 ? '1' : '0';
-    indicator.classList.toggle('date-indicator--lifted', scale.value > LIFT_THRESHOLD);
-    hit.style.transform = `translateX(${pos.value}px)`;
-    activeRow.style.transform = `translateX(${-pos.value}px)`;
-    updateMask();
+    indicator.classList.toggle('date-indicator--lifted', lifted);
+    hit.style.transform = `translate(${pos.value}px, ${posCross.value}px)`;
+    activeRow.style.transform = `translate(${-pos.value}px, ${-posCross.value}px)`;
+    // The whole row (indicator + cells together) trails the drag a touch, both axes.
+    const cx = containerOff.value, cy = containerCross.value;
+    wrapper.style.transform = (cx || cy) ? `translate(${cx}px, ${cy}px)` : '';
+    updateMask(sx, sy);
   }
   onSpringFrame(render);
 
@@ -152,13 +208,13 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
   // of the flat-sized real text showing through/around it. Mirrors
   // bottom-nav.js's updateMask() exactly, minus the vertical axis (this
   // picker only ever slides horizontally).
-  function updateMask() {
+  function updateMask(sx = scale.value, sy = scale.value) {
     if (!cellW || !cellH) return;
-    const w = cellW * scale.value;
-    const h = cellH * scale.value;
+    const w = cellW * sx;
+    const h = cellH * sy;
     const r = Math.min(w, h) / 2;
     const cx = pos.value + cellW / 2;
-    const cy = cellH / 2;
+    const cy = cellH / 2 + posCross.value;
     const x = cx - w / 2, y = cy - h / 2;
     const itemsW = items.offsetWidth, itemsH = items.offsetHeight;
     const d = `M0 0H${itemsW}V${itemsH}H0Z ` +
@@ -246,58 +302,122 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     selectElement(el);
   });
 
-  // --- Drag, mirrors bottom-nav.js's pillHit/pillPos -------------------
-  // `hit` sits exactly over the active cell's current position (see render()
-  // above), so a plain tap on the active cell also flows through here rather
-  // than the delegated click listener.
-  let dragging = false, startX = 0, grantTime = 0, dragOriginPos = 0;
+  // --- Drag, mirrors bottom-nav.js -----------------------------------------
+  // Two ways in: grab the indicator via `hit` (relative — moves by your drag
+  // delta) or press-and-hold on an unselected cell (absolute — the indicator
+  // lifts and glides under your finger, then tracks it). A quick tap on a
+  // cell still just selects, via the `items` click listener above.
+  const HOLD_MS = 130;
+  const ENGAGE_MOVE = 6;
+  let dragging = false, grabbed = false, absoluteDrag = false;
+  let startX = 0, startY = 0, grantTime = 0, dragOriginPos = 0, originScreenX = 0;
+  let holdTimer = 0, captureEl = null;
   let samples = [];
 
   const clampDragPos = p => anchors.length
     ? Math.max(anchors[0] - DRAG_OVERSHOOT, Math.min(anchors[anchors.length - 1] + DRAG_OVERSHOOT, p))
     : p;
 
-  hit.addEventListener('pointerdown', e => {
-    if (!anchors.length) return;
-    hit.setPointerCapture(e.pointerId);
-    dragging = true;
-    startX = e.clientX;
-    grantTime = performance.now();
-    samples = [{ p: e.clientX, t: grantTime }];
-    pos.stop();
+  // Live drag position: elastic past the first/last anchor rather than a hard
+  // stop, so the pill can be pulled a bit further off the rail.
+  const railDragPos = raw => {
+    if (!anchors.length) return raw;
+    const lo = anchors[0], hi = anchors[anchors.length - 1];
+    if (raw < lo) return lo + rubber(raw - lo, RAIL_GIVE);
+    if (raw > hi) return hi + rubber(raw - hi, RAIL_GIVE);
+    return raw;
+  };
+
+  // Indicator leading edge (anchor units) that centres it under the pointer.
+  const cellEdgeAtPointer = e => (e.clientX - originScreenX) - cellW / 2;
+
+  function engage(e) {
+    if (grabbed) return;
+    grabbed = true;
+    clearTimeout(holdTimer); holdTimer = 0;
+    pos.stop(); posCross.stop();
     dragOriginPos = pos.value;
     scale.to(TAP_SCALE, { stiffness: 500, damping: 25, mass: 0.5 });
-  });
+    if (absoluteDrag) {
+      pos.to(railDragPos(cellEdgeAtPointer(e)), { stiffness: 700, damping: 42, mass: 0.55 });
+    }
+  }
 
-  hit.addEventListener('pointermove', e => {
+  function onDragStart(e) {
+    if (!anchors.length) return;
+    const onHit = e.currentTarget === hit;
+    captureEl = onHit ? hit : e.target.closest('.date-element-container');
+    if (!captureEl) return;
+    captureEl.setPointerCapture(e.pointerId);
+    dragging = true;
+    grabbed = false;
+    absoluteDrag = !onHit;
+    startX = e.clientX;
+    startY = e.clientY;
+    grantTime = performance.now();
+    samples = [{ x: e.clientX, y: e.clientY, t: grantTime }];
+    originScreenX = wrapper.getBoundingClientRect().left + originX;
+    if (absoluteDrag) holdTimer = setTimeout(() => engage(e), HOLD_MS);
+    else engage(e);
+  }
+
+  function onDragMove(e) {
     if (!dragging) return;
     const now = performance.now();
-    samples.push({ p: e.clientX, t: now });
+    samples.push({ x: e.clientX, y: e.clientY, t: now });
     while (samples.length > 2 && now - samples[0].t > 100) samples.shift();
-    if (now - grantTime < 50) return;
-    pos.to(clampDragPos(dragOriginPos + (e.clientX - startX)), { stiffness: 1000, damping: 70, mass: 0.5 });
-  });
+
+    if (!grabbed) {
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) > ENGAGE_MOVE) engage(e);
+      else return;
+    }
+    if (!absoluteDrag && now - grantTime < 50) return;
+
+    const raw = absoluteDrag ? cellEdgeAtPointer(e) : dragOriginPos + (e.clientX - startX);
+    pos.to(railDragPos(raw), { stiffness: 1000, damping: 70, mass: 0.5 });
+    posCross.to(rubber(e.clientY - startY, CROSS_GIVE), { stiffness: 700, damping: 42, mass: 0.5 });
+    containerOff.to(rubber((e.clientX - startX) * CONTAINER_FOLLOW, CONTAINER_GIVE),
+      { stiffness: 260, damping: 26, mass: 1 });
+    containerCross.to(rubber((e.clientY - startY) * CONTAINER_FOLLOW, CONTAINER_GIVE_CROSS),
+      { stiffness: 260, damping: 26, mass: 1 });
+  }
 
   function release(e, terminated) {
     if (!dragging) return;
     dragging = false;
+    clearTimeout(holdTimer); holdTimer = 0;
+    try { captureEl?.releasePointerCapture(e.pointerId); } catch { /* already gone */ }
+
+    // Never engaged → a quick tap on a cell; leave it to the click listener.
+    if (!grabbed) { captureEl = null; return; }
+
+    if (absoluteDrag) {
+      const swallow = ev => ev.stopImmediatePropagation();
+      items.addEventListener('click', swallow, { capture: true, once: true });
+      setTimeout(() => items.removeEventListener('click', swallow, { capture: true }), 0);
+    }
+    captureEl = null;
+
     scale.to(1, { stiffness: 350, damping: 30, mass: 0.8 });
+    posCross.to(0, { stiffness: 480, damping: 26, mass: 0.6 });
+    containerOff.to(0, { stiffness: 320, damping: 24, mass: 0.8 });
+    containerCross.to(0, { stiffness: 320, damping: 24, mass: 0.8 });
 
     const dMain = e.clientX - startX;
-    if (terminated || Math.abs(dMain) < 8) {
+    if (terminated || (!absoluteDrag && Math.abs(dMain) < 8)) {
       returnToActive();
       return;
     }
 
     const a = samples[0], b = samples[samples.length - 1];
-    const v = b.t > a.t ? (b.p - a.p) / (b.t - a.t) : 0;
-    const projected = clampDragPos(dragOriginPos + dMain + v * 80);
+    const v = b.t > a.t ? (b.x - a.x) / (b.t - a.t) : 0;
+    const from = absoluteDrag ? cellEdgeAtPointer(e) : dragOriginPos + dMain;
+    const projected = clampDragPos(from + v * 80);
     const nearest = nearestIndex(projected);
     const el = elements[nearest];
 
     // A forbidden or unchanged target: just spring back to the last
-    // selection, faster than a real move — no shake for a drag (unlike a
-    // direct tap on it).
+    // selection, faster than a real move — no shake for a drag.
     if (isSkipped(el) || nearest === activeIndex) {
       returnToActive();
       return;
@@ -305,8 +425,13 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
 
     selectElement(el);
   }
-  hit.addEventListener('pointerup', e => release(e, false));
-  hit.addEventListener('pointercancel', e => release(e, true));
+
+  for (const el of [hit, items]) {
+    el.addEventListener('pointerdown', onDragStart);
+    el.addEventListener('pointermove', onDragMove);
+    el.addEventListener('pointerup', e => release(e, false));
+    el.addEventListener('pointercancel', e => release(e, true));
+  }
 
   return {
     refresh,

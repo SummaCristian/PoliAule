@@ -29,6 +29,13 @@ export class DateChipPicker extends HTMLElement {
   #isAnimating = false;
   #preventScroll = null;
   #scrollLocked = false;
+  // Bumped on every open/close so deferred callbacks from a superseded
+  // transition (rAF steps, morph-end handlers, the post-close cleanup timer)
+  // can detect they're stale and bail — otherwise a fast close→open tears the
+  // freshly-opened popup back down.
+  #seq = 0;
+  #cleanupTimer = 0;
+  #morphCleanup = null;
 
   connectedCallback() {
     if (this.#trigger) return; // already initialized (re-parenting, etc.)
@@ -174,13 +181,27 @@ export class DateChipPicker extends HTMLElement {
     this.#isOpen ? this.#close() : this.#open();
   }
 
+  // Invalidate every in-flight deferred step from the previous transition and
+  // return this op's sequence id, which those steps re-check before running.
+  #beginOp() {
+    clearTimeout(this.#cleanupTimer);
+    this.#cleanupTimer = 0;
+    this.#clearMorphEnd();
+    return ++this.#seq;
+  }
+
   #open() {
-    if (this.#isOpen || this.#isAnimating) return;
+    if (this.#isOpen) return;
+    const seq = this.#beginOp();
     this.#isOpen = true;
     this.#isAnimating = true;
     this.#trigger.setAttribute('aria-expanded', 'true');
     haptics.trigger(defaultPatterns.light);
     this.#lockScroll();
+
+    // A close may have got as far as tagging the shell/pill for its handoff.
+    this.#popup.classList.remove('dcp-popup--closing');
+    this.classList.remove('dcp-content-hidden');
 
     this.#overlay.hidden = false;
     this.#popup.style.display = 'flex';
@@ -205,10 +226,15 @@ export class DateChipPicker extends HTMLElement {
     this.#popup.style.transition = '';
 
     requestAnimationFrame(() => {
+      if (seq !== this.#seq) return;
       this.#overlay.classList.add('is-active');
       this.#popup.classList.add('dcp-popup--open');
       this.#applyGeometry(target);
-      this.#onMorphEnd(() => { this.#isAnimating = false; this.#afterOpen(); });
+      this.#onMorphEnd(() => {
+        if (seq !== this.#seq) return;
+        this.#isAnimating = false;
+        this.#afterOpen();
+      });
     });
   }
 
@@ -220,14 +246,17 @@ export class DateChipPicker extends HTMLElement {
   }
 
   #close() {
-    if (!this.#isOpen || this.#isAnimating) return;
+    if (!this.#isOpen) return;
+    const seq = this.#beginOp();
     this.#isOpen = false;
+    this.#isAnimating = true;
     this.#trigger.setAttribute('aria-expanded', 'false');
 
     this.#popup.classList.remove('dcp-popup--open');
     this.#overlay.classList.remove('is-active');
 
     const clear = () => {
+      if (seq !== this.#seq) return;
       this.#popup.classList.remove('dcp-popup--closing');
       this.#popup.style.display = 'none';
       this.#popup.style.transition = '';
@@ -238,14 +267,19 @@ export class DateChipPicker extends HTMLElement {
     };
 
     if (!this.#canMorph()) {
+      this.#isAnimating = false;
       clear();
       return;
     }
 
-    this.#isAnimating = true;
+    // A superseded open may have left transitions disabled — re-enable so the
+    // return-morph always animates.
+    this.#popup.style.transition = '';
     requestAnimationFrame(() => {
+      if (seq !== this.#seq) return;
       this.#applyGeometry(this.#triggerBox());
       this.#onMorphEnd(() => {
+        if (seq !== this.#seq) return;
         this.#isAnimating = false;
         // Hand the frame back to the pill: swap the identical glass box
         // instantly, fade the pill's contents in as the shell fades out.
@@ -255,22 +289,32 @@ export class DateChipPicker extends HTMLElement {
         this.#overlay.hidden = true;
         this.#unlockScroll();
         requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (seq !== this.#seq) return;
           this.classList.remove('dcp-content-hidden');
         }));
-        setTimeout(clear, 240);
+        this.#cleanupTimer = setTimeout(clear, 240);
       });
     });
   }
 
   #onMorphEnd(cb) {
-    const fallback = setTimeout(cb, MORPH_MS + 60);
+    this.#clearMorphEnd();
+    const fallback = setTimeout(() => { this.#clearMorphEnd(); cb(); }, MORPH_MS + 60);
     const handler = (e) => {
       if (e.target !== this.#popup || e.propertyName !== 'height') return;
-      clearTimeout(fallback);
-      this.#popup.removeEventListener('transitionend', handler);
+      this.#clearMorphEnd();
       cb();
     };
     this.#popup.addEventListener('transitionend', handler);
+    this.#morphCleanup = () => {
+      clearTimeout(fallback);
+      this.#popup.removeEventListener('transitionend', handler);
+      this.#morphCleanup = null;
+    };
+  }
+
+  #clearMorphEnd() {
+    this.#morphCleanup?.();
   }
 
   // ── Scroll lock ─────────────────────────────────────────────────────

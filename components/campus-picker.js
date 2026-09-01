@@ -72,6 +72,13 @@ export class CampusChipPicker extends HTMLElement {
   #typeaheadBuffer = '';
   #typeaheadTimer = 0;
   #changeWired = false;
+  // Bumped on every open/close so deferred steps from a superseded transition
+  // (rAF callbacks, the awaited #panelTarget, morph-end handlers, the
+  // post-close cleanup timer) can detect they're stale and bail — otherwise a
+  // fast close→open tears the freshly-opened popup back down.
+  #seq = 0;
+  #cleanupTimer = 0;
+  #morphCleanup = null;
 
   connectedCallback() {
     if (this.shadowRoot) return; // already initialized (re-parenting, etc.)
@@ -289,15 +296,33 @@ export class CampusChipPicker extends HTMLElement {
     s.borderRadius = borderRadius;
   }
 
+  // Invalidate every in-flight deferred step from the previous transition and
+  // return this op's sequence id, which those steps re-check before running.
+  #beginOp() {
+    clearTimeout(this.#cleanupTimer);
+    this.#cleanupTimer = 0;
+    this.#clearMorphEnd();
+    return ++this.#seq;
+  }
+
   #onMorphEnd(cb) {
-    const fallback = setTimeout(cb, MORPH_MS + 60);
+    this.#clearMorphEnd();
+    const fallback = setTimeout(() => { this.#clearMorphEnd(); cb(); }, MORPH_MS + 60);
     const handler = (e) => {
       if (e.target !== this.#popup || e.propertyName !== 'height') return;
-      clearTimeout(fallback);
-      this.#popup.removeEventListener('transitionend', handler);
+      this.#clearMorphEnd();
       cb();
     };
     this.#popup.addEventListener('transitionend', handler);
+    this.#morphCleanup = () => {
+      clearTimeout(fallback);
+      this.#popup.removeEventListener('transitionend', handler);
+      this.#morphCleanup = null;
+    };
+  }
+
+  #clearMorphEnd() {
+    this.#morphCleanup?.();
   }
 
   // Final resting box of the panel: full width, natural (capped) height,
@@ -334,18 +359,24 @@ export class CampusChipPicker extends HTMLElement {
   }
 
   async #open() {
-    if (this.#isOpen || this.#isAnimating) return;
+    if (this.#isOpen) return;
+    const seq = this.#beginOp();
     this.#isOpen = true;
     this.#isAnimating = true;
     this.#trigger.setAttribute('aria-expanded', 'true');
     haptics.trigger(defaultPatterns.light);
     this.#lockScroll();
 
+    // A close may have got as far as tagging the shell/pill for its handoff.
+    this.#popup.classList.remove('cp-popup--closing');
+    this.classList.remove('cp-content-hidden');
+
     this.#overlay.hidden = false;
     this.#popup.style.display = 'flex';
     this.classList.add('cp-anim');
 
     const target = await this.#panelTarget();
+    if (seq !== this.#seq) return; // superseded while awaiting layout
 
     if (!this.#canMorph()) {
       this.#applyGeometry(target);
@@ -365,10 +396,15 @@ export class CampusChipPicker extends HTMLElement {
     this.#popup.style.transition = '';
 
     requestAnimationFrame(() => {
+      if (seq !== this.#seq) return;
       this.#overlay.classList.add('is-active');
       this.#popup.classList.add('cp-popup--open');
       this.#applyGeometry(target);
-      this.#onMorphEnd(() => { this.#isAnimating = false; this.#afterOpen(); });
+      this.#onMorphEnd(() => {
+        if (seq !== this.#seq) return;
+        this.#isAnimating = false;
+        this.#afterOpen();
+      });
     });
   }
 
@@ -379,8 +415,10 @@ export class CampusChipPicker extends HTMLElement {
   }
 
   #close() {
-    if (!this.#isOpen || this.#isAnimating) return;
+    if (!this.#isOpen) return;
+    const seq = this.#beginOp();
     this.#isOpen = false;
+    this.#isAnimating = true;
     this.#trigger.setAttribute('aria-expanded', 'false');
     this.#clearTypeahead();
 
@@ -391,6 +429,7 @@ export class CampusChipPicker extends HTMLElement {
     this.#overlay.classList.remove('is-active');
 
     const clear = () => {
+      if (seq !== this.#seq) return;
       this.#popup.classList.remove('cp-popup--closing');
       this.#popup.style.display = 'none';
       this.#popup.style.transition = '';
@@ -401,15 +440,20 @@ export class CampusChipPicker extends HTMLElement {
     };
 
     if (!this.#canMorph()) {
+      this.#isAnimating = false;
       clear();
       if (returnFocus) this.#trigger.focus({ preventScroll: true });
       return;
     }
 
-    this.#isAnimating = true;
+    // A superseded open may have left transitions disabled — re-enable so the
+    // return-morph always animates.
+    this.#popup.style.transition = '';
     requestAnimationFrame(() => {
+      if (seq !== this.#seq) return;
       this.#applyGeometry(this.#triggerBox());
       this.#onMorphEnd(() => {
+        if (seq !== this.#seq) return;
         this.#isAnimating = false;
         // Hand the frame back to the pill: its glass box matches the collapsed
         // shell, so swap instantly, but fade the pill's contents (icon / label
@@ -421,9 +465,10 @@ export class CampusChipPicker extends HTMLElement {
         this.#unlockScroll();
         if (returnFocus) this.#trigger.focus({ preventScroll: true });
         requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (seq !== this.#seq) return;
           this.classList.remove('cp-content-hidden');
         }));
-        setTimeout(clear, 240);
+        this.#cleanupTimer = setTimeout(clear, 240);
       });
     });
   }

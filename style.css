@@ -1213,6 +1213,29 @@ body.info-open .header-nav-row {
   gap: 1rem;
 }
 
+/* Campus + Date pills sit side by side, wrapping to a second line on narrow
+   viewports, left-aligned across the full width of the form. */
+.picker-row {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* <campus-chip-picker> / <date-chip-picker> are display:block custom elements;
+   without this each stretches to the row's full width and forces a wrap even
+   when both pills would comfortably fit on one line. Shrink-wrap them to their
+   pill instead. */
+.picker-row > * {
+  flex: 0 1 auto;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .available-classroom-results {
   color: var(--text-color-primary);
 }

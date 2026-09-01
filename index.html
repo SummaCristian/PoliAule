@@ -157,22 +157,25 @@
 
       <form id="available-classrooms-form" class="form" data-loading>
 
-        <!-- Campus Picker -->
-        <campus-chip-picker data-loading>
-          <input type="hidden" id="campus-picker" name="campus" />
-        </campus-chip-picker>
+        <!-- Campus + Date pills, side by side (wrap on narrow screens) -->
+        <div class="picker-row">
+          <!-- Campus Picker -->
+          <campus-chip-picker data-loading>
+            <input type="hidden" id="campus-picker" name="campus" />
+          </campus-chip-picker>
 
-        <!-- Date picker — compact glass pill that morphs into a popup holding
-             the sliding picker below (see components/date-chip-picker.js). -->
-        <date-chip-picker data-loading>
-          <div class="date-picker">
-            <select id="date-picker" name="date" hidden></select>
+          <!-- Date picker — compact glass pill that morphs into a popup holding
+               the sliding picker below (see components/date-chip-picker.js). -->
+          <date-chip-picker data-loading>
+            <div class="date-picker">
+              <select id="date-picker" name="date" hidden></select>
 
-            <div id="today-indicator" class="hidden" aria-hidden="true" data-i18n="datepicker.today">Today</div>
-            <div class="date-picker-container"></div>
-            <div class="date-indicator"></div>
-          </div>
-        </date-chip-picker>
+              <div id="today-indicator" class="hidden" aria-hidden="true" data-i18n="datepicker.today">Today</div>
+              <div class="date-picker-container"></div>
+              <div class="date-indicator"></div>
+            </div>
+          </date-chip-picker>
+        </div>
 
         <div class="time-pickers-skeleton" aria-hidden="true">
           <div></div>

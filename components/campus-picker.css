@@ -96,6 +96,7 @@
 
 :host([data-loading]) .campus-select-skeleton {
   display: block;
+  width: 10rem;
   height: 3rem;
   border-radius: var(--radius-md);
   background: linear-gradient(90deg,

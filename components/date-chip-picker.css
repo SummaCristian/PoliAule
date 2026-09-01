@@ -7,11 +7,10 @@
    whose box (top/left/width/height/border-radius) transitions between the
    trigger's rect and the panel's. date-chip-picker.js drives the geometry. */
 
-/* Host stretches full width; the inline-flex pill is centred by .form's
-   `text-align: center`, exactly like <campus-chip-picker>. */
+/* Sized to its pill by the flanking .picker-row flex container. */
 date-chip-picker {
   display: block;
-  margin-top: 2rem;
+  min-width: 0;
 }
 
 /* While loading: keep the glass pill and the "DATE" label; shimmer only the

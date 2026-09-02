@@ -513,7 +513,13 @@ export function initTimeRangeSlider() {
   if (!container) return;
 
   const slider = buildSlider(fromInput, toInput);
-  container.appendChild(slider);
+
+  // When wrapped in <time-range-chip-picker>, the slider lives inside that
+  // component's morph popup; otherwise it renders inline in the container.
+  const chip = document.querySelector('time-range-chip-picker');
+  const mount = chip?.getMountPoint?.() ?? container;
+  mount.appendChild(slider);
+  chip?.setSlider?.(slider);
 
   // Pre-register source rects so switchPicker has valid positions for both
   // cards even before the user taps either badge.

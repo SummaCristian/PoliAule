@@ -119,11 +119,11 @@
   grid-column: 1 / -1;
 
   /* Parks directly beneath the sticky picker bar (mobile) — its live height
-     comes from --picker-bar-height (script.js); the + 0.75rem matches the
+     comes from --picker-bar-height (script.js); the + 1.5rem matches the
      picker bar's own offset below the app header. On desktop the picker bar
      isn't sticky — see the 600px override. */
   position: sticky;
-  top: calc(var(--header-height, 84px) + 0.75rem + var(--picker-bar-height, 0px) + 0.5rem);
+  top: calc(var(--header-height, 84px) + 1.5rem + var(--picker-bar-height, 0px) + 0.5rem);
   z-index: 2;
 
   display: flex;
@@ -145,7 +145,7 @@
   /* Picker form is a static grid cell on desktop, not a sticky bar — drop the
      --picker-bar-height offset and stick under the app header alone. */
   .building-section-header {
-    top: calc(var(--header-height, 84px) + 0.75rem);
+    top: calc(var(--header-height, 84px) + 1.25rem);
   }
 }
 
@@ -155,7 +155,7 @@
      title pill's blur. The app header's fade overlay already covers the
      panel's top, so the hard overflow edge isn't visible anyway. */
   .building-section-header {
-    top: 0.5rem;
+    top: 1rem;
   }
 }
 

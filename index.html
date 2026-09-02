@@ -30,6 +30,7 @@
   <link rel="stylesheet" href="./components/data-fetch-card.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
   <link rel="stylesheet" href="./components/time-range-slider.css" />
+  <link rel="stylesheet" href="./components/time-range-chip-picker.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
   <link rel="stylesheet" href="./components/settings.css" />
   <link rel="stylesheet" href="./components/search-classrooms.css" />
@@ -177,23 +178,22 @@
               <div class="date-indicator"></div>
             </div>
           </date-chip-picker>
-        </div>
 
-        <div class="time-pickers-skeleton" aria-hidden="true">
-          <div></div>
-          <div></div>
-        </div>
-        <div class="time-pickers-container">
-          <!-- From time picker -->
-          <div class="time-picker">
-            <input type="time" id="from-time-picker" name="from" min="07:15" max="20:15" />
-          </div>
+          <!-- Time range picker — compact glass pill that morphs into a popup
+               holding the drag-based slider (see components/time-range-chip-picker.js). -->
+          <time-range-chip-picker data-loading>
+            <div class="time-pickers-container">
+              <!-- From time picker -->
+              <div class="time-picker">
+                <input type="time" id="from-time-picker" name="from" min="07:15" max="20:15" />
+              </div>
 
-          <!-- To time picker -->
-          <div class="time-picker">
-            <input type="time" id="to-time-picker" name="to" min="07:15" max="20:15" />
-          </div>
-
+              <!-- To time picker -->
+              <div class="time-picker">
+                <input type="time" id="to-time-picker" name="to" min="07:15" max="20:15" />
+              </div>
+            </div>
+          </time-range-chip-picker>
         </div>
       </form>
 

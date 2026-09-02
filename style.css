@@ -1322,7 +1322,9 @@ body.info-open .header-nav-row {
    the form out in a static grid column — overridden at the 600px breakpoint.) */
 #available-classrooms-form {
   position: sticky;
-  top: calc(var(--header-height, 84px) + 0.75rem);
+  /* Extra clearance so the glass pills don't sit inside the header's blur/fade
+     overhang on mobile. */
+  top: calc(var(--header-height, 84px) + 1.5rem);
   z-index: 10;
 
   gap: 8px;
@@ -1340,8 +1342,7 @@ body.info-open .header-nav-row {
   }
 }
 
-.date-picker-skeleton,
-.time-pickers-skeleton {
+.date-picker-skeleton {
   display: none;
 }
 
@@ -1364,26 +1365,7 @@ form[data-loading] .date-picker-skeleton>div {
   flex-shrink: 0;
 }
 
-form[data-loading] .time-pickers-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-form[data-loading] .time-pickers-skeleton>div {
-  height: 3.5rem;
-  border-radius: 1.75rem;
-  flex: 1;
-}
-
-form[data-loading] .time-pickers-skeleton>div:last-child {
-  height: 1.4rem;
-  border-radius: 0.7rem;
-  opacity: 0.5;
-}
-
-form[data-loading] .date-picker-skeleton>div,
-form[data-loading] .time-pickers-skeleton>div {
+form[data-loading] .date-picker-skeleton>div {
   background: linear-gradient(90deg,
       color-mix(in srgb, var(--text-color-primary) 6%, transparent) 25%,
       color-mix(in srgb, var(--text-color-primary) 12%, transparent) 50%,

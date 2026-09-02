@@ -30,6 +30,7 @@ import { initTimeRangeSlider } from './components/time-range-slider.js';
 import { setupCampusPicker } from './components/campus-picker.js';
 import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
+import './components/time-range-chip-picker.js';
 import './components/data-fetch-card.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
@@ -269,6 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // <date-chip-picker> renders its date label via Intl at module-eval time,
     // before initI18n() resolves — re-render it now that the locale is known.
     document.querySelector('date-chip-picker')?.retranslate();
+    document.querySelector('time-range-chip-picker')?.retranslate();
 
     initSettings();
 

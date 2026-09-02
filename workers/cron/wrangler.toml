@@ -1,0 +1,24 @@
+name = "poliaule-cron"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+# Cron Triggers replace the GitHub Actions `schedule:` block, which fired hours
+# late or got dropped under load. The scheduled() handler fires a
+# workflow_dispatch via the GitHub REST API, which the runner picks up within
+# seconds.
+[triggers]
+crons = [
+  "0 3 * * *",   # 4am Italian time
+  "0 10 * * *",  # ~12pm Italian time (CEST)
+]
+
+[vars]
+GITHUB_OWNER = "SummaCristian"
+GITHUB_REPO = "poliaule"
+GITHUB_REF = "main"
+WORKFLOW_FILE = "fetch-occupancy.yml"
+
+# Secrets (set with `wrangler secret put <NAME>`):
+#   GITHUB_TOKEN       - fine-grained PAT, Actions: write on the repo
+#   TELEGRAM_BOT_TOKEN - optional; alert if the dispatch call itself fails
+#   TELEGRAM_CHAT_ID   - optional

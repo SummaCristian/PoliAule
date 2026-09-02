@@ -1,9 +1,9 @@
 name: Fetch Occupancy Data
 
 on:
-  schedule:
-    - cron: '0 3 * * *'  # Every day at 3am UTC (4am Italian time)
-    - cron: '0 10 * * *'  # ~12pm Italian time (CEST UTC+2)
+  # Triggered on a schedule by the poliaule-cron Cloudflare Worker via
+  # workflow_dispatch (see workers/cron). GitHub's own `schedule:` trigger was
+  # dropped because it fired hours late or got skipped under load.
   workflow_dispatch:      # Allow manual runs from the GitHub Actions tab
     inputs:
       no_delay:

@@ -49,7 +49,15 @@ Both fetch jobs run on GitHub Actions. Both write local JSON, then upload it to 
 
 ### fetch.py
 
-Runs on a schedule (and can be triggered manually). For each of the next 7 days it:
+Runs twice daily and can be triggered manually. The schedule is driven by the
+`poliaule-cron` Cloudflare Worker (`workers/cron`), whose Cron Triggers fire a
+`workflow_dispatch` on `fetch-occupancy.yml` via the GitHub REST API. GitHub's
+own `schedule:` trigger was dropped because scheduled runs fired hours late or
+were skipped under load; a dispatched run is queued within seconds. The Worker
+needs a `GITHUB_TOKEN` secret (fine-grained PAT, Actions: write) and optionally
+`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` to alert if the dispatch call fails.
+
+For each of the next 7 days it:
 
 1. Reads `data/classrooms.json` to get room IDs.
 2. Reads `data/opening-hours.json` to decide which days to fetch: a day is skipped only if every building is closed that weekday, or it falls in a holiday period.

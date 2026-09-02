@@ -4,6 +4,7 @@ export interface Env {
   GITHUB_REF: string;
   WORKFLOW_FILE: string;
   GITHUB_TOKEN: string;
+  TRIGGER_SECRET?: string;
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
 }
@@ -13,7 +14,7 @@ export interface Env {
  * within seconds, so this lands far closer to the intended time than the old
  * `schedule:` trigger did.
  */
-async function dispatchWorkflow(env: Env): Promise<void> {
+async function dispatchWorkflow(env: Env, noDelay = false): Promise<void> {
   const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/${env.WORKFLOW_FILE}/dispatches`;
 
   const res = await fetch(url, {
@@ -27,7 +28,7 @@ async function dispatchWorkflow(env: Env): Promise<void> {
     },
     body: JSON.stringify({
       ref: env.GITHUB_REF,
-      inputs: { no_delay: "false" },
+      inputs: { no_delay: String(noDelay) },
     }),
   });
 
@@ -64,14 +65,24 @@ export default {
     ctx.waitUntil(run(env));
   },
 
-  // Manual trigger for testing: `curl -X POST https://<worker-url>/`.
+  // Manual trigger: `curl -X POST -H "Authorization: Bearer <secret>" \
+  //   "https://<worker-url>/?no_delay=true"`.
+  // no_delay is manual-only; scheduled runs always keep the script's delays.
   async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method !== "POST") {
       return new Response("POST to trigger the occupancy fetch.\n", { status: 405 });
     }
+    // Manual trigger is gated by a shared secret. Cron runs don't go through here.
+    if (!env.TRIGGER_SECRET) {
+      return new Response("manual trigger disabled\n", { status: 403 });
+    }
+    if (request.headers.get("authorization") !== `Bearer ${env.TRIGGER_SECRET}`) {
+      return new Response("forbidden\n", { status: 403 });
+    }
+    const noDelay = new URL(request.url).searchParams.get("no_delay") === "true";
     try {
-      await dispatchWorkflow(env);
-      return new Response("dispatched\n", { status: 202 });
+      await dispatchWorkflow(env, noDelay);
+      return new Response(`dispatched${noDelay ? " (no_delay)" : ""}\n`, { status: 202 });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return new Response(`${msg}\n`, { status: 502 });

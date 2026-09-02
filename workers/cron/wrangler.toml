@@ -20,5 +20,7 @@ WORKFLOW_FILE = "fetch-occupancy.yml"
 
 # Secrets (set with `wrangler secret put <NAME>`):
 #   GITHUB_TOKEN       - fine-grained PAT, Actions: write on the repo
+#   TRIGGER_SECRET     - optional; if unset, the manual POST endpoint is disabled
+#                        (cron runs are unaffected). Send as `Authorization: Bearer <secret>`.
 #   TELEGRAM_BOT_TOKEN - optional; alert if the dispatch call itself fails
 #   TELEGRAM_CHAT_ID   - optional

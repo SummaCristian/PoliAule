@@ -13,6 +13,10 @@ npm install
 # Fine-grained PAT with "Actions: write" on SummaCristian/poliaule
 wrangler secret put GITHUB_TOKEN
 
+# Optional: enable the manual POST trigger (any random string). Without it,
+# the HTTP endpoint is disabled and only the Cron Triggers can fire the workflow.
+wrangler secret put TRIGGER_SECRET
+
 # Optional: alert on Telegram if the dispatch call itself fails
 wrangler secret put TELEGRAM_BOT_TOKEN
 wrangler secret put TELEGRAM_CHAT_ID
@@ -26,8 +30,17 @@ Schedule and repo coordinates live in `wrangler.toml` (`[triggers].crons` and
 ## Manual trigger
 
 ```bash
-curl -X POST https://poliaule-cron.<subdomain>.workers.dev/
+curl -X POST -H "Authorization: Bearer $TRIGGER_SECRET" \
+  https://poliaule-cron.<subdomain>.workers.dev/
+
+# skip the script's inter-call delays (faster; manual only):
+curl -X POST -H "Authorization: Bearer $TRIGGER_SECRET" \
+  "https://poliaule-cron.<subdomain>.workers.dev/?no_delay=true"
 ```
+
+`no_delay` is only honoured on this manual endpoint. Scheduled (cron) runs always
+keep the delays — that's `scripts/fetch.py`'s default and the polite thing to do
+against PoliMi's API.
 
 Or just run the workflow from the GitHub Actions tab — `workflow_dispatch` is
 still enabled there.

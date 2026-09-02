@@ -169,6 +169,52 @@ date-chip-picker:not([data-loading]) .dcp-trigger__skeleton {
   color: color-mix(in srgb, var(--text-color-primary) 65%, transparent);
 }
 
+/* ── "Today" badge ────────────────────────────────────────────────────────
+   A small accent pill pinned to the trigger's top-right corner, overhanging
+   the top edge (mirrors the Figma comp). Shown by JS only when the selected
+   date is today. */
+.dcp-trigger__today-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(28%, -42%);
+  z-index: 1;
+
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #fff;
+  white-space: nowrap;
+
+  background: var(--text-color-accent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 35%, transparent);
+}
+
+.dcp-trigger__today-badge[hidden] {
+  display: none;
+}
+
+/* Reflection on the glass while "today" is selected: a very subtle green inner
+   shadow catching light from the top-right (matches the Figma comp — inner
+   shadow -1 1 4 0, accent @ 15%). */
+.dcp-trigger--today {
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    inset -1px 1px 4px 0 color-mix(in srgb, var(--text-color-accent) 15%, transparent),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .dcp-trigger__today-badge {
+    background: var(--color-accent-dark);
+  }
+}
+
 /* Hide the pill while it's morphed into the panel. */
 date-chip-picker.dcp-anim .dcp-trigger {
   visibility: hidden;

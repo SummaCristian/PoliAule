@@ -265,6 +265,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     await initI18n();
     applyTranslations();
+    // <date-chip-picker> renders its date label via Intl at module-eval time,
+    // before initI18n() resolves — re-render it now that the locale is known.
+    document.querySelector('date-chip-picker')?.retranslate();
 
     initSettings();
 

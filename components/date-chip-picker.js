@@ -25,6 +25,7 @@ export class DateChipPicker extends HTMLElement {
   #inner = null;
   #valueMainEl = null;
   #valueMonthEl = null;
+  #todayBadgeEl = null;
   #isOpen = false;
   #isAnimating = false;
   #preventScroll = null;
@@ -61,9 +62,11 @@ export class DateChipPicker extends HTMLElement {
         </span>
       </span>
       <i class="hgi-stroke hgi-arrow-down-01 dcp-trigger__chevron" aria-hidden="true"></i>
+      <span class="dcp-trigger__today-badge" data-i18n="datepicker.today" hidden>${t('datepicker.today')}</span>
     `;
     this.#valueMainEl = this.#trigger.querySelector('.dcp-trigger__value-main');
     this.#valueMonthEl = this.#trigger.querySelector('.dcp-trigger__value-month');
+    this.#todayBadgeEl = this.#trigger.querySelector('.dcp-trigger__today-badge');
 
     // ── Overlay + morphing popup shell ───────────────────────────────
     this.#overlay = document.createElement('div');
@@ -109,10 +112,7 @@ export class DateChipPicker extends HTMLElement {
       if (e.key === 'Escape') this.#close();
     });
     this.#hiddenSelect?.addEventListener('change', () => this.#renderValue());
-    onLanguageSwitch(() => {
-      this.#popup.setAttribute('aria-label', t('datepicker.label'));
-      this.#renderValue();
-    });
+    onLanguageSwitch(() => this.retranslate());
     window.addEventListener('resize', () => {
       if (this.#isOpen && !this.#isAnimating) this.#applyGeometry(this.#panelTarget());
     });
@@ -133,9 +133,29 @@ export class DateChipPicker extends HTMLElement {
     const locale = getLocale();
     const main = new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric' }).format(date);
     const month = new Intl.DateTimeFormat(locale, { month: 'short' }).format(date);
-    // Some locales (e.g. Italian) lowercase the weekday — force an initial cap.
-    this.#valueMainEl.textContent = main.charAt(0).toLocaleUpperCase(locale) + main.slice(1);
-    this.#valueMonthEl.textContent = month.replace(/\.$/, '');
+    // Some locales (e.g. Italian) lowercase the weekday/month — force an initial cap.
+    const cap = s => s.charAt(0).toLocaleUpperCase(locale) + s.slice(1);
+    this.#valueMainEl.textContent = cap(main);
+    this.#valueMonthEl.textContent = cap(month.replace(/\.$/, ''));
+
+    // "Today" badge + subtle accent tint on the glass when the selected day is today.
+    const now = new Date();
+    const isToday = date.getFullYear() === now.getFullYear()
+      && date.getMonth() === now.getMonth()
+      && date.getDate() === now.getDate();
+    if (this.#todayBadgeEl) this.#todayBadgeEl.hidden = !isToday;
+    this.#trigger?.classList.toggle('dcp-trigger--today', isToday);
+  }
+
+  // Re-apply locale-dependent, JS-built text: the popup's aria-label and the
+  // collapsed date label (formatted via Intl in #renderValue). Called on
+  // language switch and once from script.js after i18n finishes loading —
+  // connectedCallback runs at module-eval time, before initI18n() resolves, so
+  // the first #renderValue() would otherwise be stuck in the default locale.
+  retranslate() {
+    if (!this.#trigger) return; // never initialized (no .date-picker subtree)
+    this.#popup.setAttribute('aria-label', t('datepicker.label'));
+    this.#renderValue();
   }
 
   // ── Geometry ────────────────────────────────────────────────────────

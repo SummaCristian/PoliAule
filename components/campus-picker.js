@@ -126,6 +126,9 @@ export class CampusChipPicker extends HTMLElement {
     this.#overlay = this.#panelRoot.querySelector('.cp-overlay');
 
     attachLiquidGlass(this.#trigger);
+    // Keep the press / drag-deform gesture alive on the open panel, but only
+    // when grabbed by its title bar — the body is a scrollable list.
+    attachLiquidGlass(this.#popup, { from: '.cp-popup__title' });
     this.#trigger.addEventListener('click', () => this.#toggle());
     this.#trigger.addEventListener('keydown', (e) => this.#onTriggerKeydown(e));
     this.#popup.addEventListener('keydown', (e) => this.#onKeydown(e));

@@ -283,6 +283,42 @@ date-chip-picker.dcp-content-hidden .dcp-trigger__chevron {
   will-change: top, left, width, height;
 }
 
+/* The panel carries `liquid-glass`, so the generic rule in liquid-glass.css
+   would replace the morph transition above wholesale. Merge the morph geometry
+   and the deform's translate/scale into one declaration — same fix as
+   `.popover.liquid-glass` / `.dfc-popup.liquid-glass`. */
+.dcp-popup.liquid-glass {
+  transition:
+    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 0.42s ease,
+    translate var(--press-out-dur) var(--ease-spring),
+    scale var(--press-out-dur) var(--ease-spring),
+    filter 0.2s ease;
+}
+
+.dcp-popup.liquid-glass.lg-pressing {
+  transition:
+    border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    translate var(--press-in-dur) var(--press-in-ease),
+    scale var(--press-in-dur) var(--press-in-ease),
+    filter 0.2s ease;
+}
+
+.dcp-popup.liquid-glass.lg-dragging {
+  transition:
+    border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    translate 0s, scale 0s, filter 0.2s ease;
+}
+
+/* A full panel shouldn't drift on hover-lift — only the press/drag deform. */
+.dcp-popup.liquid-glass:hover {
+  scale: 1;
+}
+
 .dcp-popup__inner {
   flex: 1;
   min-height: 0;
@@ -340,6 +376,7 @@ date-chip-picker.dcp-content-hidden .dcp-trigger__chevron {
 
 @media (prefers-reduced-motion: reduce) {
   .dcp-popup,
+  .dcp-popup.liquid-glass,
   .dcp-popup__inner,
   .dcp-overlay,
   .dcp-trigger__chevron {

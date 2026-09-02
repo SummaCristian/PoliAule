@@ -74,7 +74,11 @@ export class DateChipPicker extends HTMLElement {
     this.#overlay.hidden = true;
 
     this.#popup = document.createElement('div');
-    this.#popup.className = 'dcp-popup';
+    // `liquid-glass` keeps the press / drag-deform gesture alive on the open
+    // panel; `data-lg-exclude` confines the grab zone to the panel chrome
+    // (title + padding) so the sliding date scrubber inside still drags freely.
+    this.#popup.className = 'dcp-popup liquid-glass';
+    this.#popup.dataset.lgExclude = '.date-picker';
     this.#popup.setAttribute('role', 'dialog');
     this.#popup.setAttribute('aria-modal', 'true');
     this.#popup.tabIndex = -1;

@@ -123,7 +123,7 @@
      picker bar's own offset below the app header. On desktop the picker bar
      isn't sticky — see the 600px override. */
   position: sticky;
-  top: calc(var(--header-height, 84px) + 1.5rem + var(--picker-bar-height, 0px) + 0.5rem);
+  top: calc(var(--header-height, 84px) + 2.25rem + var(--picker-bar-height, 0px) + 0.5rem);
   z-index: 2;
 
   display: flex;

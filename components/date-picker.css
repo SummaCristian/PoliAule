@@ -44,7 +44,6 @@
 
   margin-top: 2rem;
 
-  cursor: pointer;
   user-select: none;
 
   opacity: 0; /* Hidden until JS populates dates */
@@ -294,7 +293,6 @@
   font-size: var(--text-72);
   font-weight: 800;
   white-space: nowrap;
-  cursor: pointer;
   box-shadow: var(--glow-accent);
   transform-origin: bottom center;
 

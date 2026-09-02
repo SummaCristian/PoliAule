@@ -35,7 +35,6 @@
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: var(--text-80);
   font-weight: 700;
-  cursor: pointer;
 
   transition: background 0.2s ease, opacity 0.2s ease;
 }
@@ -291,7 +290,6 @@
   padding: 0;
   border-radius: var(--radius-lg);
 
-  cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 

@@ -52,7 +52,6 @@ date-chip-picker:not([data-loading]) .dcp-trigger__skeleton {
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   text-align: left;
   color: var(--text-color-primary);
-  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 
   background: var(--glass-tint);

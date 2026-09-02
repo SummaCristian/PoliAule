@@ -32,6 +32,59 @@
   box-sizing: inherit;
 }
 
+/* Native-app feel: reserve the pointing-hand cursor for genuine links only.
+   Buttons, tabs, toggles, cards, selects and menu items keep the default
+   arrow and communicate their affordance through hover/active states, the
+   way native UI does. Individual components must not re-add cursor: pointer;
+   use meaningful cursors (grab, col-resize, not-allowed, text) where they
+   actually apply. */
+button,
+[role="button"],
+[role="option"],
+[role="tab"],
+[role="switch"],
+[role="tablist"],
+[role="listbox"],
+[role="menu"],
+label,
+summary,
+select {
+  cursor: default;
+}
+
+/* Native-app feel: UI chrome is not text you drag-select. Buttons, tabs,
+   toggles, option lists and the label text inside them are unselectable,
+   like native controls. Genuine content — classroom names, addresses,
+   opening hours, schedule/event text, info-page prose, text inputs — opts
+   back in with `user-select: text` in its own component. */
+button,
+[role="button"],
+[role="option"],
+[role="tab"],
+[role="switch"],
+[role="tablist"],
+[role="listbox"],
+[role="menu"],
+label,
+summary,
+select,
+.app-header,
+.bn-tabbar,
+.empty-container-title,
+.empty-container-subtitle,
+.detail-section-header,
+.detail-section-title,
+.detail-status-label,
+.detail-schedule-legend-label,
+.detail-schedule-labels-pill,
+.detail-schedule-label-cell,
+.badge-label,
+.badge-text,
+.github-stat-label {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 :root {
   --background-color: #F2F2F2;
   --background-color-secondary: #FFFFFF;
@@ -532,7 +585,6 @@ label {
   background-color: transparent;
   border-color: transparent;
 
-  cursor: pointer;
 }
 
 .secondary {
@@ -723,7 +775,6 @@ label {
   background: none;
   border: none;
   padding: 0;
-  cursor: pointer;
   border-radius: 0.5rem;
   -webkit-tap-highlight-color: transparent;
   font: inherit;
@@ -802,7 +853,6 @@ label {
     var(--glass-highlight),
     0 4px 40px 0 var(--glass-shadow-color);
 
-  cursor: pointer;
 
   transition:
     background-color 0.2s ease,
@@ -1651,7 +1701,6 @@ ul li::marker {
 
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  cursor: pointer;
 }
 
 @media (hover: hover) {

@@ -151,7 +151,6 @@ html.search-vt .bn-search-btn {
   padding: 0;
   border: none;
   border-radius: 50%;
-  cursor: pointer;
   color: var(--text-color-secondary);
 
   background: var(--glass-tint);
@@ -267,7 +266,6 @@ html.search-vt .bn-search-btn {
   border: none;
   border-radius: var(--radius-md, 0.75rem);
   background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
-  cursor: pointer;
 }
 
 .search-event-session .ses-when {

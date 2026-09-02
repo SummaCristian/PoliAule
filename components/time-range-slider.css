@@ -95,7 +95,6 @@
 
   box-shadow: 0 2px 8px color-mix(in srgb, var(--badge-bg) 40%, transparent);
 
-  cursor: pointer;
   border: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -351,7 +350,6 @@
 
   pointer-events: auto;
   user-select: none;
-  cursor: pointer;
   z-index: 1;
 
   opacity: 0;

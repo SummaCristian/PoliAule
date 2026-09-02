@@ -147,7 +147,6 @@
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   text-align: left;
   color: var(--cp-text);
-  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 
   background: var(--cp-glass-tint);
@@ -452,7 +451,6 @@
   padding: 8px;
   border-radius: 8px;
   color: var(--cp-text);
-  cursor: pointer;
 }
 
 .campus-option__check {

@@ -31,6 +31,7 @@ import { setupCampusPicker } from './components/campus-picker.js';
 import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
+import { initPickerDock } from './components/picker-dock.js';
 import './components/data-fetch-card.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
@@ -308,6 +309,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTimePickers();
     initTimePickers();
     initTimeRangeSlider();
+
+    // Decide pill vs. inline-expanded pickers based on the form column's width
+    // (desktop two-column layout only).
+    initPickerDock();
 
     // Setup the language switch handler immediately — doesn't depend on
     // fonts and shouldn't wait for the splash to dismiss

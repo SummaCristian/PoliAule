@@ -35,9 +35,10 @@
 /* Native-app feel: reserve the pointing-hand cursor for genuine links only.
    Buttons, tabs, toggles, cards, selects and menu items keep the default
    arrow and communicate their affordance through hover/active states, the
-   way native UI does. Individual components must not re-add cursor: pointer;
-   use meaningful cursors (grab, col-resize, not-allowed, text) where they
-   actually apply. */
+   way native UI does. Individual components must not re-add cursor: pointer,
+   nor grab/grabbing on custom drag controls (sliders, scrubbers, deform
+   handles) — draggability is shown through motion, not a cursor swap. Only
+   col-resize / not-allowed / text, where they genuinely apply. */
 button,
 [role="button"],
 [role="option"],
@@ -1298,13 +1299,26 @@ body.info-open .header-nav-row {
   align-items: flex-start;
   gap: 0.75rem;
   width: 100%;
+
+  /* So the docked date/time pickers (desktop) can size-query this column. */
+  container-type: inline-size;
+}
+
+/* Transparent by default — date + time act as direct children of .picker-row
+   (mobile pill bar is unchanged). The desktop rule below turns it into a real
+   flex box so the two panels stack together beside the campus list. */
+.picker-substack {
+  display: contents;
 }
 
 /* <campus-chip-picker> / <date-chip-picker> are display:block custom elements;
    without this each stretches to the row's full width and forces a wrap even
    when both pills would comfortably fit on one line. Shrink-wrap them to their
-   pill instead. */
-.picker-row > * {
+   pill instead. `.picker-substack` is display:contents on mobile, so its
+   children (date + time) are laid out by `.picker-row` directly and need the
+   same treatment. */
+.picker-row > *,
+.picker-substack > * {
   flex: 0 1 auto;
   width: max-content;
   max-width: 100%;
@@ -1834,6 +1848,54 @@ are rendered as solid colors
     /* Not sticky on desktop — the results column scrolls on its own. */
     position: static;
     gap: 1rem;
+  }
+
+  /* When the pickers dock (inline-expanded, see components/picker-dock.js) they
+     flow as a wrapping row of glass panels: side by side when the column is
+     wide enough, stacked when it isn't. Each panel hugs its own content
+     (`.picker-row` is already `flex-flow: row wrap`). */
+  .picker-row:has(.dcp-popup--docked),
+  .picker-row:has(.trc-popup--docked),
+  .picker-row:has(.cp-panel-host--docked) {
+    align-items: flex-start;
+  }
+
+  /* Each expanded panel hugs its own content and does NOT shrink — so it
+     wraps to the next line when the column can't fit it beside its sibling,
+     rather than squashing. */
+  date-chip-picker:has(.dcp-popup--docked),
+  time-range-chip-picker:has(.trc-popup--docked),
+  .picker-row > .cp-panel-host--docked {
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  /* Campus listbox docked in the column (its shadow host, portaled here from
+     <body> by campus-picker.js). */
+  .cp-panel-host--docked {
+    display: block;
+  }
+
+  /* Date + Time sit in their own wrapping flex box beside the campus panel.
+     `flex: 1 1 0` lets the box take whatever width is left on campus's line,
+     and its contents wrap within that:
+       - room for both  -> campus | date time
+       - room for one   -> campus | date
+                                    time
+       - no room        -> the whole box drops below campus, then date/time
+                           wrap again on the full width (side by side, else
+                           stacked).
+     Its `min-content` width is the wider single picker, so the box only
+     stays beside campus while at least one picker fits there. */
+  .picker-row .picker-substack {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 0.75rem;
+    flex: 1 1 0;
+    width: auto;
+    align-content: flex-start;
+    align-items: flex-start;
   }
 
   #available-classrooms-results {

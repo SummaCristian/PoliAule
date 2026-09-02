@@ -28,6 +28,7 @@ export class DateChipPicker extends HTMLElement {
   #todayBadgeEl = null;
   #isOpen = false;
   #isAnimating = false;
+  #docked = false;         // inline-expanded in the desktop column (no popup)
   #preventScroll = null;
   #scrollLocked = false;
   // Bumped on every open/close so deferred callbacks from a superseded
@@ -118,10 +119,61 @@ export class DateChipPicker extends HTMLElement {
     this.#hiddenSelect?.addEventListener('change', () => this.#renderValue());
     onLanguageSwitch(() => this.retranslate());
     window.addEventListener('resize', () => {
+      if (this.#docked) return;
       if (this.#isOpen && !this.#isAnimating) this.#applyGeometry(this.#panelTarget());
     });
 
     this.#renderValue();
+  }
+
+  // ── Docked (inline-expanded) mode ───────────────────────────────────
+  // On desktop the picker isn't a pill that morphs into a body-level popup;
+  // the same glass panel sits directly in the form column. picker-dock.js
+  // toggles this from a ResizeObserver on the container. Instant swap, no morph.
+  setDocked(on) {
+    on = !!on;
+    if (on === this.#docked) return;
+    this.#docked = on;
+
+    if (on) {
+      if (this.#isOpen) this.#forceClose();
+      this.#trigger.hidden = true;
+      this.#overlay.hidden = true;
+      this.#popup.classList.remove('dcp-popup--closing');
+      this.#popup.classList.add('dcp-popup--docked', 'dcp-popup--open');
+      ['left', 'top', 'width', 'height', 'borderRadius', 'transition'].forEach(
+        p => { this.#popup.style[p] = ''; }
+      );
+      this.#popup.style.display = 'flex';
+      this.appendChild(this.#popup);
+      // The sliding picker had no layout while display:none — date-picker.js's
+      // own ResizeObserver on .date-picker fires on this reveal; nudge it too.
+      window.dispatchEvent(new Event('resize'));
+    } else {
+      this.#popup.classList.remove('dcp-popup--docked', 'dcp-popup--open');
+      this.#popup.style.display = 'none';
+      ['left', 'top', 'width', 'height', 'borderRadius', 'transition'].forEach(
+        p => { this.#popup.style[p] = ''; }
+      );
+      document.body.appendChild(this.#popup);
+      this.#trigger.hidden = false;
+    }
+  }
+
+  // Synchronous, motion-free teardown of an open popup (used when docking mid-open).
+  #forceClose() {
+    this.#beginOp();
+    this.#isOpen = false;
+    this.#isAnimating = false;
+    this.#trigger.setAttribute('aria-expanded', 'false');
+    this.#popup.classList.remove('dcp-popup--open', 'dcp-popup--closing');
+    this.#overlay.classList.remove('is-active');
+    this.#popup.style.display = 'none';
+    this.#popup.style.transition = '';
+    ['left', 'top', 'width', 'height', 'borderRadius'].forEach(p => { this.#popup.style[p] = ''; });
+    this.#overlay.hidden = true;
+    this.classList.remove('dcp-anim', 'dcp-content-hidden');
+    this.#unlockScroll();
   }
 
   // ── Collapsed value: "Tue 15" (bold) + "Sep" (regular), locale-aware ──
@@ -209,6 +261,7 @@ export class DateChipPicker extends HTMLElement {
 
   // ── Open / close ────────────────────────────────────────────────────
   #toggle() {
+    if (this.#docked) return;
     this.#isOpen ? this.#close() : this.#open();
   }
 
@@ -222,7 +275,7 @@ export class DateChipPicker extends HTMLElement {
   }
 
   #open() {
-    if (this.#isOpen) return;
+    if (this.#isOpen || this.#docked) return;
     const seq = this.#beginOp();
     this.#isOpen = true;
     this.#isAnimating = true;

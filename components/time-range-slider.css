@@ -179,7 +179,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     0 2px 12px color-mix(in srgb, var(--text-color-accent) 16%, transparent);
 
-  cursor: grab;
+  cursor: default;
   z-index: 1;
   display: flex;
   align-items: center;
@@ -190,7 +190,6 @@
 
 .trs-range:active {
   background-color: color-mix(in srgb, var(--text-color-accent) 36%, transparent);
-  cursor: grabbing;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -243,7 +242,7 @@
     0 2px 8px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 
-  cursor: grab;
+  cursor: default;
   touch-action: none;
   z-index: 3;
   outline: none;
@@ -323,7 +322,6 @@
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-  cursor: grabbing !important;
   transition: none !important;
 }
 

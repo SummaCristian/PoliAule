@@ -335,6 +335,10 @@
   border-radius: 16px;
   text-align: left; /* body sets text-align:center; this inherits it */
 
+  /* UI chrome, not selectable text — same as the date/time pickers. */
+  -webkit-user-select: none;
+  user-select: none;
+
   background: var(--cp-glass-tint);
   -webkit-backdrop-filter: blur(var(--cp-glass-blur));
   backdrop-filter: blur(var(--cp-glass-blur));
@@ -386,15 +390,11 @@
 }
 
 /* The title bar is the deform handle (see attachLiquidGlass `from:` in
-   campus-picker.js). */
+   campus-picker.js). Native-app feel: no grab hand — the press/drag deform is
+   its own affordance (see the cursor rule in style.css). */
 .cp-popup__title {
-  cursor: grab;
+  cursor: default;
   touch-action: none;
-}
-
-.cp-popup.lg-pressing .cp-popup__title,
-.cp-popup.lg-dragging .cp-popup__title {
-  cursor: grabbing;
 }
 
 .cp-popup:focus-visible {
@@ -430,6 +430,21 @@
   transform: none;
   transition-delay: 0.16s;
   overflow-y: auto;
+}
+
+/* Thin, unobtrusive scrollbar for the campus list (Firefox uses
+   `scrollbar-width: thin` above). */
+.cp-popup__inner::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cp-popup__inner::-webkit-scrollbar-thumb {
+  background: var(--cp-text-50);
+  border-radius: 3px;
+}
+
+.cp-popup__inner::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* Shell cross-fades out over the reformed pill at the end of the close. */
@@ -574,5 +589,49 @@
   }
   .cp-popup__inner {
     transform: none;
+  }
+}
+
+/* ── Docked (inline-expanded) mode ────────────────────────────────────────
+   Desktop 2-column layout: the listbox sits directly in the form column
+   instead of morphing out of the pill into a fixed popup. Same glass chrome,
+   no fixed positioning, no morph transition. Toggled by components/picker-dock.js;
+   the shadow host (.cp-panel-host) is styled from style.css (light DOM). */
+.cp-popup--docked {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  /* A touch under the 13rem floating popup — still far wider than any campus
+     label needs, so nothing clips. */
+  width: 12.5rem;
+  height: auto !important;
+  /* A long campus list scrolls inside the card rather than growing the column. */
+  max-height: min(60vh, 26rem);
+  border-radius: 16px !important;
+  transition:
+    translate var(--press-out-dur) var(--ease-spring),
+    scale var(--press-out-dur) var(--ease-spring),
+    filter 0.2s ease;
+  will-change: auto;
+  box-shadow:
+    0 0 0 0.1px var(--cp-glass-outline),
+    var(--cp-glass-highlight),
+    0 4px 24px 0 var(--cp-glass-shadow-color);
+}
+
+.cp-popup--docked .cp-popup__inner {
+  width: 100%;
+  opacity: 1;
+  transform: none;
+  transition: none;
+  max-height: min(60vh, 26rem);
+}
+
+/* Match the date / time docked panels' hover: a gentle lift, no brightness
+   boost (it blows out the list in light mode). liquid-glass.css isn't loaded
+   in this shadow root, so spell it out. */
+@media (hover: hover) {
+  .cp-popup--docked:hover {
+    scale: 1.03;
   }
 }

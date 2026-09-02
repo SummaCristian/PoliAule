@@ -269,9 +269,12 @@ time-range-chip-picker.trc-content-hidden .trc-trigger__chevron {
     translate 0s, scale 0s, filter 0.2s ease;
 }
 
-/* A full panel shouldn't drift on hover-lift — only the press/drag deform. */
+/* The morph card is a big panel you're working inside — it shouldn't react to
+   hover at all (no lift, no brightness boost that washes out the slider). The
+   press/drag glass deform still fires. Same as the date / campus morph cards. */
 .trc-popup.liquid-glass:hover {
   scale: 1;
+  filter: none;
 }
 
 .trc-popup__inner {
@@ -321,17 +324,13 @@ time-range-chip-picker.trc-content-hidden .trc-trigger__chevron {
 
 /* The title row is the deform handle (see `data-lg-exclude` in
    time-range-chip-picker.js) — everything else inside .trs-bar-wrapper stays a
-   live slider target. */
+   live slider target. Native-app feel: no grab hand (see the cursor rule in
+   style.css); the press/drag deform is its own affordance. */
 .trc-popup__inner .trs-title {
-  cursor: grab;
+  cursor: default;
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
-}
-
-.trc-popup.lg-pressing .trs-title,
-.trc-popup.lg-dragging .trs-title {
-  cursor: grabbing;
 }
 
 .trc-popup.liquid-glass.lg-pressing,
@@ -350,4 +349,58 @@ time-range-chip-picker.trc-content-hidden .trc-trigger__chevron {
   .trc-popup__inner {
     transform: none;
   }
+}
+
+/* The pill is hidden while docked — `.trc-trigger`'s own `display` beats the
+   UA `[hidden]` rule, so re-assert it. */
+.trc-trigger[hidden] {
+  display: none;
+}
+
+/* ── Docked (inline-expanded) mode ────────────────────────────────────────
+   Desktop 2-column layout: the panel sits directly in the form column
+   instead of morphing out of a pill into a fixed popup. Same glass chrome,
+   no fixed positioning, no morph transition. Toggled by components/picker-dock.js. */
+.trc-popup--docked {
+  position: static;
+  inset: auto;
+  /* The slider bar has no intrinsic width (handles are positioned by %), so
+     unlike the date panel this one needs an explicit width — a definite value,
+     not `min(…, 100%)`, which would collapse against the fit-content host. */
+  width: 26rem !important;
+  max-width: 100%;
+  height: auto !important;
+  max-height: none;
+  z-index: auto;
+  border-radius: 22px !important;
+  transition: none;
+  will-change: auto;
+  /* Static in-flow card — lighter shadow than the floating panel. */
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 24px 0 var(--glass-shadow-color);
+}
+
+/* Inner content is always visible when docked — there's no open/close cycle. */
+.trc-popup--docked .trc-popup__inner {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+/* Keep the liquid-glass press/drag deform on the docked card — just drop the
+   geometry transitions from the merged rule above (nothing moves any more). */
+.trc-popup--docked.liquid-glass {
+  transition:
+    translate var(--press-out-dur) var(--ease-spring),
+    scale var(--press-out-dur) var(--ease-spring),
+    filter 0.2s ease;
+}
+
+/* Docked panel hover: a gentle lift, but NOT the liquid-glass brightness boost
+   — on a big light-mode panel it blows out the slider. */
+.trc-popup--docked.liquid-glass:hover {
+  scale: 1.03;
+  filter: none;
 }

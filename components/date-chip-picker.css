@@ -386,3 +386,55 @@ date-chip-picker.dcp-content-hidden .dcp-trigger__chevron {
     transform: none;
   }
 }
+
+/* The pill is hidden while docked — `.dcp-trigger`'s own `display` beats the
+   UA `[hidden]` rule, so re-assert it. */
+.dcp-trigger[hidden] {
+  display: none;
+}
+
+/* ── Docked (inline-expanded) mode ────────────────────────────────────────
+   Desktop 2-column layout: the panel sits directly in the form column
+   instead of morphing out of a pill into a fixed popup. Same glass chrome,
+   no fixed positioning, no morph transition. Toggled by components/picker-dock.js. */
+.dcp-popup--docked {
+  position: static;
+  inset: auto;
+  /* Hug the date strip rather than stretch to the column. */
+  width: max-content !important;
+  max-width: 100%;
+  height: auto !important;
+  max-height: none;
+  z-index: auto;
+  border-radius: 22px !important;
+  transition: none;
+  will-change: auto;
+  /* Static in-flow card — lighter shadow than the floating panel. */
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 24px 0 var(--glass-shadow-color);
+}
+
+/* Inner content is always visible when docked — there's no open/close cycle. */
+.dcp-popup--docked .dcp-popup__inner {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+/* Keep the liquid-glass press/drag deform on the docked card — just drop the
+   geometry transitions from the merged rule above (nothing moves any more). */
+.dcp-popup--docked.liquid-glass {
+  transition:
+    translate var(--press-out-dur) var(--ease-spring),
+    scale var(--press-out-dur) var(--ease-spring),
+    filter 0.2s ease;
+}
+
+/* Docked panel hover: a gentle lift, but NOT the liquid-glass brightness boost
+   — on a big light-mode panel it blows out the inner picker. */
+.dcp-popup--docked.liquid-glass:hover {
+  scale: 1.03;
+  filter: none;
+}

@@ -86,6 +86,7 @@ export class CampusChipPicker extends HTMLElement {
   #panelRoot = null;     // its shadow root (holds #overlay + #popup)
   #isOpen = false;
   #isAnimating = false;
+  #docked = false;         // inline-expanded in the desktop column (no popup)
   #scrollLocked = false;
   #preventScroll = null;
   #typeaheadBuffer = '';
@@ -134,6 +135,9 @@ export class CampusChipPicker extends HTMLElement {
     this.#popup.addEventListener('keydown', (e) => this.#onKeydown(e));
     this.#popup.addEventListener('click', (e) => this.#onRowClick(e));
     this.#popup.addEventListener('pointermove', (e) => this.#onRowHover(e));
+    // The pointer-driven active row must not stay lit once the cursor leaves
+    // the list (or moves onto the title / a section label).
+    this.#popup.addEventListener('pointerleave', () => this.#clearPointerActive());
     this.#overlay.addEventListener('click', () => this.#close());
   }
 
@@ -320,7 +324,58 @@ export class CampusChipPicker extends HTMLElement {
   //    and the inner content fading in once expanded. ──────────────────────
 
   #toggle() {
+    if (this.#docked) return;
     this.#isOpen ? this.#close() : this.#open();
+  }
+
+  // ── Docked (inline-expanded) mode ───────────────────────────────────
+  // Desktop: the listbox panel sits directly in the form column instead of
+  // morphing out of the pill into a fixed popup. picker-dock.js toggles this.
+  // The panel lives in a <body>-level shadow host (#panelHost); docking moves
+  // that host into .picker-row (as a sibling of this element) and hides the pill.
+  setDocked(on) {
+    on = !!on;
+    if (on === this.#docked) return;
+    this.#docked = on;
+
+    if (on) {
+      if (this.#isOpen) this.#forceClose();
+      this.#overlay.hidden = true;
+      this.#popup.classList.remove('cp-popup--closing');
+      this.#popup.classList.add('cp-popup--docked', 'cp-popup--open');
+      ['left', 'top', 'width', 'height', 'borderRadius', 'transition'].forEach(
+        p => { this.#popup.style[p] = ''; }
+      );
+      this.#popup.style.display = 'flex';
+      this.#panelHost.classList.add('cp-panel-host--docked');
+      this.parentElement?.insertBefore(this.#panelHost, this.nextSibling);
+      this.style.display = 'none';
+      this.#setActive(this.#activeIndex >= 0 ? this.#activeIndex : 0, { scroll: 'auto' });
+    } else {
+      this.#popup.classList.remove('cp-popup--docked', 'cp-popup--open');
+      this.#popup.style.display = 'none';
+      ['left', 'top', 'width', 'height', 'borderRadius', 'transition'].forEach(
+        p => { this.#popup.style[p] = ''; }
+      );
+      this.#panelHost.classList.remove('cp-panel-host--docked');
+      document.body.appendChild(this.#panelHost);
+      this.style.display = '';
+    }
+  }
+
+  #forceClose() {
+    this.#beginOp();
+    this.#isOpen = false;
+    this.#isAnimating = false;
+    this.#trigger.setAttribute('aria-expanded', 'false');
+    this.#popup.classList.remove('cp-popup--open', 'cp-popup--closing');
+    this.#overlay.classList.remove('is-active');
+    this.#popup.style.display = 'none';
+    this.#popup.style.transition = '';
+    ['left', 'top', 'width', 'height', 'borderRadius'].forEach(p => { this.#popup.style[p] = ''; });
+    this.#overlay.hidden = true;
+    this.classList.remove('cp-anim', 'cp-content-hidden');
+    this.#unlockScroll();
   }
 
   #applyGeometry({ left, top, width, height, borderRadius }) {
@@ -394,7 +449,7 @@ export class CampusChipPicker extends HTMLElement {
   }
 
   async #open() {
-    if (this.#isOpen) return;
+    if (this.#isOpen || this.#docked) return;
     const seq = this.#beginOp();
     this.#isOpen = true;
     this.#isAnimating = true;
@@ -625,9 +680,25 @@ export class CampusChipPicker extends HTMLElement {
 
   #onRowHover(e) {
     const row = e.target.closest('[role="option"]');
-    if (!row) return;
+    if (!row) {
+      // Pointer is inside the panel but not over a row (title, section label,
+      // padding) — drop the hover highlight.
+      this.#clearPointerActive();
+      return;
+    }
     const i = this.#rows.findIndex(r => r.el === row);
     if (i >= 0 && i !== this.#activeIndex) this.#setActive(i, { scroll: 'auto' });
+  }
+
+  // Clears the pointer-driven active row. Keyboard navigation re-establishes it
+  // on the next arrow key; the committed selection keeps its own styling via
+  // [aria-selected].
+  #clearPointerActive() {
+    const active = this.#rows.filter(({ el }) => el.classList.contains('is-active'));
+    if (!active.length) return;
+    active.forEach(({ el }) => el.classList.remove('is-active'));
+    this.#activeIndex = this.#rows.findIndex(r => r.id === this.#select.value);
+    this.#popup.removeAttribute('aria-activedescendant');
   }
 }
 

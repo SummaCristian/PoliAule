@@ -361,14 +361,19 @@
 }
 
 /* Scroll container. Fixed width so it doesn't reflow while the shell scales;
-   the shell's `overflow: clip` hides it until it's faded in. */
+   the shell's `overflow: clip` hides it until it's faded in.
+
+   Scrolling stays OFF until the shell has finished expanding (`--open`):
+   mid-morph the shell is far shorter than this content, so an always-on
+   `overflow-y: auto` renders a scrollbar for the whole animation that only
+   vanishes once the shell reaches full height. */
 .cp-popup__inner {
   flex: 1;
   min-height: 0;
   width: 208px;
   box-sizing: border-box;
   padding: 16px;
-  overflow-y: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
   scrollbar-width: thin;
 
@@ -383,6 +388,7 @@
   opacity: 1;
   transform: none;
   transition-delay: 0.16s;
+  overflow-y: auto;
 }
 
 /* Shell cross-fades out over the reformed pill at the end of the close. */

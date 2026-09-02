@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />
   <link rel="stylesheet" href="./components/date-chip-picker.css" />
+  <link rel="stylesheet" href="./components/data-fetch-card.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
   <link rel="stylesheet" href="./components/time-range-slider.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
@@ -105,8 +106,9 @@
           <i class="hgi-stroke hgi-star" aria-hidden="true"></i>
         </button>
 
-        <!-- Data Fetch Indicator -->
-        <button class="header-button liquid-glass" data-popover="data-fetch-indicator-popover" data-popover-shift-padding="16">
+        <!-- Data Fetch Indicator — the button morphs into a glass card holding
+             the freshness status + reload button (see components/data-fetch-card.js). -->
+        <button id="data-fetch-btn" class="header-button liquid-glass" aria-label="Data status">
           <div id="data-fetch-indicator" class="pulse-indicator"></div>
         </button>
 
@@ -278,11 +280,9 @@
     </label>
   </footer>
 
-  <!-- Popovers that need viewport-relative positioning live here, outside any positioned ancestor -->
-  <div id="data-fetch-indicator-popover" class="popover liquid-glass">
-    <div class="arrow" data-arrow></div>
-    <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
-  </div>
+  <!-- Data-fetch status card. data-fetch-card.js relocates this container into a
+       morphing card shell that grows from the header button. -->
+  <div id="data-fetch-indicator-popover-container" class="data-fetch-popover-container"></div>
 
   <!-- Search overlay (opened by the bottom-nav search FAB; floats over the current tab) -->
   <div id="search-overlay" class="search-overlay-backdrop" hidden>

@@ -170,6 +170,13 @@
   align-items: flex-start;
   gap: 0;
 
+  /* It's a <button> now (opens the building overview) — strip the UA chrome. */
+  appearance: none;
+  border: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
   padding: 0.5rem 1.05rem;
   border-radius: var(--radius-pill);
 

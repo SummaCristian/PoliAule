@@ -36,6 +36,7 @@ import './components/data-fetch-card.js';
 
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
+import { buildingOverview } from './components/building-overview.js';
 import { initLiquidGlass } from './components/liquid-glass.js';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 
@@ -194,7 +195,7 @@ document.querySelectorAll('.button-primary').forEach(btn => {
 // own card grid) holding a sticky header followed by that building's room
 // cards, to append directly into the outer <ul>. Returns { node, cardIndex }
 // (the next cardIndex feeds the stagger-animation sequencing).
-function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday = false, date = null, campusId = null) {
+function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday = false, date = null, campusId = null, allResults = []) {
   const buildingName = building.name;
 
   const allPartial = rooms.every(r => r.status === 'partially-free');
@@ -203,22 +204,40 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   // confined to this section (see .building-section in classroom-list.css).
   const section = document.createElement('li');
   section.className = 'building-section';
+  section.dataset.buildingName = buildingName;
+  if (building.id != null) section.dataset.buildingId = building.id;
   if (allPartial) section.dataset.allPartial = 'true';
 
   const headerEl = document.createElement('div');
   headerEl.className = 'building-section-header';
   headerEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
   headerEl.innerHTML = `
-    <div class="building-section-titles liquid-glass">
-      <h3 class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</h3>
-      ${building.altName ? `<p class="building-alt-name">${escapeHtml(building.altName)}</p>` : ''}
-    </div>
+    <button class="building-section-titles liquid-glass" type="button" aria-haspopup="dialog" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
+      <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
+      ${building.altName ? `<span class="building-alt-name">${escapeHtml(building.altName)}</span>` : ''}
+    </button>
     <button class="header-button building-section-btn liquid-glass" type="button" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
       <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
     </button>
   `;
   cardIndex++;
   section.appendChild(headerEl);
+
+  // Tapping the name pill "zooms out" into the building overview grid.
+  const titlesBtn = headerEl.querySelector('.building-section-titles');
+  titlesBtn.addEventListener('pointerdown', () => buildingOverview.prewarm(section));
+  titlesBtn.addEventListener('click', () => {
+    haptics.trigger(defaultPatterns.light);
+    buildingOverview.open({
+      campusId,
+      date,
+      from,
+      to,
+      results: allResults,
+      sourceSection: section,
+      buildingName,
+    });
+  });
 
   // Jump to this building's page in the Campus tab. The tab has to be made
   // visible *before* renderClassrooms runs — building the grid while the tab
@@ -411,6 +430,7 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
 // Builds the UI to show the results of the 'Available Classrooms' form submission,
 function renderAvailableClassroomsResults(results, date, from, to, campusId = null) {
   const container = document.getElementById('available-classrooms-results');
+  buildingOverview.reset(); // tear down the zoom-out view if it's open
   container.dataset.searched = 'true';
   container.innerHTML = ''; // Clear previous results
 
@@ -456,7 +476,7 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
 
   let cardIndex = 0;
   results.forEach(buildingResult => {
-    const { node, cardIndex: next } = buildBuildingSection(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date, campusId);
+    const { node, cardIndex: next } = buildBuildingSection(buildingResult.building, buildingResult.rooms, from, to, cardIndex, isToday, date, campusId, results);
     cardIndex = next;
     list.appendChild(node);
   });

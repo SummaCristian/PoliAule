@@ -1909,7 +1909,17 @@ are rendered as solid colors
     max-height: calc(100dvh - var(--header-height, 80px) - 2rem);
     overflow-y: auto;
 
-    margin: 1rem 0;
+    /* A scroll container clips on BOTH axes, so the cards' 40px soft shadows
+       were cut off at the panel's sides. Push the panel's edges outward — into
+       the page's padding-right on the right, and across the grid's 1.5rem
+       column gap plus 0.75rem of the pickers column on the left — and pad by
+       the same amount, so the content stays put while the clip edge moves out
+       past the shadows. The shadow's tail needs the full 40px + offset before
+       it's gone, or its cut-off reads as a faint line; the 0.75rem overlap
+       stays inside the picker panels' own padding, so nothing clickable is
+       under it. */
+    margin: 1rem -2rem 1rem -2.25rem;
+    padding-inline: 2.25rem 2rem;
   }
 
   #available-classrooms-results.empty {

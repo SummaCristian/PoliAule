@@ -54,6 +54,9 @@
   "search.allCampuses": "All campuses",
   "search.back": "Back",
   "building.prefix": "Building",
+  "overview.title": "Buildings",
+  "overview.close": "Close overview",
+  "overview.subtitle": "{n} classrooms",
 
   "search.buildings": "{n} buildings",
   "search.classrooms": "{n} classrooms",

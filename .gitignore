@@ -8,6 +8,7 @@ __pycache__/
 occupancy/
 data/opening-hours.json
 photos/
+logs/
 
 node_modules/
 dist/

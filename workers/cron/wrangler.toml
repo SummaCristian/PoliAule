@@ -6,10 +6,12 @@ compatibility_date = "2026-08-01"
 # late or got dropped under load. The scheduled() handler fires a
 # workflow_dispatch via the GitHub REST API, which the runner picks up within
 # seconds.
+# Cron Triggers run in UTC and can't follow DST, so the hourly range is sized to
+# always include 07:00-20:00 Italian time: 07-21 CEST (summer), 06-20 CET (winter).
 [triggers]
 crons = [
-  "0 3 * * *",   # 4am Italian time
-  "0 10 * * *",  # ~12pm Italian time (CEST)
+  "0 3 * * *",     # early-morning full refresh, 4am CET / 5am CEST
+  "0 5-19 * * *",  # hourly during the day (see note above)
 ]
 
 [vars]

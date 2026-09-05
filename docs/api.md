@@ -45,7 +45,7 @@ GET /v1/occupations/:date
 
 Returns occupancy slots for all classrooms on a given date. `:date` is `YYYY-MM-DD` (e.g. `/v1/occupations/2026-04-29`).
 
-Up to 7 dates are available at any time, covering today through the next 6 days. Data is regenerated twice daily: around 3 AM UTC (4 AM Italian time) and 10 AM UTC (~12 PM Italian time). A date is skipped (no data generated) if it falls in a university holiday period, or if every building is closed that weekday according to `/v1/opening-hours` below.
+Up to 7 dates are available at any time, covering today through the next 6 days. Data is regenerated early each morning (around 3 AM UTC) and then hourly during the day, roughly 07:00 to 20:00 Italian time. A date is skipped (no data generated) if it falls in a university holiday period, or if every building is closed that weekday according to `/v1/opening-hours` below.
 
 ### Building opening hours
 
@@ -261,7 +261,7 @@ function safeUrl(url) {
 ## Usage notes
 
 - **CORS**: the API is served by a Cloudflare Worker and is accessible from any origin via `fetch()`.
-- **Caching**: occupancy data is regenerated twice per day. Cache responses for up to an hour on your side to stay reasonably fresh without hammering the API.
+- **Caching**: occupancy data is regenerated hourly during the day. Cache responses for up to an hour on your side to stay reasonably fresh without hammering the API.
 - **Missing dates**: if a given date returns 404, the date was skipped (every building closed that weekday, or a holiday) or the scheduled job has not run yet.
 - **Null fields**: optional fields (`idfoto`, `workstations`, `accessible_seats`, etc.) may be `null` if Politecnico did not provide them for a given room.
 

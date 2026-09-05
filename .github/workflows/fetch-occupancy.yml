@@ -7,7 +7,7 @@ on:
   workflow_dispatch:      # Allow manual runs from the GitHub Actions tab
     inputs:
       no_delay:
-        description: 'Skip delay between API calls'
+        description: 'Skip delay between scrape/API calls'
         type: boolean
         default: false
 
@@ -27,7 +27,23 @@ jobs:
           python-version: '3.12'
 
       - name: Install Python dependencies
-        run: pip install httpx
+        run: pip install -r requirements.txt
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # The script compares this run's per-page slot counts against the previous
+      # run's summary to catch pages that parse fine but silently lose data.
+      - name: Download previous run log (main)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p logs
+          npx --yes wrangler@4 r2 object get "poliaule-data/logs/occupancy/latest.json" --file logs/previous.json --remote \
+            || echo "No previous run log found."
 
       - name: Run fetch script (main)
         id: fetch_main
@@ -41,8 +57,10 @@ jobs:
             python scripts/fetch.py
           fi
 
+      # Runs are hourly now, so a message per run would be noise: only alert
+      # when the script crashed or reported an anomaly (status=failed).
       - name: Notify Telegram (main)
-        if: always()
+        if: always() && (steps.fetch_main.outcome != 'success' || steps.fetch_main.outputs.status == 'failed')
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -61,11 +79,18 @@ jobs:
             --data-urlencode chat_id="${TELEGRAM_CHAT_ID}" \
             --data-urlencode text="$TEXT"
 
-      - name: Set up Node
-        if: hashFiles('occupancy/*.json') != ''
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
+      # One structured summary per run, keyed by UTC hour (logs/occupancy/YYYY/MM/DD/HH.json),
+      # plus a fixed latest.json for the next run to compare against. Written even
+      # when the script crashed, so the failure is traceable afterwards.
+      - name: Upload run log to R2 (main)
+        if: always() && hashFiles('logs/run.json') != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          KEY=$(jq -r .log_key logs/run.json)
+          npx --yes wrangler@4 r2 object put "poliaule-data/$KEY" --file logs/run.json --content-type application/json --remote
+          npx --yes wrangler@4 r2 object put "poliaule-data/logs/occupancy/latest.json" --file logs/run.json --content-type application/json --remote
 
       - name: Upload occupancy data to R2 (main)
         if: hashFiles('occupancy/*.json') != ''
@@ -148,7 +173,16 @@ jobs:
         working-directory: beta-checkout
         run: pip install -r requirements.txt
 
-
+      - name: Download previous run log (beta)
+        if: steps.beta_flag.outputs.enabled == 'true'
+        working-directory: beta-checkout
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p logs
+          npx --yes wrangler@4 r2 object get "poliaule-data-beta/logs/occupancy/latest.json" --file logs/previous.json --remote \
+            || echo "No previous run log found."
 
       - name: Run fetch script (beta)
         id: fetch_beta
@@ -166,7 +200,7 @@ jobs:
           fi
 
       - name: Notify Telegram (beta)
-        if: always() && steps.beta_flag.outputs.enabled == 'true'
+        if: always() && steps.beta_flag.outputs.enabled == 'true' && (steps.fetch_beta.outcome != 'success' || steps.fetch_beta.outputs.status == 'failed')
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -184,6 +218,17 @@ jobs:
           curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode chat_id="${TELEGRAM_CHAT_ID}" \
             --data-urlencode text="$TEXT"
+
+      - name: Upload run log to R2 (beta)
+        if: always() && steps.beta_flag.outputs.enabled == 'true' && hashFiles('beta-checkout/logs/run.json') != ''
+        working-directory: beta-checkout
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          KEY=$(jq -r .log_key logs/run.json)
+          npx --yes wrangler@4 r2 object put "poliaule-data-beta/$KEY" --file logs/run.json --content-type application/json --remote
+          npx --yes wrangler@4 r2 object put "poliaule-data-beta/logs/occupancy/latest.json" --file logs/run.json --content-type application/json --remote
 
       - name: Upload occupancy data to R2 (beta)
         if: steps.beta_flag.outputs.enabled == 'true'

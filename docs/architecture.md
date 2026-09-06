@@ -49,7 +49,7 @@ Both fetch jobs run on GitHub Actions. Both write local JSON, then upload it to 
 
 ### fetch.py
 
-Runs twice daily and can be triggered manually. The schedule is driven by the
+Runs at 3 AM UTC and then hourly from 5 to 19 UTC (about 07:00-20:00 Italian time), and can be triggered manually. The schedule is driven by the
 `poliaule-cron` Cloudflare Worker (`workers/cron`), whose Cron Triggers fire a
 `workflow_dispatch` on `fetch-occupancy.yml` via the GitHub REST API. GitHub's
 own `schedule:` trigger was dropped because scheduled runs fired hours late or
@@ -61,8 +61,8 @@ For each of the next 7 days it:
 
 1. Reads `data/classrooms.json` to get room IDs.
 2. Reads `data/opening-hours.json` to decide which days to fetch: a day is skipped only if every building is closed that weekday, or it falls in a holiday period.
-3. For each remaining day, scrapes onlineservices.polimi.it's occupation-names page once per campus (`scripts/fetch_occupation_names.py`, see below) to build a lookup of course name/code/professors by classroom and time slot.
-4. GETs the occupancy endpoint for every room on each remaining day, then enriches each returned slot with the matching entry from that lookup, when one exists.
+3. For each remaining day, scrapes onlineservices.polimi.it's per-day occupancy page once per Sede (`scripts/fetch_occupation_names.py`, see below). Several campuses share a page: Leonardo and Colombo are both on `MIA`, La Masa and Durando on `MIB`. Each scraped cell becomes a slot with start/end plus course name/code/professors. 3 retries per page.
+4. Falls back to the REST occupancy endpoint (one GET per room) only for the classrooms of a page that failed to scrape after retries, and for classrooms with no row on a healthy page (as of writing only G.1 and G.2 in Leonardo building 11). In the normal case zero REST calls are made and the whole run takes seconds.
 5. Writes one `occupancy/occupation_YYYYMMDD.json` per day locally, mirroring the classrooms structure plus an `occupancy` array of hourly slots, plus `occupancy/list.json`.
 6. Deletes stale local files (dates before today).
 7. The GitHub Actions workflow uploads all of those files to the `poliaule-data` R2 bucket via `wrangler r2 object put --remote`. A separate R2 lifecycle rule expires occupancy objects a couple of days after they age out of the 7-day window, so nothing needs to explicitly delete stale objects from the bucket.
@@ -79,14 +79,14 @@ sequenceDiagram
     GHA->>PY: run
     PY->>PY: fetch_days() - next 7 days (skip days every building is closed, and holidays)
     loop each day
-        loop each campus
-            PY->>NAMES: GET occupation-names page
-            NAMES-->>PY: HTML (course name/code/professors per room+slot)
+        loop each Sede page (MIA, MIB, CRG, LCF, MNI)
+            PY->>NAMES: GET occupancy page
+            NAMES-->>PY: HTML (start/end + course name per room)
+            PY-->>PY: wait 0.5s (skipped with --no-delay)
         end
-        loop each room
+        loop rooms on a failed page, or missing from a healthy one
             PY->>API: GET occupancy/{id}/{date}
             API-->>PY: [{slot}, ...]
-            PY-->>PY: enrich slot from name lookup (start/end match)
             PY-->>PY: wait 0.5s (skipped with --no-delay)
         end
     end
@@ -95,22 +95,30 @@ sequenceDiagram
     GHA->>R2: wrangler r2 object put (per file)
 ```
 
-Rate limiting: 0.5 seconds between calls (skippable via `--no-delay`), 3 retries with 2 seconds backoff on failure. See [Cloudflare Workers & R2](#cloudflare-workers--r2) below for what happens to this data next, including how `beta` gets its copy.
+Rate limiting: 0.5 seconds between calls (skippable via `--no-delay`), 3 retries with 2 seconds backoff on failure. Telegram is only messaged when a run has something to report, since hourly success messages would be noise. It flags any anomaly: a page that errored (possible redesign), a failed REST fallback, or more than 5 rooms missing from a healthy page. See [Cloudflare Workers & R2](#cloudflare-workers--r2) below for what happens to this data next, including how `beta` gets its copy.
+
+### Run logs
+
+Every `fetch.py` run writes `logs/run.json`, a structured summary: start/end time, duration, per-day and per-page row/slot counts, REST calls made, page errors, rooms missing from the page, REST failures, final status and the Telegram message. It is written in a `finally` block, so a crash still produces one (status `crashed`, with the traceback). The workflow uploads it to R2 as `logs/occupancy/YYYY/MM/DD/HH.json` (UTC hour of the run; a manual run in the same hour overwrites it) and as `logs/occupancy/latest.json`. Beta gets its own copies in `poliaule-data-beta` when its backend flag is on.
+
+Before the fetch, the workflow downloads `latest.json` to `logs/previous.json`; `fetch.py` compares each page's slot count for the same date against it and flags a drop below half (when the previous count was at least 20) as an anomaly, catching pages that parse fine but silently lose data. Raw stdout stays in the GitHub Actions run log.
+
+`scripts/read_logs.py` prints these summaries as a table for a date range (it probes the cron hours via `wrangler r2 object get` and caches under `logs/cache/`), or dumps a single run with `--show YYYY/MM/DD/HH`. Set an R2 lifecycle rule on the `logs/` prefix (e.g. 90 days) to keep the bucket tidy; nothing deletes them otherwise.
 
 ### fetch_occupation_names.py
 
-Called by `fetch.py` (not run standalone in production, though it has its own CLI for manual testing). The REST occupancy endpoint above only returns start/end times, no course name, so this module scrapes onlineservices.polimi.it's server-rendered occupation-names page instead, one request per campus per day, and parses the HTML table directly (no JSON API backs that page).
+Called by `fetch.py` (not run standalone in production, though it has its own CLI for manual testing). This module is the primary occupancy source: it scrapes onlineservices.polimi.it's server-rendered per-day occupancy page, one request per Sede per day, and parses the HTML table directly (no JSON API backs that page). Cells are 15 minutes wide starting at 08:00, so times snap to that grid; bookings starting before 08:00 are rendered by the page anchored at 08:00 with their full duration, so their end time reads an hour late. Known gap: a couple of classrooms in classrooms.json have no row on the page (`scripts/compare_scrape_vs_api.py` measured the scrape at 97% exact agreement with the REST API over a week).
 
 Each parsed slot's name is then split by `parse_occupation_name()` into structured fields, anchored on the course code (a 5-6 digit number) since dash placement around it is inconsistent and integrated courses have extra dashes inside the course name itself:
 
 - Matches a code → `{category: "COURSE", course, code, professors: [...]}`, plus a `section` field when a `"Sez. A"`-style marker is present. During exam sessions the category is `"EXAM"` instead of `"COURSE"` (same fields): Polimi appends `(ESAME)`/`(ORALI)`/`(ULTIMA PROVA IN ITINERE)` straight onto the last professor's name, which gets stripped out and turned into the category rather than left in `professors`.
 - No code found (events, tutoring sessions, maintenance blocks, ...) → `{category: "OTHER", raw}`, keeping the untouched string rather than forcing it into a shape that doesn't fit.
 
-A campus that fails to scrape, or a page that comes back in an unrecognized shape, is skipped with a warning and never blocks the REST-based occupancy fetch: no-name occupancy slots are preferable to failing the whole run over a page layout change.
+A page that fails to scrape after retries, or comes back in an unrecognized shape, makes `fetch.py` fall back to the REST occupancy endpoint (start/end only, no course names) for every classroom on that page, and the run's Telegram message reports the error.
 
 ### fetch_opening_hours.py
 
-Runs weekly (Sunday 6 AM UTC), independent of `fetch.py`'s twice-daily schedule. Scrapes polimi.it's building opening-hours page and writes `data/opening-hours.json`, containing:
+Runs weekly (Sunday 6 AM UTC), independent of `fetch.py`'s hourly schedule. Scrapes polimi.it's building opening-hours page and writes `data/opening-hours.json`, containing:
 
 - `buildings`: explicit per-building hours, keyed by the building number/code shown on the page (e.g. `"21"`, `"B12"`)
 - `campus_defaults`: fallback hours for a whole campus, from the page's "Tutti"/"Tutti gli altri spazi" rows

@@ -25,7 +25,8 @@ npm run deploy
 ```
 
 Schedule and repo coordinates live in `wrangler.toml` (`[triggers].crons` and
-`[vars]`). The crons mirror what used to be in `fetch-occupancy.yml`.
+`[vars]`). One early-morning full refresh at 03:00 UTC, then hourly from 05:00 to 19:00 UTC so the
+07:00-20:00 Italian window is covered in both CET and CEST (one extra evening run in summer).
 
 ## Manual trigger
 

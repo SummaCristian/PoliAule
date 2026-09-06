@@ -3,12 +3,15 @@ import json
 import os
 import re
 import time
+import traceback
 import httpx
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 from pathlib import Path
 from typing import cast
 
-from fetch_occupation_names import fetch_occupation_names, parse_occupation_name
+from fetch_occupation_names import (
+    CSIC_OVERRIDES, ScrapeError, fetch_occupation_names, parse_occupation_name,
+)
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -17,6 +20,10 @@ from fetch_occupation_names import fetch_occupation_names, parse_occupation_name
 CLASSROOMS_FILE = Path(__file__).parent.parent / "data" / "classrooms.json"
 OPENING_HOURS_FILE = Path(__file__).parent.parent / "data" / "opening-hours.json"
 OUTPUT_DIR = Path(__file__).parent.parent / "occupancy"
+LOGS_DIR = Path(__file__).parent.parent / "logs"
+RUN_LOG_FILE = LOGS_DIR / "run.json"        # structured summary of this run, uploaded to R2 by the workflow
+PREVIOUS_LOG_FILE = LOGS_DIR / "previous.json"  # previous run's summary, downloaded from R2 by the workflow
+LOG_KEY_PREFIX = "logs/occupancy"           # R2 key prefix; one object per run, keyed by UTC hour
 BASE_URL = "https://onlineservices.polimi.it/maps_rest/rest/ricerca/aula/occupazione"
 
 # Retry settings
@@ -26,6 +33,19 @@ RETRY_DELAY = 2  # seconds between retries
 # Fetch settings
 NEXT_DAYS_WINDOW = 7  # Number of days to fetch starting from today
 DELAY_BETWEEN_CALLS = 0.5  # seconds to wait between API calls
+
+# The scraped page is known to omit a couple of classrooms that classrooms.json
+# lists (as of writing: G.1 and G.2 in Leonardo building 11). Those fall back to
+# the REST API silently; more than this many missing rows on a single page is
+# instead reported as an anomaly, since it likely means the page changed shape.
+MAX_EXPECTED_MISSING_ROWS = 5
+
+# A page that parses fine but suddenly returns far fewer slots than the previous
+# run did for the same date is suspicious too (partial page, silent layout
+# change). Flag it when the count drops below this fraction of the previous
+# value, but only if the previous value was big enough to be meaningful.
+SLOT_DROP_RATIO = 0.5
+SLOT_DROP_MIN_PREVIOUS = 20
 
 # Polimi's WAF blocks the default httpx UA (and anything else that looks like
 # a bare script client); a browser-like UA lets requests from CI runners through.
@@ -207,73 +227,123 @@ def _pick(src: dict, *keys: str) -> dict:
     return {k: src[k] for k in keys if src.get(k) is not None}
 
 
-def build_name_lookup(campuses: list[dict], client: httpx.Client, d: date, no_delay: bool) -> dict:
-    """Scrape onlineservices.polimi.it's occupation-names page for every campus (one
-    request each, not per-room) and return {idaula: {(inizio, fine): {"name", "idrichiesta"}}}.
+def _resolved_csic(campus: dict) -> str | None:
+    """The scraped page's csic for a classrooms.json campus (its Sede umbrella value).
 
-    Best-effort: a campus that fails to scrape (network error, a campus this
-    endpoint doesn't cover at all e.g. Mantova, or the page layout changing in a
-    way the parser doesn't expect) is skipped with a warning. Catches broadly
-    (not just httpx.HTTPError/ScrapeError) since this scraper is built against
-    unversioned HTML that Polimi could change at any time; no-name occupations
-    are preferable to crashing the whole fetch run over it.
+    Several campuses share one page: Leonardo and Colombo both resolve to "MIA",
+    La Masa and Durando to "MIB". A failure on that page therefore affects every
+    classroom of every campus that resolves to it.
     """
-    lookup: dict[int, dict[tuple[str, str], dict]] = {}
+    csic = campus.get("id")
+    return CSIC_OVERRIDES.get(csic, csic) if csic else None
+
+
+def scrape_day(
+    campuses: list[dict], client: httpx.Client, d: date, no_delay: bool
+) -> tuple[dict[str, dict[int, list[dict]]], dict[str, str]]:
+    """Scrape onlineservices.polimi.it's per-day occupancy page once per Sede.
+
+    Returns ({resolved_csic: {idaula: [occupation, ...]}}, {resolved_csic: error}).
+    A page that fails after MAX_RETRIES attempts (network error, HTTP error,
+    unrecognized layout) is recorded in the second dict so the caller can fall
+    back to the REST API for every classroom on that page.
+    """
+    pages: dict[str, dict[int, list[dict]]] = {}
+    errors: dict[str, str] = {}
     for campus in campuses:
         csic = campus.get("id")
-        if not csic:
+        resolved = _resolved_csic(campus)
+        if not csic or resolved is None or resolved in pages or resolved in errors:
             continue
-        try:
-            per_room = fetch_occupation_names(client, csic, d)
-        except Exception as e:
-            print(f"  Warning: name scrape failed for {csic}: {e}")
-            continue
-        for idaula, occupations in per_room.items():
-            lookup[idaula] = {(o["start"], o["end"]): o for o in occupations}
+        last_error = "unknown error"
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                pages[resolved] = fetch_occupation_names(client, csic, d)
+                break
+            except httpx.HTTPStatusError as e:
+                last_error = f"HTTP {e.response.status_code}"
+            except (httpx.HTTPError, httpx.TimeoutException) as e:
+                last_error = type(e).__name__
+            except ScrapeError as e:
+                last_error = f"ScrapeError: {e}"
+            except Exception as e:  # unversioned HTML: anything can go wrong while parsing
+                last_error = f"{type(e).__name__}: {e}"
+            print(f"    Attempt {attempt}/{MAX_RETRIES} failed for page {resolved} on {d}: {last_error}")
+            if attempt < MAX_RETRIES:
+                time.sleep(RETRY_DELAY)
+        else:
+            print(f"    Page {resolved} on {d} failed after {MAX_RETRIES} attempts; "
+                  f"its classrooms will use the REST API.")
+            errors[resolved] = last_error
         if not no_delay:
             time.sleep(DELAY_BETWEEN_CALLS)
-    return lookup
+    return pages, errors
+
+
+def scraped_to_slots(occupations: list[dict]) -> list[dict]:
+    """Convert scraped occupations into the output slot shape (inizio/fine + name fields)."""
+    slots = []
+    for o in occupations:
+        slot: dict = {"inizio": o["start"], "fine": o["end"]}
+        if o.get("name"):
+            slot.update(parse_occupation_name(o["name"]))
+        if o.get("idrichiesta"):
+            slot["idrichiesta"] = o["idrichiesta"]
+        slots.append(slot)
+    return slots
 
 
 def build_output(
     campuses: list[dict], client: httpx.Client, d: date, no_delay: bool,
-    name_lookup: dict, failures: list[dict]
-) -> dict:
-    """Build the output JSON file, mirroring the classrooms structure, plus occupancy in each classroom."""
+    pages: dict[str, dict[int, list[dict]]], page_errors: dict[str, str],
+    failures: list[dict], missing_rows: list[dict],
+) -> tuple[dict, int]:
+    """Build the output JSON file, mirroring the classrooms structure, plus occupancy in each classroom.
+    Returns (output, number of REST API calls made).
+
+    Occupancy comes from the scraped page for the classroom's Sede. The REST API
+    is only called for classrooms whose page failed to scrape (see scrape_day)
+    or that have no row on an otherwise healthy page.
+    """
     result = []
+    rest_calls = 0
     for campus in campuses:
         campus_out = {**_pick(campus, "name", "id", "lat", "long"), "buildings": []}
+        resolved = _resolved_csic(campus)
+        page = pages.get(resolved) if resolved else None
+        page_failed = page is None
+        if page_failed:
+            print(f"  Campus {campus.get('name')} ({resolved}): page unavailable, using REST API for every room.")
+
         for building in campus["buildings"]:
             building_out = {
                 **_pick(building, "name", "altName", "lat", "long", "idEdificio", "address"),
                 "classrooms": [],
             }
             for classroom in building["classrooms"]:
-                print(f"  Fetching room {classroom['name']} (id={classroom['id']})...")
-                occupancy = fetch_occupancy(client, classroom["id"], classroom["name"], d, failures)  # API Call
+                room_id, room_name = classroom["id"], classroom["name"]
+                scraped = None if page_failed else page.get(room_id)
 
-                # Enrich each slot with the course name/idrichiesta scraped above, when available.
-                room_names = name_lookup.get(classroom["id"], {})
-                for slot in occupancy or []:
-                    match = room_names.get((slot.get("inizio"), slot.get("fine")))
-                    if match:
-                        if match["name"]:
-                            slot.update(parse_occupation_name(match["name"]))
-                        if match["idrichiesta"]:
-                            slot["idrichiesta"] = match["idrichiesta"]
+                if scraped is not None:
+                    occupancy = scraped_to_slots(scraped)
+                else:
+                    if not page_failed:
+                        missing_rows.append({
+                            "room": room_name, "id": room_id, "date": d.isoformat(), "page": resolved,
+                        })
+                    print(f"  Fetching room {room_name} (id={room_id}) via REST API...")
+                    rest_calls += 1
+                    occupancy = fetch_occupancy(client, room_id, room_name, d, failures) or []
+                    if not no_delay:
+                        time.sleep(DELAY_BETWEEN_CALLS)
 
                 building_out["classrooms"].append(
                     {
                         **_pick(classroom, "name", "id", "features",
                                 "idfoto", "seats", "accessible_seats", "workstations"),
-                        "occupancy": occupancy if occupancy is not None else [],
+                        "occupancy": occupancy,
                     }
                 )
-
-                # Wait before the next API call to avoid overwhelming the server
-                if not no_delay:
-                    time.sleep(DELAY_BETWEEN_CALLS)
-
             campus_out["buildings"].append(building_out)
         result.append(campus_out)
 
@@ -282,7 +352,52 @@ def build_output(
         "generated_at": datetime.now().isoformat(),
         "date": d.strftime("%Y%m%d"),
         "campuses": result,
+    }, rest_calls
+
+
+def load_previous_log() -> dict | None:
+    """Load the previous run's summary (downloaded from R2 by the workflow), if any."""
+    if not PREVIOUS_LOG_FILE.exists():
+        return None
+    try:
+        with open(PREVIOUS_LOG_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError) as e:
+        print(f"  Warning: could not read {PREVIOUS_LOG_FILE}: {e}")
+        return None
+
+
+def page_stats(pages: dict[str, dict[int, list[dict]]], errors: dict[str, str]) -> dict[str, dict]:
+    """Per-page row/slot counts for the run log."""
+    stats = {
+        csic: {"rows": len(rooms), "slots": sum(len(v) for v in rooms.values()), "error": None}
+        for csic, rooms in pages.items()
     }
+    for csic, err in errors.items():
+        stats[csic] = {"rows": 0, "slots": 0, "error": err}
+    return stats
+
+
+def detect_slot_drops(d: date, stats: dict[str, dict], previous: dict | None) -> list[dict]:
+    """Compare this run's per-page slot counts for `d` against the previous run's."""
+    if not previous:
+        return []
+    prev_pages = previous.get("days", {}).get(d.isoformat(), {}).get("pages", {})
+    drops = []
+    for csic, cur in stats.items():
+        prev = prev_pages.get(csic)
+        if cur["error"] or not prev or prev.get("error"):
+            continue
+        if prev["slots"] >= SLOT_DROP_MIN_PREVIOUS and cur["slots"] < prev["slots"] * SLOT_DROP_RATIO:
+            drops.append({"page": csic, "date": d.isoformat(), "previous": prev["slots"], "current": cur["slots"]})
+    return drops
+
+
+def write_run_log(log: dict) -> None:
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RUN_LOG_FILE, "w", encoding="utf-8") as f:
+        json.dump(log, f, ensure_ascii=False, indent=2)
+    print(f"Run log written to {RUN_LOG_FILE} (R2 key: {log['log_key']})")
 
 
 def write_github_output(status: str, message: str):
@@ -296,24 +411,62 @@ def write_github_output(status: str, message: str):
         f.write(f"message<<{delimiter}\n{message}\n{delimiter}\n")
 
 
-def summarize(days: list[date], failures: list[dict]) -> tuple[str, str]:
-    """Build a (status, message) pair describing the run, for the Telegram notification step."""
+def summarize(
+    days: list[date], page_errors: list[dict], failures: list[dict], missing_rows: list[dict],
+    slot_drops: list[dict],
+) -> tuple[str, str]:
+    """Build a (status, message) pair describing the run, for the Telegram notification step.
+
+    Status is "failed" (Telegram shows a warning) on any anomaly: a scraped page
+    that errored (possible redesign of the page), a REST fallback call that
+    failed, or more classrooms missing from a healthy page than expected. The
+    two classrooms the page is known to omit are listed but don't by themselves
+    trip the alert.
+    """
     lines = [f"{len(days)} day(s) fetched: {', '.join(d.isoformat() for d in days)}."]
-    if not failures:
-        return "ok", "\n".join(lines)
+    anomaly = False
 
-    by_error: dict[str, list[dict]] = {}
-    for f in failures:
-        by_error.setdefault(f["error"], []).append(f)
+    if page_errors:
+        anomaly = True
+        lines.append(f"{len(page_errors)} scrape page(s) failed (REST fallback used):")
+        for e in page_errors:
+            lines.append(f"- {e['page']} on {e['date']}: {e['error']}")
 
-    lines.append(f"{len(failures)} room-fetch(es) failed after {MAX_RETRIES} attempts:")
-    for error, group in sorted(by_error.items(), key=lambda kv: -len(kv[1])):
-        lines.append(f"- {error}: {len(group)} room(s)")
-        for f in group[:10]:
-            lines.append(f"    {f['room']} (id={f['id']}) on {f['date']}")
-        if len(group) > 10:
-            lines.append(f"    ...and {len(group) - 10} more")
-    return "failed", "\n".join(lines)
+    if slot_drops:
+        anomaly = True
+        lines.append(f"{len(slot_drops)} page(s) returned far fewer slots than the previous run:")
+        for s in slot_drops:
+            lines.append(f"- {s['page']} on {s['date']}: {s['previous']} -> {s['current']}")
+
+    if missing_rows:
+        per_page_day: dict[tuple[str, str], list[dict]] = {}
+        for m in missing_rows:
+            per_page_day.setdefault((m["page"], m["date"]), []).append(m)
+        worst = max(len(v) for v in per_page_day.values())
+        if worst > MAX_EXPECTED_MISSING_ROWS:
+            anomaly = True
+            lines.append(
+                f"Up to {worst} classrooms missing from a single healthy page "
+                f"(expected at most {MAX_EXPECTED_MISSING_ROWS}); page layout may have changed."
+            )
+        rooms = sorted({f"{m['room']} (id={m['id']})" for m in missing_rows})
+        lines.append(f"{len(rooms)} classroom(s) not on the page, fetched via REST: "
+                     + ", ".join(rooms[:10]) + (" ..." if len(rooms) > 10 else ""))
+
+    if failures:
+        anomaly = True
+        by_error: dict[str, list[dict]] = {}
+        for f in failures:
+            by_error.setdefault(f["error"], []).append(f)
+        lines.append(f"{len(failures)} REST fallback fetch(es) failed after {MAX_RETRIES} attempts:")
+        for error, group in sorted(by_error.items(), key=lambda kv: -len(kv[1])):
+            lines.append(f"- {error}: {len(group)} room(s)")
+            for f in group[:10]:
+                lines.append(f"    {f['room']} (id={f['id']}) on {f['date']}")
+            if len(group) > 10:
+                lines.append(f"    ...and {len(group) - 10} more")
+
+    return ("failed" if anomaly else "ok"), "\n".join(lines)
 
 
 def cleanup_old_files():
@@ -340,13 +493,39 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--no-delay", action="store_true", help="Skip delay between API calls")
     args = parser.parse_args()
-    
+
+    started = datetime.now(timezone.utc)
+    log: dict = {
+        "started_at": started.isoformat(timespec="seconds"),
+        "log_key": f"{LOG_KEY_PREFIX}/{started.strftime('%Y/%m/%d/%H')}.json",
+        "no_delay": args.no_delay,
+        "status": "crashed",  # overwritten on a normal exit
+        "days": {},
+    }
+    try:
+        run(args, log)
+    except BaseException as e:
+        log["error"] = "".join(traceback.format_exception(e)).strip()
+        log["message"] = f"Crashed: {type(e).__name__}: {e}"
+        raise
+    finally:
+        finished = datetime.now(timezone.utc)
+        log["finished_at"] = finished.isoformat(timespec="seconds")
+        log["duration_seconds"] = round((finished - started).total_seconds(), 1)
+        write_run_log(log)
+
+
+def run(args, log: dict) -> None:
     # Load classrooms
     with open(CLASSROOMS_FILE, encoding="utf-8") as f:
         campuses = json.load(f)
 
     # Load opening hours (scraped periodically by scripts/fetch_opening_hours.py)
     opening_hours = load_opening_hours()
+
+    # Previous run's summary, for the slot-count sanity check
+    previous = load_previous_log()
+    log["previous_run"] = previous.get("started_at") if previous else None
 
     # Determine days to fetch
     days = fetch_days(campuses, opening_hours)
@@ -356,7 +535,8 @@ def main():
         print(
             "No days to fetch (all within holiday periods or skipped weekdays). Exiting."
         )
-        write_github_output("ok", "No days to fetch (all within holiday periods or skipped weekdays).")
+        log["status"], log["message"] = "ok", "No days to fetch (all within holiday periods or skipped weekdays)."
+        write_github_output(log["status"], log["message"])
         return
 
     print(f"Fetching occupancy for {len(days)} day(s): {[d.isoformat() for d in days]}")
@@ -369,16 +549,29 @@ def main():
     cleanup_old_files()
 
     failures: list[dict] = []
+    page_errors: list[dict] = []
+    missing_rows: list[dict] = []
+    slot_drops: list[dict] = []
     with httpx.Client(headers=REQUEST_HEADERS) as client:
         for d in days:
             print(f"\n--- {d.isoformat()} ---")
 
-            # Scrape course names for the day first (cheap, one request per campus)
-            print("  Scraping occupation names...")
-            name_lookup = build_name_lookup(campuses, client, d, args.no_delay)
+            # Scrape the day's occupancy, one page per Sede (a few seconds in total)
+            print("  Scraping occupancy pages...")
+            pages, errors = scrape_day(campuses, client, d, args.no_delay)
+            page_errors.extend({"page": p, "date": d.isoformat(), "error": e} for p, e in errors.items())
+            stats = page_stats(pages, errors)
+            slot_drops.extend(detect_slot_drops(d, stats, previous))
 
-            # Build output for this day
-            output = build_output(campuses, client, d, args.no_delay, name_lookup, failures)
+            # Build output for this day, falling back to the REST API where the scrape can't help
+            output, rest_calls = build_output(
+                campuses, client, d, args.no_delay, pages, errors, failures, missing_rows
+            )
+            log["days"][d.isoformat()] = {
+                "pages": stats,
+                "slots_total": sum(s["slots"] for s in stats.values()),
+                "rest_calls": rest_calls,
+            }
 
             # Create output file and write JSON
             out_path = OUTPUT_DIR / f"occupation_{d.strftime('%Y%m%d')}.json"
@@ -395,8 +588,16 @@ def main():
         }, f, ensure_ascii=False, indent=2)
     print(f"\nWritten date list to {list_path}")
 
-    status, message = summarize(days, failures)
+    status, message = summarize(days, page_errors, failures, missing_rows, slot_drops)
     write_github_output(status, message)
+    log.update({
+        "status": status,
+        "message": message,
+        "page_errors": page_errors,
+        "missing_rows": missing_rows,
+        "rest_failures": failures,
+        "slot_drops": slot_drops,
+    })
 
     print("\nDone.")
 

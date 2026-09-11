@@ -14,7 +14,20 @@ html:has(#search-classrooms-container.visible) body {
 }
 
 /* The map panel: edge to edge, behind the chrome. `position: fixed` gives it
-   the whole viewport and its own z-index:0 stacking context. */
+   the whole viewport and its own z-index:0 stacking context.
+
+   iOS Safari leaves a solid strip the size of the home indicator uncovered
+   at the bottom, in-browser and in standalone PWA alike. Not a sizing bug:
+   confirmed by trying `position: absolute`, overshooting past the true edge
+   (env(safe-area-inset-bottom) and a hardcoded 60px), `100lvh` instead of
+   `height: 100%`, giving the document 1px of real scroll room instead of
+   `overflow: hidden`, pulling the Mapbox canvas back from the edge, hiding
+   the footer, and giving this element its own `!important` background —
+   none of it moved the strip. Only body's own background-color ever shows
+   there; Safari appears to sample it and tint the safe-area strip with it
+   above the page's actual content, regardless of this element's z-index,
+   position, or background. Same family of bug as the bottom-nav pill's
+   edge-flush note below — not fixable from this element's CSS. */
 #search-classrooms-container.visible {
   position: fixed;
   inset: 0;

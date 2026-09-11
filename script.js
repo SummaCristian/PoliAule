@@ -28,6 +28,7 @@ import { initTimePickers } from './components/time-picker.js';
 import { initTimeRangeSlider } from './components/time-range-slider.js';
 import { setupCampusPicker } from './components/campus-picker.js';
 import { initCampusMap } from './components/campus-map.js';
+import { initCampusSheet } from './components/campus-sheet.js';
 import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
@@ -309,6 +310,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Campus tab — fullscreen map, lazily initialised on first activation
     initCampusMap();
+
+    // Campus tab — draggable glass sheet floating over the map
+    initCampusSheet();
 
     // Setup the campus picker with the available ones
     setupCampusPicker(staticClassroomsData);

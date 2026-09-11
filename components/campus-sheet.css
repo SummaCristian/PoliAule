@@ -1,0 +1,105 @@
+/* ============================================================
+   CAMPUS SHEET
+   A draggable glass panel over the campus map — a bottom sheet on
+   mobile, a panel pinned to the right on desktop. Both drag the same
+   way: grab the handle on top and pull up/down to expand/collapse,
+   snapping to a collapsed "peek" or an expanded height. Sits above
+   the map, below the header/footer/bottom-nav chrome — see
+   components/campus-sheet.js for the drag physics.
+   ============================================================ */
+
+.campus-sheet {
+  position: fixed;
+  /* Symmetric on all three free edges — narrow enough that the sheet still
+     fully contains the tabbar's own horizontal footprint (it's inset further
+     in, by 1.75rem — see bottom-nav.css). */
+  left: 8px;
+  right: 8px;
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  height: var(--campus-sheet-size, 192px);
+  max-height: 85vh;
+  border-radius: 28px;
+
+  background: var(--glass-tint);
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+
+  will-change: height;
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .header-button::after /
+   .bn-tabbar::after in style.css / bottom-nav.css. */
+.campus-sheet::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+.campus-sheet-handle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Generous hit area (the grabber itself is only 5px tall) so a thumb
+     doesn't have to land pixel-perfect to start a drag. */
+  padding: 1rem 0;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Native-app feel: no grab hand while dragging (see the cursor rule
+     for custom scrubbers/handles in style.css). */
+  cursor: default;
+}
+
+.campus-sheet-grabber {
+  width: 36px;
+  height: 5px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--glass-outline);
+  opacity: 0.6;
+}
+
+.campus-sheet-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 1.25rem 1.25rem;
+}
+
+@media (min-width: 600px) {
+  .campus-sheet {
+    left: auto;
+    right: 20px;
+    bottom: 20px;
+
+    width: 340px;
+    height: var(--campus-sheet-size, 96px);
+    max-height: calc(100dvh - var(--header-height, 84px) - 2rem - 40px);
+    border-radius: 28px;
+  }
+
+  .campus-sheet-content {
+    padding: 0 1.25rem 1.25rem;
+  }
+}

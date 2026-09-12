@@ -14,6 +14,19 @@ html:has(#search-classrooms-container.visible),
 html:has(#search-classrooms-container.visible) body {
   touch-action: none;
   overscroll-behavior: none;
+
+  /* Cosmetic only — the page is deliberately overflowing (see the
+     invisible overshoot below) but every way to actually move it is
+     already blocked above, so the scrollbar itself is just visual noise.
+     Not `overflow: hidden`: that would make the document non-scrollable
+     again, which is the exact condition that broke the safe-area fill
+     below. */
+  scrollbar-width: none;
+}
+
+html:has(#search-classrooms-container.visible)::-webkit-scrollbar,
+html:has(#search-classrooms-container.visible) body::-webkit-scrollbar {
+  display: none;
 }
 
 /* The map panel: edge to edge, behind the chrome, extending under the

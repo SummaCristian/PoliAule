@@ -87,6 +87,19 @@ export function initCampusMap() {
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || el?.isContentEditable || el?.closest?.('a[href]')) return;
     e.preventDefault();
   });
+
+  // iOS Safari's own scroll indicator (the thin translucent strip on the
+  // right edge, shown because the page is deliberately overflowing — see
+  // campus-map.css) can be grabbed and dragged directly with a finger,
+  // scrolling the page — a gesture that bypasses touch-action entirely,
+  // since it's the browser's own scroll-affordance chrome, not a touch
+  // gesture on the page's content. Since nothing should ever actually be
+  // scrolled here, just snap straight back to 0 the instant it isn't,
+  // however it happened — catches this and any other stray way in.
+  window.addEventListener('scroll', () => {
+    if (!container.classList.contains('visible')) return;
+    if (scrollY !== 0) window.scrollTo(0, 0);
+  }, { passive: true });
 }
 
 async function boot(container) {

@@ -318,7 +318,16 @@ function onWheel(e) {
 }
 
 function onViewportResize() {
-  if (activePointerId != null) return;
+  // Also skip while a wheel gesture is live or the size spring is still
+  // easing to a detent: on Safari, scrolling the trackpad/mouse over the
+  // sheet animates the toolbar's show/hide (changing `innerHeight`, and so
+  // `resize` events) even though the scroll itself is fully consumed by
+  // onWheel below and nothing on the page actually moves. Reacting to that
+  // mid-gesture with an immediate `.set()` yanked the sheet to a new target
+  // and killed its in-flight velocity, which is what read as a snap-back.
+  // A real resize (rotation, breakpoint change) that happens to land while
+  // idle still applies instantly, same as before.
+  if (activePointerId != null || wheelMode != null || !size.resting) return;
   // Detent sizes are fractions of the available space, which moves with the
   // viewport (rotation, toolbar show/hide, breakpoint change).
   size.set(detentValue(detent));

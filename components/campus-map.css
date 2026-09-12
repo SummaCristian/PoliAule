@@ -6,11 +6,20 @@
    the map instead of scrolling the page behind it.
    ============================================================ */
 
-/* Scroll lock — only while the Campus tab is the visible one. */
+/* Scroll lock — only while the Campus tab is the visible one.
+   `overflow: hidden` on both html and body used to do this, but that also
+   fully disables iOS Safari's scroll-driven toolbar collapse — which is
+   the same mechanism that recalculates `dvh`. With scrolling flat-out
+   disabled, `100dvh` (used by .bn-wrapper's `top`, and indirectly by this
+   fixed map panel) froze at its initial value instead of tracking the real
+   viewport, permanently reserving the toolbar's height even where there's
+   no toolbar (standalone PWA). `touch-action: none` blocks the same
+   drag/pinch/bounce gestures without touching `overflow`, so Safari keeps
+   recalculating dvh normally. */
 html:has(#search-classrooms-container.visible),
 html:has(#search-classrooms-container.visible) body {
-  overflow: hidden;
-  overscroll-behavior: none;
+  /* TEMP: scroll lock disabled for the 120lvh overflow test below — revert
+     to touch-action: none; overscroll-behavior: none; after. */
 }
 
 /* The map panel: edge to edge, behind the chrome. `position: fixed` gives it
@@ -27,10 +36,27 @@ html:has(#search-classrooms-container.visible) body {
    there; Safari appears to sample it and tint the safe-area strip with it
    above the page's actual content, regardless of this element's z-index,
    position, or background. Same family of bug as the bottom-nav pill's
-   edge-flush note below — not fixable from this element's CSS. */
+   edge-flush note below — not fixable from this element's CSS.
+
+   NOTE: all of the above was tried while html/body still had
+   `overflow: hidden` (see the scroll-lock comment above), which itself
+   freezes dvh recalculation on iOS Safari — a likely root cause of this
+   strip, since this element has no explicit dvh usage but sits inside that
+   frozen-viewport document. Re-verify whether the strip persists now that
+   the lock uses `touch-action: none` instead. */
 #search-classrooms-container.visible {
-  position: fixed;
-  inset: 0;
+  /* TEMP overflow test: taken out of `position: fixed` and given real
+     height greater than the viewport, so the document becomes genuinely
+     scrollable — checking whether the map reaches under the safe area at
+     its true (in-flow, scrolled-to) bottom edge vs. a synthetic viewport
+     edge. `flex: none` is required here: the base .tab-content.visible
+     rule sets `flex: 1`, whose `flex-basis: 0%` otherwise wins over this
+     explicit `height` in a column flex container, silently ignoring it.
+     Revert to: position: fixed; inset: 0; (drop flex-shrink/flex/height)
+     after. */
+  position: relative;
+  flex: none;
+  height: 120lvh;
   z-index: 0;
 
   display: block;

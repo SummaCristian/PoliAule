@@ -18,7 +18,7 @@
   bottom: calc(8px + env(safe-area-inset-bottom));
   z-index: 1;
 
-  display: flex;
+  display: none; /* TEMP: hidden to check the map/safe-area fix underneath, revert after */
   flex-direction: column;
 
   height: var(--campus-sheet-size, 192px);

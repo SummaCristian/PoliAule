@@ -71,6 +71,22 @@ export function initCampusMap() {
     if (container.contains(e.target)) return;
     e.preventDefault();
   }, { passive: false });
+
+  // Same idea for the keyboard: Space, Page Up/Down, Home, End, and the
+  // arrow keys all scroll the page by default when nothing focused claims
+  // them — none of which fire a 'wheel' event, so the blocker above doesn't
+  // see them. Skip it when focus is on something that's meant to handle
+  // these itself (a map control button, a link, a form field) so keyboard
+  // activation/navigation there keeps working.
+  const SCROLL_KEYS = new Set([' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+  window.addEventListener('keydown', e => {
+    if (!container.classList.contains('visible')) return;
+    if (!SCROLL_KEYS.has(e.key)) return;
+    const el = document.activeElement;
+    const tag = el?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON' || el?.isContentEditable || el?.closest?.('a[href]')) return;
+    e.preventDefault();
+  });
 }
 
 async function boot(container) {

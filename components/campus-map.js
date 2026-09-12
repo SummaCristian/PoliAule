@@ -170,12 +170,62 @@ async function boot(container) {
     el.addEventListener('gestureend', e => e.preventDefault());
   }
 
-  map.addControl(new mapboxgl.NavigationControl({ showZoom: false, showCompass: true }), 'top-right');
-  map.addControl(new mapboxgl.GeolocateControl({
+  const navControl = new mapboxgl.NavigationControl({ showZoom: false, showCompass: true });
+  map.addControl(navControl, 'top-right');
+  const geolocateControl = new mapboxgl.GeolocateControl({
     positionOptions: { enableHighAccuracy: true },
     trackUserLocation: true,
     showUserHeading: true,
-  }), 'top-right');
+  });
+  map.addControl(geolocateControl, 'top-right');
+
+  // `liquid-glass` (components/liquid-glass.js) must go on the actual
+  // <button>, not the wrapping .mapboxgl-ctrl-group div: its delegated
+  // pointerdown handler treats any `<button>` under the pressed element as
+  // an "inner control" and defers to it (that's what lets a link inside a
+  // popover keep its own click instead of triggering the panel's deform) —
+  // put the class on the group and every press on the real button is
+  // silently ignored, which is why it looked completely inert. Only the
+  // geolocate button gets it, though: the compass button has Mapbox's own
+  // drag-to-rotate handler (NavigationControl's `rl` MouseRotateHandler)
+  // bound directly to it, and liquid-glass's pointer-capture-on-press would
+  // steal those pointer events out from under it. The compass gets a
+  // CSS-only hover/press state instead (see campus-map.css) that mimics the
+  // same lit look without capturing the pointer.
+  //
+  // Swap in a HugeIcons glyph (same `hgi-` icon font already used for the
+  // header buttons — index.html) for the geolocate button's baked-in icon
+  // SVG, so it reads as part of the app rather than a third-party widget.
+  // The compass needle is drawn in pure CSS instead (see campus-map.css) —
+  // HugeIcons' own "compass" glyphs read as the drafting tool, not a map
+  // compass, and a plain two-triangle needle (red north tip) is clearer here
+  // anyway.
+
+  // GeolocateControl builds its actual <button> asynchronously (behind a
+  // `navigator.permissions.query(...)` check), so it doesn't exist yet right
+  // after addControl() returns — watch for it instead of assuming it's there.
+  new MutationObserver((_records, observer) => {
+    const button = geolocateControl._container.querySelector('button');
+    if (!button) return;
+    button.classList.add('liquid-glass');
+    button.querySelector('.mapboxgl-ctrl-icon')
+      .innerHTML = '<i class="hgi-stroke hgi-gps-01" aria-hidden="true"></i>';
+    observer.disconnect();
+  }).observe(geolocateControl._container, { childList: true });
+
+  // Same glass + liquid-glass treatment for the attribution control's
+  // compact toggle badge (campus-map.css). Mapbox adds this control itself
+  // (there's no explicit instance to hold onto like NavigationControl/
+  // GeolocateControl above), so watch the whole map container for its
+  // button to show up instead.
+  new MutationObserver((_records, observer) => {
+    const button = map.getContainer().querySelector('.mapboxgl-ctrl-attrib-button');
+    if (!button) return;
+    button.classList.add('liquid-glass');
+    button.querySelector('.mapboxgl-ctrl-icon')
+      .innerHTML = '<i class="hgi-stroke hgi-information-circle" aria-hidden="true"></i>';
+    observer.disconnect();
+  }).observe(map.getContainer(), { childList: true, subtree: true });
 
   // Match the map's daylight to the app theme (Standard style only).
   map.on('style.load', applyLightPreset);

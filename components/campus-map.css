@@ -183,6 +183,7 @@ html:has(#search-classrooms-container.visible) .footer {
   .campus-map .mapboxgl-ctrl-bottom-right {
     display: flex;
     align-items: flex-end;
+
   }
   .campus-map .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl,
   .campus-map .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl {
@@ -194,6 +195,340 @@ html:has(#search-classrooms-container.visible) .footer {
        plus a little breathing room. */
     right: calc(340px + 20px + 20px + env(safe-area-inset-right, 0px));
   }
+}
+
+/* --- Attribution: same glass material + interactivity as the rest of the
+   controls (.header-button in style.css; the compass/geolocate buttons
+   above), instead of Mapbox's hardcoded white pill/icon that never adapted
+   to dark mode. Same Nunito-first font stack as the campus markers/popup
+   further down.
+
+   Two distinct visual states, independent of viewport width: an icon-only
+   circular badge (mobile default, `.mapboxgl-compact`) and the expanded
+   text pill (desktop's default, or mobile's badge after a tap adds
+   `.mapboxgl-compact-show` — Mapbox keeps `.mapboxgl-compact` too in that
+   state, so this isn't just ":not(.mapboxgl-compact)"). The badge is a true
+   circle and gets the full recipe below, outside stroke ring included, same
+   as the compass/geolocate buttons; the expanded pill is a variable-width
+   rounded rect, where that ring's circular mask wouldn't trace the shape
+   correctly, so it's skipped there — the box-shadow outline alone already
+   reads fine against any border-radius. */
+.campus-map .mapboxgl-ctrl-attrib {
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.campus-map .mapboxgl-ctrl-attrib:not(.mapboxgl-compact),
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show {
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+  border-radius: var(--radius-pill);
+}
+
+/* The default (not-yet-tapped) compact state shows nothing but the round
+   button above — but Mapbox's own `.mapboxgl-compact{background-color:#fff}`
+   still applies to *this* container underneath it, peeking out past the
+   button's circular edge as a flat white corner. */
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact:not(.mapboxgl-compact-show) {
+  background-color: transparent;
+}
+
+.campus-map .mapboxgl-ctrl-attrib a {
+  color: var(--text-color-secondary);
+  font-size: var(--text-70, 0.7rem);
+}
+
+@media (hover: hover) {
+  .campus-map .mapboxgl-ctrl-attrib a:hover {
+    color: var(--text-color-primary);
+  }
+}
+
+/* The compact badge/toggle: same glass icon-button recipe as the compass
+   and geolocate buttons, including the shared `liquid-glass` press-deform +
+   lit hover (the class, and the HugeIcons glyph replacing Mapbox's baked
+   icon, are added in campus-map.js — Mapbox creates this element itself).
+
+   !important throughout: Mapbox's own rules for this button (a fixed
+   `border-radius: 12px`, `display` toggled between none/block by
+   `.mapboxgl-compact`, its own background-image icon) sit at a specificity
+   this file's selectors don't reliably beat — the same trap already hit
+   twice on the compass/geolocate icon span above. */
+.campus-map .mapboxgl-ctrl-attrib-button {
+  /* `position: absolute` (not `relative`!) preserves Mapbox's own layout
+     intent — this button is meant to sit pinned to the pill's corner, taken
+     out of the normal text flow. Overriding it to `relative` here once
+     already put it back into normal flow, rendering as its own block above
+     the link text instead of overlapping the corner. `absolute` still gives
+     the ::after ring below a positioning context to anchor to, same as
+     `relative` would. */
+  position: absolute;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill) !important;
+  background: var(--glass-tint) !important;
+  background-image: none !important;
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+/* `display` deliberately kept out of the rule above and scoped to only the
+   compact states here: this button only exists as a toggle when the badge
+   is collapsed to an icon (mobile) — on a wide/desktop viewport, Mapbox
+   never applies `.mapboxgl-compact` at all (the text always fits, no need
+   to toggle it), and its own default `display: none` should stand. An
+   unconditional `!important` here previously forced the button visible
+   there too, showing a redundant "i" toggle next to text that's already
+   fully expanded. */
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact .mapboxgl-ctrl-attrib-button {
+  display: flex !important;
+}
+
+/* Mapbox pins this button with `top: 0`, sized against its own default
+   ~20px-tall pill. The Nunito font stack above (taller line metrics than
+   Mapbox's own default) makes the expanded pill grow past that, so a
+   `top: 0` button ends up stuck against the top edge instead of centered
+   next to the text — recenter it directly instead of depending on a
+   specific pill height. Scoped to the expanded state only: the plain
+   compact circle-badge state doesn't have this "grew taller than expected"
+   problem (there's no text row inside it to grow against). */
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show .mapboxgl-ctrl-attrib-button {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Outside 0.5px gradient stroke, same radial-gradient-masked trick as
+   .header-button::after (style.css) — a true circle's seam-free ring. */
+.campus-map .mapboxgl-ctrl-attrib-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
+}
+
+/* Extra `.mapboxgl-ctrl-icon` qualifier: needed to outrank the generic
+   `.campus-map .mapboxgl-ctrl-icon .hgi-stroke` sizing rule further down
+   (compass/geolocate) — same class-count otherwise, and that one comes
+   later in the file, which would otherwise win the tie and blow this tiny
+   24px badge's icon up to the big controls' 1.375rem size. */
+.campus-map .mapboxgl-ctrl-attrib-button .mapboxgl-ctrl-icon .hgi-stroke {
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--text-color-secondary);
+}
+
+/* Mapbox's own `:focus` (not `:focus-visible`) rule shows a hardcoded blue
+   ring on *any* focus, mouse click included — reset it back to the plain
+   glass shadow, and only show a real ring for keyboard focus. */
+.campus-map .mapboxgl-ctrl-attrib-button:focus {
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+.campus-map .mapboxgl-ctrl-attrib-button:focus-visible {
+  outline: 2px solid var(--text-color-accent);
+  outline-offset: 2px;
+}
+
+/* --- Compass / geolocate buttons: same glass icon-button recipe as
+   .header-button (style.css) — same 3rem circle, same glass material, same
+   outside stroke ring, same HugeIcons glyphs as the rest of the app (see
+   the `hgi-` icons in index.html) instead of Mapbox's baked-in icon SVGs.
+
+   The glass styling lives on the <button> itself, not on the wrapping
+   .mapboxgl-ctrl-group div: `liquid-glass` (below) has to sit on the exact
+   element it's applied to (its delegated handler treats a `<button>` found
+   *inside* the pressed element as its own separate control and backs off —
+   see components/liquid-glass.js), so the button has to be both the visual
+   surface and the liquid-glass target, exactly like .header-button. The
+   group is left with no visual styling of its own so it doesn't peek out
+   from behind the button's round corners.
+
+   Only the geolocate button gets `liquid-glass` (added in campus-map.js).
+   The compass is deliberately left out: Mapbox binds its own drag-to-rotate
+   handler directly to that button, and liquid-glass's pointer-capture-on-
+   press would steal those pointer events out from under it. It gets a
+   plain CSS hover/press state below instead, mimicking the same lit look
+   without capturing the pointer. */
+.campus-map .mapboxgl-ctrl-top-right .mapboxgl-ctrl-group {
+  margin: 0 0 0.5rem !important;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.campus-map .mapboxgl-ctrl-top-right .mapboxgl-ctrl-group:last-child {
+  margin-bottom: 0 !important;
+}
+
+.campus-map .mapboxgl-ctrl-group button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  /* !important: Mapbox's own `.mapboxgl-ctrl-group button:only-child {
+     border-radius: inherit }` ties this selector's specificity exactly, and
+     since mapbox-gl.css loads after this stylesheet (injected at runtime),
+     it wins the tie — inheriting the *group's* border-radius, which is 0
+     (see above, now that the group carries no visual shape of its own).
+     That silently squared off the button entirely: the backdrop-filter's
+     blur still looked roughly circular in the middle from its own blur
+     vignette, which is what actually looked like "a circle inside a square
+     card" rather than two separate shapes. */
+  border-radius: var(--radius-pill) !important;
+
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+
+  transition: filter 0.2s ease, scale var(--press-out-dur) var(--ease-spring);
+}
+
+/* Inside 0.5px gradient stroke, same radial-gradient-masked trick as
+   .header-button::after (style.css) — a true circle's seam-free ring. Drawn
+   at `inset: 0` rather than header-button's `-0.5px`: the button keeps
+   Mapbox's own default `overflow: hidden` (needed for `backdrop-filter` to
+   actually clip to the circle instead of bleeding into a square — that
+   square was the real bug), which would otherwise clip the outermost sliver
+   of an outside-drawn ring. */
+.campus-map .mapboxgl-ctrl-group button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
+}
+
+/* Plain CSS lit hover/press for the compass only (see the comment above) —
+   same brightness/saturate boost and press-scale as `.liquid-glass` in
+   liquid-glass.css, just driven by :hover/:active instead of pointer capture. */
+@media (hover: hover) {
+  .campus-map .mapboxgl-ctrl-compass:hover {
+    filter: brightness(1.11) saturate(1.35);
+  }
+}
+
+.campus-map .mapboxgl-ctrl-compass:active {
+  scale: 0.94;
+  filter: brightness(1.11) saturate(1.35);
+}
+
+/* Mapbox's own base CSS darkens the button on hover — the lit hover now
+   comes from the button's own filter (above, or via .liquid-glass), so this
+   would just double up on top of it. */
+.campus-map .mapboxgl-ctrl-group button:not(:disabled):hover {
+  background-color: transparent;
+}
+
+/* The icon span: Mapbox sizes it to fill the button and (for the compass)
+   rotates *this exact element* to point away from north — kept as a real,
+   full-size flex box rather than `display: contents` so both that rotation
+   and Mapbox's own `mapboxgl-spin` waiting-animation (geolocate) still have
+   a box to animate. Its baked-in background-image icon is dropped in favour
+   of the geolocate button's injected HugeIcons glyph (see campus-map.js) or,
+   for the compass, the custom needle drawn further down. */
+.campus-map .mapboxgl-ctrl-icon {
+  position: relative;
+  /* !important: Mapbox's own `.mapboxgl-ctrl button .mapboxgl-ctrl-icon {
+     display: block; ... }` ties this selector's class-count and wins the tie
+     on its extra type selector (button) — silently keeping this `block`
+     instead of `flex`, which is why `align-items: center` below was doing
+     nothing and the icon just sat at the top like normal inline content. */
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-image: none !important;
+}
+
+.campus-map .mapboxgl-ctrl-icon .hgi-stroke {
+  font-size: 1.375rem;
+  /* Mapbox's own base CSS sets a fixed `line-height: 20px` on `.mapboxgl-map`
+     (its default 12px/20px font shorthand), inherited all the way down here.
+     Against a 1.375rem (22px) glyph that mismatched line-height pushed the
+     visible icon off-center — flexbox centers the <i>'s line box, not its
+     ink, so a line-height shorter than the font-size skews where the glyph
+     actually sits inside it. */
+  line-height: 1;
+  color: var(--text-color-secondary);
+}
+
+/* Geolocate states — recolor the glyph the same way Mapbox's own CSS
+   recolors its baked-in icon per state class, just via `color` instead of
+   swapping background-images. --color-now is the app's existing "live/now"
+   accent (style.css), reused here for "actively tracking." */
+.campus-map .mapboxgl-ctrl-geolocate-active .hgi-gps-01,
+.campus-map .mapboxgl-ctrl-geolocate-background .hgi-gps-01 {
+  color: var(--color-now);
+}
+
+.campus-map .mapboxgl-ctrl-geolocate-active-error .hgi-gps-01,
+.campus-map .mapboxgl-ctrl-geolocate-background-error .hgi-gps-01,
+.campus-map .mapboxgl-ctrl-geolocate:disabled .hgi-gps-01 {
+  color: var(--color-status-busy);
+}
+
+/* Compass needle — plain two-triangle needle (no icon-font glyph: HugeIcons'
+   own "compass" icons read as the drafting tool, not a map compass), same
+   silhouette as Mapbox's original default icon. Both triangles are pseudo-
+   elements on the icon span itself (not the button), since that's the exact
+   element Mapbox rotates to point away from north — they have to turn
+   together with the map bearing to keep pointing at true north. */
+.campus-map .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon::before,
+.campus-map .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 0.7rem;
+  height: 0.6rem;
+  transform: translateX(-50%);
+}
+
+/* North half — red, pointing up. */
+.campus-map .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon::before {
+  top: calc(50% - 0.6rem);
+  clip-path: polygon(50% 0%, 15% 100%, 85% 100%);
+  background: var(--color-status-busy);
+}
+
+/* South half — muted, pointing down. */
+.campus-map .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon::after {
+  top: 50%;
+  clip-path: polygon(15% 0%, 85% 0%, 50% 100%);
+  background: var(--text-color-secondary);
+  opacity: 0.4;
 }
 
 /* --- Markers --------------------------------------------------------------- */

@@ -3,12 +3,11 @@
 // Apple Maps-style nested drag, from anywhere on the sheet (not just the
 // handle), and from wheel/trackpad scroll as well as pointer drag:
 //
-//   - Three detents on mobile — collapsed "peek", half, and full height (on
-//     desktop, half and full coincide: the panel only ever had two
-//     meaningful sizes there). Short of full height, the gesture always
-//     resizes the sheet, following the pointer/scroll 1:1 and snapping to
-//     the nearest detent on release (or the next one in the gesture's
-//     direction, if it was a fast flick).
+//   - Three detents, mobile and desktop alike — collapsed "peek", half, and
+//     full height. Short of full height, the gesture always resizes the
+//     sheet, following the pointer/scroll 1:1 and snapping to the nearest
+//     detent on release (or the next one in the gesture's direction, if it
+//     was a fast flick).
 //   - At full height, the gesture scrolls the sheet's own content instead —
 //     unless that content doesn't need to scroll, or is already scrolled to
 //     its top and the gesture keeps pulling further in the "collapse"
@@ -82,14 +81,14 @@ function availableHeight() {
 
 function bounds() {
   const available = availableHeight();
-  // Desktop panel can grow to fill all its available vertical room, and only
-  // ever had two meaningful sizes — so `half` just coincides with `full`
-  // there. The mobile bottom sheet's `full` caps short of the true full
-  // screen so the map behind it stays reachable even at that detent.
+  // Desktop panel can grow to fill all its available vertical room; the
+  // mobile bottom sheet's `full` caps short of the true full screen so the
+  // map behind it stays reachable even at that detent. Both get a genuine
+  // `half`, a fraction of their own available room either way.
   const full = desktopMQ.matches
     ? available
     : Math.min(available * FULL_FRAC, available - 40);
-  const half = desktopMQ.matches ? full : Math.min(available * HALF_FRAC, full);
+  const half = Math.min(available * HALF_FRAC, full);
   return {
     min: COLLAPSED,
     half: Math.max(COLLAPSED, half),

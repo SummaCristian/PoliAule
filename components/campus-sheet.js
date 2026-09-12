@@ -555,6 +555,11 @@ export function initCampusSheet() {
   const container = document.getElementById(CONTAINER_ID);
   if (!container || sheet) return;
 
+  // Exposed for campus-map.css: lets the map's own bottom-left/right
+  // controls (attribution/copyright included) clear the sheet's collapsed
+  // height instead of just the bottom-nav's.
+  document.documentElement.style.setProperty('--campus-sheet-collapsed-height', `${COLLAPSED}px`);
+
   // The sheet shrinks/grows under the cursor mid-gesture, so the cursor can
   // easily end up over the map while a drag or fling is still live. Rather
   // than chasing that in JS (event redirection, state tracked across

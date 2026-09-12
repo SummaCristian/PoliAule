@@ -59,12 +59,22 @@ html:has(#search-classrooms-container.visible) body::-webkit-scrollbar {
    #classroom-detail-overlay's header overlap in classroom-detail.css).
    The scroll lock above keeps the invisible overshoot from ever being
    revealed to the user. */
+:root {
+  /* How much taller than the viewport the container below is made, to work
+     around the safe-area-fill bug explained there. Its own bottom edge
+     sits this far *below* the true visible viewport — which matters for
+     anything inside it positioned with `bottom:`, since that's measured
+     against this element's (inflated) box, not the real screen. See the
+     mapbox control placement rules further down, which correct for it. */
+  --campus-map-overshoot: 80px;
+}
+
 #search-classrooms-container.visible {
   position: relative;
   flex: none;
 
   margin-top: calc(-1 * var(--header-height, 84px) - 1.5rem);
-  height: calc(100lvh + 80px);
+  height: calc(100lvh + var(--campus-map-overshoot));
   z-index: 0;
 
   display: block;
@@ -107,18 +117,82 @@ html:has(#search-classrooms-container.visible) .footer {
 .campus-map .mapboxgl-ctrl-top-right {
   top: calc(env(safe-area-inset-top) + var(--header-height, 84px) + 0.5rem);
   right: 0.75rem;
+  /* Explicit and below the sheet/guard's z-index: 1 (campus-sheet.css), so
+     the sheet covers these controls once it grows tall enough to reach
+     them, rather than floating over it. */
+  z-index: 0;
 }
 
+/* Clears the campus sheet's own collapsed height (it already sits taller
+   than, and visually contains, the bottom-nav — see campus-sheet.css/js —
+   so clearing it clears the nav too), not just the bottom-nav on its own.
+
+   `position: fixed` (overriding Mapbox's own `absolute`): these controls
+   are descendants of #search-classrooms-container, which is deliberately
+   taller than the real viewport (see its own rule above) — its bottom edge
+   sits an amount below the true visible one that depends on the current
+   toolbar state (100lvh vs. what's actually showing right now), not just
+   the fixed 80px overshoot, so no constant could correct a `bottom:` value
+   measured against it — it drifted by a different amount on every device
+   tried. Anchoring these directly to the real viewport instead (same as
+   .campus-sheet/header/footer/bottom-nav already do) sidesteps needing to
+   know that gap at all. */
 .campus-map .mapboxgl-ctrl-bottom-left,
 .campus-map .mapboxgl-ctrl-bottom-right {
-  bottom: calc(var(--bottom-nav-height, 88px) + 20px + env(safe-area-inset-bottom));
+  position: fixed;
+  bottom: calc(var(--campus-sheet-collapsed-height, 192px) + 8px + 8px + env(safe-area-inset-bottom));
+  /* Same reasoning as .mapboxgl-ctrl-top-right above: explicit and below
+     the sheet/guard's z-index: 1, so it covers these once it grows over
+     them instead of floating on top. */
+  z-index: 0;
+}
+
+/* Horizontally lined up with the tabbar's own pill/circle — --bn-tabbar-
+   outer-inset (bottom-nav.js) is the wrapper's own horizontal clearance
+   from the viewport, the same one the tabbar itself sits at regardless of
+   the sheet's current (dynamic) width. */
+.campus-map .mapboxgl-ctrl-bottom-left {
+  left: var(--bn-tabbar-outer-inset, 28px);
+}
+
+.campus-map .mapboxgl-ctrl-bottom-right {
+  right: var(--bn-tabbar-outer-inset, 28px);
 }
 
 @media (min-width: 600px) {
-  /* Bottom-nav is a top-left rail here, so only the header still overlaps. */
+  /* Bottom-nav is a top-left rail here, so no bottom clearance is needed —
+     back to mapbox's own plain default. The sheet is a right-pinned panel
+     instead, though (not a bottom one), so it's the bottom-right control
+     (the attribution) that needs clearing, horizontally rather than
+     vertically; the left one (logo) is untouched by it. Also resets both
+     controls' `left`/`right` back to a plain default, overriding the
+     tabbar-alignment rules above — there's no bottom tabbar to line up
+     with here (bottom-nav is the top-left rail). */
   .campus-map .mapboxgl-ctrl-bottom-left,
   .campus-map .mapboxgl-ctrl-bottom-right {
-    bottom: calc(20px + env(safe-area-inset-bottom));
+    bottom: 10px;
+  }
+  .campus-map .mapboxgl-ctrl-bottom-left {
+    left: 10px;
+  }
+  /* Mapbox's own default CSS gives .mapboxgl-ctrl-logo and .mapboxgl-ctrl-
+     attrib (the actual controls inside these two containers) different
+     built-in margins, so even at the same container `bottom`, the two
+     don't sit flush the same way — flatten both to line up with the logo. */
+  .campus-map .mapboxgl-ctrl-bottom-left,
+  .campus-map .mapboxgl-ctrl-bottom-right {
+    display: flex;
+    align-items: flex-end;
+  }
+  .campus-map .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl,
+  .campus-map .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl {
+    margin: 0;
+  }
+
+  .campus-map .mapboxgl-ctrl-bottom-right {
+    /* Clears campus-sheet.css's desktop panel (right: 20px; width: 340px)
+       plus a little breathing room. */
+    right: calc(340px + 20px + 20px + env(safe-area-inset-right, 0px));
   }
 }
 

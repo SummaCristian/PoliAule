@@ -120,6 +120,34 @@ async function boot(container) {
   map.scrollZoom.disable();
   el.addEventListener('wheel', e => onWheel(e, el), { passive: false });
 
+  // Safari trackpad pinch doesn't come through as a ctrl+wheel event like
+  // Chrome/Firefox synthesize — it fires the non-standard Safari-only
+  // gesture* events instead. preventDefault-ing those stops the page zooming
+  // and lets us drive the map ourselves.
+  //
+  // On iPadOS this pinch fires no DOM event at all — confirmed on-device: no
+  // wheel, no gesture*, no touch*, nothing. UIKit applies a native page-zoom
+  // entirely outside the DOM before JS ever sees it. The only place it
+  // becomes visible to JS is afterwards, via `visualViewport`'s scale — by
+  // which point the page has already visibly zoomed, and there's no reliable
+  // way to force it back to 1 (both `user-scalable=no`/`maximum-scale` and
+  // rewriting the viewport meta's `initial-scale` were tried on-device and
+  // didn't stop the visible zoom). Left as a known Safari/iPadOS limitation.
+  if ('ongesturestart' in window) {
+    let gestureStartZoom = 0;
+    el.addEventListener('gesturestart', e => {
+      e.preventDefault();
+      gestureStartZoom = map.getZoom();
+    });
+    el.addEventListener('gesturechange', e => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const around = map.unproject([e.clientX - rect.left, e.clientY - rect.top]);
+      map.easeTo({ zoom: gestureStartZoom + Math.log2(e.scale), around, duration: 0 });
+    });
+    el.addEventListener('gestureend', e => e.preventDefault());
+  }
+
   map.addControl(new mapboxgl.NavigationControl({ showZoom: false, showCompass: true }), 'top-right');
   map.addControl(new mapboxgl.GeolocateControl({
     positionOptions: { enableHighAccuracy: true },

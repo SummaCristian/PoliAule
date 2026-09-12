@@ -58,6 +58,19 @@ export function initCampusMap() {
 
   container.addEventListener('tabvisible', onVisible);
   if (container.classList.contains('visible')) onVisible();
+
+  // `touch-action: none` (campus-map.css) only blocks touch/pen scroll
+  // gestures on the page, not mouse-wheel or trackpad scroll — a wheel
+  // event over the header or bottom-nav (both floating outside this
+  // container, above the deliberately overflowing page — see
+  // campus-map.css) still scrolls the document. Block it here instead;
+  // wheel events that land inside the container are left alone; the map's
+  // own listener (onWheel below) already calls preventDefault for those.
+  window.addEventListener('wheel', e => {
+    if (!container.classList.contains('visible')) return;
+    if (container.contains(e.target)) return;
+    e.preventDefault();
+  }, { passive: false });
 }
 
 async function boot(container) {

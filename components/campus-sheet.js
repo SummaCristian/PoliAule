@@ -38,6 +38,18 @@ const HARD_FLING_VELOCITY = 1.4; // px/ms — faster than this skips straight to
 const SCROLL_PROJECTION = 120;  // ms — how far a content-scroll flick projects before easing to a stop
 const WHEEL_IDLE_MS = 150;      // gap between wheel ticks that ends a "burst"
 
+// Liquid-glass-style squash/stretch, ported (not reused directly — see the
+// conversation this came from): liquid-glass.js drives its deform from raw
+// pointer distance and owns the gesture itself (element-level pointer
+// capture), neither of which fits here, where the drag *is* the resize and
+// is already fully arbitrated (detents, mode handoffs, wheel). This instead
+// reads the resize's own velocity (see resizeVelocity() below) — live drag,
+// wheel, or the settle/fling spring, whichever's active — so it can't
+// contend with any of that logic. STRETCH_GAIN converts px/ms of resize
+// speed to a scale delta; STRETCH_MAX caps it so it stays a glass panel.
+const STRETCH_GAIN = 0.12;
+const STRETCH_MAX = 0.14;
+
 // The mobile sheet's plain (full-height) left/right inset and corner radius
 // — same 8px/28px it's always had. GAP is also the tabbar's own clearance
 // below it (see bottom-nav.css's --bn-wrapper), reused here as the gap to
@@ -183,22 +195,60 @@ function sheetGeometry() {
   };
 }
 
+// The resize's own signed velocity (px/ms, + = growing) — whichever of the
+// three phases is actually driving it right now: a live pointer drag, a
+// live (not yet committed) wheel drag, or the settle/fling spring. Reading
+// this instead of raw pointer distance is what lets the squash/stretch
+// below react without contending with any of the resize logic itself; it's
+// ~0 outside a resize (idle, or a pure content-scroll drag), so the effect
+// naturally only shows for resize motion.
+function resizeVelocity() {
+  if (activePointerId != null && dragMode === 'resize') return -velocity(); // velocity() is +down; size tracks -dy
+  if (wheelMode === 'resize' && !wheelCommitted) return wheelVel;
+  return size.v / 1000; // px/s → px/ms
+}
+
 // Guards the map from a gesture/animation still in progress on the sheet
-// (see the wheel-guard element itself, created in initCampusSheet). Driven
-// by its own dedicated rAF chain rather than piggybacking on the shared
-// spring loop above: that loop only runs (and so only recomputes anything)
-// while some spring is actually mid-animation, and stops the instant
-// everything's resting — including, for a plain tap that never calls
-// .to()/.set() again after release, potentially stopping *before* ever
-// re-checking activePointerId's just-cleared null. Polling independently
-// here guarantees a check the frame after any such state change, with no
-// dependency on whether the shared loop happens to still be running then.
+// (see the wheel-guard element itself, created in initCampusSheet), and
+// drives the sheet's own liquid-glass-style reactive feel (a "lit"
+// brightness/saturation boost — see .campus-sheet.lg-active in
+// campus-sheet.css — plus the squash/stretch transform below, from
+// resizeVelocity()). Driven by its own dedicated rAF chain rather than
+// piggybacking on the shared spring loop above: that loop only runs (and so
+// only recomputes anything) while some spring is actually mid-animation,
+// and stops the instant everything's resting — including, for a plain tap
+// that never calls .to()/.set() again after release, potentially stopping
+// *before* ever re-checking activePointerId's just-cleared null. Polling
+// independently here guarantees a check the frame after any such state
+// change, with no dependency on whether the shared loop happens to still be
+// running then.
 let guardWatchQueued = false;
 function watchGuard() {
   guardWatchQueued = false;
-  if (!guard) return;
   const busy = activePointerId != null || wheelMode != null || !size.resting || !scrollPos.resting;
-  guard.classList.toggle('busy', busy);
+
+  if (guard) guard.classList.toggle('busy', busy);
+
+  if (sheet) {
+    // The glow reads as "you're touching the glass," so it should start
+    // fading the moment the gesture itself ends — release, or a wheel fling
+    // committing — rather than lingering through the settle/fling animation
+    // that follows (which is still `busy`, and still drives the
+    // squash/stretch below; just not the glow).
+    const gesturing = activePointerId != null || (wheelMode != null && !wheelCommitted);
+    sheet.classList.toggle('lg-active', gesturing);
+    const v = resizeVelocity();
+    const mag = Math.min(Math.abs(v) * STRETCH_GAIN, STRETCH_MAX);
+    if (mag > 0.002) {
+      const dir = v >= 0 ? 1 : -1;
+      // Stretch taller (and squash a touch narrower, the perpendicular
+      // axis) when growing fast; the reverse when collapsing fast.
+      sheet.style.transform = `scaleY(${(1 + dir * mag).toFixed(4)}) scaleX(${(1 - dir * mag * 0.4).toFixed(4)})`;
+    } else {
+      sheet.style.transform = '';
+    }
+  }
+
   if (busy) requestGuardWatch();
 }
 function requestGuardWatch() {

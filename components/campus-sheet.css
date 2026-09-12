@@ -81,6 +81,21 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+
+  /* Liquid-glass-style reactive feel, ported rather than the shared
+     .liquid-glass class (see campus-sheet.js's watchGuard()/
+     resizeVelocity() for why a direct port didn't fit): `transform` is set
+     directly, per frame, while resizing — no transition, the spring itself
+     already provides the smoothing — so this only needs to cover `filter`,
+     which is toggled via a class instead. Anchored to the bottom edge
+     (where the sheet is actually pinned) so the squash/stretch reads as
+     the free top edge overshooting, not the whole panel drifting. */
+  transform-origin: bottom;
+  transition: filter 0.2s ease;
+}
+
+.campus-sheet.lg-active {
+  filter: brightness(1.11) saturate(1.35);
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .header-button::after /

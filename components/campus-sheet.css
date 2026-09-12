@@ -11,6 +11,29 @@
    components/campus-sheet.js for the drag physics.
    ============================================================ */
 
+/* Sits between the map and the sheet: invisible, and inert (pointer-events:
+   none) except while campus-sheet.js marks it .busy — a drag or fling in
+   progress — during which it becomes the actual hit-test target for
+   anywhere the sheet doesn't currently cover, so wheel input can't leak
+   through to the map (or the page's own scroll) just because the sheet
+   shrank out from under the cursor mid-gesture. The sheet itself sits at
+   the same z-index but later in DOM order, so it still wins hit-testing
+   over its own footprint regardless of this element's state. */
+.campus-sheet-wheel-guard {
+  /* Matches .campus-map's own positioning (absolute within the already-
+     fixed #search-classrooms-container) rather than its own `fixed` —
+     keeps this out of the safe-area/dvh quirks that positioning was
+     specifically worked around for on that element. */
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.campus-sheet-wheel-guard.busy {
+  pointer-events: auto;
+}
+
 .campus-sheet {
   position: fixed;
   /* Mobile only (see below) — collapsed, this is wide enough to be

@@ -33,7 +33,8 @@ const COLLAPSED = 192;
 const HALF_FRAC = 0.5;          // fraction of the available vertical space
 const FULL_FRAC = 0.85;
 const GIVE = 40;                // rubber-band overshoot (px) past either end detent
-const FLING_VELOCITY = 0.5;     // px/ms — a release faster than this commits a direction
+const FLING_VELOCITY = 0.5;     // px/ms — a release faster than this commits to the next detent
+const HARD_FLING_VELOCITY = 1.4; // px/ms — faster than this skips straight to the end detent
 const SCROLL_PROJECTION = 120;  // ms — how far a content-scroll flick projects before easing to a stop
 const WHEEL_IDLE_MS = 150;      // gap between wheel ticks that ends a "burst"
 
@@ -59,7 +60,7 @@ const SQUIRCLE_RADIUS_SCALE = (typeof CSS !== 'undefined' && CSS.supports('corne
 // used by the bottom-nav pill and the liquid-glass press/drag deform.
 const rubber = (x, give) => (x * give) / (give + Math.abs(x));
 
-let sheet, handle, content;
+let sheet, handle, content, guard;
 let detent = 'collapsed';   // 'collapsed' | 'half' | 'full'
 const size = new Spring(COLLAPSED);
 const scrollPos = new Spring(0);
@@ -116,8 +117,8 @@ function nearestDetentKey(value) {
 }
 
 // The next detent in the given direction from `value` (+1 = up/larger,
-// -1 = down/smaller) — how a fast flick commits, one step at a time rather
-// than skipping straight to an end detent.
+// -1 = down/smaller) — a fast flick commits one step at a time rather than
+// skipping straight to an end detent.
 function nextDetentKey(value, dir) {
   const pts = detentPoints();
   if (dir > 0) {
@@ -126,6 +127,17 @@ function nextDetentKey(value, dir) {
   }
   const below = pts.filter(p => p.value < value - 0.5).reverse();
   return (below[0] || pts[0]).key;
+}
+
+// A release/commit's actual target: the adjacent detent for an ordinary
+// flick, but the *end* detent (skipping past "half" entirely) for a hard
+// enough one — so a strong throw from collapsed can land straight on full.
+function flungDetentKey(value, dir, speed) {
+  if (speed > HARD_FLING_VELOCITY) {
+    const pts = detentPoints();
+    return (dir > 0 ? pts[pts.length - 1] : pts[0]).key;
+  }
+  return nextDetentKey(value, dir);
 }
 
 function contentMaxScroll() {
@@ -171,6 +183,30 @@ function sheetGeometry() {
   };
 }
 
+// Guards the map from a gesture/animation still in progress on the sheet
+// (see the wheel-guard element itself, created in initCampusSheet). Driven
+// by its own dedicated rAF chain rather than piggybacking on the shared
+// spring loop above: that loop only runs (and so only recomputes anything)
+// while some spring is actually mid-animation, and stops the instant
+// everything's resting — including, for a plain tap that never calls
+// .to()/.set() again after release, potentially stopping *before* ever
+// re-checking activePointerId's just-cleared null. Polling independently
+// here guarantees a check the frame after any such state change, with no
+// dependency on whether the shared loop happens to still be running then.
+let guardWatchQueued = false;
+function watchGuard() {
+  guardWatchQueued = false;
+  if (!guard) return;
+  const busy = activePointerId != null || wheelMode != null || !size.resting || !scrollPos.resting;
+  guard.classList.toggle('busy', busy);
+  if (busy) requestGuardWatch();
+}
+function requestGuardWatch() {
+  if (guardWatchQueued) return;
+  guardWatchQueued = true;
+  requestAnimationFrame(watchGuard);
+}
+
 onSpringFrame(() => {
   if (!sheet) return;
   sheet.style.setProperty('--campus-sheet-size', `${size.value}px`);
@@ -180,6 +216,14 @@ onSpringFrame(() => {
     const g = sheetGeometry();
     sheet.style.setProperty('--campus-sheet-inset', `${g.inset}px`);
     sheet.style.setProperty('--campus-sheet-radius', `${g.radius}px`);
+  }
+
+  // A committed wheel-fling's spring runs on its own from here — release
+  // the "gesture in progress" state for real once it actually settles,
+  // rather than on some fixed timeout (see onWheel's early-return above).
+  if (wheelCommitted && size.resting) {
+    wheelMode = null;
+    wheelCommitted = false;
   }
 });
 
@@ -239,6 +283,7 @@ function onPointerDown(e) {
   pushSample(e.clientY);
   size.stop();
   scrollPos.stop();
+  watchGuard();
   window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerEnd);
   window.addEventListener('pointercancel', onPointerEnd);
@@ -313,10 +358,11 @@ function onPointerEnd(e) {
     // velocity alone) means the settle continues the drag's actual motion
     // instead of starting from a standstill.
     size.v = -v * 1000; // v is px/ms; Spring integrates in px/s
-    // A fast flick commits to the next detent in that direction regardless
-    // of how far it got dragged; otherwise snap to whichever detent the
-    // release position is closer to.
-    snapToDetent(Math.abs(v) > FLING_VELOCITY ? nextDetentKey(size.value, v < 0 ? 1 : -1) : nearestDetentKey(size.value));
+    // A fast flick commits to the next detent in that direction (or skips
+    // straight to the end one, hard enough) regardless of how far it got
+    // dragged; otherwise snap to whichever detent the release position is
+    // closer to.
+    snapToDetent(Math.abs(v) > FLING_VELOCITY ? flungDetentKey(size.value, v < 0 ? 1 : -1, Math.abs(v)) : nearestDetentKey(size.value));
   } else if (mode === 'scroll') {
     // Project the flick a little ahead and ease there, rather than a true
     // momentum simulation — same trick as the sheet's own snap, and
@@ -326,36 +372,95 @@ function onPointerEnd(e) {
     scrollPos.v = -v * 1000;
     scrollPos.to(Math.min(max, Math.max(0, scrollPos.value - v * SCROLL_PROJECTION)), SETTLE_SPRING);
   }
+  watchGuard();
 }
 
 /* --- Wheel / trackpad ------------------------------------------------------
    Same resize/scroll arbitration as the pointer drag above, but driven by
    discrete wheel ticks: each tick nudges size or scrollTop directly (no
-   dead zone — a single tick is already an intentional gesture), and a
-   short idle gap after the last tick in a burst stands in for "release". */
+   dead zone — a single tick is already an intentional gesture).
+
+   For resize specifically: a trackpad fling arrives as many ticks with
+   OS-supplied momentum (shrinking deltas), so tracking them 1:1 would coast
+   to a stop on its own, and only *then* — once the burst goes idle — did a
+   separate, freshly-started snap animation kick in, reading as two
+   disjointed motions back to back. Instead, track this burst's own
+   velocity, and the moment it crosses FLING_VELOCITY, commit immediately:
+   stop tracking raw deltas and ease straight to the next detent in that
+   direction, seeded with that same measured velocity (same seamless
+   hand-off trick as onPointerEnd) so the fling continues into the snap
+   as one motion instead of two. A slower, deliberate scroll never crosses
+   the threshold and still just settles to the nearest detent once idle,
+   as before. */
 let wheelMode = null;
 let wheelIdleTimer = null;
+let wheelCommitted = false;
+let wheelLastT = null;
+let wheelVel = 0; // smoothed px/ms, same sign as deltaY (size += deltaY)
 
 function onWheel(e) {
   e.preventDefault();
+
+  // Once committed, the spring is flying on its own and no longer needs
+  // this burst's ticks — and, critically, must stop treating them as signs
+  // of life: trackpad momentum keeps sending shrinking-delta wheel events
+  // for a while after the fingers lift, and continuing to poke the idle
+  // timer on every one of them kept the "gesture in progress" state alive
+  // far past the actual animation, silently swallowing the user's next,
+  // genuinely new scroll until they moved the cursor (which happens to
+  // reset WebKit's own stale wheel-target tracking). onSpringFrame below
+  // clears wheelCommitted/wheelMode for real, once the spring actually
+  // settles, so there's nothing left to do with these ticks but consume
+  // them.
+  if (wheelCommitted) return;
+
   clearTimeout(wheelIdleTimer);
-  size.stop();
-  scrollPos.stop();
 
   if (wheelMode === null) {
     wheelMode = detent !== 'full'
       ? 'resize'
       : ((!contentScrollable() || scrollPos.value <= 0) && e.deltaY < 0 ? 'resize' : 'scroll');
+    wheelCommitted = false;
+    wheelLastT = null;
+    wheelVel = 0;
+    size.stop();
+    scrollPos.stop();
+    watchGuard();
   }
 
+  // dt is only meaningful from this burst's second tick on — the first
+  // tick's "elapsed time" is however long it's been since the *previous*
+  // burst ended, not a real inter-tick interval, and would otherwise read
+  // as an enormous, spurious velocity.
+  const now = performance.now();
+  const dt = wheelLastT != null ? Math.max(1, now - wheelLastT) : null;
+  wheelLastT = now;
+
   if (wheelMode === 'resize') {
-    const { min, max } = bounds();
-    const next = size.value + e.deltaY;
-    if (next > max && contentScrollable()) {
-      size.set(max);
-      wheelMode = 'scroll';
+    if (dt != null) {
+      const instVel = e.deltaY / dt;
+      wheelVel = wheelVel === 0 ? instVel : wheelVel * 0.7 + instVel * 0.3;
+    }
+    if (dt != null && Math.abs(wheelVel) > FLING_VELOCITY) {
+      wheelCommitted = true;
+      size.v = wheelVel * 1000; // px/ms → px/s
+      snapToDetent(flungDetentKey(size.value, wheelVel > 0 ? 1 : -1, Math.abs(wheelVel)));
+      // No idle timer to schedule here — see onSpringFrame, which takes
+      // over from this point and clears wheelCommitted/wheelMode once the
+      // spring actually settles. Scheduling one anyway would race it: if it
+      // fires before the (often longer) settle animation finishes, it'd
+      // clear wheelCommitted early and let a stray leftover momentum tick
+      // treat it as a brand-new gesture, yanking the animation mid-flight.
+      return;
     } else {
-      size.set(next < min ? min + rubber(next - min, GIVE) : next > max ? max + rubber(next - max, GIVE) : next);
+      const { min, max } = bounds();
+      const next = size.value + e.deltaY;
+      if (next > max && contentScrollable()) {
+        size.set(max);
+        wheelMode = 'scroll';
+      } else {
+        size.set(next < min ? min + rubber(next - min, GIVE) : next > max ? max + rubber(next - max, GIVE) : next);
+      }
     }
   } else {
     const max = contentMaxScroll();
@@ -369,9 +474,10 @@ function onWheel(e) {
   }
 
   wheelIdleTimer = setTimeout(() => {
-    if (wheelMode === 'resize') snapToDetent(nearestDetentKey(size.value));
+    if (wheelMode === 'resize' && !wheelCommitted) snapToDetent(nearestDetentKey(size.value));
     else if (wheelMode === 'scroll') settleScroll();
     wheelMode = null;
+    wheelCommitted = false;
   }, WHEEL_IDLE_MS);
 }
 
@@ -398,6 +504,24 @@ desktopMQ.addEventListener('change', onViewportResize);
 export function initCampusSheet() {
   const container = document.getElementById(CONTAINER_ID);
   if (!container || sheet) return;
+
+  // The sheet shrinks/grows under the cursor mid-gesture, so the cursor can
+  // easily end up over the map while a drag or fling is still live. Rather
+  // than chasing that in JS (event redirection, state tracked across
+  // bursts, all of it fighting stray trailing wheel ticks), just put a
+  // plain element between the map and the sheet that becomes the actual
+  // hit-test target for that whole area while busy — invisible, and its
+  // one job is to swallow wheel events so they can't reach the map (or
+  // trigger the page's own — deliberately overflowing, see
+  // campus-map.css — scroll). `pointer-events` toggles with `.busy` (see
+  // watchGuard() above): off at rest, so idle clicks/scrolls reach the
+  // map normally; the sheet itself sits above this at the same z-index
+  // (appended after it, in DOM-order tie-break) so it keeps getting events
+  // directly regardless of this guard's state.
+  guard = document.createElement('div');
+  guard.className = 'campus-sheet-wheel-guard';
+  guard.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
+  container.appendChild(guard);
 
   sheet = document.createElement('div');
   sheet.className = 'campus-sheet';

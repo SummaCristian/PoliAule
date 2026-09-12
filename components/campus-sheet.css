@@ -13,11 +13,15 @@
 
 .campus-sheet {
   position: fixed;
-  /* Symmetric on all three free edges — narrow enough that the sheet still
-     fully contains the tabbar's own horizontal footprint (it's inset further
-     in, by 1.75rem — see bottom-nav.css). */
-  left: 8px;
-  right: 8px;
+  /* Mobile only (see below) — collapsed, this is wide enough to be
+     concentric with the tabbar's own pill/circle ends: campus-sheet.js sets
+     --campus-sheet-inset to (tabbar-radius + the same 8px gap the tabbar
+     already keeps below it), so the sheet's edge traces the exact same
+     curve outward from the pill/circle, then eases back down to a plain
+     8px as the sheet grows toward full height (see --campus-sheet-radius
+     below, and the js for the interpolation). */
+  left: var(--campus-sheet-inset, 8px);
+  right: var(--campus-sheet-inset, 8px);
   bottom: calc(8px + env(safe-area-inset-bottom));
   z-index: 1;
 
@@ -26,7 +30,12 @@
 
   height: var(--campus-sheet-size, 192px);
   max-height: 85vh;
-  border-radius: 28px;
+  /* Shrinks from the concentric compact value down to a plain 28px as the
+     sheet grows — see --campus-sheet-inset above. */
+  border-radius: var(--campus-sheet-radius, 28px);
+  /* iOS-style continuous ("squircle") corner instead of a plain circular
+     arc — same treatment as .info-hero-icon in info-page.css. */
+  corner-shape: superellipse;
 
   background: var(--glass-tint);
   box-shadow:

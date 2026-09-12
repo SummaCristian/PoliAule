@@ -38,6 +38,24 @@ const FLING_VELOCITY = 0.5;     // px/ms — a release faster than this commits 
 const SCROLL_PROJECTION = 120;  // ms — how far a content-scroll flick projects before easing to a stop
 const WHEEL_IDLE_MS = 150;      // gap between wheel ticks that ends a "burst"
 
+// The mobile sheet's plain (full-height) left/right inset and corner radius
+// — same 8px/28px it's always had. GAP is also the tabbar's own clearance
+// below it (see bottom-nav.css's --bn-wrapper), reused here as the gap to
+// keep concentric at the collapsed detent (see sheetGeometry() below).
+const PLAIN_INSET = 8;
+const PLAIN_RADIUS = 28;
+const GAP = 8;
+// A superellipse ("squircle", see campus-sheet.css's corner-shape) reads as
+// less round than a circular arc at the same radius — it hugs the straight
+// edges longer before curving in. Where it's actually supported, this scales
+// the radius up to compensate, so it still reads roughly as round as the
+// tabbar's true circular pill/circle ends. Where it's not (Safari, as of
+// this writing — corner-shape is Chromium-only right now), the property is
+// simply ignored and border-radius stays a plain circle, so scaling it up
+// would just throw off the concentricity this was built for; keep it at 1
+// there. Estimate for the supported case — nudge after an eyeball check.
+const SQUIRCLE_RADIUS_SCALE = (typeof CSS !== 'undefined' && CSS.supports('corner-shape', 'superellipse')) ? 1.15 : 1;
+
 // Asymptotic rubber-band (approaches ±give, never past it) — same falloff
 // used by the bottom-nav pill and the liquid-glass press/drag deform.
 const rubber = (x, give) => (x * give) / (give + Math.abs(x));
@@ -119,10 +137,51 @@ function contentScrollable() {
   return contentMaxScroll() > 1;
 }
 
+function tabbarHeightPx() {
+  const n = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bn-tabbar-height'));
+  return Number.isFinite(n) && n > 0 ? n : 76; // fallback ~= today's --bottom-nav-height minus its own top padding
+}
+
+function tabbarOuterInsetPx() {
+  const n = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bn-tabbar-outer-inset'));
+  return Number.isFinite(n) && n > 0 ? n : 28; // fallback ~= today's 1.75rem wrapper padding
+}
+
+// Mobile only — desktop's own media query hardcodes both properties outright
+// (its panel doesn't sit over the tabbar the same way). Two independent
+// quantities, both easing linearly back to the plain 8px/28px as the sheet
+// grows, fully there by the full detent:
+//
+//  - inset: the sheet's straight edge needs to sit *outside* the pill/
+//    circle's own outer edge (tabbarOuterInsetPx() from the viewport) by
+//    GAP, to actually contain the tabbar rather than clip into it.
+//  - radius: for the sheet's rounded corner to be concentric with the
+//    pill's/circle's own rounded end (sharing the same arc centre), it
+//    needs to equal that end's own radius (half the tabbar's height) plus
+//    the *vertical* clearance the tabbar already keeps below it, which
+//    happens to be the same GAP — then scaled up for the superellipse (see
+//    SQUIRCLE_RADIUS_SCALE).
+function sheetGeometry() {
+  const compactInset = tabbarOuterInsetPx() - GAP;
+  const compactRadius = (tabbarHeightPx() / 2 + GAP) * SQUIRCLE_RADIUS_SCALE;
+  const b = bounds();
+  const t = Math.max(0, Math.min(1, (size.value - COLLAPSED) / (b.max - COLLAPSED)));
+  return {
+    inset: compactInset + (PLAIN_INSET - compactInset) * t,
+    radius: compactRadius + (PLAIN_RADIUS - compactRadius) * t,
+  };
+}
+
 onSpringFrame(() => {
   if (!sheet) return;
   sheet.style.setProperty('--campus-sheet-size', `${size.value}px`);
   if (content) content.scrollTop = scrollPos.value;
+
+  if (!desktopMQ.matches) {
+    const g = sheetGeometry();
+    sheet.style.setProperty('--campus-sheet-inset', `${g.inset}px`);
+    sheet.style.setProperty('--campus-sheet-radius', `${g.radius}px`);
+  }
 });
 
 // Shared by both springs so a released drag settles at one consistent feel —

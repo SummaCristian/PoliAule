@@ -142,6 +142,11 @@ function layout() {
   const vertical = isVertical();
   const barRect = bar.getBoundingClientRect();
   const wrapRect = group.getBoundingClientRect();
+  // Exposed for campus-sheet.css/js: the tabbar's own cross-axis thickness
+  // (its rendered height on mobile — same number that already sizes the
+  // search button's diameter above), used to make the campus sheet's
+  // compact corners/edges concentric with the pill's/circle's own rounding.
+  document.documentElement.style.setProperty('--bn-tabbar-height', `${barRect.height}px`);
   const itemsRect = barItems.getBoundingClientRect();
   itemsW = itemsRect.width;
   itemsH = itemsRect.height;
@@ -522,6 +527,12 @@ bar.addEventListener('keydown', (e) => {
 function setNavSizeVars() {
   document.documentElement.style.setProperty('--bottom-nav-height', `${wrapper.offsetHeight}px`);
   document.documentElement.style.setProperty('--side-nav-width', `${wrapper.offsetWidth}px`);
+  // The wrapper's own horizontal padding is the tabbar's true outer-edge
+  // clearance from the viewport (group/search-btn sit flush against it) —
+  // read live rather than hardcoding the 1.75rem this happens to be today,
+  // for campus-sheet.js's concentric-corner math.
+  const padLeft = parseFloat(getComputedStyle(wrapper).paddingLeft);
+  document.documentElement.style.setProperty('--bn-tabbar-outer-inset', `${Number.isFinite(padLeft) ? padLeft : 28}px`);
 }
 new ResizeObserver(setNavSizeVars).observe(wrapper);
 setNavSizeVars();

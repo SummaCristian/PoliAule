@@ -133,7 +133,16 @@ async function boot(container) {
   // way to force it back to 1 (both `user-scalable=no`/`maximum-scale` and
   // rewriting the viewport meta's `initial-scale` were tried on-device and
   // didn't stop the visible zoom). Left as a known Safari/iPadOS limitation.
-  if ('ongesturestart' in window) {
+  //
+  // `'ongesturestart' in window` alone isn't enough to scope this to the
+  // trackpad, though — it's true on every WebKit browser, iPadOS Safari's
+  // real touchscreen included, and it turns out a two-finger touch pinch
+  // *does* fire these there (contradicting the on-device finding above,
+  // maybe from an OS update since). Since this handler only ever reads
+  // `e.scale` — no pan translation, no `e.rotation` — hijacking a touch
+  // gesture into it broke simultaneous pan+zoom and rotate entirely.
+  // Gate it to non-touch devices so it's trackpad-only, same as intended.
+  if ('ongesturestart' in window && navigator.maxTouchPoints === 0) {
     let gestureStartZoom = 0;
     el.addEventListener('gesturestart', e => {
       e.preventDefault();

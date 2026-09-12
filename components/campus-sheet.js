@@ -1,8 +1,21 @@
 // Glass sheet that floats over the campus map — inset on all sides at the
 // bottom on mobile, pinned to the right on desktop (see campus-sheet.css).
-// Both breakpoints drag the same way: grab the handle on top and pull up/
-// down, snapping to a collapsed "peek" or an expanded height, iOS Maps
-// style. Empty shell for now — content lands in a later pass.
+// Apple Maps-style nested drag, from anywhere on the sheet (not just the
+// handle), and from wheel/trackpad scroll as well as pointer drag:
+//
+//   - Three detents on mobile — collapsed "peek", half, and full height (on
+//     desktop, half and full coincide: the panel only ever had two
+//     meaningful sizes there). Short of full height, the gesture always
+//     resizes the sheet, following the pointer/scroll 1:1 and snapping to
+//     the nearest detent on release (or the next one in the gesture's
+//     direction, if it was a fast flick).
+//   - At full height, the gesture scrolls the sheet's own content instead —
+//     unless that content doesn't need to scroll, or is already scrolled to
+//     its top and the gesture keeps pulling further in the "collapse"
+//     direction, in which case it hands off to resizing the sheet back down.
+//   - The reverse handoff also holds: resizing past the full detent (there's
+//     a little more headroom beyond it, used as rubber-band give normally)
+//     hands off to scrolling the content instead of overshooting.
 //
 // Lives inside #search-classrooms-container, alongside the map (see
 // components/campus-map.js) and above it (z-index), below the header /
@@ -18,17 +31,21 @@ const desktopMQ = matchMedia('(min-width: 600px)');
 // too short and the pill's own hit area sits right on top of the handle,
 // swallowing the drag before it starts.
 const COLLAPSED = 192;
-const EXPANDED_FRAC = 0.5;      // fraction of the available vertical space
-const MAX_FRAC = 0.85;
-const GIVE = 40;                // rubber-band overshoot (px) past either snap point
+const HALF_FRAC = 0.5;          // fraction of the available vertical space
+const FULL_FRAC = 0.85;
+const GIVE = 40;                // rubber-band overshoot (px) past either end detent
+const FLING_VELOCITY = 0.5;     // px/ms — a release faster than this commits a direction
+const SCROLL_PROJECTION = 120;  // ms — how far a content-scroll flick projects before easing to a stop
+const WHEEL_IDLE_MS = 150;      // gap between wheel ticks that ends a "burst"
 
 // Asymptotic rubber-band (approaches ±give, never past it) — same falloff
 // used by the bottom-nav pill and the liquid-glass press/drag deform.
 const rubber = (x, give) => (x * give) / (give + Math.abs(x));
 
-let sheet, handle;
-let expanded = false;
+let sheet, handle, content;
+let detent = 'collapsed';   // 'collapsed' | 'half' | 'full'
 const size = new Spring(COLLAPSED);
+const scrollPos = new Spring(0);
 
 function headerHeightPx() {
   const n = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height'));
@@ -47,82 +64,266 @@ function availableHeight() {
 
 function bounds() {
   const available = availableHeight();
-  // Desktop panel can grow to fill all its available vertical room; the
-  // mobile bottom sheet caps short of the full screen so the map behind it
-  // stays reachable even fully expanded.
-  const max = desktopMQ.matches
+  // Desktop panel can grow to fill all its available vertical room, and only
+  // ever had two meaningful sizes — so `half` just coincides with `full`
+  // there. The mobile bottom sheet's `full` caps short of the true full
+  // screen so the map behind it stays reachable even at that detent.
+  const full = desktopMQ.matches
     ? available
-    : Math.min(available * MAX_FRAC, available - 40);
-  const expanded = desktopMQ.matches ? max : Math.min(available * EXPANDED_FRAC, max);
-  return { min: COLLAPSED, max: Math.max(COLLAPSED, max), expanded: Math.max(COLLAPSED, expanded) };
+    : Math.min(available * FULL_FRAC, available - 40);
+  const half = desktopMQ.matches ? full : Math.min(available * HALF_FRAC, full);
+  return {
+    min: COLLAPSED,
+    half: Math.max(COLLAPSED, half),
+    max: Math.max(COLLAPSED, full),
+  };
+}
+
+// The three detents as sorted { key, value } points, current viewport.
+function detentPoints() {
+  const b = bounds();
+  return [
+    { key: 'collapsed', value: b.min },
+    { key: 'half', value: b.half },
+    { key: 'full', value: b.max },
+  ];
+}
+
+function detentValue(key) {
+  const b = bounds();
+  return key === 'collapsed' ? b.min : key === 'half' ? b.half : b.max;
+}
+
+function nearestDetentKey(value) {
+  return detentPoints().reduce((best, p) => Math.abs(p.value - value) < Math.abs(best.value - value) ? p : best).key;
+}
+
+// The next detent in the given direction from `value` (+1 = up/larger,
+// -1 = down/smaller) — how a fast flick commits, one step at a time rather
+// than skipping straight to an end detent.
+function nextDetentKey(value, dir) {
+  const pts = detentPoints();
+  if (dir > 0) {
+    const above = pts.filter(p => p.value > value + 0.5);
+    return (above[0] || pts[pts.length - 1]).key;
+  }
+  const below = pts.filter(p => p.value < value - 0.5).reverse();
+  return (below[0] || pts[0]).key;
+}
+
+function contentMaxScroll() {
+  return content ? Math.max(0, content.scrollHeight - content.clientHeight) : 0;
+}
+
+function contentScrollable() {
+  return contentMaxScroll() > 1;
 }
 
 onSpringFrame(() => {
   if (!sheet) return;
   sheet.style.setProperty('--campus-sheet-size', `${size.value}px`);
+  if (content) content.scrollTop = scrollPos.value;
 });
 
-function snapTo(wantExpanded) {
-  expanded = wantExpanded;
-  const b = bounds();
-  size.to(expanded ? b.expanded : b.min, { stiffness: 420, damping: 38, mass: 0.9 });
+// Shared by both springs so a released drag settles at one consistent feel —
+// smooth (no visible bounce) but not sluggish. Both onPointerEnd handlers
+// also seed the spring's own velocity from the drag's measured velocity
+// right before calling .to() below, so the settle picks up exactly where
+// the finger left off instead of starting from rest — that hand-off is what
+// makes the drag and the "throw" feel like one continuous motion rather
+// than two separate ones.
+const SETTLE_SPRING = { stiffness: 260, damping: 30, mass: 1 };
+
+function snapToDetent(key) {
+  detent = key;
+  size.to(detentValue(key), SETTLE_SPRING);
 }
 
-/* --- Drag ---------------------------------------------------------------- */
-let dragging = false;
-let startSize = 0, startY = 0;
+function settleScroll() {
+  scrollPos.to(Math.min(contentMaxScroll(), Math.max(0, scrollPos.value)), SETTLE_SPRING);
+}
+
+/* --- Pointer drag (touch + mouse click-drag) ------------------------------
+   Attached to the whole sheet, not just the handle: short of full height
+   this always resizes; at full height it scrolls the content instead,
+   deciding which on first movement and handing off mid-gesture at either
+   boundary (see file header). */
+let activePointerId = null;
+let dragMode = null;   // null (undecided) | 'resize' | 'scroll'
+let dragStartY = 0;
+let dragStartSize = 0;
+let dragStartScroll = 0;
 let samples = [];
 
-function onDragStart(e) {
-  if (e.pointerType === 'mouse' && e.button !== 0) return;
-  dragging = true;
-  try { handle.setPointerCapture(e.pointerId); } catch { /* not fatal */ }
-  size.stop();
-  startSize = size.value;
-  startY = e.clientY;
-  samples = [{ y: startY, t: performance.now() }];
-}
-
-function onDragMove(e) {
-  if (!dragging) return;
-  const y = e.clientY;
+function pushSample(y) {
   const now = performance.now();
   samples.push({ y, t: now });
   while (samples.length > 2 && now - samples[0].t > 100) samples.shift();
-
-  // Dragging the handle up (negative delta) grows the sheet.
-  const raw = startSize - (y - startY);
-  const { min, max } = bounds();
-  const clamped = raw < min
-    ? min + rubber(raw - min, GIVE)
-    : raw > max
-      ? max + rubber(raw - max, GIVE)
-      : raw;
-  size.set(clamped);
 }
 
-function onDragEnd(e) {
-  if (!dragging) return;
-  dragging = false;
-  try { handle.releasePointerCapture(e.pointerId); } catch { /* already gone */ }
-
+function velocity() {
+  // px/ms, positive = pointer moving down.
   const a = samples[0], b = samples[samples.length - 1];
-  const v = b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;
-  // A fast flick commits to a snap point regardless of how far it got
-  // dragged; otherwise snap to whichever point the release position is
-  // closer to.
-  if (Math.abs(v) > 0.5) snapTo(v < 0);
-  else {
-    const bnd = bounds();
-    snapTo(size.value > bnd.min + (bnd.expanded - bnd.min) / 2);
+  return b && a && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;
+}
+
+function onPointerDown(e) {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  activePointerId = e.pointerId;
+  dragStartY = e.clientY;
+  dragStartSize = size.value;
+  dragStartScroll = scrollPos.value;
+  // Short of full height, any touch on the sheet resizes it, no ambiguity.
+  // At full height, wait for the first real movement to tell resize from
+  // content-scroll intent (see onPointerMove).
+  dragMode = detent === 'full' ? null : 'resize';
+  samples = [];
+  pushSample(e.clientY);
+  size.stop();
+  scrollPos.stop();
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerEnd);
+  window.addEventListener('pointercancel', onPointerEnd);
+}
+
+function onPointerMove(e) {
+  if (e.pointerId !== activePointerId) return;
+  const y = e.clientY;
+  pushSample(y);
+
+  if (dragMode === null) {
+    const dy = y - dragStartY;
+    if (Math.abs(dy) < 4) return; // dead zone — don't commit to a mode on a near-tap
+    const atTop = !contentScrollable() || scrollPos.value <= 0;
+    if (atTop && dy > 0) {
+      dragMode = 'resize';
+      dragStartY = y;
+      dragStartSize = size.value;
+    } else {
+      dragMode = 'scroll';
+      dragStartY = y;
+      dragStartScroll = scrollPos.value;
+    }
+  }
+
+  e.preventDefault();
+
+  if (dragMode === 'resize') {
+    const dy = y - dragStartY;
+    const { min, max } = bounds();
+    const raw = dragStartSize - dy;
+    if (raw > max && contentScrollable()) {
+      // Handoff: pulling past full height spills into scrolling the content.
+      size.set(max);
+      dragMode = 'scroll';
+      dragStartY = y;
+      dragStartScroll = scrollPos.value;
+      return;
+    }
+    size.set(raw < min ? min + rubber(raw - min, GIVE) : raw > max ? max + rubber(raw - max, GIVE) : raw);
+  } else {
+    const dy = y - dragStartY;
+    const max = contentMaxScroll();
+    const raw = dragStartScroll - dy;
+    if (raw < 0 && dy > 0) {
+      // Handoff: content is at its top and still being pulled down — start
+      // collapsing the sheet instead of rubber-banding the content.
+      scrollPos.set(0);
+      dragMode = 'resize';
+      dragStartY = y;
+      dragStartSize = size.value;
+      return;
+    }
+    scrollPos.set(raw > max ? max + rubber(raw - max, GIVE) : Math.max(0, raw));
   }
 }
 
+function onPointerEnd(e) {
+  if (e.pointerId !== activePointerId) return;
+  window.removeEventListener('pointermove', onPointerMove);
+  window.removeEventListener('pointerup', onPointerEnd);
+  window.removeEventListener('pointercancel', onPointerEnd);
+  activePointerId = null;
+
+  const v = velocity(); // px/ms, + = down
+  const mode = dragMode;
+  dragMode = null;
+
+  if (mode === 'resize') {
+    // size tracks -dy (see onPointerMove), so its own rate of change is -v.
+    // Seeding the spring with it before .to() (which, unlike .set(), leaves
+    // velocity alone) means the settle continues the drag's actual motion
+    // instead of starting from a standstill.
+    size.v = -v * 1000; // v is px/ms; Spring integrates in px/s
+    // A fast flick commits to the next detent in that direction regardless
+    // of how far it got dragged; otherwise snap to whichever detent the
+    // release position is closer to.
+    snapToDetent(Math.abs(v) > FLING_VELOCITY ? nextDetentKey(size.value, v < 0 ? 1 : -1) : nearestDetentKey(size.value));
+  } else if (mode === 'scroll') {
+    // Project the flick a little ahead and ease there, rather than a true
+    // momentum simulation — same trick as the sheet's own snap, and
+    // consistent with the rest of the app's spring-driven gestures. Same
+    // velocity hand-off as above.
+    const max = contentMaxScroll();
+    scrollPos.v = -v * 1000;
+    scrollPos.to(Math.min(max, Math.max(0, scrollPos.value - v * SCROLL_PROJECTION)), SETTLE_SPRING);
+  }
+}
+
+/* --- Wheel / trackpad ------------------------------------------------------
+   Same resize/scroll arbitration as the pointer drag above, but driven by
+   discrete wheel ticks: each tick nudges size or scrollTop directly (no
+   dead zone — a single tick is already an intentional gesture), and a
+   short idle gap after the last tick in a burst stands in for "release". */
+let wheelMode = null;
+let wheelIdleTimer = null;
+
+function onWheel(e) {
+  e.preventDefault();
+  clearTimeout(wheelIdleTimer);
+  size.stop();
+  scrollPos.stop();
+
+  if (wheelMode === null) {
+    wheelMode = detent !== 'full'
+      ? 'resize'
+      : ((!contentScrollable() || scrollPos.value <= 0) && e.deltaY < 0 ? 'resize' : 'scroll');
+  }
+
+  if (wheelMode === 'resize') {
+    const { min, max } = bounds();
+    const next = size.value + e.deltaY;
+    if (next > max && contentScrollable()) {
+      size.set(max);
+      wheelMode = 'scroll';
+    } else {
+      size.set(next < min ? min + rubber(next - min, GIVE) : next > max ? max + rubber(next - max, GIVE) : next);
+    }
+  } else {
+    const max = contentMaxScroll();
+    const next = scrollPos.value + e.deltaY;
+    if (next < 0 && e.deltaY < 0) {
+      scrollPos.set(0);
+      wheelMode = 'resize';
+    } else {
+      scrollPos.set(next > max ? max + rubber(next - max, GIVE) : Math.max(0, next));
+    }
+  }
+
+  wheelIdleTimer = setTimeout(() => {
+    if (wheelMode === 'resize') snapToDetent(nearestDetentKey(size.value));
+    else if (wheelMode === 'scroll') settleScroll();
+    wheelMode = null;
+  }, WHEEL_IDLE_MS);
+}
+
 function onViewportResize() {
-  if (dragging) return;
-  // The expanded height is a fraction of the available space, which moves
-  // with the viewport (rotation, toolbar show/hide, breakpoint change).
-  size.set(expanded ? bounds().expanded : bounds().min);
+  if (activePointerId != null) return;
+  // Detent sizes are fractions of the available space, which moves with the
+  // viewport (rotation, toolbar show/hide, breakpoint change).
+  size.set(detentValue(detent));
+  const max = contentMaxScroll();
+  if (scrollPos.value > max) scrollPos.set(max);
 }
 addEventListener('resize', onViewportResize);
 desktopMQ.addEventListener('change', onViewportResize);
@@ -133,22 +334,21 @@ export function initCampusSheet() {
 
   sheet = document.createElement('div');
   sheet.className = 'campus-sheet';
+  sheet.addEventListener('pointerdown', onPointerDown);
+  sheet.addEventListener('wheel', onWheel, { passive: false });
 
   handle = document.createElement('div');
   handle.className = 'campus-sheet-handle';
   handle.innerHTML = '<span class="campus-sheet-grabber"></span>';
-  handle.addEventListener('pointerdown', onDragStart);
-  handle.addEventListener('pointermove', onDragMove);
-  handle.addEventListener('pointerup', onDragEnd);
-  handle.addEventListener('pointercancel', onDragEnd);
   sheet.appendChild(handle);
 
-  const content = document.createElement('div');
+  content = document.createElement('div');
   content.className = 'campus-sheet-content';
   sheet.appendChild(content);
 
   container.appendChild(sheet);
 
   size.set(COLLAPSED);
+  scrollPos.set(0);
   sheet.style.setProperty('--campus-sheet-size', `${size.value}px`);
 }

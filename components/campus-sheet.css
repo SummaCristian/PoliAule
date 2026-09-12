@@ -1,10 +1,13 @@
 /* ============================================================
    CAMPUS SHEET
    A draggable glass panel over the campus map — a bottom sheet on
-   mobile, a panel pinned to the right on desktop. Both drag the same
-   way: grab the handle on top and pull up/down to expand/collapse,
-   snapping to a collapsed "peek" or an expanded height. Sits above
-   the map, below the header/footer/bottom-nav chrome — see
+   mobile, a panel pinned to the right on desktop. Apple Maps-style
+   nested drag: dragging/scrolling anywhere on it (not just the handle)
+   resizes it between a collapsed "peek" and an expanded height while
+   short of full height; once at full height, the same gesture instead
+   scrolls its own content, handing back to resizing the sheet only once
+   that content is scrolled to its top and the gesture keeps pulling down.
+   Sits above the map, below the header/footer/bottom-nav chrome — see
    components/campus-sheet.js for the drag physics.
    ============================================================ */
 
@@ -18,7 +21,7 @@
   bottom: calc(8px + env(safe-area-inset-bottom));
   z-index: 1;
 
-  display: none; /* TEMP: hidden to check the map/safe-area fix underneath, revert after */
+  display: flex;
   flex-direction: column;
 
   height: var(--campus-sheet-size, 192px);
@@ -35,6 +38,17 @@
   -webkit-backdrop-filter: blur(var(--glass-blur-lg));
 
   will-change: height;
+
+  /* The whole sheet (not just the handle) is a drag surface now — same
+     reasoning as .bn-wrapper in bottom-nav.css: without these, a
+     touch-drag starting on/near text triggers native selection/callout,
+     and the browser's own touch scrolling would fight our manual one
+     (campus-sheet.js drives --campus-sheet-size and the content's
+     scrollTop itself). */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .header-button::after /
@@ -83,7 +97,14 @@
 .campus-sheet-content {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  /* `hidden`, not `auto`: campus-sheet.js drives scrollTop itself (so it can
+     hand off between resizing the sheet and scrolling this content
+     mid-gesture) — an element with `overflow: hidden` still supports
+     programmatic `scrollTop`, it just never shows its own scrollbar or
+     responds to touch/wheel input directly, which is exactly what's wanted
+     here. */
+  overflow-y: hidden;
+  touch-action: none;
   padding: 0 1.25rem 1.25rem;
 }
 

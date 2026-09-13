@@ -45,10 +45,9 @@ const KEYFRAMES = 60;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 const STATUS_META = [
-  { key: 'free',          i18n: 'status.free',         cls: 'free' },
-  { key: 'free-soon',     i18n: 'status.freeSoon',     cls: 'free-soon' },
-  { key: 'occupied-soon', i18n: 'status.occupiedSoon', cls: 'occupied-soon' },
-  { key: 'occupied',      i18n: 'status.occupied',     cls: 'occupied' },
+  { key: 'free',           i18n: 'status.free',         cls: 'free' },
+  { key: 'partially-free', i18n: 'status.partiallyFree', cls: 'partially-free' },
+  { key: 'occupied',       i18n: 'status.occupied',      cls: 'occupied' },
 ];
 
 const LAYER_PROPS = ['position', 'insetInline', 'top', 'zIndex', 'transformOrigin', 'willChange', 'opacity', 'pointerEvents'];
@@ -632,7 +631,7 @@ class BuildingOverview {
 
   // ── Grid / cards ──────────────────────────────────────────────────
   #buildGrid() {
-    const { campusId, date, from, results } = this.#ctx;
+    const { campusId, date, from, to, results } = this.#ctx;
 
     const active = new Set(
       (results ?? [])
@@ -656,7 +655,7 @@ class BuildingOverview {
     closeBtn.addEventListener('click', () => this.close());
     grid.appendChild(bar);
 
-    for (const { building, counts } of getCampusBuildingsOverview(campusId, date, from)) {
+    for (const { building, counts } of getCampusBuildingsOverview(campusId, date, from, to)) {
       grid.appendChild(this.#buildCard(building, counts, active.has(building.name)));
     }
     return grid;

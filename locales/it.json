@@ -67,6 +67,8 @@
   "campus.milanLabel": "Milano",
   "campus.otherLabel": "Altre città",
   "campus.mapError": "Impossibile caricare la mappa.",
+  "campus.recenter": "Centra sulla selezione",
+  "campus.buildingsCount": "{n} edifici",
   "features.videoProjector": "Proiettore",
   "features.radioMic": "Microfono ambientale",
   "features.dimmable": "Oscurabile",

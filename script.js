@@ -29,6 +29,7 @@ import { initTimeRangeSlider } from './components/time-range-slider.js';
 import { setupCampusPicker } from './components/campus-picker.js';
 import { initCampusMap } from './components/campus-map.js';
 import { initCampusSheet } from './components/campus-sheet.js';
+import { retranslateCampusBuildingsPage } from './components/campus-buildings.js';
 import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
@@ -335,6 +336,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setupDataFetchIndicatorText(true);
       setupDatePicker(() => preferInitialDate);
       document.querySelector('campus-chip-picker')?.retranslate();
+      retranslateCampusBuildingsPage();
       renderFavourites();
       const container = document.getElementById('available-classrooms-results');
       if (!container.classList.contains('empty')) {

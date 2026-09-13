@@ -191,9 +191,9 @@ html:has(#search-classrooms-container.visible) .footer {
   }
 
   .campus-map .mapboxgl-ctrl-bottom-right {
-    /* Clears campus-sheet.css's desktop panel (right: 20px; width: 340px)
+    /* Clears campus-sheet.css's desktop panel (right: 20px; width: 420px)
        plus a little breathing room. */
-    right: calc(340px + 20px + 20px + env(safe-area-inset-right, 0px));
+    right: calc(420px + 20px + 20px + env(safe-area-inset-right, 0px));
   }
 }
 

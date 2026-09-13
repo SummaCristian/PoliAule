@@ -71,6 +71,11 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 // stays a hidden <input> in the light DOM (declared in index.html); the
 // <select> value is mirrored onto it on every change.
 export class CampusChipPicker extends HTMLElement {
+  // Overridable by a subclass (see components/campus-buildings.js) so a
+  // second instance can reuse this whole class without its `change` also
+  // triggering the Available tab's own `campuschange` listener.
+  changeEventName = 'campuschange';
+
   #select = null;
   #hiddenInput = null;
   #trigger = null;
@@ -287,7 +292,7 @@ export class CampusChipPicker extends HTMLElement {
       select.addEventListener('change', () => {
         hiddenInput.value = select.value;
         this.#syncFromSelect();
-        document.dispatchEvent(new CustomEvent('campuschange', { detail: { id: select.value } }));
+        document.dispatchEvent(new CustomEvent(this.changeEventName, { detail: { id: select.value } }));
         haptics.trigger(defaultPatterns.light);
       });
     }

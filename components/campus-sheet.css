@@ -133,14 +133,28 @@
 }
 
 .campus-sheet-handle {
-  flex: none;
+  /* An overlay, not a flex sibling: .campus-sheet-content (below) spans the
+     sheet's full height, from underneath this, so its own top-edge fade
+     mask has room to blend into — rather than a flex layout where content
+     could only ever start right below a fixed handle-height gap. Purely
+     decorative either way: the drag gesture itself is bound to the whole
+     `sheet` (see campus-sheet.js), not this element specifically, so taking
+     it out of flow changes nothing about hit-testing. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+
   display: flex;
   align-items: center;
   justify-content: center;
 
-  /* Generous hit area (the grabber itself is only 5px tall) so a thumb
-     doesn't have to land pixel-perfect to start a drag. */
-  padding: 1rem 0;
+  /* Asymmetric on purpose: the grabber itself sits close to the sheet's top
+     edge (a small 0.5rem clearance), while the hit area stays generous
+     overall (it's only 5px tall) by keeping the padding *below* it instead —
+     same total height as an even 1rem/1rem split, just shifted upward. */
+  padding: 0.5rem 0 1.5rem;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
   /* Native-app feel: no grab hand while dragging (see the cursor rule
@@ -167,7 +181,211 @@
      here. */
   overflow-y: hidden;
   touch-action: none;
-  padding: 0 1.25rem 1.25rem;
+  /* Top: clears the handle overlay above (1rem padding + its 5px grabber,
+     both sides — matches .campus-sheet-handle exactly) now that it's out of
+     flow, so the title sits at the same spot it would if the handle were
+     still a normal flex sibling. Bottom: clears the floating bottom-nav
+     tabbar (--bn-tabbar-height, kept live by bottom-nav.js) plus a bit more
+     breathing room, so scrolling all the way down actually clears the last
+     card out from under it instead of stopping with it still half-covered.
+     Desktop's own bottom-nav is a side rail, not a floating overlay, so it
+     just gets the plain 1.25rem below (see the @media override further
+     down). */
+  padding: calc(1rem + 5px) 1.25rem calc(var(--bn-tabbar-height, 76px) + 1.5rem);
+
+  /* Fades both edges into the sheet's own glass background instead of a hard
+     cut — the top fade is sized to about the handle clearance above (so the
+     title blends in from under the handle instead of starting on a hard
+     edge); the bottom one is deliberately more generous, so a card scrolled
+     toward it still reads as "there's more below" rather than just a trim.
+     The visible stops are `#fff`, not `#000`: Firefox's `mask-image`
+     defaults to luminance masking (black = hidden), while Chrome/Safari
+     effectively treat a plain gradient as alpha masking (black, fully
+     opaque, = visible) — white reads as "fully visible" under either
+     interpretation, so the fade actually shows up in both. Explicit
+     repeat/size guard against any engine's differing defaults for a mask
+     that's shorter than the element (it isn't here, but cheap insurance). */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #fff 1.5rem, #fff calc(100% - 3rem), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #fff 1.5rem, #fff calc(100% - 3rem), transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+/* ── Buildings page ───────────────────────────────────────────────────────
+   The sheet's content: a campus picker (components/campus-buildings.js — a
+   second instance of the Available tab's own morphing <campus-chip-picker>)
+   on top, a grid of that campus's buildings below it. The cards reuse the
+   Available tab's building-overview cards (.bo-card, building-overview.css)
+   without their occupancy-counts row — browsing here isn't tied to a
+   date/time. */
+.campus-sheet-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Title              [Center btn] Picker
+   A bit more inset than the grid below (which already gets .campus-sheet-
+   content's own 1.25rem): the sheet's top corners are noticeably rounder
+   than its sides, so the same inset reads as tighter up here. */
+.campus-sheet-toprow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0 0.5rem;
+}
+
+.campus-sheet-titlebox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  /* body sets a global `text-align: center` — override back to left. */
+  text-align: start;
+}
+
+.campus-sheet-title {
+  margin: 0;
+  font-size: var(--text-150);
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--text-color-primary);
+}
+
+.campus-sheet-subtitle {
+  font-size: var(--text-80);
+}
+
+.campus-sheet-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Recenters the map (components/campus-map.js) on the picker's campus — same
+   glass icon-button recipe as .bo-close (building-overview.css). Hidden by
+   default; campus-buildings.js shows it only once the map reports itself
+   'campusmapshifted' away from that campus. */
+.campus-sheet-recenter {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  color: var(--text-color-secondary);
+
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+/* `.liquid-glass` (liquid-glass.css, loaded after this file) sets its own
+   `transition` shorthand on the same single-class specificity — whichever
+   rule is later in the cascade wins the WHOLE property, silently dropping
+   the other's. `.campus-sheet-recenter.liquid-glass` outranks both and
+   merges the two lists, same fix as `.campus-select.liquid-glass` in
+   campus-picker.css. Pop in/out on appear/disappear uses the same overshoot
+   ease + durations as the header's own controls (header-ctl-scale-in/-out,
+   classroom-detail.css). `display` is part of the transition
+   (`allow-discrete`) so toggling the `hidden` attribute animates instead of
+   cutting instantly; `@starting-style` below seeds the "just appeared" frame
+   the way a keyframe `from` would. */
+.campus-sheet-recenter.liquid-glass {
+  transition:
+    opacity 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+    display 0.32s allow-discrete,
+    translate var(--press-out-dur) var(--ease-spring),
+    scale var(--press-out-dur) var(--ease-spring),
+    filter 0.2s ease;
+}
+
+.campus-sheet-recenter::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
+}
+
+.campus-sheet-recenter .material-symbols-outlined {
+  font-size: 1.25rem;
+}
+
+/* This class's own `display: inline-flex` above outranks the UA `[hidden]`
+   rule (an author style always beats a UA one, regardless of specificity) —
+   re-assert it, same fix as .dcp-trigger[hidden] / .trc-trigger[hidden].
+   Shrinks/fades out first (header-ctl-scale-out's own ease-in, quicker than
+   the pop-in), `display` only flipping to `none` once that's done. */
+.campus-sheet-recenter.liquid-glass[hidden] {
+  display: none;
+  opacity: 0;
+  transform: scale(0.3);
+  transition:
+    opacity 0.2s ease-in,
+    transform 0.2s ease-in,
+    display 0.2s allow-discrete;
+}
+
+@starting-style {
+  .campus-sheet-recenter:not([hidden]) {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-sheet-recenter.liquid-glass,
+  .campus-sheet-recenter.liquid-glass[hidden] {
+    transition: none;
+  }
+}
+
+/* Mobile only: hidden at the 'full' detent (desktop's fixed-width panel shows
+   it at all 3 — see campus-sheet.js's snapToDetent(), which sets this). */
+@media (max-width: 599.98px) {
+  .campus-sheet[data-detent="full"] .campus-sheet-recenter {
+    display: none;
+  }
+}
+
+.campus-sheet-grid {
+  padding: 0;
+  /* A flat 2-way split, not `auto-fill`/`auto-fit`: the sheet's own width
+     actually changes with its drag detent on mobile (campus-sheet.js narrows
+     it at the collapsed detent to stay concentric with the tabbar pill — see
+     sheetGeometry()), and a width-driven column count would count out one of
+     the two columns right at that narrowest point. Cards just get a little
+     narrower there instead — same fixed-2-up approach as building-overview.css's
+     own mobile grid. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* .bo-card reserves room for the counts row this page doesn't render. */
+.campus-sheet-card {
+  min-height: auto;
+}
+
+.campus-sheet-card-address {
+  font-size: var(--text-80);
 }
 
 @media (min-width: 600px) {
@@ -176,7 +394,11 @@
     right: 20px;
     bottom: 20px;
 
-    width: 340px;
+    /* Wide enough for the buildings grid (.campus-sheet-grid) to fit two
+       11rem card columns side by side (content padding 1.25rem each side +
+       two 11rem cards + the grid's 0.85rem gap) — see campus-map.css's
+       matching mapboxgl-ctrl-bottom-right clearance. */
+    width: 420px;
     height: var(--campus-sheet-size, 96px);
     max-height: calc(100dvh - var(--header-height, 84px) - 2rem - 40px);
     border-radius: 28px;
@@ -191,6 +413,10 @@
   }
 
   .campus-sheet-content {
-    padding: 0 1.25rem 1.25rem;
+    /* Top stays the same handle clearance as mobile (see the base rule
+       above) — only the bottom drops the tabbar clearance, which doesn't
+       apply here (desktop's bottom-nav is a side rail, not a floating
+       overlay). */
+    padding: calc(1rem + 5px) 1.25rem 1.25rem;
   }
 }

@@ -3,6 +3,7 @@ import { classroomsData } from '../classroom-search-data.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { haptics, defaultPatterns } from './haptics.js';
+import { getSelectedCampusId } from './campus-buildings.js';
 
 // Fullscreen Mapbox map that fills the Campus tab. The app chrome (header,
 // footer, bottom-nav) floats above it — see components/campus-map.css, which
@@ -29,19 +30,95 @@ const MAX_BOUNDS = [[8.3, 44.5], [11.6, 46.8]];
 // Below this zoom we're "looking at the region" → show campuses, not buildings.
 const CAMPUS_ZOOM = 12.3;
 // Where a campus tap settles.
-const CAMPUS_FLY_ZOOM = 15.5;
+const CAMPUS_FLY_ZOOM = 16.5;
+
+// The campus sheet (components/campus-sheet.{js,css}) covers part of the map
+// — a right-pinned panel on desktop, a bottom one on mobile — so a plain
+// `center` lands a picked campus in the middle of the WHOLE canvas, part of
+// which is actually hidden under the sheet. `padding` (below) tells Mapbox to
+// center within the remaining, actually-visible area instead. Mirrors
+// campus-sheet.css's desktop panel width (420px) + its 20px right gap, and
+// campus-sheet.js's own COLLAPSED mobile height (192px) + its 20px bottom
+// gap — the sheet's own footprint before it's been dragged open any further,
+// which is the only state this accounts for (matching the sheet's own
+// initial detent, not whatever it's later dragged to).
+const SHEET_DESKTOP_WIDTH = 420;
+const SHEET_DESKTOP_GAP = 20;
+const SHEET_MOBILE_COLLAPSED = 192;
+const SHEET_MOBILE_GAP = 20;
+const desktopMQ = matchMedia('(min-width: 600px)');
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
 let started = false;
 let map = null;
+let mapboxglLib = null;  // set once loaded — reused by the picker's change listener below
 let mode = 'campus';   // 'campus' | 'buildings'
 let markers = [];      // currently-rendered mapboxgl.Marker[]
+
+// Whether the map's actual camera differs from the auto-centered view of the
+// current selection — recomputed after every settle (`moveend`, see boot()),
+// not inferred from *how* it got there. A few Mapbox-native gestures (the
+// NavigationControl compass's own drag-to-rotate, its click-to-reset-north)
+// turned out not to consistently tag their originalEvent the way a plain
+// drag/wheel/pinch does, which made a "was this user-caused?" heuristic
+// unreliable — diffing the actual state instead sidesteps that entirely, for
+// every kind of move (pan, zoom, rotate, pitch) alike. Drives the sheet's
+// recenter button (components/campus-buildings.js).
+let shifted = false;
+function setShifted(v) {
+  if (shifted === v) return;
+  shifted = v;
+  document.dispatchEvent(new CustomEvent('campusmapshifted', { detail: { shifted } }));
+}
+
+// Small pixel/degree slack so floating-point settle noise from an easeTo/
+// flyTo we ourselves triggered never reads as "shifted".
+const CENTER_SLACK_PX = 2;
+const ANGLE_SLACK_DEG = 0.5;
+
+function updateShifted() {
+  const campus = selectedCampus();
+  if (!campus) { setShifted(false); return; }
+
+  const canvas = map.getCanvas();
+  const padding = mapPadding();
+  const targetX = (padding.left + (canvas.clientWidth - padding.right)) / 2;
+  const targetY = (padding.top + (canvas.clientHeight - padding.bottom)) / 2;
+  const px = map.project([campus.long, campus.lat]);
+
+  const centered = Math.abs(px.x - targetX) <= CENTER_SLACK_PX && Math.abs(px.y - targetY) <= CENTER_SLACK_PX;
+  const zoomed = Math.abs(map.getZoom() - CAMPUS_FLY_ZOOM) <= 0.05;
+  const pitched = Math.abs(map.getPitch() - 55) <= ANGLE_SLACK_DEG;
+  const facingNorth = Math.abs(map.getBearing()) <= ANGLE_SLACK_DEG;
+
+  setShifted(!(centered && zoomed && pitched && facingNorth));
+}
 
 export function initCampusMap() {
   const container = document.getElementById(CONTAINER_ID);
   if (!container) return;
+
+  // Either campus picker changing — the Available tab's or the campus
+  // sheet's own (components/campus-buildings.js), now kept in sync as the
+  // same logical picker — drives the map: whichever campus it's on, the map
+  // flies there and shows its buildings, same motion as tapping that
+  // campus's marker directly.
+  document.addEventListener('campuschange', (e) => {
+    if (!map || !mapboxglLib) return;
+    const campus = campuses().find(c => c.id === e.detail.id);
+    if (!campus || typeof campus.lat !== 'number' || typeof campus.long !== 'number') return;
+    flyToCampus(mapboxglLib, campus);
+  });
+
+  // The sheet's own recenter button (shown once `shifted` above goes true).
+  document.addEventListener('campusrecenter', () => {
+    if (!map || !mapboxglLib) return;
+    const campus = selectedCampus();
+    if (!campus) return;
+    flyToCampus(mapboxglLib, campus);
+  });
 
   const onVisible = () => {
     if (!started) {
@@ -105,6 +182,7 @@ export function initCampusMap() {
 async function boot(container) {
   const token = await getMapboxToken();
   const mapboxgl = await loadMapboxGl();
+  mapboxglLib = mapboxgl;
 
   const el = document.createElement('div');
   el.className = 'campus-map';
@@ -112,20 +190,39 @@ async function boot(container) {
   el.setAttribute('aria-label', t('tabs.campus'));
   container.appendChild(el);
 
+  // Opens straight onto whichever campus the sheet's picker already has
+  // selected, at the same spot/zoom a marker tap flies to — rather than the
+  // region-wide overview.
+  const startCampus = selectedCampus();
+
   mapboxgl.accessToken = token;
   map = new mapboxgl.Map({
     container: el,
     style: 'mapbox://styles/mapbox/standard',
-    center: INITIAL_CENTER,
-    zoom: INITIAL_ZOOM,
+    center: startCampus ? [startCampus.long, startCampus.lat] : INITIAL_CENTER,
+    zoom: startCampus ? CAMPUS_FLY_ZOOM : INITIAL_ZOOM,
     minZoom: 8.5,
     maxZoom: 18,
-    pitch: 0,
+    pitch: startCampus ? 55 : 0,
     maxPitch: 70,
     pitchWithRotate: true,
     touchPitch: true,
     logoPosition: 'bottom-left',
   });
+
+  // The constructor's own `center`/`zoom`/`pitch` above ignore `padding` —
+  // only jumpTo/easeTo/flyTo actually offset `center` by it. Re-apply the
+  // same camera through jumpTo (no animation, runs before the first paint)
+  // so the initial view is padding-aware too, not just later flyTo's (see
+  // flyToCampus()).
+  if (startCampus) {
+    map.jumpTo({
+      center: [startCampus.long, startCampus.lat],
+      zoom: CAMPUS_FLY_ZOOM,
+      pitch: 55,
+      padding: mapPadding(),
+    });
+  }
 
   // Desktop trackpad: a two-finger swipe should pan the map, not zoom it.
   // Wheel zoom is kept only for the pinch gesture, which the browser reports
@@ -233,7 +330,8 @@ async function boot(container) {
 
   map.on('load', () => {
     map.resize();
-    showCampusMarkers(mapboxgl);
+    if (startCampus) showBuildingMarkers(mapboxgl, startCampus);
+    else showCampusMarkers(mapboxgl);
   });
 
   // Zoom back out past a campus → return to the campus overview.
@@ -247,6 +345,13 @@ async function boot(container) {
   // Soft geographic leash: after any move, if the centre has drifted outside
   // Lombardy, ease it back. Doesn't touch pitch, unlike constructor maxBounds.
   map.on('moveend', panBackInBounds);
+
+  // Re-check "shifted" (see updateShifted() above) after every settle —
+  // covers every way the camera can end up off the auto-centered view (pan,
+  // zoom, rotate, pitch), from any source (drag, wheel/trackpad, a control
+  // button), including Mapbox-native interactions like the NavigationControl
+  // compass's own drag-to-rotate/click-to-reset-north.
+  map.on('moveend', updateShifted);
 
   // Keep the GL canvas glued to the panel through rotations / dynamic toolbars.
   new ResizeObserver(() => { if (map) map.resize(); }).observe(el);
@@ -326,13 +431,40 @@ function campuses() {
   return Array.isArray(classroomsData) ? classroomsData : [];
 }
 
+// The campus sheet's own picker's current selection, if it names a campus
+// with known coordinates — null otherwise (picker not set up yet, or a
+// campus with no lat/long).
+function selectedCampus() {
+  const id = getSelectedCampusId();
+  if (!id) return null;
+  const campus = campuses().find(c => c.id === id);
+  return campus && typeof campus.lat === 'number' && typeof campus.long === 'number' ? campus : null;
+}
+
 function clearMarkers() {
   markers.forEach(m => m.remove());
   markers = [];
 }
 
 function flyOpts(extra) {
-  return { duration: reduceMotion.matches ? 0 : 1200, essential: true, ...extra };
+  return { duration: reduceMotion.matches ? 0 : 1200, essential: true, padding: mapPadding(), ...extra };
+}
+
+// See the SHEET_* constants above — reserves the sheet's own footprint so
+// `center` lands in the middle of the map's actually-visible remainder.
+function mapPadding() {
+  return desktopMQ.matches
+    ? { top: 0, bottom: 0, left: 0, right: SHEET_DESKTOP_WIDTH + SHEET_DESKTOP_GAP }
+    : { top: 0, right: 0, left: 0, bottom: SHEET_MOBILE_COLLAPSED + SHEET_MOBILE_GAP };
+}
+
+// Flies to a campus and swaps to its building markers — shared by a marker
+// tap and either picker's 'campuschange' (see initCampusMap()).
+function flyToCampus(mapboxgl, campus) {
+  showBuildingMarkers(mapboxgl, campus);
+  // `bearing: 0` resets any rotation too — see updateShifted()'s facingNorth
+  // check, and moveend re-derives `shifted` once this settles.
+  map.flyTo(flyOpts({ center: [campus.long, campus.lat], zoom: CAMPUS_FLY_ZOOM, pitch: 55, bearing: 0 }));
 }
 
 function buildingLabel(b) {
@@ -354,8 +486,7 @@ function showCampusMarkers(mapboxgl) {
     el.innerHTML = `<span class="campus-marker__dot"></span><span>${escapeHtml(campus.name)}</span>`;
     el.addEventListener('click', () => {
       haptics.trigger(defaultPatterns.light);
-      showBuildingMarkers(mapboxgl, campus);
-      map.flyTo(flyOpts({ center: [long, lat], zoom: CAMPUS_FLY_ZOOM, pitch: 55 }));
+      flyToCampus(mapboxgl, campus);
     });
 
     markers.push(

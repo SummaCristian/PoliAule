@@ -21,6 +21,7 @@
 // footer / bottom-nav chrome, same stacking story as the map's own controls.
 
 import { Spring, onSpringFrame } from '../utils/spring.js';
+import { initCampusBuildingsPage } from './campus-buildings.js';
 
 const CONTAINER_ID = 'search-classrooms-container';
 const desktopMQ = matchMedia('(min-width: 600px)');
@@ -289,6 +290,7 @@ const SETTLE_SPRING = { stiffness: 260, damping: 30, mass: 1 };
 function snapToDetent(key) {
   detent = key;
   sheet.classList.toggle('is-collapsed', key === 'collapsed');
+  sheet.dataset.detent = key;
   size.to(detentValue(key), SETTLE_SPRING);
 }
 
@@ -581,6 +583,7 @@ export function initCampusSheet() {
 
   sheet = document.createElement('div');
   sheet.className = 'campus-sheet is-collapsed';
+  sheet.dataset.detent = detent;
   sheet.addEventListener('pointerdown', onPointerDown);
   sheet.addEventListener('wheel', onWheel, { passive: false });
 
@@ -594,6 +597,11 @@ export function initCampusSheet() {
   sheet.appendChild(content);
 
   container.appendChild(sheet);
+
+  // Only now is `content` actually connected to the document — the picker
+  // custom element inside it needs that before .setup() can reach its
+  // shadow root.
+  initCampusBuildingsPage(content);
 
   size.set(COLLAPSED);
   scrollPos.set(0);

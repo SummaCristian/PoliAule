@@ -348,6 +348,44 @@ html:has(#search-classrooms-container.visible) .footer {
   outline-offset: 2px;
 }
 
+/* Slide the revealed text in from behind the always-visible `i` badge
+   (mobile default position: bottom-right, so the text sits to the badge's
+   left) instead of Mapbox's hard `display` cut. Mapbox itself only toggles
+   `.mapboxgl-ctrl-attrib-inner` between `display: none`/`block` via
+   `.mapboxgl-compact`/`.mapboxgl-compact-show` (mapbox-gl.css) — a property
+   that can't transition on its own, hence `allow-discrete` + `@starting-style`
+   below, which defers the `none` switch on close until the slide/fade
+   finishes instead of cutting it instantly, and seeds the `from` state on
+   open the same way a keyframe `from` would. Scoped to `.mapboxgl-compact`
+   so the always-expanded desktop pill (no toggle button, text already
+   visible on load) never plays this. */
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact .mapboxgl-ctrl-attrib-inner {
+  transition: opacity 0.2s ease, transform 0.2s ease, display 0.2s allow-discrete;
+}
+
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact:not(.mapboxgl-compact-show) .mapboxgl-ctrl-attrib-inner {
+  opacity: 0;
+  transform: translateX(6px);
+}
+
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show .mapboxgl-ctrl-attrib-inner {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@starting-style {
+  .campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show .mapboxgl-ctrl-attrib-inner {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact .mapboxgl-ctrl-attrib-inner {
+    transition: none;
+  }
+}
+
 /* --- Compass / geolocate buttons: same glass icon-button recipe as
    .header-button (style.css) — same 3rem circle, same glass material, same
    outside stroke ring, same HugeIcons glyphs as the rest of the app (see

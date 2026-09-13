@@ -379,9 +379,13 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* .bo-card reserves room for the counts row this page doesn't render. */
+/* .bo-card reserves room for the counts row this page doesn't render, and
+   blurs its background — dropped here since these cards sit over the sheet's
+   own opaque/glass surface rather than a scrolling photo backdrop. */
 .campus-sheet-card {
   min-height: auto;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .campus-sheet-card-address {

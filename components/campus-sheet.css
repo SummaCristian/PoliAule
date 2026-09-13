@@ -45,7 +45,7 @@
      below, and the js for the interpolation). */
   left: var(--campus-sheet-inset, 8px);
   right: var(--campus-sheet-inset, 8px);
-  bottom: calc(8px + env(safe-area-inset-bottom));
+  bottom: calc(20px + env(safe-area-inset-bottom));
   z-index: 1;
 
   display: flex;
@@ -64,7 +64,7 @@
   box-shadow:
     0 0 0 0.1px var(--glass-outline),
     var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 4px 20px 0 var(--glass-shadow-color);
 
   backdrop-filter: blur(var(--glass-blur-lg));
   -webkit-backdrop-filter: blur(var(--glass-blur-lg));
@@ -165,6 +165,14 @@
     height: var(--campus-sheet-size, 96px);
     max-height: calc(100dvh - var(--header-height, 84px) - 2rem - 40px);
     border-radius: 28px;
+
+    /* Not clipped by Safari's safe area here (pinned to the map panel, not
+       flush against the true viewport edge), so restore the site-wide
+       glass shadow radius shrunk on mobile below. */
+    box-shadow:
+      0 0 0 0.1px var(--glass-outline),
+      var(--glass-highlight),
+      0 4px 40px 0 var(--glass-shadow-color);
   }
 
   .campus-sheet-content {

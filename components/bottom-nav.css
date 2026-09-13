@@ -17,17 +17,17 @@
   /* `bottom: 20px` alone anchors to the large viewport and ignores Safari's
      dynamic toolbar, so the bar doesn't track it as the toolbar
      collapses/expands. Anchoring off `100dvh` (which does track it) and
-     pulling back up by the element's own height instead keeps the same
-     20px clearance while staying reactive — and, same as before, it lands
+     pulling back up by the element's own height instead keeps a similar
+     clearance while staying reactive — and, same as before, it lands
      the box well clear of the true edge/safe area rather than flush
      against it, so it doesn't trip Safari's fixed-element edge handling
      (iOS Safari's floating bottom bar seems to opaque-paint the safe strip
      when a backdrop-filter'd fixed element sits exactly at its boundary).
-     24px clears the children's drop shadow (0 4px 20px) too, since a
+     28px clears the children's drop shadow (0 4px 20px) too, since a
      fixed element's box-shadow is otherwise cut off at the true viewport
      edge if there isn't enough raw clearance for it to render into. */
   top: 100dvh;
-  transform: translateY(calc(-100% - 16px));
+  transform: translateY(calc(-100% - 28px));
   z-index: 20;
 
   display: flex;
@@ -76,7 +76,7 @@
   box-shadow:
     0 0 0 0.1px var(--glass-outline),
     var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 4px 20px 0 var(--glass-shadow-color);
 
   backdrop-filter: blur(var(--glass-blur-sm));
   -webkit-backdrop-filter: blur(var(--glass-blur-sm));
@@ -176,7 +176,7 @@
   box-shadow:
     0 0 0 0.1px var(--glass-outline),
     var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 4px 20px 0 var(--glass-shadow-color);
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .header-button::after in
@@ -278,7 +278,7 @@
   box-shadow:
     0 0 0 0.1px var(--glass-outline),
     var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 4px 20px 0 var(--glass-shadow-color);
 
   backdrop-filter: blur(var(--glass-blur-sm));
   -webkit-backdrop-filter: blur(var(--glass-blur-sm));
@@ -380,6 +380,18 @@
     bottom: auto;
     right: 0;
     flex-direction: column;
+  }
+
+  /* Not clipped by Safari's safe area here (a top-left rail, not flush
+     against the true bottom viewport edge), so restore the site-wide
+     glass shadow radius shrunk on mobile below. */
+  .bn-tabbar,
+  .bn-pill-outer.bn-pill--lifted,
+  .bn-search-btn {
+    box-shadow:
+      0 0 0 0.1px var(--glass-outline),
+      var(--glass-highlight),
+      0 4px 40px 0 var(--glass-shadow-color);
   }
 
   .bn-search-btn {

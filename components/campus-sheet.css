@@ -91,11 +91,26 @@
      (where the sheet is actually pinned) so the squash/stretch reads as
      the free top edge overshooting, not the whole panel drifting. */
   transform-origin: bottom;
-  transition: filter 0.2s ease;
+  transition:
+    filter 0.2s ease,
+    background 0.25s ease,
+    backdrop-filter 0.25s ease,
+    -webkit-backdrop-filter 0.25s ease;
 }
 
 .campus-sheet.lg-active {
   filter: brightness(1.11) saturate(1.35);
+}
+
+/* Lighter, less opaque "clear" material at the collapsed (smallest) detent
+   only — campus-sheet.js toggles this the moment a snap targets 'collapsed',
+   so it eases in/out together with the resize itself. Keeps the map more
+   visible when the sheet is just a peek, without touching the outline/
+   shadow/stroke, which stay the shared glass recipe. */
+.campus-sheet.is-collapsed {
+  background: var(--glass-tint-clear);
+  backdrop-filter: blur(var(--glass-blur-clear));
+  -webkit-backdrop-filter: blur(var(--glass-blur-clear));
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .header-button::after /

@@ -288,6 +288,7 @@ const SETTLE_SPRING = { stiffness: 260, damping: 30, mass: 1 };
 
 function snapToDetent(key) {
   detent = key;
+  sheet.classList.toggle('is-collapsed', key === 'collapsed');
   size.to(detentValue(key), SETTLE_SPRING);
 }
 
@@ -579,7 +580,7 @@ export function initCampusSheet() {
   container.appendChild(guard);
 
   sheet = document.createElement('div');
-  sheet.className = 'campus-sheet';
+  sheet.className = 'campus-sheet is-collapsed';
   sheet.addEventListener('pointerdown', onPointerDown);
   sheet.addEventListener('wheel', onWheel, { passive: false });
 

@@ -181,6 +181,14 @@ select,
   --glass-blur-md: 8px;
   --glass-blur-lg: 18px;
 
+  /* "Clear" variant — a lighter tint and a shallower blur for surfaces that
+     want to stay glassy but read as less opaque (e.g. the campus sheet at
+     its collapsed detent, where it should get out of the map's way). Same
+     alpha reduction in both themes; only the base colour differs, same as
+     --glass-tint above. */
+  --glass-tint-clear: rgba(250, 250, 250, 0.35);
+  --glass-blur-clear: 8px;
+
   /* Outside 0.5px gradient stroke, top to bottom (Figma's outside-stroke
      equivalent). Applied per glass surface via a masked ::after ring —
      see .header-button::after below for the shared recipe. */
@@ -250,6 +258,7 @@ select,
       0 4px 12px rgba(0, 0, 0, 0.6);
 
     --glass-tint: rgba(21, 21, 21, 0.8);
+    --glass-tint-clear: rgba(21, 21, 21, 0.35);
     --glass-outline: rgba(255, 255, 255, 0.25);
     --glass-shadow-color: rgba(0, 0, 0, 0.1);
     --glass-highlight:

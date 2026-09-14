@@ -47,7 +47,7 @@ import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY } from './components/settings.js';
 import { initKeybindings } from './components/keybindings.js';
-import { resolveBlurCapability, applyBlurState } from './utils/blur-capability.js';
+import { resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from './utils/blur-capability.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -352,16 +352,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // state until it resolves.
     initOccupancyData();
 
-    // Only start the blur benchmark here, not earlier: everything above this
-    // line builds a non-trivial amount of DOM synchronously (settings popup,
-    // campus picker/map/sheet, time pickers, ...), and rAF sampling during
-    // that stretch measures "is the main thread busy booting the app," not
-    // "can this device composite blur smoothly" — even a fast device fails
-    // it. By here that synchronous work is done and the thread is genuinely
-    // idle (waiting on fonts/network), which is the actual dead time to
-    // spend the benchmark on.
-    const [, blurCapable] = await Promise.all([document.fonts.ready, resolveBlurCapability()]);
-    applyBlurState(blurCapable);
+    // Apply the cached blur verdict (or the safe "off" default if none yet)
+    // instantly — the actual benchmark never runs during load, see
+    // utils/blur-capability.js for why.
+    applyBlurState(resolveBlurCapability());
+
+    await document.fonts.ready;
     document.querySelector('.time-pickers-container').style.opacity = '1';
     document.querySelector('campus-chip-picker')?.removeAttribute('data-loading');
 
@@ -369,6 +365,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const elapsed = Date.now() - _splashStartTime;
     const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
     setTimeout(dismissSplash, remaining);
+
+    // Once things have settled, spend a moment of genuine idle time
+    // benchmarking blur for real (first load / no cached verdict only).
+    scheduleIdleBenchmark();
 
   } catch (error) {
     clearTimeout(_initTimeoutId);

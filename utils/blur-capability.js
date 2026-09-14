@@ -1,21 +1,40 @@
 // utils/blur-capability.js
 //
 // Perf-gated glass blur. backdrop-filter is expensive to composite on weak
-// GPUs, so instead of shipping it to every device we benchmark it during the
-// splash screen — dead time we already pay for asset loading — and cache the
-// verdict. No blur is the safe baseline: before the first-ever benchmark
-// resolves, and on any device that fails it, [data-blur] stays "off" and
-// every backdrop-filter in the app is disabled (see style.css). Blur is
-// granted, never assumed.
+// GPUs, so instead of shipping it to every device we benchmark it once and
+// cache the verdict. No blur is the safe baseline: before the first-ever
+// benchmark resolves, and on any device that fails it, [data-blur] stays
+// "off" and every backdrop-filter in the app is disabled (see style.css).
+// Blur is granted, never assumed.
+//
+// The benchmark deliberately does NOT run during the splash/load sequence.
+// It did originally, but even once its rAF sampling was moved past the app's
+// own synchronous DOM-building work, page load still isn't a clean window:
+// layout/paint settling, font/image rendering, network activity, and (on
+// Safari specifically) JIT warm-up on first execution all eat frame budget
+// without ever showing up as "the main thread is blocked." That produced
+// false negatives on genuinely capable devices — confirmed by the fact that
+// manually forcing "Auto" from Settings after load (when nothing else is
+// competing) reliably passed on the same hardware. So instead: apply the
+// safe "off" default (or a previously cached verdict) instantly at load, and
+// schedule the actual benchmark for a moment of real post-load idle time —
+// see scheduleIdleBenchmark(). It still only runs once per device (cached
+// after), so the "pay the cost once" property is preserved; it's just paid
+// at a moment that actually reflects real usage instead of at boot.
 
 export const BLUR_MODE_KEY = 'poliAule_blurMode'; // 'auto' | 'on' | 'off'
 const BENCHMARK_CACHE_KEY = 'poliAule_blurBenchmark';
 
 // Bump this whenever the benchmark logic or thresholds change, so stale
 // cached verdicts from an older version don't linger — they'll re-run once.
-const BENCHMARK_VERSION = 2;
+// v3: benchmark no longer runs during splash/load (see module comment above)
+// — this also flushes out any "off" verdict a device got misdiagnosed with
+// under the old load-time measurement.
+const BENCHMARK_VERSION = 3;
 
-const SAMPLE_MS = 220;         // benchmark window; bounded by the splash's own min display time
+const IDLE_RECHECK_DELAY_MS = 2500; // fallback delay where requestIdleCallback isn't available (Safari)
+
+const SAMPLE_MS = 220;         // benchmark window
 const WARMUP_FRAMES = 2;       // ignore the first frames — one-time compositing-layer setup, not sustained cost
 const JANK_THRESHOLD_MS = 20;  // a frame slower than this counts as dropped
 const MAX_JANK_RATIO = 0.15;   // capable if fewer than 15% of sampled frames are dropped
@@ -100,22 +119,45 @@ function runBenchmark() {
   });
 }
 
-// Resolves whether blur should render, applying the manual Settings override
-// first. In 'auto' mode, `prefers-reduced-transparency` is honored ahead of
-// the benchmark (cheap, and it's the user's OS-level call, not a perf one).
-export async function resolveBlurCapability() {
+// Resolves whether blur should render *right now*, applying the manual
+// Settings override first, without ever running the benchmark itself — see
+// the module comment for why. In 'auto' mode with no cached verdict yet,
+// this returns the safe "off" default; scheduleIdleBenchmark() fills the
+// cache in shortly after and applies the real verdict live.
+export function resolveBlurCapability() {
   const mode = getBlurMode();
   if (mode === 'on') return true;
   if (mode === 'off') return false;
 
   if (window.matchMedia?.('(prefers-reduced-transparency: reduce)').matches) return false;
 
-  const cached = readCachedResult();
-  if (cached !== null) return cached;
+  return readCachedResult() ?? false;
+}
 
-  const capable = await runBenchmark();
-  writeCachedResult(capable);
-  return capable;
+// Schedules a one-time benchmark during real post-load idle time (not during
+// splash/load — see module comment) and applies + caches the result. No-op
+// if a cached verdict already exists, or the user isn't on 'auto'. Call once
+// after the splash dismisses.
+export function scheduleIdleBenchmark() {
+  if (getBlurMode() !== 'auto') return;
+  if (readCachedResult() !== null) return;
+
+  const run = () => {
+    // Mode or cache may have changed while waiting (manual override, or a
+    // duplicate call from another tab/instance) — bail rather than clobber it.
+    if (getBlurMode() !== 'auto' || readCachedResult() !== null) return;
+    runBenchmark().then(capable => {
+      writeCachedResult(capable);
+      applyBlurState(capable);
+    });
+  };
+
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(run, { timeout: IDLE_RECHECK_DELAY_MS + 1500 });
+  } else {
+    // Safari has never implemented requestIdleCallback.
+    setTimeout(run, IDLE_RECHECK_DELAY_MS);
+  }
 }
 
 // Fired on every applyBlurState() call (including no-op re-applications) so

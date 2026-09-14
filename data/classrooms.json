@@ -1769,6 +1769,7 @@
         "altName": "",
         "lat": 45.47999444485881,
         "long": 9.226916231419708,
+        "address": "Via Bonardi",
         "classrooms": [
           {
             "name": "IV",
@@ -2547,6 +2548,7 @@
         "altName": "Trifoglio",
         "lat": 45.48000604456495,
         "long": 9.228131301903064,
+        "address": "Via Bonardi",
         "classrooms": [
           {
             "name": "T.1.1",
@@ -2890,6 +2892,7 @@
         "altName": "Nave",
         "lat": 45.480002732109945,
         "long": 9.228849930155548,
+        "address": "Via Bonardi",
         "classrooms": [
           {
             "name": "B.2.1",
@@ -3548,6 +3551,7 @@
         "altName": "",
         "lat": 45.480145185250095,
         "long": 9.227587431107505,
+        "address": "Via Bonardi",
         "classrooms": [
           {
             "name": "16B.1.1",
@@ -3712,6 +3716,7 @@
         "altName": "",
         "lat": 45.47964413172484,
         "long": 9.229121059363239,
+        "address": "Via Bonardi",
         "classrooms": [
           {
             "name": "16C.0.1",
@@ -3807,6 +3812,7 @@
         "altName": "",
         "lat": 45.47878209603393,
         "long": 9.231165058178192,
+        "address": "Via Bassini",
         "classrooms": [
           {
             "name": "19.0.1",
@@ -3833,6 +3839,7 @@
         "altName": "",
         "lat": 45.478678541531416,
         "long": 9.232432895105335,
+        "address": "Via Bassini",
         "classrooms": [
           {
             "name": "20.S.1",
@@ -3869,6 +3876,7 @@
         "altName": "",
         "lat": 45.47907807545045,
         "long": 9.23370157876371,
+        "address": "Via Bassini",
         "classrooms": [
           {
             "name": "21.0.1",
@@ -4143,6 +4151,7 @@
         "altName": "",
         "lat": 45.47770460048462,
         "long": 9.234989575882654,
+        "address": "Via Golgi 40",
         "classrooms": [
           {
             "name": "G.0.1",
@@ -4187,6 +4196,7 @@
         "altName": "",
         "lat": 45.47741731896511,
         "long": 9.23514648497592,
+        "address": "Via Golgi 40",
         "classrooms": [
           {
             "name": "25.0.1",
@@ -4698,6 +4708,7 @@
         "altName": "",
         "lat": 45.47571273608685,
         "long": 9.234995301549715,
+        "address": "Via Golgi 20",
         "classrooms": [
           {
             "name": "26.0.1",
@@ -9272,6 +9283,7 @@
         "altName": "",
         "lat": 45.16039268948615,
         "long": 10.789052657731485,
+        "address": "Via Scarsellini 15",
         "classrooms": [
           {
             "name": "A.0.1",

@@ -30,14 +30,23 @@ const BENCHMARK_CACHE_KEY = 'poliAule_blurBenchmark';
 // v3: benchmark no longer runs during splash/load (see module comment above)
 // — this also flushes out any "off" verdict a device got misdiagnosed with
 // under the old load-time measurement.
-const BENCHMARK_VERSION = 3;
+// v4: widened sample/loosened jank tolerance (see the constants below) —
+// the old thresholds failed devices on a single stray frame.
+const BENCHMARK_VERSION = 4;
 
 const IDLE_RECHECK_DELAY_MS = 2500; // fallback delay where requestIdleCallback isn't available (Safari)
 
-const SAMPLE_MS = 220;         // benchmark window
-const WARMUP_FRAMES = 2;       // ignore the first frames — one-time compositing-layer setup, not sustained cost
-const JANK_THRESHOLD_MS = 20;  // a frame slower than this counts as dropped
-const MAX_JANK_RATIO = 0.15;   // capable if fewer than 15% of sampled frames are dropped
+// At the old SAMPLE_MS=220/WARMUP_FRAMES=2 this left ~11 sampled frames at
+// 60fps, and MAX_JANK_RATIO=0.15 of that is 1.65 — so a single stray slow
+// frame (GC pause, compositor hiccup, timer jitter — normal even on capable
+// hardware) was enough to fail the device. Now that the benchmark runs at
+// idle time instead of during load, there's no splash-budget pressure to
+// keep the sample short, so it's widened for a real statistical margin
+// instead of reacting to one bad frame.
+const SAMPLE_MS = 500;         // benchmark window — ~30 frames at 60fps
+const WARMUP_FRAMES = 3;       // ignore the first frames — one-time compositing-layer setup, not sustained cost
+const JANK_THRESHOLD_MS = 24;  // a frame slower than this counts as dropped (~1.4x a 60Hz frame budget)
+const MAX_JANK_RATIO = 0.3;    // capable if fewer than 30% of sampled frames are dropped
 
 export function getBlurMode() {
   return localStorage.getItem(BLUR_MODE_KEY) ?? 'auto';

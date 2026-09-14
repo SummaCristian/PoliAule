@@ -83,6 +83,26 @@
   }
 }
 
+/* ── Perf-gated glass blur ────────────────────────────────────────────────
+   Mirrors :root[data-blur] from style.css. Custom properties set on :root
+   don't reach in here — this component intentionally keeps its own concrete
+   --cp-glass-* palette (see the comment above) instead of inheriting the
+   design tokens across the shadow boundary. So campus-picker.js mirrors
+   document.documentElement's `data-blur` onto <campus-chip-picker> itself
+   *and* its detached panel host (#cp-panel-host, appended to <body> for the
+   popup) whenever it changes, and this stylesheet keys off that directly —
+   same pattern as `data-loading` below. */
+:host([data-blur="off"]) {
+  --cp-glass-blur: 0px;
+  --cp-glass-tint: rgba(250, 250, 250, 0.94);
+}
+
+@media (prefers-color-scheme: dark) {
+  :host([data-blur="off"]) {
+    --cp-glass-tint: rgba(21, 21, 21, 0.94);
+  }
+}
+
 /* ── Skeleton loading state ────────────────────────────────────────────────
    `data-loading` lives on the ancestor <form> in the light DOM; script.js
    mirrors it onto <campus-chip-picker> so this stylesheet can key off it. */

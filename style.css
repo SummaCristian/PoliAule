@@ -307,6 +307,40 @@ select,
   }
 }
 
+/* ── Perf-gated glass blur ────────────────────────────────────────────────
+   utils/blur-capability.js grants [data-blur="on"] only once a splash-time
+   benchmark proves the device composites backdrop-filter smoothly (or the
+   user picks "On" in Settings). No blur is the safe baseline: before the
+   verdict lands, and on any device that fails the benchmark, every
+   backdrop-filter in the app is disabled and the shared glass tint becomes
+   near-opaque so translucent surfaces stay legible without the blur behind
+   them. Higher specificity than :root (and :root inside the dark-mode media
+   query) so it overrides both regardless of source order. */
+:root[data-blur="off"] {
+  --glass-blur-sm: 0px;
+  --glass-blur-md: 0px;
+  --glass-blur-lg: 0px;
+  --glass-blur-clear: 0px;
+  --glass-tint: rgba(250, 250, 250, 0.94);
+  --glass-tint-clear: rgba(250, 250, 250, 0.9);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-blur="off"] {
+    --glass-tint: rgba(21, 21, 21, 0.94);
+    --glass-tint-clear: rgba(21, 21, 21, 0.9);
+  }
+}
+
+/* Catches every backdrop-filter in the app, including the ones on hardcoded
+   pixel values that don't go through --glass-blur-* (settings, info page,
+   keybindings overlay, campus map pills, etc.) — one rule instead of
+   migrating each file's hardcoded blur to a token. */
+:root[data-blur="off"] * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 /* Base Styles */
 html,
 body {

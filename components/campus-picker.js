@@ -7,6 +7,7 @@ import {
 import { haptics, defaultPatterns } from './haptics.js';
 import { attachLiquidGlass } from './liquid-glass.js';
 import { t } from '../i18n.js';
+import { BLUR_STATE_EVENT } from '../utils/blur-capability.js';
 
 const STYLE_LINKS = `
   <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css">
@@ -144,6 +145,24 @@ export class CampusChipPicker extends HTMLElement {
     // the list (or moves onto the title / a section label).
     this.#popup.addEventListener('pointerleave', () => this.#clearPointerActive());
     this.#overlay.addEventListener('click', () => this.#close());
+
+    // Mirror the perf-gated blur verdict onto both shadow hosts — this
+    // component keeps its own concrete --cp-glass-* palette rather than
+    // inheriting :root's custom properties (see campus-picker.css), so it
+    // can't pick up [data-blur] from document.documentElement on its own.
+    this.#syncBlurState();
+    window.addEventListener(BLUR_STATE_EVENT, () => this.#syncBlurState());
+  }
+
+  #syncBlurState() {
+    const blur = document.documentElement.dataset.blur;
+    if (blur) {
+      this.dataset.blur = blur;
+      if (this.#panelHost) this.#panelHost.dataset.blur = blur;
+    } else {
+      delete this.dataset.blur;
+      if (this.#panelHost) delete this.#panelHost.dataset.blur;
+    }
   }
 
   disconnectedCallback() {

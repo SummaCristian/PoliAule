@@ -146,6 +146,10 @@ export function initCampusMap() {
   window.addEventListener('wheel', e => {
     if (!container.classList.contains('visible')) return;
     if (container.contains(e.target)) return;
+    // The settings popup renders outside this container, in document.body,
+    // and manages its own scroll lock — leave its wheel events alone rather
+    // than blocking them as if they were page scroll.
+    if (e.target.closest?.('.settings-popup')) return;
     e.preventDefault();
   }, { passive: false });
 

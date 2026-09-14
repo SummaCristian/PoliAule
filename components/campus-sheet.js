@@ -73,7 +73,7 @@ const SQUIRCLE_RADIUS_SCALE = (typeof CSS !== 'undefined' && CSS.supports('corne
 // used by the bottom-nav pill and the liquid-glass press/drag deform.
 const rubber = (x, give) => (x * give) / (give + Math.abs(x));
 
-let sheet, handle, content, guard;
+let sheet, handle, header, content, guard;
 let detent = 'collapsed';   // 'collapsed' | 'half' | 'full'
 const size = new Spring(COLLAPSED);
 const scrollPos = new Spring(0);
@@ -592,16 +592,30 @@ export function initCampusSheet() {
   handle.innerHTML = '<span class="campus-sheet-grabber"></span>';
   sheet.appendChild(handle);
 
+  // A fixed overlay, like the handle above it: stays in place while `content`
+  // (below) scrolls underneath, its own top fade mask blending scrolled
+  // cards out as they reach it. `content`'s top padding reserves exactly
+  // this much room — see the ResizeObserver below, which keeps that in sync
+  // with the header's actual (i18n/font-dependent) height instead of a
+  // hardcoded guess.
+  header = document.createElement('div');
+  header.className = 'campus-sheet-header';
+  sheet.appendChild(header);
+
   content = document.createElement('div');
   content.className = 'campus-sheet-content';
   sheet.appendChild(content);
 
   container.appendChild(sheet);
 
-  // Only now is `content` actually connected to the document — the picker
-  // custom element inside it needs that before .setup() can reach its
-  // shadow root.
-  initCampusBuildingsPage(content);
+  // Only now is `content`/`header` actually connected to the document — the
+  // picker custom element inside the header needs that before .setup() can
+  // reach its shadow root.
+  initCampusBuildingsPage(header, content);
+
+  new ResizeObserver(() => {
+    sheet.style.setProperty('--campus-sheet-header-height', `${header.getBoundingClientRect().height}px`);
+  }).observe(header);
 
   size.set(COLLAPSED);
   scrollPos.set(0);

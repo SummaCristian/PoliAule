@@ -134,12 +134,13 @@
 
 .campus-sheet-handle {
   /* An overlay, not a flex sibling: .campus-sheet-content (below) spans the
-     sheet's full height, from underneath this, so its own top-edge fade
-     mask has room to blend into — rather than a flex layout where content
-     could only ever start right below a fixed handle-height gap. Purely
-     decorative either way: the drag gesture itself is bound to the whole
-     `sheet` (see campus-sheet.js), not this element specifically, so taking
-     it out of flow changes nothing about hit-testing. */
+     sheet's full height, from underneath this and .campus-sheet-header, so
+     its own top-edge fade mask has room to blend into — rather than a flex
+     layout where content could only ever start right below a fixed
+     handle-height gap. Purely decorative either way: the drag gesture itself
+     is bound to the whole `sheet` (see campus-sheet.js), not this element
+     specifically, so taking it out of flow changes nothing about
+     hit-testing. */
   position: absolute;
   top: 0;
   left: 0;
@@ -170,7 +171,37 @@
   opacity: 0.6;
 }
 
+/* Fixed overlay, same trick as .campus-sheet-handle above it: sits above
+   .campus-sheet-content (which spans the sheet's full height underneath),
+   so the title/picker row stays put while the buildings grid scrolls under
+   it. Its rendered height (i18n text length, font scaling) feeds
+   --campus-sheet-header-height via campus-sheet.js's ResizeObserver, which
+   .campus-sheet-content's own top padding reads below — so the grid always
+   starts right after it, however tall it ends up being. */
+.campus-sheet-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+
+  /* Top matches .campus-sheet-handle's own clearance exactly (1rem padding +
+     its 5px grabber), same reasoning as .campus-sheet-content used to carry
+     before this row moved out of it. Bottom is the gap before the grid,
+     equivalent to .campus-sheet-page's old flex `gap: 1rem`. */
+  padding: calc(1rem + 5px) 1.25rem 1rem;
+}
+
 .campus-sheet-content {
+  /* Shared by the fade mask below and .campus-sheet-content's own bottom
+     padding (mobile inline here, desktop in the @media override further
+     down): the padding has to be at least this large, or the last row can
+     never fully clear the fade even scrolled all the way to the end —
+     mobile's padding is dominated by the (larger) floating-tabbar
+     clearance anyway, but desktop's own side-rail nav doesn't add any, so
+     it needs this reasserted explicitly there. */
+  --csheet-fade-bottom: 5.5rem;
+
   flex: 1;
   min-height: 0;
   /* `hidden`, not `auto`: campus-sheet.js drives scrollTop itself (so it can
@@ -181,32 +212,39 @@
      here. */
   overflow-y: hidden;
   touch-action: none;
-  /* Top: clears the handle overlay above (1rem padding + its 5px grabber,
-     both sides — matches .campus-sheet-handle exactly) now that it's out of
-     flow, so the title sits at the same spot it would if the handle were
-     still a normal flex sibling. Bottom: clears the floating bottom-nav
-     tabbar (--bn-tabbar-height, kept live by bottom-nav.js) plus a bit more
-     breathing room, so scrolling all the way down actually clears the last
-     card out from under it instead of stopping with it still half-covered.
-     Desktop's own bottom-nav is a side rail, not a floating overlay, so it
-     just gets the plain 1.25rem below (see the @media override further
-     down). */
-  padding: calc(1rem + 5px) 1.25rem calc(var(--bn-tabbar-height, 76px) + 1.5rem);
+  /* Top: clears the fixed .campus-sheet-header overlay above (its live
+     height, kept in --campus-sheet-header-height — see campus-sheet.js),
+     so the grid's first row starts right below it instead of underneath it.
+     Bottom: at least --csheet-fade-bottom (below), so the last card can
+     actually scroll clear of the fade instead of staying permanently
+     part-faded — mobile's floating-tabbar clearance is already bigger than
+     that on its own, but desktop's side-rail nav doesn't add any, so this
+     `max()` is what guarantees it there (see the @media override further
+     down, which used to hardcode a plain 1.25rem here). */
+  padding: var(--campus-sheet-header-height, 4.75rem) 1.25rem max(var(--csheet-fade-bottom), calc(var(--bn-tabbar-height, 76px) + 1.5rem));
 
   /* Fades both edges into the sheet's own glass background instead of a hard
-     cut — the top fade is sized to about the handle clearance above (so the
-     title blends in from under the handle instead of starting on a hard
-     edge); the bottom one is deliberately more generous, so a card scrolled
-     toward it still reads as "there's more below" rather than just a trim.
-     The visible stops are `#fff`, not `#000`: Firefox's `mask-image`
-     defaults to luminance masking (black = hidden), while Chrome/Safari
-     effectively treat a plain gradient as alpha masking (black, fully
-     opaque, = visible) — white reads as "fully visible" under either
-     interpretation, so the fade actually shows up in both. Explicit
-     repeat/size guard against any engine's differing defaults for a mask
-     that's shorter than the element (it isn't here, but cheap insurance). */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #fff 1.5rem, #fff calc(100% - 3rem), transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, #fff 1.5rem, #fff calc(100% - 3rem), transparent 100%);
+     cut — the top fade is what makes a card scrolled up read as sliding
+     *under* the fixed header instead of just stopping at a hard edge; the
+     bottom one is deliberately more generous (--csheet-fade-bottom above),
+     so a card scrolled toward it still reads as "there's more below" rather
+     than just a trim. The top fade's own 4rem span sits right against
+     --campus-sheet-header-height (not against 0): the whole padding-top
+     above that point is empty (it's just the header's own clearance, no
+     card ever renders there), so starting the fade at the very top of the
+     box would finish fading to opaque long before any card scrolls into
+     view, reading as no fade at all. Anchoring it to the header's actual
+     (dynamic) height instead means a card is still mid-fade right as it
+     visually reaches the header's bottom edge. The visible stops are
+     `#fff`, not `#000`: Firefox's `mask-image` defaults to luminance
+     masking (black = hidden), while Chrome/Safari effectively treat a plain
+     gradient as alpha masking (black, fully opaque, = visible) — white
+     reads as "fully visible" under either interpretation, so the fade
+     actually shows up in both. Explicit repeat/size guard against any
+     engine's differing defaults for a mask that's shorter than the element
+     (it isn't here, but cheap insurance). */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--campus-sheet-header-height, 4.75rem) - 4rem), #fff var(--campus-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--campus-sheet-header-height, 4.75rem) - 4rem), #fff var(--campus-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-size: 100% 100%;
@@ -216,15 +254,11 @@
 /* ── Buildings page ───────────────────────────────────────────────────────
    The sheet's content: a campus picker (components/campus-buildings.js — a
    second instance of the Available tab's own morphing <campus-chip-picker>)
-   on top, a grid of that campus's buildings below it. The cards reuse the
+   fixed in .campus-sheet-header above, a scrolling grid of that campus's
+   buildings in .campus-sheet-content below it. The cards reuse the
    Available tab's building-overview cards (.bo-card, building-overview.css)
    without their occupancy-counts row — browsing here isn't tied to a
    date/time. */
-.campus-sheet-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
 
 /* Title              [Center btn] Picker
    A bit more inset than the grid below (which already gets .campus-sheet-
@@ -417,10 +451,11 @@
   }
 
   .campus-sheet-content {
-    /* Top stays the same handle clearance as mobile (see the base rule
-       above) — only the bottom drops the tabbar clearance, which doesn't
-       apply here (desktop's bottom-nav is a side rail, not a floating
-       overlay). */
-    padding: calc(1rem + 5px) 1.25rem 1.25rem;
+    /* Top stays the same header clearance as mobile (see the base rule
+       above) — the bottom drops the tabbar clearance (desktop's bottom-nav
+       is a side rail, not a floating overlay), but still keeps at least
+       --csheet-fade-bottom so the last card can scroll fully clear of the
+       fade instead of staying part-faded forever. */
+    padding: var(--campus-sheet-header-height, 4.75rem) 1.25rem var(--csheet-fade-bottom);
   }
 }

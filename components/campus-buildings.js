@@ -33,11 +33,9 @@ let recenterBtn = null;
 let titleEl = null;
 let subtitleEl = null;
 
-export function initCampusBuildingsPage(container) {
-  container.innerHTML = '';
-
-  const page = document.createElement('div');
-  page.className = 'campus-sheet-page';
+export function initCampusBuildingsPage(headerContainer, gridContainer) {
+  headerContainer.innerHTML = '';
+  gridContainer.innerHTML = '';
 
   // Title            [Center btn] Picker
   const topRow = document.createElement('div');
@@ -83,13 +81,11 @@ export function initCampusBuildingsPage(container) {
   actions.appendChild(picker);
 
   topRow.appendChild(actions);
-  page.appendChild(topRow);
+  headerContainer.appendChild(topRow);
 
   grid = document.createElement('div');
   grid.className = 'bo-grid campus-sheet-grid';
-  page.appendChild(grid);
-
-  container.appendChild(page);
+  gridContainer.appendChild(grid);
 
   picker.setup(staticClassroomsData);
   renderGrid(hiddenInput.value);

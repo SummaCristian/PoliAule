@@ -45,6 +45,18 @@ jobs:
           npx --yes wrangler@4 r2 object get "poliaule-data/logs/occupancy/latest.json" --file logs/previous.json --remote \
             || echo "No previous run log found."
 
+      # data/opening-hours.json isn't committed to git — it's written by the weekly
+      # fetch-opening-hours.yml job and lives only in R2. Pull it down here so the
+      # occupancy fetch doesn't fall back to hardcoded hours.
+      - name: Download opening hours (main)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p data
+          npx --yes wrangler@4 r2 object get "poliaule-data/opening-hours.json" --file data/opening-hours.json --remote \
+            || echo "No opening hours found in R2, will fall back to hardcoded hours."
+
       - name: Run fetch script (main)
         id: fetch_main
         env:
@@ -183,6 +195,17 @@ jobs:
           mkdir -p logs
           npx --yes wrangler@4 r2 object get "poliaule-data-beta/logs/occupancy/latest.json" --file logs/previous.json --remote \
             || echo "No previous run log found."
+
+      - name: Download opening hours (beta)
+        if: steps.beta_flag.outputs.enabled == 'true'
+        working-directory: beta-checkout
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p data
+          npx --yes wrangler@4 r2 object get "poliaule-data-beta/opening-hours.json" --file data/opening-hours.json --remote \
+            || echo "No opening hours found in R2, will fall back to hardcoded hours."
 
       - name: Run fetch script (beta)
         id: fetch_beta

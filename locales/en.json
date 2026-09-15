@@ -79,6 +79,7 @@
   "campus.mapError": "Couldn't load the map.",
   "campus.recenter": "Center on selection",
   "campus.buildingsCount": "{n} buildings",
+  "campus.back": "Back",
 
   "features.videoProjector": "Video projector",
   "features.radioMic": "Radio microphone",

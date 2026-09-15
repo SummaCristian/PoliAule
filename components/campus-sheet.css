@@ -272,6 +272,16 @@
   padding: 0 0.5rem;
 }
 
+/* Groups the back button (building page only) with the title/subtitle, so
+   the two move as one unit at the left of .campus-sheet-toprow while
+   .campus-sheet-actions stays pinned right (the row's own space-between). */
+.campus-sheet-leftgroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
 .campus-sheet-titlebox {
   display: flex;
   flex-direction: column;
@@ -302,8 +312,14 @@
 /* Recenters the map (components/campus-map.js) on the picker's campus — same
    glass icon-button recipe as .bo-close (building-overview.css). Hidden by
    default; campus-buildings.js shows it only once the map reports itself
-   'campusmapshifted' away from that campus. */
-.campus-sheet-recenter {
+   'campusmapshifted' away from that campus.
+
+   .campus-sheet-backbtn (the building page's back button) shares this exact
+   recipe — same glass circle, same pop in/out — swapping only its icon and
+   what toggles its [hidden]: the current page (campus vs. building) instead
+   of the map's shifted state. */
+.campus-sheet-recenter,
+.campus-sheet-backbtn {
   position: relative;
   flex: none;
   display: inline-flex;
@@ -335,7 +351,8 @@
    (`allow-discrete`) so toggling the `hidden` attribute animates instead of
    cutting instantly; `@starting-style` below seeds the "just appeared" frame
    the way a keyframe `from` would. */
-.campus-sheet-recenter.liquid-glass {
+.campus-sheet-recenter.liquid-glass,
+.campus-sheet-backbtn.liquid-glass {
   transition:
     opacity 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
     transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -345,7 +362,8 @@
     filter 0.2s ease;
 }
 
-.campus-sheet-recenter::after {
+.campus-sheet-recenter::after,
+.campus-sheet-backbtn::after {
   content: "";
   position: absolute;
   inset: -0.5px;
@@ -360,7 +378,8 @@
   pointer-events: none;
 }
 
-.campus-sheet-recenter .material-symbols-outlined {
+.campus-sheet-recenter .material-symbols-outlined,
+.campus-sheet-backbtn .material-symbols-outlined {
   font-size: 1.25rem;
 }
 
@@ -369,7 +388,8 @@
    re-assert it, same fix as .dcp-trigger[hidden] / .trc-trigger[hidden].
    Shrinks/fades out first (header-ctl-scale-out's own ease-in, quicker than
    the pop-in), `display` only flipping to `none` once that's done. */
-.campus-sheet-recenter.liquid-glass[hidden] {
+.campus-sheet-recenter.liquid-glass[hidden],
+.campus-sheet-backbtn.liquid-glass[hidden] {
   display: none;
   opacity: 0;
   transform: scale(0.3);
@@ -380,7 +400,8 @@
 }
 
 @starting-style {
-  .campus-sheet-recenter:not([hidden]) {
+  .campus-sheet-recenter:not([hidden]),
+  .campus-sheet-backbtn:not([hidden]) {
     opacity: 0;
     transform: scale(0.3);
   }
@@ -388,16 +409,69 @@
 
 @media (prefers-reduced-motion: reduce) {
   .campus-sheet-recenter.liquid-glass,
-  .campus-sheet-recenter.liquid-glass[hidden] {
+  .campus-sheet-recenter.liquid-glass[hidden],
+  .campus-sheet-backbtn.liquid-glass,
+  .campus-sheet-backbtn.liquid-glass[hidden] {
     transition: none;
   }
 }
 
 /* Mobile only: hidden at the 'full' detent (desktop's fixed-width panel shows
-   it at all 3 — see campus-sheet.js's snapToDetent(), which sets this). */
+   it at all 3 — see campus-sheet.js's snapToDetent(), which sets this).
+   Only the recenter button — the back button stays available at every
+   detent, it's primary navigation rather than an extra. */
 @media (max-width: 599.98px) {
   .campus-sheet[data-detent="full"] .campus-sheet-recenter {
     display: none;
+  }
+}
+
+/* Wraps whichever page (campus grid or building grid, components/
+   campus-buildings.js) is on screen. `position: relative` at rest too, so
+   the absolutely-positioned pages a transition temporarily stacks inside it
+   anchor to its own box rather than drifting up to the next positioned
+   ancestor. `overflow` only clips while `.csp-animating` — the rest of the
+   time nothing needs clipping, and clipping unconditionally would cut a
+   card's own drop shadow/hover scale right at the panel's padding edge. */
+.campus-sheet-pageswap {
+  position: relative;
+}
+
+.campus-sheet-pageswap.csp-animating {
+  overflow: hidden;
+}
+
+/* Plain in-place cross-fade (components/campus-buildings.js's
+   crossfadePage()) — switching straight from one building's page to
+   another's via a map marker tap, or re-rendering the current page after a
+   language switch. A declarative `animation`, not a JS-driven `transition`:
+   it starts the moment the class lands on a rendered element, no separate
+   "set the start state, force a reflow, flip to the end state next frame"
+   choreography for something else (the map's own camera fly, competing for
+   the same rendering pipeline) to throw off. Duration/easing intentionally
+   match .campus-sheet-page (forward/back)'s own slide, above. */
+.campus-sheet-page.csp-fade-out {
+  animation: csp-fade-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.campus-sheet-page.csp-fade-in {
+  animation: csp-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes csp-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes csp-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-sheet-page.csp-fade-out,
+  .campus-sheet-page.csp-fade-in {
+    animation: none;
   }
 }
 

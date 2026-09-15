@@ -78,6 +78,23 @@ let detent = 'collapsed';   // 'collapsed' | 'half' | 'full'
 const size = new Spring(COLLAPSED);
 const scrollPos = new Spring(0);
 
+// Read/write the sheet's own scroll offset — used by campus-buildings.js to
+// keep the campus grid's and each building page's scroll positions
+// independent of one another (save the campus scroll before drilling into a
+// building, reset the new page to the top, restore it on the way back).
+// Both the spring (which drives it every frame while resting — see
+// onSpringFrame below) and `content.scrollTop` itself are set synchronously
+// here, so a page swap and its scroll reset land in the same paint with no
+// one-frame flash of the old position.
+export function getContentScroll() {
+  return scrollPos.value;
+}
+
+export function setContentScroll(value) {
+  scrollPos.set(value);
+  if (content) content.scrollTop = value;
+}
+
 function headerHeightPx() {
   const n = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height'));
   return Number.isFinite(n) ? n : 84;
@@ -620,4 +637,14 @@ export function initCampusSheet() {
   size.set(COLLAPSED);
   scrollPos.set(0);
   sheet.style.setProperty('--campus-sheet-size', `${size.value}px`);
+
+  // components/campus-buildings.js dispatches this whenever a building
+  // becomes selected (from its grid, or a map marker tap) — surface the
+  // sheet if it's currently just a collapsed peek. A no-op at 'half'/'full':
+  // there's no reason to shrink an already-open sheet back down just because
+  // a different building was picked, and desktop's panel has room to sit at
+  // 'half' comfortably without this forcing it to 'full'.
+  document.addEventListener('buildingpageopen', () => {
+    if (detent === 'collapsed') snapToDetent(desktopMQ.matches ? 'full' : 'half');
+  });
 }

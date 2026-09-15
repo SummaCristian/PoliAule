@@ -630,32 +630,6 @@ html:has(#search-classrooms-container.visible) .footer {
   box-shadow: none;
 }
 
-/* --- Popup: match the app's card language -------------------------------- */
-.campus-map .mapboxgl-popup-content {
-  padding: 0.7rem 0.9rem;
-  border-radius: 14px;
-  font-family: "Nunito", -apple-system, sans-serif;
-  color: var(--text-color-primary);
-  background: var(--background-color-secondary, #fff);
-  box-shadow: 0 8px 30px var(--glass-shadow-color, rgba(0, 0, 0, 0.2));
-}
-
-.campus-map .mapboxgl-popup-tip,
-.campus-map .mapboxgl-popup-close-button {
-  display: none;
-}
-
-.campus-popup__title {
-  font-weight: 800;
-  font-size: var(--text-100, 1rem);
-}
-
-.campus-popup__addr {
-  margin-top: 0.15rem;
-  font-size: var(--text-75, 0.8125rem);
-  color: var(--text-color-secondary);
-}
-
 /* --- Error state -------------------------------------------------------- */
 .campus-map-error {
   position: absolute;

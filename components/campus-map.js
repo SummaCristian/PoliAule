@@ -3,7 +3,7 @@ import { classroomsData } from '../classroom-search-data.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { haptics, defaultPatterns } from './haptics.js';
-import { getSelectedCampusId } from './campus-buildings.js';
+import { getSelectedCampusId, getSelectedBuildingId, clearSelectedBuildingSilently } from './campus-buildings.js';
 
 // Fullscreen Mapbox map that fills the Campus tab. The app chrome (header,
 // footer, bottom-nav) floats above it — see components/campus-map.css, which
@@ -31,6 +31,9 @@ const MAX_BOUNDS = [[8.3, 44.5], [11.6, 46.8]];
 const CAMPUS_ZOOM = 12.3;
 // Where a campus tap settles.
 const CAMPUS_FLY_ZOOM = 16.5;
+// Where a building tap settles — close enough to read as "looking at just
+// this building," one deliberate step in from the campus-wide view.
+const BUILDING_FLY_ZOOM = 18;
 
 // The campus sheet (components/campus-sheet.{js,css}) covers part of the map
 // — a right-pinned panel on desktop, a bottom one on mobile — so a plain
@@ -79,17 +82,17 @@ const CENTER_SLACK_PX = 2;
 const ANGLE_SLACK_DEG = 0.5;
 
 function updateShifted() {
-  const campus = selectedCampus();
-  if (!campus) { setShifted(false); return; }
+  const focus = selectedFocus();
+  if (!focus) { setShifted(false); return; }
 
   const canvas = map.getCanvas();
   const padding = mapPadding();
   const targetX = (padding.left + (canvas.clientWidth - padding.right)) / 2;
   const targetY = (padding.top + (canvas.clientHeight - padding.bottom)) / 2;
-  const px = map.project([campus.long, campus.lat]);
+  const px = map.project([focus.long, focus.lat]);
 
   const centered = Math.abs(px.x - targetX) <= CENTER_SLACK_PX && Math.abs(px.y - targetY) <= CENTER_SLACK_PX;
-  const zoomed = Math.abs(map.getZoom() - CAMPUS_FLY_ZOOM) <= 0.05;
+  const zoomed = Math.abs(map.getZoom() - focus.zoom) <= 0.05;
   const pitched = Math.abs(map.getPitch() - 55) <= ANGLE_SLACK_DEG;
   const facingNorth = Math.abs(map.getBearing()) <= ANGLE_SLACK_DEG;
 
@@ -112,12 +115,39 @@ export function initCampusMap() {
     flyToCampus(mapboxglLib, campus);
   });
 
-  // The sheet's own recenter button (shown once `shifted` above goes true).
+  // The sheet's own recenter button (shown once `shifted` above goes true) —
+  // targets whichever level (building or campus) is actually selected right
+  // now, same as updateShifted()'s own check.
   document.addEventListener('campusrecenter', () => {
     if (!map || !mapboxglLib) return;
+    const building = selectedBuilding();
+    if (building) { flyToBuilding(mapboxglLib, building); return; }
     const campus = selectedCampus();
     if (!campus) return;
     flyToCampus(mapboxglLib, campus);
+  });
+
+  // The sheet's own building page (components/campus-buildings.js) — a
+  // building card tap, its back button, or a language-switch re-render, all
+  // ride this same event (see that file's header comment). A building
+  // marker tap (below) also dispatches it, so this one listener drives the
+  // camera for every source uniformly, rather than each source flying the
+  // map itself.
+  document.addEventListener('buildingchange', (e) => {
+    if (!map || !mapboxglLib) return;
+    const campus = campuses().find(c => c.id === e.detail.campusId);
+    if (!campus) return;
+    if (e.detail.buildingId) {
+      const building = (campus.buildings || []).find(b => b.name === e.detail.buildingId);
+      if (building && typeof building.lat === 'number' && typeof building.long === 'number') {
+        flyToBuilding(mapboxglLib, building);
+      }
+    } else if (typeof campus.lat === 'number' && typeof campus.long === 'number') {
+      // Back to the campus page — zoom the camera back out to the
+      // campus-level view (building markers stay up, same as a plain campus
+      // pick).
+      flyToCampus(mapboxglLib, campus);
+    }
   });
 
   const onVisible = () => {
@@ -341,6 +371,11 @@ async function boot(container) {
   // Zoom back out past a campus → return to the campus overview.
   map.on('zoomend', () => {
     if (mode === 'buildings' && map.getZoom() < CAMPUS_ZOOM) {
+      // A zoom-out this big leaves any single-building focus behind too —
+      // fall the sheet back to its campus page in sync (see
+      // clearSelectedBuildingSilently()'s own note on why this doesn't just
+      // dispatch 'buildingchange' like every other path here does).
+      clearSelectedBuildingSilently();
       showCampusMarkers(mapboxgl);
       if (map.getPitch() > 0) map.easeTo({ pitch: 0, duration: reduceMotion.matches ? 0 : 600 });
     }
@@ -445,6 +480,29 @@ function selectedCampus() {
   return campus && typeof campus.lat === 'number' && typeof campus.long === 'number' ? campus : null;
 }
 
+// The campus sheet's building page's current selection (components/
+// campus-buildings.js), if it names a building with known coordinates —
+// null otherwise (no building selected, or one with no lat/long).
+function selectedBuilding() {
+  const campus = selectedCampus();
+  if (!campus) return null;
+  const id = getSelectedBuildingId();
+  if (!id) return null;
+  const building = (campus.buildings || []).find(b => b.name === id);
+  return building && typeof building.lat === 'number' && typeof building.long === 'number' ? building : null;
+}
+
+// The camera target implied by the current selection — a building if one's
+// selected, else its campus, else null. Shared by updateShifted() and the
+// recenter button's handler so both agree on what "centered" means right now.
+function selectedFocus() {
+  const building = selectedBuilding();
+  if (building) return { lat: building.lat, long: building.long, zoom: BUILDING_FLY_ZOOM };
+  const campus = selectedCampus();
+  if (campus) return { lat: campus.lat, long: campus.long, zoom: CAMPUS_FLY_ZOOM };
+  return null;
+}
+
 function clearMarkers() {
   markers.forEach(m => m.remove());
   markers = [];
@@ -469,6 +527,14 @@ function flyToCampus(mapboxgl, campus) {
   // `bearing: 0` resets any rotation too — see updateShifted()'s facingNorth
   // check, and moveend re-derives `shifted` once this settles.
   map.flyTo(flyOpts({ center: [campus.long, campus.lat], zoom: CAMPUS_FLY_ZOOM, pitch: 55, bearing: 0 }));
+}
+
+// Zooms in further on a single building, one step past flyToCampus() above —
+// the building markers themselves don't change (every building in the
+// campus stays visible and tappable, see the sheet's own back-button note),
+// only the camera moves.
+function flyToBuilding(mapboxgl, building) {
+  map.flyTo(flyOpts({ center: [building.long, building.lat], zoom: BUILDING_FLY_ZOOM, pitch: 55, bearing: 0 }));
 }
 
 function buildingLabel(b) {
@@ -515,16 +581,17 @@ function showBuildingMarkers(mapboxgl, campus) {
     el.type = 'button';
     el.className = 'campus-marker campus-marker--building';
     el.innerHTML = `<span class="campus-marker__dot"></span><span>${escapeHtml(label)}</span>`;
-
-    const popup = new mapboxgl.Popup({ offset: 18, closeButton: false }).setHTML(
-      `<div class="campus-popup__title">${escapeHtml(label)}</div>` +
-      (b.address ? `<div class="campus-popup__addr">${escapeHtml(b.address)}</div>` : '')
-    );
+    // Selects the building in the sheet's own building page (components/
+    // campus-buildings.js) and, via the 'buildingchange' listener above,
+    // flies the camera in — same tap-to-drill-in as a building card there.
+    el.addEventListener('click', () => {
+      haptics.trigger(defaultPatterns.light);
+      document.dispatchEvent(new CustomEvent('buildingchange', { detail: { campusId: campus.id, buildingId: b.name } }));
+    });
 
     markers.push(
       new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([long, lat])
-        .setPopup(popup)
         .addTo(map)
     );
   }

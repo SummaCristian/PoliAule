@@ -69,6 +69,7 @@
   "campus.mapError": "Impossibile caricare la mappa.",
   "campus.recenter": "Centra sulla selezione",
   "campus.buildingsCount": "{n} edifici",
+  "campus.back": "Indietro",
   "features.videoProjector": "Proiettore",
   "features.radioMic": "Microfono ambientale",
   "features.dimmable": "Oscurabile",

@@ -48,6 +48,7 @@
   "search.allCampuses": "Tutti i campus",
   "search.back": "Indietro",
   "building.prefix": "Edificio",
+  "building.viewInCampus": "Vedi {name} nella scheda Campus",
   "overview.title": "Edifici",
   "overview.close": "Chiudi panoramica",
   "overview.subtitle": "{n} aule",

@@ -198,6 +198,22 @@ export function getSelectedBuildingId() {
   return selectedBuildingId;
 }
 
+// Called by the Available tab's building header jump button (script.js) to
+// drive this sheet straight to a building's detail page, from cold (the tab
+// may never have been opened yet) or from wherever it currently is. Brings
+// the picker along first if it's on a different campus — synchronously, via
+// the same 'campuschange' path a manual pick takes (see selectCampusById in
+// components/campus-picker.js) — so openBuilding() below finds the right
+// campus already selected. No slide animation: this is a teleport, not an
+// in-sheet navigation.
+export function goToBuilding(campusId, buildingId) {
+  if (hiddenInput.value !== campusId) {
+    picker.selectCampusById(campusId, false);
+    document.querySelector('campus-chip-picker')?.selectCampusById(campusId, false);
+  }
+  openBuilding(buildingId, { animate: false });
+}
+
 // Called by campus-map.js when a big enough zoom-out reverts the map to the
 // campus overview on its own (not via the back button below) — snaps the
 // sheet back to its campus page in sync. No slide (nothing was

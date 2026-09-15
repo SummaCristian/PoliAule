@@ -29,7 +29,8 @@ import { initTimeRangeSlider } from './components/time-range-slider.js';
 import { setupCampusPicker } from './components/campus-picker.js';
 import { initCampusMap } from './components/campus-map.js';
 import { initCampusSheet } from './components/campus-sheet.js';
-import { retranslateCampusBuildingsPage } from './components/campus-buildings.js';
+import { retranslateCampusBuildingsPage, goToBuilding } from './components/campus-buildings.js';
+import { activateGroupTab } from './components/bottom-nav.js';
 import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
@@ -219,6 +220,9 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
       <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
       ${building.altName ? `<span class="building-alt-name">${escapeHtml(building.altName)}</span>` : ''}
     </button>
+    <button class="header-button building-section-btn liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
+      <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
+    </button>
   `;
   cardIndex++;
   section.appendChild(headerEl);
@@ -253,6 +257,15 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   });
   // Fallback for keyboard / assistive-tech activation, which fires click only.
   titlesBtn.addEventListener('click', openOverview);
+
+  // Jumps straight to this building's detail page in the Campus tab — see
+  // components/campus-buildings.js's goToBuilding(), which brings the picker
+  // along to the right campus first if needed.
+  headerEl.querySelector('.building-section-btn').addEventListener('click', () => {
+    haptics.trigger(defaultPatterns.light);
+    activateGroupTab('search-classrooms-container');
+    goToBuilding(campusId, buildingName);
+  });
 
   rooms.forEach(room => {
     const roomItem = document.createElement('div');

@@ -4,6 +4,7 @@ import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { haptics, defaultPatterns } from './haptics.js';
 import { getSelectedCampusId, getSelectedBuildingId, clearSelectedBuildingSilently } from './campus-buildings.js';
+import { getSheetHeightPx, heightAfterBuildingSelect, isUserResizing } from './campus-sheet.js';
 
 // Fullscreen Mapbox map that fills the Campus tab. The app chrome (header,
 // footer, bottom-nav) floats above it — see components/campus-map.css, which
@@ -39,16 +40,30 @@ const BUILDING_FLY_ZOOM = 18;
 // — a right-pinned panel on desktop, a bottom one on mobile — so a plain
 // `center` lands a picked campus in the middle of the WHOLE canvas, part of
 // which is actually hidden under the sheet. `padding` (below) tells Mapbox to
-// center within the remaining, actually-visible area instead. Mirrors
-// campus-sheet.css's desktop panel width (420px) + its 20px right gap, and
-// campus-sheet.js's own COLLAPSED mobile height (192px) + its 20px bottom
-// gap — the sheet's own footprint before it's been dragged open any further,
-// which is the only state this accounts for (matching the sheet's own
-// initial detent, not whatever it's later dragged to).
+// center within the remaining, actually-visible area instead.
+//
+// Desktop's panel is a fixed 420px wide (+ its own 20px right gap) regardless
+// of its drag detent — only its *height* varies, and since it's pinned to the
+// map's bottom-right, that height never eats into the padding's horizontal
+// reservation the way it does on mobile — so `right` alone, both mirrored
+// from campus-sheet.css, is enough there.
+//
+// Mobile's bottom sheet instead spans the full width, so its live *height*
+// (campus-sheet.js's own drag-detent spring, mirrored here via the
+// 'campussheetresize' listener below) is exactly what needs to be reserved —
+// same 20px gap, kept in sync with every manual drag/wheel resize, the settle
+// spring that follows one, and the auto-expand a building selection triggers,
+// alike, rather than just the sheet's initial collapsed footprint.
 const SHEET_DESKTOP_WIDTH = 420;
 const SHEET_DESKTOP_GAP = 20;
-const SHEET_MOBILE_COLLAPSED = 192;
 const SHEET_MOBILE_GAP = 20;
+// However tall the mobile sheet grows (up to its own 'full' detent, close to
+// the whole screen — see campus-sheet.js's bounds()), always leave at least
+// this much of the map genuinely visible above it. Without this, a
+// near-fullscreen sheet would make the padded "visible area" vanishingly
+// small (or fight itself trying to center a marker in it) instead of just
+// keeping it pinned in the sliver that's actually left.
+const SHEET_MOBILE_MIN_VISIBLE = 140;
 const desktopMQ = matchMedia('(min-width: 600px)');
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -59,6 +74,30 @@ let map = null;
 let mapboxglLib = null;  // set once loaded — reused by the picker's change listener below
 let mode = 'campus';   // 'campus' | 'buildings'
 let markers = [];      // currently-rendered mapboxgl.Marker[]
+
+// The mobile sheet's current live height (px) — seeded from its resting
+// value up front (safe even before campus-sheet.js's own init runs, see
+// getSheetHeightPx()'s comment), kept current via the 'campussheetresize'
+// listener in initCampusMap(). Unused on desktop (see mapPadding()).
+let sheetHeightPx = getSheetHeightPx();
+
+// True while a flyTo we triggered (flyToCampus/flyToBuilding) still owns the
+// camera — the sheet-resize follow below defers to it instead of fighting
+// its animation with a hard jump every frame; see followSheetResize()'s own
+// comment.
+let autoFlying = false;
+// The in-flight fly's own destination (center/zoom/pitch/bearing) — null
+// whenever autoFlying is false. Lets a genuine user drag on the sheet mid-
+// flight (see followSheetResize()) retarget the same destination with the
+// sheet's actual current padding, rather than the flight finishing against
+// whatever padding it happened to snapshot when it started.
+let flyDestination = null;
+let lastFlyRetargetAt = 0;
+// Minimum gap between mid-flight retargets — the sheet dispatches a resize
+// event on every animation frame while being dragged, and restarting the
+// flyTo that often would read as a jittery chase instead of one flight
+// correcting itself.
+const FLY_RETARGET_THROTTLE_MS = 120;
 
 // Whether the map's actual camera differs from the auto-centered view of the
 // current selection — recomputed after every settle (`moveend`, see boot()),
@@ -148,6 +187,15 @@ export function initCampusMap() {
       // pick).
       flyToCampus(mapboxglLib, campus);
     }
+  });
+
+  // Sheet resize (drag/wheel, its settle spring, or an auto-expand — see
+  // components/campus-sheet.js's own dispatch comment) — keep the padding
+  // (and, while something's focused, the camera itself) glued to its actual
+  // live footprint instead of just the detent it started at.
+  document.addEventListener('campussheetresize', (e) => {
+    sheetHeightPx = e.detail.height;
+    followSheetResize();
   });
 
   const onVisible = () => {
@@ -519,16 +567,33 @@ function clearMarkers() {
   markers = [];
 }
 
-function flyOpts(extra) {
-  return { duration: reduceMotion.matches ? 0 : 1200, essential: true, padding: mapPadding(), ...extra };
+function flyOpts(extra, mobileHeightOverride) {
+  return { duration: reduceMotion.matches ? 0 : 1200, essential: true, padding: mapPadding(mobileHeightOverride), ...extra };
 }
 
 // See the SHEET_* constants above — reserves the sheet's own footprint so
 // `center` lands in the middle of the map's actually-visible remainder.
-function mapPadding() {
-  return desktopMQ.matches
-    ? { top: 0, bottom: 0, left: 0, right: SHEET_DESKTOP_WIDTH + SHEET_DESKTOP_GAP }
-    : { top: 0, right: 0, left: 0, bottom: SHEET_MOBILE_COLLAPSED + SHEET_MOBILE_GAP };
+// `mobileHeightOverride` lets a caller target a height the sheet hasn't
+// actually reached yet (see flyToBuilding()'s own comment) instead of its
+// current live one.
+function mapPadding(mobileHeightOverride) {
+  if (desktopMQ.matches) {
+    return { top: 0, bottom: 0, left: 0, right: SHEET_DESKTOP_WIDTH + SHEET_DESKTOP_GAP };
+  }
+  const height = mobileHeightOverride ?? sheetHeightPx;
+  const bottom = Math.min(height + SHEET_MOBILE_GAP, Math.max(0, innerHeight - SHEET_MOBILE_MIN_VISIBLE));
+  return { top: 0, right: 0, left: 0, bottom };
+}
+
+// Shared by flyToCampus/flyToBuilding below — starts (or, mid-flight,
+// swapped in as the new target of — see followSheetResize()) a flyTo towards
+// `destination`, tracking it in `flyDestination` for the duration.
+function startFly(destination, mobileHeightOverride) {
+  flyDestination = destination;
+  autoFlying = true;
+  lastFlyRetargetAt = performance.now();
+  map.flyTo(flyOpts(destination, mobileHeightOverride));
+  map.once('moveend', () => { autoFlying = false; flyDestination = null; });
 }
 
 // Flies to a campus and swaps to its building markers — shared by a marker
@@ -537,7 +602,7 @@ function flyToCampus(mapboxgl, campus) {
   showBuildingMarkers(mapboxgl, campus);
   // `bearing: 0` resets any rotation too — see updateShifted()'s facingNorth
   // check, and moveend re-derives `shifted` once this settles.
-  map.flyTo(flyOpts({ center: [campus.long, campus.lat], zoom: CAMPUS_FLY_ZOOM, pitch: 55, bearing: 0 }));
+  startFly({ center: [campus.long, campus.lat], zoom: CAMPUS_FLY_ZOOM, pitch: 55, bearing: 0 });
 }
 
 // Zooms in further on a single building, one step past flyToCampus() above —
@@ -545,7 +610,47 @@ function flyToCampus(mapboxgl, campus) {
 // campus stays visible and tappable, see the sheet's own back-button note),
 // only the camera moves.
 function flyToBuilding(mapboxgl, building) {
-  map.flyTo(flyOpts({ center: [building.long, building.lat], zoom: BUILDING_FLY_ZOOM, pitch: 55, bearing: 0 }));
+  // Selecting a building auto-expands a collapsed sheet (campus-sheet.js's
+  // own 'buildingpageopen' listener), running concurrently with this fly —
+  // aim at the padding it's about to settle at (heightAfterBuildingSelect())
+  // rather than its current, about-to-be-stale one, or the marker would land
+  // centered against a footprint the sheet has already outgrown by the time
+  // the camera gets there.
+  startFly({ center: [building.long, building.lat], zoom: BUILDING_FLY_ZOOM, pitch: 55, bearing: 0 }, heightAfterBuildingSelect());
+}
+
+// Keeps the camera glued to whatever's currently focused (a building, else
+// its campus) as the sheet resizes, so the focused marker never ends up
+// hidden behind a sheet that grew out from under it.
+function followSheetResize() {
+  if (!map || !mapboxglLib || desktopMQ.matches) return;
+
+  if (autoFlying) {
+    // A flyTo is mid-flight (see startFly()) — its own padding was only a
+    // snapshot from the moment it started (heightAfterBuildingSelect()'s
+    // *predicted* final footprint, for a building fly). That's fine while
+    // the sheet is just auto-expanding on its own towards that same
+    // prediction, but if the user actually grabs the sheet and drags it
+    // somewhere else mid-flight, keep retargeting the same destination with
+    // its real current footprint instead of landing against a detent it
+    // never actually settles at. isUserResizing() is what scopes this to a
+    // live gesture — the sheet's own settle spring alone doesn't retrigger
+    // this, since it's already tracking towards what the fly predicted.
+    if (!flyDestination || !isUserResizing()) return;
+    const now = performance.now();
+    if (now - lastFlyRetargetAt < FLY_RETARGET_THROTTLE_MS) return;
+    lastFlyRetargetAt = now;
+    map.flyTo(flyOpts(flyDestination));
+    return;
+  }
+
+  // No flight in progress — live-follow only while the camera's already on
+  // the auto-centered view; if the user's manually panned away from it
+  // (`shifted`), updateShifted() above already offers a recenter button for
+  // that instead of this silently fighting the pan.
+  const focus = selectedFocus();
+  if (!focus || shifted) return;
+  map.easeTo({ center: [focus.long, focus.lat], padding: mapPadding(), duration: 0 });
 }
 
 function buildingLabel(b) {

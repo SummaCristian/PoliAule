@@ -95,6 +95,38 @@ export function setContentScroll(value) {
   if (content) content.scrollTop = value;
 }
 
+// The sheet's current live height (px) — mobile's actual footprint (it's a
+// bottom sheet, full width) driving components/campus-map.js's own auto-
+// alignment padding; see its 'campussheetresize' listener below. Safe to
+// call before initCampusSheet() ever runs — `size` is constructed with its
+// resting value up front, at module load.
+export function getSheetHeightPx() {
+  return size.value;
+}
+
+// Where the sheet is *about to* settle once a building gets selected — same
+// logic as the 'buildingpageopen' listener below (a collapsed sheet expands;
+// anything already open stays put) — without actually triggering that
+// expansion. components/campus-map.js's building fly-to reads this instead
+// of the sheet's current (about-to-be-stale) height, so the camera aims at
+// where the sheet will actually end up, not where it is the instant the
+// building was tapped (see that function's own comment).
+export function heightAfterBuildingSelect() {
+  return detentValue(detent === 'collapsed' ? (desktopMQ.matches ? 'full' : 'half') : detent);
+}
+
+// True while an actual user gesture is live on the sheet — a pointer drag or
+// an uncommitted wheel burst (same "gesturing" check watchGuard() above uses
+// for the lg-active glow), as opposed to the settle/fling spring just
+// animating on its own afterwards. components/campus-map.js's fly-to reads
+// this to tell "the sheet is auto-expanding on its own, already aimed at
+// (heightAfterBuildingSelect())" apart from "the user is actively dragging
+// it somewhere else mid-flight" — only the latter is worth interrupting an
+// in-flight camera animation for.
+export function isUserResizing() {
+  return activePointerId != null || (wheelMode != null && !wheelCommitted);
+}
+
 function headerHeightPx() {
   const n = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-height'));
   return Number.isFinite(n) ? n : 84;
@@ -275,10 +307,26 @@ function requestGuardWatch() {
   requestAnimationFrame(watchGuard);
 }
 
+// Deduped against the actual value (not just "a spring frame ran") — this
+// loop also renders while only `scrollPos` is animating (a plain content
+// scroll), which shouldn't spam campus-map.js with same-height resize
+// events.
+let lastDispatchedHeight = null;
+
 onSpringFrame(() => {
   if (!sheet) return;
   sheet.style.setProperty('--campus-sheet-size', `${size.value}px`);
   if (content) content.scrollTop = scrollPos.value;
+
+  if (size.value !== lastDispatchedHeight) {
+    lastDispatchedHeight = size.value;
+    // components/campus-map.js listens for this to keep its own auto-
+    // alignment padding (and, while a building/campus is focused, the
+    // camera itself) glued to the sheet's actual live footprint — any
+    // manual drag/wheel, the settle spring that follows one, or the
+    // auto-expand a building selection triggers below, alike.
+    document.dispatchEvent(new CustomEvent('campussheetresize', { detail: { height: size.value } }));
+  }
 
   if (!desktopMQ.matches) {
     const g = sheetGeometry();

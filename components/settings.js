@@ -8,6 +8,7 @@ import { classroomsData } from '../available-rooms-script.js';
 import { selectCampusById } from './campus-picker.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
+import { getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState } from '../utils/blur-capability.js';
 
 const TRANSITION_DURATION = 420;
 
@@ -45,6 +46,7 @@ let popupEl = null;
 let positionIndicatorFn = null;
 let positionTimeFmtIndicatorFn = null;
 let positionDefaultTabIndicatorFn = null;
+let positionBlurModeIndicatorFn = null;
 let refreshCampusSelectFn = null; // set by buildCampusSection, called on every open
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
@@ -168,6 +170,7 @@ function openSettings() {
   positionIndicatorFn?.(false);            // snap lang indicator before morph animation starts
   positionTimeFmtIndicatorFn?.(false);     // snap time format indicator before morph animation starts
   positionDefaultTabIndicatorFn?.(false);  // snap default tab indicator before morph animation starts
+  positionBlurModeIndicatorFn?.(false);    // snap glass effect indicator before morph animation starts
   refreshCampusSelectFn?.();            // re-populate campus select now that data may be loaded
   popupEl.style.transition = '';
 
@@ -694,6 +697,40 @@ function buildPopup() {
         </div>
       </div>
 
+      <div class="settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__icon-badge">
+            <span class="material-symbols-outlined">blur_on</span>
+          </div>
+          <span class="settings-section__header-label" data-blurmode-section-header>${t('settings.sectionAppearance')}</span>
+        </div>
+        <div class="settings-group">
+          <div class="settings-row">
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #64D2FF">
+                <span class="material-symbols-outlined">gradient</span>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.glassEffect">${t('settings.glassEffect')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.glassEffectDesc">${t('settings.glassEffectDesc')}</span>
+              </div>
+            </div>
+            <div class="settings-lang-toggle" data-blurmode-toggle>
+              <div class="settings-lang-indicator"></div>
+              <button class="settings-lang-btn" data-blurmode="auto">
+                <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.auto">${t('settings.glassEffect.auto')}</span>
+              </button>
+              <button class="settings-lang-btn" data-blurmode="on">
+                <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.on">${t('settings.glassEffect.on')}</span>
+              </button>
+              <button class="settings-lang-btn" data-blurmode="off">
+                <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.off">${t('settings.glassEffect.off')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       ${IS_STABLE_BUILD ? '' : `
       <div class="settings-section">
         <div class="settings-section__header">
@@ -904,6 +941,45 @@ function buildPopup() {
 
   positionDefaultTabIndicatorFn = positionDefaultTabIndicator;
 
+  // Wire Glass Effect (blur) 3-way toggle
+  const blurModeToggle = popup.querySelector('[data-blurmode-toggle]');
+  const blurModeIndicator = blurModeToggle.querySelector('.settings-lang-indicator');
+  const savedBlurMode = getBlurMode();
+  blurModeToggle.querySelector(`[data-blurmode="${savedBlurMode}"]`)?.classList.add('active');
+
+  function positionBlurModeIndicator(animate) {
+    const activeBtn = blurModeToggle.querySelector('.settings-lang-btn.active');
+    if (!activeBtn) return;
+    if (!animate) blurModeIndicator.style.transition = 'none';
+    blurModeIndicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
+    blurModeIndicator.style.width = `${activeBtn.offsetWidth}px`;
+    blurModeIndicator.style.height = `${activeBtn.offsetHeight}px`;
+    if (!animate) {
+      blurModeIndicator.getBoundingClientRect();
+      blurModeIndicator.style.transition = '';
+    }
+  }
+
+  blurModeToggle.querySelectorAll('.settings-lang-btn[data-blurmode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.blurmode;
+      if (blurModeToggle.querySelector('.settings-lang-btn.active') === btn) return;
+      setBlurMode(mode);
+      blurModeToggle.querySelectorAll('.settings-lang-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      positionBlurModeIndicator(true);
+      haptics.trigger(defaultPatterns.light);
+      // Apply right away instead of waiting for the next splash screen: "on"/"off"
+      // are immediate, "auto" re-runs the benchmark since the cached verdict may
+      // now be stale (e.g. the mode was forced off, then set back to auto).
+      if (mode === 'off') applyBlurState(false);
+      else if (mode === 'on') applyBlurState(true);
+      else reevaluateBlurCapability();
+    });
+  });
+
+  positionBlurModeIndicatorFn = positionBlurModeIndicator;
+
   // Wire Use Beta Backend toggle (non-stable builds only, default: true)
   const useBetaBackendRow = popup.querySelector('[data-use-beta-backend-row]');
   if (useBetaBackendRow) {
@@ -919,7 +995,7 @@ function buildPopup() {
     });
   }
 
-  return { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, retranslateCampus };
+  return { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, positionBlurModeIndicator, retranslateCampus };
 }
 
 function updateLangButtons(popup, positionIndicator) {
@@ -935,7 +1011,7 @@ export function initSettings() {
   triggerEl = document.getElementById('settings-btn');
   if (!triggerEl) return;
 
-  const { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, retranslateCampus } = buildPopup();
+  const { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, positionBlurModeIndicator, retranslateCampus } = buildPopup();
   popupEl = popup;
   document.body.appendChild(popupEl);
 
@@ -949,6 +1025,7 @@ export function initSettings() {
   const sectionHeaderLabelEl = popupEl.querySelector('.settings-section__header-label');
   const timeFmtHeaderLabelEl = popupEl.querySelector('[data-timefmt-section-header]');
   const defaultTabHeaderLabelEl = popupEl.querySelector('[data-defaulttab-section-header]');
+  const blurModeHeaderLabelEl = popupEl.querySelector('[data-blurmode-section-header]');
 
   onLanguageSwitch(() => {
     titleEl.textContent = t('settings.title');
@@ -963,12 +1040,17 @@ export function initSettings() {
       defaultTabHeaderLabelEl.textContent = t('settings.sectionNavigation');
       animateI18nElement(defaultTabHeaderLabelEl);
     }
+    if (blurModeHeaderLabelEl) {
+      blurModeHeaderLabelEl.textContent = t('settings.sectionAppearance');
+      animateI18nElement(blurModeHeaderLabelEl);
+    }
     popupEl.querySelectorAll('[data-i18n]').forEach(el => {
       el.textContent = t(el.dataset.i18n);
     });
     updateLangButtons(popupEl, positionIndicator);
     positionTimeFmtIndicator?.(false);
     positionDefaultTabIndicator?.(false);
+    positionBlurModeIndicator?.(false);
     retranslateCampus();
   });
 

@@ -54,6 +54,7 @@
   "search.allCampuses": "All campuses",
   "search.back": "Back",
   "building.prefix": "Building",
+  "building.viewInCampus": "View {name} in the Campus tab",
   "overview.title": "Buildings",
   "overview.close": "Close overview",
   "overview.subtitle": "{n} classrooms",
@@ -76,6 +77,10 @@
 
   "campus.milanLabel": "Milano",
   "campus.otherLabel": "Other cities",
+  "campus.mapError": "Couldn't load the map.",
+  "campus.recenter": "Center on selection",
+  "campus.buildingsCount": "{n} buildings",
+  "campus.back": "Back",
 
   "features.videoProjector": "Video projector",
   "features.radioMic": "Radio microphone",
@@ -134,6 +139,12 @@
   "settings.defaultTab.available": "Available",
   "settings.defaultTab.last": "Last",
   "settings.defaultTab.search": "Campus",
+  "settings.sectionAppearance": "Appearance",
+  "settings.glassEffect": "Glass Effect",
+  "settings.glassEffectDesc": "Blur behind translucent panels. Auto disables it on devices that render it slowly.",
+  "settings.glassEffect.auto": "Auto",
+  "settings.glassEffect.on": "On",
+  "settings.glassEffect.off": "Off",
   "settings.sectionBackend": "Backend",
   "settings.useBetaBackend": "Use Beta Backend",
   "settings.useBetaBackendDesc": "Fetch data from the beta API instead of the stable one.",
@@ -193,11 +204,9 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 2.0.0-beta5",
+  "footer.versionInfo": "Version 2.0.0-beta6",
 
-  "changelog.item1": "Redesigned the search screen",
-  "changelog.item2": "Added search for lessons and exams",
-  "changelog.item3": "Added keyboard shortcuts",
-  "changelog.item4": "Added a new way to move between buildings inside the available classrooms result list: simply tap on the building name pill to see all buildings",
-  "changelog.item5": "Redesigned the query pickers section: they now live in a sticky section on mobile, and in their dedicated area on desktop. On mobile, click any of the pills to expand it and reveal its picker."
+  "changelog.item1": "Redesigned the Campus tab",
+  "changelog.item2": "Added a map view to show all buildings in a campus",
+  "changelog.item3": "Added an option to disable the glass effect for better performance on slower devices"
 }

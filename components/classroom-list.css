@@ -128,10 +128,14 @@
 .building-section-header {
   grid-column: 1 / -1;
 
-  /* Parks directly beneath the sticky picker bar (mobile) — its live height
-     comes from --picker-bar-height (script.js); the + 1.5rem matches the
-     picker bar's own offset below the app header. On desktop the picker bar
-     isn't sticky — see the 600px override. */
+  /* Parks directly beneath the sticky picker bar — its live height comes
+     from --picker-bar-height (script.js); the + 1.5rem matches the picker
+     bar's own offset below the app header. This holds all the way up to the
+     1100px breakpoint below: the side nav rail appears at 600px, but the
+     picker form itself doesn't go static (non-sticky, --picker-bar-height
+     legitimately 0) until the 1100px two-column layout, so this rule can't
+     drop the offset any earlier without the header sliding in behind the
+     still-sticky pickers. */
   position: sticky;
   top: calc(var(--header-height, 84px) + 2.25rem + var(--picker-bar-height, 0px) + 0.5rem);
   z-index: 2;
@@ -149,14 +153,6 @@
      glass button's nested backdrop-filter in Safari (same reason
      .tab-content.visible drops `forwards`). */
   animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-
-@media (min-width: 600px) {
-  /* Picker form is a static grid cell on desktop, not a sticky bar — drop the
-     --picker-bar-height offset and stick under the app header alone. */
-  .building-section-header {
-    top: calc(var(--header-height, 84px) + 1.25rem);
-  }
 }
 
 @media (min-width: 1100px) {

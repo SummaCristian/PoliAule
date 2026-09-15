@@ -19,8 +19,7 @@ import {
   SKIP_DAYS
 } from './available-rooms-script.js';
 
-import { initSearchTab, navigateToBuilding, classroomsData as staticClassroomsData } from './search-classrooms-script.js';
-import { activateGroupTab } from './components/bottom-nav.js';
+import { ensureClassroomDirectory, classroomsData as staticClassroomsData } from './classroom-search-data.js';
 import { initSearchOverlay } from './components/search-overlay.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
@@ -28,6 +27,10 @@ import { infoPage } from './components/info-page.js';
 import { initTimePickers } from './components/time-picker.js';
 import { initTimeRangeSlider } from './components/time-range-slider.js';
 import { setupCampusPicker } from './components/campus-picker.js';
+import { initCampusMap } from './components/campus-map.js';
+import { initCampusSheet } from './components/campus-sheet.js';
+import { retranslateCampusBuildingsPage, goToBuilding } from './components/campus-buildings.js';
+import { activateGroupTab } from './components/bottom-nav.js';
 import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
@@ -45,6 +48,7 @@ import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY } from './components/settings.js';
 import { initKeybindings } from './components/keybindings.js';
+import { resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from './utils/blur-capability.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -216,7 +220,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
       <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
       ${building.altName ? `<span class="building-alt-name">${escapeHtml(building.altName)}</span>` : ''}
     </button>
-    <button class="header-button building-section-btn liquid-glass" type="button" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
+    <button class="header-button building-section-btn liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
       <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
     </button>
   `;
@@ -254,27 +258,13 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   // Fallback for keyboard / assistive-tech activation, which fires click only.
   titlesBtn.addEventListener('click', openOverview);
 
-  // Jump to this building's page in the Campus tab. The tab has to be made
-  // visible *before* renderClassrooms runs — building the grid while the tab
-  // is still content-visibility:hidden makes every card first lay out at a
-  // zero-width container, and content-visibility:auto then caches that wrong
-  // intrinsic size (cards balloon after the next view transition).
+  // Jumps straight to this building's detail page in the Campus tab — see
+  // components/campus-buildings.js's goToBuilding(), which brings the picker
+  // along to the right campus first if needed.
   headerEl.querySelector('.building-section-btn').addEventListener('click', () => {
-    const campus = staticClassroomsData?.find(c => c.id === campusId);
-    const target = campus?.buildings.find(b =>
-      (building.id != null && b.id === building.id) || b.name === building.name);
-    if (!campus || !target) return;
-
     haptics.trigger(defaultPatterns.light);
-
-    const campusTab = document.getElementById('search-classrooms-container');
-    const go = () => navigateToBuilding(campusId, building.id ?? null, building.name);
-    if (campusTab.classList.contains('visible')) {
-      go();
-    } else {
-      campusTab.addEventListener('tabvisible', go, { once: true });
-    }
     activateGroupTab('search-classrooms-container');
+    goToBuilding(campusId, buildingName);
   });
 
   rooms.forEach(room => {
@@ -319,10 +309,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     initSearchOverlay();
 
     // Only the static classroom directory blocks the splash — it's what the
-    // page shell (campus picker, search tab, classroom detail) is built from.
+    // page shell (campus picker, classroom detail, favourites) is built from.
     // Occupancy data is fetched separately in the background (see
     // initOccupancyData below) and fills in its own skeleton once ready.
-    await initSearchTab();
+    await ensureClassroomDirectory();
 
     // Init classroom detail overlay (hash routing + VT morph)
     classroomDetail.init(staticClassroomsData);
@@ -332,6 +322,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Favourites carousel on the Available page
     initFavourites(staticClassroomsData);
+
+    // Campus tab — fullscreen map, lazily initialised on first activation
+    initCampusMap();
+
+    // Campus tab — draggable glass sheet floating over the map
+    initCampusSheet();
 
     // Setup the campus picker with the available ones
     setupCampusPicker(staticClassroomsData);
@@ -354,6 +350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setupDataFetchIndicatorText(true);
       setupDatePicker(() => preferInitialDate);
       document.querySelector('campus-chip-picker')?.retranslate();
+      retranslateCampusBuildingsPage();
       renderFavourites();
       const container = document.getElementById('available-classrooms-results');
       if (!container.classList.contains('empty')) {
@@ -368,7 +365,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // state until it resolves.
     initOccupancyData();
 
-    // Wait for fonts so time pickers render correctly, then dismiss splash.
+    // Apply the cached blur verdict (or the safe "off" default if none yet)
+    // instantly — the actual benchmark never runs during load, see
+    // utils/blur-capability.js for why.
+    applyBlurState(resolveBlurCapability());
+
     await document.fonts.ready;
     document.querySelector('.time-pickers-container').style.opacity = '1';
     document.querySelector('campus-chip-picker')?.removeAttribute('data-loading');
@@ -377,6 +378,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const elapsed = Date.now() - _splashStartTime;
     const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
     setTimeout(dismissSplash, remaining);
+
+    // Once things have settled, spend a moment of genuine idle time
+    // benchmarking blur for real (first load / no cached verdict only).
+    scheduleIdleBenchmark();
 
   } catch (error) {
     clearTimeout(_initTimeoutId);

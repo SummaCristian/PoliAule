@@ -346,7 +346,6 @@
   opacity: 0.32;
 }
 
-.bo-count.free          { color: var(--color-status-free); }
-.bo-count.free-soon     { color: var(--color-status-free-soon); }
-.bo-count.occupied-soon { color: var(--color-status-partial); }
-.bo-count.occupied      { color: var(--color-status-busy); }
+.bo-count.free           { color: var(--color-status-free); }
+.bo-count.partially-free { color: var(--color-status-partial); }
+.bo-count.occupied       { color: var(--color-status-busy); }

@@ -255,14 +255,15 @@ export function getClassroomStatusNow(classroomId) {
  * Builds the data for the "zoom out" building overview: every building in the
  * given campus on the given date, each with a per-status classroom count.
  *
- * The status is computed relative to an instant: NOW when `date` is today,
- * otherwise `date` at `refTime` ("HH:MM", the selected query start) so
- * "free soon" / "occupied soon" still mean something on a future day.
+ * The status is computed over the queried [fromTime, toTime] window, using
+ * the same free-slot logic as findAvailableClassrooms(), so the counts match
+ * what the classrooms grid below is showing for that same query (free /
+ * partially-free / occupied) instead of a snapshot at a single instant.
  *
- * Returns [{ building, counts: {free, 'free-soon', 'occupied-soon', occupied} }]
+ * Returns [{ building, counts: {free, 'partially-free', occupied} }]
  * in the campus's building order.
  */
-export function getCampusBuildingsOverview(campusId, date, refTime) {
+export function getCampusBuildingsOverview(campusId, date, fromTime, toTime) {
   const formattedDate = formatDateYYYYMMDD(new Date(date));
   const dayData = classroomsData.find(day => day.date === formattedDate);
   if (!dayData) return [];
@@ -270,21 +271,18 @@ export function getCampusBuildingsOverview(campusId, date, refTime) {
   const campusData = dayData.campuses.find(c => c.id === campusId);
   if (!campusData) return [];
 
-  const now = new Date();
-  const isToday = formattedDate === formatDateYYYYMMDD(now);
-  let refDate;
-  if (isToday) {
-    refDate = now;
-  } else {
-    const [h, m] = String(refTime ?? '08:00').split(':').map(Number);
-    refDate = new Date(date);
-    refDate.setHours(h || 0, m || 0, 0, 0);
-  }
-
   return campusData.buildings.map(building => {
-    const counts = { 'free': 0, 'free-soon': 0, 'occupied-soon': 0, 'occupied': 0 };
+    const counts = { 'free': 0, 'partially-free': 0, 'occupied': 0 };
     for (const room of building.classrooms ?? []) {
-      counts[computeClassroomStatus(room.occupancy ?? [], refDate)]++;
+      const freeSlots = getFreeSlots(room.occupancy ?? [], fromTime, toTime);
+      if (freeSlots.length === 0) {
+        counts.occupied++;
+      } else {
+        const isFullyFree = freeSlots.length === 1
+          && freeSlots[0].start === fromTime
+          && freeSlots[0].end === toTime;
+        counts[isFullyFree ? 'free' : 'partially-free']++;
+      }
     }
     return { building, counts };
   });

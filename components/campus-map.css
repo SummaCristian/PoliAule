@@ -1,0 +1,667 @@
+/* ============================================================
+   CAMPUS TAB — FULLSCREEN MAP
+   A Mapbox map fills the whole viewport; the app chrome (header,
+   footer, bottom-nav) floats above it. The page scroll is locked
+   while this tab is open so every drag / pinch / rotate reaches
+   the map instead of scrolling the page behind it.
+   ============================================================ */
+
+/* Scroll lock — only while the Campus tab is the visible one. Blocks
+   gestures via `touch-action`/`overscroll-behavior` rather than
+   `overflow: hidden`, so the document stays technically scrollable (see
+   why below).
+
+   `#search-classrooms-container` keeps its `.visible` class even while the
+   classroom detail or info overlay is open on top of it — those only
+   collapse `.tab-content` to `height: 0` (see `body.detail-open
+   .tab-content` / `body.info-open .tab-content`), they don't remove the
+   class. Without the `:not(:has(...))` guards below, this lock stayed
+   active behind those overlays too, leaving their (normal, in-flow) pages
+   unscrollable. */
+html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)),
+html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)) body {
+  touch-action: none;
+  overscroll-behavior: none;
+
+  /* Cosmetic only — the page is deliberately overflowing (see the
+     invisible overshoot below) but every way to actually move it is
+     already blocked above, so the scrollbar itself is just visual noise.
+     Not `overflow: hidden`: that would make the document non-scrollable
+     again, which is the exact condition that broke the safe-area fill
+     below. */
+  scrollbar-width: none;
+}
+
+html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open))::-webkit-scrollbar,
+html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)) body::-webkit-scrollbar {
+  display: none;
+}
+
+/* The map panel: edge to edge, behind the chrome, extending under the
+   home-indicator safe area at the bottom.
+
+   iOS Safari used to leave a solid strip the size of the home indicator
+   uncovered there, in-browser and in standalone PWA alike — tinted with
+   body's background-color instead of the map, regardless of this
+   element's own z-index/position/background. Root cause, confirmed by
+   testing: it only happens when the document's total content is exactly
+   viewport-height (or less) — i.e. genuinely non-scrollable. Once
+   anything makes the document truly taller than the viewport (so it can
+   really scroll, even if nothing ever does), Safari treats the safe-area
+   strip as ordinary mid-page content and composites it normally. A plain
+   `position: fixed; inset: 0` div doesn't hit this at all (fixed elements
+   always cover the true viewport including the safe area) — but a `fixed`
+   element by definition never contributes to the document's scroll
+   height, so it can't be the thing that makes the page "genuinely taller."
+   That also explains why every previous attempt failed: `position:
+   absolute`, overshooting the inset, `100lvh` instead of `height: 100%`,
+   `!important` backgrounds — none of them changed whether the document
+   itself overflowed the viewport.
+
+   Fix: give up `position: fixed` and instead lay this out in normal flow,
+   sized deliberately taller than any possible viewport (100lvh + a fixed
+   overshoot, not tied to dvh/lvh tracking the toolbar correctly — we want
+   this to hold regardless of that). `margin-top` cancels .body-container's
+   padding-top plus the header's own height, pulling the box back up so it
+   still starts at the true top edge (same recipe as
+   #classroom-detail-overlay's header overlap in classroom-detail.css).
+   The scroll lock above keeps the invisible overshoot from ever being
+   revealed to the user. */
+:root {
+  /* How much taller than the viewport the container below is made, to work
+     around the safe-area-fill bug explained there. Its own bottom edge
+     sits this far *below* the true visible viewport — which matters for
+     anything inside it positioned with `bottom:`, since that's measured
+     against this element's (inflated) box, not the real screen. See the
+     mapbox control placement rules further down, which correct for it. */
+  --campus-map-overshoot: 80px;
+}
+
+#search-classrooms-container.visible {
+  position: relative;
+  flex: none;
+
+  margin-top: calc(-1 * var(--header-height, 84px) - 1.5rem);
+  height: calc(100lvh + var(--campus-map-overshoot));
+  z-index: 0;
+
+  display: block;
+  padding: 0;
+
+  /* The shared .tab-content intro animates transform + filter; that would
+     churn the GL canvas, so use a plain fade here instead. */
+  animation: campus-map-fade-in 0.3s ease both;
+}
+
+/* When the classroom detail or info overlay opens on top of this tab, it
+   still carries `.visible` (see the scroll-lock comment above) — so the
+   `position`/`height` above need re-declaring here, because an ID selector
+   otherwise outranks the plain-class `body.detail-open .tab-content` /
+   `body.info-open .tab-content` collapse rules (classroom-detail.css /
+   info-page.css) that are supposed to zero this out. Without this, the map
+   silently stayed a full `100lvh`-tall box — just invisible — pushing the
+   overlay's real content down off-screen below it. */
+body.detail-open #search-classrooms-container.visible,
+body.info-open #search-classrooms-container.visible {
+  position: absolute;
+  height: 0;
+  overflow: hidden;
+}
+
+@keyframes campus-map-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #search-classrooms-container.visible { animation: none; }
+}
+
+/* Keep the chrome painted above the fixed map. Header (z 1000) and bottom-nav
+   (z 20) already clear it; the footer is statically positioned, so lift it. */
+html:has(#search-classrooms-container.visible) .footer {
+  position: relative;
+  z-index: 5;
+}
+
+.campus-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.campus-map:focus,
+.campus-map canvas:focus {
+  outline: none;
+}
+
+/* --- Mapbox control placement: clear the floating header / footer / nav --- */
+.campus-map .mapboxgl-ctrl-top-right {
+  top: calc(env(safe-area-inset-top) + var(--header-height, 84px) + 0.5rem);
+  right: 0.75rem;
+  /* Explicit and below the sheet/guard's z-index: 1 (campus-sheet.css), so
+     the sheet covers these controls once it grows tall enough to reach
+     them, rather than floating over it. */
+  z-index: 0;
+}
+
+/* Clears the campus sheet's own collapsed height (it already sits taller
+   than, and visually contains, the bottom-nav — see campus-sheet.css/js —
+   so clearing it clears the nav too), not just the bottom-nav on its own.
+
+   `position: fixed` (overriding Mapbox's own `absolute`): these controls
+   are descendants of #search-classrooms-container, which is deliberately
+   taller than the real viewport (see its own rule above) — its bottom edge
+   sits an amount below the true visible one that depends on the current
+   toolbar state (100lvh vs. what's actually showing right now), not just
+   the fixed 80px overshoot, so no constant could correct a `bottom:` value
+   measured against it — it drifted by a different amount on every device
+   tried. Anchoring these directly to the real viewport instead (same as
+   .campus-sheet/header/footer/bottom-nav already do) sidesteps needing to
+   know that gap at all. */
+.campus-map .mapboxgl-ctrl-bottom-left,
+.campus-map .mapboxgl-ctrl-bottom-right {
+  position: fixed;
+  bottom: calc(var(--campus-sheet-collapsed-height, 192px) + 8px + 8px + env(safe-area-inset-bottom));
+  /* Same reasoning as .mapboxgl-ctrl-top-right above: explicit and below
+     the sheet/guard's z-index: 1, so it covers these once it grows over
+     them instead of floating on top. */
+  z-index: 0;
+}
+
+/* Horizontally lined up with the tabbar's own pill/circle — --bn-tabbar-
+   outer-inset (bottom-nav.js) is the wrapper's own horizontal clearance
+   from the viewport, the same one the tabbar itself sits at regardless of
+   the sheet's current (dynamic) width. */
+.campus-map .mapboxgl-ctrl-bottom-left {
+  left: var(--bn-tabbar-outer-inset, 28px);
+}
+
+.campus-map .mapboxgl-ctrl-bottom-right {
+  right: var(--bn-tabbar-outer-inset, 28px);
+}
+
+@media (min-width: 600px) {
+  /* Bottom-nav is a top-left rail here, so no bottom clearance is needed —
+     back to mapbox's own plain default. The sheet is a right-pinned panel
+     instead, though (not a bottom one), so it's the bottom-right control
+     (the attribution) that needs clearing, horizontally rather than
+     vertically; the left one (logo) is untouched by it. Also resets both
+     controls' `left`/`right` back to a plain default, overriding the
+     tabbar-alignment rules above — there's no bottom tabbar to line up
+     with here (bottom-nav is the top-left rail). */
+  .campus-map .mapboxgl-ctrl-bottom-left,
+  .campus-map .mapboxgl-ctrl-bottom-right {
+    bottom: 10px;
+  }
+  .campus-map .mapboxgl-ctrl-bottom-left {
+    left: 10px;
+  }
+  /* Mapbox's own default CSS gives .mapboxgl-ctrl-logo and .mapboxgl-ctrl-
+     attrib (the actual controls inside these two containers) different
+     built-in margins, so even at the same container `bottom`, the two
+     don't sit flush the same way — flatten both to line up with the logo. */
+  .campus-map .mapboxgl-ctrl-bottom-left,
+  .campus-map .mapboxgl-ctrl-bottom-right {
+    display: flex;
+    align-items: flex-end;
+
+  }
+  .campus-map .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl,
+  .campus-map .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl {
+    margin: 0;
+  }
+
+  .campus-map .mapboxgl-ctrl-bottom-right {
+    /* Clears campus-sheet.css's desktop panel (right: 20px; width: 420px)
+       plus a little breathing room. */
+    right: calc(420px + 20px + 20px + env(safe-area-inset-right, 0px));
+  }
+}
+
+/* --- Attribution: same glass material + interactivity as the rest of the
+   controls (.header-button in style.css; the compass/geolocate buttons
+   above), instead of Mapbox's hardcoded white pill/icon that never adapted
+   to dark mode. Same Nunito-first font stack as the campus markers/popup
+   further down.
+
+   Two distinct visual states, independent of viewport width: an icon-only
+   circular badge (mobile default, `.mapboxgl-compact`) and the expanded
+   text pill (desktop's default, or mobile's badge after a tap adds
+   `.mapboxgl-compact-show` — Mapbox keeps `.mapboxgl-compact` too in that
+   state, so this isn't just ":not(.mapboxgl-compact)"). The badge is a true
+   circle and gets the full recipe below, outside stroke ring included, same
+   as the compass/geolocate buttons; the expanded pill is a variable-width
+   rounded rect, where that ring's circular mask wouldn't trace the shape
+   correctly, so it's skipped there — the box-shadow outline alone already
+   reads fine against any border-radius. */
+.campus-map .mapboxgl-ctrl-attrib {
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.campus-map .mapboxgl-ctrl-attrib:not(.mapboxgl-compact),
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show {
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+  border-radius: var(--radius-pill);
+}
+
+/* The default (not-yet-tapped) compact state shows nothing but the round
+   button above — but Mapbox's own `.mapboxgl-compact{background-color:#fff}`
+   still applies to *this* container underneath it, peeking out past the
+   button's circular edge as a flat white corner. */
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact:not(.mapboxgl-compact-show) {
+  background-color: transparent;
+}
+
+.campus-map .mapboxgl-ctrl-attrib a {
+  color: var(--text-color-secondary);
+  font-size: var(--text-70, 0.7rem);
+}
+
+@media (hover: hover) {
+  .campus-map .mapboxgl-ctrl-attrib a:hover {
+    color: var(--text-color-primary);
+  }
+}
+
+/* The compact badge/toggle: same glass icon-button recipe as the compass
+   and geolocate buttons, including the shared `liquid-glass` press-deform +
+   lit hover (the class, and the HugeIcons glyph replacing Mapbox's baked
+   icon, are added in campus-map.js — Mapbox creates this element itself).
+
+   !important throughout: Mapbox's own rules for this button (a fixed
+   `border-radius: 12px`, `display` toggled between none/block by
+   `.mapboxgl-compact`, its own background-image icon) sit at a specificity
+   this file's selectors don't reliably beat — the same trap already hit
+   twice on the compass/geolocate icon span above. */
+.campus-map .mapboxgl-ctrl-attrib-button {
+  /* `position: absolute` (not `relative`!) preserves Mapbox's own layout
+     intent — this button is meant to sit pinned to the pill's corner, taken
+     out of the normal text flow. Overriding it to `relative` here once
+     already put it back into normal flow, rendering as its own block above
+     the link text instead of overlapping the corner. `absolute` still gives
+     the ::after ring below a positioning context to anchor to, same as
+     `relative` would. */
+  position: absolute;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill) !important;
+  background: var(--glass-tint) !important;
+  background-image: none !important;
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+/* `display` deliberately kept out of the rule above and scoped to only the
+   compact states here: this button only exists as a toggle when the badge
+   is collapsed to an icon (mobile) — on a wide/desktop viewport, Mapbox
+   never applies `.mapboxgl-compact` at all (the text always fits, no need
+   to toggle it), and its own default `display: none` should stand. An
+   unconditional `!important` here previously forced the button visible
+   there too, showing a redundant "i" toggle next to text that's already
+   fully expanded. */
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact .mapboxgl-ctrl-attrib-button {
+  display: flex !important;
+}
+
+/* Mapbox pins this button with `top: 0`, sized against its own default
+   ~20px-tall pill. The Nunito font stack above (taller line metrics than
+   Mapbox's own default) makes the expanded pill grow past that, so a
+   `top: 0` button ends up stuck against the top edge instead of centered
+   next to the text — recenter it directly instead of depending on a
+   specific pill height. Scoped to the expanded state only: the plain
+   compact circle-badge state doesn't have this "grew taller than expected"
+   problem (there's no text row inside it to grow against). */
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show .mapboxgl-ctrl-attrib-button {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Outside 0.5px gradient stroke, same radial-gradient-masked trick as
+   .header-button::after (style.css) — a true circle's seam-free ring. */
+.campus-map .mapboxgl-ctrl-attrib-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
+}
+
+/* Extra `.mapboxgl-ctrl-icon` qualifier: needed to outrank the generic
+   `.campus-map .mapboxgl-ctrl-icon .hgi-stroke` sizing rule further down
+   (compass/geolocate) — same class-count otherwise, and that one comes
+   later in the file, which would otherwise win the tie and blow this tiny
+   24px badge's icon up to the big controls' 1.375rem size. */
+.campus-map .mapboxgl-ctrl-attrib-button .mapboxgl-ctrl-icon .hgi-stroke {
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--text-color-secondary);
+}
+
+/* Mapbox's own `:focus` (not `:focus-visible`) rule shows a hardcoded blue
+   ring on *any* focus, mouse click included — reset it back to the plain
+   glass shadow, and only show a real ring for keyboard focus. */
+.campus-map .mapboxgl-ctrl-attrib-button:focus {
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
+.campus-map .mapboxgl-ctrl-attrib-button:focus-visible {
+  outline: 2px solid var(--text-color-accent);
+  outline-offset: 2px;
+}
+
+/* Slide the revealed text in from behind the always-visible `i` badge
+   (mobile default position: bottom-right, so the text sits to the badge's
+   left) instead of Mapbox's hard `display` cut. Mapbox itself only toggles
+   `.mapboxgl-ctrl-attrib-inner` between `display: none`/`block` via
+   `.mapboxgl-compact`/`.mapboxgl-compact-show` (mapbox-gl.css) — a property
+   that can't transition on its own, hence `allow-discrete` + `@starting-style`
+   below, which defers the `none` switch on close until the slide/fade
+   finishes instead of cutting it instantly, and seeds the `from` state on
+   open the same way a keyframe `from` would. Scoped to `.mapboxgl-compact`
+   so the always-expanded desktop pill (no toggle button, text already
+   visible on load) never plays this. */
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact .mapboxgl-ctrl-attrib-inner {
+  transition: opacity 0.2s ease, transform 0.2s ease, display 0.2s allow-discrete;
+}
+
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact:not(.mapboxgl-compact-show) .mapboxgl-ctrl-attrib-inner {
+  opacity: 0;
+  transform: translateX(6px);
+}
+
+.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show .mapboxgl-ctrl-attrib-inner {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@starting-style {
+  .campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show .mapboxgl-ctrl-attrib-inner {
+    opacity: 0;
+    transform: translateX(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact .mapboxgl-ctrl-attrib-inner {
+    transition: none;
+  }
+}
+
+/* --- Compass / geolocate buttons: same glass icon-button recipe as
+   .header-button (style.css) — same 3rem circle, same glass material, same
+   outside stroke ring, same HugeIcons glyphs as the rest of the app (see
+   the `hgi-` icons in index.html) instead of Mapbox's baked-in icon SVGs.
+
+   The glass styling lives on the <button> itself, not on the wrapping
+   .mapboxgl-ctrl-group div: `liquid-glass` (below) has to sit on the exact
+   element it's applied to (its delegated handler treats a `<button>` found
+   *inside* the pressed element as its own separate control and backs off —
+   see components/liquid-glass.js), so the button has to be both the visual
+   surface and the liquid-glass target, exactly like .header-button. The
+   group is left with no visual styling of its own so it doesn't peek out
+   from behind the button's round corners.
+
+   Only the geolocate button gets `liquid-glass` (added in campus-map.js).
+   The compass is deliberately left out: Mapbox binds its own drag-to-rotate
+   handler directly to that button, and liquid-glass's pointer-capture-on-
+   press would steal those pointer events out from under it. It gets a
+   plain CSS hover/press state below instead, mimicking the same lit look
+   without capturing the pointer. */
+.campus-map .mapboxgl-ctrl-top-right .mapboxgl-ctrl-group {
+  margin: 0 0 0.5rem !important;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.campus-map .mapboxgl-ctrl-top-right .mapboxgl-ctrl-group:last-child {
+  margin-bottom: 0 !important;
+}
+
+.campus-map .mapboxgl-ctrl-group button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  /* !important: Mapbox's own `.mapboxgl-ctrl-group button:only-child {
+     border-radius: inherit }` ties this selector's specificity exactly, and
+     since mapbox-gl.css loads after this stylesheet (injected at runtime),
+     it wins the tie — inheriting the *group's* border-radius, which is 0
+     (see above, now that the group carries no visual shape of its own).
+     That silently squared off the button entirely: the backdrop-filter's
+     blur still looked roughly circular in the middle from its own blur
+     vignette, which is what actually looked like "a circle inside a square
+     card" rather than two separate shapes. */
+  border-radius: var(--radius-pill) !important;
+
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-sm));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+
+  transition: filter 0.2s ease, scale var(--press-out-dur) var(--ease-spring);
+}
+
+/* Inside 0.5px gradient stroke, same radial-gradient-masked trick as
+   .header-button::after (style.css) — a true circle's seam-free ring. Drawn
+   at `inset: 0` rather than header-button's `-0.5px`: the button keeps
+   Mapbox's own default `overflow: hidden` (needed for `backdrop-filter` to
+   actually clip to the circle instead of bleeding into a square — that
+   square was the real bug), which would otherwise clip the outermost sliver
+   of an outside-drawn ring. */
+.campus-map .mapboxgl-ctrl-group button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
+}
+
+/* Plain CSS lit hover/press for the compass only (see the comment above) —
+   same brightness/saturate boost and press-scale as `.liquid-glass` in
+   liquid-glass.css, just driven by :hover/:active instead of pointer capture. */
+@media (hover: hover) {
+  .campus-map .mapboxgl-ctrl-compass:hover {
+    filter: brightness(1.11) saturate(1.35);
+  }
+}
+
+.campus-map .mapboxgl-ctrl-compass:active {
+  scale: 0.94;
+  filter: brightness(1.11) saturate(1.35);
+}
+
+/* Mapbox's own base CSS darkens the button on hover — the lit hover now
+   comes from the button's own filter (above, or via .liquid-glass), so this
+   would just double up on top of it. */
+.campus-map .mapboxgl-ctrl-group button:not(:disabled):hover {
+  background-color: transparent;
+}
+
+/* The icon span: Mapbox sizes it to fill the button and (for the compass)
+   rotates *this exact element* to point away from north — kept as a real,
+   full-size flex box rather than `display: contents` so both that rotation
+   and Mapbox's own `mapboxgl-spin` waiting-animation (geolocate) still have
+   a box to animate. Its baked-in background-image icon is dropped in favour
+   of the geolocate button's injected HugeIcons glyph (see campus-map.js) or,
+   for the compass, the custom needle drawn further down. */
+.campus-map .mapboxgl-ctrl-icon {
+  position: relative;
+  /* !important: Mapbox's own `.mapboxgl-ctrl button .mapboxgl-ctrl-icon {
+     display: block; ... }` ties this selector's class-count and wins the tie
+     on its extra type selector (button) — silently keeping this `block`
+     instead of `flex`, which is why `align-items: center` below was doing
+     nothing and the icon just sat at the top like normal inline content. */
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-image: none !important;
+}
+
+.campus-map .mapboxgl-ctrl-icon .hgi-stroke {
+  font-size: 1.375rem;
+  /* Mapbox's own base CSS sets a fixed `line-height: 20px` on `.mapboxgl-map`
+     (its default 12px/20px font shorthand), inherited all the way down here.
+     Against a 1.375rem (22px) glyph that mismatched line-height pushed the
+     visible icon off-center — flexbox centers the <i>'s line box, not its
+     ink, so a line-height shorter than the font-size skews where the glyph
+     actually sits inside it. */
+  line-height: 1;
+  color: var(--text-color-secondary);
+}
+
+/* Geolocate states — recolor the glyph the same way Mapbox's own CSS
+   recolors its baked-in icon per state class, just via `color` instead of
+   swapping background-images. --color-now is the app's existing "live/now"
+   accent (style.css), reused here for "actively tracking." */
+.campus-map .mapboxgl-ctrl-geolocate-active .hgi-gps-01,
+.campus-map .mapboxgl-ctrl-geolocate-background .hgi-gps-01 {
+  color: var(--color-now);
+}
+
+.campus-map .mapboxgl-ctrl-geolocate-active-error .hgi-gps-01,
+.campus-map .mapboxgl-ctrl-geolocate-background-error .hgi-gps-01,
+.campus-map .mapboxgl-ctrl-geolocate:disabled .hgi-gps-01 {
+  color: var(--color-status-busy);
+}
+
+/* Compass needle — plain two-triangle needle (no icon-font glyph: HugeIcons'
+   own "compass" icons read as the drafting tool, not a map compass), same
+   silhouette as Mapbox's original default icon. Both triangles are pseudo-
+   elements on the icon span itself (not the button), since that's the exact
+   element Mapbox rotates to point away from north — they have to turn
+   together with the map bearing to keep pointing at true north. */
+.campus-map .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon::before,
+.campus-map .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 0.7rem;
+  height: 0.6rem;
+  transform: translateX(-50%);
+}
+
+/* North half — red, pointing up. */
+.campus-map .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon::before {
+  top: calc(50% - 0.6rem);
+  clip-path: polygon(50% 0%, 15% 100%, 85% 100%);
+  background: var(--color-status-busy);
+}
+
+/* South half — muted, pointing down. */
+.campus-map .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon::after {
+  top: 50%;
+  clip-path: polygon(15% 0%, 85% 0%, 50% 100%);
+  background: var(--text-color-secondary);
+  opacity: 0.4;
+}
+
+/* --- Markers --------------------------------------------------------------- */
+.campus-marker {
+  --marker-accent: var(--text-color-accent);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  margin: 0;
+  padding: 0.4rem 0.7rem 0.4rem 0.55rem;
+  border: none;
+  border-radius: var(--radius-pill, 999px);
+
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 700;
+  font-size: var(--text-87, 0.875rem);
+  line-height: 1;
+  color: var(--text-color-primary);
+  white-space: nowrap;
+
+  background: var(--glass-tint, rgba(250, 250, 250, 0.7));
+  box-shadow:
+    0 0 0 0.1px var(--glass-outline, rgba(0, 0, 0, 0.25)),
+    0 4px 16px var(--glass-shadow-color, rgba(0, 0, 0, 0.18));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  cursor: pointer;
+  will-change: transform;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.campus-marker:active { transform: scale(0.94); }
+
+@media (hover: hover) {
+  .campus-marker:hover { transform: scale(1.04); }
+}
+
+.campus-marker__dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--marker-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--marker-accent) 25%, transparent);
+}
+
+.campus-marker--building {
+  padding: 0.3rem 0.6rem;
+  font-weight: 600;
+  font-size: var(--text-75, 0.8125rem);
+  color: var(--text-color-secondary);
+}
+
+.campus-marker--building .campus-marker__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  background: var(--text-color-secondary);
+  box-shadow: none;
+}
+
+/* --- Error state -------------------------------------------------------- */
+.campus-map-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+}

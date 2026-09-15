@@ -339,7 +339,7 @@ def build_output(
 
                 building_out["classrooms"].append(
                     {
-                        **_pick(classroom, "name", "id", "features",
+                        **_pick(classroom, "name", "id", "floor", "features",
                                 "idfoto", "seats", "accessible_seats", "workstations"),
                         "occupancy": occupancy,
                     }

@@ -27,12 +27,7 @@ const BENCHMARK_CACHE_KEY = 'poliAule_blurBenchmark';
 
 // Bump this whenever the benchmark logic or thresholds change, so stale
 // cached verdicts from an older version don't linger — they'll re-run once.
-// v3: benchmark no longer runs during splash/load (see module comment above)
-// — this also flushes out any "off" verdict a device got misdiagnosed with
-// under the old load-time measurement.
-// v4: widened sample/loosened jank tolerance (see the constants below) —
-// the old thresholds failed devices on a single stray frame.
-const BENCHMARK_VERSION = 4;
+const BENCHMARK_VERSION = 1;
 
 const IDLE_RECHECK_DELAY_MS = 2500; // fallback delay where requestIdleCallback isn't available (Safari)
 

@@ -127,6 +127,40 @@
   }
 }
 
+/* Floor section headers inside a building page's grid — full-width so they
+   break the two-up flow into groups. Same black/white-at-half-opacity, bold
+   treatment as .building-name (classroom-list.css). */
+.bo-floor-label {
+  grid-column: 1 / -1;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  font-size: var(--text-125);
+  font-weight: 700;
+  line-height: 1.2;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: start;
+  margin: 0;
+  padding: 0.75rem 0.25rem;
+}
+
+.bo-floor-label i {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bo-floor-label {
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.bo-floor-label:not(:first-child) {
+  margin-top: 0.5rem;
+}
+
 /* Parks where a building's sticky header would, so × stays within reach
    while the grid scrolls. */
 .bo-topbar {

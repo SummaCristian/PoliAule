@@ -11,7 +11,7 @@ import { BLUR_STATE_EVENT } from '../utils/blur-capability.js';
 import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
 
 const STYLE_LINKS = `
-  <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css">
+  <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css">
   <link rel="stylesheet" href="./components/campus-picker.css">
 `;
 

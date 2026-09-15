@@ -58,6 +58,10 @@
   "overview.title": "Buildings",
   "overview.close": "Close overview",
   "overview.subtitle": "{n} classrooms",
+  "overview.floorGround": "Ground floor",
+  "overview.floorBasement": "Basement",
+  "overview.floor": "Floor {n}",
+  "overview.floorUnknown": "Floor unknown",
 
   "search.buildings": "{n} buildings",
   "search.classrooms": "{n} classrooms",

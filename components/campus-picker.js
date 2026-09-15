@@ -8,6 +8,7 @@ import { haptics, defaultPatterns } from './haptics.js';
 import { attachLiquidGlass } from './liquid-glass.js';
 import { t } from '../i18n.js';
 import { BLUR_STATE_EVENT } from '../utils/blur-capability.js';
+import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
 
 const STYLE_LINKS = `
   <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css">
@@ -367,7 +368,7 @@ export class CampusChipPicker extends HTMLElement {
       this.#overlay.hidden = true;
       this.#popup.classList.remove('cp-popup--closing');
       this.#popup.classList.add('cp-popup--docked', 'cp-popup--open');
-      ['left', 'top', 'width', 'height', 'borderRadius', 'transition'].forEach(
+      ['left', 'top', 'width', 'height', 'borderRadius', 'transform', 'transition'].forEach(
         p => { this.#popup.style[p] = ''; }
       );
       this.#popup.style.display = 'flex';
@@ -378,7 +379,7 @@ export class CampusChipPicker extends HTMLElement {
     } else {
       this.#popup.classList.remove('cp-popup--docked', 'cp-popup--open');
       this.#popup.style.display = 'none';
-      ['left', 'top', 'width', 'height', 'borderRadius', 'transition'].forEach(
+      ['left', 'top', 'width', 'height', 'borderRadius', 'transform', 'transition'].forEach(
         p => { this.#popup.style[p] = ''; }
       );
       this.#panelHost.classList.remove('cp-panel-host--docked');
@@ -396,19 +397,11 @@ export class CampusChipPicker extends HTMLElement {
     this.#overlay.classList.remove('is-active');
     this.#popup.style.display = 'none';
     this.#popup.style.transition = '';
-    ['left', 'top', 'width', 'height', 'borderRadius'].forEach(p => { this.#popup.style[p] = ''; });
+    ['left', 'top', 'width', 'height', 'borderRadius', 'transform'].forEach(p => { this.#popup.style[p] = ''; });
+    unhideInnerBox(this.#inner);
     this.#overlay.hidden = true;
     this.classList.remove('cp-anim', 'cp-content-hidden');
     this.#unlockScroll();
-  }
-
-  #applyGeometry({ left, top, width, height, borderRadius }) {
-    const s = this.#popup.style;
-    s.left = `${left}px`;
-    s.top = `${top}px`;
-    s.width = `${width}px`;
-    s.height = `${height}px`;
-    s.borderRadius = borderRadius;
   }
 
   // Invalidate every in-flight deferred step from the previous transition and
@@ -424,7 +417,7 @@ export class CampusChipPicker extends HTMLElement {
     this.#clearMorphEnd();
     const fallback = setTimeout(() => { this.#clearMorphEnd(); cb(); }, MORPH_MS + 60);
     const handler = (e) => {
-      if (e.target !== this.#popup || e.propertyName !== 'height') return;
+      if (e.target !== this.#popup || e.propertyName !== 'transform') return;
       this.#clearMorphEnd();
       cb();
     };
@@ -481,9 +474,11 @@ export class CampusChipPicker extends HTMLElement {
     haptics.trigger(defaultPatterns.light);
     this.#lockScroll();
 
-    // A close may have got as far as tagging the shell/pill for its handoff.
+    // A close may have got as far as tagging the shell/pill for its handoff,
+    // or hiding the list's content (see #close) — undo both before reopening.
     this.#popup.classList.remove('cp-popup--closing');
     this.classList.remove('cp-content-hidden');
+    unhideInnerBox(this.#inner);
 
     this.#overlay.hidden = false;
     this.#popup.style.display = 'flex';
@@ -493,7 +488,7 @@ export class CampusChipPicker extends HTMLElement {
     if (seq !== this.#seq) return; // superseded while awaiting layout
 
     if (!this.#canMorph()) {
-      this.#applyGeometry(target);
+      snapGeometry(this.#popup, target, target.borderRadius);
       this.#popup.style.transition = 'none';
       this.#overlay.classList.add('is-active');
       this.#popup.classList.add('cp-popup--open');
@@ -502,22 +497,28 @@ export class CampusChipPicker extends HTMLElement {
       return;
     }
 
-    // Place at the final box instantly (transition off, set in #panelTarget)…
-    this.#applyGeometry(target);
-    // …then snap back onto the (now hidden) trigger.
-    this.#applyGeometry(this.#triggerBox());
-    this.#popup.getBoundingClientRect();               // force reflow
+    // Snap onto the (now hidden) trigger — this is what actually paints next.
+    const triggerRect = this.#triggerBox();
+    snapGeometry(this.#popup, triggerRect, triggerRect.borderRadius);
     this.#popup.style.transition = '';
 
     requestAnimationFrame(() => {
       if (seq !== this.#seq) return;
-      this.#overlay.classList.add('is-active');
-      this.#popup.classList.add('cp-popup--open');
-      this.#applyGeometry(target);
-      this.#onMorphEnd(() => {
-        if (seq !== this.#seq) return;
-        this.#isAnimating = false;
-        this.#afterOpen();
+      // Pin the real box straight to `target` and fake the trigger's look
+      // via `transform`, then release it — no layout/paint per frame.
+      morphGeometry(this.#popup, triggerRect, target, {
+        fromRadius: triggerRect.borderRadius,
+        toRadius: target.borderRadius,
+        onSettle: () => {
+          if (seq !== this.#seq) return;
+          this.#overlay.classList.add('is-active');
+          this.#popup.classList.add('cp-popup--open');
+          this.#onMorphEnd(() => {
+            if (seq !== this.#seq) return;
+            this.#isAnimating = false;
+            this.#afterOpen();
+          });
+        },
       });
     });
   }
@@ -547,7 +548,8 @@ export class CampusChipPicker extends HTMLElement {
       this.#popup.classList.remove('cp-popup--closing');
       this.#popup.style.display = 'none';
       this.#popup.style.transition = '';
-      ['left', 'top', 'width', 'height', 'borderRadius'].forEach(p => { this.#popup.style[p] = ''; });
+      ['left', 'top', 'width', 'height', 'borderRadius', 'transform'].forEach(p => { this.#popup.style[p] = ''; });
+      unhideInnerBox(this.#inner);
       this.#overlay.hidden = true;
       this.classList.remove('cp-anim', 'cp-content-hidden');
       this.#unlockScroll();
@@ -560,29 +562,42 @@ export class CampusChipPicker extends HTMLElement {
       return;
     }
 
+    // Cut the list's fade-out short (instant, not the usual ~180ms) before the
+    // shell's real size jumps to the (small) trigger box — otherwise it'd
+    // still be visible while its flex layout gets squeezed into that tiny
+    // box, and the shell's transform would then visibly stretch it back up.
+    hideInnerBoxInstantly(this.#inner);
+
     // A superseded open may have left transitions disabled — re-enable so the
     // return-morph always animates.
     this.#popup.style.transition = '';
+    const visualRect = this.#popup.getBoundingClientRect();
     requestAnimationFrame(() => {
       if (seq !== this.#seq) return;
-      this.#applyGeometry(this.#triggerBox());
-      this.#onMorphEnd(() => {
-        if (seq !== this.#seq) return;
-        this.#isAnimating = false;
-        // Hand the frame back to the pill: its glass box matches the collapsed
-        // shell, so swap instantly, but fade the pill's contents (icon / label
-        // / value / chevron) in while the shell cross-fades out.
-        this.classList.remove('cp-anim');
-        this.classList.add('cp-content-hidden');
-        this.#popup.classList.add('cp-popup--closing');
-        this.#overlay.hidden = true;
-        this.#unlockScroll();
-        if (returnFocus) this.#trigger.focus({ preventScroll: true });
-        requestAnimationFrame(() => requestAnimationFrame(() => {
+      const triggerRect = this.#triggerBox();
+      morphGeometry(this.#popup, visualRect, triggerRect, {
+        toRadius: triggerRect.borderRadius,
+        onSettle: () => {
           if (seq !== this.#seq) return;
-          this.classList.remove('cp-content-hidden');
-        }));
-        this.#cleanupTimer = setTimeout(clear, 240);
+          this.#onMorphEnd(() => {
+            if (seq !== this.#seq) return;
+            this.#isAnimating = false;
+            // Hand the frame back to the pill: its glass box matches the collapsed
+            // shell, so swap instantly, but fade the pill's contents (icon / label
+            // / value / chevron) in while the shell cross-fades out.
+            this.classList.remove('cp-anim');
+            this.classList.add('cp-content-hidden');
+            this.#popup.classList.add('cp-popup--closing');
+            this.#overlay.hidden = true;
+            this.#unlockScroll();
+            if (returnFocus) this.#trigger.focus({ preventScroll: true });
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              if (seq !== this.#seq) return;
+              this.classList.remove('cp-content-hidden');
+            }));
+            this.#cleanupTimer = setTimeout(clear, 240);
+          });
+        },
       });
     });
   }

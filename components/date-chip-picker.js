@@ -1,5 +1,6 @@
 import { haptics, defaultPatterns } from './haptics.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
+import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
 
 // <date-chip-picker> is a thin wrapper around the sliding date picker
 // (components/date-picker.js), which stays completely untouched — its markup,
@@ -120,7 +121,10 @@ export class DateChipPicker extends HTMLElement {
     onLanguageSwitch(() => this.retranslate());
     window.addEventListener('resize', () => {
       if (this.#docked) return;
-      if (this.#isOpen && !this.#isAnimating) this.#applyGeometry(this.#panelTarget());
+      if (this.#isOpen && !this.#isAnimating) {
+        const target = this.#panelTarget();
+        snapGeometry(this.#popup, target, target.borderRadius);
+      }
     });
 
     this.#renderValue();
@@ -141,7 +145,7 @@ export class DateChipPicker extends HTMLElement {
       this.#overlay.hidden = true;
       this.#popup.classList.remove('dcp-popup--closing');
       this.#popup.classList.add('dcp-popup--docked', 'dcp-popup--open');
-      ['left', 'top', 'width', 'height', 'borderRadius', 'transition'].forEach(
+      ['left', 'top', 'width', 'height', 'borderRadius', 'transform', 'transition'].forEach(
         p => { this.#popup.style[p] = ''; }
       );
       this.#popup.style.display = 'flex';
@@ -152,7 +156,7 @@ export class DateChipPicker extends HTMLElement {
     } else {
       this.#popup.classList.remove('dcp-popup--docked', 'dcp-popup--open');
       this.#popup.style.display = 'none';
-      ['left', 'top', 'width', 'height', 'borderRadius', 'transition'].forEach(
+      ['left', 'top', 'width', 'height', 'borderRadius', 'transform', 'transition'].forEach(
         p => { this.#popup.style[p] = ''; }
       );
       document.body.appendChild(this.#popup);
@@ -170,7 +174,8 @@ export class DateChipPicker extends HTMLElement {
     this.#overlay.classList.remove('is-active');
     this.#popup.style.display = 'none';
     this.#popup.style.transition = '';
-    ['left', 'top', 'width', 'height', 'borderRadius'].forEach(p => { this.#popup.style[p] = ''; });
+    ['left', 'top', 'width', 'height', 'borderRadius', 'transform'].forEach(p => { this.#popup.style[p] = ''; });
+    unhideInnerBox(this.#inner);
     this.#overlay.hidden = true;
     this.classList.remove('dcp-anim', 'dcp-content-hidden');
     this.#unlockScroll();
@@ -215,15 +220,6 @@ export class DateChipPicker extends HTMLElement {
   }
 
   // ── Geometry ────────────────────────────────────────────────────────
-  #applyGeometry({ left, top, width, height, borderRadius }) {
-    const s = this.#popup.style;
-    s.left = `${left}px`;
-    s.top = `${top}px`;
-    s.width = `${width}px`;
-    s.height = `${height}px`;
-    s.borderRadius = borderRadius;
-  }
-
   #triggerBox() {
     const r = this.#trigger.getBoundingClientRect();
     return { left: r.left, top: r.top, width: r.width, height: r.height, borderRadius: '999px' };
@@ -283,9 +279,11 @@ export class DateChipPicker extends HTMLElement {
     haptics.trigger(defaultPatterns.light);
     this.#lockScroll();
 
-    // A close may have got as far as tagging the shell/pill for its handoff.
+    // A close may have got as far as tagging the shell/pill for its handoff,
+    // or hiding the picker's content (see #close) — undo both before reopening.
     this.#popup.classList.remove('dcp-popup--closing');
     this.classList.remove('dcp-content-hidden');
+    unhideInnerBox(this.#inner);
 
     this.#overlay.hidden = false;
     this.#popup.style.display = 'flex';
@@ -294,8 +292,8 @@ export class DateChipPicker extends HTMLElement {
     const target = this.#panelTarget();
 
     if (!this.#canMorph()) {
+      snapGeometry(this.#popup, target, target.borderRadius);
       this.#popup.style.transition = 'none';
-      this.#applyGeometry(target);
       this.#overlay.classList.add('is-active');
       this.#popup.classList.add('dcp-popup--open');
       this.#isAnimating = false;
@@ -303,21 +301,27 @@ export class DateChipPicker extends HTMLElement {
       return;
     }
 
-    // Snap onto the (now hidden) trigger, then transition to the panel box.
-    this.#popup.style.transition = 'none';
-    this.#applyGeometry(this.#triggerBox());
-    this.#popup.getBoundingClientRect();              // force reflow
-    this.#popup.style.transition = '';
+    // Snap onto the (now hidden) trigger — this is what actually paints next.
+    const triggerRect = this.#triggerBox();
+    snapGeometry(this.#popup, triggerRect, triggerRect.borderRadius);
 
     requestAnimationFrame(() => {
       if (seq !== this.#seq) return;
-      this.#overlay.classList.add('is-active');
-      this.#popup.classList.add('dcp-popup--open');
-      this.#applyGeometry(target);
-      this.#onMorphEnd(() => {
-        if (seq !== this.#seq) return;
-        this.#isAnimating = false;
-        this.#afterOpen();
+      // Pin the real box straight to `target` and fake the trigger's look
+      // via `transform`, then release it — no layout/paint per frame.
+      morphGeometry(this.#popup, triggerRect, target, {
+        fromRadius: triggerRect.borderRadius,
+        toRadius: target.borderRadius,
+        onSettle: () => {
+          if (seq !== this.#seq) return;
+          this.#overlay.classList.add('is-active');
+          this.#popup.classList.add('dcp-popup--open');
+          this.#onMorphEnd(() => {
+            if (seq !== this.#seq) return;
+            this.#isAnimating = false;
+            this.#afterOpen();
+          });
+        },
       });
     });
   }
@@ -344,7 +348,8 @@ export class DateChipPicker extends HTMLElement {
       this.#popup.classList.remove('dcp-popup--closing');
       this.#popup.style.display = 'none';
       this.#popup.style.transition = '';
-      ['left', 'top', 'width', 'height', 'borderRadius'].forEach(p => { this.#popup.style[p] = ''; });
+      ['left', 'top', 'width', 'height', 'borderRadius', 'transform'].forEach(p => { this.#popup.style[p] = ''; });
+      unhideInnerBox(this.#inner);
       this.#overlay.hidden = true;
       this.classList.remove('dcp-anim', 'dcp-content-hidden');
       this.#unlockScroll();
@@ -356,27 +361,40 @@ export class DateChipPicker extends HTMLElement {
       return;
     }
 
+    // Cut the picker's fade-out short (instant, not the usual ~180ms) before
+    // the shell's real size jumps to the (small) trigger box — otherwise it'd
+    // still be visible while its layout gets squeezed into that tiny box,
+    // and the shell's transform would then visibly stretch it back up.
+    hideInnerBoxInstantly(this.#inner);
+
     // A superseded open may have left transitions disabled — re-enable so the
     // return-morph always animates.
     this.#popup.style.transition = '';
+    const visualRect = this.#popup.getBoundingClientRect();
     requestAnimationFrame(() => {
       if (seq !== this.#seq) return;
-      this.#applyGeometry(this.#triggerBox());
-      this.#onMorphEnd(() => {
-        if (seq !== this.#seq) return;
-        this.#isAnimating = false;
-        // Hand the frame back to the pill: swap the identical glass box
-        // instantly, fade the pill's contents in as the shell fades out.
-        this.classList.remove('dcp-anim');
-        this.classList.add('dcp-content-hidden');
-        this.#popup.classList.add('dcp-popup--closing');
-        this.#overlay.hidden = true;
-        this.#unlockScroll();
-        requestAnimationFrame(() => requestAnimationFrame(() => {
+      const triggerRect = this.#triggerBox();
+      morphGeometry(this.#popup, visualRect, triggerRect, {
+        toRadius: triggerRect.borderRadius,
+        onSettle: () => {
           if (seq !== this.#seq) return;
-          this.classList.remove('dcp-content-hidden');
-        }));
-        this.#cleanupTimer = setTimeout(clear, 240);
+          this.#onMorphEnd(() => {
+            if (seq !== this.#seq) return;
+            this.#isAnimating = false;
+            // Hand the frame back to the pill: swap the identical glass box
+            // instantly, fade the pill's contents in as the shell fades out.
+            this.classList.remove('dcp-anim');
+            this.classList.add('dcp-content-hidden');
+            this.#popup.classList.add('dcp-popup--closing');
+            this.#overlay.hidden = true;
+            this.#unlockScroll();
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              if (seq !== this.#seq) return;
+              this.classList.remove('dcp-content-hidden');
+            }));
+            this.#cleanupTimer = setTimeout(clear, 240);
+          });
+        },
       });
     });
   }
@@ -385,7 +403,7 @@ export class DateChipPicker extends HTMLElement {
     this.#clearMorphEnd();
     const fallback = setTimeout(() => { this.#clearMorphEnd(); cb(); }, MORPH_MS + 60);
     const handler = (e) => {
-      if (e.target !== this.#popup || e.propertyName !== 'height') return;
+      if (e.target !== this.#popup || e.propertyName !== 'transform') return;
       this.#clearMorphEnd();
       cb();
     };

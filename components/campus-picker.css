@@ -376,17 +376,14 @@
   translate: 0 0;
   scale: 1;
   transition:
-    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 0.42s ease,
     translate var(--press-out-dur) var(--ease-spring),
     scale var(--press-out-dur) var(--ease-spring),
     filter 0.2s ease;
 
-  will-change: top, left, width, height;
+  will-change: transform;
 }
 
 /* Snap down fast on touch, track 1:1 while dragging — mirrors liquid-glass.css. */

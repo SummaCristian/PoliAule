@@ -65,7 +65,7 @@
     var(--glass-highlight),
     0 12px 40px 0 var(--glass-shadow-color);
 
-  will-change: top, left, width, height;
+  will-change: transform;
 }
 
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
@@ -101,10 +101,7 @@
 .dfc-popup,
 .dfc-popup.liquid-glass {
   transition:
-    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 0.42s ease,
     translate var(--press-out-dur) var(--ease-spring),
@@ -114,10 +111,6 @@
 
 .dfc-popup.liquid-glass.lg-pressing {
   transition:
-    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     translate var(--press-in-dur) var(--press-in-ease),
     scale var(--press-in-dur) var(--press-in-ease),
@@ -126,10 +119,6 @@
 
 .dfc-popup.liquid-glass.lg-dragging {
   transition:
-    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     translate 0s, scale 0s, filter 0.2s ease;
 }

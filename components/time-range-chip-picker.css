@@ -228,14 +228,11 @@ time-range-chip-picker.trc-content-hidden .trc-trigger__chevron {
     0 12px 40px 0 var(--glass-shadow-color);
 
   transition:
-    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 0.42s ease;
 
-  will-change: top, left, width, height;
+  will-change: transform;
 }
 
 /* The panel carries `liquid-glass`, so the generic rule in liquid-glass.css
@@ -244,10 +241,7 @@ time-range-chip-picker.trc-content-hidden .trc-trigger__chevron {
    `.dcp-popup.liquid-glass`. */
 .trc-popup.liquid-glass {
   transition:
-    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 0.42s ease,
     translate var(--press-out-dur) var(--ease-spring),

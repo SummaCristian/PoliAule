@@ -9,6 +9,7 @@ import { selectCampusById } from './campus-picker.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
 import { getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState } from '../utils/blur-capability.js';
+import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
 
 const TRANSITION_DURATION = 420;
 
@@ -60,7 +61,7 @@ function getPopupTarget() {
   popupEl.style.width = w + 'px';
   popupEl.style.height = 'auto';
   const naturalH = popupEl.scrollHeight;
-  popupEl.style.height = ''; // applyGeometry sets the final value immediately after
+  popupEl.style.height = ''; // snapGeometry (via morphGeometry) sets the final value right after
 
   const h = Math.min(naturalH, vh - 120);
   return {
@@ -70,14 +71,6 @@ function getPopupTarget() {
     height: h,
     borderRadius: '22px',
   };
-}
-
-function applyGeometry(el, { left, top, width, height, borderRadius }) {
-  el.style.left = left + 'px';
-  el.style.top = top + 'px';
-  el.style.width = width + 'px';
-  el.style.height = height + 'px';
-  el.style.borderRadius = borderRadius;
 }
 
 function onTransitionEnd(el, cb) {
@@ -148,43 +141,33 @@ function openSettings() {
   popupEl.style.display = 'flex'; // must be visible before getPopupTarget() measures scrollHeight
 
   const target = getPopupTarget(); // measures scrollHeight — needs display:flex
-
-  // Place popup at its final position/size instantly — only transform animates
-  applyGeometry(popupEl, target);
-  popupEl.style.boxShadow = 'var(--shadow)';
-
-  // Start with the popup visually sitting on the button:
-  // translate its center to the button's center, then scale each axis independently
-  // so the popup exactly matches the button's dimensions (preserving its circle shape).
-  const scaleX = rect.width  / target.width;
-  const scaleY = rect.height / target.height;
-  const tx = (rect.left + rect.width  / 2) - (target.left + target.width  / 2);
-  const ty = (rect.top  + rect.height / 2) - (target.top  + target.height / 2);
-  popupEl.style.transformOrigin = '50% 50%';
-  popupEl.style.transform       = `translate(${tx}px, ${ty}px) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`;
-  popupEl.style.borderRadius    = '50%';
+  popupEl.style.transition = ''; // let morphGeometry manage transition timing from here
 
   triggerEl.classList.add('settings-btn--morphing');
+  // A close may have got as far as hiding the sections' content — undo that
+  // before reopening.
+  unhideInnerBox(popupEl.querySelector('.settings-popup__inner'));
 
-  popupEl.getBoundingClientRect(); // force reflow
+  // Pin the real box straight to `target` and fake the button's circular
+  // look via `transform`, then release it — no layout/paint per frame.
+  morphGeometry(popupEl, rect, target, {
+    fromRadius: '50%',
+    toRadius: target.borderRadius,
+    onSettle: () => {
+      popupEl.style.boxShadow = 'var(--tp-shadow-lg)';
+      popupEl.classList.add('settings-popup--open');
+      getOverlay().classList.add('settings-overlay--active');
+    },
+  });
+  popupEl.style.boxShadow = 'var(--shadow)';
+
   positionIndicatorFn?.(false);            // snap lang indicator before morph animation starts
   positionTimeFmtIndicatorFn?.(false);     // snap time format indicator before morph animation starts
   positionDefaultTabIndicatorFn?.(false);  // snap default tab indicator before morph animation starts
   positionBlurModeIndicatorFn?.(false);    // snap glass effect indicator before morph animation starts
   refreshCampusSelectFn?.();            // re-populate campus select now that data may be loaded
-  popupEl.style.transition = '';
-
-  requestAnimationFrame(() => {
-    popupEl.style.transform    = 'translate(0px, 0px) scale(1)';
-    popupEl.style.borderRadius = '22px';
-    popupEl.style.boxShadow    = 'var(--tp-shadow-lg)';
-    popupEl.classList.add('settings-popup--open');
-    getOverlay().classList.add('settings-overlay--active');
-  });
 
   onTransitionEnd(popupEl, () => {
-    popupEl.style.transform       = '';
-    popupEl.style.transformOrigin = '';
     isAnimating = false;
     isOpen = true;
   });
@@ -194,33 +177,30 @@ function closeSettings() {
   if (isAnimating || !isOpen) return;
   isAnimating = true;
 
-  const rect      = triggerEl.getBoundingClientRect();
-  const popupRect = popupEl.getBoundingClientRect();
-
-  // Translate the popup's center to the button's center, then scale each axis
-  // independently so the popup's final visual size exactly matches the button's
-  // dimensions — ensuring a circle, not a vertical oval on tall popups.
-  const scaleX = rect.width  / popupRect.width;
-  const scaleY = rect.height / popupRect.height;
-  const tx = (rect.left + rect.width  / 2) - (popupRect.left + popupRect.width  / 2);
-  const ty = (rect.top  + rect.height / 2) - (popupRect.top  + popupRect.height / 2);
+  const rect = triggerEl.getBoundingClientRect();
 
   popupEl.classList.remove('settings-popup--open');
   getOverlay().classList.remove('settings-overlay--active');
   removeOverlay();
 
+  // Cut the sections' fade-out short (instant, not the usual ~180ms) before
+  // the popup's real size jumps to the (small) button box — otherwise
+  // they'd still be visible while squeezed into that tiny box, and the
+  // popup's transform would then visibly stretch them back up.
+  const inner = popupEl.querySelector('.settings-popup__inner');
+  hideInnerBoxInstantly(inner);
+
+  const visualRect = popupEl.getBoundingClientRect();
   requestAnimationFrame(() => {
-    popupEl.style.transformOrigin = '50% 50%';
-    popupEl.style.transform    = `translate(${tx}px, ${ty}px) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`;
-    popupEl.style.borderRadius = '50%';
-    popupEl.style.boxShadow    = 'var(--shadow)';
+    morphGeometry(popupEl, visualRect, rect, {
+      toRadius: '50%',
+      onSettle: () => { popupEl.style.boxShadow = 'var(--shadow)'; },
+    });
   });
 
   onTransitionEnd(popupEl, () => {
-    popupEl.style.display         = 'none';
-    popupEl.style.transform       = '';
-    popupEl.style.transformOrigin = '';
-    popupEl.style.borderRadius    = '';
+    popupEl.style.display = 'none';
+    unhideInnerBox(inner);
     triggerEl.classList.remove('settings-btn--morphing');
     isOpen = false;
     isAnimating = false;
@@ -1062,9 +1042,7 @@ export function initSettings() {
   // Keep popup centred on resize while open
   window.addEventListener('resize', () => {
     if (!isOpen || isAnimating) return;
-    popupEl.style.transition = 'none';
-    applyGeometry(popupEl, getPopupTarget());
-    popupEl.getBoundingClientRect();
-    popupEl.style.transition = '';
+    const target = getPopupTarget();
+    snapGeometry(popupEl, target, target.borderRadius);
   });
 }

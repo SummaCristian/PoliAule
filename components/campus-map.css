@@ -9,9 +9,17 @@
 /* Scroll lock — only while the Campus tab is the visible one. Blocks
    gestures via `touch-action`/`overscroll-behavior` rather than
    `overflow: hidden`, so the document stays technically scrollable (see
-   why below). */
-html:has(#search-classrooms-container.visible),
-html:has(#search-classrooms-container.visible) body {
+   why below).
+
+   `#search-classrooms-container` keeps its `.visible` class even while the
+   classroom detail or info overlay is open on top of it — those only
+   collapse `.tab-content` to `height: 0` (see `body.detail-open
+   .tab-content` / `body.info-open .tab-content`), they don't remove the
+   class. Without the `:not(:has(...))` guards below, this lock stayed
+   active behind those overlays too, leaving their (normal, in-flow) pages
+   unscrollable. */
+html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)),
+html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)) body {
   touch-action: none;
   overscroll-behavior: none;
 
@@ -24,8 +32,8 @@ html:has(#search-classrooms-container.visible) body {
   scrollbar-width: none;
 }
 
-html:has(#search-classrooms-container.visible)::-webkit-scrollbar,
-html:has(#search-classrooms-container.visible) body::-webkit-scrollbar {
+html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open))::-webkit-scrollbar,
+html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)) body::-webkit-scrollbar {
   display: none;
 }
 
@@ -83,6 +91,21 @@ html:has(#search-classrooms-container.visible) body::-webkit-scrollbar {
   /* The shared .tab-content intro animates transform + filter; that would
      churn the GL canvas, so use a plain fade here instead. */
   animation: campus-map-fade-in 0.3s ease both;
+}
+
+/* When the classroom detail or info overlay opens on top of this tab, it
+   still carries `.visible` (see the scroll-lock comment above) — so the
+   `position`/`height` above need re-declaring here, because an ID selector
+   otherwise outranks the plain-class `body.detail-open .tab-content` /
+   `body.info-open .tab-content` collapse rules (classroom-detail.css /
+   info-page.css) that are supposed to zero this out. Without this, the map
+   silently stayed a full `100lvh`-tall box — just invisible — pushing the
+   overlay's real content down off-screen below it. */
+body.detail-open #search-classrooms-container.visible,
+body.info-open #search-classrooms-container.visible {
+  position: absolute;
+  height: 0;
+  overflow: hidden;
 }
 
 @keyframes campus-map-fade-in {

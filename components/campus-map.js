@@ -166,6 +166,17 @@ export function initCampusMap() {
   container.addEventListener('tabvisible', onVisible);
   if (container.classList.contains('visible')) onVisible();
 
+  // `container` keeps its `.visible` class even while the classroom detail
+  // or info overlay is open on top of this tab (they only collapse
+  // `.tab-content` to height 0 via `body.detail-open`/`body.info-open` —
+  // see classroom-detail.css/info-page.css) — so every scroll-lock listener
+  // below must also check those aren't active, or it keeps blocking/undoing
+  // scroll on those (normal, in-flow) overlay pages.
+  const isScrollLocked = () =>
+    container.classList.contains('visible') &&
+    !document.body.classList.contains('detail-open') &&
+    !document.body.classList.contains('info-open');
+
   // `touch-action: none` (campus-map.css) only blocks touch/pen scroll
   // gestures on the page, not mouse-wheel or trackpad scroll — a wheel
   // event over the header or bottom-nav (both floating outside this
@@ -174,7 +185,7 @@ export function initCampusMap() {
   // wheel events that land inside the container are left alone; the map's
   // own listener (onWheel below) already calls preventDefault for those.
   window.addEventListener('wheel', e => {
-    if (!container.classList.contains('visible')) return;
+    if (!isScrollLocked()) return;
     if (container.contains(e.target)) return;
     // The settings popup renders outside this container, in document.body,
     // and manages its own scroll lock — leave its wheel events alone rather
@@ -191,7 +202,7 @@ export function initCampusMap() {
   // activation/navigation there keeps working.
   const SCROLL_KEYS = new Set([' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
   window.addEventListener('keydown', e => {
-    if (!container.classList.contains('visible')) return;
+    if (!isScrollLocked()) return;
     if (!SCROLL_KEYS.has(e.key)) return;
     const el = document.activeElement;
     const tag = el?.tagName;
@@ -208,7 +219,7 @@ export function initCampusMap() {
   // scrolled here, just snap straight back to 0 the instant it isn't,
   // however it happened — catches this and any other stray way in.
   window.addEventListener('scroll', () => {
-    if (!container.classList.contains('visible')) return;
+    if (!isScrollLocked()) return;
     if (scrollY !== 0) window.scrollTo(0, 0);
   }, { passive: true });
 }

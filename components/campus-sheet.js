@@ -354,7 +354,7 @@ const SETTLE_SPRING = { stiffness: 260, damping: 30, mass: 1 };
 
 function snapToDetent(key) {
   detent = key;
-  sheet.classList.toggle('is-collapsed', key === 'collapsed');
+  sheet.classList.toggle('is-collapsed', key !== 'full');
   sheet.dataset.detent = key;
   size.to(detentValue(key), SETTLE_SPRING);
 }

@@ -102,10 +102,11 @@
   filter: brightness(1.11) saturate(1.35);
 }
 
-/* Lighter, less opaque "clear" material at the collapsed (smallest) detent
-   only — campus-sheet.js toggles this the moment a snap targets 'collapsed',
-   so it eases in/out together with the resize itself. Keeps the map more
-   visible when the sheet is just a peek, without touching the outline/
+/* Lighter, less opaque "clear" material at the collapsed and half detents —
+   only the full detent gets the regular, more opaque glass. campus-sheet.js
+   toggles this the moment a snap targets a non-'full' detent, so it eases
+   in/out together with the resize itself. Keeps the map more visible except
+   when the sheet is taking up the whole view, without touching the outline/
    shadow/stroke, which stay the shared glass recipe. */
 .campus-sheet.is-collapsed {
   background: var(--glass-tint-clear);

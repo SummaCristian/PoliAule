@@ -110,6 +110,7 @@ Returns the classroom's photo as a JPEG image. `:id` is the classroom's stable `
           {
             id:                number   // stable room identifier
             name:              string   // e.g. "2.0.1"
+            floor:             number | null   // parsed from name (X.Y.Z -> Y); null if not resolvable
             seats:             number | null
             accessible_seats:  number | null
             workstations:      number | null

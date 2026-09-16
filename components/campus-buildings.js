@@ -427,7 +427,7 @@ function buildBuildingPage(building) {
   const page = document.createElement('div');
   page.className = 'campus-sheet-page';
   const grid = document.createElement('div');
-  grid.className = 'bo-grid campus-sheet-grid';
+  grid.className = 'bo-grid campus-sheet-grid campus-sheet-classroom-grid';
   page.appendChild(grid);
 
   const sorted = [...building.classrooms].sort((a, b) => {

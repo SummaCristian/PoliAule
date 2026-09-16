@@ -148,7 +148,7 @@
 
 .bo-floor-label i {
   font-size: 1.1em;
-  line-height: 1;
+  line-height: 1.1em;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -136,6 +136,14 @@ html:has(#search-classrooms-container.visible) .footer {
   outline: none;
 }
 
+/* Native-app feel: Mapbox's own stylesheet puts a grab/grabbing hand on the
+   draggable canvas (see the cursor rule in style.css) — override it back to
+   the default arrow, same as our custom drag surfaces. */
+.campus-map .mapboxgl-canvas-container.mapboxgl-interactive,
+.campus-map .mapboxgl-canvas-container.mapboxgl-interactive:active {
+  cursor: default !important;
+}
+
 /* --- Mapbox control placement: clear the floating header / footer / nav --- */
 .campus-map .mapboxgl-ctrl-top-right {
   top: calc(env(safe-area-inset-top) + var(--header-height, 84px) + 0.5rem);
@@ -619,7 +627,6 @@ html:has(#search-classrooms-container.visible) .footer {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 
-  cursor: pointer;
   will-change: transform;
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }

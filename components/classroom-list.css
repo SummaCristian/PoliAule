@@ -181,7 +181,7 @@
   border: none;
   font: inherit;
   text-align: start;
-  cursor: pointer;
+  cursor: default;
 
   padding: 0.5rem 1.05rem;
   border-radius: var(--radius-pill);

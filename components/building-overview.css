@@ -300,7 +300,6 @@
 }
 
 .bo-card[role="button"] {
-  cursor: pointer;
   transition: transform 0.16s ease;
 }
 

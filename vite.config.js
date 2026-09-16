@@ -8,5 +8,9 @@ export default defineConfig({
   build: {
     sourcemap: isDevBranch,
     target: 'es2020',
+    // Lightning CSS (Vite's default CSS minifier) collapses several
+    // `backdrop-filter` / `-webkit-backdrop-filter` pairs down to just the
+    // prefixed one, leaving blur working only in Safari. esbuild doesn't.
+    cssMinify: 'esbuild',
   },
 });

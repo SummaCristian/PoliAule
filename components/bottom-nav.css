@@ -25,9 +25,14 @@
      when a backdrop-filter'd fixed element sits exactly at its boundary).
      28px clears the children's drop shadow (0 4px 20px) too, since a
      fixed element's box-shadow is otherwise cut off at the true viewport
-     edge if there isn't enough raw clearance for it to render into. */
+     edge if there isn't enough raw clearance for it to render into.
+     The safe-area-inset-bottom term matches campus-sheet.css's `bottom:
+     20px + env(safe-area-inset-bottom)`: in-browser it's normally 0, but
+     in standalone/PWA mode (no browser chrome) it's the real home-indicator
+     inset, and without it here the bar sits closer to the true edge than
+     the sheet, breaking the concentric look at the smallest detent. */
   top: 100dvh;
-  transform: translateY(calc(-100% - 28px));
+  transform: translateY(calc(-100% - 28px - env(safe-area-inset-bottom)));
   z-index: 20;
 
   display: flex;

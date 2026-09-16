@@ -83,7 +83,7 @@ function _renderResults(query) {
     const state = document.createElement('div');
     state.className = 'search-empty-state';
     state.innerHTML = `
-      <span class="material-symbols-outlined empty-container-icon">search_off</span>
+      <i class="hgi-stroke hgi-search-remove empty-container-icon" aria-hidden="true"></i>
       <p class="empty-container-title">${t('search.emptyTitle')}</p>
       <p class="empty-container-subtitle">${t('search.emptySubtitle')}</p>
     `;

@@ -242,7 +242,7 @@ function buildStepper(value, min, max, format, onChange) {
   const minusBtn = document.createElement('button');
   minusBtn.type = 'button';
   minusBtn.className = 'settings-stepper__btn';
-  minusBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
+  minusBtn.innerHTML = '<i class="hgi-stroke hgi-remove-01" aria-hidden="true"></i>';
 
   const valueEl = document.createElement('span');
   valueEl.className = 'settings-stepper__value';
@@ -250,7 +250,7 @@ function buildStepper(value, min, max, format, onChange) {
   const plusBtn = document.createElement('button');
   plusBtn.type = 'button';
   plusBtn.className = 'settings-stepper__btn';
-  plusBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
+  plusBtn.innerHTML = '<i class="hgi-stroke hgi-add-01" aria-hidden="true"></i>';
 
   function refresh() {
     valueEl.textContent = format(current);
@@ -316,7 +316,7 @@ function buildCampusSection() {
   section.innerHTML = `
     <div class="settings-section__header">
       <div class="settings-section__icon-badge">
-        <span class="material-symbols-outlined">location_on</span>
+        <i class="hgi-stroke hgi-location-01" aria-hidden="true"></i>
       </div>
       <span class="settings-section__header-label" data-campus-label></span>
     </div>
@@ -335,7 +335,7 @@ function buildCampusSection() {
   preferredIconTitle.className = 'settings-row__icon-title-container';
   preferredIconTitle.innerHTML = `
     <div class="settings-row__icon-badge" style="--badge-color: #FF9500">
-      <span class="material-symbols-outlined">school</span>
+      <i class="hgi-stroke hgi-school-01" aria-hidden="true"></i>
     </div>
     <div class="settings-row__label-group">
       <span class="settings-row__label" data-preferred-label></span>
@@ -421,7 +421,7 @@ function buildCampusSection() {
   rememberLastIconTitle.className = 'settings-row__icon-title-container';
   rememberLastIconTitle.innerHTML = `
     <div class="settings-row__icon-badge" style="--badge-color: #34C759">
-      <span class="material-symbols-outlined">history</span>
+      <i class="hgi-stroke hgi-history" aria-hidden="true"></i>
     </div>
     <div class="settings-row__label-group">
       <span class="settings-row__label" data-rememberlast-label></span>
@@ -502,14 +502,14 @@ function buildPopup() {
       <div class="settings-popup__title-row">
         <h2 class="settings-popup__title">${t('settings.title')}</h2>
         <button class="settings-close-btn" aria-label="Close settings">
-          <span class="material-symbols-outlined">close</span>
+          <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
         </button>
       </div>
 
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">translate</span>
+            <i class="hgi-stroke hgi-translate" aria-hidden="true"></i>
           </div>
           <span class="settings-section__header-label">${t('settings.language')}</span>
         </div>
@@ -517,7 +517,7 @@ function buildPopup() {
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon-badge" style="--badge-color: #007AFF">
-                <span class="material-symbols-outlined">language</span>
+                <i class="hgi-stroke hgi-languages" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.language">${t('settings.language')}</span>
@@ -542,7 +542,7 @@ function buildPopup() {
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">calendar_today</span>
+            <i class="hgi-stroke hgi-calendar-03" aria-hidden="true"></i>
           </div>
           <span class="settings-section__header-label" data-timefmt-section-header>${t('settings.sectionDateTime')}</span>
         </div>
@@ -550,7 +550,7 @@ function buildPopup() {
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon-badge" style="--badge-color: #FF9500">
-                <span class="material-symbols-outlined">schedule</span>
+                <i class="hgi-stroke hgi-clock-01" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.timeFormat">${t('settings.timeFormat')}</span>
@@ -573,7 +573,7 @@ function buildPopup() {
           <div class="settings-row" data-hide-sundays-row>
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon-badge" style="--badge-color: #FF3B30">
-                <span class="material-symbols-outlined">event_busy</span>
+                <i class="hgi-stroke hgi-calendar-remove-01" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.hideSundays">${t('settings.hideSundays')}</span>
@@ -584,7 +584,7 @@ function buildPopup() {
           <div class="settings-row" data-interval-hours-row>
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon-badge" style="--badge-color: #007AFF">
-                <span class="material-symbols-outlined">timelapse</span>
+                <i class="hgi-stroke hgi-hourglass" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.intervalHours">${t('settings.intervalHours')}</span>
@@ -598,7 +598,7 @@ function buildPopup() {
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">search</span>
+            <i class="hgi-stroke hgi-search-01" aria-hidden="true"></i>
           </div>
           <span class="settings-section__header-label" data-i18n="settings.sectionResults">${t('settings.sectionResults')}</span>
         </div>
@@ -606,7 +606,7 @@ function buildPopup() {
           <div class="settings-row" data-show-partial-row>
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon-badge" style="--badge-color: #34C759">
-                <span class="material-symbols-outlined">filter_alt</span>
+                <i class="hgi-stroke hgi-filter" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.showPartial">${t('settings.showPartial')}</span>
@@ -617,7 +617,7 @@ function buildPopup() {
           <div class="settings-row" data-auto-search-row>
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon-badge" style="--badge-color: #007AFF">
-                <span class="material-symbols-outlined">bolt</span>
+                <i class="hgi-stroke hgi-bolt" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.autoSearch">${t('settings.autoSearch')}</span>
@@ -628,7 +628,7 @@ function buildPopup() {
           <div class="settings-row" data-live-search-row>
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon-badge" style="--badge-color: #FF2D55">
-                <span class="material-symbols-outlined">sync</span>
+                <i class="hgi-stroke hgi-refresh-ccw" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.liveSearch">${t('settings.liveSearch')}</span>
@@ -642,7 +642,7 @@ function buildPopup() {
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">tab</span>
+            <i class="hgi-stroke hgi-browser" aria-hidden="true"></i>
           </div>
           <span class="settings-section__header-label" data-defaulttab-section-header>${t('settings.sectionNavigation')}</span>
         </div>
@@ -650,7 +650,7 @@ function buildPopup() {
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon-badge" style="--badge-color: #5856D6">
-                <span class="material-symbols-outlined">tab</span>
+                <i class="hgi-stroke hgi-browser" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.defaultTab">${t('settings.defaultTab')}</span>
@@ -660,16 +660,16 @@ function buildPopup() {
             <div class="settings-lang-toggle" data-defaulttab-toggle>
               <div class="settings-lang-indicator"></div>
               <button class="settings-lang-btn" data-defaulttab="available">
-                <span class="settings-seg-icon material-symbols-outlined">event_available</span>
+                <i class="hgi-stroke hgi-calendar-check-01 settings-seg-icon" aria-hidden="true"></i>
                 <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.available">${t('settings.defaultTab.available')}</span>
               </button>
               <button class="settings-lang-btn" data-defaulttab="search">
-                <span class="settings-seg-icon material-symbols-outlined">search</span>
+                <i class="hgi-stroke hgi-search-01 settings-seg-icon" aria-hidden="true"></i>
                 <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.search">${t('settings.defaultTab.search')}</span>
               </button>
               <div class="settings-seg-separator"></div>
               <button class="settings-lang-btn" data-defaulttab="last">
-                <span class="settings-seg-icon material-symbols-outlined">history</span>
+                <i class="hgi-stroke hgi-history settings-seg-icon" aria-hidden="true"></i>
                 <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.last">${t('settings.defaultTab.last')}</span>
               </button>
             </div>
@@ -680,7 +680,7 @@ function buildPopup() {
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">blur_on</span>
+            <i class="hgi-stroke hgi-blur" aria-hidden="true"></i>
           </div>
           <span class="settings-section__header-label" data-blurmode-section-header>${t('settings.sectionAppearance')}</span>
         </div>
@@ -688,7 +688,7 @@ function buildPopup() {
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon-badge" style="--badge-color: #64D2FF">
-                <span class="material-symbols-outlined">gradient</span>
+                <i class="hgi-stroke hgi-layers-01" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.glassEffect">${t('settings.glassEffect')}</span>
@@ -715,7 +715,7 @@ function buildPopup() {
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">dns</span>
+            <i class="hgi-stroke hgi-server" aria-hidden="true"></i>
           </div>
           <span class="settings-section__header-label" data-i18n="settings.sectionBackend">${t('settings.sectionBackend')}</span>
         </div>
@@ -723,7 +723,7 @@ function buildPopup() {
           <div class="settings-row" data-use-beta-backend-row>
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon-badge" style="--badge-color: #5856D6">
-                <span class="material-symbols-outlined">science</span>
+                <i class="hgi-stroke hgi-test-tube-01" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.useBetaBackend">${t('settings.useBetaBackend')}</span>
@@ -852,7 +852,7 @@ function buildPopup() {
   const autoSearchWarning = document.createElement('div');
   autoSearchWarning.className = 'settings-warning' + (autoSearchOn ? '' : ' settings-warning--hidden');
   autoSearchWarning.innerHTML = `
-    <span class="material-symbols-outlined settings-warning__icon">warning</span>
+    <i class="hgi-stroke hgi-alert-02 settings-warning__icon" aria-hidden="true"></i>
     <span class="settings-warning__text" data-i18n="settings.autoSearchWarning">${t('settings.autoSearchWarning')}</span>
   `;
   autoSearchRow.insertAdjacentElement('afterend', autoSearchWarning);
@@ -875,7 +875,7 @@ function buildPopup() {
   const liveSearchWarning = document.createElement('div');
   liveSearchWarning.className = 'settings-warning' + (liveSearchOn ? '' : ' settings-warning--hidden');
   liveSearchWarning.innerHTML = `
-    <span class="material-symbols-outlined settings-warning__icon">warning</span>
+    <i class="hgi-stroke hgi-alert-02 settings-warning__icon" aria-hidden="true"></i>
     <span class="settings-warning__text" data-i18n="settings.liveSearchWarning">${t('settings.liveSearchWarning')}</span>
   `;
   liveSearchRow.insertAdjacentElement('afterend', liveSearchWarning);

@@ -379,8 +379,8 @@
   pointer-events: none;
 }
 
-.campus-sheet-recenter .material-symbols-outlined,
-.campus-sheet-backbtn .material-symbols-outlined {
+.campus-sheet-recenter .hgi-stroke,
+.campus-sheet-backbtn .hgi-stroke {
   font-size: 1.25rem;
 }
 

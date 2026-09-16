@@ -351,7 +351,7 @@ body.detail-open .tab-content * {
   color: var(--text-color-secondary);
 }
 
-.detail-stat .material-symbols-outlined {
+.detail-stat .hgi-stroke {
   font-size: var(--text-110) !important;
   color: var(--text-color-accent);
 }
@@ -432,7 +432,7 @@ body.detail-open .tab-content * {
    `transform: translateY(-50%)` centring — .liquid-glass drives `translate`
    and `scale` separately, so the two compose. */
 
-.detail-back-btn .material-symbols-outlined {
+.detail-back-btn .hgi-stroke {
   font-size: var(--text-125);
   margin-left: -0.125rem;
 }
@@ -579,7 +579,7 @@ body.detail-open .tab-content * {
   }
 }
 
-.detail-feature-chip .material-symbols-outlined {
+.detail-feature-chip .hgi-stroke {
   font-size: var(--text-110);
   color: var(--text-color-accent);
 }

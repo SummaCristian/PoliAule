@@ -89,7 +89,7 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
   backBtn.className = 'campus-sheet-backbtn liquid-glass';
   backBtn.hidden = true;
   backBtn.setAttribute('aria-label', t('campus.back'));
-  backBtn.innerHTML = '<span class="material-symbols-outlined">chevron_left</span>';
+  backBtn.innerHTML = '<i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>';
   backBtn.addEventListener('click', () => {
     haptics.trigger(defaultPatterns.light);
     goToCampusPage({ animate: true });
@@ -123,7 +123,7 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
   recenterBtn.className = 'campus-sheet-recenter liquid-glass';
   recenterBtn.hidden = true;
   recenterBtn.setAttribute('aria-label', t('campus.recenter'));
-  recenterBtn.innerHTML = '<span class="material-symbols-outlined">my_location</span>';
+  recenterBtn.innerHTML = '<i class="hgi-stroke hgi-gps-01" aria-hidden="true"></i>';
   recenterBtn.addEventListener('click', () => {
     haptics.trigger(defaultPatterns.light);
     document.dispatchEvent(new CustomEvent('campusrecenter'));

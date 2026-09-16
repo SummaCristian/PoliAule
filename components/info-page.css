@@ -962,7 +962,7 @@ body.info-open .header-title-btn {
   opacity: 0.8;
 }
 
-.github-subsection-header .material-symbols-outlined {
+.github-subsection-header .hgi-stroke {
   font-size: var(--text-100);
   background: var(--accent-gradient);
   -webkit-background-clip: text;
@@ -990,7 +990,7 @@ body.info-open .header-title-btn {
   margin-top: 0.5rem;
 }
 
-.create-issue-btn .material-symbols-outlined {
+.create-issue-btn .hgi-stroke {
   font-size: var(--text-110);
 }
 
@@ -1199,7 +1199,7 @@ body.info-open .header-title-btn {
   gap: 1rem;
 }
 
-.info-pwa-title-row > .material-symbols-outlined {
+.info-pwa-title-row > .hgi-stroke {
   font-size: var(--text-200);
   background: var(--accent-gradient);
   -webkit-background-clip: text;
@@ -1289,7 +1289,7 @@ body.info-open .header-title-btn {
   fill: currentColor;
 }
 
-.pwa-tab .material-symbols-outlined {
+.pwa-tab .hgi-stroke {
   font-size: var(--text-110) !important;
   color: inherit;
   background: none;
@@ -1374,7 +1374,7 @@ body.info-open .header-title-btn {
   flex-shrink: 0;
 }
 
-.info-pwa-card-title .material-symbols-outlined {
+.info-pwa-card-title .hgi-stroke {
   font-size: var(--text-125) !important;
   color: var(--text-color-secondary);
   background: none;

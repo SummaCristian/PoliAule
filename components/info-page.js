@@ -364,7 +364,7 @@ class InfoPage {
           <div class="info-pwa-section">
             <div class="info-pwa-header">
               <div class="info-pwa-title-row">
-                <span class="material-symbols-outlined">install_mobile</span>
+                <i class="hgi-stroke hgi-screen-add-to-home" aria-hidden="true"></i>
                 <h2>${t('info.pwa.title')}</h2>
               </div>
               <p class="info-pwa-subtitle">${t('info.pwa.subtitle')}</p>
@@ -382,7 +382,7 @@ class InfoPage {
                 <span>Android</span>
               </button>
               <button class="pwa-tab" data-pwa-tab="desktop" role="tab" aria-selected="false">
-                <span class="material-symbols-outlined">desktop_windows</span>
+                <i class="hgi-stroke hgi-computer" aria-hidden="true"></i>
                 <span>Desktop</span>
               </button>
             </div>
@@ -414,7 +414,7 @@ class InfoPage {
               </div>
               <div class="info-pwa-card" data-pwa-platform="desktop">
                 <div class="info-pwa-card-title">
-                  <span class="material-symbols-outlined">desktop_windows</span>
+                  <i class="hgi-stroke hgi-computer" aria-hidden="true"></i>
                   <span>${t('info.pwa.desktop.title')}</span>
                 </div>
                 <ol class="info-pwa-steps">
@@ -455,43 +455,43 @@ class InfoPage {
               <div class="github-stats-grid">
                 <a href="https://github.com/SummaCristian/poliaule/stargazers" target="_blank" rel="noopener" class="github-stat-card">
                   <div class="star-avatars" data-github="stargazers">
-                    <span class="material-symbols-outlined github-stat-icon">star</span>
+                    <i class="hgi-stroke hgi-star github-stat-icon" aria-hidden="true"></i>
                   </div>
                   <span class="github-stat-number" data-stat="stars">—</span>
                   <span class="github-stat-label">${t('info.github.stars')}</span>
                 </a>
                 <a href="https://github.com/SummaCristian/poliaule/commits/main" target="_blank" rel="noopener" class="github-stat-card">
-                  <span class="material-symbols-outlined github-stat-icon">commit</span>
+                  <i class="hgi-stroke hgi-git-commit github-stat-icon" aria-hidden="true"></i>
                   <span class="github-stat-number" data-stat="commits">—</span>
                   <span class="github-stat-label">${t('info.github.commits')}</span>
                 </a>
                 <a href="https://github.com/SummaCristian/poliaule/issues" target="_blank" rel="noopener" class="github-stat-card">
-                  <span class="material-symbols-outlined github-stat-icon">bug_report</span>
+                  <i class="hgi-stroke hgi-bug-01 github-stat-icon" aria-hidden="true"></i>
                   <span class="github-stat-number" data-stat="issues">—</span>
                   <span class="github-stat-label">${t('info.github.issues')}</span>
                 </a>
                 <a href="https://github.com/SummaCristian/poliaule/blob/main/LICENSE" target="_blank" rel="noopener" class="github-stat-card">
-                  <span class="material-symbols-outlined github-stat-icon">balance</span>
+                  <i class="hgi-stroke hgi-balance-scale github-stat-icon" aria-hidden="true"></i>
                   <span class="github-stat-number" data-stat="license">—</span>
                   <span class="github-stat-label">${t('info.github.license')}</span>
                 </a>
               </div>
 
               <a href="https://github.com/SummaCristian/poliaule/issues/new" target="_blank" rel="noopener" class="create-issue-btn">
-                <span class="material-symbols-outlined">bug_report</span>
+                <i class="hgi-stroke hgi-bug-01" aria-hidden="true"></i>
                 <span>${t('info.github.createIssue')}</span>
               </a>
               <div class="github-extended">
                 <div class="github-subsection">
                   <div class="github-subsection-header">
-                    <span class="material-symbols-outlined">code</span>
+                    <i class="hgi-stroke hgi-code" aria-hidden="true"></i>
                     <span>${t('info.github.languages')}</span>
                   </div>
                   <div data-github="lang-bar"><div class="github-skeleton" style="height:2rem"></div></div>
                 </div>
                 <div class="github-subsection">
                   <div class="github-subsection-header">
-                    <span class="material-symbols-outlined">group</span>
+                    <i class="hgi-stroke hgi-user-group" aria-hidden="true"></i>
                     <span>${t('info.github.contributors')}</span>
                   </div>
                   <div data-github="contributors"><div class="github-skeleton" style="height:3rem"></div></div>

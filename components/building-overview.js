@@ -647,7 +647,7 @@ class BuildingOverview {
     bar.innerHTML = `
       <h3 class="bo-title">${escapeHtml(t('overview.title'))}</h3>
       <button class="bo-close liquid-glass" type="button" aria-label="${escapeHtml(t('overview.close'))}">
-        <span class="material-symbols-outlined">close</span>
+        <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
       </button>
     `;
     const closeBtn = bar.querySelector('.bo-close');

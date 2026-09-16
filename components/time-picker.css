@@ -147,7 +147,7 @@
   transition: background 0.15s ease, scale 0.15s ease;
 }
 
-.tp-popup__switch .material-symbols-outlined {
+.tp-popup__switch .hgi-stroke {
   font-size: 16px !important;
 }
 
@@ -224,7 +224,7 @@
   color: var(--text-color-accent);
 }
 
-.tp-card__icon-wrap .material-symbols-outlined {
+.tp-card__icon-wrap .hgi-stroke {
   font-size: 20px !important;
 }
 
@@ -400,7 +400,7 @@
   justify-content: center;
 }
 
-.tp-popup__step .material-symbols-outlined {
+.tp-popup__step .hgi-stroke {
   font-size: 20px !important;
 }
 

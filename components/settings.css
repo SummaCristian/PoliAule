@@ -108,7 +108,7 @@
   touch-action: manipulation;
 }
 
-.settings-close-btn .material-symbols-outlined {
+.settings-close-btn .hgi-stroke {
   font-size: 18px !important;
 }
 
@@ -170,7 +170,7 @@
   flex-shrink: 0;
 }
 
-.settings-section__icon-badge .material-symbols-outlined {
+.settings-section__icon-badge .hgi-stroke {
   font-size: var(--text-100) !important;
 }
 
@@ -224,7 +224,7 @@
   flex-shrink: 0;
 }
 
-.settings-row__icon-badge .material-symbols-outlined {
+.settings-row__icon-badge .hgi-stroke {
   font-size: 17px !important;
 }
 
@@ -416,7 +416,7 @@
   touch-action: manipulation;
 }
 
-.settings-stepper__btn .material-symbols-outlined {
+.settings-stepper__btn .hgi-stroke {
   font-size: 16px !important;
 }
 

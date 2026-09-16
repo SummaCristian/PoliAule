@@ -291,13 +291,13 @@ function buildTimePicker(wrapperEl) {
   card.className = 'tp-card';
   card.innerHTML = `
     <div class="tp-card__icon-wrap">
-      <span class="material-symbols-outlined">schedule</span>
+      <i class="hgi-stroke hgi-clock-01" aria-hidden="true"></i>
     </div>
     <div class="tp-card__info">
       <span class="tp-card__label">${t(labelKey)}</span>
       <span class="tp-card__time">${formatTimeDisplay(inputEl.value)}</span>
     </div>
-    <span class="material-symbols-outlined tp-card__chevron">chevron_right</span>
+    <i class="hgi-stroke hgi-chevron-right tp-card__chevron" aria-hidden="true"></i>
   `;
 
   wrapperEl.appendChild(card);
@@ -316,38 +316,38 @@ function buildTimePicker(wrapperEl) {
         </div>
         <button type="button" class="tp-popup__switch">
           ${isFrom
-            ? `<span class="tp-switch__label">${t('form.toTitle')}</span><span class="material-symbols-outlined">arrow_forward</span>`
-            : `<span class="material-symbols-outlined">arrow_back</span><span class="tp-switch__label">${t('form.fromTitle')}</span>`}
+            ? `<span class="tp-switch__label">${t('form.toTitle')}</span><i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>`
+            : `<i class="hgi-stroke hgi-arrow-left-01" aria-hidden="true"></i><span class="tp-switch__label">${t('form.fromTitle')}</span>`}
         </button>
       </div>
 
       <div class="tp-popup__input-wrap">
-        <span class="material-symbols-outlined tp-popup__clock">schedule</span>
+        <i class="hgi-stroke hgi-clock-01 tp-popup__clock" aria-hidden="true"></i>
       </div>
 
       <div class="tp-popup__step-btns">
         <button type="button" class="tp-popup__step button-primary button-secondary tp-step-minus">
-          <span class="material-symbols-outlined">remove</span>
+          <i class="hgi-stroke hgi-remove-01" aria-hidden="true"></i>
         </button>
         <button type="button" class="tp-popup__step button-primary button-secondary tp-step-plus">
-          <span class="material-symbols-outlined">add</span>
+          <i class="hgi-stroke hgi-add-01" aria-hidden="true"></i>
         </button>
       </div>
 
       <div class="tp-popup__quick-btns">
         ${isFrom ? `
         <button type="button" class="tp-popup__quick button-primary tp-quick-now">
-          <span class="material-symbols-outlined">near_me</span>
+          <i class="hgi-stroke hgi-navigation-03" aria-hidden="true"></i>
           <span class="tp-text-node">${t('timepicker.now')}</span>
         </button>` : ''}
         <button type="button" class="tp-popup__quick button-primary tp-quick-preset">
-          <span class="material-symbols-outlined">schedule</span>
+          <i class="hgi-stroke hgi-clock-01" aria-hidden="true"></i>
           <span class="tp-quick-label">${isFrom ? t('timepicker.currentSlot') : t('timepicker.fromPlusOne')}</span>
         </button>
       </div>
 
       <button type="button" class="tp-popup__done button-primary">
-        <span class="material-symbols-outlined">check</span>
+        <i class="hgi-stroke hgi-tick-02" aria-hidden="true"></i>
         <span class="tp-text-node">${t('timepicker.done')}</span>
       </button>
     </div>

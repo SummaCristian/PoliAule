@@ -140,7 +140,7 @@ function showSplashError() {
   if (!overlay) return;
   overlay.classList.add('splash-error');
   overlay.innerHTML = `
-    <span class="material-symbols-outlined splash-error-icon">wifi_off</span>
+    <i class="hgi-stroke hgi-wifi-off-01 splash-error-icon" aria-hidden="true"></i>
     <p class="splash-error-title">Unable to load</p>
     <p class="splash-error-subtitle">Check your connection and try again.</p>
     <button class="button-primary splash-error-reload" onclick="location.reload()">Reload</button>
@@ -481,7 +481,7 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   if (hasPartial) {
     const toggleBtn = document.createElement('button');
     toggleBtn.className = showPartialDefault ? 'results-filter-btn active' : 'results-filter-btn';
-    toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> ${t('results.filterPartial')}`;
+    toggleBtn.innerHTML = `<i class="hgi-stroke hgi-filter" aria-hidden="true"></i> ${t('results.filterPartial')}`;
     if (!showPartialDefault) container.classList.add('hide-partial');
     toggleBtn.addEventListener('click', () => {
       haptics.trigger(defaultPatterns.light);
@@ -523,7 +523,7 @@ function renderNoResultsClassroomsContainer(container) {
   container.classList.add('empty');
 
   container.innerHTML = `
-    <span class="material-symbols-outlined empty-container-icon">search_off</span>
+    <i class="hgi-stroke hgi-search-remove empty-container-icon" aria-hidden="true"></i>
     <p class="empty-container-title">${t('results.noResultsTitle')}</p>
     <p class="empty-container-subtitle">${t('results.noResultsSubtitle')}</p>
   `;
@@ -703,7 +703,7 @@ function setupDataFetchIndicatorText(animate = false) {
     <p class="data-status-description secondary">${description}</p>
     <label class="data-status-time secondary">${t('data.lastFetched')}: ${formattedTime}</label>
     <button id="reload-data-btn" class="button-primary button-secondary data-reload-btn">
-      <span class="material-symbols-outlined data-reload-icon">refresh</span>
+      <i class="hgi-stroke hgi-refresh data-reload-icon" aria-hidden="true"></i>
       <span class="data-reload-label">${t('data.reload')}</span>
     </button>
   `;

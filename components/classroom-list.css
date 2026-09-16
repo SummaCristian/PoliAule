@@ -44,7 +44,7 @@
   opacity: 0.45;
 }
 
-.results-filter-btn .material-symbols-outlined {
+.results-filter-btn .hgi-stroke {
   font-size: var(--text-100) !important;
 }
 
@@ -419,8 +419,8 @@
 }
 
 .classroom-card--photo.photo-failed::before {
-  content: 'hide_image';
-  font-family: 'Material Symbols Outlined';
+  content: '\f1e97';
+  font-family: 'hugeicons-stroke-rounded';
   font-size: var(--text-200);
   position: absolute;
   inset: 0;

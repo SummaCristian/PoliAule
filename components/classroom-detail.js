@@ -18,12 +18,12 @@ function minutesToTimeDisplay(minutes) {
 // ---------- CONSTANTS ----------
 
 const FEATURE_ICONS = {
-  4: { icon: 'videocam', key: 'features.videoProjector' },
-  5: { icon: 'mic', key: 'features.radioMic' },
-  6: { icon: 'blinds', key: 'features.dimmable' },
-  7: { icon: 'cable', key: 'features.wiredDesk' },
-  142: { icon: 'electrical_services', key: 'features.powerOutlets' },
-  223: { icon: 'video_call', key: 'features.videoconf' },
+  4: { icon: 'hgi-projector-01', key: 'features.videoProjector' },
+  5: { icon: 'hgi-mic-01', key: 'features.radioMic' },
+  6: { icon: 'hgi-blinds', key: 'features.dimmable' },
+  7: { icon: 'hgi-cable', key: 'features.wiredDesk' },
+  142: { icon: 'hgi-plug-socket', key: 'features.powerOutlets' },
+  223: { icon: 'hgi-computer-video-call', key: 'features.videoconf' },
 };
 
 
@@ -554,7 +554,7 @@ class ClassroomDetail {
         const { icon, key } = FEATURE_ICONS[id];
         return `
           <div class="detail-feature-chip liquid-glass" data-feature-id="${id}">
-            <span class="material-symbols-outlined">${icon}</span>
+            <i class="hgi-stroke ${icon}" aria-hidden="true"></i>
             <span>${t(key)}</span>
           </div>`;
       })
@@ -592,12 +592,12 @@ class ClassroomDetail {
         </p>
         <div class="detail-stats">
           <div class="detail-stat">
-            <span class="material-symbols-outlined">groups</span>
+            <i class="hgi-stroke hgi-user-multiple" aria-hidden="true"></i>
             <span>${classroom.seats} ${t('detail.seats')}</span>
           </div>
           ${classroom.accessible_seats ? `
             <div class="detail-stat">
-              <span class="material-symbols-outlined">accessible</span>
+              <i class="hgi-stroke hgi-wheelchair" aria-hidden="true"></i>
               <span>${classroom.accessible_seats} ${t('detail.disabledSeats')}</span>
             </div>
           ` : ''}

@@ -123,7 +123,7 @@ html.search-vt .bn-search-btn {
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.search-bar-wrapper .material-symbols-outlined {
+.search-bar-wrapper .hgi-stroke {
   color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
   font-size: var(--text-125) !important;
   flex-shrink: 0;
@@ -167,7 +167,7 @@ html.search-vt .bn-search-btn {
   background: color-mix(in srgb, var(--text-color-primary) 16%, transparent);
 }
 
-.search-clear-btn .material-symbols-outlined {
+.search-clear-btn .hgi-stroke {
   font-size: var(--text-100) !important;
 }
 
@@ -248,7 +248,7 @@ html.search-vt .bn-search-btn {
     0 4px 40px 0 var(--glass-shadow-color);
 }
 
-.search-overlay-close .material-symbols-outlined {
+.search-overlay-close .hgi-stroke {
   font-size: var(--text-125) !important;
 }
 

@@ -48,11 +48,35 @@
   bottom: calc(20px + env(safe-area-inset-bottom));
   z-index: 1;
 
-  display: flex;
-  flex-direction: column;
-
   height: var(--campus-sheet-size, 192px);
   max-height: 85vh;
+
+  will-change: height;
+
+  /* The whole sheet (not just the handle) is a drag surface now — same
+     reasoning as .bn-wrapper in bottom-nav.css: without these, a
+     touch-drag starting on/near text triggers native selection/callout,
+     and the browser's own touch scrolling would fight our manual one
+     (campus-sheet.js drives --campus-sheet-size and the content's
+     scrollTop itself). */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* All the actual glass chrome, and the liquid-glass squash/stretch itself,
+   live on this inner `absolute` div rather than directly on `.campus-sheet`
+   — see campus-sheet.js's `glass` element for why: `.campus-sheet` is
+   `position: fixed` right up against `env(safe-area-inset-bottom)`, and a
+   `transform` there (nested inside another positioned ancestor) is what
+   made iOS Safari mispaint the bottom safe area. Filling `.campus-sheet`
+   exactly (`inset: 0`) means this tracks its live-resized box with no extra
+   JS needed. */
+.campus-sheet-glass {
+  position: absolute;
+  inset: 0;
+
   /* Shrinks from the concentric compact value down to a plain 28px as the
      sheet grows — see --campus-sheet-inset above. */
   border-radius: var(--campus-sheet-radius, 28px);
@@ -68,19 +92,6 @@
 
   backdrop-filter: blur(var(--glass-blur-lg));
   -webkit-backdrop-filter: blur(var(--glass-blur-lg));
-
-  will-change: height;
-
-  /* The whole sheet (not just the handle) is a drag surface now — same
-     reasoning as .bn-wrapper in bottom-nav.css: without these, a
-     touch-drag starting on/near text triggers native selection/callout,
-     and the browser's own touch scrolling would fight our manual one
-     (campus-sheet.js drives --campus-sheet-size and the content's
-     scrollTop itself). */
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
 
   /* Liquid-glass-style reactive feel, ported rather than the shared
      .liquid-glass class (see campus-sheet.js's watchGuard()/
@@ -98,7 +109,7 @@
     -webkit-backdrop-filter 0.25s ease;
 }
 
-.campus-sheet.lg-active {
+.campus-sheet-glass.lg-active {
   filter: brightness(1.11) saturate(1.35);
 }
 
@@ -108,7 +119,7 @@
    in/out together with the resize itself. Keeps the map more visible except
    when the sheet is taking up the whole view, without touching the outline/
    shadow/stroke, which stay the shared glass recipe. */
-.campus-sheet.is-collapsed {
+.campus-sheet-glass.is-collapsed {
   background: var(--glass-tint-clear);
   backdrop-filter: blur(var(--glass-blur-clear));
   -webkit-backdrop-filter: blur(var(--glass-blur-clear));
@@ -116,7 +127,7 @@
 
 /* Outside 0.5px gradient stroke — same recipe as .header-button::after /
    .bn-tabbar::after in style.css / bottom-nav.css. */
-.campus-sheet::after {
+.campus-sheet-glass::after {
   content: "";
   position: absolute;
   inset: -0.5px;
@@ -131,6 +142,23 @@
   mask-composite: exclude;
 
   pointer-events: none;
+}
+
+/* The actual clip: `.campus-sheet-glass` can't have `overflow: hidden`
+   itself (that would cut off its own box-shadow, which is meant to extend
+   past its bounds), so this separate inner layer — sharing the exact same
+   box via `inset: 0` and `border-radius: inherit` — is what keeps
+   handle/header/content confined to the rounded shape instead of poking out
+   past the bottom edge while the sheet is dragged/rubber-banded smaller
+   than its resting height. */
+.campus-sheet-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+
+  display: flex;
+  flex-direction: column;
 }
 
 .campus-sheet-handle {
@@ -525,6 +553,9 @@
     width: 420px;
     height: var(--campus-sheet-size, 96px);
     max-height: calc(100dvh - var(--header-height, 84px) - 2rem - 40px);
+  }
+
+  .campus-sheet-glass {
     border-radius: 28px;
 
     /* Not clipped by Safari's safe area here (pinned to the map panel, not

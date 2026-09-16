@@ -73,7 +73,7 @@ const SQUIRCLE_RADIUS_SCALE = (typeof CSS !== 'undefined' && CSS.supports('corne
 // used by the bottom-nav pill and the liquid-glass press/drag deform.
 const rubber = (x, give) => (x * give) / (give + Math.abs(x));
 
-let sheet, handle, header, content, guard;
+let sheet, glass, clip, handle, header, content, guard;
 let detent = 'collapsed';   // 'collapsed' | 'half' | 'full'
 const size = new Spring(COLLAPSED);
 const scrollPos = new Spring(0);
@@ -279,23 +279,23 @@ function watchGuard() {
 
   if (guard) guard.classList.toggle('busy', busy);
 
-  if (sheet) {
+  if (glass) {
     // The glow reads as "you're touching the glass," so it should start
     // fading the moment the gesture itself ends — release, or a wheel fling
     // committing — rather than lingering through the settle/fling animation
     // that follows (which is still `busy`, and still drives the
     // squash/stretch below; just not the glow).
     const gesturing = activePointerId != null || (wheelMode != null && !wheelCommitted);
-    sheet.classList.toggle('lg-active', gesturing);
+    glass.classList.toggle('lg-active', gesturing);
     const v = resizeVelocity();
     const mag = Math.min(Math.abs(v) * STRETCH_GAIN, STRETCH_MAX);
     if (mag > 0.002) {
       const dir = v >= 0 ? 1 : -1;
       // Stretch taller (and squash a touch narrower, the perpendicular
       // axis) when growing fast; the reverse when collapsing fast.
-      sheet.style.transform = `scaleY(${(1 + dir * mag).toFixed(4)}) scaleX(${(1 - dir * mag * 0.4).toFixed(4)})`;
+      glass.style.transform = `scaleY(${(1 + dir * mag).toFixed(4)}) scaleX(${(1 - dir * mag * 0.4).toFixed(4)})`;
     } else {
-      sheet.style.transform = '';
+      glass.style.transform = '';
     }
   }
 
@@ -354,7 +354,7 @@ const SETTLE_SPRING = { stiffness: 260, damping: 30, mass: 1 };
 
 function snapToDetent(key) {
   detent = key;
-  sheet.classList.toggle('is-collapsed', key !== 'full');
+  glass.classList.toggle('is-collapsed', key !== 'full');
   sheet.dataset.detent = key;
   size.to(detentValue(key), SETTLE_SPRING);
 }
@@ -647,15 +647,39 @@ export function initCampusSheet() {
   container.appendChild(guard);
 
   sheet = document.createElement('div');
-  sheet.className = 'campus-sheet is-collapsed';
+  sheet.className = 'campus-sheet';
   sheet.dataset.detent = detent;
   sheet.addEventListener('pointerdown', onPointerDown);
   sheet.addEventListener('wheel', onWheel, { passive: false });
 
+  // All the actual glass chrome (background/blur/radius/shadow) and the
+  // squash/stretch transform itself live on this inner, plain `absolute`
+  // div rather than on `sheet` — `sheet` is `position: fixed` right up
+  // against `env(safe-area-inset-bottom)` (campus-sheet.css), and a
+  // `transform` on a `position: fixed` element nested inside another
+  // positioned ancestor (here, #search-classrooms-container) is exactly the
+  // combination that made iOS Safari mispaint/miscompose the bottom safe
+  // area elsewhere in this app (see campus-picker.js's and
+  // data-fetch-card.js's own "portal to <body>" comments for the same bug)
+  // — the fast-resize squash was reproducing it by transforming `sheet`
+  // directly. Keeping `sheet` itself always transform-free sidesteps that
+  // regardless of how strong the deform gets.
+  glass = document.createElement('div');
+  glass.className = 'campus-sheet-glass is-collapsed';
+  sheet.appendChild(glass);
+
+  // `glass` carries the box-shadow, which needs to paint past its own
+  // bounds — so it can't also be the thing with `overflow: hidden`. This
+  // separate, exactly-matching inner layer is what actually clips
+  // handle/header/content to the rounded shape (see its CSS comment).
+  clip = document.createElement('div');
+  clip.className = 'campus-sheet-clip';
+  glass.appendChild(clip);
+
   handle = document.createElement('div');
   handle.className = 'campus-sheet-handle';
   handle.innerHTML = '<span class="campus-sheet-grabber"></span>';
-  sheet.appendChild(handle);
+  clip.appendChild(handle);
 
   // A fixed overlay, like the handle above it: stays in place while `content`
   // (below) scrolls underneath, its own top fade mask blending scrolled
@@ -665,11 +689,11 @@ export function initCampusSheet() {
   // hardcoded guess.
   header = document.createElement('div');
   header.className = 'campus-sheet-header';
-  sheet.appendChild(header);
+  clip.appendChild(header);
 
   content = document.createElement('div');
   content.className = 'campus-sheet-content';
-  sheet.appendChild(content);
+  clip.appendChild(content);
 
   container.appendChild(sheet);
 

@@ -266,6 +266,8 @@ Two R2 buckets hold the fetched data: `poliaule-data` (prod) and `poliaule-data-
 
 `config.js` holds the `API_BASE` the frontend fetches from; `scripts/build-beta.sh` overwrites it to point at `api-beta.poliaule.com` for the beta Pages build.
 
+Each Pages build runs Vite (`npm run build` for main/dev, `npm run build:beta` for beta, output directory `dist`), which bundles and minifies `index.html`'s JS/CSS into hashed files and copies `public/` (favicons, fonts, locales, the About-page profile photo) through untouched, since those are referenced by absolute runtime path rather than imported. Source maps ship only when `CF_PAGES_BRANCH` is unset or `dev`.
+
 ### Keeping beta in sync
 
 Beta's occupancy data isn't independently fetched from PoliMi by default. After the GitHub Actions workflow fetches once for prod, it checks the `BETA_OCCUPANCY_BACKEND_ENABLED` GitHub Actions repository variable:

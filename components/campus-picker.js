@@ -10,9 +10,18 @@ import { t } from '../i18n.js';
 import { BLUR_STATE_EVENT } from '../utils/blur-capability.js';
 import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
 
+// `new URL(..., import.meta.url)` (not a bare relative href) so Vite's build
+// actually discovers, hashes and copies this stylesheet — a hardcoded
+// "./components/campus-picker.css" string only works in dev (served as-is
+// from the project root); in production it isn't part of the bundle, so the
+// shadow root's <link> 404s to Cloudflare Pages' SPA fallback (index.html,
+// served as text/html) and every :host custom property silently falls back
+// to its unstyled default.
+const CAMPUS_PICKER_CSS_URL = new URL('./campus-picker.css', import.meta.url).href;
+
 const STYLE_LINKS = `
   <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css">
-  <link rel="stylesheet" href="./components/campus-picker.css">
+  <link rel="stylesheet" href="${CAMPUS_PICKER_CSS_URL}">
 `;
 
 // The trigger (pill + skeleton) lives in a shadow root on <campus-chip-picker>

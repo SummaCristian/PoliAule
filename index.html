@@ -23,6 +23,13 @@
   <!-- Preload the logo to improve loading times -->
   <link rel="preload" as="image" href="/favicons/main/logo.png">
 
+  <!-- Preconnect to the render-blocking cross-origin CSS below (fonts + icon
+       CDN), so DNS/TCP/TLS isn't paid serially after each stylesheet is
+       discovered. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://use.hugeicons.com" crossorigin>
+
   <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />

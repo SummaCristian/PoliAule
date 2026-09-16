@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./favicons/main/icon-border.png" width="150">
+  <img src="./public/favicons/main/icon-border.png" width="150">
   <h1>PoliAule</h1>
 
   [![Visit poliaule.com](https://img.shields.io/badge/%F0%9F%8C%90_Visit-poliaule.com-2ecc5a?style=for-the-badge)](https://poliaule.com)
@@ -22,14 +22,14 @@ Built by students, for students. Because finding a place to study shouldn't be h
     <tr>
       <td align="center" width="240">
         <a href="https://poliaule.com">
-          <img src="./favicons/main/icon-border.png" width="72"><br>
+          <img src="./public/favicons/main/icon-border.png" width="72"><br>
           <strong>PoliAule</strong><br>
           <sub>poliaule.com</sub>
         </a>
       </td>
       <td align="center" width="240">
         <a href="https://beta.poliaule.com">
-          <img src="./favicons/beta/icon.png" width="72"><br>
+          <img src="./public/favicons/beta/icon.png" width="72"><br>
           <strong>PoliAule Beta</strong><br>
           <sub>beta.poliaule.com</sub>
         </a>

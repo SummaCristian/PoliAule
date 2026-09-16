@@ -1,6 +1,6 @@
 # PoliAule - Frontend
 
-The frontend is plain HTML + vanilla ES modules. No build step, no framework, no bundler: files are served directly by Cloudflare Pages.
+The frontend is plain HTML + vanilla ES modules, no framework. Cloudflare Pages builds it with Vite (`npm run build`), which bundles and minifies the JS/CSS graph reachable from `index.html` into hashed files under `dist/assets/`. Static files referenced by absolute path at runtime rather than imported (`public/favicons/`, `public/fonts/`, `public/locales/`, `public/assets/`) are copied through unprocessed via Vite's `public/` convention. See the "Development Commands" section of the root `CLAUDE.md` for the exact build commands.
 
 ---
 

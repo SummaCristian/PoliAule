@@ -375,6 +375,10 @@ class ClassroomDetail {
         document.documentElement.classList.remove('header-ctl-vt');
         if (fromInfo) infoPage._cleanupReturnVT();
       };
+      // A second VT firing before this one settles rejects .ready/.finished with
+      // InvalidStateError; .finished is handled above, but .ready isn't awaited
+      // anywhere, so it was surfacing as an unhandled rejection on every abort.
+      vt.ready.catch(() => {});
       vt.finished.then(cleanup).catch(cleanup);
     } else {
       // Fallback: show overlay, swap tabbar for back button without animation
@@ -487,6 +491,7 @@ class ClassroomDetail {
         }
       });
 
+      vt.ready.catch(() => {});
       vt.finished.then(cleanup).catch(cleanup);
     } else {
       // Fallback: fade out overlay, swap back button for tabbar without animation

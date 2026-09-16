@@ -177,6 +177,10 @@ class InfoPage {
         if (heroBadge) heroBadge.style.viewTransitionName = 'info-badge';
       });
 
+      // A second VT firing before this one settles rejects .ready/.finished with
+      // InvalidStateError; .finished is handled below, but .ready isn't awaited
+      // anywhere, so it was surfacing as an unhandled rejection on every abort.
+      vt.ready.catch(() => {});
       vt.finished.then(() => this._clearVtNames()).catch(() => this._clearVtNames());
     } else {
       this._tabbar?.classList.add('detail-open');
@@ -241,6 +245,7 @@ class InfoPage {
         window.scrollTo(0, this._savedScrollPos);
       });
 
+      vt.ready.catch(() => {});
       vt.finished.then(cleanup).catch(cleanup);
     } else {
       this._overlay.classList.remove('visible');

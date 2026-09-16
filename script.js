@@ -92,6 +92,10 @@ function dismissSplash() {
         infoPage._applyOpenState('splash-icon');
       });
 
+      // A second VT firing before this one settles rejects .ready/.finished with
+      // InvalidStateError; .finished is handled above, but .ready isn't awaited
+      // anywhere, so it was surfacing as an unhandled rejection on every abort.
+      vt.ready.catch(() => {});
       vt.finished.then(() => infoPage._clearVtNames()).catch(() => infoPage._clearVtNames());
     } else {
       const vt = document.startViewTransition(() => {
@@ -101,6 +105,7 @@ function dismissSplash() {
         realLogo.style.viewTransitionName = 'splash-icon';
       });
 
+      vt.ready.catch(() => {});
       const cleanup = () => { realLogo.style.viewTransitionName = ''; };
       vt.finished.then(cleanup).catch(cleanup);
     }

@@ -56,18 +56,19 @@
   transition: translate 0s, scale 0s, filter 0.2s ease;
 }
 
-/* Hover / press "lit" state: a gentle lift plus a brightness + saturation
-   boost so the glass reads as catching more light, instead of the old
-   darken-the-tint hover. */
+/* Hover: a gentle lift only, no brightness boost — the "lit" HDR look is
+   reserved for an actual press/drag (below), not just mousing over. */
 @media (hover: hover) {
-  /* The popover is pinned to its trigger — brighten it on hover, but don't
-     lift it (a scale would drift it off the anchor). */
+  /* The popover is pinned to its trigger; a scale would drift it off the
+     anchor, so it gets no hover lift at all. */
   .liquid-glass:not(.popover):hover {
     scale: 1.045;
   }
 }
 
-.liquid-glass:hover,
+/* Press / drag "lit" state: a brightness + saturation boost so the glass
+   reads as catching more light while it's being manually stretched. */
+
 .liquid-glass.lg-pressing,
 .liquid-glass.lg-dragging {
   filter: brightness(1.11) saturate(1.35);

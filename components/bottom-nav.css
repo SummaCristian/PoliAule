@@ -240,17 +240,34 @@
   color: var(--bn-tab-active-color);
 }
 
+/* This copy's box is deliberately auto/100%-of-anchor sized to always fit
+   its own content (see .bn-tab-active below) — it should never actually
+   need to truncate. Dropping the shared .bn-tab-label's max-width:100%
+   here specifically avoids Safari's percentage-vs-intrinsic-width
+   resolution in this auto/shrink-to-fit sizing context, which was
+   misresolving to something smaller than the real available space and
+   clipping the label (independent of font-size, though larger type made
+   it more visible) — the exact same class of engine-specific bug already
+   behind the pill/label misalignment this duplicate exists to route
+   around. */
+.bn-active-row .bn-tab-label {
+  max-width: none;
+}
+
 .bn-tab-active {
-  /* Positioned (left/top/width/height) from JS in bottom-nav.js layout(),
-     off the exact same per-tab anchors that size/place the pill and its
-     clip-path mask — not flex flow. Two separately-rendered copies of the
-     same icon+label (this one and .bn-tab-item's) can end up a sub-pixel
-     apart if the icon webfont swaps in at a different moment for each
-     (FOUT race), which used to throw off flex's cumulative width sum and
-     visibly shift a later tab's content sideways within an otherwise
-     correctly-placed pill. Pinning this element's own box to the anchor
-     keeps any such mismatch confined to symmetric centering inside that
-     box instead of a directional drift. */
+  /* Centered (not sized) from JS in bottom-nav.js layout(), on the same
+     per-tab anchor midpoint that centers the pill and its clip-path mask —
+     not flex flow. Two separately-rendered copies of the same icon+label
+     (this one and .bn-tab-item's) can end up a sub-pixel apart in their
+     natural width if the icon webfont swaps in at a different moment for
+     each (FOUT race), which used to throw off flex's cumulative width sum
+     and visibly shift a later tab's content sideways within an otherwise
+     correctly-placed pill. Width is intentionally left auto (hugging its
+     own content, same as .bn-tab-item) rather than pinned to the anchor's
+     measured size — forcing an exact width reintroduces the same problem
+     one level down, letting a sub-pixel mismatch clip the label via its
+     max-width/ellipsis instead of shifting it. Centering on the anchor's
+     midpoint absorbs any mismatch symmetrically either way. */
   position: absolute;
   padding: 0.625rem 1.1875rem;
 }

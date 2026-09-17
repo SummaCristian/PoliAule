@@ -180,22 +180,24 @@ function layout() {
   searchBtn.style.width = diameter + 'px';
 
   anchors = measureAnchors();
-  // Pin each colored duplicate directly to its own anchor (the same
+  // Center each colored duplicate on its own anchor's midpoint (the same
   // measurements driving the pill/mask below) rather than trusting flex
-  // flow to reproduce those widths in this separate DOM subtree — see the
-  // comment on .bn-tab-active in bottom-nav.css for why that matters.
+  // flow to reproduce matching widths in this separate DOM subtree — see
+  // the comment on .bn-tab-active in bottom-nav.css for why that matters,
+  // and why width is left auto here rather than pinned to anchor.size.
   anchors.forEach((anchor, i) => {
     const el = activeRow.children[i];
+    const center = anchor.pos + anchor.size / 2;
     if (vertical) {
-      el.style.top = anchor.pos + 'px';
-      el.style.height = anchor.size + 'px';
+      el.style.top = center + 'px';
       el.style.left = '0';
       el.style.width = '100%';
+      el.style.transform = 'translateY(-50%)';
     } else {
-      el.style.left = anchor.pos + 'px';
-      el.style.width = anchor.size + 'px';
+      el.style.left = center + 'px';
       el.style.top = '0';
       el.style.height = '100%';
+      el.style.transform = 'translateX(-50%)';
     }
   });
   const a = anchors[groupIndex];

@@ -180,6 +180,24 @@ function layout() {
   searchBtn.style.width = diameter + 'px';
 
   anchors = measureAnchors();
+  // Pin each colored duplicate directly to its own anchor (the same
+  // measurements driving the pill/mask below) rather than trusting flex
+  // flow to reproduce those widths in this separate DOM subtree — see the
+  // comment on .bn-tab-active in bottom-nav.css for why that matters.
+  anchors.forEach((anchor, i) => {
+    const el = activeRow.children[i];
+    if (vertical) {
+      el.style.top = anchor.pos + 'px';
+      el.style.height = anchor.size + 'px';
+      el.style.left = '0';
+      el.style.width = '100%';
+    } else {
+      el.style.left = anchor.pos + 'px';
+      el.style.width = anchor.size + 'px';
+      el.style.top = '0';
+      el.style.height = '100%';
+    }
+  });
   const a = anchors[groupIndex];
   if (!didInit) {
     pillPos.set(a.pos); pillMain.set(a.size); didInit = true;

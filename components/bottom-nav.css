@@ -233,10 +233,6 @@
   top: 0;
   bottom: 0;
   left: 0;
-
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   will-change: transform;
 }
 
@@ -245,8 +241,17 @@
 }
 
 .bn-tab-active {
-  /* Matches .bn-tab-item's own padding so this duplicate hugs to the exact
-     same width as the gray item it sits on top of. */
+  /* Positioned (left/top/width/height) from JS in bottom-nav.js layout(),
+     off the exact same per-tab anchors that size/place the pill and its
+     clip-path mask — not flex flow. Two separately-rendered copies of the
+     same icon+label (this one and .bn-tab-item's) can end up a sub-pixel
+     apart if the icon webfont swaps in at a different moment for each
+     (FOUT race), which used to throw off flex's cumulative width sum and
+     visibly shift a later tab's content sideways within an otherwise
+     correctly-placed pill. Pinning this element's own box to the anchor
+     keeps any such mismatch confined to symmetric centering inside that
+     box instead of a directional drift. */
+  position: absolute;
   padding: 0.625rem 1.1875rem;
 }
 
@@ -384,7 +389,6 @@
   .bn-active-row {
     bottom: auto;
     right: 0;
-    flex-direction: column;
   }
 
   /* Not clipped by Safari's safe area here (a top-left rail, not flush

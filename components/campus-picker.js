@@ -9,18 +9,21 @@ import { attachLiquidGlass } from './liquid-glass.js';
 import { t } from '../i18n.js';
 import { BLUR_STATE_EVENT } from '../utils/blur-capability.js';
 import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
+import CAMPUS_PICKER_CSS_URL from './campus-picker.css?url';
 
-// `new URL(..., import.meta.url)` (not a bare relative href) so Vite's build
-// actually discovers, hashes and copies this stylesheet — a hardcoded
-// "./components/campus-picker.css" string only works in dev (served as-is
-// from the project root); in production it isn't part of the bundle, so the
-// shadow root's <link> 404s to Cloudflare Pages' SPA fallback (index.html,
-// served as text/html) and every :host custom property silently falls back
-// to its unstyled default.
-const CAMPUS_PICKER_CSS_URL = new URL('./campus-picker.css', import.meta.url).href;
+// The `?url` suffix (not a hardcoded "./components/campus-picker.css"
+// string, and not `new URL(..., import.meta.url)`) routes this through
+// Vite's CSS pipeline — minified and content-hashed like every other
+// stylesheet — while still resolving to a URL the shadow root's <link> can
+// use. A hardcoded path only works in dev (served as-is from the project
+// root); in production it isn't part of the bundle, so the <link> 404s to
+// Cloudflare Pages' SPA fallback (index.html, served as text/html) and
+// every :host custom property silently falls back to its unstyled default.
+// `new URL(..., import.meta.url)` avoids that 404 but Vite treats it as an
+// opaque asset copy, skipping minification entirely.
 
 const STYLE_LINKS = `
-  <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css">
+  <link rel="stylesheet" href="/fonts/hugeicons/icons.css">
   <link rel="stylesheet" href="${CAMPUS_PICKER_CSS_URL}">
 `;
 

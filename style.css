@@ -891,6 +891,7 @@ label {
 }
 
 .header-logo {
+  width: auto;
   height: 2rem;
 
   user-select: none;
@@ -1644,6 +1645,7 @@ ul li::marker {
 }
 
 .changelog-logo {
+  width: auto;
   height: 4rem;
   margin-bottom: 0.5rem;
 

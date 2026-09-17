@@ -1,3 +1,3 @@
-import { WebHaptics, defaultPatterns } from 'https://esm.sh/web-haptics';
+import { WebHaptics, defaultPatterns } from 'web-haptics';
 export { defaultPatterns };
 export const haptics = new WebHaptics();

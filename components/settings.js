@@ -154,12 +154,12 @@ function openSettings() {
     fromRadius: '50%',
     toRadius: target.borderRadius,
     onSettle: () => {
-      popupEl.style.boxShadow = 'var(--tp-shadow-lg)';
+      popupEl.style.boxShadow = 'var(--settings-glass-shadow)';
       popupEl.classList.add('settings-popup--open');
       getOverlay().classList.add('settings-overlay--active');
     },
   });
-  popupEl.style.boxShadow = 'var(--shadow)';
+  popupEl.style.boxShadow = 'var(--settings-glass-shadow)';
 
   positionIndicatorFn?.(false);            // snap lang indicator before morph animation starts
   positionTimeFmtIndicatorFn?.(false);     // snap time format indicator before morph animation starts
@@ -194,7 +194,7 @@ function closeSettings() {
   requestAnimationFrame(() => {
     morphGeometry(popupEl, visualRect, rect, {
       toRadius: '50%',
-      onSettle: () => { popupEl.style.boxShadow = 'var(--shadow)'; },
+      onSettle: () => { popupEl.style.boxShadow = 'var(--settings-glass-shadow)'; },
     });
   });
 
@@ -498,6 +498,7 @@ function buildPopup() {
   popup.className = 'settings-popup';
   popup.style.display = 'none';
   popup.innerHTML = `
+    <div class="settings-popup__clip">
     <div class="settings-popup__inner">
       <div class="settings-popup__title-row">
         <h2 class="settings-popup__title">${t('settings.title')}</h2>
@@ -735,6 +736,7 @@ function buildPopup() {
       </div>
       `}
 
+    </div>
     </div>
   `;
 

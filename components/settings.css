@@ -1,5 +1,16 @@
 /* ── Settings Component ────────────────────────────────────────────────────── */
 
+/* Popup's glass box-shadow, kept as one custom property because settings.js
+   also pins it inline mid-morph (see openSettings/closeSettings) — an inline
+   style always wins over the stylesheet, so both places must reference this
+   rather than the recipe's three layers directly. */
+:root {
+  --settings-glass-shadow:
+    0 0 0 0.1px var(--glass-outline),
+    var(--glass-highlight),
+    0 4px 40px 0 var(--glass-shadow-color);
+}
+
 /* Overlay */
 .settings-overlay {
   position: fixed;
@@ -22,23 +33,70 @@
   background: rgba(0, 0, 0, 0.55);
 }
 
-/* Popup shell — morphs from the header button */
+/* Popup shell — morphs from the header button.
+   Same glass material as the popovers / header buttons — see the recipe
+   note at :root's --glass-tint definition in style.css. */
 .settings-popup {
   position: fixed;
   z-index: 1200;
-  background: var(--background-color-secondary);
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
   border-radius: 50%;
-  box-shadow: var(--shadow);
-  overflow: clip;
+  box-shadow: var(--settings-glass-shadow);
   flex-direction: column;
   /* display:flex set via JS */
 
   transition:
     transform     0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    box-shadow    0.42s ease;
+    box-shadow    0.42s ease,
+    background    0.42s ease;
 
   will-change: transform;
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .kb-help-panel::after in
+   keybindings.css. Content clipping lives on the separate
+   `.settings-popup__clip` layer below, so this isn't cut off. */
+.settings-popup::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--glass-stroke-gradient);
+  opacity: var(--glass-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .settings-popup {
+    background: color-mix(in srgb, var(--background-color-secondary) 95%, black);
+  }
+}
+
+/* Clips content to the popup's (animated) rounded shape without clipping
+   the glass box-shadow/stroke above, which live on `.settings-popup`
+   itself — `overflow` clips an element's own box-shadow, so the two can't
+   share a box. Same split as `.campus-sheet-glass` / `.campus-sheet-clip`
+   in campus-sheet.css.
+   Stays an in-flow flex item (not absolutely positioned) so it still
+   contributes to `.settings-popup`'s content height — openSettings()
+   measures that via `scrollHeight` while `height: auto` to size the popup
+   to its natural content. */
+.settings-popup__clip {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: clip;
+  border-radius: inherit;
 }
 
 /* Inner content fades in after the morph completes */
@@ -82,7 +140,7 @@
   bottom: -2.5rem; /* extend into the gap below the row */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: var(--background-color-secondary);
+  background: var(--glass-tint);
   -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
   pointer-events: none;

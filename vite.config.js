@@ -41,6 +41,14 @@ function minifyPublicCss(paths) {
 // standard "loadCSS" async pattern (load as non-render-blocking via
 // media="print", then flip to media="all" once it lands) so it stops being
 // render-blocking, with a <noscript> fallback for JS-disabled clients.
+//
+// data-shell-css + window.__onShellCssLoad (index.html) is the other half of
+// this: real content stays out of the layout tree until this tag has
+// resolved, so the app doesn't paint unstyled and then reflow into place
+// once this lands — that reflow was the single biggest Cumulative Layout
+// Shift contributor before this existed. See markShellCssReadyInDev below
+// for why index.html's own 19 component-CSS <link> tags don't get this same
+// treatment (they stay plain/blocking, dev-only).
 function deferMainStylesheet() {
   return {
     name: 'defer-main-stylesheet',
@@ -49,8 +57,35 @@ function deferMainStylesheet() {
       return html.replace(
         /<link rel="stylesheet" crossorigin href="([^"]+)">/,
         (match, href) =>
-          `<link rel="stylesheet" href="${href}" media="print" onload="this.media='all'" crossorigin>` +
+          `<link rel="stylesheet" href="${href}" data-shell-css media="print" onload="window.__onShellCssLoad(this)" onerror="window.__onShellCssLoad(this)" crossorigin>` +
           `<noscript><link rel="stylesheet" href="${href}" crossorigin></noscript>`,
+      );
+    },
+  };
+}
+
+// Dev-only counterpart to deferMainStylesheet. Real content stays hidden
+// (index.html's `:root:not(.css-ready) body > *:not(#splash-overlay)`
+// rule) until something adds `.css-ready` to <html> — in production that's
+// window.__onShellCssLoad, fired by the deferred stylesheet's onload above.
+// In `npm run dev`, index.html's 19 component CSS <link> tags stay plain
+// and render-blocking on purpose (giving them the same media="print"
+// treatment made Vite stop merging them into one bundle and ship 19
+// separate files instead — a real regression, not a style choice). Without
+// this, nothing would ever add .css-ready locally and the app would stay
+// invisible behind the splash. A plain classic <script> (no type="module",
+// no defer/async) placed after those <link> tags is guaranteed by spec to
+// wait for them to finish loading before it runs, which — since they're
+// still blocking here — means CSS is already fully applied by the time it
+// does, so it's always safe to flip the switch immediately.
+function markShellCssReadyInDev() {
+  return {
+    name: 'mark-shell-css-ready-in-dev',
+    apply: 'serve',
+    transformIndexHtml(html) {
+      return html.replace(
+        '<!-- JS -->',
+        `<script>document.documentElement.classList.add('css-ready');</script>\n\n  <!-- JS -->`,
       );
     },
   };
@@ -65,5 +100,5 @@ export default defineConfig({
     // prefixed one, leaving blur working only in Safari. esbuild doesn't.
     cssMinify: 'esbuild',
   },
-  plugins: [minifyPublicCss(['fonts/hugeicons/icons.css']), deferMainStylesheet()],
+  plugins: [minifyPublicCss(['fonts/hugeicons/icons.css']), deferMainStylesheet(), markShellCssReadyInDev()],
 });

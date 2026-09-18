@@ -229,7 +229,51 @@
       opacity: 0;
       animation: splash-logo-fade-in 0.4s ease-out 0.25s forwards;
     }
+
+    /* Keep the real UI entirely out of the layout tree (not just hidden —
+       display:none, so it has no rendered box at all) until every "shell"
+       stylesheet below has resolved. An element that never had a previous
+       box doesn't register as a Cumulative Layout Shift when it first
+       appears; letting it paint unstyled and then reflow once CSS attaches
+       does (this replaced a single reflow that scored 0.88 on its own —
+       the whole .body-container snapping from an unstyled box into its
+       real flex layout). See window.__onShellCssLoad below. */
+    :root:not(.css-ready) body > *:not(#splash-overlay) {
+      display: none;
+    }
   </style>
+
+  <!-- Without JS, window.__onShellCssLoad below never runs, so .css-ready
+       never gets added — the rule above would hide the app forever. The
+       synchronous <noscript><link> fallbacks (below, one per deferred
+       stylesheet) already load everything render-blocking in that case, so
+       just force the real content back on and drop the (now permanently
+       stuck) splash. -->
+  <noscript>
+    <style>
+      body > * { display: revert !important; }
+      #splash-overlay { display: none !important; }
+    </style>
+  </noscript>
+
+  <script>
+    // Shared by every "shell" stylesheet link below (the ones that define
+    // the app's actual box layout — style.css and the per-component CSS
+    // files, or their single bundled equivalent in production). Each one
+    // is marked data-shell-css and loaded non-blocking (media="print" swap
+    // trick); this re-checks, on every load/error, whether any are still
+    // pending, and flips the switch above once none are. Deliberately
+    // excludes the Google Fonts / Hugeicons stylesheets further down —
+    // gating on those too (slow, cross-origin, sometimes blocked) would
+    // reintroduce the render-blocking problem this async-loading trick was
+    // meant to fix; their own swap-in cost is comparatively small.
+    window.__onShellCssLoad = function (link) {
+      link.media = 'all';
+      if (!document.querySelector('link[data-shell-css][media="print"]')) {
+        document.documentElement.classList.add('css-ready');
+      }
+    };
+  </script>
 
   <!-- Preconnect to the render-blocking cross-origin CSS below (Google
        Fonts), so DNS/TCP/TLS isn't paid serially after the stylesheet is
@@ -246,7 +290,14 @@
        beta build runs, matching that build's default backend. -->
   <link rel="preconnect" href="https://api.poliaule.com" crossorigin>
 
-  <!-- CSS -->
+  <!-- CSS. Plain/blocking here on purpose, even though prod defers the
+       equivalent bundled tag (vite.config.js's deferMainStylesheet plugin):
+       adding media/onload attributes directly to these 19 source tags makes
+       Vite stop merging them into one bundle and ship each as its own file
+       instead (tried it — do not repeat). Since these stay render-blocking
+       in `npm run dev`, CSS is always already applied before any script
+       runs there, so dev never hits the reflow this is working around —
+       see vite.config.js's markShellCssReadyInDev plugin. -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />
   <link rel="stylesheet" href="./components/date-chip-picker.css" />

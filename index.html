@@ -24,6 +24,213 @@
        the splash screen's LCP element -->
   <link rel="preload" as="image" href="/favicons/main/logo.webp" fetchpriority="high">
 
+  <!-- Critical CSS: everything the splash screen needs to paint, inlined so
+       first paint doesn't wait on the app's full stylesheet (which Vite
+       bundles into one ~170KB/27KB-gzip file and, on a throttled connection,
+       can take seconds to arrive). The full stylesheet below is loaded
+       non-blocking (see the media="print" swap trick) and takes over once it
+       lands — well before the splash is dismissed. Keep this in sync with
+       the ".splash-*"/".noscript-overlay" rules in style.css if they change. -->
+  <style>
+    :root {
+      box-sizing: border-box;
+      --background-color: #F2F2F2;
+      --text-color-primary: #1A1A1A;
+      --text-color-secondary: #333333;
+      --text-75: 0.75rem;
+      --text-90: 0.9rem;
+      --text-110: 1.1rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background-color: #1E1E1E;
+        --text-color-primary: #EAEAEA;
+        --text-color-secondary: #CCCCCC;
+      }
+    }
+
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+
+    html {
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      background-color: transparent;
+    }
+
+    html:has(.splash-overlay) {
+      overflow: hidden;
+    }
+
+    body {
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--background-color);
+      text-align: center;
+      font-family: "Nunito", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .noscript-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--background-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .splash-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .splash-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-color: var(--background-color);
+      transition: opacity 0.65s ease-out;
+      pointer-events: none;
+    }
+
+    .splash-overlay.splash-hiding::before {
+      opacity: 0;
+    }
+
+    .splash-logo {
+      width: auto;
+      height: 10rem;
+      user-select: none;
+      -webkit-user-drag: none;
+      will-change: transform;
+      opacity: 0;
+      scale: 0.75;
+      animation: splash-logo-fade-in 0.5s ease-out 0.1s forwards;
+    }
+
+    @keyframes splash-logo-fade-in {
+      to {
+        opacity: 1;
+        scale: 1;
+      }
+    }
+
+    .splash-logo.splash-logo-flying {
+      transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .splash-header-item {
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .splash-header-item.splash-revealed {
+      opacity: 1;
+    }
+
+    .splash-loading-label {
+      position: absolute;
+      bottom: 3.5rem;
+      font-size: var(--text-75);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-color-secondary);
+      opacity: 0;
+      scale: 0.88;
+      animation: splash-loading-appear 1s ease-out 3s forwards;
+    }
+
+    .splash-loading-label::after {
+      content: '...';
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: bottom;
+      width: 0;
+      animation: splash-loading-dots 1.4s steps(4, end) 3s infinite;
+    }
+
+    @keyframes splash-loading-appear {
+      to {
+        opacity: 0.5;
+        scale: 1;
+      }
+    }
+
+    @keyframes splash-loading-dots {
+      to { width: 1.1em; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .splash-logo {
+        animation: none;
+        opacity: 1;
+      }
+
+      .splash-logo.splash-logo-flying {
+        transition: transform 0s;
+      }
+
+      .splash-loading-label,
+      .splash-loading-label::after {
+        animation: none;
+      }
+    }
+
+    .splash-overlay.splash-error {
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .splash-error-icon {
+      font-size: 2.5rem;
+      color: var(--text-color-secondary);
+      margin-bottom: 0.25rem;
+      opacity: 0;
+      animation: splash-logo-fade-in 0.4s ease-out 0.1s forwards;
+    }
+
+    .splash-error-title {
+      font-size: var(--text-110);
+      font-weight: 700;
+      color: var(--text-color-primary);
+      opacity: 0;
+      animation: splash-logo-fade-in 0.4s ease-out 0.15s forwards;
+    }
+
+    .splash-error-subtitle {
+      font-size: var(--text-90);
+      color: var(--text-color-secondary);
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: splash-logo-fade-in 0.4s ease-out 0.2s forwards;
+    }
+
+    .splash-error-reload {
+      opacity: 0;
+      animation: splash-logo-fade-in 0.4s ease-out 0.25s forwards;
+    }
+  </style>
+
   <!-- Preconnect to the render-blocking cross-origin CSS below (Google
        Fonts), so DNS/TCP/TLS isn't paid serially after the stylesheet is
        discovered. -->
@@ -51,13 +258,21 @@
   <link rel="stylesheet" href="./components/liquid-glass.css" />
   <link rel="stylesheet" href="./components/keybindings.css" />
 
-  <!-- Nunito font -->
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Nunito font. Loaded non-blocking (media="print" swap trick): the
+       splash/body font-family fallback stack already covers the pre-load
+       gap, and font-display: swap covers the rest of the app, so nothing
+       needs this to be render-blocking. -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"
+    media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"></noscript>
 
   <!-- HugeIcons (stroke-rounded) — the app's icon font, self-hosted (see
        public/fonts/hugeicons/icons.css) for a long, cache-controlled TTL
-       instead of use.hugeicons.com's 4h one -->
-  <link rel="stylesheet" href="/fonts/hugeicons/icons.css" />
+       instead of use.hugeicons.com's 4h one. 50KB gzipped and unused by the
+       splash screen, so it's loaded non-blocking too. -->
+  <link rel="stylesheet" href="/fonts/hugeicons/icons.css" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="/fonts/hugeicons/icons.css" /></noscript>
 
   <!-- JS -->
   <script type="module" src="script.js" defer></script>

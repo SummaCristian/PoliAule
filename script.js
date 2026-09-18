@@ -54,17 +54,33 @@ import { resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from './
 const _splashStartTime = Date.now();
 const _SPLASH_MIN_MS = 300;
 
+// Set once showSplashError() has replaced the splash's markup with the error
+// screen. The 15s init-timeout (below) and a genuinely slow-but-successful
+// init are two independent setTimeout callbacks racing each other — nothing
+// cancels the success path just because the timeout fired first. If init
+// finishes after the error screen is already showing, dismissSplash() would
+// otherwise reach for a .splash-logo/.header-logo hand-off that no longer
+// applies (the error markup has no .splash-logo) and crash. Recover instead
+// by just dropping the error screen and revealing the app.
+let _splashFailed = false;
+
 function dismissSplash() {
   const overlay = document.getElementById('splash-overlay');
   if (!overlay) return;
 
-  const splashLogo = overlay.querySelector('.splash-logo');
-  const realLogo = document.querySelector('.header-logo');
-  const isInfo = location.hash === '#info';
-
   const revealHeader = () =>
     document.querySelectorAll('.splash-header-item')
       .forEach(el => el.classList.add('splash-revealed'));
+
+  if (_splashFailed) {
+    overlay.remove();
+    revealHeader();
+    return;
+  }
+
+  const splashLogo = overlay.querySelector('.splash-logo');
+  const realLogo = document.querySelector('.header-logo');
+  const isInfo = location.hash === '#info';
 
   if (document.startViewTransition) {
     // --- View Transition path ---
@@ -138,6 +154,7 @@ function dismissSplash() {
 function showSplashError() {
   const overlay = document.getElementById('splash-overlay');
   if (!overlay) return;
+  _splashFailed = true;
   overlay.classList.add('splash-error');
   overlay.innerHTML = `
     <i class="hgi-stroke hgi-wifi-off-01 splash-error-icon" aria-hidden="true"></i>
@@ -294,8 +311,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   // connectivity), surface the error screen instead of staying stuck forever.
   const _initTimeoutId = setTimeout(showSplashError, 15000);
 
+  // Kick off occupancy fetching immediately, in parallel with everything
+  // below. It's an independent network round trip (locale JSON and the
+  // classroom directory don't feed into it) and doesn't block the splash —
+  // the date picker/results area stay in their skeleton/loading state until
+  // it resolves — so there's no reason to make it wait its turn behind the
+  // rest of init.
+  initOccupancyData();
+
   try {
-    await initI18n();
+    // The locale JSON and the static classroom directory are independent
+    // fetches (neither's data feeds the other) but both block the splash —
+    // it's what the page shell (campus picker, classroom detail, favourites)
+    // is built from, and translations need to be in before anything renders
+    // text. Running them head-to-tail with two `await`s would serialize two
+    // network round trips for no reason, so fire them together instead.
+    await Promise.all([initI18n(), ensureClassroomDirectory()]);
+
     applyTranslations();
     // <date-chip-picker> renders its date label via Intl at module-eval time,
     // before initI18n() resolves — re-render it now that the locale is known.
@@ -312,12 +344,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Search overlay (bottom-nav FAB) — lazy-loads its data on first open
     initSearchOverlay();
-
-    // Only the static classroom directory blocks the splash — it's what the
-    // page shell (campus picker, classroom detail, favourites) is built from.
-    // Occupancy data is fetched separately in the background (see
-    // initOccupancyData below) and fills in its own skeleton once ready.
-    await ensureClassroomDirectory();
 
     // Init classroom detail overlay (hash routing + VT morph)
     classroomDetail.init(staticClassroomsData);
@@ -364,11 +390,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
       }
     });
-
-    // Kick off occupancy fetching in the background. It doesn't block the
-    // splash — the date picker/results area stay in their skeleton/loading
-    // state until it resolves.
-    initOccupancyData();
 
     // Apply the cached blur verdict (or the safe "off" default if none yet)
     // instantly — the actual benchmark never runs during load, see

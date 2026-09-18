@@ -237,6 +237,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+  <!-- Preconnect to the occupancy/opening-hours/config API, so the first
+       fetch() call (issued once the JS bundle has downloaded and run,
+       config.js/available-rooms-script.js) doesn't pay DNS/TCP/TLS on top of
+       that fetch's own round trip. Points at the stable API by default —
+       correct for poliaule.com, where getApiBase() (config.js) always
+       resolves here; scripts/build-beta.sh swaps this to api-beta before the
+       beta build runs, matching that build's default backend. -->
+  <link rel="preconnect" href="https://api.poliaule.com" crossorigin>
+
   <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />

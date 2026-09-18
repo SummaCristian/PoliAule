@@ -12,3 +12,9 @@ cp public/favicons/beta/web-app-manifest-512x512.png public/favicons/main/web-ap
 cp public/favicons/beta/site.webmanifest public/favicons/main/site.webmanifest
 
 echo "Beta icons in place."
+
+echo "Beta build: swapping API preconnect..."
+
+sed -i 's#https://api\.poliaule\.com#https://api-beta.poliaule.com#' index.html
+
+echo "Beta API preconnect in place."

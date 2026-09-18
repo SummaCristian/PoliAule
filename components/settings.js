@@ -13,6 +13,14 @@ import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } fr
 
 const TRANSITION_DURATION = 420;
 
+// Swipe-to-dismiss (drag from the title row — see wireDismissDrag()).
+const DISMISS_DISTANCE = 120;       // px dragged down commits to close
+const DISMISS_FLING_VELOCITY = 0.5; // px/ms — a fast-enough flick commits regardless of distance
+const DRAG_RUBBER_GIVE = 60;        // rubber-band give (px) when dragging upward, which never dismisses
+// Asymptotic rubber-band (approaches ±give, never past it) — same recipe as
+// campus-sheet.js's own rubber().
+const rubber = (x, give) => (x * give) / (give + Math.abs(x));
+
 const PREFERRED_CAMPUS_ENABLED_KEY = 'poliAule_preferredCampusEnabled';
 const PREFERRED_CAMPUS_ID_KEY      = 'poliAule_preferredCampusId';
 const REMEMBER_LAST_CAMPUS_KEY     = 'poliAule_rememberLastCampus';
@@ -103,6 +111,82 @@ function lockScroll() {
 function unlockScroll() {
   window.removeEventListener('wheel', preventScroll);
   window.removeEventListener('touchmove', preventScroll);
+}
+
+// ── Swipe-to-dismiss ────────────────────────────────────────────────────────────
+//
+// Bound to the title row rather than the whole popup: the row is sticky
+// (never scrolls), so there's no scroll-vs-drag ambiguity to arbitrate
+// (contrast campus-sheet.js's onPointerMove, which has to guess between
+// resizing the sheet and scrolling its content). Dragging up just
+// rubber-bands in place — this is a centered modal, not a sheet with
+// somewhere further up to go.
+
+let dragPointerId = null;
+let dragStartY = 0;
+let dragSamples = [];
+
+function pushDragSample(y) {
+  const now = performance.now();
+  dragSamples.push({ y, t: now });
+  while (dragSamples.length > 2 && now - dragSamples[0].t > 100) dragSamples.shift();
+}
+
+function dragVelocity() {
+  // px/ms, positive = pointer moving down.
+  const a = dragSamples[0], b = dragSamples[dragSamples.length - 1];
+  return b && a && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;
+}
+
+function onDragPointerDown(e) {
+  if (!isOpen || isAnimating) return;
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  if (e.target.closest('.settings-close-btn')) return; // let the close button's own click through
+
+  dragPointerId = e.pointerId;
+  dragStartY = e.clientY;
+  dragSamples = [];
+  pushDragSample(e.clientY);
+  popupEl.style.transition = 'none';
+  window.addEventListener('pointermove', onDragPointerMove);
+  window.addEventListener('pointerup', onDragPointerEnd);
+  window.addEventListener('pointercancel', onDragPointerEnd);
+}
+
+function onDragPointerMove(e) {
+  if (e.pointerId !== dragPointerId) return;
+  pushDragSample(e.clientY);
+  const dy = e.clientY - dragStartY;
+  const applied = dy > 0 ? dy : rubber(dy, DRAG_RUBBER_GIVE);
+  popupEl.style.transform = `translateY(${applied}px)`;
+}
+
+function onDragPointerEnd(e) {
+  if (e.pointerId !== dragPointerId) return;
+  window.removeEventListener('pointermove', onDragPointerMove);
+  window.removeEventListener('pointerup', onDragPointerEnd);
+  window.removeEventListener('pointercancel', onDragPointerEnd);
+  dragPointerId = null;
+
+  const dy = e.clientY - dragStartY;
+  const v = dragVelocity();
+
+  if (dy > 0 && (dy > DISMISS_DISTANCE || v > DISMISS_FLING_VELOCITY)) {
+    // Leave the popup exactly where the drag left it — closeSettings()
+    // reads that via getBoundingClientRect() as the morph's starting rect,
+    // so the fling continues straight into the close animation.
+    popupEl.style.transition = '';
+    closeSettings();
+    return;
+  }
+
+  // Didn't clear the threshold — spring back to centered.
+  popupEl.style.transition = 'transform 0.32s cubic-bezier(0.34, 1.4, 0.64, 1)';
+  popupEl.style.transform = '';
+}
+
+function wireDismissDrag(titleRow) {
+  titleRow.addEventListener('pointerdown', onDragPointerDown);
 }
 
 // ── Overlay ───────────────────────────────────────────────────────────────────
@@ -741,6 +825,7 @@ function buildPopup() {
   `;
 
   popup.querySelector('.settings-close-btn').addEventListener('click', () => closeSettings());
+  wireDismissDrag(popup.querySelector('.settings-popup__title-row'));
 
   // Append campus section
   const inner = popup.querySelector('.settings-popup__inner');

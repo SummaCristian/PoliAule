@@ -118,7 +118,10 @@
   transition-delay: 0.28s;
 }
 
-/* Title row: sticky header with gradient blur + color fade */
+/* Title row: sticky header with gradient blur + color fade.
+   Also the swipe-to-dismiss drag handle (settings.js's wireDismissDrag) —
+   `touch-action: none` so a touch drag here drives the gesture directly
+   instead of the browser trying to scroll/pull-to-refresh underneath it. */
 .settings-popup__title-row {
   position: sticky;
   top: 0;
@@ -129,6 +132,9 @@
   /* Extend edge-to-edge, cancelling the inner's horizontal padding */
   margin: 0 -1.25rem;
   padding: 1.25rem 1.25rem 0.875rem;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* The blur+color gradient lives on ::before so mask-image can fade both

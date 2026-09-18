@@ -29,8 +29,10 @@
        bundles into one ~170KB/27KB-gzip file and, on a throttled connection,
        can take seconds to arrive). The full stylesheet below is loaded
        non-blocking (see the media="print" swap trick) and takes over once it
-       lands — well before the splash is dismissed. Keep this in sync with
-       the ".splash-*"/".noscript-overlay" rules in style.css if they change. -->
+       lands. All the ".splash-*" rules are intentionally NOT duplicated
+       there (see style.css's "Splash Screen" comment) — this is their only
+       copy. ".noscript-overlay" IS duplicated there on purpose (that one
+       isn't transient); keep the two in sync if it changes. -->
   <style>
     :root {
       box-sizing: border-box;

@@ -413,159 +413,31 @@ body {
   padding: 2rem;
 }
 
-/* ── Splash Screen ────────────────────────────────────────────── */
-html:has(.splash-overlay) {
-  overflow: hidden;
-}
-
-.splash-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.splash-overlay::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: var(--background-color);
-  transition: opacity 0.65s ease-out;
-  pointer-events: none;
-}
-
-.splash-overlay.splash-hiding::before {
-  opacity: 0;
-}
-
-.splash-logo {
-  /* Match the header logo's sizing model (height-driven, width auto) so the
-     splash → header view transition is a pure uniform scale. A fixed square
-     box here letterboxes the non-square artwork, which makes the shared
-     element land at the wrong size/position and jump at the end. */
-  width: auto;
-  height: 10rem;
-  user-select: none;
-  -webkit-user-drag: none;
-  will-change: transform;
-  opacity: 0.5;
-  scale: 0.75;
-  animation: splash-logo-fade-in 0.5s ease-out 0.1s forwards;
-}
-
-@keyframes splash-logo-fade-in {
-  to {
-    opacity: 1;
-    scale: 1;
-  }
-}
-
-.splash-logo.splash-logo-flying {
-  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.splash-header-item {
-  opacity: 0;
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.splash-header-item.splash-revealed {
-  opacity: 1;
-}
-
-.splash-loading-label {
-  position: absolute;
-  bottom: 3.5rem;
-  font-size: var(--text-75);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-color-secondary);
-  opacity: 0;
-  scale: 0.88;
-  animation: splash-loading-appear 1s ease-out 3s forwards;
-}
-
-.splash-loading-label::after {
-  content: '...';
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: bottom;
-  width: 0;
-  animation: splash-loading-dots 1.4s steps(4, end) 3s infinite;
-}
-
-@keyframes splash-loading-appear {
-  to {
-    opacity: 0.5;
-    scale: 1;
-  }
-}
-
-@keyframes splash-loading-dots {
-  to { width: 1.1em; }
-}
-
+/* ── Splash Screen ────────────────────────────────────────────────────────
+   Every visual rule for the splash (.splash-overlay, .splash-logo,
+   .splash-loading-label, the splash-error-* state, splash-header-item,
+   html:has(.splash-overlay), and the splash-logo-fade-in/splash-loading-*
+   keyframes) lives ONLY in index.html's inlined critical <style> now, not
+   here. It used to be duplicated in both places ("keep in sync" comments on
+   each copy) — but @keyframes don't merge across stylesheets: when this
+   file's identically-named @keyframes finished loading, it fully replaced
+   the inline one as the winning rule, and that swap was visibly restarting
+   the splash logo's fade-in mid-animation on slow connections (the two
+   copies were behaviorally identical but came from different CSSOM
+   objects, which browsers don't always treat as "no real change"). Since
+   the splash element is always gone from the DOM well before this
+   stylesheet matters, there's no reason for it to restate any of this —
+   only the reduced-motion --ease-spring override (app-wide, not
+   splash-specific) and the view-transition rules below (never duplicated
+   inline — they don't apply until the transition actually starts, long
+   after this file has loaded) still belong here. */
 @media (prefers-reduced-motion: reduce) {
-  .splash-logo {
-    animation: none;
-    opacity: 1;
-  }
-
-  .splash-logo.splash-logo-flying {
-    transition: transform 0s;
-  }
-
-  .splash-loading-label,
-  .splash-loading-label::after {
-    animation: none;
-  }
-
   /* Keep the press feedback, drop the springy overshoot. */
   :root {
     --ease-spring: ease;
     --press-in-ease: ease;
     --press-out-dur: 0.15s;
   }
-}
-
-/* Splash error state */
-.splash-overlay.splash-error {
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 2rem;
-  text-align: center;
-}
-
-.splash-error-icon {
-  font-size: 2.5rem;
-  color: var(--text-color-secondary);
-  margin-bottom: 0.25rem;
-  opacity: 0;
-  animation: splash-logo-fade-in 0.4s ease-out 0.1s forwards;
-}
-
-.splash-error-title {
-  font-size: var(--text-110);
-  font-weight: 700;
-  color: var(--text-color-primary);
-  opacity: 0;
-  animation: splash-logo-fade-in 0.4s ease-out 0.15s forwards;
-}
-
-.splash-error-subtitle {
-  font-size: var(--text-90);
-  color: var(--text-color-secondary);
-  margin-bottom: 1rem;
-  opacity: 0;
-  animation: splash-logo-fade-in 0.4s ease-out 0.2s forwards;
-}
-
-.splash-error-reload {
-  opacity: 0;
-  animation: splash-logo-fade-in 0.4s ease-out 0.25s forwards;
 }
 
 /* Splash logo View Transition */

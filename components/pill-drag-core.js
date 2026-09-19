@@ -24,9 +24,11 @@ const RAIL_GIVE = 11;             // elastic px the pill can be pulled past the 
 const CROSS_GIVE = 5;             // elastic px the pill can be pulled off its rail
 const STRETCH_GAIN = 0.9;         // pill speed (px/ms) → inertia deform ratio
 const STRETCH_MAX = 0.26;
-const CONTAINER_FOLLOW = 0.09;    // fraction of the drag the whole control trails by
-const CONTAINER_GIVE = 5;         // px cap along the rail
-const CONTAINER_GIVE_CROSS = 4;   // px cap across it
+const TRAIL = {
+  follow: 0.09,                   // fraction of the drag the whole control trails by
+  give: 5,                        // px cap along the rail
+  giveCross: 4,                   // px cap across it
+};
 const DRAG_OVERSHOOT = 8;
 const HOLD_MS = 130;              // press-and-hold before an unselected cell grabs the pill
 const ENGAGE_MOVE = 6;            // ...or this much finger travel, whichever comes first
@@ -37,12 +39,26 @@ const rubber = (x, give) => (x * give) / (give + Math.abs(x));
 
 // onChange(index, { silent }) fires whenever a *different* cell becomes the
 // selected one. `silent` is true only for a programmatic select(..., { silent }).
+//
+// Optional hooks:
+//   canSelect(index)   false → that cell can't be chosen: a tap calls
+//                      onReject(index) instead, a drag released over it
+//                      springs back to the current cell.
+//   haptic             called on a committed tap/drag (default: light tick;
+//                      pass null when onChange already buzzes on its own).
+//   trail              overrides TRAIL, how far the whole control follows a drag.
+//   onRender({ pos })  after every frame's transforms are written.
 export function createPillDragCore({
   root, items, pill, hit, activeRow,
   cellSelector,
   activeCellClass = 'pill-active-cell',
   liftedClass = 'pill--lifted',
   tapScale = 1.3,
+  trail = TRAIL,
+  canSelect,
+  onReject,
+  haptic = () => haptics.trigger(defaultPatterns.light),
+  onRender,
   onChange,
 }) {
   let cells = [];
@@ -98,7 +114,12 @@ export function createPillDragCore({
     }
     activeRow.style.width = itemsW + 'px';
 
-    anchors = cells.map(el => ({ pos: el.offsetLeft, size: el.offsetWidth }));
+    // Cells are usually positioned against `items` itself, but may share an
+    // offsetParent with it (e.g. a padded container) — normalize to items' origin.
+    anchors = cells.map(el => ({
+      pos: el.offsetLeft - (el.offsetParent === items ? 0 : items.offsetLeft),
+      size: el.offsetWidth,
+    }));
 
     // One duplicate per cell, centered on that cell's own anchor midpoint
     // rather than laid out by flex — see .bn-tab-active in bottom-nav.css
@@ -111,6 +132,9 @@ export function createPillDragCore({
       dup.style.left = (anchors[i].pos + anchors[i].size / 2) + 'px';
       dup.style.transform = 'translateX(-50%)';
       dup.style.height = '100%';
+      // Auto width on an abs-positioned box shrinks to the room right of `left`,
+      // squeezing the last cell's duplicate; max-content keeps it its natural size.
+      dup.style.width = 'max-content';
       activeRow.appendChild(dup);
     });
 
@@ -186,7 +210,7 @@ export function createPillDragCore({
     const posStr = `translateX(${pillPos.value}px) translateY(${crossOff.value}px)`;
     pill.style.transform = `${posStr} scale(${scMain}, ${scCross})`;
     hit.style.transform = posStr;
-    pill.style.opacity = index >= 0 ? '' : '0';
+    pill.style.opacity = index >= 0 ? '1' : '0';
     // Full glass look only while lifted; flat at rest. Checking scale.value
     // (not scale.resting) also covers reduced-motion, where to() snaps.
     pill.classList.toggle(liftedClass, lifted);
@@ -195,6 +219,7 @@ export function createPillDragCore({
     const cx = containerOff.value, cy = containerCross.value;
     root.style.transform = (cx || cy) ? `translate(${cx}px, ${cy}px)` : '';
     updateMask(scMain, scCross);
+    onRender?.({ pos: pillPos.value });
   }
   onSpringFrame(render);
 
@@ -228,7 +253,10 @@ export function createPillDragCore({
 
   items.addEventListener('click', (e) => {
     const i = cells.indexOf(e.target.closest(cellSelector));
-    if (i !== -1 && i !== index) { haptics.trigger(defaultPatterns.light); select(i); }
+    if (i === -1 || i === index) return;
+    if (canSelect && !canSelect(i)) { onReject?.(i); return; }
+    haptic?.();
+    select(i);
   });
 
   /* --- Drag -------------------------------------------------------- */
@@ -303,9 +331,9 @@ export function createPillDragCore({
     pillPos.to(railDragPos(raw), { stiffness: 1000, damping: 70, mass: 0.5 });
     pillMain.to(sizeForPos(raw), { stiffness: 1000, damping: 70, mass: 0.5 });
     crossOff.to(rubber(dCross, CROSS_GIVE), { stiffness: 700, damping: 42, mass: 0.5 });
-    containerOff.to(rubber(dMain * CONTAINER_FOLLOW, CONTAINER_GIVE),
+    containerOff.to(rubber(dMain * trail.follow, trail.give),
       { stiffness: 260, damping: 26, mass: 1 });
-    containerCross.to(rubber(dCross * CONTAINER_FOLLOW, CONTAINER_GIVE_CROSS),
+    containerCross.to(rubber(dCross * trail.follow, trail.giveCross),
       { stiffness: 260, damping: 26, mass: 1 });
   }
 
@@ -350,6 +378,15 @@ export function createPillDragCore({
       const d = Math.abs(projectedPos - anchor.pos);
       if (d < bestDist) { bestDist = d; nearest = i; }
     });
+    // (With canSelect) a forbidden or unchanged target: spring back to the current cell,
+    // snappier than a real move — it's a correction, not a selection.
+    if (canSelect && (nearest === index || !canSelect(nearest))) {
+      scale.to(1, { stiffness: 350, damping: 30, mass: 0.8 });
+      const cur = anchors[index];
+      pillPos.to(cur.pos, { stiffness: 700, damping: 50, mass: 0.7 });
+      pillMain.to(cur.size, { stiffness: 700, damping: 50, mass: 0.7 });
+      return;
+    }
     const target = anchors[nearest];
     pillPos.to(target.pos, { stiffness: 400, damping: 38, mass: 0.8 });
     pillMain.to(target.size, { stiffness: 400, damping: 38, mass: 0.8 });
@@ -357,7 +394,7 @@ export function createPillDragCore({
     if (nearest !== index) {
       index = nearest;
       onChange?.(nearest, { silent: false });
-      haptics.trigger(defaultPatterns.light);
+      haptic?.();
     }
   }
 
@@ -385,5 +422,7 @@ export function createPillDragCore({
     refresh,
     select,
     get index() { return index; },
+    get cells() { return cells; },
+    indexOf: (el) => cells.indexOf(el),
   };
 }

@@ -9,6 +9,7 @@ import { selectCampusById } from './campus-picker.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
 import { getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState } from '../utils/blur-capability.js';
+import { createSegmentedControl } from './segmented-control.js';
 import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
 
 const TRANSITION_DURATION = 420;
@@ -52,10 +53,7 @@ let overlay = null;
 // Module-level refs set by initSettings()
 let triggerEl = null;
 let popupEl = null;
-let positionIndicatorFn = null;
-let positionTimeFmtIndicatorFn = null;
-let positionDefaultTabIndicatorFn = null;
-let positionBlurModeIndicatorFn = null;
+let segControls = []; // segmented controls, re-measured whenever the popup is shown
 let refreshCampusSelectFn = null; // set by buildCampusSection, called on every open
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
@@ -245,10 +243,7 @@ function openSettings() {
   });
   popupEl.style.boxShadow = 'var(--settings-glass-shadow)';
 
-  positionIndicatorFn?.(false);            // snap lang indicator before morph animation starts
-  positionTimeFmtIndicatorFn?.(false);     // snap time format indicator before morph animation starts
-  positionDefaultTabIndicatorFn?.(false);  // snap default tab indicator before morph animation starts
-  positionBlurModeIndicatorFn?.(false);    // snap glass effect indicator before morph animation starts
+  segControls.forEach(c => c.refresh({ snap: true })); // place pills before the morph animation starts
   refreshCampusSelectFn?.();            // re-populate campus select now that data may be loaded
 
   onTransitionEnd(popupEl, () => {
@@ -609,13 +604,12 @@ function buildPopup() {
                 <span class="settings-row__sublabel" data-i18n="settings.languageDesc">${t('settings.languageDesc')}</span>
               </div>
             </div>
-            <div class="settings-lang-toggle">
-              <div class="settings-lang-indicator"></div>
-              <button class="settings-lang-btn${getLocale() === 'en' ? ' active' : ''}" data-lang="en">
+            <div data-lang-toggle>
+              <button class="seg-item" data-value="en">
                 <span class="settings-lang-btn__flag">🇬🇧</span>
                 <span class="settings-lang-btn__name">English</span>
               </button>
-              <button class="settings-lang-btn${getLocale() === 'it' ? ' active' : ''}" data-lang="it">
+              <button class="seg-item" data-value="it">
                 <span class="settings-lang-btn__flag">🇮🇹</span>
                 <span class="settings-lang-btn__name">Italiano</span>
               </button>
@@ -642,15 +636,14 @@ function buildPopup() {
                 <span class="settings-row__sublabel" data-i18n="settings.timeFormatDesc">${t('settings.timeFormatDesc')}</span>
               </div>
             </div>
-            <div class="settings-lang-toggle" data-timefmt-toggle>
-              <div class="settings-lang-indicator"></div>
-              <button class="settings-lang-btn" data-timefmt="system">
+            <div data-timefmt-toggle>
+              <button class="seg-item" data-value="system">
                 <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.system">${t('settings.timeFormat.system')}</span>
               </button>
-              <button class="settings-lang-btn" data-timefmt="12">
+              <button class="seg-item" data-value="12">
                 <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.12h">${t('settings.timeFormat.12h')}</span>
               </button>
-              <button class="settings-lang-btn" data-timefmt="24">
+              <button class="seg-item" data-value="24">
                 <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.24h">${t('settings.timeFormat.24h')}</span>
               </button>
             </div>
@@ -742,18 +735,17 @@ function buildPopup() {
                 <span class="settings-row__sublabel" data-i18n="settings.defaultTab.desc">${t('settings.defaultTab.desc')}</span>
               </div>
             </div>
-            <div class="settings-lang-toggle" data-defaulttab-toggle>
-              <div class="settings-lang-indicator"></div>
-              <button class="settings-lang-btn" data-defaulttab="available">
+            <div data-defaulttab-toggle>
+              <button class="seg-item" data-value="available">
                 <i class="hgi-stroke hgi-calendar-check-01 settings-seg-icon" aria-hidden="true"></i>
                 <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.available">${t('settings.defaultTab.available')}</span>
               </button>
-              <button class="settings-lang-btn" data-defaulttab="search">
+              <button class="seg-item" data-value="search">
                 <i class="hgi-stroke hgi-search-01 settings-seg-icon" aria-hidden="true"></i>
                 <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.search">${t('settings.defaultTab.search')}</span>
               </button>
-              <div class="settings-seg-separator"></div>
-              <button class="settings-lang-btn" data-defaulttab="last">
+              <div class="seg-separator"></div>
+              <button class="seg-item" data-value="last">
                 <i class="hgi-stroke hgi-history settings-seg-icon" aria-hidden="true"></i>
                 <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.last">${t('settings.defaultTab.last')}</span>
               </button>
@@ -780,15 +772,14 @@ function buildPopup() {
                 <span class="settings-row__sublabel" data-i18n="settings.glassEffectDesc">${t('settings.glassEffectDesc')}</span>
               </div>
             </div>
-            <div class="settings-lang-toggle" data-blurmode-toggle>
-              <div class="settings-lang-indicator"></div>
-              <button class="settings-lang-btn" data-blurmode="auto">
+            <div data-blurmode-toggle>
+              <button class="seg-item" data-value="auto">
                 <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.auto">${t('settings.glassEffect.auto')}</span>
               </button>
-              <button class="settings-lang-btn" data-blurmode="on">
+              <button class="seg-item" data-value="on">
                 <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.on">${t('settings.glassEffect.on')}</span>
               </button>
-              <button class="settings-lang-btn" data-blurmode="off">
+              <button class="seg-item" data-value="off">
                 <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.off">${t('settings.glassEffect.off')}</span>
               </button>
             </div>
@@ -833,69 +824,24 @@ function buildPopup() {
   refreshCampusSelectFn = refreshIfNeeded;
   inner.appendChild(campusSectionEl);
 
-  // Wire language buttons and sliding indicator
-  const toggle = popup.querySelector('.settings-lang-toggle');
-  const indicator = toggle.querySelector('.settings-lang-indicator');
-
-  function positionIndicator(animate) {
-    const activeBtn = toggle.querySelector('.settings-lang-btn.active');
-    if (!activeBtn) return;
-    if (!animate) indicator.style.transition = 'none';
-    indicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
-    indicator.style.width = `${activeBtn.offsetWidth}px`;
-    indicator.style.height = `${activeBtn.offsetHeight}px`;
-    if (!animate) {
-      indicator.getBoundingClientRect(); // force reflow
-      indicator.style.transition = '';
-    }
-  }
-
-  popup.querySelectorAll('.settings-lang-btn[data-lang]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const lang = btn.dataset.lang;
+  // Segmented controls (glass pill w/ tabbar tap + drag, see segmented-control.js)
+  const langSeg = createSegmentedControl(popup.querySelector('[data-lang-toggle]'), {
+    value: getLocale(),
+    async onSelect(lang) {
       if (lang === getLocale()) return;
+      haptics.trigger(defaultPatterns.light);
       await setLocale(lang);
-      haptics.trigger(defaultPatterns.light);
-      updateLangButtons(popup, positionIndicator);
-    });
+    },
   });
 
-  // Expose so openSettings() can snap after first display
-  positionIndicatorFn = positionIndicator;
-
-  // Wire time format buttons and sliding indicator
-  const timeFmtToggle = popup.querySelector('[data-timefmt-toggle]');
-  const timeFmtIndicator = timeFmtToggle.querySelector('.settings-lang-indicator');
-  const savedTimeFmt = localStorage.getItem(TIME_FORMAT_KEY) ?? 'system';
-  timeFmtToggle.querySelector(`[data-timefmt="${savedTimeFmt}"]`)?.classList.add('active');
-
-  function positionTimeFmtIndicator(animate) {
-    const activeBtn = timeFmtToggle.querySelector('.settings-lang-btn.active');
-    if (!activeBtn) return;
-    if (!animate) timeFmtIndicator.style.transition = 'none';
-    timeFmtIndicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
-    timeFmtIndicator.style.width = `${activeBtn.offsetWidth}px`;
-    timeFmtIndicator.style.height = `${activeBtn.offsetHeight}px`;
-    if (!animate) {
-      timeFmtIndicator.getBoundingClientRect(); // force reflow
-      timeFmtIndicator.style.transition = '';
-    }
-  }
-
-  timeFmtToggle.querySelectorAll('.settings-lang-btn[data-timefmt]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const fmt = btn.dataset.timefmt;
-      if (timeFmtToggle.querySelector('.settings-lang-btn.active') === btn) return;
+  const timeFmtSeg = createSegmentedControl(popup.querySelector('[data-timefmt-toggle]'), {
+    value: localStorage.getItem(TIME_FORMAT_KEY) ?? 'system',
+    onSelect(fmt, { silent }) {
+      if (silent) return;
       localStorage.setItem(TIME_FORMAT_KEY, fmt);
-      timeFmtToggle.querySelectorAll('.settings-lang-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      positionTimeFmtIndicator(true);
-      haptics.trigger(defaultPatterns.light);
       window.dispatchEvent(new CustomEvent('timeformatchange'));
-    });
+    },
   });
-
-  positionTimeFmtIndicatorFn = positionTimeFmtIndicator;
 
   // Wire Hide Sundays toggle
   const hideSundaysRow = popup.querySelector('[data-hide-sundays-row]');
@@ -975,77 +921,29 @@ function buildPopup() {
     haptics.trigger(defaultPatterns.light);
   });
 
-  // Wire Default Tab 3-way toggle
-  const defaultTabToggle = popup.querySelector('[data-defaulttab-toggle]');
-  const defaultTabIndicator = defaultTabToggle.querySelector('.settings-lang-indicator');
-  const savedDefaultTab = localStorage.getItem(DEFAULT_TAB_KEY) ?? 'available';
-  defaultTabToggle.querySelector(`[data-defaulttab="${savedDefaultTab}"]`)?.classList.add('active');
-
-  function positionDefaultTabIndicator(animate) {
-    const activeBtn = defaultTabToggle.querySelector('.settings-lang-btn.active');
-    if (!activeBtn) return;
-    if (!animate) defaultTabIndicator.style.transition = 'none';
-    defaultTabIndicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
-    defaultTabIndicator.style.width = `${activeBtn.offsetWidth}px`;
-    defaultTabIndicator.style.height = `${activeBtn.offsetHeight}px`;
-    if (!animate) {
-      defaultTabIndicator.getBoundingClientRect();
-      defaultTabIndicator.style.transition = '';
-    }
-  }
-
-  defaultTabToggle.querySelectorAll('.settings-lang-btn[data-defaulttab]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const val = btn.dataset.defaulttab;
-      if (defaultTabToggle.querySelector('.settings-lang-btn.active') === btn) return;
+  const defaultTabSeg = createSegmentedControl(popup.querySelector('[data-defaulttab-toggle]'), {
+    value: localStorage.getItem(DEFAULT_TAB_KEY) ?? 'available',
+    onSelect(val, { silent }) {
+      if (silent) return;
       localStorage.setItem(DEFAULT_TAB_KEY, val);
-      defaultTabToggle.querySelectorAll('.settings-lang-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      positionDefaultTabIndicator(true);
-      haptics.trigger(defaultPatterns.light);
-    });
+    },
   });
 
-  positionDefaultTabIndicatorFn = positionDefaultTabIndicator;
-
-  // Wire Glass Effect (blur) 3-way toggle
-  const blurModeToggle = popup.querySelector('[data-blurmode-toggle]');
-  const blurModeIndicator = blurModeToggle.querySelector('.settings-lang-indicator');
-  const savedBlurMode = getBlurMode();
-  blurModeToggle.querySelector(`[data-blurmode="${savedBlurMode}"]`)?.classList.add('active');
-
-  function positionBlurModeIndicator(animate) {
-    const activeBtn = blurModeToggle.querySelector('.settings-lang-btn.active');
-    if (!activeBtn) return;
-    if (!animate) blurModeIndicator.style.transition = 'none';
-    blurModeIndicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
-    blurModeIndicator.style.width = `${activeBtn.offsetWidth}px`;
-    blurModeIndicator.style.height = `${activeBtn.offsetHeight}px`;
-    if (!animate) {
-      blurModeIndicator.getBoundingClientRect();
-      blurModeIndicator.style.transition = '';
-    }
-  }
-
-  blurModeToggle.querySelectorAll('.settings-lang-btn[data-blurmode]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mode = btn.dataset.blurmode;
-      if (blurModeToggle.querySelector('.settings-lang-btn.active') === btn) return;
+  const blurModeSeg = createSegmentedControl(popup.querySelector('[data-blurmode-toggle]'), {
+    value: getBlurMode(),
+    onSelect(mode, { silent }) {
+      if (silent) return;
       setBlurMode(mode);
-      blurModeToggle.querySelectorAll('.settings-lang-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      positionBlurModeIndicator(true);
-      haptics.trigger(defaultPatterns.light);
       // Apply right away instead of waiting for the next splash screen: "on"/"off"
       // are immediate, "auto" re-runs the benchmark since the cached verdict may
       // now be stale (e.g. the mode was forced off, then set back to auto).
       if (mode === 'off') applyBlurState(false);
       else if (mode === 'on') applyBlurState(true);
       else reevaluateBlurCapability();
-    });
+    },
   });
 
-  positionBlurModeIndicatorFn = positionBlurModeIndicator;
+  segControls = [langSeg, timeFmtSeg, defaultTabSeg, blurModeSeg];
 
   // Wire Use Beta Backend toggle (non-stable builds only, default: true)
   const useBetaBackendRow = popup.querySelector('[data-use-beta-backend-row]');
@@ -1062,14 +960,7 @@ function buildPopup() {
     });
   }
 
-  return { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, positionBlurModeIndicator, retranslateCampus };
-}
-
-function updateLangButtons(popup, positionIndicator) {
-  popup.querySelectorAll('.settings-lang-btn[data-lang]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.lang === getLocale());
-  });
-  positionIndicator?.(true);
+  return { popup, retranslateCampus };
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -1078,7 +969,7 @@ export function initSettings() {
   triggerEl = document.getElementById('settings-btn');
   if (!triggerEl) return;
 
-  const { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, positionBlurModeIndicator, retranslateCampus } = buildPopup();
+  const { popup, retranslateCampus } = buildPopup();
   popupEl = popup;
   document.body.appendChild(popupEl);
 
@@ -1114,10 +1005,9 @@ export function initSettings() {
     popupEl.querySelectorAll('[data-i18n]').forEach(el => {
       el.textContent = t(el.dataset.i18n);
     });
-    updateLangButtons(popupEl, positionIndicator);
-    positionTimeFmtIndicator?.(false);
-    positionDefaultTabIndicator?.(false);
-    positionBlurModeIndicator?.(false);
+    // Labels just changed width; re-measure without animating.
+    segControls.forEach(c => c.refresh({ snap: true }));
+    segControls[0]?.select(getLocale());   // language control, in case the switch came from elsewhere
     retranslateCampus();
   });
 

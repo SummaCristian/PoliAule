@@ -47,6 +47,8 @@ const rubber = (x, give) => (x * give) / (give + Math.abs(x));
 //   haptic             called on a committed tap/drag (default: light tick;
 //                      pass null when onChange already buzzes on its own).
 //   trail              overrides TRAIL, how far the whole control follows a drag.
+//   onPillTap()        a grab of the pill itself that barely moved (a tap on
+//                      the pill; without this it just settles back).
 //   onRender({ pos })  after every frame's transforms are written.
 export function createPillDragCore({
   root, items, pill, hit, activeRow,
@@ -59,6 +61,7 @@ export function createPillDragCore({
   onReject,
   haptic = () => haptics.trigger(defaultPatterns.light),
   onRender,
+  onPillTap,
   onChange,
 }) {
   let cells = [];
@@ -359,6 +362,12 @@ export function createPillDragCore({
     containerOff.to(0, { stiffness: 320, damping: 24, mass: 0.8 });
     containerCross.to(0, { stiffness: 320, damping: 24, mass: 0.8 });
     const dMain = e.clientX - startX, dCross = e.clientY - startY;
+
+    // A barely-moved grab of the pill itself is a tap on it.
+    if (!terminated && !absoluteDrag && onPillTap && Math.abs(dMain) < 8 && Math.abs(dCross) < 8) {
+      onPillTap();
+      return;
+    }
 
     // Cancelled, or a barely-moved grab of the pill itself → just settle back.
     if (terminated || (!absoluteDrag && Math.abs(dMain) < 8 && Math.abs(dCross) < 8)) {

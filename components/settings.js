@@ -10,6 +10,7 @@ import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
 import { getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState } from '../utils/blur-capability.js';
 import { createSegmentedControl } from './segmented-control.js';
+import { createToggle } from './toggle.js';
 import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
 
 const TRANSITION_DURATION = 420;
@@ -53,7 +54,7 @@ let overlay = null;
 // Module-level refs set by initSettings()
 let triggerEl = null;
 let popupEl = null;
-let segControls = []; // segmented controls, re-measured whenever the popup is shown
+let segControls = []; // segmented controls + toggles, re-measured whenever the popup is shown
 let refreshCampusSelectFn = null; // set by buildCampusSection, called on every open
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
@@ -360,20 +361,12 @@ function buildStepper(value, min, max, format, onChange) {
   return el;
 }
 
+// Returns a createToggle() handle; assign `.onChange = isOn => ...` afterwards.
+// Registered so the popup can snap its thumb into place before it's shown.
 function buildToggle(isOn) {
-  const btn = document.createElement('button');
-  btn.className = 'settings-toggle' + (isOn ? ' on' : '');
-  btn.setAttribute('role', 'switch');
-  btn.setAttribute('aria-checked', String(isOn));
-  const thumb = document.createElement('span');
-  thumb.className = 'settings-toggle__thumb';
-  btn.appendChild(thumb);
-  return btn;
-}
-
-function setToggleState(btn, isOn) {
-  btn.classList.toggle('on', isOn);
-  btn.setAttribute('aria-checked', String(isOn));
+  const toggle = createToggle(isOn);
+  segControls.push(toggle);
+  return toggle;
 }
 
 // ── Campus section ────────────────────────────────────────────────────────────
@@ -427,7 +420,7 @@ function buildCampusSection() {
   let preferredEnabled = localStorage.getItem(PREFERRED_CAMPUS_ENABLED_KEY) === 'true';
   const preferredToggle = buildToggle(preferredEnabled);
   preferredRow.appendChild(preferredIconTitle);
-  preferredRow.appendChild(preferredToggle);
+  preferredRow.appendChild(preferredToggle.el);
   group.appendChild(preferredRow);
 
   // ── Row 2: Campus select (conditionally shown)
@@ -476,21 +469,19 @@ function buildCampusSection() {
     localStorage.setItem(PREFERRED_CAMPUS_ID_KEY, campusSelect.value);
   });
 
-  preferredToggle.addEventListener('click', () => {
-    preferredEnabled = !preferredEnabled;
+  preferredToggle.onChange = (isOn) => {
+    preferredEnabled = isOn;
     localStorage.setItem(PREFERRED_CAMPUS_ENABLED_KEY, String(preferredEnabled));
-    setToggleState(preferredToggle, preferredEnabled);
     if (preferredEnabled) {
       if (rememberLastEnabled) {
         rememberLastEnabled = false;
         localStorage.setItem(REMEMBER_LAST_CAMPUS_KEY, 'false');
-        setToggleState(rememberLastToggle, false);
+        rememberLastToggle.set(false);
       }
       populateCampusSelect();
     }
     showPickerRow(preferredEnabled);
-    haptics.trigger(defaultPatterns.light);
-  });
+  };
 
   // ── Row 3: Remember Last Used toggle
   const rememberLastRow = document.createElement('div');
@@ -514,21 +505,19 @@ function buildCampusSection() {
   const rememberLastToggle = buildToggle(rememberLastEnabled);
 
   rememberLastRow.appendChild(rememberLastIconTitle);
-  rememberLastRow.appendChild(rememberLastToggle);
+  rememberLastRow.appendChild(rememberLastToggle.el);
   group.appendChild(rememberLastRow);
 
-  rememberLastToggle.addEventListener('click', () => {
-    rememberLastEnabled = !rememberLastEnabled;
+  rememberLastToggle.onChange = (isOn) => {
+    rememberLastEnabled = isOn;
     localStorage.setItem(REMEMBER_LAST_CAMPUS_KEY, String(rememberLastEnabled));
-    setToggleState(rememberLastToggle, rememberLastEnabled);
     if (rememberLastEnabled && preferredEnabled) {
       preferredEnabled = false;
       localStorage.setItem(PREFERRED_CAMPUS_ENABLED_KEY, 'false');
-      setToggleState(preferredToggle, false);
+      preferredToggle.set(false);
       showPickerRow(false);
     }
-    haptics.trigger(defaultPatterns.light);
-  });
+  };
 
   // Save last used campus whenever the campus selection changes
   document.addEventListener('campuschange', (e) => {
@@ -846,14 +835,11 @@ function buildPopup() {
   // Wire Hide Sundays toggle
   const hideSundaysRow = popup.querySelector('[data-hide-sundays-row]');
   const hideSundaysToggle = buildToggle(localStorage.getItem(HIDE_SUNDAYS_KEY) === 'true');
-  hideSundaysRow.appendChild(hideSundaysToggle);
-  hideSundaysToggle.addEventListener('click', () => {
-    const isOn = !hideSundaysToggle.classList.contains('on');
-    setToggleState(hideSundaysToggle, isOn);
+  hideSundaysRow.appendChild(hideSundaysToggle.el);
+  hideSundaysToggle.onChange = (isOn) => {
     localStorage.setItem(HIDE_SUNDAYS_KEY, String(isOn));
-    haptics.trigger(defaultPatterns.light);
     window.dispatchEvent(new CustomEvent('hidesundayschange', { detail: { hidden: isOn } }));
-  });
+  };
 
   // Wire Interval Hours stepper
   const intervalHoursRow = popup.querySelector('[data-interval-hours-row]');
@@ -867,20 +853,17 @@ function buildPopup() {
   const showPartialRow = popup.querySelector('[data-show-partial-row]');
   const showPartialSaved = localStorage.getItem(SHOW_PARTIAL_KEY);
   const showPartialToggle = buildToggle(showPartialSaved === null ? true : showPartialSaved === 'true');
-  showPartialRow.appendChild(showPartialToggle);
-  showPartialToggle.addEventListener('click', () => {
-    const isOn = !showPartialToggle.classList.contains('on');
-    setToggleState(showPartialToggle, isOn);
+  showPartialRow.appendChild(showPartialToggle.el);
+  showPartialToggle.onChange = (isOn) => {
     localStorage.setItem(SHOW_PARTIAL_KEY, String(isOn));
-    haptics.trigger(defaultPatterns.light);
-  });
+  };
 
   // Wire Auto-Search on Load toggle (default: true)
   const autoSearchRow = popup.querySelector('[data-auto-search-row]');
   const autoSearchSaved = localStorage.getItem(AUTO_SEARCH_KEY);
   const autoSearchOn = autoSearchSaved === null ? true : autoSearchSaved === 'true';
   const autoSearchToggle = buildToggle(autoSearchOn);
-  autoSearchRow.appendChild(autoSearchToggle);
+  autoSearchRow.appendChild(autoSearchToggle.el);
 
   const autoSearchWarning = document.createElement('div');
   autoSearchWarning.className = 'settings-warning' + (autoSearchOn ? '' : ' settings-warning--hidden');
@@ -890,20 +873,17 @@ function buildPopup() {
   `;
   autoSearchRow.insertAdjacentElement('afterend', autoSearchWarning);
 
-  autoSearchToggle.addEventListener('click', () => {
-    const isOn = !autoSearchToggle.classList.contains('on');
-    setToggleState(autoSearchToggle, isOn);
+  autoSearchToggle.onChange = (isOn) => {
     localStorage.setItem(AUTO_SEARCH_KEY, String(isOn));
     autoSearchWarning.classList.toggle('settings-warning--hidden', !isOn);
-    haptics.trigger(defaultPatterns.light);
-  });
+  };
 
   // Wire Live Search toggle (default: true)
   const liveSearchRow = popup.querySelector('[data-live-search-row]');
   const liveSearchSaved = localStorage.getItem(LIVE_SEARCH_KEY);
   const liveSearchOn = liveSearchSaved === null ? true : liveSearchSaved === 'true';
   const liveSearchToggle = buildToggle(liveSearchOn);
-  liveSearchRow.appendChild(liveSearchToggle);
+  liveSearchRow.appendChild(liveSearchToggle.el);
 
   const liveSearchWarning = document.createElement('div');
   liveSearchWarning.className = 'settings-warning' + (liveSearchOn ? '' : ' settings-warning--hidden');
@@ -913,13 +893,10 @@ function buildPopup() {
   `;
   liveSearchRow.insertAdjacentElement('afterend', liveSearchWarning);
 
-  liveSearchToggle.addEventListener('click', () => {
-    const isOn = !liveSearchToggle.classList.contains('on');
-    setToggleState(liveSearchToggle, isOn);
+  liveSearchToggle.onChange = (isOn) => {
     localStorage.setItem(LIVE_SEARCH_KEY, String(isOn));
     liveSearchWarning.classList.toggle('settings-warning--hidden', !isOn);
-    haptics.trigger(defaultPatterns.light);
-  });
+  };
 
   const defaultTabSeg = createSegmentedControl(popup.querySelector('[data-defaulttab-toggle]'), {
     value: localStorage.getItem(DEFAULT_TAB_KEY) ?? 'available',
@@ -943,7 +920,7 @@ function buildPopup() {
     },
   });
 
-  segControls = [langSeg, timeFmtSeg, defaultTabSeg, blurModeSeg];
+  segControls.push(langSeg, timeFmtSeg, defaultTabSeg, blurModeSeg);
 
   // Wire Use Beta Backend toggle (non-stable builds only, default: true)
   const useBetaBackendRow = popup.querySelector('[data-use-beta-backend-row]');
@@ -951,13 +928,10 @@ function buildPopup() {
     const useBetaBackendSaved = localStorage.getItem(USE_BETA_BACKEND_KEY);
     const useBetaBackendOn = useBetaBackendSaved === null ? true : useBetaBackendSaved === 'true';
     const useBetaBackendToggle = buildToggle(useBetaBackendOn);
-    useBetaBackendRow.appendChild(useBetaBackendToggle);
-    useBetaBackendToggle.addEventListener('click', () => {
-      const isOn = !useBetaBackendToggle.classList.contains('on');
-      setToggleState(useBetaBackendToggle, isOn);
+    useBetaBackendRow.appendChild(useBetaBackendToggle.el);
+    useBetaBackendToggle.onChange = (isOn) => {
       localStorage.setItem(USE_BETA_BACKEND_KEY, String(isOn));
-      haptics.trigger(defaultPatterns.light);
-    });
+    };
   }
 
   return { popup, retranslateCampus };

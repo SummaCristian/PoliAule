@@ -147,7 +147,7 @@
   border-radius: 999px;
 
   background: var(--seg-pill-bg);
-  transition: backdrop-filter 0.15s ease, -webkit-backdrop-filter 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.15s ease, backdrop-filter 0.15s ease, -webkit-backdrop-filter 0.15s ease, box-shadow 0.15s ease;
 }
 
 .seg-pill.seg-pill--lifted .seg-pill-inner {

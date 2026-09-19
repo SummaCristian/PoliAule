@@ -348,6 +348,7 @@
   position: relative;
   width: 61px;
   height: 31px;
+  padding: 0;
   border-radius: var(--radius-lg);
   /* iOS 26: glass track — translucent fill + visible stroke */
   background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
@@ -358,7 +359,8 @@
     background 0.25s ease,
     box-shadow  0.25s ease;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  /* Horizontal drags belong to the thumb, vertical ones still scroll the popup. */
+  touch-action: pan-y;
 }
 
 .settings-toggle.on {
@@ -366,27 +368,42 @@
   box-shadow: none;
 }
 
-.settings-toggle__thumb {
+/* Thumb travel box (61 - 3 - 3 = 55 × 25); the two cells sit at its ends and
+   overlap in the middle, which is fine — they only exist to give
+   pill-drag-core.js its two anchors and to catch taps on the far side. */
+.settings-toggle__items {
   position: absolute;
-  top: 3px;
-  left: 3px;
+  inset: 3px;
+}
+
+.settings-toggle__cell {
+  position: absolute;
+  top: 0;
   width: 36px;
   height: 25px;
-  border-radius: 12.5px; /* half of height — proper pill shape */
-  /* iOS 26: frosted-glass thumb */
+  touch-action: pan-y;
+}
+
+.settings-toggle__cell--off { left: 0; }
+.settings-toggle__cell--on  { left: 19px; } /* 55 - 36 = 19 */
+
+/* Thumb: its lifted glass look comes from the shared .seg-pill--lifted rules
+   (segmented-control.css); this is the flat resting state — the frosted white
+   capsule — which gives way to the translucent glass tint while lifted. */
+.settings-toggle .seg-pill-inner {
   background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   box-shadow:
     0 1px 4px rgba(0, 0, 0, 0.20),
     0 0.5px 1px rgba(0, 0, 0, 0.10),
     inset 0 0.5px 0 rgba(255, 255, 255, 0.6);
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: none;
 }
 
-.settings-toggle.on .settings-toggle__thumb {
-  transform: translateX(19px); /* 61 - 3 - 36 - 3 = 19 */
+.settings-toggle .seg-pill.seg-pill--lifted .seg-pill-inner {
+  background: var(--seg-pill-bg);
+}
+
+.settings-toggle .seg-hit {
+  touch-action: pan-y;
 }
 
 /* ── Stepper control (−  value  +) ──────────────────────────────────────────── */

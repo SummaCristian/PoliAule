@@ -54,6 +54,7 @@ let overlay = null;
 // Module-level refs set by initSettings()
 let triggerEl = null;
 let popupEl = null;
+let langSegControl = null; // the language picker, re-synced when the locale changes elsewhere
 let segControls = []; // segmented controls + toggles, re-measured whenever the popup is shown
 let refreshCampusSelectFn = null; // set by buildCampusSection, called on every open
 
@@ -920,6 +921,7 @@ function buildPopup() {
     },
   });
 
+  langSegControl = langSeg;
   segControls.push(langSeg, timeFmtSeg, defaultTabSeg, blurModeSeg);
 
   // Wire Use Beta Backend toggle (non-stable builds only, default: true)
@@ -981,7 +983,7 @@ export function initSettings() {
     });
     // Labels just changed width; re-measure without animating.
     segControls.forEach(c => c.refresh({ snap: true }));
-    segControls[0]?.select(getLocale());   // language control, in case the switch came from elsewhere
+    langSegControl?.select(getLocale());   // language control, in case the switch came from elsewhere
     retranslateCampus();
   });
 

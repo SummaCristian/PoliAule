@@ -1513,27 +1513,20 @@ are rendered as solid colors
      flow as a wrapping row of glass panels: side by side when the column is
      wide enough, stacked when it isn't. Each panel hugs its own content
      (`.picker-row` is already `flex-flow: row wrap`). */
-  .picker-row:has(.dcp-popup--docked),
-  .picker-row:has(.trc-popup--docked),
-  .picker-row:has(.cp-panel-host--docked) {
+  .picker-row:has(.chip-dock),
+  .picker-row:has(.campus-dock) {
     align-items: flex-start;
   }
 
   /* Each expanded panel hugs its own content and does NOT shrink — so it
      wraps to the next line when the column can't fit it beside its sibling,
      rather than squashing. */
-  date-chip-picker:has(.dcp-popup--docked),
-  time-range-chip-picker:has(.trc-popup--docked),
-  .picker-row > .cp-panel-host--docked {
+  date-chip-picker:has(.chip-dock),
+  time-range-chip-picker:has(.chip-dock),
+  .picker-row > .campus-dock {
     flex: 0 0 auto;
     width: fit-content;
     max-width: 100%;
-  }
-
-  /* Campus listbox docked in the column (its shadow host, portaled here from
-     <body> by campus-picker.js). */
-  .cp-panel-host--docked {
-    display: block;
   }
 
   /* Date + Time sit in their own wrapping flex box beside the campus panel.

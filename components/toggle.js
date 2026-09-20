@@ -2,7 +2,7 @@
 // whose pill is the thumb, so it lifts into glass on tap, follows the finger
 // on drag and commits to the nearer end on release — the same behavior as
 // segmented-control.js. The root is a <button>, so Space/Enter toggle natively.
-import { createPillDragCore } from './pill-drag-core.js';
+import { createPillDragCore } from 'vitrium';
 import { haptics, defaultPatterns } from './haptics.js';
 
 // Returns { el, set, refresh, on, onChange }. Assign `onChange(isOn)` to react

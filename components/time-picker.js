@@ -5,7 +5,7 @@
 import { haptics, defaultPatterns } from './haptics.js';
 import { t, onLanguageSwitch, animateI18nElement } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
-import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
+import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from 'vitrium';
 
 const TRANSITION_DURATION = 420; // ms — must match CSS
 

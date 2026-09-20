@@ -55,15 +55,15 @@
   border-radius: 20px;
   text-align: left;
 
-  background: var(--glass-tint);
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
-  backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--lg-tint);
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+  backdrop-filter: blur(var(--lg-blur-md));
   color: var(--text-color-primary);
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 12px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 12px 40px 0 var(--lg-shadow-color);
 
   will-change: transform;
 }
@@ -87,8 +87,8 @@
   inset: -0.5px;
   border-radius: inherit;
   padding: 0.5px;
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -104,16 +104,16 @@
     transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 0.42s ease,
-    translate var(--press-out-dur) var(--ease-spring),
-    scale var(--press-out-dur) var(--ease-spring),
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
     filter 0.2s ease;
 }
 
 .dfc-popup.liquid-glass.lg-pressing {
   transition:
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    translate var(--press-in-dur) var(--press-in-ease),
-    scale var(--press-in-dur) var(--press-in-ease),
+    translate var(--lg-press-in-dur) var(--lg-press-in-ease),
+    scale var(--lg-press-in-dur) var(--lg-press-in-ease),
     filter 0.2s ease;
 }
 

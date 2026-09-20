@@ -367,13 +367,13 @@ body.detail-open .tab-content * {
 
   /* Same glass material as .header-button (style.css) — this is styled as
      one of the header buttons, just relocated over the nav row. */
-  background: var(--glass-tint);
+  background: var(--lg-tint);
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
 
   color: var(--text-color-secondary);
 
@@ -399,8 +399,8 @@ body.detail-open .tab-content * {
   inset: -0.5px;
   border-radius: inherit;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
   mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
@@ -411,9 +411,9 @@ body.detail-open .tab-content * {
 @media (prefers-color-scheme: dark) {
   .detail-back-btn {
     box-shadow:
-      0 0 0 0.1px var(--glass-outline),
-      var(--glass-highlight),
-      0 4px 40px 0 var(--glass-shadow-color);
+      0 0 0 0.1px var(--lg-outline),
+      var(--lg-highlight),
+      0 4px 40px 0 var(--lg-shadow-color);
   }
 }
 
@@ -542,14 +542,14 @@ body.detail-open .tab-content * {
   color: var(--text-color-primary);
 
   /* Same glass material as .header-button (style.css) — see the recipe
-     note at :root's --glass-tint definition there. */
-  background: var(--glass-tint);
+     note at :root's --lg-tint definition there. */
+  background: var(--lg-tint);
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .detail-back-btn::after
@@ -562,8 +562,8 @@ body.detail-open .tab-content * {
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -608,7 +608,7 @@ body.detail-open .tab-content * {
 
 /* Left pill: vertical date picker clone. Same glass material as
    .date-picker-container (components/date-picker.css) — see the recipe
-   note at :root's --glass-tint definition in style.css. */
+   note at :root's --lg-tint definition in style.css. */
 .detail-schedule-labels-pill {
   position: relative;
   flex-shrink: 0;
@@ -618,16 +618,16 @@ body.detail-open .tab-content * {
   justify-content: space-between;
   gap: 0.75rem;
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
   border-radius: var(--radius-pill);
   padding: 0.75rem 0.5rem;
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .date-picker-container::after
@@ -639,8 +639,8 @@ body.detail-open .tab-content * {
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;

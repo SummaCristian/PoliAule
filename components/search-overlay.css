@@ -201,22 +201,22 @@ html.search-vt .bn-search-btn {
   max-width: none;
   flex: 1;
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
   border-color: transparent;
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 .search-overlay-header .search-bar-wrapper:focus-within {
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--text-color-accent) 22%, transparent),
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* .liquid-glass sets user-select:none on the surface — the field itself must
@@ -239,13 +239,13 @@ html.search-vt .bn-search-btn {
   border-radius: 50%;
   color: var(--text-color-secondary);
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 .search-overlay-close .hgi-stroke {
@@ -264,13 +264,13 @@ html.search-vt .bn-search-btn {
 
   padding: 1.75rem; /* 28px all around */
   border-radius: var(--radius-xl);
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Nothing to show yet — collapse the container so it isn't an empty glass slab. */

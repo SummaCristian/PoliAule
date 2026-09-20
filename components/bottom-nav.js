@@ -10,7 +10,7 @@
 import { haptics, defaultPatterns } from './haptics.js';
 import { t, onLanguageSwitch } from '../i18n.js';
 import { DEFAULT_TAB_KEY, LAST_TAB_KEY, getStartupTabId } from './settings.js';
-import { Spring, onSpringFrame } from '../utils/spring.js';
+import { Spring, onSpringFrame } from 'vitrium';
 import { openSearchOverlay } from './search-overlay.js';
 
 const GROUP_TABS = [

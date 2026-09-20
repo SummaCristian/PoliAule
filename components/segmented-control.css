@@ -38,11 +38,11 @@
   border-radius: var(--radius-pill);
   touch-action: none;
 
-  background: var(--glass-tint);
+  background: var(--lg-tint);
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 20px 0 var(--lg-shadow-color);
 }
 
 .seg-track::after {
@@ -52,8 +52,8 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -113,9 +113,9 @@
 
 .seg-pill.seg-pill--lifted {
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 20px 0 var(--lg-shadow-color);
 }
 
 .seg-pill::after {
@@ -125,7 +125,7 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
+  background: var(--lg-stroke-gradient);
   opacity: 0;
   transition: opacity 0.15s ease;
 
@@ -137,7 +137,7 @@
 }
 
 .seg-pill.seg-pill--lifted::after {
-  opacity: var(--glass-stroke-opacity);
+  opacity: var(--lg-stroke-opacity);
 }
 
 .seg-pill-inner {

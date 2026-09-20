@@ -1,3 +1,5 @@
+@import "vitrium/styles";
+
 /* Theme and color schemes */
 :root {
   box-sizing: border-box;
@@ -158,50 +160,6 @@ select,
   --text-175: clamp(1.45rem, 1.26rem + 0.95vw, 1.75rem);
   --text-200: clamp(1.6rem, 1.36rem + 1.2vw, 2rem);
 
-  /* Glass material — the tabbar's recipe (bn-tabbar, pre-tokenization) is
-     the canonical source for this; every other translucent surface should
-     match it, not the other way around. No saturate() — the tabbar never
-     had one. */
-  --glass-tint: rgba(250, 250, 250, 0.7);
-  --glass-outline: rgba(0, 0, 0, 0.25);
-  --glass-shadow-color: rgba(0, 0, 0, 0.1);
-  /* The specular rim along the top and bottom edges. Plain white here; the
-     HDR block below pushes it past white on displays that have the headroom
-     (see the --glass-specular override under `dynamic-range: high`). Dark
-     mode redefines --glass-highlight wholesale and doesn't use this. */
-  --glass-specular: rgb(255 255 255);
-  --glass-highlight:
-    inset -1px 0 2px 0 rgba(0, 0, 0, 0.25),
-    inset 1px 0 2px 0 rgba(0, 0, 0, 0.25),
-    inset 0 -1px 2px 0 var(--glass-specular),
-    inset 0 1px 2px 0 var(--glass-specular),
-    inset 0 -8px 4px 0 rgba(0, 0, 0, 0.02),
-    inset 0 8px 4px 0 rgba(0, 0, 0, 0.02);
-  --glass-blur-sm: 4px;
-  --glass-blur-md: 8px;
-  --glass-blur-lg: 18px;
-
-  /* "Clear" variant — a lighter tint and a shallower blur for surfaces that
-     want to stay glassy but read as less opaque (e.g. the campus sheet at
-     its collapsed detent, where it should get out of the map's way). Same
-     alpha reduction in both themes; only the base colour differs, same as
-     --glass-tint above. */
-  --glass-tint-clear: rgba(250, 250, 250, 0.35);
-  --glass-blur-clear: 8px;
-
-  /* Outside 0.5px gradient stroke, top to bottom (Figma's outside-stroke
-     equivalent). Applied per glass surface via a masked ::after ring —
-     see .header-button::after below for the shared recipe. */
-  --glass-stroke-gradient: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(94, 94, 94, 0.25) 25%,
-    rgba(94, 94, 94, 0.8) 50%,
-    rgba(94, 94, 94, 0.25) 75%,
-    rgba(255, 255, 255, 1) 100%
-  );
-  --glass-stroke-opacity: 0.8;
-
   /* Repeated shadow/glow patterns, extracted only where the literal value
      was byte-identical across multiple files — not a general elevation
      scale, just naming duplication that already existed. */
@@ -216,10 +174,6 @@ select,
      snaps down fast and linearly; on release it springs back with an
      overshoot via the spring easing over a longer duration. */
   --press-scale: 0.9;
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --press-in-dur: 0.11s;
-  --press-in-ease: cubic-bezier(0.3, 0, 0.4, 1);
-  --press-out-dur: 0.5s;
 
   /* "Now" marker blue — fixed by design, doesn't react to theme (verified:
      no dark-mode override exists anywhere it's used). */
@@ -256,89 +210,7 @@ select,
     --shadow:
       0 1px 2px rgba(0, 0, 0, 0.3),
       0 4px 12px rgba(0, 0, 0, 0.6);
-
-    --glass-tint: rgba(21, 21, 21, 0.8);
-    --glass-tint-clear: rgba(21, 21, 21, 0.35);
-    --glass-outline: rgba(255, 255, 255, 0.25);
-    --glass-shadow-color: rgba(0, 0, 0, 0.1);
-    --glass-highlight:
-      inset -1px 0 2px 0 rgba(0, 0, 0, 0.75),
-      inset 1px 0 2px 0 rgba(0, 0, 0, 0.75),
-      inset 0 -1px 2px 0 rgba(255, 255, 255, 0.2),
-      inset 0 1px 2px 0 rgba(255, 255, 255, 0.2),
-      inset 0 -8px 4px 0 rgba(255, 255, 255, 0.02),
-      inset 0 8px 4px 0 rgba(255, 255, 255, 0.02);
-    --glass-stroke-gradient: linear-gradient(
-      to bottom,
-      rgba(223, 223, 223, 0.35) 0%,
-      rgba(41, 41, 41, 0.5) 25%,
-      rgba(0, 0, 0, 1) 50%,
-      rgba(41, 41, 41, 0.5) 75%,
-      rgba(223, 223, 223, 0.35) 100%
-    );
   }
-}
-
-/* HDR specular highlights.
-
-   In light mode the glass rim was already rgb(255 255 255) — the brightest
-   colour SDR can express — so against a light background it barely reads as a
-   highlight at all. On a display with dynamic range to spare we spend it here:
-   components above 100% in display-p3 are extended-range values, and the
-   compositor takes them past reference white instead of clamping.
-
-   Gated on `dynamic-range: high` rather than left to clamp on its own, so SDR
-   displays keep the exact previous value and the effect is one token to tune.
-   Requires an HDR-capable display *and* the browser actually driving it in HDR
-   (Chrome/Edge 136+, Safari 26+); everywhere else the media query simply
-   doesn't match.
-
-   The @supports is load-bearing, not belt-and-braces: the media query shipped
-   before color() did (Chrome 98 vs 111), so a browser in that gap would store
-   an unparseable value in --glass-specular. Custom properties aren't validated
-   until substitution, so that wouldn't fall back through the cascade — it
-   would invalidate the whole box-shadow at computed-value time and drop it to
-   `none`, taking the outline and drop shadow with it. */
-@media (dynamic-range: high) {
-  @supports (color: color(display-p3 1 1 1)) {
-    :root {
-      --glass-specular: color(display-p3 200% 200% 200%);
-    }
-  }
-}
-
-/* ── Perf-gated glass blur ────────────────────────────────────────────────
-   utils/blur-capability.js grants [data-blur="on"] only once a splash-time
-   benchmark proves the device composites backdrop-filter smoothly (or the
-   user picks "On" in Settings). No blur is the safe baseline: before the
-   verdict lands, and on any device that fails the benchmark, every
-   backdrop-filter in the app is disabled and the shared glass tint becomes
-   near-opaque so translucent surfaces stay legible without the blur behind
-   them. Higher specificity than :root (and :root inside the dark-mode media
-   query) so it overrides both regardless of source order. */
-:root[data-blur="off"] {
-  --glass-blur-sm: 0px;
-  --glass-blur-md: 0px;
-  --glass-blur-lg: 0px;
-  --glass-blur-clear: 0px;
-  --glass-tint: rgba(250, 250, 250, 0.94);
-  --glass-tint-clear: rgba(250, 250, 250, 0.9);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root[data-blur="off"] {
-    --glass-tint: rgba(21, 21, 21, 0.94);
-    --glass-tint-clear: rgba(21, 21, 21, 0.9);
-  }
-}
-
-/* Catches every backdrop-filter in the app, including the ones on hardcoded
-   pixel values that don't go through --glass-blur-* (settings, info page,
-   keybindings overlay, campus map pills, etc.) — one rule instead of
-   migrating each file's hardcoded blur to a token. */
-:root[data-blur="off"] * {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
 }
 
 /* Base Styles */
@@ -427,19 +299,9 @@ body {
    objects, which browsers don't always treat as "no real change"). Since
    the splash element is always gone from the DOM well before this
    stylesheet matters, there's no reason for it to restate any of this —
-   only the reduced-motion --ease-spring override (app-wide, not
-   splash-specific) and the view-transition rules below (never duplicated
+   only the view-transition rules below (never duplicated
    inline — they don't apply until the transition actually starts, long
    after this file has loaded) still belong here. */
-@media (prefers-reduced-motion: reduce) {
-  /* Keep the press feedback, drop the springy overshoot. */
-  :root {
-    --ease-spring: ease;
-    --press-in-ease: ease;
-    --press-out-dur: 0.15s;
-  }
-}
-
 /* Splash logo View Transition */
 @supports (view-transition-name: none) {
   /* Pure positional morph — suppress the default cross-fade so it reads as
@@ -786,9 +648,9 @@ label {
   border-radius: var(--radius-pill);
 
   /* Same glass material as the tabbar/back button. */
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
 
   color: var(--text-color-secondary);
 
@@ -799,9 +661,9 @@ label {
   border-color: transparent;
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 
 
   transition:
@@ -828,8 +690,8 @@ label {
   inset: -0.5px;
   border-radius: inherit;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
   mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
@@ -1353,17 +1215,17 @@ ul li::marker {
   padding: 12px 16px;
 
   /* Same glass material as the tabbar/header-button — see the recipe note
-     at :root's --glass-tint definition. */
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+     at :root's --lg-tint definition. */
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
   color: var(--text-color-primary);
 
   border-radius: 12px;
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 
   opacity: 0;
   transform: scale(0.78) translateY(var(--popover-closed-ty, -6px));
@@ -1386,8 +1248,8 @@ ul li::marker {
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -1892,4 +1754,43 @@ are rendered as solid colors
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+/* Vitrium bridge ------------------------------------------------------------
+   Vitrium's accent and toggle colour follow the app's own accent. Tripled
+   :root outranks Vitrium's dark-mode block regardless of load order. */
+:root:root:root {
+  --lg-accent: var(--text-color-accent);
+  --lg-toggle-on: var(--text-color-accent);
+}
+
+/* PoliAule's popovers use `.popover`, not Vitrium's `.lg-popover`. They are
+   pinned to their trigger, so they get no hover lift and keep their own
+   open/close transitions alongside the press deform's translate/scale. */
+@media (hover: hover) {
+  :root .popover.liquid-glass:hover { scale: 1; }
+}
+
+.popover.liquid-glass {
+  transition:
+    opacity 120ms ease-out,
+    transform 200ms cubic-bezier(0.34, 1.3, 0.64, 1),
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
+    filter 0.2s ease;
+}
+
+.popover.liquid-glass.lg-pressing {
+  transition:
+    opacity 120ms ease-out,
+    transform 200ms cubic-bezier(0.34, 1.3, 0.64, 1),
+    translate var(--lg-press-in-dur) var(--lg-press-in-ease),
+    scale var(--lg-press-in-dur) var(--lg-press-in-ease),
+    filter 0.2s ease;
+}
+
+.popover.liquid-glass.lg-dragging {
+  transition:
+    opacity 120ms ease-out,
+    transform 200ms cubic-bezier(0.34, 1.3, 0.64, 1),
+    translate 0s, scale 0s, filter 0.2s ease;
 }

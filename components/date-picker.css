@@ -31,14 +31,14 @@
   touch-action: none;
 
   /* Same glass material as the tabbar/popover — see the recipe note at
-     :root's --glass-tint definition in style.css. No overflow:hidden here
+     :root's --lg-tint definition in style.css. No overflow:hidden here
      (unlike a card): the sliding indicator and day cells never exceed the
      pill's bounds on their own, same as .bn-tabbar, so nothing needs
      clipping and the outer box-shadow/::after stroke below can live
      directly on this element. */
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
   border-radius: var(--radius-pill);
   padding: 0.5rem 0.75rem;
 
@@ -50,9 +50,9 @@
   transition: opacity 0.4s ease;
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .bn-tabbar::after in
@@ -64,8 +64,8 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -132,9 +132,9 @@
 
 .date-indicator.date-indicator--lifted {
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Outside 0.5px gradient stroke, only shown while lifted — same recipe as
@@ -146,7 +146,7 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
+  background: var(--lg-stroke-gradient);
   opacity: 0;
   transition: opacity 0.15s ease;
 
@@ -158,7 +158,7 @@
 }
 
 .date-indicator.date-indicator--lifted::after {
-  opacity: var(--glass-stroke-opacity);
+  opacity: var(--lg-stroke-opacity);
 }
 
 /* Inner layer: clips the active-row filmstrip to the indicator's own box,
@@ -168,7 +168,7 @@
 .date-indicator-inner {
   /* Literal copy of .bn-wrapper's --bn-pill-* tokens in bottom-nav.css
      (that pill's own material is deliberately subtler/more transparent
-     than this project's shared --glass-* tokens, so it isn't reused here) —
+     than this project's shared --lg-* tokens, so it isn't reused here) —
      scoped to this element itself rather than a shared ancestor, since
      pill-selector.js moves this whole subtree between different parents
      (.date-picker vs. .detail-schedule-day-selector). */

@@ -18,7 +18,7 @@
    layer proved unreliable (option text stayed light in dark mode on Chrome).
    So this component carries its own concrete palette, kept in sync with
    style.css by hand. The --cp-glass-* values mirror style.css's glass tokens
-   (minus the HDR --glass-specular push, which targets :root only). */
+   (minus the HDR --lg-specular push, which targets :root only). */
 :host {
   color-scheme: light dark;
 
@@ -212,8 +212,8 @@
   transition:
     box-shadow 0.2s ease,
     background 0.2s ease,
-    translate var(--press-out-dur) var(--ease-spring),
-    scale var(--press-out-dur) var(--ease-spring),
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
     filter 0.2s ease;
 }
 
@@ -228,8 +228,8 @@
 .campus-select.liquid-glass.lg-pressing {
   transition:
     box-shadow 0.2s ease, background 0.2s ease,
-    translate var(--press-in-dur) var(--press-in-ease),
-    scale var(--press-in-dur) var(--press-in-ease),
+    translate var(--lg-press-in-dur) var(--lg-press-in-ease),
+    scale var(--lg-press-in-dur) var(--lg-press-in-ease),
     filter 0.2s ease;
 }
 
@@ -379,8 +379,8 @@
     transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 0.42s ease,
-    translate var(--press-out-dur) var(--ease-spring),
-    scale var(--press-out-dur) var(--ease-spring),
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
     filter 0.2s ease;
 
   will-change: transform;
@@ -390,8 +390,8 @@
 .cp-popup.lg-pressing {
   transition:
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    translate var(--press-in-dur) var(--press-in-ease),
-    scale var(--press-in-dur) var(--press-in-ease),
+    translate var(--lg-press-in-dur) var(--lg-press-in-ease),
+    scale var(--lg-press-in-dur) var(--lg-press-in-ease),
     filter 0.2s ease;
 }
 
@@ -626,8 +626,8 @@
   max-height: min(60vh, 26rem);
   border-radius: 16px !important;
   transition:
-    translate var(--press-out-dur) var(--ease-spring),
-    scale var(--press-out-dur) var(--ease-spring),
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
     filter 0.2s ease;
   will-change: auto;
   box-shadow:

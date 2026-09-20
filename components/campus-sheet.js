@@ -20,7 +20,7 @@
 // components/campus-map.js) and above it (z-index), below the header /
 // footer / bottom-nav chrome, same stacking story as the map's own controls.
 
-import { Spring, onSpringFrame } from '../utils/spring.js';
+import { Spring, onSpringFrame } from 'vitrium';
 import { initCampusBuildingsPage } from './campus-buildings.js';
 
 const CONTAINER_ID = 'search-classrooms-container';

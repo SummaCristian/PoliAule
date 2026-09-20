@@ -61,14 +61,14 @@ time-range-chip-picker:not([data-loading]) .trc-trigger__skeleton {
   color: var(--text-color-primary);
   -webkit-tap-highlight-color: transparent;
 
-  background: var(--glass-tint);
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
-  backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-blur-sm));
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 
   transition: box-shadow 0.2s ease, background 0.2s ease;
 }
@@ -94,8 +94,8 @@ time-range-chip-picker:not([data-loading]) .trc-trigger__skeleton {
   inset: -0.5px;
   border-radius: inherit;
   padding: 0.5px;
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -104,9 +104,9 @@ time-range-chip-picker:not([data-loading]) .trc-trigger__skeleton {
 
 .trc-trigger[aria-expanded="true"] {
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color),
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color),
     0 0 0 3px color-mix(in srgb, var(--text-color-accent) 10%, transparent);
 }
 
@@ -217,15 +217,15 @@ time-range-chip-picker.trc-content-hidden .trc-trigger__chevron {
   border-radius: 22px;
   text-align: left;
 
-  background: var(--glass-tint);
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
-  backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--lg-tint);
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+  backdrop-filter: blur(var(--lg-blur-md));
   color: var(--text-color-primary);
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 12px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 12px 40px 0 var(--lg-shadow-color);
 
   transition:
     transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
@@ -244,16 +244,16 @@ time-range-chip-picker.trc-content-hidden .trc-trigger__chevron {
     transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 0.42s ease,
-    translate var(--press-out-dur) var(--ease-spring),
-    scale var(--press-out-dur) var(--ease-spring),
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
     filter 0.2s ease;
 }
 
 .trc-popup.liquid-glass.lg-pressing {
   transition:
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    translate var(--press-in-dur) var(--press-in-ease),
-    scale var(--press-in-dur) var(--press-in-ease),
+    translate var(--lg-press-in-dur) var(--lg-press-in-ease),
+    scale var(--lg-press-in-dur) var(--lg-press-in-ease),
     filter 0.2s ease;
 }
 
@@ -371,9 +371,9 @@ time-range-chip-picker.trc-content-hidden .trc-trigger__chevron {
   will-change: auto;
   /* Static in-flow card — lighter shadow than the floating panel. */
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 24px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 24px 0 var(--lg-shadow-color);
 }
 
 /* Inner content is always visible when docked — there's no open/close cycle. */
@@ -387,8 +387,8 @@ time-range-chip-picker.trc-content-hidden .trc-trigger__chevron {
    geometry transitions from the merged rule above (nothing moves any more). */
 .trc-popup--docked.liquid-glass {
   transition:
-    translate var(--press-out-dur) var(--ease-spring),
-    scale var(--press-out-dur) var(--ease-spring),
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
     filter 0.2s ease;
 }
 

@@ -1,6 +1,6 @@
 import { haptics, defaultPatterns } from './haptics.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
-import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
+import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from 'vitrium';
 
 // <date-chip-picker> is a thin wrapper around the sliding date picker
 // (components/date-picker.js), which stays completely untouched — its markup,

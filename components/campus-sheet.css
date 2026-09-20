@@ -84,14 +84,14 @@
      arc — same treatment as .info-hero-icon in info-page.css. */
   corner-shape: superellipse;
 
-  background: var(--glass-tint);
+  background: var(--lg-tint);
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 20px 0 var(--lg-shadow-color);
 
-  backdrop-filter: blur(var(--glass-blur-lg));
-  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  backdrop-filter: blur(var(--lg-blur-lg));
+  -webkit-backdrop-filter: blur(var(--lg-blur-lg));
 
   /* Liquid-glass-style reactive feel, ported rather than the shared
      .liquid-glass class (see campus-sheet.js's watchGuard()/
@@ -120,9 +120,9 @@
    when the sheet is taking up the whole view, without touching the outline/
    shadow/stroke, which stay the shared glass recipe. */
 .campus-sheet-glass.is-collapsed {
-  background: var(--glass-tint-clear);
-  backdrop-filter: blur(var(--glass-blur-clear));
-  -webkit-backdrop-filter: blur(var(--glass-blur-clear));
+  background: var(--lg-tint-clear);
+  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .header-button::after /
@@ -134,8 +134,8 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -196,7 +196,7 @@
   width: 36px;
   height: 5px;
   border-radius: var(--radius-pill, 999px);
-  background: var(--glass-outline);
+  background: var(--lg-outline);
   opacity: 0.6;
 }
 
@@ -360,13 +360,13 @@
   border-radius: var(--radius-pill);
   color: var(--text-color-secondary);
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* `.liquid-glass` (liquid-glass.css, loaded after this file) sets its own
@@ -386,8 +386,8 @@
     opacity 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
     transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
     display 0.32s allow-discrete,
-    translate var(--press-out-dur) var(--ease-spring),
-    scale var(--press-out-dur) var(--ease-spring),
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
     filter 0.2s ease;
 }
 
@@ -398,8 +398,8 @@
   inset: -0.5px;
   border-radius: inherit;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
   mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
@@ -562,9 +562,9 @@
        flush against the true viewport edge), so restore the site-wide
        glass shadow radius shrunk on mobile below. */
     box-shadow:
-      0 0 0 0.1px var(--glass-outline),
-      var(--glass-highlight),
-      0 4px 40px 0 var(--glass-shadow-color);
+      0 0 0 0.1px var(--lg-outline),
+      var(--lg-highlight),
+      0 4px 40px 0 var(--lg-shadow-color);
   }
 
   .campus-sheet-content {

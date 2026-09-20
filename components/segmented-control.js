@@ -4,7 +4,7 @@
 // caller wants (text, icon + text, ...) — the control just hugs it, and its
 // height follows the tallest cell. Any other child (e.g. a `.seg-separator`)
 // stays in the flow but isn't selectable.
-import { createPillDragCore } from './pill-drag-core.js';
+import { createPillDragCore } from 'vitrium';
 
 // root: an empty-of-chrome element holding just the `.seg-item`s.
 // onSelect(value, { silent }): a different item became the selected one.

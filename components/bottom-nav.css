@@ -74,17 +74,17 @@
      the pill, not the page behind it (same as .bn-pill-hit). */
   touch-action: none;
 
-  background: var(--glass-tint);
+  background: var(--lg-tint);
   padding: 4px;
   border-radius: var(--radius-pill);
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 20px 0 var(--lg-shadow-color);
 
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .header-button::after
@@ -96,8 +96,8 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -179,9 +179,9 @@
 
 .bn-pill-outer.bn-pill--lifted {
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 20px 0 var(--lg-shadow-color);
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .header-button::after in
@@ -193,7 +193,7 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
+  background: var(--lg-stroke-gradient);
   opacity: 0;
   transition: opacity 0.15s ease;
 
@@ -205,7 +205,7 @@
 }
 
 .bn-pill-outer.bn-pill--lifted::after {
-  opacity: var(--glass-stroke-opacity);
+  opacity: var(--lg-stroke-opacity);
 }
 
 .bn-pill-inner {
@@ -301,14 +301,14 @@
   border-radius: var(--radius-pill);
   -webkit-tap-highlight-color: transparent;
 
-  background: var(--glass-tint);
+  background: var(--lg-tint);
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 20px 0 var(--lg-shadow-color);
 
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
 
   color: var(--bn-tab-color);
   will-change: transform;
@@ -325,8 +325,8 @@
   inset: -0.5px;
   border-radius: inherit;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
   mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
@@ -415,9 +415,9 @@
   .bn-pill-outer.bn-pill--lifted,
   .bn-search-btn {
     box-shadow:
-      0 0 0 0.1px var(--glass-outline),
-      var(--glass-highlight),
-      0 4px 40px 0 var(--glass-shadow-color);
+      0 0 0 0.1px var(--lg-outline),
+      var(--lg-highlight),
+      0 4px 40px 0 var(--lg-shadow-color);
   }
 
   .bn-search-btn {

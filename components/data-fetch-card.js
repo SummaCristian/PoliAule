@@ -1,5 +1,5 @@
 import { haptics, defaultPatterns } from './haptics.js';
-import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
+import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from 'vitrium';
 
 // The header's data-fetch indicator button morphs into a glass card holding the
 // freshness status + reload button, and back — the exact shell technique used

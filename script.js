@@ -1,6 +1,17 @@
 history.scrollRestoration = 'manual';
 window.scrollTo(0, 0);
 
+// One-time move of the blur preference to the key Vitrium reads. The cached
+// benchmark verdict isn't carried over; it re-runs once at idle.
+try {
+  const oldMode = localStorage.getItem('poliAule_blurMode');
+  if (oldMode !== null) {
+    if (localStorage.getItem('lg:blur-mode') === null) localStorage.setItem('lg:blur-mode', oldMode);
+    localStorage.removeItem('poliAule_blurMode');
+  }
+  localStorage.removeItem('poliAule_blurBenchmark');
+} catch { /* storage unavailable */ }
+
 const h = location.hostname;
 const envLabel = h === 'beta.poliaule.com' ? 'Beta'
                : h === 'dev.poliaule.com'  ? 'Dev'
@@ -40,7 +51,7 @@ import './components/data-fetch-card.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
-import { initLiquidGlass } from './components/liquid-glass.js';
+import { initLiquidGlass, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
@@ -48,7 +59,6 @@ import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY } from './components/settings.js';
 import { initKeybindings } from './components/keybindings.js';
-import { resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from './utils/blur-capability.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();

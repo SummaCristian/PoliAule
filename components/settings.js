@@ -8,10 +8,9 @@ import { classroomsData } from '../available-rooms-script.js';
 import { selectCampusById } from './campus-picker.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
-import { getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState } from '../utils/blur-capability.js';
 import { createSegmentedControl } from './segmented-control.js';
 import { createToggle } from './toggle.js';
-import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from '../utils/flip-morph.js';
+import { getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState, snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from 'vitrium';
 
 const TRANSITION_DURATION = 420;
 

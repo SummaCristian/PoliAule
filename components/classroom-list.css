@@ -166,7 +166,7 @@
 }
 
 /* Glass pill around the name + altName group, so the sticky label reads
-   cleanly over the cards scrolling beneath it. Same --glass-* material as
+   cleanly over the cards scrolling beneath it. Same --lg-* material as
    .header-button / the classroom cards. */
 .building-section-titles {
   position: relative;
@@ -186,14 +186,14 @@
   padding: 0.5rem 1.05rem;
   border-radius: var(--radius-pill);
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .classroom-card::after. */
@@ -204,8 +204,8 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -286,7 +286,7 @@
    Ported from the Figma "Classroom Card / Portrait" component: a photo with
    a gradient fade to a solid, readable footer instead of the old design's
    second blurred copy of the photo and mix-blend-mode overlay. The card's
-   chrome reuses the project's existing --glass-* tokens instead of one-off
+   chrome reuses the project's existing --lg-* tokens instead of one-off
    shadow values, per the Figma spec's own Glass effect names.
    ══════════════════════════════════════════════════════════════ */
 
@@ -318,8 +318,8 @@
      (the photo) is fully opaque, so an inset shadow declared here would be
      invisible on any photo card. */
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    0 4px 40px 0 var(--lg-shadow-color);
 
   transition: transform 0.15s ease;
 
@@ -375,7 +375,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: var(--glass-highlight);
+  box-shadow: var(--lg-highlight);
   pointer-events: none;
   z-index: 1;
 }
@@ -389,8 +389,8 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;

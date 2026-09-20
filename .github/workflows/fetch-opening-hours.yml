@@ -2,7 +2,7 @@ name: Fetch Opening Hours
 
 on:
   schedule:
-    - cron: '0 6 * * 0'  # Once a week, Sunday 6am UTC (clear of the twice-daily occupancy fetch at 3am/10am UTC)
+    - cron: '0 6 * * 0'  # Once a week, Sunday 6am UTC (clear of the occupancy fetches, which run at 3am UTC and hourly from 5am to 7pm UTC)
   workflow_dispatch:      # Allow manual runs from the GitHub Actions tab
 
 jobs:

@@ -1,6 +1,6 @@
 # PoliAule - Public Data API
 
-PoliAule pre-fetches classroom occupancy data from Politecnico di Milano every night and serves it through a small versioned REST API backed by Cloudflare Workers + R2. These endpoints are publicly accessible. If you want to build something on top of PoliMi classroom data, you can use them directly instead of scraping Politecnico yourself.
+PoliAule pre-fetches classroom occupancy data from Politecnico di Milano every morning and hourly during the day, and serves it through a small versioned REST API backed by Cloudflare Workers + R2. These endpoints are publicly accessible. If you want to build something on top of PoliMi classroom data, you can use them directly instead of scraping Politecnico yourself.
 
 > [!IMPORTANT]
 > PoliAule's API now has a new home!
@@ -157,7 +157,7 @@ Same structure as `/v1/classrooms`, with a top-level metadata wrapper and an `oc
           ...
           classrooms: [
             {
-              ...
+              ...             // includes `floor`, as in /v1/classrooms
               occupancy: [   // list of BOOKED time slots (not free slots)
                 {
                   inizio: string        // start time, "HH:MM"

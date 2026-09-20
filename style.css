@@ -1267,7 +1267,8 @@ ul li::marker {
 .changelog-logo {
   width: auto;
   height: 4rem;
-  margin-bottom: 0.5rem;
+  margin: 0 auto 0.5rem;
+  display: block;
 
   user-select: none;
   -webkit-user-drag: none;
@@ -1278,6 +1279,35 @@ ul li::marker {
 
   display: flex;
   flex-direction: column;
+}
+
+.changelog-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  text-align: start;
+}
+
+.changelog-container ul li {
+  font-size: var(--text-90);
+  color: var(--text-color-secondary);
+  padding-left: 16px;
+  position: relative;
+}
+
+.changelog-container ul li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0.45em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-color-secondary);
 }
 
 .hero-badge {

@@ -426,7 +426,7 @@ html:has(#search-classrooms-container.visible) .footer {
    .mapboxgl-ctrl-group div: `liquid-glass` (below) has to sit on the exact
    element it's applied to (its delegated handler treats a `<button>` found
    *inside* the pressed element as its own separate control and backs off —
-   see components/liquid-glass.js), so the button has to be both the visual
+   see Vitrium's core/liquid-glass.js), so the button has to be both the visual
    surface and the liquid-glass target, exactly like .header-button. The
    group is left with no visual styling of its own so it doesn't peek out
    from behind the button's round corners.
@@ -501,7 +501,7 @@ html:has(#search-classrooms-container.visible) .footer {
 
 /* Plain CSS lit hover/press for the compass only (see the comment above) —
    same brightness/saturate boost and press-scale as `.liquid-glass` in
-   liquid-glass.css, just driven by :hover/:active instead of pointer capture. */
+   Vitrium's liquid-glass.css, just driven by :hover/:active instead of pointer capture. */
 @media (hover: hover) {
   .campus-map .mapboxgl-ctrl-compass:hover {
     filter: brightness(1.11) saturate(1.35);

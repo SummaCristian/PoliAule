@@ -2,7 +2,6 @@ import { getMapboxToken } from '../config.js';
 import { classroomsData } from '../classroom-search-data.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
-import { haptics, defaultPatterns } from './haptics.js';
 import { getSelectedCampusId, getSelectedBuildingId, clearSelectedBuildingSilently } from './campus-buildings.js';
 import { getSheetHeightPx, heightAfterBuildingSelect, isUserResizing } from './campus-sheet.js';
 
@@ -671,7 +670,6 @@ function showCampusMarkers(mapboxgl) {
     el.className = 'campus-marker';
     el.innerHTML = `<span class="campus-marker__dot"></span><span>${escapeHtml(campus.name)}</span>`;
     el.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       flyToCampus(mapboxgl, campus);
     });
 
@@ -701,7 +699,6 @@ function showBuildingMarkers(mapboxgl, campus) {
     // campus-buildings.js) and, via the 'buildingchange' listener above,
     // flies the camera in — same tap-to-drill-in as a building card there.
     el.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       document.dispatchEvent(new CustomEvent('buildingchange', { detail: { campusId: campus.id, buildingId: b.name } }));
     });
 

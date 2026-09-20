@@ -1,5 +1,4 @@
 import { getLocale } from '../i18n.js';
-import { haptics } from './haptics.js';
 import { classroomsData } from '../available-rooms-script.js';
 import { createPillSelector } from './pill-selector.js';
 
@@ -89,14 +88,6 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
       const changed = datePicker.value !== el.dataset.date;
       datePicker.value = el.dataset.date;
       if (changed) datePicker.dispatchEvent(new Event('change', { bubbles: true }));
-
-      // Haptic feedback (skipped for programmatic/silent placement, e.g. the
-      // deferred re-anchor when the wrapping <date-chip-picker> popup opens)
-      if (silent || !changed) return;
-      haptics.trigger([
-        { duration: 30 },
-        { delay: 60, duration: 40, intensity: 1 },
-      ]);
     },
   });
 

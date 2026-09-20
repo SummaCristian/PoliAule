@@ -48,7 +48,6 @@ import './components/time-range-chip-picker.js';
 import { initPickerDock } from './components/picker-dock.js';
 import './components/data-fetch-card.js';
 
-import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
 import { initLiquidGlass, createPopover, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
@@ -294,7 +293,6 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   // components/campus-buildings.js's goToBuilding(), which brings the picker
   // along to the right campus first if needed.
   headerEl.querySelector('.building-section-btn').addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     activateGroupTab('search-classrooms-container');
     goToBuilding(campusId, buildingName);
   });
@@ -412,7 +410,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Apply the cached blur verdict (or the safe "off" default if none yet)
     // instantly — the actual benchmark never runs during load, see
-    // utils/blur-capability.js for why.
+    // Vitrium's core/blur-capability.js for why.
     applyBlurState(resolveBlurCapability());
 
     await document.fonts.ready;
@@ -469,8 +467,6 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   // Skip default submit behavior since we will handle it with JavaScript
   e.preventDefault();
 
-  // Haptic feedback
-  haptics.trigger(defaultPatterns.light);
 
   // Check if data was already fetched
   if (!classroomsData.length) {
@@ -524,7 +520,6 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
     toggleBtn.innerHTML = `<i class="hgi-stroke hgi-filter" aria-hidden="true"></i> ${t('results.filterPartial')}`;
     if (!showPartialDefault) container.classList.add('hide-partial');
     toggleBtn.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
     });

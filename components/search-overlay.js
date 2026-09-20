@@ -4,7 +4,6 @@
 // (data, index, card builders) lives in classroom-search-data.js.
 
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
-import { haptics, defaultPatterns } from './haptics.js';
 import { escapeHtml, highlight } from '../utils/html.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import {
@@ -247,7 +246,6 @@ function grabInput() {
 export async function openSearchOverlay() {
   if (isOpen || !overlay) return;
   isOpen = true;
-  haptics.trigger(defaultPatterns.light);
   savedScrollPos = window.scrollY;
 
   // Unhide + focus synchronously (still inside the FAB-tap callstack, so iOS
@@ -342,7 +340,6 @@ export function initSearchOverlay() {
   resultsEl = document.getElementById('search-overlay-results');
 
   closeBtn.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     closeSearchOverlay();
   });
 
@@ -376,7 +373,6 @@ export function initSearchOverlay() {
   });
 
   clearBtn.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     input.value = '';
     input.dispatchEvent(new Event('input'));
     input.focus();

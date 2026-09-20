@@ -2,13 +2,7 @@
 // Horizontal drag-based time range selector. Replaces the two-card picker UI
 // as the primary input; tapping a badge opens the morph popup for typed entry.
 
-import { haptics, defaultPatterns } from './haptics.js';
 
-// Defer haptic out of the pointer event to avoid mobile browser suppression
-// of navigator.vibrate() during active touch handling.
-function triggerHaptic() {
-  setTimeout(() => haptics.trigger(defaultPatterns.light), 0);
-}
 import { openPicker, getPickerCards } from './time-picker.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { t } from '../i18n.js';
@@ -253,7 +247,6 @@ function buildSlider(fromInput, toInput) {
     bar.classList.add('trs-bar--snapping');
     render();
     setTimeout(() => bar.classList.remove('trs-bar--snapping'), 300);
-    triggerHaptic();
   });
 
   // ── Input sync ────────────────────────────────────────────────────────────
@@ -296,8 +289,6 @@ function buildSlider(fromInput, toInput) {
   let panAnchorTo   = 0;
   let pointerDownX  = 0;
   let didDrag       = false;
-  let lastSnapFrom  = null; // track last snapped position to fire haptics only on change
-  let lastSnapTo    = null;
 
   function onPointerDown(e) {
     if (e.button !== 0 && e.pointerType !== 'touch') return;
@@ -317,12 +308,10 @@ function buildSlider(fromInput, toInput) {
 
     if (dFrom <= hitPx && dFrom <= dTo) {
       dragMode = 'from';
-      lastSnapFrom = fromMin;
       fromHandle.classList.add('trs-handle--dragging');
       fromBadge.classList.add('trs-badge--dragging');
     } else if (dTo <= hitPx) {
       dragMode = 'to';
-      lastSnapTo = toMin;
       toHandle.classList.add('trs-handle--dragging');
       toBadge.classList.add('trs-badge--dragging');
     } else if (rawM >= fromMin - SNAP * 0.5 && rawM <= toMin + SNAP * 0.5) {
@@ -330,15 +319,12 @@ function buildSlider(fromInput, toInput) {
       panAnchorX    = e.clientX;
       panAnchorFrom = fromMin;
       panAnchorTo   = toMin;
-      lastSnapFrom  = fromMin;
-      lastSnapTo    = toMin;
       fromBadge.classList.add('trs-badge--dragging');
       toBadge.classList.add('trs-badge--dragging');
     } else {
       return;
     }
 
-    triggerHaptic();
     bar.setPointerCapture(e.pointerId);
   }
 
@@ -356,7 +342,6 @@ function buildSlider(fromInput, toInput) {
       const snapped = snapTo(vFrom);
       if (snapped !== fromMin) {
         fromMin = snapped;
-        triggerHaptic();
         syncInputs();
       }
     } else if (dragMode === 'to') {
@@ -364,7 +349,6 @@ function buildSlider(fromInput, toInput) {
       const snapped = snapTo(vTo);
       if (snapped !== toMin) {
         toMin = snapped;
-        triggerHaptic();
         syncInputs();
       }
     } else {
@@ -383,7 +367,6 @@ function buildSlider(fromInput, toInput) {
       if (snappedF !== fromMin && snappedT <= MAX && snappedF >= MIN) {
         fromMin = snappedF;
         toMin   = snappedT;
-        triggerHaptic();
         syncInputs();
       }
     }
@@ -411,7 +394,6 @@ function buildSlider(fromInput, toInput) {
     }, 300);
 
     if (wasDrag) {
-      triggerHaptic();
       // Reflect any corrections applied by setupTimePickers' input listeners
       const cFrom = timeToMinutes(fromInput.value);
       const cTo   = timeToMinutes(toInput.value);
@@ -420,7 +402,6 @@ function buildSlider(fromInput, toInput) {
       }
     } else {
       // Tap (no significant movement) — open popup for the tapped handle
-      triggerHaptic();
       if (endedDragMode === 'from') openFrom();
       else if (endedDragMode === 'to')   openTo();
     }
@@ -447,8 +428,8 @@ function buildSlider(fromInput, toInput) {
     openPicker(toCard, toCard._sourceRect);
   }
 
-  fromBadge.addEventListener('click', () => { triggerHaptic(); openFrom(); });
-  toBadge.addEventListener('click',   () => { triggerHaptic(); openTo(); });
+  fromBadge.addEventListener('click', () => { openFrom(); });
+  toBadge.addEventListener('click',   () => { openTo(); });
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
 
@@ -456,11 +437,11 @@ function buildSlider(fromInput, toInput) {
     const step = e.shiftKey ? 60 : SNAP;
     if (e.key === 'ArrowLeft') {
       fromMin = Math.max(MIN, fromMin - step);
-      render(); syncInputs(); triggerHaptic();
+      render(); syncInputs();
       e.preventDefault();
     } else if (e.key === 'ArrowRight') {
       fromMin = Math.min(toMin - SNAP, fromMin + step);
-      render(); syncInputs(); triggerHaptic();
+      render(); syncInputs();
       e.preventDefault();
     } else if (e.key === 'Enter' || e.key === ' ') {
       openFrom(); e.preventDefault();
@@ -471,11 +452,11 @@ function buildSlider(fromInput, toInput) {
     const step = e.shiftKey ? 60 : SNAP;
     if (e.key === 'ArrowLeft') {
       toMin = Math.max(fromMin + SNAP, toMin - step);
-      render(); syncInputs(); triggerHaptic();
+      render(); syncInputs();
       e.preventDefault();
     } else if (e.key === 'ArrowRight') {
       toMin = Math.min(MAX, toMin + step);
-      render(); syncInputs(); triggerHaptic();
+      render(); syncInputs();
       e.preventDefault();
     } else if (e.key === 'Enter' || e.key === ' ') {
       openTo(); e.preventDefault();

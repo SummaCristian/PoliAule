@@ -381,7 +381,7 @@
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .header-button::after /
-   .bn-tabbar::after in style.css / bottom-nav.css. */
+   .lg-tabbar__bar::after in Vitrium's tabbar.css. */
 .classroom-card::after {
   content: "";
   position: absolute;

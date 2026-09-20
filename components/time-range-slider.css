@@ -49,7 +49,7 @@
   }
 }
 
-/* Title row — icon + "Time", matching .cp-popup__title / .dcp-popup__title */
+/* Title row — icon + "Time", matching .lg-morph__title / .chip-dock__title */
 .trs-title {
   display: flex;
   align-items: center;

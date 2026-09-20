@@ -6,7 +6,7 @@ The frontend is plain HTML + vanilla ES modules, no framework. Cloudflare Pages 
 
 ## Tab Navigation
 
-The main UI is divided into two tabs (Available and Search) plus a Settings panel. Tab switching is CSS-driven: clicking a tab adds/removes a `visible` class on the corresponding `.tab-content` container. No URL change happens: tab state is purely in-memory, with an optional preference stored in `localStorage` so the user's last-used tab (or a fixed default) survives page reloads.
+The main UI is divided into two tabs (Available and Campus) plus a Search overlay and a Settings panel. The tab bar is Vitrium's `createTabBar` (`components/bottom-nav.js`): a bottom row on mobile and a side rail from 600px up. Tab switching is CSS-driven: selecting a tab adds/removes a `visible` class on the corresponding `.tab-content` container. Search is a `prominent` + `press` tab: a floating circle that never becomes selected and opens the search overlay, which morphs out of it. No URL change happens: tab state is purely in-memory, with an optional preference stored in `localStorage` so the user's last-used tab (or a fixed default) survives page reloads.
 
 ```mermaid
 stateDiagram-v2
@@ -25,7 +25,7 @@ stateDiagram-v2
     class ClassroomDetail detail
 ```
 
-The animated sliding indicator under the tab bar is a single `<div class="tab-indicator">` moved with `translateX`. No JS animation library needed.
+The sliding selection pill, its drag behaviour and the row/rail layout change are all Vitrium's tab bar (spring-driven, no separate animation library).
 
 ---
 
@@ -126,9 +126,28 @@ Because `localStorage` is scoped to the browser on a single device, preferences 
 
 ---
 
-## Haptics
+## UI components (Vitrium)
 
-`components/haptics.js` wraps the `web-haptics` CDN library. Components call `haptics.trigger(pattern)` on significant interactions (tab switches, opening a classroom, form submission). On devices without haptic support the call is a no-op.
+The glass design system and most interactive components come from the `vitrium` package, extracted from this app. `style.css` starts with `@import "vitrium/styles"`, and components are imported from `'vitrium'`.
+
+| Area | Built on |
+|---|---|
+| Tokens, glass, blur, springs, press/drag deform | `vitrium/styles`, `initLiquidGlass`, and the blur-capability helpers, set up in `script.js` |
+| Settings toggles and segmented controls | `createToggle`, `createSegmentedControl` |
+| Footer version popover, classroom timeline popover | `createPopover` |
+| Date and time-range chips | `createChipPicker` via `components/chip-shell.js` |
+| Campus picker (Available tab and campus sheet) | `createListPicker` |
+| Data-fetch card | `createMorphPopup` |
+| Campus sheet | `createSheet` |
+| Main navigation | `createTabBar` |
+
+Things to know:
+
+- **Docked pickers.** On wide screens `picker-dock.js` docks the campus, date and time pickers open as inline cards. Vitrium has no docked mode, so `chip-shell.js` swaps the chip for a card (rebuilding the chip when undocked), and `campus-picker.js` moves the list's own panel into the form column.
+- **Tab bar rebuilds.** Vitrium rebuilds tab buttons from the tab definitions when the layout changes, so `bottom-nav.js` defines each `label` as a getter (the translation is only known after startup) and the search overlay finds the Search circle by class, not by id.
+- **Page padding follows the bar.** `.tab-content`, `.body-container`, `.footer` and the favourites carousel's `--fade-left` transition their padding (`--nav-shift` in `style.css`) when the bar moves between row and rail. `--side-nav-width` and `--bottom-nav-height` are only updated while the bar is in the matching layout, so the padding never chases a mid-move measurement.
+- **Campus sheet corners.** On mobile the collapsed sheet is concentric with the tab bar, using the bar's settled height and inset; the sheet is rebuilt (same detent, scroll and content) when the breakpoint or those metrics change. Its stretch deform is off, and it re-measures itself after each detent change (a resize could otherwise leave it slightly short of full and unable to scroll).
+- **Fonts and icons.** The tab and chip icons are HugeIcons glyphs passed as HTML where Vitrium expects SVG, so `bottom-nav.css` and `chip-pickers.css` size them and reset their weight.
 
 ---
 
@@ -177,14 +196,17 @@ Any URL that fails this check causes the photo container to be removed silently,
 | `available-rooms-script.js` | Data fetch, `findAvailableClassrooms()` filtering |
 | `search-classrooms-script.js` | Full-text search index, hierarchy navigation |
 | `i18n.js` | Locale loading, `t()`, language switch callbacks |
-| `components/campus-picker.js` | Campus selector popup |
+| `components/campus-picker.js` | `<campus-chip-picker>`: Vitrium list picker, `campuschange` event, docked mode |
+| `components/chip-shell.js` | Shared shell of the date and time chip pickers (Vitrium chip, docked mode) |
+| `components/date-chip-picker.js`, `components/time-range-chip-picker.js` | Custom elements wrapping the date row and the time slider |
+| `components/bottom-nav.js` | Main navigation on Vitrium's tab bar |
+| `components/campus-sheet.js` | Campus map sheet on Vitrium's sheet |
+| `components/data-fetch-card.js` | Header status card on Vitrium's morph popup |
 | `components/classroom-detail.js` | Detail sheet with hash routing, VT animations, photo, schedule |
 | `components/classroom-list.js` | Renders classroom cards in the Available tab |
 | `components/time-picker.js` | Morphing time input |
 | `components/time-range-slider.js` | Dual-handle time range slider |
 | `components/settings.js` | User preferences panel + `localStorage` keys |
-| `components/haptics.js` | Haptic feedback wrapper |
 | `components/tooltip.js` | Side-effect: global `data-tooltip` handler |
-| `components/popover.js` | `@floating-ui/dom` wrapper (available, not yet wired in) |
 | `utils/time-format.js` | `createTimeFormatter()`, locale-aware time display |
 | `utils/html.js` | `escapeHtml()` and `safeUrl()` - XSS sanitization helpers |

@@ -7,8 +7,8 @@
 
   /* The pill is draggable (see pill-selector.js); without this, a
      touch-drag starting on/near a day's text triggers the browser's native
-     text-selection/callout instead — same fix as .bn-wrapper in
-     bottom-nav.css. Scoped to the whole wrapper, not just
+     text-selection/callout instead — same fix as the tab bar in
+     Vitrium's tabbar.css. Scoped to the whole wrapper, not just
      .date-picker-container, since the indicator/hit/active-row now live
      here as its siblings. */
   user-select: none;
@@ -33,7 +33,7 @@
   /* Same glass material as the tabbar/popover — see the recipe note at
      :root's --lg-tint definition in style.css. No overflow:hidden here
      (unlike a card): the sliding indicator and day cells never exceed the
-     pill's bounds on their own, same as .bn-tabbar, so nothing needs
+     pill's bounds on their own, same as .lg-tabbar__bar, so nothing needs
      clipping and the outer box-shadow/::after stroke below can live
      directly on this element. */
   background: var(--lg-tint);
@@ -55,8 +55,8 @@
     0 4px 40px 0 var(--lg-shadow-color);
 }
 
-/* Outside 0.5px gradient stroke — same recipe as .bn-tabbar::after in
-   bottom-nav.css. */
+/* Outside 0.5px gradient stroke — same recipe as .lg-tabbar__bar::after in
+   Vitrium's tabbar.css. */
 .date-picker-container::after {
   content: "";
   position: absolute;
@@ -96,7 +96,7 @@
    purely so pill-selector.js can clip a pill-shaped hole out of just this
    layer while the indicator is lifted (see updateMask() there), without
    touching the container's own glass background/stroke. Same reason
-   .bn-tabbar-items exists in bottom-nav.css. Created dynamically by
+   .lg-tabbar__items exists in Vitrium's tabbar.css. Created dynamically by
    pill-selector.js. */
 .date-picker-items {
   display: flex;
@@ -106,14 +106,14 @@
   width: 100%;
 }
 
-/* Selector pill — literal copy of .bn-pill-outer/.bn-pill-inner in
-   bottom-nav.css: flat local-tint color at rest (from .date-indicator-inner
+/* Selector pill — literal copy of .lg-pill/.lg-pill-inner in
+   Vitrium's tabbar.css: flat local-tint color at rest (from .date-indicator-inner
    below — this element itself carries no background, same as
-   .bn-pill-outer), full glass treatment only while lifted (mid tap/drag,
+   .lg-pill), full glass treatment only while lifted (mid tap/drag,
    per scale.value in pill-selector.js's render()). pill-selector.js also
    moves this element (+ its hit overlay) out to be a sibling of
-   .date-picker-container, not a child — same as .bn-pill-outer/.bn-pill-hit
-   being siblings of .bn-tabbar rather than nested inside it. Nested, the
+   .date-picker-container, not a child — same as .lg-pill/.lg-pill-hit
+   being siblings of .lg-tabbar__bar rather than nested inside it. Nested, the
    container's own ::after stroke (generated as its last child) would paint
    above the indicator's lifted glass instead of below it. */
 .date-indicator {
@@ -124,7 +124,7 @@
   transition: box-shadow 0.15s ease;
 
   /* Position/scale are driven every frame by the spring in
-     pill-selector.js (components/pill-selector.js), same as bottom-nav's
+     pill-selector.js (components/pill-selector.js), same as Vitrium's tab bar's
      pill — a CSS transition here would fight the per-frame inline
      transform instead of the spring easing it. */
   will-change: transform;
@@ -138,7 +138,7 @@
 }
 
 /* Outside 0.5px gradient stroke, only shown while lifted — same recipe as
-   .bn-pill-outer::after in bottom-nav.css. */
+   .lg-pill::after in Vitrium's tabbar.css. */
 .date-indicator::after {
   content: "";
   position: absolute;
@@ -162,11 +162,11 @@
 }
 
 /* Inner layer: clips the active-row filmstrip to the indicator's own box,
-   and — literally as in .bn-pill-inner — carries the pill's actual color at
+   and — literally as in .lg-pill-inner — carries the pill's actual color at
    all times (not just while lifted), plus the extra blur/highlight/border
    once lifted. */
 .date-indicator-inner {
-  /* Literal copy of .bn-wrapper's --bn-pill-* tokens in bottom-nav.css
+  /* Literal copy of the tab bar's --lg-pill-* tokens in Vitrium's tabbar.css
      (that pill's own material is deliberately subtler/more transparent
      than this project's shared --lg-* tokens, so it isn't reused here) —
      scoped to this element itself rather than a shared ancestor, since
@@ -208,7 +208,7 @@
    space-between layout it's shadowing) — see rebuildActiveRow() in
    pill-selector.js. Only the sliver currently under the indicator's own
    (possibly grown) footprint is ever visible, through the hole clipped
-   into .date-picker-items. Same role as .bn-active-row. */
+   into .date-picker-items. Same role as .lg-pill-active-row. */
 .date-indicator-active-row {
   position: absolute;
   top: 0;
@@ -235,7 +235,7 @@
 }
 
 /* Invisible drag/tap target laid exactly over the indicator (see
-   pill-selector.js) — same role as .bn-pill-hit in bottom-nav.css. Needs
+   pill-selector.js) — same role as .lg-pill-hit in Vitrium's tabbar.css. Needs
    its own layer with pointer-events:auto since .date-indicator itself stays
    pointer-events:none so it never blocks the cells under it. */
 .date-indicator-hit {
@@ -245,7 +245,7 @@
   pointer-events: auto;
   touch-action: none;
   /* Native-app feel: no grab hand — the indicator communicates its draggability
-     through motion/haptics, like a native picker wheel (see the cursor rule in
+     through motion, like a native picker wheel (see the cursor rule in
      style.css). */
   cursor: default;
   will-change: transform;
@@ -408,7 +408,7 @@
 /* No .active-based coloring here on purpose: unlike a plain class toggle,
    the accent color for "the selected day" now comes solely from
    .date-indicator-cell (see pill-selector.js) showing through the hole
-   masked into .date-picker-items — same as bottom-nav's tabbar, where only
+   masked into .date-picker-items — same as Vitrium's tab bar, where only
    the pill's own mask reveals the colored label, never a standalone class.
    A parallel .active-class color here would show as a second, independently
    stuck-in-place green cell while dragging the indicator elsewhere. */

@@ -1,6 +1,5 @@
 import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow } from '../available-rooms-script.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
-import { haptics, defaultPatterns } from './haptics.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
@@ -96,14 +95,12 @@ class ClassroomDetail {
 
     this._favBtn?.addEventListener('click', () => {
       if (this._currentId === null) return;
-      haptics.trigger(defaultPatterns.light);
       toggleFavourite(this._currentId);
       this._syncFavBtn();
     });
     window.addEventListener('favourites-changed', () => this._syncFavBtn());
 
     this._backBtn?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       if (this._openedViaPushState) {
         history.back();
       } else {
@@ -164,7 +161,6 @@ class ClassroomDetail {
       const trigger = e.target.closest('[data-open-classroom]');
       if (!trigger) return;
       e.stopPropagation();
-      haptics.trigger(defaultPatterns.light);
 
       const id = parseInt(trigger.dataset.openClassroom);
 
@@ -633,7 +629,6 @@ class ClassroomDetail {
 
     // Title click -> manual refresh of photo and schedule
     this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       this._loadSchedule(classroom.id);
       if (classroom.idfoto) this._loadPhoto(classroom.id);
     });
@@ -948,7 +943,6 @@ class ClassroomDetail {
           selectedDayIndex = index;
           rowEls.forEach((row, i) => row.classList.toggle('selected', i === index));
           if (!silent) {
-            haptics.trigger(defaultPatterns.light);
             hideOccupationPopover();
           }
         },
@@ -1136,7 +1130,6 @@ class ClassroomDetail {
           const block = e.target.closest?.('.detail-schedule-block');
           if (!block) { hideOccupationPopover(); return; }
           e.stopPropagation();
-          haptics.trigger(defaultPatterns.light);
           if (_popoverBlock === block) hideOccupationPopover();
           else showOccupationPopover(block);
         });

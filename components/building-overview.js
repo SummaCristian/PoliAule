@@ -1,6 +1,5 @@
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
-import { haptics, defaultPatterns } from './haptics.js';
 import { getCampusBuildingsOverview } from '../available-rooms-script.js';
 
 // The "zoom out" building overview.
@@ -164,7 +163,6 @@ class BuildingOverview {
     this.#filterRow = container.querySelector('.results-filter-row');
     this.#sourceName = buildingName;
     this.#scroller = scrollerFor(container, this.#stickyTop(sourceSection));
-    haptics.trigger(defaultPatterns.light);
 
     this.#onKey = (e) => { if (e.key === 'Escape') this.close(); };
     document.addEventListener('keydown', this.#onKey);
@@ -246,7 +244,6 @@ class BuildingOverview {
     cancelAnimationFrame(this.#prewarmRaf);
     document.removeEventListener('keydown', this.#onKey);
     this.#onKey = null;
-    haptics.trigger(defaultPatterns.light);
 
     const targetName = this.#pendingNavName || this.#sourceName;
     const { list, grid } = { list: this.#list, grid: this.#grid };
@@ -450,7 +447,6 @@ class BuildingOverview {
     this.#isOpen = false;
     document.removeEventListener('keydown', this.#onKey);
     this.#onKey = null;
-    haptics.trigger(defaultPatterns.light);
 
     const anims = this.#anims;
     anims.forEach(a => a.reverse());

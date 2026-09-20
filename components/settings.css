@@ -300,8 +300,8 @@
   color: var(--text-color-primary);
 }
 
-/* Label parts used inside the segmented controls (see segmented-control.css
-   for the control itself). */
+/* Label parts used inside the segmented controls (Vitrium's
+   .lg-seg for the control itself). */
 .settings-lang-btn__flag {
   font-size: var(--text-100);
   line-height: 1;

@@ -1,6 +1,6 @@
 // Draggable sliding indicator for a horizontal ".date-picker-container" row of
 // ".date-element-container" cells with a ".date-indicator" pill. All the
-// tap/drag/spring behavior lives in pill-drag-core.js (shared with the
+// tap/drag/spring behavior lives in Vitrium's createPillDragCore (shared with the
 // settings segmented controls); this file only maps that onto the date
 // picker's existing markup/CSS and its skipped-day rules. Used by both the
 // Available tab's date picker (date-picker.js) and the details page's mobile
@@ -25,8 +25,8 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
   // container's own parent — .date-picker / .detail-schedule-day-selector,
   // both already position:relative. The indicator (+ hit overlay) live here
   // as container's siblings, not its children — same relationship as
-  // .bn-pill-outer/.bn-pill-hit being siblings of .bn-tabbar rather than
-  // nested inside it, and already marked up that way (not reparented at
+  // the tab bar's pill and hit overlay being siblings of its bar rather
+  // than nested inside it, and already marked up that way (not reparented at
   // runtime): Safari doesn't reliably recompute an element's backdrop-filter
   // root after it's moved out from under a backdrop-filter'd ancestor via
   // JS, which silently killed the indicator's lift-blur there.
@@ -37,7 +37,7 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
 
   // Wrap the real cells in their own layer so a pill-shaped hole can be
   // clipped out of them while the indicator is lifted — same reason
-  // .bn-tabbar-items exists in bottom-nav.css/js. Idempotent across repeated
+  // the tab bar's items layer exists (Vitrium's tabbar). Idempotent across repeated
   // createPillSelector() calls on the same container (setupDatePicker can
   // re-run): reuse an existing wrapper and just re-adopt whatever cells
   // currently sit as direct children.
@@ -51,8 +51,8 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     Array.from(container.querySelectorAll(':scope > .date-element-container')).forEach(el => items.appendChild(el));
   adoptCells();
 
-  // Accent-colored cell duplicates (.bn-active-row's equivalent) live in an
-  // overflow:hidden inner layer that blurs while lifted (.bn-pill-inner's).
+  // Accent-colored cell duplicates (the tab bar's active row equivalent) live in an
+  // overflow:hidden inner layer that blurs while lifted (the tab bar's pill inner).
   indicator.querySelector(':scope > .date-indicator-inner')?.remove();
   const inner = document.createElement('div');
   inner.className = 'date-indicator-inner';

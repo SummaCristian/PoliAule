@@ -674,7 +674,7 @@ label {
     box-shadow 0.2s ease;
 
   /* Lit hover state, press feedback and the swipe-deform are all handled by
-     the shared .liquid-glass rules (components/liquid-glass.{css,js}). */
+     the shared .liquid-glass rules (Vitrium's liquid-glass, see vitrium/styles). */
 }
 
 /* Outside 0.5px gradient stroke (Figma's "outside stroke") without

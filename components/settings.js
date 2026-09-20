@@ -2,7 +2,6 @@
 // Settings button that morphs into a centered popup.
 // Contains the language switcher and any future settings.
 
-import { haptics, defaultPatterns } from './haptics.js';
 import { t, getLocale, setLocale, onLanguageSwitch, animateI18nElement } from '../i18n.js';
 import { classroomsData } from '../available-rooms-script.js';
 import { selectCampusById } from './campus-picker.js';
@@ -340,7 +339,6 @@ function buildStepper(value, min, max, format, onChange) {
     if (current <= min) return;
     current--;
     refresh();
-    haptics.trigger(defaultPatterns.light);
     onChange(current);
   });
 
@@ -348,7 +346,6 @@ function buildStepper(value, min, max, format, onChange) {
     if (current >= max) return;
     current++;
     refresh();
-    haptics.trigger(defaultPatterns.light);
     onChange(current);
   });
 
@@ -820,7 +817,6 @@ function buildPopup() {
     value: getLocale(),
     async onSelect(lang) {
       if (lang === getLocale()) return;
-      haptics.trigger(defaultPatterns.light);
       await setLocale(lang);
     },
   });
@@ -951,7 +947,6 @@ export function initSettings() {
   document.body.appendChild(popupEl);
 
   triggerEl.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     openSettings();
   });
 

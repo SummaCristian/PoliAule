@@ -104,12 +104,11 @@
     0 4px 40px 0 var(--lg-shadow-color);
 }
 
-/* `.liquid-glass` (liquid-glass.css, loaded after this file) sets its own
+/* `.liquid-glass` (Vitrium's liquid-glass.css) sets its own
    `transition` shorthand on the same single-class specificity — whichever
    rule is later in the cascade wins the WHOLE property, silently dropping
    the other's. `.campus-sheet-recenter.liquid-glass` outranks both and
-   merges the two lists, same fix as `.campus-select.liquid-glass` in
-   campus-picker.css. Pop in/out on appear/disappear uses the same overshoot
+   merges the two lists. Pop in/out on appear/disappear uses the same overshoot
    ease + durations as the header's own controls (header-ctl-scale-in/-out,
    classroom-detail.css). `display` is part of the transition
    (`allow-discrete`) so toggling the `hidden` attribute animates instead of
@@ -149,7 +148,7 @@
 
 /* This class's own `display: inline-flex` above outranks the UA `[hidden]`
    rule (an author style always beats a UA one, regardless of specificity) —
-   re-assert it, same fix as .dcp-trigger[hidden] / .trc-trigger[hidden].
+   re-assert it, the same fix any class that sets `display` needs.
    Shrinks/fades out first (header-ctl-scale-out's own ease-in, quicker than
    the pop-in), `display` only flipping to `none` once that's done. */
 .campus-sheet-recenter.liquid-glass[hidden],

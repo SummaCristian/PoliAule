@@ -45,6 +45,7 @@ let header = null;
 let content = null;
 let container = null;
 let settleTimer = 0;
+let builtGeometryKey = '';
 
 const rootPx = (name, fallback) => {
   const n = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
@@ -100,9 +101,23 @@ function detentAfterBuildingSelect() {
 //  - radius: to be concentric with the pill's rounded end it equals that end's
 //    radius (half the tabbar's height) plus the vertical clearance the tabbar
 //    keeps below it, which is the same GAP.
+// The tab bar's metrics as last seen in its mobile row layout. Not read live
+// when the sheet is built: on a resize from desktop the bar is still animating
+// from the rail (a tall column with no side inset) to the row, so a live read
+// would bake the rail's numbers into the corners. They are refreshed once the
+// bar has settled (see initCampusSheet).
+const navMetrics = { tabbarHeight: 72, outerInset: 28 };
+const geometryKey = () => `${navMetrics.tabbarHeight}|${navMetrics.outerInset}`;
+
+function readNavMetrics() {
+  if (desktopMQ.matches) return;
+  const tabbarHeight = rootPx('--bn-tabbar-height', 0);
+  const outerInset = rootPx('--bn-tabbar-outer-inset', 0);
+  if (tabbarHeight && outerInset) Object.assign(navMetrics, { tabbarHeight, outerInset });
+}
+
 function mobileGeometry() {
-  const tabbarHeight = rootPx('--bn-tabbar-height', 76);
-  const outerInset = rootPx('--bn-tabbar-outer-inset', 28);
+  const { tabbarHeight, outerInset } = navMetrics;
   return {
     // Vitrium's inset is extra clearance on top of the 8px inline margin.
     inset: [outerInset - GAP - PLAIN_INSET, 0],
@@ -130,6 +145,7 @@ function headerHeightPx() {
 // content.
 function build(detent) {
   const desktop = desktopMQ.matches;
+  builtGeometryKey = geometryKey();
   sheet = createSheet({
     header, content, container,
     label: t('tabs.campus'),
@@ -171,18 +187,34 @@ export function initCampusSheet() {
 
   header = document.createElement('div');
   content = document.createElement('div');
+  readNavMetrics();
   build('collapsed');
 
   // Only now is `header`/`content` connected to the document: the picker custom
   // element inside the header needs that before .setup().
   initCampusBuildingsPage(header, content);
 
-  desktopMQ.addEventListener('change', () => {
+  // Rebuilt in place (same content, detent and scroll) when the layout it was
+  // built for changes: the breakpoint flips, or the tab bar it is concentric
+  // with changes size (its height is only known once the bar has laid out and
+  // its icon font has loaded).
+  const rebuild = () => {
     const detent = sheet.detent;
     const scroll = sheet.scrollTop;
     sheet.destroy();
     build(detent);
     sheet.scrollTop = scroll;
+  };
+  desktopMQ.addEventListener('change', rebuild);
+  // The bar animates to its new size when the layout changes, firing this on
+  // every frame: wait until it has stopped before comparing.
+  let navSettle = 0;
+  document.addEventListener('navsizechange', () => {
+    clearTimeout(navSettle);
+    navSettle = setTimeout(() => {
+      readNavMetrics();
+      if (!desktopMQ.matches && geometryKey() !== builtGeometryKey) rebuild();
+    }, 250);
   });
 
   // components/campus-buildings.js dispatches this whenever a building becomes

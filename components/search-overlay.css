@@ -59,8 +59,8 @@ body.search-overlay-open .bn-wrapper {
    search-overlay.js sets html.search-vt only for that window. The header's
    fade-overlay gradient keeps it legible without the blur. */
 html.search-vt .header-blur-layer,
-html.search-vt .bn-tabbar,
-html.search-vt .bn-search-btn,
+html.search-vt .lg-tabbar__bar,
+html.search-vt .lg-tabbar__prominent,
 html.search-vt .search-overlay-header .search-bar-wrapper,
 html.search-vt .search-overlay-close,
 html.search-vt .search-overlay-results {
@@ -71,7 +71,7 @@ html.search-vt .search-overlay-results {
 /* The FAB's persistent `will-change: transform` keeps Safari compositing its
    backdrop-filter on the pre-transform layer even after the blur is dropped —
    a blurred ghost trailing the morph. Release the hint for the transition. */
-html.search-vt .bn-search-btn {
+html.search-vt .lg-tabbar__prominent {
   will-change: auto;
 }
 
@@ -487,7 +487,7 @@ html.search-vt .bn-search-btn {
     pointer-events: auto;
   }
 
-  body.search-overlay-open #bn-search-btn {
+  body.search-overlay-open .lg-tabbar__prominent {
     opacity: 0;
     pointer-events: none;
   }

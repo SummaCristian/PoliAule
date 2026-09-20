@@ -84,7 +84,7 @@ label,
 summary,
 select,
 .app-header,
-.bn-tabbar,
+.lg-tabbar,
 .empty-container-title,
 .empty-container-subtitle,
 .detail-section-header,
@@ -678,12 +678,12 @@ label {
    affecting layout. header-button is a true circle (fixed equal
    width/height), so the ring is masked with a radial-gradient rather than
    the padding + mask-composite: exclude trick used on the pill-shaped
-   surfaces (.bn-tabbar::after, .detail-back-btn::after) — that box-corner
+   surfaces (the tab bar's ring, .detail-back-btn::after) — that box-corner
    technique has a seam at the four cardinal points of a perfect circle
    (border-radius: 999px on a square box), rendered as a bright spot/arc
    instead of a clean ring. A radial-gradient mask is exact Euclidean
-   distance from the center, so it doesn't hit that seam. .bn-search-btn is
-   also a true circle and uses the same fix (see bottom-nav.css). */
+   distance from the center, so it doesn't hit that seam. the tab bar's search circle is
+   also a true circle and uses the same fix (Vitrium's tab bar does the same). */
 .header-button::after {
   content: "";
   position: absolute;
@@ -882,7 +882,7 @@ body.info-open .header-nav-row {
 
   padding: 1rem;
   /* --bottom-nav-height is only the pill bar's own rendered height; the bar
-     also floats 20px clear of the viewport edge (see .bn-wrapper's
+     also floats 20px clear of the viewport edge (see the tab bar's
      `bottom: 20px`), so that offset has to be added back in here. */
   padding-bottom: calc(var(--bottom-nav-height, 88px) + 20px);
 }
@@ -1410,23 +1410,23 @@ All fancy elements like blurs or blend modes
 are rendered as solid colors
 */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .no-safari .bn-tabbar,
-  .no-safari .bn-search-btn {
+  .no-safari .lg-tabbar__bar,
+  .no-safari .lg-tabbar__prominent {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background: var(--background-color-secondary);
   }
 
   @media (prefers-color-scheme: dark) {
-    .no-safari .bn-tabbar,
-    .no-safari .bn-search-btn {
+    .no-safari .lg-tabbar__bar,
+    .no-safari .lg-tabbar__prominent {
       background: rgba(55, 55, 55, 0.96);
     }
   }
 }
 
-.samsung .bn-tabbar,
-.samsung .bn-search-btn,
+.samsung .lg-tabbar__bar,
+.samsung .lg-tabbar__prominent,
 .samsung .header-button {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;

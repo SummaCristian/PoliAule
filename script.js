@@ -41,7 +41,7 @@ import { setupCampusPicker } from './components/campus-picker.js';
 import { initCampusMap } from './components/campus-map.js';
 import { initCampusSheet } from './components/campus-sheet.js';
 import { retranslateCampusBuildingsPage, goToBuilding } from './components/campus-buildings.js';
-import { activateGroupTab } from './components/bottom-nav.js';
+import { activateGroupTab, retranslateNav } from './components/bottom-nav.js';
 import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
@@ -339,6 +339,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await Promise.all([initI18n(), ensureClassroomDirectory()]);
 
     applyTranslations();
+    retranslateNav();
     // <date-chip-picker> renders its date label via Intl at module-eval time,
     // before initI18n() resolves — re-render it now that the locale is known.
     document.querySelector('date-chip-picker')?.retranslate();

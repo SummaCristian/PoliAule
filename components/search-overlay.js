@@ -23,7 +23,9 @@ const DEBOUNCE_MS = 200;
 // overlay's search bar on open, and back on close. Only ever assigned to one
 // of the two elements at a time (cleared before it's handed over).
 const MORPH_NAME = 'search-fab-morph';
-const fabEl = () => document.getElementById('bn-search-btn');
+// Vitrium rebuilds this circle when the layout changes, so it is looked up by
+// class each time rather than held or given an id.
+const fabEl = () => document.querySelector('.lg-tabbar__prominent');
 const barEl = () => overlay.querySelector('.search-bar-wrapper');
 
 // The translucent chrome (header blur layers, pill nav) can't keep a live

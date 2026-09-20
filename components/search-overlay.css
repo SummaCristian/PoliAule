@@ -125,7 +125,15 @@ html.search-vt .lg-tabbar__prominent {
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 6%, transparent);
 
   box-sizing: border-box;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  /* Restates Vitrium's `.liquid-glass` spring (translate / scale / filter): a
+     `transition` here, being later in the cascade, would otherwise replace it,
+     and a released press or stretch would snap back instead of springing. */
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
+    filter 0.2s ease;
 }
 
 .search-bar-wrapper .hgi-stroke {

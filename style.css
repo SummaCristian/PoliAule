@@ -669,9 +669,15 @@ label {
     0 4px 40px 0 var(--lg-shadow-color);
 
 
+  /* Restates Vitrium's `.liquid-glass` spring (translate / scale / filter): a
+     `transition` here, being later in the cascade, would otherwise replace it,
+     and a released press or stretch would snap back instead of springing. */
   transition:
     background-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
+    filter 0.2s ease;
 
   /* Lit hover state, press feedback and the swipe-deform are all handled by
      the shared .liquid-glass rules (Vitrium's liquid-glass, see vitrium/styles). */

@@ -381,9 +381,15 @@ body.detail-open .tab-content * {
   align-items: center;
   justify-content: center;
 
+  /* Restates Vitrium's `.liquid-glass` spring (translate / scale / filter): a
+     `transition` here, being later in the cascade, would otherwise replace it,
+     and a released press or stretch would snap back instead of springing. */
   transition:
     background-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
+    filter 0.2s ease;
 
   /* Ensure the button and its content adapt their internal rendering to the theme */
   color-scheme: light dark;

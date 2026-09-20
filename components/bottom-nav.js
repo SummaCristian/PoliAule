@@ -87,14 +87,21 @@ export function activateGroupTab(target) {
 
 /* --- Layout variables the rest of the app reads -------------------------- */
 // --bottom-nav-height / --side-nav-width: how much room the bar takes (the
-// page pads itself around it); --bn-tabbar-height / --bn-tabbar-outer-inset:
+// page pads itself around it, and animates that padding: see style.css); --bn-tabbar-height / --bn-tabbar-outer-inset:
 // the pill's own thickness and its clearance from the viewport edge, for
 // campus-sheet.js's concentric corners and campus-map.css.
 const barEl = root.querySelector('.lg-tabbar__bar');
 function setNavSizeVars() {
   const style = document.documentElement.style;
-  style.setProperty('--bottom-nav-height', `${root.offsetHeight}px`);
-  style.setProperty('--side-nav-width', `${root.offsetWidth}px`);
+  // Each of the two is published only while the bar is in the layout it
+  // belongs to. While it moves between layouts the wrapper briefly measures as
+  // the other one (a full-width row, or a tall rail); publishing that would
+  // send the page's padding, which animates, towards a value it then abandons.
+  if (root.classList.contains('lg-tabbar--vertical')) {
+    style.setProperty('--side-nav-width', `${root.offsetWidth}px`);
+  } else {
+    style.setProperty('--bottom-nav-height', `${root.offsetHeight}px`);
+  }
   // offsetHeight, not getBoundingClientRect: the latter includes the
   // squash-and-stretch transform Vitrium applies while the bar changes layout,
   // which leaves a stale mid-animation value once it settles.

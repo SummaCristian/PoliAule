@@ -14,6 +14,9 @@
      falling back to its own hand-written literal (which had drifted: some said
      80px, some 84px for the header). */
   --header-height: 84px;
+  /* The page pads itself around the tab bar (bottom row / side rail). When the
+     bar changes place, that padding animates along with it. */
+  --nav-shift: 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   --bottom-nav-height: 88px;
   --side-nav-width: 88px;
   /* not --picker-bar-height: it is legitimately 0 when the picker bar isn't
@@ -885,6 +888,7 @@ body.info-open .header-nav-row {
      also floats 20px clear of the viewport edge (see the tab bar's
      `bottom: 20px`), so that offset has to be added back in here. */
   padding-bottom: calc(var(--bottom-nav-height, 88px) + 20px);
+  transition: padding-bottom var(--nav-shift);
 }
 
 @media (min-width: 600px) {
@@ -914,6 +918,7 @@ body.info-open .header-nav-row {
      title (e.g. Favourites) isn't blurred at the top. */
   padding-top: 1.5rem;
   padding-bottom: var(--bottom-nav-height, 88px);
+  transition: padding-bottom var(--nav-shift);
 
   flex: 1;
   display: flex;
@@ -928,6 +933,7 @@ body.info-open .header-nav-row {
 
 .tab-content {
   padding: 0 1rem;
+  transition: padding-left var(--nav-shift);
 
   /* content-visibility:hidden instead of display:none: it still keeps the
      subtree out of layout/paint, but (unlike display:none) doesn't remove it
@@ -1598,4 +1604,13 @@ are rendered as solid colors
    :root outranks Vitrium's dark-mode block regardless of load order. */
 :root:root:root {
   --lg-accent: var(--text-color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body-container,
+  .footer,
+  .tab-content,
+  .tab-content.visible {
+    transition: none;
+  }
 }

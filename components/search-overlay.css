@@ -34,9 +34,14 @@ body.search-overlay-open {
 /* No scrim element — instead the tab behind just recedes. The class is toggled
    inside the open/close view-transition callback, so the root cross-fade
    animates this; the transition is the no-VT fallback. */
-.tab-content.visible,
+.tab-content.visible {
+  /* Also carries the padding that follows the tab bar (see style.css): a
+     `transition` here replaces that one wholesale, so both are listed. */
+  transition: opacity 0.2s ease, padding-left var(--nav-shift);
+}
+
 .footer {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, padding-bottom var(--nav-shift);
 }
 
 body.search-overlay-open .tab-content.visible,

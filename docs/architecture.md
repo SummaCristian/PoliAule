@@ -194,7 +194,6 @@ graph TD
     TP["time-picker.js"]:::component
     TRS["time-range-slider.js"]:::component
     SET["settings.js"]:::component
-    HAP["haptics.js"]:::component
     TT["tooltip.js"]:::component
 
     IH -->|loads| SC
@@ -207,7 +206,6 @@ graph TD
     SC -->|imports| TP
     SC -->|imports| TRS
     SC -->|imports| SET
-    SC -->|imports| HAP
     SC -->|registers| TT
     SCS -->|imports| ARS
     SCS -->|imports| I18N
@@ -223,13 +221,14 @@ graph TD
 | `available-rooms-script.js` | Fetches occupancy JSON and opening hours, exposes `findAvailableClassrooms()` |
 | `search-classrooms-script.js` | Search tab: full-text index, hierarchy navigation, classroom status |
 | `i18n.js` | Locale detection (browser / localStorage), `t()` translation helper |
-| `components/campus-picker.js` | Campus selector UI + popup |
+| `components/campus-picker.js` | Campus selector (Vitrium list picker) |
+| `components/bottom-nav.js` | Main navigation (Vitrium tab bar) |
+| `components/campus-sheet.js` | Campus map sheet (Vitrium sheet) |
 | `components/classroom-detail.js` | Classroom detail page with timeline and photo |
 | `components/time-picker.js` | Morphing time input |
 | `components/time-range-slider.js` | Dual-handle slider for time range |
 | `components/settings.js` | User preferences (remembered campus, partial availability, etc.) |
 | `components/tooltip.js` | Side-effect module: registers a global `data-tooltip` attribute handler |
-| `components/popover.js` | `@floating-ui/dom` wrapper (exported, available for future use) |
 
 ### Classroom photos
 
@@ -298,7 +297,5 @@ The app detects its environment from `location.hostname` at startup and shows a 
 
 | Library | Used for |
 |---|---|
-| `@floating-ui/dom` | Popover positioning |
-| `web-haptics` | Mobile vibration feedback |
 | Google Fonts (Nunito) | Typography |
 | Google Material Symbols | Icons |

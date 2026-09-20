@@ -2,21 +2,21 @@
 
 /* Glass panel around the slider — same material/stroke recipe as the campus /
    date picker panels and .date-picker-container (see style.css :root
-   --glass-*). */
+   --lg-*). */
 .trs-wrapper {
   position: relative;
   width: 100%;
   padding: 0.75rem 1rem 0.5rem;
   border-radius: 22px;
 
-  background: var(--glass-tint);
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
-  backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-blur-sm));
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .date-picker-container::after */
@@ -27,8 +27,8 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -49,7 +49,7 @@
   }
 }
 
-/* Title row — icon + "Time", matching .cp-popup__title / .dcp-popup__title */
+/* Title row — icon + "Time", matching .lg-morph__title / .chip-dock__title */
 .trs-title {
   display: flex;
   align-items: center;

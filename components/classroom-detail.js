@@ -1,12 +1,11 @@
 import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow } from '../available-rooms-script.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
-import { haptics, defaultPatterns } from './haptics.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
-import { DynamicPopover } from './popover.js';
+import { createPopover } from 'vitrium';
 import { createPillSelector } from './pill-selector.js';
 
 function minutesToTimeDisplay(minutes) {
@@ -96,14 +95,12 @@ class ClassroomDetail {
 
     this._favBtn?.addEventListener('click', () => {
       if (this._currentId === null) return;
-      haptics.trigger(defaultPatterns.light);
       toggleFavourite(this._currentId);
       this._syncFavBtn();
     });
     window.addEventListener('favourites-changed', () => this._syncFavBtn());
 
     this._backBtn?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       if (this._openedViaPushState) {
         history.back();
       } else {
@@ -164,7 +161,6 @@ class ClassroomDetail {
       const trigger = e.target.closest('[data-open-classroom]');
       if (!trigger) return;
       e.stopPropagation();
-      haptics.trigger(defaultPatterns.light);
 
       const id = parseInt(trigger.dataset.openClassroom);
 
@@ -633,7 +629,6 @@ class ClassroomDetail {
 
     // Title click -> manual refresh of photo and schedule
     this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       this._loadSchedule(classroom.id);
       if (classroom.idfoto) this._loadPhoto(classroom.id);
     });
@@ -916,10 +911,6 @@ class ClassroomDetail {
             </div>
           </div>
         </div>
-        <div id="detail-timeline-popover" class="popover timeline-occupation-popover liquid-glass" role="tooltip">
-          <div class="arrow" data-arrow></div>
-          <div class="timeline-popover-body"></div>
-        </div>
       `;
 
       if (localStorage.getItem('poliAule_hideSundays') === 'true') {
@@ -952,7 +943,6 @@ class ClassroomDetail {
           selectedDayIndex = index;
           rowEls.forEach((row, i) => row.classList.toggle('selected', i === index));
           if (!silent) {
-            haptics.trigger(defaultPatterns.light);
             hideOccupationPopover();
           }
         },
@@ -1092,20 +1082,22 @@ class ClassroomDetail {
       });
 
       // ---------- TIMELINE OCCUPATION POPOVER ----------
-      const timelinePopoverEl = container.querySelector('#detail-timeline-popover');
-      const timelinePopoverBody = timelinePopoverEl?.querySelector('.timeline-popover-body') ?? null;
-      const timelinePopover = timelinePopoverEl ? new DynamicPopover(timelinePopoverEl, { placement: 'top' }) : null;
+      // One popover reused for every block; it lives on <body>, so it is
+      // destroyed with the rest of this render (see _timelinePopoverCleanup).
+      const timelinePopover = createPopover({ placement: 'top', role: 'tooltip', dismissable: false });
+      timelinePopover.el.style.setProperty('--lg-popover-max-width', 'min(280px, 70vw)');
+      let _popoverBlock = null;
 
       const showOccupationPopover = (blockEl) => {
-        if (!timelinePopover || !timelinePopoverBody) return;
         const slot = scheduleSlots[Number(blockEl.dataset.slotIdx)];
         if (!slot) return;
-        timelinePopoverBody.innerHTML = buildOccupationPopoverHtml(slot);
+        timelinePopover.setContent(`<div class="timeline-popover-body">${buildOccupationPopoverHtml(slot)}</div>`);
+        _popoverBlock = blockEl;
         timelinePopover.show(blockEl);
       };
-      const hideOccupationPopover = () => timelinePopover?.hide();
+      const hideOccupationPopover = () => { _popoverBlock = null; timelinePopover.hide(); };
 
-      if (timelinePopover) {
+      {
         // Desktop hover
         let _hoveredBlock = null;
         container.addEventListener('pointerover', e => {
@@ -1138,8 +1130,7 @@ class ClassroomDetail {
           const block = e.target.closest?.('.detail-schedule-block');
           if (!block) { hideOccupationPopover(); return; }
           e.stopPropagation();
-          haptics.trigger(defaultPatterns.light);
-          if (timelinePopover.trigger === block) hideOccupationPopover();
+          if (_popoverBlock === block) hideOccupationPopover();
           else showOccupationPopover(block);
         });
 
@@ -1159,6 +1150,7 @@ class ClassroomDetail {
         window.addEventListener('scroll', onScroll, { capture: true, passive: true });
 
         this._timelinePopoverCleanup = () => {
+          timelinePopover.destroy();
           document.removeEventListener('click', onDocClick);
           window.removeEventListener('scroll', onScroll, { capture: true });
         };

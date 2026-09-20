@@ -25,6 +25,6 @@
     "vite": "^8.3.0"
   },
   "dependencies": {
-    "web-haptics": "^0.0.6"
+    "vitrium": "^0.2.0"
   }
 }

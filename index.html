@@ -302,15 +302,13 @@
        see vite.config.js's markShellCssReadyInDev plugin. -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />
-  <link rel="stylesheet" href="./components/date-chip-picker.css" />
+  <link rel="stylesheet" href="./components/chip-pickers.css" />
   <link rel="stylesheet" href="./components/data-fetch-card.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
   <link rel="stylesheet" href="./components/time-range-slider.css" />
-  <link rel="stylesheet" href="./components/time-range-chip-picker.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
   <link rel="stylesheet" href="./components/building-overview.css" />
   <link rel="stylesheet" href="./components/settings.css" />
-  <link rel="stylesheet" href="./components/segmented-control.css" />
   <link rel="stylesheet" href="./components/search-overlay.css" />
   <link rel="stylesheet" href="./components/classroom-detail.css" />
   <link rel="stylesheet" href="./components/info-page.css" />
@@ -318,7 +316,6 @@
   <link rel="stylesheet" href="./components/campus-map.css" />
   <link rel="stylesheet" href="./components/campus-sheet.css" />
   <link rel="stylesheet" href="./components/favourites.css" />
-  <link rel="stylesheet" href="./components/liquid-glass.css" />
   <link rel="stylesheet" href="./components/keybindings.css" />
 
   <!-- Nunito font. Loaded non-blocking (media="print" swap trick): the
@@ -340,8 +337,6 @@
   <!-- JS -->
   <script type="module" src="script.js" defer></script>
   <script type="module" src="available-rooms-script.js" defer></script>
-  <script type="module" src="./components/popover.js" defer></script>
-  <script type="module" src="./components/haptics.js" defer></script>
   <script type="module" src="./components/classroom-list.js" defer></script>
   <script type="module" src="./components/building-overview.js" defer></script>
   <script type="module" src="./components/bottom-nav.js" defer></script>
@@ -516,12 +511,10 @@
   </div>
 
   <footer class="footer">
-    <button class="transparent-button version-info-button" data-popover="version-info-popover">
+    <button class="transparent-button version-info-button">
       <label class="secondary" data-i18n="footer.versionInfo"></label>
     </button>
-    <div id="version-info-popover" class="popover liquid-glass">
-      <div class="arrow" data-arrow></div>
-
+    <div id="version-info-content" hidden>
       <img src="/favicons/main/logo.webp" class="changelog-logo" width="434" height="500" />
       <h1 class="popover-title" data-i18n="footer.versionInfo"></h1>
       <div class="changelog-container">
@@ -587,27 +580,8 @@
     </div>
   </div>
 
-  <!-- Bottom pill nav (populated by components/bottom-nav.js) -->
-  <div class="bn-wrapper" id="bn-wrapper">
-    <div class="bn-group" id="bn-group">
-      <nav class="bn-tabbar" id="bn-bar" aria-label="Main navigation">
-        <div class="bn-tabbar-items" id="bn-bar-items"></div>
-      </nav>
-      <div class="bn-pill-outer" id="bn-pill" aria-hidden="true">
-        <div class="bn-pill-inner">
-          <div class="bn-active-row" id="bn-active-row"></div>
-        </div>
-      </div>
-      <div class="bn-pill-hit" id="bn-pill-hit"></div>
-    </div>
-
-    <button class="bn-search-btn liquid-glass" id="bn-search-btn" type="button" aria-label="Search">
-      <span class="bn-search-btn-inner">
-        <i class="hgi-stroke hgi-search-01"></i>
-        <span class="bn-tab-label" data-i18n="tabs.search">Search</span>
-      </span>
-    </button>
-  </div>
+  <!-- Bottom pill nav / side rail: Vitrium's tab bar, built by components/bottom-nav.js -->
+  <div class="bn-wrapper" id="bn-wrapper"></div>
 
 </body>
 

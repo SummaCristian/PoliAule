@@ -1,5 +1,4 @@
 import { onLanguageSwitch, t } from '../i18n.js';
-import { haptics, defaultPatterns } from './haptics.js';
 import { escapeHtml, safeUrl } from '../utils/html.js';
 
 const HASH = '#info';
@@ -42,15 +41,7 @@ class InfoPage {
     this._titleEl = document.querySelector('.header-title');
     this._badgeEl = document.getElementById('env-badge');
 
-    // Haptics for interactive GitHub elements
-    this._overlay?.addEventListener('click', (e) => {
-      if (e.target.closest('.github-stat-card') || e.target.closest('.contributor-item') || e.target.closest('.github-repo-chip') || e.target.closest('.create-issue-btn')) {
-        haptics.trigger(defaultPatterns.light);
-      }
-    });
-
     document.getElementById('info-trigger')?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       location.hash = HASH;
     });
 
@@ -59,7 +50,6 @@ class InfoPage {
     this._backBtn?.addEventListener('click', (e) => {
       if (!this._isOpen) return;
       e.stopImmediatePropagation();
-      haptics.trigger(defaultPatterns.light);
       if (this._openedFromDetail) {
         // Go back to the classroom hash; hashchange will trigger _silentClose() here
         // and classroomDetail._onHashChange() will run its own VT to reopen the detail.
@@ -564,7 +554,6 @@ class InfoPage {
       pwaTabbar.addEventListener('click', (e) => {
         const btn = e.target.closest('.pwa-tab');
         if (!btn || btn.classList.contains('active')) return;
-        haptics.trigger(defaultPatterns.light);
         const idx = tabs.indexOf(btn);
         tabs.forEach((t, i) => {
           t.classList.toggle('active', i === idx);

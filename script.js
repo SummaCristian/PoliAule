@@ -1,6 +1,17 @@
 history.scrollRestoration = 'manual';
 window.scrollTo(0, 0);
 
+// One-time move of the blur preference to the key Vitrium reads. The cached
+// benchmark verdict isn't carried over; it re-runs once at idle.
+try {
+  const oldMode = localStorage.getItem('poliAule_blurMode');
+  if (oldMode !== null) {
+    if (localStorage.getItem('lg:blur-mode') === null) localStorage.setItem('lg:blur-mode', oldMode);
+    localStorage.removeItem('poliAule_blurMode');
+  }
+  localStorage.removeItem('poliAule_blurBenchmark');
+} catch { /* storage unavailable */ }
+
 const h = location.hostname;
 const envLabel = h === 'beta.poliaule.com' ? 'Beta'
                : h === 'dev.poliaule.com'  ? 'Dev'
@@ -30,17 +41,16 @@ import { setupCampusPicker } from './components/campus-picker.js';
 import { initCampusMap } from './components/campus-map.js';
 import { initCampusSheet } from './components/campus-sheet.js';
 import { retranslateCampusBuildingsPage, goToBuilding } from './components/campus-buildings.js';
-import { activateGroupTab } from './components/bottom-nav.js';
+import { activateGroupTab, retranslateNav } from './components/bottom-nav.js';
 import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
 import { initPickerDock } from './components/picker-dock.js';
 import './components/data-fetch-card.js';
 
-import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
-import { initLiquidGlass } from './components/liquid-glass.js';
+import { initLiquidGlass, createPopover, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
@@ -48,7 +58,6 @@ import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY } from './components/settings.js';
 import { initKeybindings } from './components/keybindings.js';
-import { resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from './utils/blur-capability.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -284,7 +293,6 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   // components/campus-buildings.js's goToBuilding(), which brings the picker
   // along to the right campus first if needed.
   headerEl.querySelector('.building-section-btn').addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     activateGroupTab('search-classrooms-container');
     goToBuilding(campusId, buildingName);
   });
@@ -329,6 +337,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await Promise.all([initI18n(), ensureClassroomDirectory()]);
 
     applyTranslations();
+    retranslateNav();
     // <date-chip-picker> renders its date label via Intl at module-eval time,
     // before initI18n() resolves — re-render it now that the locale is known.
     document.querySelector('date-chip-picker')?.retranslate();
@@ -350,6 +359,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Delegated press / swipe-deform for every .liquid-glass control
     initLiquidGlass();
+
+    // Footer "version info" popover; its content is authored in index.html.
+    const versionTrigger = document.querySelector('.version-info-button');
+    const versionContent = document.getElementById('version-info-content');
+    if (versionTrigger && versionContent) {
+      versionContent.hidden = false;
+      createPopover({ trigger: versionTrigger, content: versionContent, placement: 'top-end' });
+    }
 
     // Favourites carousel on the Available page
     initFavourites(staticClassroomsData);
@@ -393,7 +410,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Apply the cached blur verdict (or the safe "off" default if none yet)
     // instantly — the actual benchmark never runs during load, see
-    // utils/blur-capability.js for why.
+    // Vitrium's core/blur-capability.js for why.
     applyBlurState(resolveBlurCapability());
 
     await document.fonts.ready;
@@ -450,8 +467,6 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   // Skip default submit behavior since we will handle it with JavaScript
   e.preventDefault();
 
-  // Haptic feedback
-  haptics.trigger(defaultPatterns.light);
 
   // Check if data was already fetched
   if (!classroomsData.length) {
@@ -505,7 +520,6 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
     toggleBtn.innerHTML = `<i class="hgi-stroke hgi-filter" aria-hidden="true"></i> ${t('results.filterPartial')}`;
     if (!showPartialDefault) container.classList.add('hide-partial');
     toggleBtn.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
     });

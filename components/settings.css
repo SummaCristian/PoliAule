@@ -6,9 +6,9 @@
    rather than the recipe's three layers directly. */
 :root {
   --settings-glass-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Overlay */
@@ -35,13 +35,13 @@
 
 /* Popup shell — morphs from the header button.
    Same glass material as the popovers / header buttons — see the recipe
-   note at :root's --glass-tint definition in style.css. */
+   note at :root's --lg-tint definition in style.css. */
 .settings-popup {
   position: fixed;
   z-index: 1200;
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-lg));
-  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-lg));
+  -webkit-backdrop-filter: blur(var(--lg-blur-lg));
   border-radius: 50%;
   box-shadow: var(--settings-glass-shadow);
   flex-direction: column;
@@ -66,8 +66,8 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -146,7 +146,7 @@
   bottom: -2.5rem; /* extend into the gap below the row */
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: var(--glass-tint);
+  background: var(--lg-tint);
   -webkit-mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 45%, transparent 100%);
   pointer-events: none;
@@ -300,8 +300,8 @@
   color: var(--text-color-primary);
 }
 
-/* Label parts used inside the segmented controls (see segmented-control.css
-   for the control itself). */
+/* Label parts used inside the segmented controls (Vitrium's
+   .lg-seg for the control itself). */
 .settings-lang-btn__flag {
   font-size: var(--text-100);
   line-height: 1;
@@ -340,70 +340,6 @@
 
 .settings-row__sublabel:empty {
   display: none;
-}
-
-/* ── iOS-style toggle switch ────────────────────────────────────────────────── */
-
-.settings-toggle {
-  position: relative;
-  width: 61px;
-  height: 31px;
-  padding: 0;
-  border-radius: var(--radius-lg);
-  /* iOS 26: glass track — translucent fill + visible stroke */
-  background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--text-color-primary) 18%, transparent);
-  border: none;
-  flex-shrink: 0;
-  transition:
-    background 0.25s ease,
-    box-shadow  0.25s ease;
-  -webkit-tap-highlight-color: transparent;
-  /* Horizontal drags belong to the thumb, vertical ones still scroll the popup. */
-  touch-action: pan-y;
-}
-
-.settings-toggle.on {
-  background: #34C759;
-  box-shadow: none;
-}
-
-/* Thumb travel box (61 - 3 - 3 = 55 × 25); the two cells sit at its ends and
-   overlap in the middle, which is fine — they only exist to give
-   pill-drag-core.js its two anchors and to catch taps on the far side. */
-.settings-toggle__items {
-  position: absolute;
-  inset: 3px;
-}
-
-.settings-toggle__cell {
-  position: absolute;
-  top: 0;
-  width: 36px;
-  height: 25px;
-  touch-action: pan-y;
-}
-
-.settings-toggle__cell--off { left: 0; }
-.settings-toggle__cell--on  { left: 19px; } /* 55 - 36 = 19 */
-
-/* Thumb: its lifted glass look comes from the shared .seg-pill--lifted rules
-   (segmented-control.css); this is the flat resting state — the frosted white
-   capsule — which gives way to the translucent glass tint while lifted. */
-.settings-toggle .seg-pill-inner {
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.20),
-    0 0.5px 1px rgba(0, 0, 0, 0.10),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.6);
-}
-
-.settings-toggle .seg-pill.seg-pill--lifted .seg-pill-inner {
-  background: var(--seg-pill-bg);
-}
-
-.settings-toggle .seg-hit {
-  touch-action: pan-y;
 }
 
 /* ── Stepper control (−  value  +) ──────────────────────────────────────────── */

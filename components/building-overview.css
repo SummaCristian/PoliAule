@@ -80,8 +80,8 @@
      40px blur on every card is the bulk of that raster time (profiled), and
      at 10 % alpha the swap is invisible under the cross-fade. */
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    0 2px 8px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    0 2px 8px 0 var(--lg-shadow-color);
 }
 
 /* The card keeps its photo and label through the morph — that's what makes it
@@ -203,13 +203,13 @@
   font-weight: 800;
   color: var(--text-color-primary);
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Same glass pill as .header-button (press / hover come from `.liquid-glass`). */
@@ -226,13 +226,13 @@
   border-radius: var(--radius-pill);
   color: var(--text-color-secondary);
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Outside 0.5px gradient stroke — radial-gradient mask, same as
@@ -244,8 +244,8 @@
   inset: -0.5px;
   border-radius: inherit;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
   mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
@@ -272,14 +272,14 @@
   border-radius: var(--radius-lg);
   text-align: start;
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-lg));
-  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-lg));
+  -webkit-backdrop-filter: blur(var(--lg-blur-lg));
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 30px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 30px 0 var(--lg-shadow-color);
 }
 
 .bo-card::after {
@@ -289,8 +289,8 @@
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;

@@ -250,13 +250,13 @@ html:has(#search-classrooms-container.visible) .footer {
 
 .campus-map .mapboxgl-ctrl-attrib:not(.mapboxgl-compact),
 .campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show {
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
   border-radius: var(--radius-pill);
 }
 
@@ -301,14 +301,14 @@ html:has(#search-classrooms-container.visible) .footer {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-pill) !important;
-  background: var(--glass-tint) !important;
+  background: var(--lg-tint) !important;
   background-image: none !important;
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* `display` deliberately kept out of the rule above and scoped to only the
@@ -344,8 +344,8 @@ html:has(#search-classrooms-container.visible) .footer {
   inset: 0;
   border-radius: inherit;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
   mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
@@ -369,9 +369,9 @@ html:has(#search-classrooms-container.visible) .footer {
    glass shadow, and only show a real ring for keyboard focus. */
 .campus-map .mapboxgl-ctrl-attrib-button:focus {
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 .campus-map .mapboxgl-ctrl-attrib-button:focus-visible {
@@ -426,7 +426,7 @@ html:has(#search-classrooms-container.visible) .footer {
    .mapboxgl-ctrl-group div: `liquid-glass` (below) has to sit on the exact
    element it's applied to (its delegated handler treats a `<button>` found
    *inside* the pressed element as its own separate control and backs off —
-   see components/liquid-glass.js), so the button has to be both the visual
+   see Vitrium's core/liquid-glass.js), so the button has to be both the visual
    surface and the liquid-glass target, exactly like .header-button. The
    group is left with no visual styling of its own so it doesn't peek out
    from behind the button's round corners.
@@ -466,15 +466,15 @@ html:has(#search-classrooms-container.visible) .footer {
      card" rather than two separate shapes. */
   border-radius: var(--radius-pill) !important;
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 
-  transition: filter 0.2s ease, scale var(--press-out-dur) var(--ease-spring);
+  transition: filter 0.2s ease, scale var(--lg-press-out-dur) var(--lg-ease-spring);
 }
 
 /* Inside 0.5px gradient stroke, same radial-gradient-masked trick as
@@ -490,8 +490,8 @@ html:has(#search-classrooms-container.visible) .footer {
   inset: 0;
   border-radius: inherit;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
   mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
@@ -501,7 +501,7 @@ html:has(#search-classrooms-container.visible) .footer {
 
 /* Plain CSS lit hover/press for the compass only (see the comment above) —
    same brightness/saturate boost and press-scale as `.liquid-glass` in
-   liquid-glass.css, just driven by :hover/:active instead of pointer capture. */
+   Vitrium's liquid-glass.css, just driven by :hover/:active instead of pointer capture. */
 @media (hover: hover) {
   .campus-map .mapboxgl-ctrl-compass:hover {
     filter: brightness(1.11) saturate(1.35);
@@ -620,10 +620,10 @@ html:has(#search-classrooms-container.visible) .footer {
   color: var(--text-color-primary);
   white-space: nowrap;
 
-  background: var(--glass-tint, rgba(250, 250, 250, 0.7));
+  background: var(--lg-tint, rgba(250, 250, 250, 0.7));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline, rgba(0, 0, 0, 0.25)),
-    0 4px 16px var(--glass-shadow-color, rgba(0, 0, 0, 0.18));
+    0 0 0 0.1px var(--lg-outline, rgba(0, 0, 0, 0.25)),
+    0 4px 16px var(--lg-shadow-color, rgba(0, 0, 0, 0.18));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 

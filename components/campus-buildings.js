@@ -5,7 +5,6 @@ import { getClassroomStatusNow } from '../available-rooms-script.js';
 import { buildCardForClassroom } from './classroom-list.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
-import { haptics, defaultPatterns } from './haptics.js';
 
 // The Campus tab's own "pages" inside the campus sheet (components/campus-sheet.js):
 //
@@ -91,7 +90,6 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
   backBtn.setAttribute('aria-label', t('campus.back'));
   backBtn.innerHTML = '<i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>';
   backBtn.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     goToCampusPage({ animate: true });
   });
   leftGroup.appendChild(backBtn);
@@ -125,7 +123,6 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
   recenterBtn.setAttribute('aria-label', t('campus.recenter'));
   recenterBtn.innerHTML = '<i class="hgi-stroke hgi-gps-01" aria-hidden="true"></i>';
   recenterBtn.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     document.dispatchEvent(new CustomEvent('campusrecenter'));
   });
   actions.appendChild(recenterBtn);
@@ -380,7 +377,6 @@ function buildBuildingCard(building) {
   `;
 
   const go = () => {
-    haptics.trigger(defaultPatterns.light);
     openBuilding(building.name, { animate: true });
   };
   card.addEventListener('click', go);

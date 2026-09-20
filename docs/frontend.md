@@ -143,11 +143,11 @@ The glass design system and most interactive components come from the `vitrium` 
 
 Things to know:
 
-- **Docked pickers.** On wide screens `picker-dock.js` docks the campus, date and time pickers open as inline cards. Vitrium has no docked mode, so `chip-shell.js` swaps the chip for a card (rebuilding the chip when undocked), and `campus-picker.js` moves the list's own panel into the form column.
-- **Tab bar rebuilds.** Vitrium rebuilds tab buttons from the tab definitions when the layout changes, so `bottom-nav.js` defines each `label` as a getter (the translation is only known after startup) and the search overlay finds the Search circle by class, not by id.
+- **Docked pickers.** (PoliAule-side workaround: Vitrium has no docked mode.) On wide screens `picker-dock.js` docks the campus, date and time pickers open as inline cards. Vitrium has no docked mode, so `chip-shell.js` swaps the chip for a card (rebuilding the chip when undocked), and `campus-picker.js` moves the list's own panel into the form column.
+- **Tab bar rebuilds.** Vitrium rebuilds tab buttons when the layout changes, and the Search circle is a new element each time, so the search overlay finds it by class (`.lg-tabbar__prominent`), never by id or a held reference. Labels are only known after startup, so `bottom-nav.js` sets them with `setLabel` (via `retranslateNav`, which `script.js` calls once i18n is ready).
 - **Page padding follows the bar.** `.tab-content`, `.body-container`, `.footer` and the favourites carousel's `--fade-left` transition their padding (`--nav-shift` in `style.css`) when the bar moves between row and rail. `--side-nav-width` and `--bottom-nav-height` are only updated while the bar is in the matching layout, so the padding never chases a mid-move measurement.
-- **Campus sheet corners.** On mobile the collapsed sheet is concentric with the tab bar, using the bar's settled height and inset; the sheet is rebuilt (same detent, scroll and content) when the breakpoint or those metrics change. Its stretch deform is off, and it re-measures itself after each detent change (a resize could otherwise leave it slightly short of full and unable to scroll).
-- **Fonts and icons.** The tab and chip icons are HugeIcons glyphs passed as HTML where Vitrium expects SVG, so `bottom-nav.css` and `chip-pickers.css` size them and reset their weight.
+- **Campus sheet corners.** On mobile the collapsed sheet is concentric with the tab bar, using the bar's settled height and inset; the sheet is rebuilt (same detent, scroll and content) when the breakpoint or those metrics change. Its squash/stretch is limited to drags that start on the grabber or header (`deform: 'handle'`), so dragging over the building cards doesn't stretch it.
+- **Fonts and icons.** The tab and chip icons are HugeIcons glyphs passed as HTML where Vitrium expects SVG, so `bottom-nav.css` and `chip-pickers.css` size them.
 
 ---
 

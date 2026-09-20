@@ -44,7 +44,6 @@ let sheet = null;
 let header = null;
 let content = null;
 let container = null;
-let settleTimer = 0;
 let builtGeometryKey = '';
 
 const rootPx = (name, fallback) => {
@@ -125,16 +124,6 @@ function mobileGeometry() {
   };
 }
 
-// The sheet can come to rest a few px short of its detent (its detent sizes
-// were measured before the map tab finished laying out). It then doesn't count
-// as being at its largest detent, so native scrolling never switches on and a
-// touch on the content keeps resizing the sheet instead of scrolling it.
-// Re-measuring once it has settled snaps it to the real size.
-function remeasureWhenSettled() {
-  clearTimeout(settleTimer);
-  settleTimer = setTimeout(() => sheet?.refresh(), 800);
-}
-
 function headerHeightPx() {
   return rootPx('--header-height', 84);
 }
@@ -149,8 +138,7 @@ function build(detent) {
   sheet = createSheet({
     header, content, container,
     label: t('tabs.campus'),
-    deform: false,           // no squash/stretch while dragging: it fights touch scrolling on the cards
-    expandOnFocus: false,    // a tapped card must not pop the sheet open; only a building selection does
+    deform: 'handle',        // squash/stretch only for a drag on the grabber or header, not on the cards
     zIndex: 3,               // above the map (0) and its controls (5 is inside the map's own context)
     detents: [
       { id: 'collapsed', size: COLLAPSED },
@@ -168,7 +156,6 @@ function build(detent) {
     },
     onDetentChange(id) {
       sheet.el.dataset.detent = id;
-      remeasureWhenSettled();
     },
   });
   sheet.el.classList.add('campus-sheet');

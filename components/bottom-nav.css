@@ -11,23 +11,7 @@
   --lg-tabbar-top-offset: calc(var(--header-height, 84px) + 2rem + 20px);
 }
 
-/* Vitrium tightens a row tab's side padding on narrow screens
-   (clamp(0.25rem, 1.6vw, 1.1875rem)) so a five-tab bar still fits a phone.
-   This bar has two, so keep the full padding at every width. The selected
-   pill's duplicate cells need the same, or they drift off their tabs. */
-.lg-tabbar:not(.lg-tabbar--vertical) .lg-tabbar__tab,
-.lg-tabbar:not(.lg-tabbar--vertical) .lg-pill-active-cell {
-  padding-inline: 1.1875rem;
-}
-
-/* HugeIcons glyphs where Vitrium expects SVGs. The tab is font-weight 700 and
-   the icon font has a single weight, so without this the browser fakes a bold
-   on top of the glyph's own thickened stroke (below). */
-.lg-tabbar__icon > i,
-.lg-tabbar__prominent > i {
-  font-weight: 400;
-}
-
+/* HugeIcons glyphs where Vitrium expects SVGs. */
 .lg-tabbar__icon > i {
   font-size: var(--text-110);
   line-height: 1;

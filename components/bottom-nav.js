@@ -57,12 +57,9 @@ const startup = TABS.find(tab => tab.id === startupId) ?? TABS[0];
 const bar = createTabBar(root, {
   label: 'Main navigation',
   value: startup.id,
-  // `label` is a getter: Vitrium rebuilds a tab's button from this object when
-  // the layout changes (a resize across the breakpoint), so it must read the
-  // current translation then, not the one from when this module loaded.
   tabs: [
-    ...TABS.map(({ id, labelKey, icon }) => ({ id, get label() { return t(labelKey); }, icon, panel: id })),
-    { id: SEARCH.id, get label() { return t(SEARCH.labelKey); }, icon: SEARCH.icon, prominent: true, press: true, onPress: () => openSearchOverlay() },
+    ...TABS.map(({ id, labelKey, icon }) => ({ id, label: t(labelKey), icon, panel: id })),
+    { id: SEARCH.id, label: t(SEARCH.labelKey), icon: SEARCH.icon, prominent: true, press: true, onPress: () => openSearchOverlay() },
   ],
   onSelect(id, { silent }) {
     showContent(id);
@@ -75,6 +72,7 @@ showContent(startup.id);
 
 // The labels are built when this module loads, before the locale has, so
 // script.js calls this once i18n is ready, and it runs on every language switch.
+// (setLabel also updates the tab definitions, so a later layout change keeps them.)
 export function retranslateNav() {
   for (const { id, labelKey } of [...TABS, SEARCH]) bar.setLabel(id, t(labelKey));
 }
@@ -102,9 +100,9 @@ function setNavSizeVars() {
   } else {
     style.setProperty('--bottom-nav-height', `${root.offsetHeight}px`);
   }
-  // offsetHeight, not getBoundingClientRect: the latter includes the
-  // squash-and-stretch transform Vitrium applies while the bar changes layout,
-  // which leaves a stale mid-animation value once it settles.
+  // offsetHeight, not getBoundingClientRect (which includes the squash-and-
+  // stretch transform while the bar changes layout). Vitrium publishes the same
+  // measurement as --lg-tabbar-height.
   if (barEl) style.setProperty('--bn-tabbar-height', `${barEl.offsetHeight}px`);
   const padLeft = parseFloat(getComputedStyle(root).paddingLeft);
   style.setProperty('--bn-tabbar-outer-inset', `${Number.isFinite(padLeft) ? padLeft : 28}px`);

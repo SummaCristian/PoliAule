@@ -8,7 +8,6 @@
 // but otherwise have independent selection logic (hidden <select> vs.
 // schedule row highlight).
 import { createPillDragCore } from 'vitrium';
-import { haptics, defaultPatterns } from './haptics.js';
 
 // container: the `.date-picker-container` element (already position:relative,
 // already holding a `.date-indicator` sibling and some
@@ -20,7 +19,7 @@ import { haptics, defaultPatterns } from './haptics.js';
 // onSelect(el, { silent }): called whenever a *new* cell commits as the
 // active one, whether by tap, drag, or a programmatic selectElement() call.
 // `silent` is true only for a caller-initiated selectElement(el, { silent: true })
-// (e.g. an initial auto-select) — callers use it to skip haptics/side effects
+// (e.g. an initial auto-select) — callers use it to skip side effects
 // that shouldn't fire on page load.
 export function createPillSelector(container, { isSkipped = el => el.classList.contains('date-skipped'), onSelect } = {}) {
   // container's own parent — .date-picker / .detail-schedule-day-selector,
@@ -72,7 +71,6 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     void indicator.offsetWidth; // force reflow to restart the animation
     indicator.classList.add('shake');
     indicator.addEventListener('animationend', () => indicator.classList.remove('shake'), { once: true });
-    haptics.trigger(defaultPatterns.error);
   }
 
   const core = createPillDragCore({
@@ -85,7 +83,6 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     trail: { follow: 0.12, give: 8, giveCross: 5 },
     canSelect: i => !isSkipped(core.cells[i]),
     onReject: shake,
-    haptic: null, // onSelect callers buzz (or deliberately don't) themselves
     // The shake keyframes (date-indicator-shake in date-picker.css) rotate
     // around the pill's current x.
     onRender: ({ pos }) => indicator.style.setProperty('--indicator-x', `${pos}px`),

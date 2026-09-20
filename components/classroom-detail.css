@@ -821,21 +821,10 @@ body.detail-open .tab-content * {
   }
 }
 
-.timeline-occupation-popover {
-  /* Positioned entirely by floating-ui (see DynamicPopover in popover.js), which
-     sets left/top inline based on real available space around the hovered
-     block. Reset the generic anchor-positioning rules from style.css so they
-     don't fight with those inline coordinates or apply a stale fallback. */
-  position: fixed;
-  inset: auto;
-  margin: 0;
-  position-anchor: none;
-  position-try-fallbacks: none;
-
+.timeline-popover-body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-width: min(280px, 70vw);
   text-align: start;
 }
 

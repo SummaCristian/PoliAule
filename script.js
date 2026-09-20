@@ -51,7 +51,7 @@ import './components/data-fetch-card.js';
 import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
-import { initLiquidGlass, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
+import { initLiquidGlass, createPopover, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
@@ -360,6 +360,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Delegated press / swipe-deform for every .liquid-glass control
     initLiquidGlass();
+
+    // Footer "version info" popover; its content is authored in index.html.
+    const versionTrigger = document.querySelector('.version-info-button');
+    const versionContent = document.getElementById('version-info-content');
+    if (versionTrigger && versionContent) {
+      versionContent.hidden = false;
+      createPopover({ trigger: versionTrigger, content: versionContent, placement: 'top-end' });
+    }
 
     // Favourites carousel on the Available page
     initFavourites(staticClassroomsData);

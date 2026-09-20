@@ -8,9 +8,7 @@ import { classroomsData } from '../available-rooms-script.js';
 import { selectCampusById } from './campus-picker.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
-import { createSegmentedControl } from './segmented-control.js';
-import { createToggle } from './toggle.js';
-import { getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState, snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from 'vitrium';
+import { createToggle, createSegmentedControl, getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState, snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from 'vitrium';
 
 const TRANSITION_DURATION = 420;
 
@@ -361,10 +359,14 @@ function buildStepper(value, min, max, format, onChange) {
   return el;
 }
 
-// Returns a createToggle() handle; assign `.onChange = isOn => ...` afterwards.
+// Returns a createToggle() handle; assign `.onChange = isOn => ...` afterwards
+// (Vitrium takes onChange at creation, but the handlers here are wired up after
+// the rows exist, so the handle forwards to whatever was assigned last).
 // Registered so the popup can snap its thumb into place before it's shown.
 function buildToggle(isOn) {
-  const toggle = createToggle(isOn);
+  let handler = null;
+  const toggle = createToggle({ value: isOn, onChange: (v) => handler?.(v) });
+  Object.defineProperty(toggle, 'onChange', { get: () => handler, set: (fn) => { handler = fn; } });
   segControls.push(toggle);
   return toggle;
 }
@@ -594,11 +596,11 @@ function buildPopup() {
               </div>
             </div>
             <div data-lang-toggle>
-              <button class="seg-item" data-value="en">
+              <button class="lg-seg__item" data-value="en">
                 <span class="settings-lang-btn__flag">🇬🇧</span>
                 <span class="settings-lang-btn__name">English</span>
               </button>
-              <button class="seg-item" data-value="it">
+              <button class="lg-seg__item" data-value="it">
                 <span class="settings-lang-btn__flag">🇮🇹</span>
                 <span class="settings-lang-btn__name">Italiano</span>
               </button>
@@ -626,13 +628,13 @@ function buildPopup() {
               </div>
             </div>
             <div data-timefmt-toggle>
-              <button class="seg-item" data-value="system">
+              <button class="lg-seg__item" data-value="system">
                 <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.system">${t('settings.timeFormat.system')}</span>
               </button>
-              <button class="seg-item" data-value="12">
+              <button class="lg-seg__item" data-value="12">
                 <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.12h">${t('settings.timeFormat.12h')}</span>
               </button>
-              <button class="seg-item" data-value="24">
+              <button class="lg-seg__item" data-value="24">
                 <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.24h">${t('settings.timeFormat.24h')}</span>
               </button>
             </div>
@@ -725,16 +727,16 @@ function buildPopup() {
               </div>
             </div>
             <div data-defaulttab-toggle>
-              <button class="seg-item" data-value="available">
+              <button class="lg-seg__item" data-value="available">
                 <i class="hgi-stroke hgi-calendar-check-01 settings-seg-icon" aria-hidden="true"></i>
                 <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.available">${t('settings.defaultTab.available')}</span>
               </button>
-              <button class="seg-item" data-value="search">
+              <button class="lg-seg__item" data-value="search">
                 <i class="hgi-stroke hgi-search-01 settings-seg-icon" aria-hidden="true"></i>
                 <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.search">${t('settings.defaultTab.search')}</span>
               </button>
-              <div class="seg-separator"></div>
-              <button class="seg-item" data-value="last">
+              <div class="lg-seg__separator"></div>
+              <button class="lg-seg__item" data-value="last">
                 <i class="hgi-stroke hgi-history settings-seg-icon" aria-hidden="true"></i>
                 <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.last">${t('settings.defaultTab.last')}</span>
               </button>
@@ -762,13 +764,13 @@ function buildPopup() {
               </div>
             </div>
             <div data-blurmode-toggle>
-              <button class="seg-item" data-value="auto">
+              <button class="lg-seg__item" data-value="auto">
                 <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.auto">${t('settings.glassEffect.auto')}</span>
               </button>
-              <button class="seg-item" data-value="on">
+              <button class="lg-seg__item" data-value="on">
                 <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.on">${t('settings.glassEffect.on')}</span>
               </button>
-              <button class="seg-item" data-value="off">
+              <button class="lg-seg__item" data-value="off">
                 <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.off">${t('settings.glassEffect.off')}</span>
               </button>
             </div>

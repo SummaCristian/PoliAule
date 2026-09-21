@@ -1722,6 +1722,14 @@ body.detail-open .tab-content * {
 
 /* ── View Transition animation overrides ──────────────────────────── */
 
+/* Card <-> page transition motion (open and close). --vt-duration must match
+   VT_DURATION in utils/vt-motion.js. --vt-spring is a critically damped spring
+   (omega 19/s over this duration): no overshoot, no bounce. */
+:root {
+  --vt-duration: 0.44s;
+  --vt-spring: linear(0, 0.0287, 0.0971, 0.1854, 0.2808, 0.3754, 0.4645, 0.5457, 0.6178, 0.6808, 0.735, 0.7812, 0.8201, 0.8527, 0.8799, 0.9023, 0.9208, 0.9359, 0.9483, 0.9583, 0.9665, 0.9731, 0.9785, 0.9828, 0.9862, 0.989, 0.9913, 0.993, 0.9945, 0.9956, 0.9965, 0.9972, 1);
+}
+
 @supports (view-transition-name: none) {
   /* Suppress the CSS opacity fallback transition when VT is available.
      Must match/exceed the base rule's specificity (#id:not([hidden]) = 1,1,0),
@@ -1797,47 +1805,44 @@ body.detail-open .tab-content * {
      duration/easing — a mismatch here makes the shorter one snap back to full
      opacity before the transition ends, reading as a sudden pop instead of a fade. */
   ::view-transition-group(classroom-detail-zoom) {
-    animation-duration: 0.5s;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-duration: var(--vt-duration);
+    /* Critically damped spring (no overshoot): quick off the mark, soft landing.
+       The path is additionally arced by utils/vt-motion.js. */
+    animation-timing-function: var(--vt-spring);
     overflow: hidden; /* clip both snapshots to the group's morphing bounds */
   }
 
+  /* The fades run on ease-in-out, not the spring: the spring covers most of its
+     distance early, which would make the crossfade a near-instant pop. */
   ::view-transition-old(classroom-detail-zoom),
   ::view-transition-new(classroom-detail-zoom) {
-    animation-duration: 0.5s;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-duration: var(--vt-duration);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
     animation-fill-mode: both;
-  }
-
-  /* Open only: the card BECOMES the page. Close keeps the base rules above.
-     - The morph eases in (not expo-out), so there is a visible "lift-off" from
-       the card instead of an instant jump.
-     - The base rules fade the page in on the same expo curve as the morph, so it
-       was nearly opaque while the box was still card-sized. Here the page's
-       opacity ramps slowly and only picks up as the box grows (nothing of it for
-       the first 30%: Safari doesn't scale that snapshot with the group, so an
-       early page showed up "from the middle"), while the card dissolves
-       alongside it, so neither ever reads as a separate full-size layer. */
-  :root.detail-vt-open::view-transition-group(classroom-detail-zoom) {
-    animation-duration: 0.5s;
-    animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1);
-  }
-
-  :root.detail-vt-open::view-transition-old(classroom-detail-zoom) {
-    animation: detail-zoom-card-out 0.5s cubic-bezier(0.4, 0, 0.6, 1) both;
-  }
-
-  :root.detail-vt-open::view-transition-new(classroom-detail-zoom) {
-    animation: detail-zoom-page-in 0.5s cubic-bezier(0.4, 0, 0.6, 1) both;
   }
 
   /* Blur that hides the swap. It goes on the image-pair wrapper (which holds
      both layers and is never moved by the group animation), NOT on -old/-new:
      Safari applied a filter on those outside the group's scaling and displaced
      the page snapshot to the bottom-right until the end. One blur over the pair
-     rises and falls across the crossfade, sharp at both ends. */
-  :root.detail-vt-open::view-transition-image-pair(classroom-detail-zoom) {
-    animation: detail-zoom-swap-blur 0.5s cubic-bezier(0.4, 0, 0.6, 1) both;
+     rises and falls across the crossfade, sharp at both ends. Base rule, so
+     open and close match. */
+  ::view-transition-image-pair(classroom-detail-zoom) {
+    animation: detail-zoom-swap-blur var(--vt-duration) cubic-bezier(0.4, 0, 0.6, 1) both;
+  }
+
+  /* Open only: the card BECOMES the page. Close keeps the base rules above.
+     The page's opacity ramps only as the box grows (nothing of it at first:
+     Safari doesn't scale that snapshot with the group, so an early page showed
+     up "from the middle"), while the card dissolves alongside it, so neither
+     ever reads as a separate full-size layer. The spring covers ~50% of the
+     distance by 20% of the run, hence the earlier windows than a linear ease. */
+  :root.detail-vt-open::view-transition-old(classroom-detail-zoom) {
+    animation-name: detail-zoom-card-out;
+  }
+
+  :root.detail-vt-open::view-transition-new(classroom-detail-zoom) {
+    animation-name: detail-zoom-page-in;
   }
 
   /* Detail-only header controls get their own VT groups (pulled out of the
@@ -1893,17 +1898,17 @@ body.detail-open .tab-content * {
    ::view-transition-old/new outside the group's scaling, which displaced the
    page snapshot to the bottom-right of the screen until the end. */
 @keyframes detail-zoom-card-out {
-  0%, 10%   { opacity: 1; }
-  80%, 100% { opacity: 0; }
+  0%, 8%    { opacity: 1; }
+  65%, 100% { opacity: 0; }
 }
 
 @keyframes detail-zoom-page-in {
-  0%, 30% { opacity: 0; }
-  100%    { opacity: 1; }
+  0%, 22% { opacity: 0; }
+  80%, 100% { opacity: 1; }
 }
 
 @keyframes detail-zoom-swap-blur {
-  0%, 15%   { filter: blur(0); }
-  50%       { filter: blur(10px); }
-  90%, 100% { filter: blur(0); }
+  0%, 10%   { filter: blur(0); }
+  42%       { filter: blur(10px); }
+  85%, 100% { filter: blur(0); }
 }

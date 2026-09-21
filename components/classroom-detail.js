@@ -6,6 +6,7 @@ import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, photoUrlCache, extractPhotoColor, getCachedPhotoColor } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createPopover } from 'vitrium';
+import { arcGroup } from '../utils/vt-motion.js';
 import { createPillSelector } from './pill-selector.js';
 
 function minutesToTimeDisplay(minutes) {
@@ -308,6 +309,8 @@ class ClassroomDetail {
       // morphing name/photo/icons independently. --
       const cardEl = pending?.cardEl ?? null;
       const cardInDom = !!(cardEl && document.body.contains(cardEl));
+      const zoomFrom = cardInDom ? cardEl.getBoundingClientRect() : null;
+      let zoomTo = null;
       // The header is a constant translucent/blurred overlay, not content that
       // changes — it doesn't need to cross-fade with the rest of "root". But
       // a VT freezes everything (including backdrop-filter's live sampling)
@@ -357,6 +360,7 @@ class ClassroomDetail {
         // settled at the exact moment the VT captures the "new" state geometry.
         void this._overlay.offsetHeight;
         this._overlay.style.viewTransitionName = 'classroom-detail-zoom';
+        zoomTo = this._overlay.getBoundingClientRect();
 
         if (validPhotoUrl) {
           const detailImg = this._overlay.querySelector('.detail-photo');
@@ -372,6 +376,8 @@ class ClassroomDetail {
         this._loadSchedule(id);
         if (hasPhoto) this._loadPhoto(id);
       });
+
+      if (cardInDom) arcGroup(vt, 'classroom-detail-zoom', zoomFrom, () => zoomTo);
 
       const cleanup = () => {
         this._overlay.style.viewTransitionName = '';
@@ -450,6 +456,8 @@ class ClassroomDetail {
       // the VT new-state snapshot blank. Force it visible here so the card's
       // subtree is rendered when the VT captures it after scrollTo().
       if (cardInDom) cardEl.style.contentVisibility = 'visible';
+      const zoomFrom = this._overlay.getBoundingClientRect();
+      let zoomTo = null;
 
       // See _doOpen: the header is pinned as its own group so its frozen
       // snapshot always shows the already-correct blur, instead of being
@@ -495,8 +503,11 @@ class ClassroomDetail {
         if (cardInDom) {
           void cardEl.offsetHeight;
           cardEl.style.viewTransitionName = 'classroom-detail-zoom';
+          zoomTo = cardEl.getBoundingClientRect();
         }
       });
+
+      if (cardInDom) arcGroup(vt, 'classroom-detail-zoom', zoomFrom, () => zoomTo);
 
       vt.ready.catch(() => {});
       vt.finished.then(cleanup).catch(cleanup);

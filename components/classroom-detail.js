@@ -3,7 +3,7 @@ import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
+import { fetchPhotoUrl, photoUrlCache, extractPhotoColor } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createPopover } from 'vitrium';
 import { createPillSelector } from './pill-selector.js';
@@ -269,6 +269,7 @@ class ClassroomDetail {
     const entry = this._flatIndex?.get(id);
     if (!entry) return;
 
+    if (this._currentId !== id) document.documentElement.style.removeProperty('--detail-tint');
     this._currentId = id;
     this._openTrigger = pending ?? null;
     this._queryContext = pending?.queryContext ?? null;
@@ -355,6 +356,7 @@ class ClassroomDetail {
           const detailContainer = this._overlay.querySelector('.detail-photo-container');
           if (detailImg) {
             detailImg.src = validPhotoUrl;
+            this._setBackdrop(validPhotoUrl);
             detailImg.classList.add('loaded');
             detailContainer?.classList.add('loaded');
           }
@@ -392,6 +394,7 @@ class ClassroomDetail {
         const detailContainer = this._overlay.querySelector('.detail-photo-container');
         if (detailImg) {
           detailImg.src = validPhotoUrl;
+          this._setBackdrop(validPhotoUrl);
           detailImg.classList.add('loaded');
           detailContainer?.classList.add('loaded');
         }
@@ -574,6 +577,7 @@ class ClassroomDetail {
 
     this._overlay.innerHTML = `
       ${classroom.idfoto ? `
+        <div class="detail-photo-backdrop"></div>
         <div class="detail-photo-container">
           <img class="detail-photo" alt="">
           <div class="detail-photo-gradient"></div>
@@ -637,6 +641,20 @@ class ClassroomDetail {
 
   // ---------- RENDER: HERO PHOTO ----------
 
+  /** Feeds the blurred backdrop behind the hero photo (see .detail-photo-backdrop). */
+  _setBackdrop(url) {
+    const el = this._overlay.querySelector('.detail-photo-backdrop');
+    if (!el) return;
+    el.style.setProperty('--backdrop-img', `url("${url}")`);
+    el.classList.add('loaded');
+
+    // Base color under the backdrop's fade (see #classroom-detail-overlay's
+    // background). Best-effort: without it the page just stays --background-color.
+    extractPhotoColor(url).then(color => {
+      if (color && el.isConnected) document.documentElement.style.setProperty('--detail-tint', color);
+    });
+  }
+
   async _loadPhoto(classroomId) {
     if (this._currentId !== classroomId) return;
 
@@ -651,7 +669,7 @@ class ClassroomDetail {
       if (!container) {
         const header = this._overlay.querySelector('.detail-header');
         if (header) {
-          header.insertAdjacentHTML('beforebegin', '<div class="detail-photo-container"><img class="detail-photo" alt=""></div>');
+          header.insertAdjacentHTML('beforebegin', '<div class="detail-photo-backdrop"></div><div class="detail-photo-container"><img class="detail-photo" alt=""></div>');
           container = this._overlay.querySelector('.detail-photo-container');
         }
       }
@@ -670,10 +688,11 @@ class ClassroomDetail {
         // changed — the "blink". Stamp src + `loaded` synchronously (same task as
         // the innerHTML that created it, so it's painted only once, already
         // revealed). onerror still culls a genuinely broken URL (stale idfoto).
-        img.onerror = () => { if (this._currentId === classroomId) container?.remove(); };
+        img.onerror = () => { if (this._currentId === classroomId) { container?.remove(); this._overlay.querySelector('.detail-photo-backdrop')?.remove(); } };
         img.classList.add('loaded');
         container.classList.add('loaded');
         img.src = cachedUrl;
+        this._setBackdrop(cachedUrl);
         return;
       }
 
@@ -683,6 +702,7 @@ class ClassroomDetail {
       if (this._currentId !== classroomId) return;
 
       img.src = url;
+      this._setBackdrop(url);
       img.decode().then(() => {
         if (this._currentId !== classroomId) return;
         img.classList.add('loaded');
@@ -694,6 +714,7 @@ class ClassroomDetail {
       console.error('Classroom photo load error:', err);
       if (this._currentId !== classroomId) return;
       this._overlay.querySelector('.detail-photo-container')?.remove();
+      this._overlay.querySelector('.detail-photo-backdrop')?.remove();
     }
   }
 

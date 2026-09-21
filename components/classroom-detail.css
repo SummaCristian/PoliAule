@@ -8,7 +8,16 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  background: var(--background-color);
+  /* The photo's extracted color (--detail-tint, set by classroom-detail.js),
+     mixed into the theme background so lightness and contrast stay
+     predictable. This is what the backdrop's fade lands on. Without a tint it
+     is exactly --background-color. */
+  background: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
+  transition: background-color 0.6s ease;
+  /* Stacking context for .detail-photo-backdrop (z-index: -1), so it paints
+     above this background but below all the page content. */
+  position: relative;
+  isolation: isolate;
 }
 
 /* Fallback fade-in for browsers without View Transitions only. When VT IS
@@ -40,6 +49,30 @@
 
 #classroom-detail-overlay.visible {
   opacity: 1;
+}
+
+/* .body-container reserves --bottom-nav-height at its bottom for the tab bar,
+   but that strip is outside the overlay, so the overlay's tinted background
+   stopped short of the screen's bottom edge. Hand the reservation to the
+   overlay itself (the tab bar is hidden here anyway) so its background runs to
+   the bottom. Mobile only, like the original padding. */
+@media (max-width: 599px) {
+  body.detail-open .body-container {
+    padding-bottom: 0;
+  }
+
+  #classroom-detail-overlay:not([hidden]) {
+    padding-bottom: var(--bottom-nav-height, 88px);
+  }
+}
+
+/* The canvas behind the overlay (body's background, which viewport-fit=cover
+   extends under the safe areas and mobile browser bars) has to carry the same
+   tint, or those strips show the plain page color. --detail-tint lives on
+   <html> for this reason. */
+body.detail-open {
+  background-color: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
+  transition: background-color 0.6s ease;
 }
 
 /* Hide tab contents and footer while the detail panel is open */
@@ -119,13 +152,9 @@ body.detail-open .tab-content * {
 
 .detail-photo-container.loaded {
   animation: none;
-  background: var(--background-color-secondary);
-}
-
-@media (max-width: 599px) {
-  .detail-photo-container.loaded {
-    background: var(--background-color);
-  }
+  /* Transparent so the photo's bottom fade dissolves into the blurred
+     backdrop behind the container, not into a flat page color. */
+  background: transparent;
 }
 
 .detail-photo {
@@ -141,8 +170,26 @@ body.detail-open .tab-content * {
 
   /* Use a mask to fade out the image itself at the bottom to avoid "line" artifacts
      between the image and the background blur layer. */
-  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  /* Eased (smoothstep-like) instead of a 2-stop linear ramp, so the fade has no
+     visible kink where it starts. */
+  mask-image: linear-gradient(to bottom,
+    black 45%,
+    rgba(0, 0, 0, 0.92) 55%,
+    rgba(0, 0, 0, 0.75) 65%,
+    rgba(0, 0, 0, 0.5) 75%,
+    rgba(0, 0, 0, 0.27) 85%,
+    rgba(0, 0, 0, 0.1) 93%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to bottom,
+    black 45%,
+    rgba(0, 0, 0, 0.92) 55%,
+    rgba(0, 0, 0, 0.75) 65%,
+    rgba(0, 0, 0, 0.5) 75%,
+    rgba(0, 0, 0, 0.27) 85%,
+    rgba(0, 0, 0, 0.1) 93%,
+    transparent 100%
+  );
 }
 
 .detail-photo.loaded {
@@ -184,6 +231,112 @@ body.detail-open .tab-content * {
 
 .detail-photo.loaded + .detail-photo-gradient {
   opacity: 1;
+}
+
+/* With the backdrop present the photo's own mask does the fade, and this flat
+   page-colored gradient would just paint a band over the blur. */
+#classroom-detail-overlay:has(.detail-photo-backdrop) .detail-photo-gradient {
+  display: none;
+}
+
+/* ── Photo backdrop ─────────────────────────────────────────────────
+   A blurred copy of the photo behind everything, so the sharp photo fades into
+   its own colors instead of a flat surface. The image is set on the wrapper as
+   --backdrop-img by classroom-detail.js.
+
+   Geometry: the wrapper is twice the photo's height. ::before is the photo's
+   box, cropped exactly like .detail-photo (same width, same height, same
+   `cover`), so the blur is aligned with the sharp image at the seam. ::after
+   is that same box mirrored underneath, which continues the photo's bottom-edge
+   colors with no jump. Both bleed 60px past the wrapper (padding + content-box
+   origin keeps `cover` sized to the photo box) so the blur's transparent
+   fringe lands outside the wrapper's overflow clip. No tint layer: the sharp
+   photo is untinted, and a tinted backdrop behind it made the fade step. */
+
+.detail-photo-backdrop {
+  --photo-h: max(38vh, 280px);
+  --bd-blur: 40px;
+  /* Bleed is what keeps the blur's transparent fringe outside the clip, so it
+     has to grow with the blur radius. */
+  --bd-bleed: calc(var(--bd-blur) * 1.5);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--photo-h) * 2);
+  z-index: -1;
+  overflow: hidden; /* the bleed must not cause horizontal scroll */
+  container-type: inline-size;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+
+  mask-image: linear-gradient(to bottom,
+    black 45%,
+    rgba(0, 0, 0, 0.85) 55%,
+    rgba(0, 0, 0, 0.6) 65%,
+    rgba(0, 0, 0, 0.35) 75%,
+    rgba(0, 0, 0, 0.15) 85%,
+    rgba(0, 0, 0, 0.04) 93%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to bottom,
+    black 45%,
+    rgba(0, 0, 0, 0.85) 55%,
+    rgba(0, 0, 0, 0.6) 65%,
+    rgba(0, 0, 0, 0.35) 75%,
+    rgba(0, 0, 0, 0.15) 85%,
+    rgba(0, 0, 0, 0.04) 93%,
+    transparent 100%
+  );
+}
+
+@media (min-width: 600px) {
+  .detail-photo-backdrop {
+    --photo-h: calc(100cqw * 9 / 21); /* .detail-photo-container's 21 / 9 */
+    /* The photo is drawn much larger here, so a fixed radius reads as weaker.
+       Scale with width, capped so the blur stays affordable. */
+    --bd-blur: clamp(40px, 4.5cqw, 90px);
+  }
+}
+
+.detail-photo-backdrop.loaded {
+  opacity: 1;
+}
+
+.detail-photo-backdrop::before,
+.detail-photo-backdrop::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--bd-bleed) * -1);
+  right: calc(var(--bd-bleed) * -1);
+  top: calc(var(--bd-bleed) * -1);
+  height: calc(var(--photo-h) + var(--bd-bleed) * 2);
+  padding: var(--bd-bleed);
+  box-sizing: border-box;
+  background: var(--backdrop-img) center / cover repeat;
+  background-origin: content-box;
+  filter: blur(var(--bd-blur)) saturate(1.25);
+}
+
+.detail-photo-backdrop::after {
+  top: calc(var(--photo-h) - var(--bd-bleed));
+  transform: scaleY(-1);
+}
+
+/* Desktop: no mirror. At this size the reflected half is hundreds of px tall and
+   the gradient reversing at the mirror line reads as a dark/light crease; the
+   tile-wrapped bleed at the seam also shows the wrong part of the photo. The
+   single blurred copy just ends at the photo's bottom edge (no vertical
+   repeat), so its own blur fringe fades into the tint. */
+@media (min-width: 600px) {
+  .detail-photo-backdrop::after {
+    display: none;
+  }
+
+  .detail-photo-backdrop::before {
+    background-repeat: repeat-x;
+  }
 }
 
 /* ── Header ─────────────────────────────────────────────────────── */

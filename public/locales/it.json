@@ -197,8 +197,10 @@
   "footer.whatsNew": "Cosa c'è di nuovo?",
   "footer.checkOnGitHub": "Vedi su GitHub",
   "footer.disclaimer5": "Non affiliato al Politecnico di Milano.",
-  "footer.versionInfo": "Versione 2.0.0-beta6",
-  "changelog.item1": "Riprogettato il tab Campus",
-  "changelog.item2": "Aggiunta una mappa per mostrare tutti gli edifici in un campus",
-  "changelog.item3": "Aggiunta un'opzione per disabilitare l'effetto vetro per migliorare le prestazioni su dispositivi meno potenti"
+  "footer.versionInfo": "Versione 2.0.0-beta7",
+  "changelog.item1": "Ridisegnata la pagina Dettagli delle aule",
+  "changelog.item2": "Aggiunta una vista mappa per mostrare dove si trova l'edificio all'interno della pagina Dettagli",
+  "changelog.item3": "Aggiunti gli orari di apertura dell'edificio nella pagina Dettagli",
+  "changelog.item4": "Migliorata la performance dell'intera webapp",
+  "changelog.item5": "Portato l'intero design system su Vitrium, la libreria di componenti estratta da PoliAule"
 }

@@ -218,9 +218,11 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 2.0.0-beta6",
+  "footer.versionInfo": "Version 2.0.0-beta7",
 
-  "changelog.item1": "Redesigned the Campus tab",
-  "changelog.item2": "Added a map view to show all buildings in a campus",
-  "changelog.item3": "Added an option to disable the glass effect for better performance on slower devices"
+  "changelog.item1": "Redesigned the Details page",
+  "changelog.item2": "Added a map view to show where the building is located inside the Details page",
+  "changelog.item3": "Added the building's opening hours in the Details page",
+  "changelog.item4": "Improved the performance of the whole webapp",
+  "changelog.item5": "Ported the whole design system to Vitrium, the component library extrazcted from PoliAule"
 }

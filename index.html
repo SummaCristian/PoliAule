@@ -20,44 +20,324 @@
   <meta name="apple-mobile-web-app-title" content="PoliAule" />
   <link rel="manifest" href="/favicons/main/site.webmanifest" />
 
-  <!-- Preload the logo to improve loading times -->
-  <link rel="preload" as="image" href="/favicons/main/logo.png">
+  <!-- Preload the logo to improve loading times; fetchpriority=high since it's
+       the splash screen's LCP element -->
+  <link rel="preload" as="image" href="/favicons/main/logo.webp" fetchpriority="high">
 
-  <!-- CSS -->
+  <!-- Critical CSS: everything the splash screen needs to paint, inlined so
+       first paint doesn't wait on the app's full stylesheet (which Vite
+       bundles into one ~170KB/27KB-gzip file and, on a throttled connection,
+       can take seconds to arrive). The full stylesheet below is loaded
+       non-blocking (see the media="print" swap trick) and takes over once it
+       lands. All the ".splash-*" rules are intentionally NOT duplicated
+       there (see style.css's "Splash Screen" comment) — this is their only
+       copy. ".noscript-overlay" IS duplicated there on purpose (that one
+       isn't transient); keep the two in sync if it changes. -->
+  <style>
+    :root {
+      box-sizing: border-box;
+      --background-color: #F2F2F2;
+      --text-color-primary: #1A1A1A;
+      --text-color-secondary: #333333;
+      --text-75: 0.75rem;
+      --text-90: 0.9rem;
+      --text-110: 1.1rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background-color: #1E1E1E;
+        --text-color-primary: #EAEAEA;
+        --text-color-secondary: #CCCCCC;
+      }
+    }
+
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+
+    html {
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      background-color: transparent;
+    }
+
+    html:has(.splash-overlay) {
+      overflow: hidden;
+    }
+
+    body {
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--background-color);
+      text-align: center;
+      font-family: "Nunito", -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .noscript-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--background-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .splash-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .splash-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-color: var(--background-color);
+      transition: opacity 0.65s ease-out;
+      pointer-events: none;
+    }
+
+    .splash-overlay.splash-hiding::before {
+      opacity: 0;
+    }
+
+    .splash-logo {
+      width: auto;
+      height: 10rem;
+      user-select: none;
+      -webkit-user-drag: none;
+      will-change: transform;
+      opacity: 0.5;
+      scale: 0.75;
+      animation: splash-logo-fade-in 0.5s ease-out 0.1s forwards;
+    }
+
+    @keyframes splash-logo-fade-in {
+      to {
+        opacity: 1;
+        scale: 1;
+      }
+    }
+
+    .splash-logo.splash-logo-flying {
+      transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .splash-header-item {
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .splash-header-item.splash-revealed {
+      opacity: 1;
+    }
+
+    .splash-loading-label {
+      position: absolute;
+      bottom: 3.5rem;
+      font-size: var(--text-75);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-color-secondary);
+      opacity: 0;
+      scale: 0.88;
+      animation: splash-loading-appear 1s ease-out 3s forwards;
+    }
+
+    .splash-loading-label::after {
+      content: '...';
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: bottom;
+      width: 0;
+      animation: splash-loading-dots 1.4s steps(4, end) 3s infinite;
+    }
+
+    @keyframes splash-loading-appear {
+      to {
+        opacity: 0.5;
+        scale: 1;
+      }
+    }
+
+    @keyframes splash-loading-dots {
+      to { width: 1.1em; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .splash-logo {
+        animation: none;
+        opacity: 1;
+      }
+
+      .splash-logo.splash-logo-flying {
+        transition: transform 0s;
+      }
+
+      .splash-loading-label,
+      .splash-loading-label::after {
+        animation: none;
+      }
+    }
+
+    .splash-overlay.splash-error {
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .splash-error-icon {
+      font-size: 2.5rem;
+      color: var(--text-color-secondary);
+      margin-bottom: 0.25rem;
+      opacity: 0;
+      animation: splash-logo-fade-in 0.4s ease-out 0.1s forwards;
+    }
+
+    .splash-error-title {
+      font-size: var(--text-110);
+      font-weight: 700;
+      color: var(--text-color-primary);
+      opacity: 0;
+      animation: splash-logo-fade-in 0.4s ease-out 0.15s forwards;
+    }
+
+    .splash-error-subtitle {
+      font-size: var(--text-90);
+      color: var(--text-color-secondary);
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: splash-logo-fade-in 0.4s ease-out 0.2s forwards;
+    }
+
+    .splash-error-reload {
+      opacity: 0;
+      animation: splash-logo-fade-in 0.4s ease-out 0.25s forwards;
+    }
+
+    /* Keep the real UI entirely out of the layout tree (not just hidden —
+       display:none, so it has no rendered box at all) until every "shell"
+       stylesheet below has resolved. An element that never had a previous
+       box doesn't register as a Cumulative Layout Shift when it first
+       appears; letting it paint unstyled and then reflow once CSS attaches
+       does (this replaced a single reflow that scored 0.88 on its own —
+       the whole .body-container snapping from an unstyled box into its
+       real flex layout). See window.__onShellCssLoad below. */
+    :root:not(.css-ready) body > *:not(#splash-overlay) {
+      display: none;
+    }
+  </style>
+
+  <!-- Without JS, window.__onShellCssLoad below never runs, so .css-ready
+       never gets added — the rule above would hide the app forever. The
+       synchronous <noscript><link> fallbacks (below, one per deferred
+       stylesheet) already load everything render-blocking in that case, so
+       just force the real content back on and drop the (now permanently
+       stuck) splash. -->
+  <noscript>
+    <style>
+      body > * { display: revert !important; }
+      #splash-overlay { display: none !important; }
+    </style>
+  </noscript>
+
+  <script>
+    // Shared by every "shell" stylesheet link below (the ones that define
+    // the app's actual box layout — style.css and the per-component CSS
+    // files, or their single bundled equivalent in production). Each one
+    // is marked data-shell-css and loaded non-blocking (media="print" swap
+    // trick); this re-checks, on every load/error, whether any are still
+    // pending, and flips the switch above once none are. Deliberately
+    // excludes the Google Fonts / Hugeicons stylesheets further down —
+    // gating on those too (slow, cross-origin, sometimes blocked) would
+    // reintroduce the render-blocking problem this async-loading trick was
+    // meant to fix; their own swap-in cost is comparatively small.
+    window.__onShellCssLoad = function (link) {
+      link.media = 'all';
+      if (!document.querySelector('link[data-shell-css][media="print"]')) {
+        document.documentElement.classList.add('css-ready');
+      }
+    };
+  </script>
+
+  <!-- Preconnect to the render-blocking cross-origin CSS below (Google
+       Fonts), so DNS/TCP/TLS isn't paid serially after the stylesheet is
+       discovered. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Preconnect to the occupancy/opening-hours/config API, so the first
+       fetch() call (issued once the JS bundle has downloaded and run,
+       config.js/available-rooms-script.js) doesn't pay DNS/TCP/TLS on top of
+       that fetch's own round trip. Points at the stable API by default —
+       correct for poliaule.com, where getApiBase() (config.js) always
+       resolves here; scripts/build-beta.sh swaps this to api-beta before the
+       beta build runs, matching that build's default backend. -->
+  <link rel="preconnect" href="https://api.poliaule.com" crossorigin>
+
+  <!-- CSS. Plain/blocking here on purpose, even though prod defers the
+       equivalent bundled tag (vite.config.js's deferMainStylesheet plugin):
+       adding media/onload attributes directly to these 19 source tags makes
+       Vite stop merging them into one bundle and ship each as its own file
+       instead (tried it — do not repeat). Since these stay render-blocking
+       in `npm run dev`, CSS is always already applied before any script
+       runs there, so dev never hits the reflow this is working around —
+       see vite.config.js's markShellCssReadyInDev plugin. -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="./components/date-picker.css" />
-  <link rel="stylesheet" href="./components/date-chip-picker.css" />
+  <link rel="stylesheet" href="./components/chip-pickers.css" />
   <link rel="stylesheet" href="./components/data-fetch-card.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
   <link rel="stylesheet" href="./components/time-range-slider.css" />
-  <link rel="stylesheet" href="./components/time-range-chip-picker.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
   <link rel="stylesheet" href="./components/building-overview.css" />
   <link rel="stylesheet" href="./components/settings.css" />
   <link rel="stylesheet" href="./components/search-overlay.css" />
   <link rel="stylesheet" href="./components/classroom-detail.css" />
   <link rel="stylesheet" href="./components/info-page.css" />
+  <link rel="stylesheet" href="./components/info-hint.css" />
   <link rel="stylesheet" href="./components/bottom-nav.css" />
   <link rel="stylesheet" href="./components/campus-map.css" />
   <link rel="stylesheet" href="./components/campus-sheet.css" />
   <link rel="stylesheet" href="./components/favourites.css" />
-  <link rel="stylesheet" href="./components/liquid-glass.css" />
   <link rel="stylesheet" href="./components/keybindings.css" />
 
-  <!-- Nunito font -->
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Nunito font. Loaded non-blocking (media="print" swap trick): the
+       splash/body font-family fallback stack already covers the pre-load
+       gap, and font-display: swap covers the rest of the app, so nothing
+       needs this to be render-blocking. -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"
+    media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"></noscript>
 
-  <!-- Google Material Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-
-  <!-- HugeIcons (stroke-rounded) — used for the redesigned bottom nav, and going forward -->
-  <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css" />
+  <!-- HugeIcons (stroke-rounded) — the app's icon font, self-hosted (see
+       public/fonts/hugeicons/icons.css) for a long, cache-controlled TTL
+       instead of use.hugeicons.com's 4h one. 50KB gzipped and unused by the
+       splash screen, so it's loaded non-blocking too. -->
+  <link rel="stylesheet" href="/fonts/hugeicons/icons.css" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="/fonts/hugeicons/icons.css" /></noscript>
 
   <!-- JS -->
   <script type="module" src="script.js" defer></script>
   <script type="module" src="available-rooms-script.js" defer></script>
-  <script type="module" src="./components/popover.js" defer></script>
-  <script type="module" src="./components/haptics.js" defer></script>
   <script type="module" src="./components/classroom-list.js" defer></script>
   <script type="module" src="./components/building-overview.js" defer></script>
   <script type="module" src="./components/bottom-nav.js" defer></script>
@@ -67,7 +347,7 @@
 <body>
   <!-- Splash Screen -->
   <div id="splash-overlay" class="splash-overlay" aria-hidden="true">
-    <img src="/favicons/main/logo.png" class="splash-logo" alt="" draggable="false" />
+    <img src="/favicons/main/logo.webp" class="splash-logo" alt="" draggable="false" fetchpriority="high" />
     <span class="splash-loading-label">Loading</span>
   </div>
 
@@ -92,7 +372,7 @@
 
       <div class="header-title-container">
         <button class="header-title-btn" id="info-trigger" aria-label="About PoliAule">
-          <img src="/favicons/main/logo.png" class="header-logo">
+          <img src="/favicons/main/logo.webp" class="header-logo" width="434" height="500">
 
           <div class="header-title-beta-container splash-header-item">
             <h2 class="header-title">PoliAule</h2>
@@ -118,7 +398,7 @@
 
         <!-- Settings button -->
         <button id="settings-btn" class="header-button liquid-glass" aria-label="Settings">
-          <span class="material-symbols-outlined">settings</span>
+          <i class="hgi-stroke hgi-settings-01" aria-hidden="true"></i>
         </button>
 
       </div>
@@ -136,9 +416,8 @@
 
   </header>
 
-  <button id="detail-back-btn" class="detail-back-btn liquid-glass" hidden>
-    <span class="material-symbols-outlined">chevron_left</span>
-    <span class="detail-back-label" data-i18n="search.back">Back</span>
+  <button id="detail-back-btn" class="detail-back-btn liquid-glass" hidden aria-label="Back">
+    <i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>
   </button>
 
 
@@ -211,7 +490,7 @@
       </form>
 
       <div id="available-classrooms-results" class="available-classrooms-container empty">
-        <span class="material-symbols-outlined empty-container-icon">search</span>
+        <i class="hgi-stroke hgi-search-01 empty-container-icon" aria-hidden="true"></i>
         <p class="empty-container-title" data-i18n="results.emptyTitle">Need a classroom?</p>
         <p class="empty-container-subtitle" data-i18n="results.emptySubtitle">Tell me when you need it and I’ll show you
           what’s available</p>
@@ -233,13 +512,11 @@
   </div>
 
   <footer class="footer">
-    <button class="transparent-button version-info-button" data-popover="version-info-popover">
+    <button class="transparent-button version-info-button">
       <label class="secondary" data-i18n="footer.versionInfo"></label>
     </button>
-    <div id="version-info-popover" class="popover liquid-glass">
-      <div class="arrow" data-arrow></div>
-
-      <img src="/favicons/main/logo.png" class="changelog-logo" />
+    <div id="version-info-content" hidden>
+      <img src="/favicons/main/logo.webp" class="changelog-logo" width="434" height="500" />
       <h1 class="popover-title" data-i18n="footer.versionInfo"></h1>
       <div class="changelog-container">
         <h2 class="popover-subtitle" data-i18n="footer.whatsNew">What's new?</h2>
@@ -248,6 +525,8 @@
           <li data-i18n="changelog.item1"></li>
           <li data-i18n="changelog.item2"></li>
           <li data-i18n="changelog.item3"></li>
+          <li data-i18n="changelog.item4"></li>
+          <li data-i18n="changelog.item5"></li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">
@@ -286,45 +565,26 @@
     <div class="search-overlay-panel" role="dialog" aria-modal="true" aria-label="Search classrooms">
       <div class="search-overlay-header">
         <div class="search-bar-wrapper liquid-glass">
-          <span class="material-symbols-outlined">search</span>
+          <i class="hgi-stroke hgi-search-01" aria-hidden="true"></i>
           <input type="text" id="classroom-search-input" class="search-input"
             data-i18n-attr="placeholder:search.inputPlaceholder" placeholder="e.g. 2.0.1, Trifoglio..."
             autocomplete="off" spellcheck="false" />
           <button id="classroom-search-clear" class="search-clear-btn" type="button" tabindex="-1"
             aria-label="Clear search">
-            <span class="material-symbols-outlined">close</span>
+            <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
           </button>
         </div>
         <button id="search-overlay-close" class="search-overlay-close liquid-glass" type="button"
           aria-label="Close search">
-          <span class="material-symbols-outlined">close</span>
+          <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
         </button>
       </div>
       <div id="search-overlay-results" class="search-overlay-results"></div>
     </div>
   </div>
 
-  <!-- Bottom pill nav (populated by components/bottom-nav.js) -->
-  <div class="bn-wrapper" id="bn-wrapper">
-    <div class="bn-group" id="bn-group">
-      <nav class="bn-tabbar" id="bn-bar" aria-label="Main navigation">
-        <div class="bn-tabbar-items" id="bn-bar-items"></div>
-      </nav>
-      <div class="bn-pill-outer" id="bn-pill" aria-hidden="true">
-        <div class="bn-pill-inner">
-          <div class="bn-active-row" id="bn-active-row"></div>
-        </div>
-      </div>
-      <div class="bn-pill-hit" id="bn-pill-hit"></div>
-    </div>
-
-    <button class="bn-search-btn liquid-glass" id="bn-search-btn" type="button" aria-label="Search">
-      <span class="bn-search-btn-inner">
-        <i class="hgi-stroke hgi-search-01"></i>
-        <span class="bn-tab-label" data-i18n="tabs.search">Search</span>
-      </span>
-    </button>
-  </div>
+  <!-- Bottom pill nav / side rail: Vitrium's tab bar, built by components/bottom-nav.js -->
+  <div class="bn-wrapper" id="bn-wrapper"></div>
 
 </body>
 

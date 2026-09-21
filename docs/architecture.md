@@ -15,13 +15,19 @@ graph TD
     classDef cf fill:#ffedd5,stroke:#f97316,color:#7c2d12
     classDef browser fill:#ede9fe,stroke:#8b5cf6,color:#2e1065
 
-    subgraph CI ["GitHub Actions (scheduled)"]
+    CRON["Cron Worker<br/>(workers/cron)"]:::cf
+
+    subgraph CI ["GitHub Actions"]
         GHA["Workflows"]:::ci
-        PY["scripts/fetch.py +<br/>fetch_opening_hours.py"]:::py
+        PY["scripts/fetch.py<br/>(hourly)"]:::py
+        PYOH["fetch_opening_hours.py<br/>(weekly)"]:::py
+        PYPH["fetch_photos.py<br/>(monthly)"]:::py
     end
 
-    POLIMI_API["PoliMi occupancy API"]:::api
+    POLIMI_PAGE_OCC["onlineservices.polimi.it<br/>occupancy pages"]:::api
+    POLIMI_API["PoliMi REST API<br/>(fallback only)"]:::api
     POLIMI_PAGE["polimi.it opening-hours page"]:::api
+    POLIMI_PHOTO["PoliMi photo API"]:::api
     R2[("R2: poliaule-data")]:::store
 
     subgraph Delivery ["Delivery"]
@@ -30,16 +36,23 @@ graph TD
         BROWSER["Browser"]:::browser
     end
 
+    CRON -->|workflow_dispatch| GHA
     GHA -->|runs| PY
-    PY -->|fetch per room/day| POLIMI_API
-    PY -->|scrape weekly| POLIMI_PAGE
+    GHA -->|runs| PYOH
+    GHA -->|runs| PYPH
+    PY -->|scrape per Sede/day| POLIMI_PAGE_OCC
+    PY -.->|per room, on failure| POLIMI_API
+    PYOH -->|scrape| POLIMI_PAGE
+    PYPH -->|download| POLIMI_PHOTO
     PY -->|wrangler r2 object put| R2
+    PYOH -->|wrangler r2 object put| R2
+    PYPH -->|wrangler r2 object put| R2
     R2 -->|binding| WORKER
-    WORKER -->|"/v1/* (JSON)"| BROWSER
+    WORKER -->|"/v1/* (JSON, photos)"| BROWSER
     PAGES -->|static HTML/JS/CSS| BROWSER
 ```
 
-Both fetch jobs run on GitHub Actions. Both write local JSON, then upload it to the `poliaule-data` R2 bucket via `wrangler r2 object put`. The API Worker binds that bucket and serves it over HTTP; see [api.md](./api.md) for the exact routes.
+The occupancy job is triggered by the cron Worker via `workflow_dispatch`; the opening-hours and photos jobs run on their own GitHub Actions schedules. All three write local files, then upload them to the `poliaule-data` R2 bucket via `wrangler r2 object put`. The API Worker binds that bucket and serves it over HTTP; see [api.md](./api.md) for the exact routes.
 
 `fetch.py` reads the freshly-written `data/opening-hours.json` locally to decide which days to fetch. The browser gets it through `/v1/opening-hours` on the API Worker.
 
@@ -157,7 +170,7 @@ occupation_YYYYMMDD.json
 
 > For more detail on routing, navigation, the View Transition API, and PWA support, see [frontend.md](./frontend.md).
 
-The frontend is vanilla ES modules, no build step or framework.
+The frontend is vanilla ES modules with no framework, bundled and minified by Vite at deploy time (see Deployment below).
 
 ```mermaid
 graph TD
@@ -181,7 +194,6 @@ graph TD
     TP["time-picker.js"]:::component
     TRS["time-range-slider.js"]:::component
     SET["settings.js"]:::component
-    HAP["haptics.js"]:::component
     TT["tooltip.js"]:::component
 
     IH -->|loads| SC
@@ -194,7 +206,6 @@ graph TD
     SC -->|imports| TP
     SC -->|imports| TRS
     SC -->|imports| SET
-    SC -->|imports| HAP
     SC -->|registers| TT
     SCS -->|imports| ARS
     SCS -->|imports| I18N
@@ -210,13 +221,14 @@ graph TD
 | `available-rooms-script.js` | Fetches occupancy JSON and opening hours, exposes `findAvailableClassrooms()` |
 | `search-classrooms-script.js` | Search tab: full-text index, hierarchy navigation, classroom status |
 | `i18n.js` | Locale detection (browser / localStorage), `t()` translation helper |
-| `components/campus-picker.js` | Campus selector UI + popup |
+| `components/campus-picker.js` | Campus selector (Vitrium list picker) |
+| `components/bottom-nav.js` | Main navigation (Vitrium tab bar) |
+| `components/campus-sheet.js` | Campus map sheet (Vitrium sheet) |
 | `components/classroom-detail.js` | Classroom detail page with timeline and photo |
 | `components/time-picker.js` | Morphing time input |
 | `components/time-range-slider.js` | Dual-handle slider for time range |
 | `components/settings.js` | User preferences (remembered campus, partial availability, etc.) |
 | `components/tooltip.js` | Side-effect module: registers a global `data-tooltip` attribute handler |
-| `components/popover.js` | `@floating-ui/dom` wrapper (exported, available for future use) |
 
 ### Classroom photos
 
@@ -285,7 +297,5 @@ The app detects its environment from `location.hostname` at startup and shows a 
 
 | Library | Used for |
 |---|---|
-| `@floating-ui/dom` | Popover positioning |
-| `web-haptics` | Mobile vibration feedback |
 | Google Fonts (Nunito) | Typography |
 | Google Material Symbols | Icons |

@@ -33,14 +33,14 @@
   color: var(--text-color-primary);
 
   /* Same glass material as the popovers / header buttons — see the recipe
-     note at :root's --glass-tint definition. */
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-lg));
-  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+     note at :root's --lg-tint definition. */
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-lg));
+  -webkit-backdrop-filter: blur(var(--lg-blur-lg));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 
   transform: translateY(8px) scale(0.98);
   transition: transform 0.18s ease;
@@ -53,8 +53,8 @@
   inset: -0.5px;
   border-radius: inherit;
   padding: 0.5px;
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -102,7 +102,7 @@
   min-width: 1.6em;
   padding: 2px 6px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-shadow-color, rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--lg-shadow-color, rgba(0, 0, 0, 0.15));
   border-bottom-width: 2px;
   background: var(--background-color);
   font-family: inherit;

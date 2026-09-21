@@ -1,4 +1,7 @@
 {
+  "infoHint.text": "Tap here to find out more",
+  "infoHint.dismiss": "Dismiss",
+
   "tabs.available": "Available",
   "tabs.campus": "Campus",
   "tabs.search": "Search",
@@ -52,12 +55,15 @@
   "search.sectionEvents": "Lessons & exams",
   "search.moreSessions": "+{n} more sessions",
   "search.allCampuses": "All campuses",
-  "search.back": "Back",
   "building.prefix": "Building",
   "building.viewInCampus": "View {name} in the Campus tab",
   "overview.title": "Buildings",
   "overview.close": "Close overview",
   "overview.subtitle": "{n} classrooms",
+  "overview.floorGround": "Ground floor",
+  "overview.floorBasement": "Basement",
+  "overview.floor": "Floor {n}",
+  "overview.floorUnknown": "Floor unknown",
 
   "search.buildings": "{n} buildings",
   "search.classrooms": "{n} classrooms",
@@ -155,6 +161,14 @@
   "detail.seats": "Seats",
   "detail.disabledSeats": "Accessible seats",
   "detail.weeklySchedule": "Weekly Schedule",
+  "detail.location": "Location",
+  "detail.openingHours": "Opening Hours",
+  "detail.monFri": "Mon–Fri",
+  "detail.saturday": "Saturday",
+  "detail.sunday": "Sunday",
+  "detail.closed": "Closed",
+  "detail.openGoogleMaps": "Open in Google Maps",
+  "detail.openAppleMaps": "Open in Apple Maps",
   "detail.occupied": "Occupied",
   "detail.examLabel": "Exam",
   "detail.noData": "No schedule data available",
@@ -204,9 +218,11 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 2.0.0-beta6",
+  "footer.versionInfo": "Version 2.0.0-beta7",
 
-  "changelog.item1": "Redesigned the Campus tab",
-  "changelog.item2": "Added a map view to show all buildings in a campus",
-  "changelog.item3": "Added an option to disable the glass effect for better performance on slower devices"
+  "changelog.item1": "Redesigned the Details page",
+  "changelog.item2": "Added a map view to show where the building is located inside the Details page",
+  "changelog.item3": "Added the building's opening hours in the Details page",
+  "changelog.item4": "Improved the performance of the whole webapp",
+  "changelog.item5": "Ported the whole design system to Vitrium, the component library extracted from PoliAule"
 }

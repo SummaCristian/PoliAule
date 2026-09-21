@@ -105,6 +105,24 @@
    only the left side bleeds — all the way past the fixed glass side rail, so
    scrolled cards pass behind its blur. --fade-left mirrors .tab-content's
    desktop padding-left (rail offset + measured width + breathing room). */
+/* Registered so it can animate: it mirrors .tab-content's padding-left (which
+   animates when the tab bar changes place), and the two must move together. */
+@property --fade-left {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 16px; /* a registered initial value must be absolute: rem would invalidate the rule */
+}
+
+.favourites-carousel {
+  transition: --fade-left var(--nav-shift);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .favourites-carousel {
+    transition: none;
+  }
+}
+
 @media (min-width: 600px) {
   .favourites-carousel {
     --fade-left: calc(20px + var(--side-nav-width, 88px) + 1.5rem);

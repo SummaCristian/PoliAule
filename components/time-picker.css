@@ -147,7 +147,7 @@
   transition: background 0.15s ease, scale 0.15s ease;
 }
 
-.tp-popup__switch .material-symbols-outlined {
+.tp-popup__switch .hgi-stroke {
   font-size: 16px !important;
 }
 
@@ -224,7 +224,7 @@
   color: var(--text-color-accent);
 }
 
-.tp-card__icon-wrap .material-symbols-outlined {
+.tp-card__icon-wrap .hgi-stroke {
   font-size: 20px !important;
 }
 
@@ -273,14 +273,11 @@
   /* display:flex set via JS */
 
   transition:
-    top 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    width 0.42s cubic-bezier(0.32, 0.72, 0, 1),
-    height 0.42s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.42s cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 0.42s ease;
 
-  will-change: top, left, width, height;
+  will-change: transform;
 }
 
 .tp-popup__inner {
@@ -403,7 +400,7 @@
   justify-content: center;
 }
 
-.tp-popup__step .material-symbols-outlined {
+.tp-popup__step .hgi-stroke {
   font-size: 20px !important;
 }
 

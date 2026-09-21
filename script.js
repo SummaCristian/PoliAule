@@ -1,6 +1,17 @@
 history.scrollRestoration = 'manual';
 window.scrollTo(0, 0);
 
+// One-time move of the blur preference to the key Vitrium reads. The cached
+// benchmark verdict isn't carried over; it re-runs once at idle.
+try {
+  const oldMode = localStorage.getItem('poliAule_blurMode');
+  if (oldMode !== null) {
+    if (localStorage.getItem('lg:blur-mode') === null) localStorage.setItem('lg:blur-mode', oldMode);
+    localStorage.removeItem('poliAule_blurMode');
+  }
+  localStorage.removeItem('poliAule_blurBenchmark');
+} catch { /* storage unavailable */ }
+
 const h = location.hostname;
 const envLabel = h === 'beta.poliaule.com' ? 'Beta'
                : h === 'dev.poliaule.com'  ? 'Dev'
@@ -23,6 +34,7 @@ import { ensureClassroomDirectory, classroomsData as staticClassroomsData } from
 import { initSearchOverlay } from './components/search-overlay.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
+import { initInfoHint } from './components/info-hint.js';
 
 import { initTimePickers } from './components/time-picker.js';
 import { initTimeRangeSlider } from './components/time-range-slider.js';
@@ -30,17 +42,16 @@ import { setupCampusPicker } from './components/campus-picker.js';
 import { initCampusMap } from './components/campus-map.js';
 import { initCampusSheet } from './components/campus-sheet.js';
 import { retranslateCampusBuildingsPage, goToBuilding } from './components/campus-buildings.js';
-import { activateGroupTab } from './components/bottom-nav.js';
+import { activateGroupTab, retranslateNav } from './components/bottom-nav.js';
 import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
 import { initPickerDock } from './components/picker-dock.js';
 import './components/data-fetch-card.js';
 
-import { haptics, defaultPatterns } from './components/haptics.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
-import { initLiquidGlass } from './components/liquid-glass.js';
+import { initLiquidGlass, createPopover, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
@@ -48,23 +59,38 @@ import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY } from './components/settings.js';
 import { initKeybindings } from './components/keybindings.js';
-import { resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from './utils/blur-capability.js';
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
 const _SPLASH_MIN_MS = 300;
 
+// Set once showSplashError() has replaced the splash's markup with the error
+// screen. The 15s init-timeout (below) and a genuinely slow-but-successful
+// init are two independent setTimeout callbacks racing each other — nothing
+// cancels the success path just because the timeout fired first. If init
+// finishes after the error screen is already showing, dismissSplash() would
+// otherwise reach for a .splash-logo/.header-logo hand-off that no longer
+// applies (the error markup has no .splash-logo) and crash. Recover instead
+// by just dropping the error screen and revealing the app.
+let _splashFailed = false;
+
 function dismissSplash() {
   const overlay = document.getElementById('splash-overlay');
   if (!overlay) return;
 
-  const splashLogo = overlay.querySelector('.splash-logo');
-  const realLogo = document.querySelector('.header-logo');
-  const isInfo = location.hash === '#info';
-
   const revealHeader = () =>
     document.querySelectorAll('.splash-header-item')
       .forEach(el => el.classList.add('splash-revealed'));
+
+  if (_splashFailed) {
+    overlay.remove();
+    revealHeader();
+    return;
+  }
+
+  const splashLogo = overlay.querySelector('.splash-logo');
+  const realLogo = document.querySelector('.header-logo');
+  const isInfo = location.hash === '#info';
 
   if (document.startViewTransition) {
     // --- View Transition path ---
@@ -92,6 +118,10 @@ function dismissSplash() {
         infoPage._applyOpenState('splash-icon');
       });
 
+      // A second VT firing before this one settles rejects .ready/.finished with
+      // InvalidStateError; .finished is handled above, but .ready isn't awaited
+      // anywhere, so it was surfacing as an unhandled rejection on every abort.
+      vt.ready.catch(() => {});
       vt.finished.then(() => infoPage._clearVtNames()).catch(() => infoPage._clearVtNames());
     } else {
       const vt = document.startViewTransition(() => {
@@ -101,6 +131,7 @@ function dismissSplash() {
         realLogo.style.viewTransitionName = 'splash-icon';
       });
 
+      vt.ready.catch(() => {});
       const cleanup = () => { realLogo.style.viewTransitionName = ''; };
       vt.finished.then(cleanup).catch(cleanup);
     }
@@ -133,9 +164,10 @@ function dismissSplash() {
 function showSplashError() {
   const overlay = document.getElementById('splash-overlay');
   if (!overlay) return;
+  _splashFailed = true;
   overlay.classList.add('splash-error');
   overlay.innerHTML = `
-    <span class="material-symbols-outlined splash-error-icon">wifi_off</span>
+    <i class="hgi-stroke hgi-wifi-off-01 splash-error-icon" aria-hidden="true"></i>
     <p class="splash-error-title">Unable to load</p>
     <p class="splash-error-subtitle">Check your connection and try again.</p>
     <button class="button-primary splash-error-reload" onclick="location.reload()">Reload</button>
@@ -262,7 +294,6 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   // components/campus-buildings.js's goToBuilding(), which brings the picker
   // along to the right campus first if needed.
   headerEl.querySelector('.building-section-btn').addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     activateGroupTab('search-classrooms-container');
     goToBuilding(campusId, buildingName);
   });
@@ -289,9 +320,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   // connectivity), surface the error screen instead of staying stuck forever.
   const _initTimeoutId = setTimeout(showSplashError, 15000);
 
+  // Kick off occupancy fetching immediately, in parallel with everything
+  // below. It's an independent network round trip (locale JSON and the
+  // classroom directory don't feed into it) and doesn't block the splash —
+  // the date picker/results area stay in their skeleton/loading state until
+  // it resolves — so there's no reason to make it wait its turn behind the
+  // rest of init.
+  initOccupancyData();
+
   try {
-    await initI18n();
+    // The locale JSON and the static classroom directory are independent
+    // fetches (neither's data feeds the other) but both block the splash —
+    // it's what the page shell (campus picker, classroom detail, favourites)
+    // is built from, and translations need to be in before anything renders
+    // text. Running them head-to-tail with two `await`s would serialize two
+    // network round trips for no reason, so fire them together instead.
+    await Promise.all([initI18n(), ensureClassroomDirectory()]);
+
     applyTranslations();
+    retranslateNav();
     // <date-chip-picker> renders its date label via Intl at module-eval time,
     // before initI18n() resolves — re-render it now that the locale is known.
     document.querySelector('date-chip-picker')?.retranslate();
@@ -304,21 +351,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Init info page overlay immediately — no data dependency
     infoPage.init();
+    initInfoHint();
 
     // Search overlay (bottom-nav FAB) — lazy-loads its data on first open
     initSearchOverlay();
-
-    // Only the static classroom directory blocks the splash — it's what the
-    // page shell (campus picker, classroom detail, favourites) is built from.
-    // Occupancy data is fetched separately in the background (see
-    // initOccupancyData below) and fills in its own skeleton once ready.
-    await ensureClassroomDirectory();
 
     // Init classroom detail overlay (hash routing + VT morph)
     classroomDetail.init(staticClassroomsData);
 
     // Delegated press / swipe-deform for every .liquid-glass control
     initLiquidGlass();
+
+    // Footer "version info" popover; its content is authored in index.html.
+    const versionTrigger = document.querySelector('.version-info-button');
+    const versionContent = document.getElementById('version-info-content');
+    if (versionTrigger && versionContent) {
+      versionContent.hidden = false;
+      createPopover({ trigger: versionTrigger, content: versionContent, placement: 'top-end' });
+    }
 
     // Favourites carousel on the Available page
     initFavourites(staticClassroomsData);
@@ -360,14 +410,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // Kick off occupancy fetching in the background. It doesn't block the
-    // splash — the date picker/results area stay in their skeleton/loading
-    // state until it resolves.
-    initOccupancyData();
-
     // Apply the cached blur verdict (or the safe "off" default if none yet)
     // instantly — the actual benchmark never runs during load, see
-    // utils/blur-capability.js for why.
+    // Vitrium's core/blur-capability.js for why.
     applyBlurState(resolveBlurCapability());
 
     await document.fonts.ready;
@@ -424,8 +469,6 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   // Skip default submit behavior since we will handle it with JavaScript
   e.preventDefault();
 
-  // Haptic feedback
-  haptics.trigger(defaultPatterns.light);
 
   // Check if data was already fetched
   if (!classroomsData.length) {
@@ -476,10 +519,9 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   if (hasPartial) {
     const toggleBtn = document.createElement('button');
     toggleBtn.className = showPartialDefault ? 'results-filter-btn active' : 'results-filter-btn';
-    toggleBtn.innerHTML = `<span class="material-symbols-outlined">filter_alt</span> ${t('results.filterPartial')}`;
+    toggleBtn.innerHTML = `<i class="hgi-stroke hgi-filter" aria-hidden="true"></i> ${t('results.filterPartial')}`;
     if (!showPartialDefault) container.classList.add('hide-partial');
     toggleBtn.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       const isActive = toggleBtn.classList.toggle('active');
       container.classList.toggle('hide-partial', !isActive);
     });
@@ -518,7 +560,7 @@ function renderNoResultsClassroomsContainer(container) {
   container.classList.add('empty');
 
   container.innerHTML = `
-    <span class="material-symbols-outlined empty-container-icon">search_off</span>
+    <i class="hgi-stroke hgi-search-remove empty-container-icon" aria-hidden="true"></i>
     <p class="empty-container-title">${t('results.noResultsTitle')}</p>
     <p class="empty-container-subtitle">${t('results.noResultsSubtitle')}</p>
   `;
@@ -698,7 +740,7 @@ function setupDataFetchIndicatorText(animate = false) {
     <p class="data-status-description secondary">${description}</p>
     <label class="data-status-time secondary">${t('data.lastFetched')}: ${formattedTime}</label>
     <button id="reload-data-btn" class="button-primary button-secondary data-reload-btn">
-      <span class="material-symbols-outlined data-reload-icon">refresh</span>
+      <i class="hgi-stroke hgi-refresh data-reload-icon" aria-hidden="true"></i>
       <span class="data-reload-label">${t('data.reload')}</span>
     </button>
   `;

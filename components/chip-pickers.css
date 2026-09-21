@@ -1,0 +1,244 @@
+/* ── Campus, date and time-range chip pickers ─────────────────────────────────────
+   The pill, the morph and the panel are Vitrium's (.lg-chip, .lg-morph); see
+   chip-shell.js. This file only holds what is PoliAule's: the value labels, the
+   loading shimmer, the "Today" badge, the picker layouts inside the panel, and
+   the docked (inline-expanded) desktop form. */
+
+/* Sized to its pill by the flanking .picker-row flex container. */
+campus-chip-picker,
+campus-sheet-picker,
+date-chip-picker,
+time-range-chip-picker {
+  display: block;
+  min-width: 0;
+}
+
+/* The native <input type="time"> fields stay here (inside the <form>) as the
+   submittable data model; only the visual slider is relocated into the panel. */
+time-range-chip-picker .time-pickers-container {
+  display: none;
+}
+
+/* HugeIcons glyphs where Vitrium expects SVGs. */
+.lg-chip__icon > i {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.lg-morph__title-icon > i,
+.chip-dock__title > i {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ── Loading: keep the pill and its label; shimmer only the value line. */
+.chip-skeleton {
+  display: block;
+  height: 14px;
+  border-radius: 5px;
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--lg-text) 6%, transparent) 25%,
+      color-mix(in srgb, var(--lg-text) 12%, transparent) 50%,
+      color-mix(in srgb, var(--lg-text) 6%, transparent) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s linear infinite;
+}
+
+.dcp-skeleton { width: 4.5rem; }
+.trc-skeleton { width: 5rem; }
+
+date-chip-picker:not([data-loading]) .chip-skeleton,
+time-range-chip-picker:not([data-loading]) .chip-skeleton {
+  display: none;
+}
+
+date-chip-picker[data-loading] .dcp-value > :not(.chip-skeleton),
+time-range-chip-picker[data-loading] .trc-value > :not(.chip-skeleton) {
+  display: none;
+}
+
+/* ── Values ──────────────────────────────────────────────────────────────── */
+
+/* "Tue 15" (bold 14px) + "Sep" (regular 10px), bottoms aligned. */
+.dcp-value {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.dcp-value__month {
+  font-size: 10px;
+  line-height: 10px;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--lg-text) 65%, transparent);
+}
+
+/* "9:15 – 11:15": bold times, lighter dash. */
+.trc-value {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.trc-value__sep {
+  font-weight: 400;
+  color: color-mix(in srgb, var(--lg-text) 45%, transparent);
+}
+
+/* ── "Today" badge ────────────────────────────────────────────────────────
+   A small accent pill pinned to the pill's top-right corner, overhanging the
+   top edge. Shown by JS only when the selected date is today. */
+.dcp-today-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(28%, -42%);
+  z-index: 1;
+
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #fff;
+  white-space: nowrap;
+
+  background: var(--text-color-accent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 35%, transparent);
+}
+
+.dcp-today-badge[hidden] {
+  display: none;
+}
+
+/* Reflection on the glass while "today" is selected: a very subtle green inner
+   shadow catching light from the top-right. */
+.lg-chip.dcp-trigger--today {
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    inset -1px 1px 4px 0 color-mix(in srgb, var(--text-color-accent) 15%, transparent),
+    0 4px 40px 0 var(--lg-shadow-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .dcp-today-badge {
+    background: var(--color-accent-dark);
+  }
+}
+
+/* ── The pickers, relocated into the panel ─────────────────────────────── */
+.dcp-content .date-picker {
+  align-self: stretch;
+}
+
+/* Extra headroom for the "Today" bubble, which is absolutely positioned just
+   above .date-picker-container (see positionTodayIndicator()). */
+.dcp-content .date-picker-container {
+  margin-top: 3rem;
+  max-width: 100%;
+}
+
+/* The panel already provides the glass shell; strip the slider's own glass
+   chrome so it reads as one surface. Its .trs-title stays as the panel heading. */
+.trc-content .trs-wrapper {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.trc-content .trs-wrapper::after {
+  display: none;
+}
+
+/* The title row is the deform handle (see `deformFrom` in
+   time-range-chip-picker.js); everything else inside .trs-bar-wrapper stays a
+   live slider target. */
+.trc-content .trs-title {
+  cursor: default;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── Docked (inline-expanded) mode ────────────────────────────────────────
+   Desktop 2-column layout: the picker sits directly in the form column as a
+   glass card instead of morphing out of a pill. Toggled by picker-dock.js. */
+.chip-dock {
+  box-sizing: border-box;
+  padding: 16px 16px 20px;
+  border-radius: 22px;
+  color: var(--lg-text);
+  text-align: start;
+  /* Hug the date strip rather than stretch to the column. */
+  width: max-content;
+  max-width: 100%;
+  /* Static in-flow card: lighter shadow than the floating panel. */
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 24px 0 var(--lg-shadow-color);
+}
+
+/* The slider bar has no intrinsic width (handles are positioned by %), so this
+   one needs a definite width, not `min(…, 100%)`, which would collapse against
+   the fit-content host. */
+.chip-dock:has(.trc-content) {
+  width: 26rem;
+}
+
+.chip-dock__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--lg-text-muted);
+}
+
+/* Docked panel hover: a gentle lift, but NOT the liquid-glass brightness boost;
+   on a big light-mode panel it blows out the picker inside. */
+.chip-dock.liquid-glass:hover {
+  scale: 1.03;
+  filter: none;
+}
+
+/* ── Campus list, docked ──────────────────────────────────────────────────
+   The morph popup's own panel, moved into the form column and shown open (see
+   campus-picker.js). No fixed positioning, no morph. */
+.lg-morph.campus-dock {
+  --lg-morph-width: 12.5rem;
+  position: static;
+  z-index: auto;
+  max-width: 100%;
+  height: auto;
+  /* A long campus list scrolls inside the card rather than growing the column. */
+  max-height: min(60vh, 26rem);
+  border-radius: 16px;
+  will-change: auto;
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 24px 0 var(--lg-shadow-color);
+}
+
+.picker-row > .lg-morph.campus-dock {
+  /* A definite width: the row's `width: max-content` would shrink it to its rows. */
+  width: 12.5rem;
+}
+
+.campus-dock .lg-morph__inner {
+  width: 100%;
+}
+
+/* Same gentle lift as the date and time cards. */
+.campus-dock.liquid-glass:hover {
+  scale: 1.03;
+  filter: none;
+}

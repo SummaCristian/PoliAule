@@ -5,7 +5,6 @@ import { getClassroomStatusNow } from '../available-rooms-script.js';
 import { buildCardForClassroom } from './classroom-list.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
-import { haptics, defaultPatterns } from './haptics.js';
 
 // The Campus tab's own "pages" inside the campus sheet (components/campus-sheet.js):
 //
@@ -89,9 +88,8 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
   backBtn.className = 'campus-sheet-backbtn liquid-glass';
   backBtn.hidden = true;
   backBtn.setAttribute('aria-label', t('campus.back'));
-  backBtn.innerHTML = '<span class="material-symbols-outlined">chevron_left</span>';
+  backBtn.innerHTML = '<i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>';
   backBtn.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     goToCampusPage({ animate: true });
   });
   leftGroup.appendChild(backBtn);
@@ -123,9 +121,8 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
   recenterBtn.className = 'campus-sheet-recenter liquid-glass';
   recenterBtn.hidden = true;
   recenterBtn.setAttribute('aria-label', t('campus.recenter'));
-  recenterBtn.innerHTML = '<span class="material-symbols-outlined">my_location</span>';
+  recenterBtn.innerHTML = '<i class="hgi-stroke hgi-gps-01" aria-hidden="true"></i>';
   recenterBtn.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     document.dispatchEvent(new CustomEvent('campusrecenter'));
   });
   actions.appendChild(recenterBtn);
@@ -380,7 +377,6 @@ function buildBuildingCard(building) {
   `;
 
   const go = () => {
-    haptics.trigger(defaultPatterns.light);
     openBuilding(building.name, { animate: true });
   };
   card.addEventListener('click', go);
@@ -413,14 +409,42 @@ function renderBuildingHeader(building, { fade = false } = {}) {
   picker.style.display = 'none';
 }
 
+// Ground floor and basement get their own wording (Italian convention),
+// everything else is just "Floor {n}"; `null` (2 classrooms, missing data)
+// sorts last under its own "unknown" label rather than being dropped.
+function floorLabel(floor) {
+  if (floor === null || floor === undefined) return t('overview.floorUnknown');
+  if (floor === 0) return t('overview.floorGround');
+  if (floor === -1) return t('overview.floorBasement');
+  return t('overview.floor').replace('{n}', floor);
+}
+
 function buildBuildingPage(building) {
   const page = document.createElement('div');
   page.className = 'campus-sheet-page';
   const grid = document.createElement('div');
-  grid.className = 'bo-grid campus-sheet-grid';
+  grid.className = 'bo-grid campus-sheet-grid campus-sheet-classroom-grid';
   page.appendChild(grid);
 
-  for (const classroom of building.classrooms) {
+  const sorted = [...building.classrooms].sort((a, b) => {
+    const fa = a.floor, fb = b.floor;
+    if (fa === fb) return 0;
+    if (fa === null || fa === undefined) return 1;
+    if (fb === null || fb === undefined) return -1;
+    return fa - fb;
+  });
+
+  let lastFloor;
+  let first = true;
+  for (const classroom of sorted) {
+    if (first || classroom.floor !== lastFloor) {
+      const label = document.createElement('div');
+      label.className = 'bo-floor-label';
+      label.innerHTML = `<i class="hgi-stroke hgi-stairs-01" aria-hidden="true"></i><span>${floorLabel(classroom.floor)}</span>`;
+      grid.appendChild(label);
+      lastFloor = classroom.floor;
+      first = false;
+    }
     const status = getClassroomStatusNow(classroom.id);
     const card = buildCardForClassroom({ ...classroom, status }, building, null, null, false, null, '', true);
     grid.appendChild(card);

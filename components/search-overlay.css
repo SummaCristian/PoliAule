@@ -34,9 +34,14 @@ body.search-overlay-open {
 /* No scrim element — instead the tab behind just recedes. The class is toggled
    inside the open/close view-transition callback, so the root cross-fade
    animates this; the transition is the no-VT fallback. */
-.tab-content.visible,
+.tab-content.visible {
+  /* Also carries the padding that follows the tab bar (see style.css): a
+     `transition` here replaces that one wholesale, so both are listed. */
+  transition: opacity 0.2s ease, padding-left var(--nav-shift);
+}
+
 .footer {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, padding-bottom var(--nav-shift);
 }
 
 body.search-overlay-open .tab-content.visible,
@@ -59,8 +64,8 @@ body.search-overlay-open .bn-wrapper {
    search-overlay.js sets html.search-vt only for that window. The header's
    fade-overlay gradient keeps it legible without the blur. */
 html.search-vt .header-blur-layer,
-html.search-vt .bn-tabbar,
-html.search-vt .bn-search-btn,
+html.search-vt .lg-tabbar__bar,
+html.search-vt .lg-tabbar__prominent,
 html.search-vt .search-overlay-header .search-bar-wrapper,
 html.search-vt .search-overlay-close,
 html.search-vt .search-overlay-results {
@@ -71,7 +76,7 @@ html.search-vt .search-overlay-results {
 /* The FAB's persistent `will-change: transform` keeps Safari compositing its
    backdrop-filter on the pre-transform layer even after the blur is dropped —
    a blurred ghost trailing the morph. Release the hint for the transition. */
-html.search-vt .bn-search-btn {
+html.search-vt .lg-tabbar__prominent {
   will-change: auto;
 }
 
@@ -120,10 +125,18 @@ html.search-vt .bn-search-btn {
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 6%, transparent);
 
   box-sizing: border-box;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  /* Restates Vitrium's `.liquid-glass` spring (translate / scale / filter): a
+     `transition` here, being later in the cascade, would otherwise replace it,
+     and a released press or stretch would snap back instead of springing. */
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
+    filter 0.2s ease;
 }
 
-.search-bar-wrapper .material-symbols-outlined {
+.search-bar-wrapper .hgi-stroke {
   color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
   font-size: var(--text-125) !important;
   flex-shrink: 0;
@@ -167,7 +180,7 @@ html.search-vt .bn-search-btn {
   background: color-mix(in srgb, var(--text-color-primary) 16%, transparent);
 }
 
-.search-clear-btn .material-symbols-outlined {
+.search-clear-btn .hgi-stroke {
   font-size: var(--text-100) !important;
 }
 
@@ -201,22 +214,22 @@ html.search-vt .bn-search-btn {
   max-width: none;
   flex: 1;
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
   border-color: transparent;
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 .search-overlay-header .search-bar-wrapper:focus-within {
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--text-color-accent) 22%, transparent),
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* .liquid-glass sets user-select:none on the surface — the field itself must
@@ -239,16 +252,16 @@ html.search-vt .bn-search-btn {
   border-radius: 50%;
   color: var(--text-color-secondary);
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
-.search-overlay-close .material-symbols-outlined {
+.search-overlay-close .hgi-stroke {
   font-size: var(--text-125) !important;
 }
 
@@ -264,13 +277,13 @@ html.search-vt .bn-search-btn {
 
   padding: 1.75rem; /* 28px all around */
   border-radius: var(--radius-xl);
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Nothing to show yet — collapse the container so it isn't an empty glass slab. */
@@ -487,7 +500,7 @@ html.search-vt .bn-search-btn {
     pointer-events: auto;
   }
 
-  body.search-overlay-open #bn-search-btn {
+  body.search-overlay-open .lg-tabbar__prominent {
     opacity: 0;
     pointer-events: none;
   }

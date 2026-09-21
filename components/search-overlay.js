@@ -4,7 +4,6 @@
 // (data, index, card builders) lives in classroom-search-data.js.
 
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
-import { haptics, defaultPatterns } from './haptics.js';
 import { escapeHtml, highlight } from '../utils/html.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import {
@@ -23,7 +22,9 @@ const DEBOUNCE_MS = 200;
 // overlay's search bar on open, and back on close. Only ever assigned to one
 // of the two elements at a time (cleared before it's handed over).
 const MORPH_NAME = 'search-fab-morph';
-const fabEl = () => document.getElementById('bn-search-btn');
+// Vitrium rebuilds this circle when the layout changes, so it is looked up by
+// class each time rather than held or given an id.
+const fabEl = () => document.querySelector('.lg-tabbar__prominent');
 const barEl = () => overlay.querySelector('.search-bar-wrapper');
 
 // The translucent chrome (header blur layers, pill nav) can't keep a live
@@ -83,7 +84,7 @@ function _renderResults(query) {
     const state = document.createElement('div');
     state.className = 'search-empty-state';
     state.innerHTML = `
-      <span class="material-symbols-outlined empty-container-icon">search_off</span>
+      <i class="hgi-stroke hgi-search-remove empty-container-icon" aria-hidden="true"></i>
       <p class="empty-container-title">${t('search.emptyTitle')}</p>
       <p class="empty-container-subtitle">${t('search.emptySubtitle')}</p>
     `;
@@ -245,7 +246,6 @@ function grabInput() {
 export async function openSearchOverlay() {
   if (isOpen || !overlay) return;
   isOpen = true;
-  haptics.trigger(defaultPatterns.light);
   savedScrollPos = window.scrollY;
 
   // Unhide + focus synchronously (still inside the FAB-tap callstack, so iOS
@@ -340,7 +340,6 @@ export function initSearchOverlay() {
   resultsEl = document.getElementById('search-overlay-results');
 
   closeBtn.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     closeSearchOverlay();
   });
 
@@ -374,7 +373,6 @@ export function initSearchOverlay() {
   });
 
   clearBtn.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     input.value = '';
     input.dispatchEvent(new Event('input'));
     input.focus();

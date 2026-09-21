@@ -1,255 +1,18 @@
 /* ============================================================
    CAMPUS SHEET
-   A draggable glass panel over the campus map — a bottom sheet on
-   mobile, a panel pinned to the right on desktop. Apple Maps-style
-   nested drag: dragging/scrolling anywhere on it (not just the handle)
-   resizes it between a collapsed "peek" and an expanded height while
-   short of full height; once at full height, the same gesture instead
-   scrolls its own content, handing back to resizing the sheet only once
-   that content is scrolled to its top and the gesture keeps pulling down.
-   Sits above the map, below the header/footer/bottom-nav chrome — see
-   components/campus-sheet.js for the drag physics.
+   The panel itself (glass, detents, drag, handle, header) is Vitrium's sheet;
+   see components/campus-sheet.js. This file holds the content it carries: the
+   campus picker row and the buildings grid.
    ============================================================ */
 
-/* Sits between the map and the sheet: invisible, and inert (pointer-events:
-   none) except while campus-sheet.js marks it .busy — a drag or fling in
-   progress — during which it becomes the actual hit-test target for
-   anywhere the sheet doesn't currently cover, so wheel input can't leak
-   through to the map (or the page's own scroll) just because the sheet
-   shrank out from under the cursor mid-gesture. The sheet itself sits at
-   the same z-index but later in DOM order, so it still wins hit-testing
-   over its own footprint regardless of this element's state. */
-.campus-sheet-wheel-guard {
-  /* Matches .campus-map's own positioning (absolute within the already-
-     fixed #search-classrooms-container) rather than its own `fixed` —
-     keeps this out of the safe-area/dvh quirks that positioning was
-     specifically worked around for on that element. */
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.campus-sheet-wheel-guard.busy {
-  pointer-events: auto;
-}
-
-.campus-sheet {
-  position: fixed;
-  /* Mobile only (see below) — collapsed, this is wide enough to be
-     concentric with the tabbar's own pill/circle ends: campus-sheet.js sets
-     --campus-sheet-inset to (tabbar-radius + the same 8px gap the tabbar
-     already keeps below it), so the sheet's edge traces the exact same
-     curve outward from the pill/circle, then eases back down to a plain
-     8px as the sheet grows toward full height (see --campus-sheet-radius
-     below, and the js for the interpolation). */
-  left: var(--campus-sheet-inset, 8px);
-  right: var(--campus-sheet-inset, 8px);
-  bottom: calc(20px + env(safe-area-inset-bottom));
-  z-index: 1;
-
-  display: flex;
-  flex-direction: column;
-
-  height: var(--campus-sheet-size, 192px);
-  max-height: 85vh;
-  /* Shrinks from the concentric compact value down to a plain 28px as the
-     sheet grows — see --campus-sheet-inset above. */
-  border-radius: var(--campus-sheet-radius, 28px);
-  /* iOS-style continuous ("squircle") corner instead of a plain circular
-     arc — same treatment as .info-hero-icon in info-page.css. */
-  corner-shape: superellipse;
-
-  background: var(--glass-tint);
-  box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 20px 0 var(--glass-shadow-color);
-
-  backdrop-filter: blur(var(--glass-blur-lg));
-  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
-
-  will-change: height;
-
-  /* The whole sheet (not just the handle) is a drag surface now — same
-     reasoning as .bn-wrapper in bottom-nav.css: without these, a
-     touch-drag starting on/near text triggers native selection/callout,
-     and the browser's own touch scrolling would fight our manual one
-     (campus-sheet.js drives --campus-sheet-size and the content's
-     scrollTop itself). */
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-
-  /* Liquid-glass-style reactive feel, ported rather than the shared
-     .liquid-glass class (see campus-sheet.js's watchGuard()/
-     resizeVelocity() for why a direct port didn't fit): `transform` is set
-     directly, per frame, while resizing — no transition, the spring itself
-     already provides the smoothing — so this only needs to cover `filter`,
-     which is toggled via a class instead. Anchored to the bottom edge
-     (where the sheet is actually pinned) so the squash/stretch reads as
-     the free top edge overshooting, not the whole panel drifting. */
-  transform-origin: bottom;
-  transition:
-    filter 0.2s ease,
-    background 0.25s ease,
-    backdrop-filter 0.25s ease,
-    -webkit-backdrop-filter 0.25s ease;
-}
-
-.campus-sheet.lg-active {
-  filter: brightness(1.11) saturate(1.35);
-}
-
-/* Lighter, less opaque "clear" material at the collapsed and half detents —
-   only the full detent gets the regular, more opaque glass. campus-sheet.js
-   toggles this the moment a snap targets a non-'full' detent, so it eases
-   in/out together with the resize itself. Keeps the map more visible except
-   when the sheet is taking up the whole view, without touching the outline/
-   shadow/stroke, which stay the shared glass recipe. */
-.campus-sheet.is-collapsed {
-  background: var(--glass-tint-clear);
-  backdrop-filter: blur(var(--glass-blur-clear));
-  -webkit-backdrop-filter: blur(var(--glass-blur-clear));
-}
-
-/* Outside 0.5px gradient stroke — same recipe as .header-button::after /
-   .bn-tabbar::after in style.css / bottom-nav.css. */
-.campus-sheet::after {
-  content: "";
-  position: absolute;
-  inset: -0.5px;
-  border-radius: inherit;
-  padding: 0.5px;
-
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
-
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-
-  pointer-events: none;
-}
-
-.campus-sheet-handle {
-  /* An overlay, not a flex sibling: .campus-sheet-content (below) spans the
-     sheet's full height, from underneath this and .campus-sheet-header, so
-     its own top-edge fade mask has room to blend into — rather than a flex
-     layout where content could only ever start right below a fixed
-     handle-height gap. Purely decorative either way: the drag gesture itself
-     is bound to the whole `sheet` (see campus-sheet.js), not this element
-     specifically, so taking it out of flow changes nothing about
-     hit-testing. */
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  /* Asymmetric on purpose: the grabber itself sits close to the sheet's top
-     edge (a small 0.5rem clearance), while the hit area stays generous
-     overall (it's only 5px tall) by keeping the padding *below* it instead —
-     same total height as an even 1rem/1rem split, just shifted upward. */
-  padding: 0.5rem 0 1.5rem;
-  touch-action: none;
-  -webkit-tap-highlight-color: transparent;
-  /* Native-app feel: no grab hand while dragging (see the cursor rule
-     for custom scrubbers/handles in style.css). */
-  cursor: default;
-}
-
-.campus-sheet-grabber {
-  width: 36px;
-  height: 5px;
-  border-radius: var(--radius-pill, 999px);
-  background: var(--glass-outline);
-  opacity: 0.6;
-}
-
-/* Fixed overlay, same trick as .campus-sheet-handle above it: sits above
-   .campus-sheet-content (which spans the sheet's full height underneath),
-   so the title/picker row stays put while the buildings grid scrolls under
-   it. Its rendered height (i18n text length, font scaling) feeds
-   --campus-sheet-header-height via campus-sheet.js's ResizeObserver, which
-   .campus-sheet-content's own top padding reads below — so the grid always
-   starts right after it, however tall it ends up being. */
-.campus-sheet-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-
-  /* Top matches .campus-sheet-handle's own clearance exactly (1rem padding +
-     its 5px grabber), same reasoning as .campus-sheet-content used to carry
-     before this row moved out of it. Bottom is the gap before the grid,
-     equivalent to .campus-sheet-page's old flex `gap: 1rem`. */
-  padding: calc(1rem + 5px) 1.25rem 1rem;
-}
-
+/* The content is scrolled under the header and above the floating tab bar, so
+   it needs more bottom clearance (and a longer bottom fade) than the default:
+   at least 5.5rem, or the tab bar's height plus 1.5rem on mobile. */
 .campus-sheet-content {
-  /* Shared by the fade mask below and .campus-sheet-content's own bottom
-     padding (mobile inline here, desktop in the @media override further
-     down): the padding has to be at least this large, or the last row can
-     never fully clear the fade even scrolled all the way to the end —
-     mobile's padding is dominated by the (larger) floating-tabbar
-     clearance anyway, but desktop's own side-rail nav doesn't add any, so
-     it needs this reasserted explicitly there. */
   --csheet-fade-bottom: 5.5rem;
-
-  flex: 1;
-  min-height: 0;
-  /* `hidden`, not `auto`: campus-sheet.js drives scrollTop itself (so it can
-     hand off between resizing the sheet and scrolling this content
-     mid-gesture) — an element with `overflow: hidden` still supports
-     programmatic `scrollTop`, it just never shows its own scrollbar or
-     responds to touch/wheel input directly, which is exactly what's wanted
-     here. */
-  overflow-y: hidden;
-  touch-action: none;
-  /* Top: clears the fixed .campus-sheet-header overlay above (its live
-     height, kept in --campus-sheet-header-height — see campus-sheet.js),
-     so the grid's first row starts right below it instead of underneath it.
-     Bottom: at least --csheet-fade-bottom (below), so the last card can
-     actually scroll clear of the fade instead of staying permanently
-     part-faded — mobile's floating-tabbar clearance is already bigger than
-     that on its own, but desktop's side-rail nav doesn't add any, so this
-     `max()` is what guarantees it there (see the @media override further
-     down, which used to hardcode a plain 1.25rem here). */
-  padding: var(--campus-sheet-header-height, 4.75rem) 1.25rem max(var(--csheet-fade-bottom), calc(var(--bn-tabbar-height, 76px) + 1.5rem));
-
-  /* Fades both edges into the sheet's own glass background instead of a hard
-     cut — the top fade is what makes a card scrolled up read as sliding
-     *under* the fixed header instead of just stopping at a hard edge; the
-     bottom one is deliberately more generous (--csheet-fade-bottom above),
-     so a card scrolled toward it still reads as "there's more below" rather
-     than just a trim. The top fade's own 4rem span sits right against
-     --campus-sheet-header-height (not against 0): the whole padding-top
-     above that point is empty (it's just the header's own clearance, no
-     card ever renders there), so starting the fade at the very top of the
-     box would finish fading to opaque long before any card scrolls into
-     view, reading as no fade at all. Anchoring it to the header's actual
-     (dynamic) height instead means a card is still mid-fade right as it
-     visually reaches the header's bottom edge. The visible stops are
-     `#fff`, not `#000`: Firefox's `mask-image` defaults to luminance
-     masking (black = hidden), while Chrome/Safari effectively treat a plain
-     gradient as alpha masking (black, fully opaque, = visible) — white
-     reads as "fully visible" under either interpretation, so the fade
-     actually shows up in both. Explicit repeat/size guard against any
-     engine's differing defaults for a mask that's shorter than the element
-     (it isn't here, but cheap insurance). */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--campus-sheet-header-height, 4.75rem) - 4rem), #fff var(--campus-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--campus-sheet-header-height, 4.75rem) - 4rem), #fff var(--campus-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
+  padding-bottom: max(var(--csheet-fade-bottom), calc(var(--bn-tabbar-height, 76px) + 1.5rem));
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--lg-sheet-header-height, 4.75rem) - var(--lg-sheet-fade)), #fff var(--lg-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--lg-sheet-header-height, 4.75rem) - var(--lg-sheet-fade)), #fff var(--lg-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
 }
 
 /* ── Buildings page ───────────────────────────────────────────────────────
@@ -332,21 +95,20 @@
   border-radius: var(--radius-pill);
   color: var(--text-color-secondary);
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
-/* `.liquid-glass` (liquid-glass.css, loaded after this file) sets its own
+/* `.liquid-glass` (Vitrium's liquid-glass.css) sets its own
    `transition` shorthand on the same single-class specificity — whichever
    rule is later in the cascade wins the WHOLE property, silently dropping
    the other's. `.campus-sheet-recenter.liquid-glass` outranks both and
-   merges the two lists, same fix as `.campus-select.liquid-glass` in
-   campus-picker.css. Pop in/out on appear/disappear uses the same overshoot
+   merges the two lists. Pop in/out on appear/disappear uses the same overshoot
    ease + durations as the header's own controls (header-ctl-scale-in/-out,
    classroom-detail.css). `display` is part of the transition
    (`allow-discrete`) so toggling the `hidden` attribute animates instead of
@@ -358,8 +120,8 @@
     opacity 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
     transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
     display 0.32s allow-discrete,
-    translate var(--press-out-dur) var(--ease-spring),
-    scale var(--press-out-dur) var(--ease-spring),
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
     filter 0.2s ease;
 }
 
@@ -370,8 +132,8 @@
   inset: -0.5px;
   border-radius: inherit;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
   mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
@@ -379,14 +141,14 @@
   pointer-events: none;
 }
 
-.campus-sheet-recenter .material-symbols-outlined,
-.campus-sheet-backbtn .material-symbols-outlined {
+.campus-sheet-recenter .hgi-stroke,
+.campus-sheet-backbtn .hgi-stroke {
   font-size: 1.25rem;
 }
 
 /* This class's own `display: inline-flex` above outranks the UA `[hidden]`
    rule (an author style always beats a UA one, regardless of specificity) —
-   re-assert it, same fix as .dcp-trigger[hidden] / .trc-trigger[hidden].
+   re-assert it, the same fix any class that sets `display` needs.
    Shrinks/fades out first (header-ctl-scale-out's own ease-in, quicker than
    the pop-in), `display` only flipping to `none` once that's done. */
 .campus-sheet-recenter.liquid-glass[hidden],
@@ -501,36 +263,22 @@
   font-size: var(--text-80);
 }
 
+/* The building page's grid holds actual classroom cards (.classroom-card,
+   reused straight from the Available tab), not the wider .bo-card building
+   tiles above — so it drops .campus-sheet-grid's fixed 2-up split for the
+   same auto-fill/8.5rem-floor sizing the Available tab's own results grid
+   uses (.building-section, classroom-list.css), keeping card size consistent
+   between the two places the same card shows up. */
+.campus-sheet-classroom-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr));
+  gap: 0.75rem;
+}
+
 @media (min-width: 600px) {
-  .campus-sheet {
-    left: auto;
-    right: 20px;
-    bottom: 20px;
-
-    /* Wide enough for the buildings grid (.campus-sheet-grid) to fit two
-       11rem card columns side by side (content padding 1.25rem each side +
-       two 11rem cards + the grid's 0.85rem gap) — see campus-map.css's
-       matching mapboxgl-ctrl-bottom-right clearance. */
-    width: 420px;
-    height: var(--campus-sheet-size, 96px);
-    max-height: calc(100dvh - var(--header-height, 84px) - 2rem - 40px);
-    border-radius: 28px;
-
-    /* Not clipped by Safari's safe area here (pinned to the map panel, not
-       flush against the true viewport edge), so restore the site-wide
-       glass shadow radius shrunk on mobile below. */
-    box-shadow:
-      0 0 0 0.1px var(--glass-outline),
-      var(--glass-highlight),
-      0 4px 40px 0 var(--glass-shadow-color);
-  }
-
   .campus-sheet-content {
-    /* Top stays the same header clearance as mobile (see the base rule
-       above) — the bottom drops the tabbar clearance (desktop's bottom-nav
-       is a side rail, not a floating overlay), but still keeps at least
-       --csheet-fade-bottom so the last card can scroll fully clear of the
-       fade instead of staying part-faded forever. */
-    padding: var(--campus-sheet-header-height, 4.75rem) 1.25rem var(--csheet-fade-bottom);
+    /* Desktop's bottom-nav is a side rail, not a floating overlay, so no tabbar
+       clearance, but still keep at least --csheet-fade-bottom so the last card
+       can scroll fully clear of the fade. */
+    padding-bottom: var(--csheet-fade-bottom);
   }
 }

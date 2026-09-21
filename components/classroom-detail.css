@@ -8,7 +8,31 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  background: var(--background-color);
+  /* The photo's extracted color (--detail-tint, set by classroom-detail.js),
+     mixed into the theme background so lightness and contrast stay
+     predictable. This is what the backdrop's fade lands on. Without a tint it
+     is exactly --background-color. */
+  background: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
+  transition: background-color 0.6s ease;
+  /* Containing block for .detail-photo-backdrop. Deliberately NOT a stacking
+     context (no isolation / z-index / will-change): an isolated overlay is its
+     own compositing surface in Safari, and the header's progressive
+     backdrop-filter then doesn't sample it until something forces a repaint
+     (it stayed blank until scrolled). The backdrop instead sits at z-index: 0
+     and the page content above it at z-index: 1 (rule below), which paints in
+     the same order without isolating the overlay. */
+  position: relative;
+}
+
+#classroom-detail-overlay > :not(.detail-photo-backdrop) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Sticky (not relative) so the photo stays pinned while the content scrolls
+   over it; needs the overlay's specificity to beat the rule above. */
+#classroom-detail-overlay > .detail-photo-container {
+  position: sticky;
 }
 
 /* Fallback fade-in for browsers without View Transitions only. When VT IS
@@ -40,6 +64,62 @@
 
 #classroom-detail-overlay.visible {
   opacity: 1;
+}
+
+/* .body-container reserves --bottom-nav-height at its bottom for the tab bar,
+   but that strip is outside the overlay, so the overlay's tinted background
+   stopped short of the screen's bottom edge. Hand the reservation to the
+   overlay itself (the tab bar is hidden here anyway) so its background runs to
+   the bottom. Mobile only, like the original padding. */
+@media (max-width: 599px) {
+  body.detail-open .body-container {
+    padding-bottom: 0;
+  }
+
+  #classroom-detail-overlay:not([hidden]) {
+    padding-bottom: var(--bottom-nav-height, 88px);
+  }
+}
+
+/* The canvas behind the overlay (body's background, which viewport-fit=cover
+   extends under the safe areas and mobile browser bars) has to carry the same
+   tint, or those strips show the plain page color. --detail-tint lives on
+   <html> for this reason. */
+body.detail-open {
+  background-color: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
+  /* The header's top strip, safe-area rectangle and fade gradient (style.css)
+     take the same color, so the top of the screen follows the page instead of
+     staying the plain theme background. */
+  --header-bg: var(--detail-page-bg);
+  transition: background-color 0.6s ease, --header-bg 0.35s ease;
+}
+
+/* Registered so it can transition (a gradient can't, but the color stops that
+   read it can). Everywhere but the detail page it is just the theme background. */
+@property --header-bg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
+:root {
+  --header-bg: var(--background-color);
+}
+
+/* Header color across the open/close VT. During the VT the header is a frozen
+   snapshot pinned to its OLD state, so its color can't interpolate inside it.
+   Hold --header-bg at the plain theme background for the whole VT, open or
+   close (a tinted header over the untinted list, which is what close would
+   otherwise show, looks wrong). On open the registered property then
+   transitions theme -> tint right after the morph, when .header-ctl-vt is
+   removed; on close it is already at the theme color, so nothing changes. */
+body {
+  --detail-page-bg: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
+  transition: --header-bg 0.35s ease;
+}
+
+.header-ctl-vt body {
+  --header-bg: var(--background-color);
 }
 
 /* Hide tab contents and footer while the detail panel is open */
@@ -88,6 +168,11 @@ body.detail-open .tab-content * {
      through the blurred header instead of sitting below it. Using the real
      height instead of a fixed guess keeps this correct at every breakpoint. */
   margin-top: calc(-1 * var(--header-height, 84px) - 0.5rem);
+
+  /* Pinned in place: the header and content (z-index above, later in the DOM)
+     scroll over the photo instead of carrying it away. */
+  position: sticky;
+  top: 0;
 }
 
 /* Mobile "Hero Header" style */
@@ -119,13 +204,33 @@ body.detail-open .tab-content * {
 
 .detail-photo-container.loaded {
   animation: none;
-  background: var(--background-color-secondary);
+  /* Transparent so the photo's bottom fade dissolves into the blurred
+     backdrop behind the container, not into a flat page color. */
+  background: transparent;
 }
 
-@media (max-width: 599px) {
+/* Shrinks a little as the page scrolls (scroll-driven, no JS). Only once
+   loaded, so it doesn't fight the skeleton pulse. Mobile animates the height,
+   desktop the aspect-ratio. */
+@supports (animation-timeline: scroll()) {
   .detail-photo-container.loaded {
-    background: var(--background-color);
+    animation: detail-photo-shrink linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 220px;
   }
+  @media (min-width: 600px) {
+    .detail-photo-container.loaded {
+      animation-name: detail-photo-shrink-wide;
+    }
+  }
+}
+
+@keyframes detail-photo-shrink {
+  to { height: max(33vh, 240px); min-height: 0; }
+}
+
+@keyframes detail-photo-shrink-wide {
+  to { aspect-ratio: 21 / 8; }
 }
 
 .detail-photo {
@@ -141,8 +246,26 @@ body.detail-open .tab-content * {
 
   /* Use a mask to fade out the image itself at the bottom to avoid "line" artifacts
      between the image and the background blur layer. */
-  mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  /* Eased (smoothstep-like) instead of a 2-stop linear ramp, so the fade has no
+     visible kink where it starts. */
+  mask-image: linear-gradient(to bottom,
+    black 45%,
+    rgba(0, 0, 0, 0.92) 55%,
+    rgba(0, 0, 0, 0.75) 65%,
+    rgba(0, 0, 0, 0.5) 75%,
+    rgba(0, 0, 0, 0.27) 85%,
+    rgba(0, 0, 0, 0.1) 93%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to bottom,
+    black 45%,
+    rgba(0, 0, 0, 0.92) 55%,
+    rgba(0, 0, 0, 0.75) 65%,
+    rgba(0, 0, 0, 0.5) 75%,
+    rgba(0, 0, 0, 0.27) 85%,
+    rgba(0, 0, 0, 0.1) 93%,
+    transparent 100%
+  );
 }
 
 .detail-photo.loaded {
@@ -186,6 +309,136 @@ body.detail-open .tab-content * {
   opacity: 1;
 }
 
+/* With the backdrop present the photo's own mask does the fade, and this flat
+   page-colored gradient would just paint a band over the blur. */
+#classroom-detail-overlay:has(.detail-photo-backdrop) .detail-photo-gradient {
+  display: none;
+}
+
+/* ── Photo backdrop ─────────────────────────────────────────────────
+   A blurred copy of the photo behind everything, so the sharp photo fades into
+   its own colors instead of a flat surface. The image is set on the wrapper as
+   --backdrop-img by classroom-detail.js.
+
+   Geometry: the wrapper is twice the photo's height. ::before is the photo's
+   box, cropped exactly like .detail-photo (same width, same height, same
+   `cover`), so the blur is aligned with the sharp image at the seam. ::after
+   is that same box mirrored underneath, which continues the photo's bottom-edge
+   colors with no jump. Both bleed 60px past the wrapper (padding + content-box
+   origin keeps `cover` sized to the photo box) so the blur's transparent
+   fringe lands outside the wrapper's overflow clip. No tint layer: the sharp
+   photo is untinted, and a tinted backdrop behind it made the fade step. */
+
+.detail-photo-backdrop {
+  --photo-h: max(38vh, 280px);
+  --bd-blur: 40px;
+  /* Bleed is what keeps the blur's transparent fringe outside the clip, so it
+     has to grow with the blur radius. */
+  --bd-bleed: calc(var(--bd-blur) * 1.5);
+  /* Sticky like the photo, but pulled out of the flow with a negative bottom
+     margin (and the overlay's top padding cancelled) so it still sits exactly
+     behind the photo and the content scrolls over it. */
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+  margin-top: calc(-1 * var(--header-height, 84px) - 0.5rem);
+  margin-bottom: calc(var(--photo-h) * -2 + var(--header-height, 84px) + 0.5rem);
+  height: calc(var(--photo-h) * 2);
+  /* Never taller than the overlay: the overlay is the VT's shared element, and
+     Safari sizes its snapshot from ink overflow (Chromium uses the border box),
+     so a backdrop poking out below the overlay made the "new" image taller than
+     the group and squeezed it during the zoom. */
+  max-height: 100%;
+  z-index: 0; /* above the overlay's background, below its other children (z-index: 1) */
+  overflow: hidden; /* the bleed must not cause horizontal scroll */
+  container-type: inline-size;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+
+  mask-image: linear-gradient(to bottom,
+    black 45%,
+    rgba(0, 0, 0, 0.85) 55%,
+    rgba(0, 0, 0, 0.6) 65%,
+    rgba(0, 0, 0, 0.35) 75%,
+    rgba(0, 0, 0, 0.15) 85%,
+    rgba(0, 0, 0, 0.04) 93%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to bottom,
+    black 45%,
+    rgba(0, 0, 0, 0.85) 55%,
+    rgba(0, 0, 0, 0.6) 65%,
+    rgba(0, 0, 0, 0.35) 75%,
+    rgba(0, 0, 0, 0.15) 85%,
+    rgba(0, 0, 0, 0.04) 93%,
+    transparent 100%
+  );
+}
+
+@media (min-width: 600px) {
+  .detail-photo-backdrop {
+    --photo-h: calc(100cqw * 9 / 21); /* .detail-photo-container's 21 / 9 */
+    /* The photo is drawn much larger here, so a fixed radius reads as weaker.
+       Scale with width, capped so the blur stays affordable. */
+    --bd-blur: clamp(40px, 4.5cqw, 90px);
+  }
+}
+
+.detail-photo-backdrop.loaded {
+  opacity: 1;
+}
+
+.detail-photo-backdrop::before,
+.detail-photo-backdrop::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--bd-bleed) * -1);
+  right: calc(var(--bd-bleed) * -1);
+  top: calc(var(--bd-bleed) * -1);
+  height: calc(var(--photo-h) + var(--bd-bleed) * 2);
+  padding: var(--bd-bleed);
+  box-sizing: border-box;
+  background: var(--backdrop-img) center / cover repeat;
+  background-origin: content-box;
+  filter: blur(var(--bd-blur)) saturate(1.25);
+}
+
+.detail-photo-backdrop::after {
+  top: calc(var(--photo-h) - var(--bd-bleed));
+  transform: scaleY(-1);
+}
+
+/* Desktop: no mirror. At this size the reflected half is hundreds of px tall and
+   the gradient reversing at the mirror line reads as a dark/light crease; the
+   tile-wrapped bleed at the seam also shows the wrong part of the photo. The
+   single blurred copy just ends at the photo's bottom edge (no vertical
+   repeat), so its own blur fringe fades into the tint. */
+@media (min-width: 600px) {
+  .detail-photo-backdrop::after {
+    display: none;
+  }
+
+  .detail-photo-backdrop::before {
+    background-repeat: repeat-x;
+  }
+}
+
+/* Adaptive dimming (dark mode only): --photo-dim is set per photo from its
+   average brightness (classroom-detail.js _applyPhotoDim). The backdrop copies
+   get the same factor so they keep matching the sharp photo's edge. */
+@media (prefers-color-scheme: dark) {
+  .detail-photo {
+    filter: brightness(var(--photo-dim, 1));
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+  }
+
+  .detail-photo-backdrop::before,
+  .detail-photo-backdrop::after {
+    filter: blur(var(--bd-blur)) saturate(1.25) brightness(var(--photo-dim, 1));
+  }
+}
+
 /* ── Header ─────────────────────────────────────────────────────── */
 
 /* Back button is a sibling of <header> (not a child — see index.html) so it
@@ -221,31 +474,46 @@ body.detail-open .tab-content * {
   gap: 1rem;
 }
 
-@media (min-width: 600px) {
-  .detail-title-row {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    width: auto;
-  }
-}
-
 .detail-status-wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--radius-lg);
+
+  /* Clear glass container (Vitrium's .lg-glass--clear material). */
+  background: var(--lg-tint-clear);
+  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
+  backdrop-filter: blur(var(--lg-blur-clear));
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
-@media (min-width: 600px) {
-  .detail-status-wrapper {
-    align-items: center;
-  }
+.detail-status-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
 }
 
 .detail-status-label {
   font-size: var(--text-70);
   font-weight: 700;
   color: var(--text-color-secondary);
+  transition: color 0.6s ease;
   opacity: 0.65;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -257,74 +525,132 @@ body.detail-open .tab-content * {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  opacity: 0.85;
 }
 
-@media (min-width: 600px) {
-  .detail-header {
-    align-items: center; /* Desktop centered */
+/* The status colors are tuned for flat surfaces; over the colorful glass they
+   wash out (green worst). Push each toward black on a light backdrop and white
+   on a dark one so it keeps its hue but gains contrast. Full opacity, too.
+   Which one is decided by data-title-tone (see _applyTitleTone in
+   classroom-detail.js), the same computation as the title. It also picks which
+   theme's status tokens to start from (below). Without it (no photo, or not
+   read yet) it falls back to the system color scheme. */
+.detail-status-wrapper .classroom-status-txt {
+  --status-base: var(--text-color-primary);
+  --status-mix: black;
+  --status-keep: 82%;
+  color: color-mix(in srgb, var(--status-base) var(--status-keep), var(--status-mix));
+}
+
+.detail-status-wrapper .classroom-status-txt.free { --status-base: var(--color-status-free); }
+.detail-status-wrapper .classroom-status-txt.free-soon { --status-base: var(--color-status-free-soon); }
+.detail-status-wrapper .classroom-status-txt.occupied-soon { --status-base: var(--color-status-partial); }
+.detail-status-wrapper .classroom-status-txt.occupied { --status-base: var(--color-status-busy); }
+
+@media (prefers-color-scheme: dark) {
+  .detail-status-wrapper .classroom-status-txt {
+    --status-mix: white;
+    --status-keep: 85%;
   }
 }
 
-@media (max-width: 599px) {
-  .detail-header {
-    padding-top: 1rem;
-    gap: 0;
-    position: relative;
-    z-index: 2; /* Stay above the blur layer */
+/* Light backdrop → the light theme's tokens (:root in style.css and
+   Vitrium's tokens.css), dark backdrop → the dark theme's. Scoped to the
+   wrapper so nothing else sees them. */
+#classroom-detail-overlay[data-title-tone="light"] .detail-status-wrapper {
+  --color-status-free: #2a9e47;
+  --color-status-free-soon: #5a7a10;
+  --color-status-partial: #f0b429;
+  --color-status-busy: #e53935;
+  --text-color-primary: #1A1A1A;
+}
 
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: start;
-    text-align: left;
-  }
+#classroom-detail-overlay[data-title-tone="light"] .detail-status-wrapper .classroom-status-txt {
+  --status-mix: black;
+  --status-keep: 82%;
+}
 
-  .detail-title-row {
-    display: contents;
-  }
+#classroom-detail-overlay[data-title-tone="dark"] .detail-status-wrapper {
+  --color-status-free: #3ce065;
+  --color-status-free-soon: color-mix(in srgb, #3ce065 70%, #f5a623);
+  --color-status-partial: #f5a623;
+  --color-status-busy: #ff5252;
+  --text-color-primary: #EAEAEA;
+}
 
-  .detail-title {
-    grid-column: 1;
-    grid-row: 1;
-    text-align: left;
-    /* Align perfectly with the floating back button */
-    padding-top: 0.25rem;
-    /* Shrink to text width (like it did as a flex item before) so the VT morph
-       from the card name stays positional rather than expanding across the full column */
-    width: fit-content;
-    max-width: 100%;
-  }
+#classroom-detail-overlay[data-title-tone="dark"] .detail-status-wrapper .classroom-status-txt {
+  --status-mix: white;
+  --status-keep: 85%;
+}
 
-  .detail-status-wrapper {
-    grid-column: 2;
-    grid-row: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    /* Match title's padding-top for alignment */
-    padding-top: 0.25rem;
+/* Mixing toward black/white dulls the color; put the chroma back with a boost
+   in OKLCH. Browsers without relative color syntax keep the plain mix above. */
+@supports (color: oklch(from red l c h)) {
+  .detail-status-wrapper .classroom-status-txt {
+    color: oklch(from color-mix(in oklch, var(--status-base) var(--status-keep), var(--status-mix)) l calc(c * 1.3) h);
   }
+}
 
-  .detail-subtitle {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    margin-bottom: 0.25rem;
-    text-align: left;
-    align-self: start;
-  }
+/* Header layout (same on mobile and desktop) */
+.detail-header {
+  /* Same column as .detail-content below, so the edges line up */
+  width: 100%;
+  max-width: 680px;
+  margin-inline: auto;
+  padding-top: 1rem;
+  gap: 0;
+  position: relative;
+  z-index: 2; /* Stay above the blur layer */
 
-  .detail-stats {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    margin-top: 0;
-  }
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  text-align: left;
+}
 
-  /* Pull header up to overlay the blurred hero only when the photo container is present.
-     This also handles the photo-load-error case: once the container is removed from the DOM
-     the negative margin is lifted and the header reflows into its natural position. */
-  #classroom-detail-overlay:has(.detail-photo-container) .detail-header {
-    margin-top: -6rem;
-  }
+.detail-title-row {
+  display: contents;
+}
+
+.detail-title {
+  grid-column: 1;
+  grid-row: 1;
+  text-align: left;
+  /* Align perfectly with the floating back button */
+  padding-top: 0.25rem;
+  /* Shrink to text width (like it did as a flex item before) so the VT morph
+     from the card name stays positional rather than expanding across the full column */
+  width: fit-content;
+  max-width: 100%;
+}
+
+.detail-status-wrapper {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  align-self: start;
+}
+
+.detail-subtitle {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-bottom: 0.25rem;
+  text-align: left;
+  align-self: start;
+}
+
+.detail-stats {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  margin-top: 0;
+}
+
+/* Pull header up to overlay the blurred hero only when the photo container is present.
+   This also handles the photo-load-error case: once the container is removed from the DOM
+   the negative margin is lifted and the header reflows into its natural position. */
+#classroom-detail-overlay:has(.detail-photo-container) .detail-header {
+  margin-top: -6rem;
 }
 
 .detail-title {
@@ -332,7 +658,31 @@ body.detail-open .tab-content * {
   font-weight: 700;
   margin: 0;
   color: var(--text-color-primary);
+  transition: color 0.6s ease;
   user-select: none;
+}
+
+/* Black or white per photo (see _applyTitleTone in classroom-detail.js). */
+#classroom-detail-overlay[data-title-tone="light"] .detail-title {
+  color: #111;
+}
+
+#classroom-detail-overlay[data-title-tone="dark"] .detail-title {
+  color: #fff;
+}
+
+/* The subtitle and the status label follow the same choice, slightly softened
+   to stay secondary. */
+#classroom-detail-overlay[data-title-tone="light"] .detail-subtitle,
+#classroom-detail-overlay[data-title-tone="light"] .detail-status-label {
+  color: rgba(17, 17, 17, 0.8);
+  opacity: 1; /* the label's own 0.65 would stack on the alpha above */
+}
+
+#classroom-detail-overlay[data-title-tone="dark"] .detail-subtitle,
+#classroom-detail-overlay[data-title-tone="dark"] .detail-status-label {
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 1;
 }
 
 .detail-stats {
@@ -343,61 +693,36 @@ body.detail-open .tab-content * {
 }
 
 .detail-stat {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.375rem;
+  padding: 0.25rem 0.625rem 0.25rem 0.5rem;
+  border-radius: var(--radius-pill);
   font-size: var(--text-85);
   font-weight: 600;
-  color: var(--text-color-secondary);
-}
-
-.detail-stat .material-symbols-outlined {
-  font-size: var(--text-110) !important;
-  color: var(--text-color-accent);
-}
-
-.detail-back-btn {
-  position: relative;
-
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.125rem;
-  padding: 0.375rem 0.875rem 0.375rem 0.5rem;
-  border-radius: var(--radius-pill);
-  border: none;
-
-  /* Same glass material as the tabbar, blurred harder since this sits
-     directly over classroom photos and needs the extra contrast. */
-  background: var(--glass-tint);
-  box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
-  backdrop-filter: blur(var(--glass-blur-lg));
-  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
-
   color: var(--text-color-primary);
-  font-size: var(--text-90);
-  font-weight: 600;
-  font-family: inherit;
-  transition: background 0.15s ease;
-  
-  /* Ensure the button and its content adapt their internal rendering to the theme */
-  color-scheme: light dark;
+
+  /* Small clear-glass capsule (Vitrium's .lg-glass--clear material). */
+  background: var(--lg-tint-clear);
+  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
+  backdrop-filter: blur(var(--lg-blur-clear));
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
-/* Outside 0.5px gradient stroke — same recipe as .header-button::after
-   in style.css. */
-.detail-back-btn::after {
+/* Outside 0.5px gradient stroke — same recipe as .detail-feature-chip::after. */
+.detail-stat::after {
   content: "";
   position: absolute;
   inset: -0.5px;
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -406,12 +731,75 @@ body.detail-open .tab-content * {
   pointer-events: none;
 }
 
+.detail-stat .hgi-stroke {
+  font-size: var(--text-110) !important;
+  color: var(--text-color-primary);
+}
+
+.detail-back-btn {
+  position: relative;
+
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  border: none;
+
+  /* Same glass material as .header-button (style.css) — this is styled as
+     one of the header buttons, just relocated over the nav row. */
+  background: var(--lg-tint);
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+
+  color: var(--text-color-secondary);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Restates Vitrium's `.liquid-glass` spring (translate / scale / filter): a
+     `transition` here, being later in the cascade, would otherwise replace it,
+     and a released press or stretch would snap back instead of springing. */
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
+    filter 0.2s ease;
+
+  /* Ensure the button and its content adapt their internal rendering to the theme */
+  color-scheme: light dark;
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .header-button::after in
+   style.css. A radial-gradient mask, not the pill's box-corner + mask-
+   composite trick, since this is a true circle (see that file's comment on
+   the seam it avoids). */
+.detail-back-btn::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
+}
+
 @media (prefers-color-scheme: dark) {
   .detail-back-btn {
     box-shadow:
-      0 0 0 0.1px var(--glass-outline),
-      var(--glass-highlight),
-      0 4px 40px 0 var(--glass-shadow-color);
+      0 0 0 0.1px var(--lg-outline),
+      var(--lg-highlight),
+      0 4px 40px 0 var(--lg-shadow-color);
   }
 }
 
@@ -432,12 +820,149 @@ body.detail-open .tab-content * {
    `transform: translateY(-50%)` centring — .liquid-glass drives `translate`
    and `scale` separately, so the two compose. */
 
-.detail-back-btn .material-symbols-outlined {
-  font-size: var(--text-125);
-  margin-left: -0.125rem;
-}
-
 /* ── Content ─────────────────────────────────────────────────────── */
+
+/* Mobile: the title row sticks beside the back button.
+   .detail-header dissolves (display: contents) so the row becomes a direct
+   child of the overlay, whose height is the sticky containing block; a
+   header-sized box would unstick as soon as the header scrolled away. When
+   stuck (.title-stuck, toggled from classroom-detail.js) the title slides right
+   of the back button and gets a glass pill. */
+@media (max-width: 599px) {
+  .detail-header {
+    display: contents;
+  }
+
+  .detail-title-row,
+  .detail-subtitle,
+  .detail-stats {
+    width: 100%;
+    max-width: 680px;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+    box-sizing: border-box;
+  }
+
+  .detail-stats {
+    padding-bottom: 0.5rem;
+  }
+
+  /* No longer painted through .detail-header's z-index: 2 (it is display:
+     contents now), so without this the sticky photo paints over them. */
+  .detail-subtitle,
+  .detail-stats {
+    position: relative;
+    z-index: 2;
+  }
+
+  .detail-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 3rem;
+    margin-top: 1rem;
+  }
+
+  #classroom-detail-overlay:has(.detail-photo-container) .detail-title-row {
+    margin-top: -5rem; /* the header's old -6rem pull-up minus its 1rem padding */
+  }
+
+  /* Same centre line as #detail-back-btn (a 3rem circle). */
+  #classroom-detail-overlay .detail-title-row {
+    position: sticky;
+    top: calc(11px + var(--header-height, 84px) - 3.25rem);
+    z-index: 1001; /* above .header (1000), below the back button (1002) */
+    pointer-events: none;
+  }
+
+  .detail-title-row > * {
+    pointer-events: auto;
+  }
+
+  .detail-title {
+    position: relative;
+    display: block;
+    min-width: 0;
+    height: 3rem;
+    line-height: 3rem;
+    padding: 0 0.875rem;
+    margin-left: -0.875rem; /* text stays on the page gutter until stuck */
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition:
+      margin-left 0.35s var(--lg-ease-spring, ease),
+      background-color 0.25s ease,
+      box-shadow 0.25s ease,
+      color 0.6s ease;
+  }
+
+  .detail-title::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 0.5px;
+    background: var(--lg-stroke-gradient);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  #classroom-detail-overlay.title-stuck .detail-title {
+    /* 1rem gutter + 3rem button + 0.5rem gap, less the row's own 1.25rem */
+    margin-left: 3.25rem;
+    background: var(--lg-tint);
+    -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+    backdrop-filter: blur(var(--lg-blur-sm));
+    box-shadow:
+      0 0 0 0.1px var(--lg-outline),
+      var(--lg-highlight),
+      0 4px 40px 0 var(--lg-shadow-color);
+  }
+
+  #classroom-detail-overlay.title-stuck .detail-title::after {
+    opacity: var(--lg-stroke-opacity);
+  }
+
+  /* The photo-tone colours are for text over the photo; the pill sits over
+     scrolled content, so back to the theme's own. */
+  #classroom-detail-overlay.title-stuck[data-title-tone] .detail-title {
+    color: var(--text-color-primary);
+  }
+
+  /* Same for the status badge: back to the system theme's tokens and label
+     colour instead of the photo-tone ones. */
+  #classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-wrapper {
+    --color-status-free: unset;
+    --color-status-free-soon: unset;
+    --color-status-partial: unset;
+    --color-status-busy: unset;
+    --text-color-primary: unset;
+  }
+
+  #classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-wrapper .classroom-status-txt {
+    --status-mix: black;
+    --status-keep: 82%;
+  }
+
+  #classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-label {
+    color: var(--text-color-secondary);
+    opacity: 0.65;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-wrapper .classroom-status-txt {
+      --status-mix: white;
+      --status-keep: 85%;
+    }
+  }
+}
 
 .detail-content {
   width: 100%;
@@ -452,19 +977,47 @@ body.detail-open .tab-content * {
   font-size: var(--text-100);
   font-weight: 600;
   text-align: left;
+  transition: color 0.6s ease;
 }
 
-@media (min-width: 600px) {
-  .detail-subtitle {
-    text-align: center;
-    margin-bottom: 2rem;
+/* Desktop: sections flow as a masonry grid of cards (CSS multi-column, so
+   each card lands in the shortest column and keeps its natural height). */
+@media (min-width: 1000px) {
+  .detail-header {
+    max-width: 1100px;
+  }
+
+  .detail-content {
+    max-width: 1100px;
+    column-count: 2;
+    column-gap: 1rem;
+  }
+
+  .detail-content > .detail-section {
+    break-inside: avoid;
+    display: inline-block; /* keeps backdrop-filter cards unsplit in WebKit */
+    width: 100%;
   }
 }
 
 /* ── Section ─────────────────────────────────────────────────────── */
 
 .detail-section {
-  margin-bottom: 2rem;
+  position: relative;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius-xl);
+
+  /* Clear glass card (Vitrium's .lg-glass--clear material): keeps the
+     section's text readable over the colorful photo backdrop while
+     letting the colors through. */
+  background: var(--lg-tint-clear);
+  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
+  backdrop-filter: blur(var(--lg-blur-clear));
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 .detail-section-title {
@@ -544,18 +1097,20 @@ body.detail-open .tab-content * {
   font-weight: 600;
   color: var(--text-color-primary);
 
-  /* Same glass material as .detail-back-btn — see the recipe note at
-     :root's --glass-tint definition in style.css. */
-  background: var(--glass-tint);
+  /* Same glass material as .header-button (style.css) — see the recipe
+     note at :root's --lg-tint definition there. */
+  background: var(--lg-tint);
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
-  backdrop-filter: blur(var(--glass-blur-sm));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
 }
 
-/* Outside 0.5px gradient stroke — same recipe as .detail-back-btn::after. */
+/* Outside 0.5px gradient stroke — same recipe as .detail-back-btn::after
+   used to be, back when it was a pill (padding + mask-composite: exclude,
+   the box-corner trick for non-circular surfaces). */
 .detail-feature-chip::after {
   content: "";
   position: absolute;
@@ -563,8 +1118,8 @@ body.detail-open .tab-content * {
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -579,9 +1134,84 @@ body.detail-open .tab-content * {
   }
 }
 
-.detail-feature-chip .material-symbols-outlined {
+.detail-feature-chip .hgi-stroke {
   font-size: var(--text-110);
   color: var(--text-color-accent);
+}
+
+/* ── Location map ───────────────────────────────────────────────── */
+
+/* Host of the shared campus map (components/campus-map.js embedMap()). */
+.detail-map {
+  position: relative;
+  height: 280px;
+  --detail-map-radius: calc(var(--radius-xl) - 0.5rem);
+  border-radius: var(--detail-map-radius);
+  overflow: hidden;
+  /* Firefox doesn't clip the composited WebGL canvas to `overflow: hidden` +
+     border-radius (it happens inside the backdrop-filtered card), so clip the
+     box explicitly as well. */
+  clip-path: inset(0 round var(--detail-map-radius));
+  isolation: isolate;
+  background: var(--lg-tint-clear);
+}
+
+.detail-map .campus-map,
+.detail-map .mapboxgl-canvas-container,
+.detail-map .mapboxgl-canvas {
+  border-radius: inherit;
+}
+
+.detail-map-pov {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+}
+
+.detail-map-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.detail-map-link {
+  height: 2.5rem;
+  padding: 0 1rem 0 0.75rem;
+  font-size: var(--text-90);
+  font-weight: 600;
+}
+
+.detail-map-link-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.3rem;
+  pointer-events: none;
+}
+
+.detail-map-section {
+  /* Keep the card's own title inside its glass; the map fills the rest. */
+  overflow: hidden;
+}
+
+/* Staggered entrance: each chip fades and pops in a beat after the last. */
+.detail-feature-chip--enter {
+  animation: detail-chip-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(0.15s + var(--i, 0) * 45ms);
+}
+
+@keyframes detail-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-feature-chip--enter {
+    animation: none;
+  }
 }
 
 .detail-no-features {
@@ -609,7 +1239,7 @@ body.detail-open .tab-content * {
 
 /* Left pill: vertical date picker clone. Same glass material as
    .date-picker-container (components/date-picker.css) — see the recipe
-   note at :root's --glass-tint definition in style.css. */
+   note at :root's --lg-tint definition in style.css. */
 .detail-schedule-labels-pill {
   position: relative;
   flex-shrink: 0;
@@ -619,16 +1249,16 @@ body.detail-open .tab-content * {
   justify-content: space-between;
   gap: 0.75rem;
 
-  background: var(--glass-tint);
-  backdrop-filter: blur(var(--glass-blur-md));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md));
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
   border-radius: var(--radius-pill);
   padding: 0.75rem 0.5rem;
 
   box-shadow:
-    0 0 0 0.1px var(--glass-outline),
-    var(--glass-highlight),
-    0 4px 40px 0 var(--glass-shadow-color);
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .date-picker-container::after
@@ -640,8 +1270,8 @@ body.detail-open .tab-content * {
   border-radius: inherit;
   padding: 0.5px;
 
-  background: var(--glass-stroke-gradient);
-  opacity: var(--glass-stroke-opacity);
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -822,21 +1452,10 @@ body.detail-open .tab-content * {
   }
 }
 
-.timeline-occupation-popover {
-  /* Positioned entirely by floating-ui (see DynamicPopover in popover.js), which
-     sets left/top inline based on real available space around the hovered
-     block. Reset the generic anchor-positioning rules from style.css so they
-     don't fight with those inline coordinates or apply a stale fallback. */
-  position: fixed;
-  inset: auto;
-  margin: 0;
-  position-anchor: none;
-  position-try-fallbacks: none;
-
+.timeline-popover-body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-width: min(280px, 70vw);
   text-align: start;
 }
 
@@ -1520,6 +2139,20 @@ body.detail-open .tab-content * {
   50% { opacity: 0.8; }
 }
 
+/* The photo backdrop and tinted backgrounds fade in over 0.6s for the normal
+   (non-VT) load. During an open/close VT that fade would start inside the
+   update callback, so the "new" snapshot would capture a transparent backdrop
+   and an untinted background that then pop in when the live DOM takes over.
+   Same for the photo's own opacity + scale(1.05 -> 1.001) settle: it would
+   start mid-callback, so the snapshot catches it faded/zoomed and the live
+   image finishes the zoom after the morph ends. */
+.header-ctl-vt #classroom-detail-overlay,
+.header-ctl-vt .detail-photo-backdrop,
+.header-ctl-vt .detail-photo,
+.header-ctl-vt body {
+  transition: none;
+}
+
 /* Detail-only header controls (back button, favourite toggle) scaling in/out
    in step with the page morph. */
 
@@ -1555,6 +2188,14 @@ body.detail-open .tab-content * {
 }
 
 /* ── View Transition animation overrides ──────────────────────────── */
+
+/* Card <-> page transition motion (open and close). --vt-duration must match
+   VT_DURATION in utils/vt-motion.js. --vt-spring is a critically damped spring
+   (omega 19/s over this duration): no overshoot, no bounce. */
+:root {
+  --vt-duration: 0.44s;
+  --vt-spring: linear(0, 0.0287, 0.0971, 0.1854, 0.2808, 0.3754, 0.4645, 0.5457, 0.6178, 0.6808, 0.735, 0.7812, 0.8201, 0.8527, 0.8799, 0.9023, 0.9208, 0.9359, 0.9483, 0.9583, 0.9665, 0.9731, 0.9785, 0.9828, 0.9862, 0.989, 0.9913, 0.993, 0.9945, 0.9956, 0.9965, 0.9972, 1);
+}
 
 @supports (view-transition-name: none) {
   /* Suppress the CSS opacity fallback transition when VT is available.
@@ -1631,16 +2272,44 @@ body.detail-open .tab-content * {
      duration/easing — a mismatch here makes the shorter one snap back to full
      opacity before the transition ends, reading as a sudden pop instead of a fade. */
   ::view-transition-group(classroom-detail-zoom) {
-    animation-duration: 0.5s;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-duration: var(--vt-duration);
+    /* Critically damped spring (no overshoot): quick off the mark, soft landing.
+       The path is additionally arced by utils/vt-motion.js. */
+    animation-timing-function: var(--vt-spring);
     overflow: hidden; /* clip both snapshots to the group's morphing bounds */
   }
 
+  /* The fades run on ease-in-out, not the spring: the spring covers most of its
+     distance early, which would make the crossfade a near-instant pop. */
   ::view-transition-old(classroom-detail-zoom),
   ::view-transition-new(classroom-detail-zoom) {
-    animation-duration: 0.5s;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-duration: var(--vt-duration);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
     animation-fill-mode: both;
+  }
+
+  /* Blur that hides the swap. It goes on the image-pair wrapper (which holds
+     both layers and is never moved by the group animation), NOT on -old/-new:
+     Safari applied a filter on those outside the group's scaling and displaced
+     the page snapshot to the bottom-right until the end. One blur over the pair
+     rises and falls across the crossfade, sharp at both ends. Base rule, so
+     open and close match. */
+  ::view-transition-image-pair(classroom-detail-zoom) {
+    animation: detail-zoom-swap-blur var(--vt-duration) cubic-bezier(0.4, 0, 0.6, 1) both;
+  }
+
+  /* Open only: the card BECOMES the page. Close keeps the base rules above.
+     The page's opacity ramps only as the box grows (nothing of it at first:
+     Safari doesn't scale that snapshot with the group, so an early page showed
+     up "from the middle"), while the card dissolves alongside it, so neither
+     ever reads as a separate full-size layer. The spring covers ~50% of the
+     distance by 20% of the run, hence the earlier windows than a linear ease. */
+  :root.detail-vt-open::view-transition-old(classroom-detail-zoom) {
+    animation-name: detail-zoom-card-out;
+  }
+
+  :root.detail-vt-open::view-transition-new(classroom-detail-zoom) {
+    animation-name: detail-zoom-page-in;
   }
 
   /* Detail-only header controls get their own VT groups (pulled out of the
@@ -1690,4 +2359,53 @@ body.detail-open .tab-content * {
   .detail-today-indicator:hover {
     background: var(--color-accent-dark-hover);
   }
+}
+
+/* No `filter: blur()` on these: Safari applies a filter on
+   ::view-transition-old/new outside the group's scaling, which displaced the
+   page snapshot to the bottom-right of the screen until the end. */
+@keyframes detail-zoom-card-out {
+  0%, 8%    { opacity: 1; }
+  65%, 100% { opacity: 0; }
+}
+
+@keyframes detail-zoom-page-in {
+  0%, 22% { opacity: 0; }
+  80%, 100% { opacity: 1; }
+}
+
+@keyframes detail-zoom-swap-blur {
+  0%, 10%   { filter: blur(0); }
+  42%       { filter: blur(10px); }
+  85%, 100% { filter: blur(0); }
+}
+
+.detail-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-hours-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-color-primary);
+}
+
+.detail-hours-day {
+  color: var(--text-color-secondary);
+}
+
+.detail-hours-row--today,
+.detail-hours-row--today .detail-hours-day {
+  font-weight: 700;
+  color: var(--text-color-accent);
+}
+
+.detail-hours-row--closed:not(.detail-hours-row--today) .detail-hours-time {
+  color: var(--text-color-secondary);
 }

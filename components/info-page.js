@@ -1,5 +1,4 @@
 import { onLanguageSwitch, t } from '../i18n.js';
-import { haptics, defaultPatterns } from './haptics.js';
 import { escapeHtml, safeUrl } from '../utils/html.js';
 
 const HASH = '#info';
@@ -42,15 +41,7 @@ class InfoPage {
     this._titleEl = document.querySelector('.header-title');
     this._badgeEl = document.getElementById('env-badge');
 
-    // Haptics for interactive GitHub elements
-    this._overlay?.addEventListener('click', (e) => {
-      if (e.target.closest('.github-stat-card') || e.target.closest('.contributor-item') || e.target.closest('.github-repo-chip') || e.target.closest('.create-issue-btn')) {
-        haptics.trigger(defaultPatterns.light);
-      }
-    });
-
     document.getElementById('info-trigger')?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       location.hash = HASH;
     });
 
@@ -59,7 +50,6 @@ class InfoPage {
     this._backBtn?.addEventListener('click', (e) => {
       if (!this._isOpen) return;
       e.stopImmediatePropagation();
-      haptics.trigger(defaultPatterns.light);
       if (this._openedFromDetail) {
         // Go back to the classroom hash; hashchange will trigger _silentClose() here
         // and classroomDetail._onHashChange() will run its own VT to reopen the detail.
@@ -177,6 +167,10 @@ class InfoPage {
         if (heroBadge) heroBadge.style.viewTransitionName = 'info-badge';
       });
 
+      // A second VT firing before this one settles rejects .ready/.finished with
+      // InvalidStateError; .finished is handled below, but .ready isn't awaited
+      // anywhere, so it was surfacing as an unhandled rejection on every abort.
+      vt.ready.catch(() => {});
       vt.finished.then(() => this._clearVtNames()).catch(() => this._clearVtNames());
     } else {
       this._tabbar?.classList.add('detail-open');
@@ -241,6 +235,7 @@ class InfoPage {
         window.scrollTo(0, this._savedScrollPos);
       });
 
+      vt.ready.catch(() => {});
       vt.finished.then(cleanup).catch(cleanup);
     } else {
       this._overlay.classList.remove('visible');
@@ -359,7 +354,7 @@ class InfoPage {
           <div class="info-pwa-section">
             <div class="info-pwa-header">
               <div class="info-pwa-title-row">
-                <span class="material-symbols-outlined">install_mobile</span>
+                <i class="hgi-stroke hgi-screen-add-to-home" aria-hidden="true"></i>
                 <h2>${t('info.pwa.title')}</h2>
               </div>
               <p class="info-pwa-subtitle">${t('info.pwa.subtitle')}</p>
@@ -377,7 +372,7 @@ class InfoPage {
                 <span>Android</span>
               </button>
               <button class="pwa-tab" data-pwa-tab="desktop" role="tab" aria-selected="false">
-                <span class="material-symbols-outlined">desktop_windows</span>
+                <i class="hgi-stroke hgi-computer" aria-hidden="true"></i>
                 <span>Desktop</span>
               </button>
             </div>
@@ -409,7 +404,7 @@ class InfoPage {
               </div>
               <div class="info-pwa-card" data-pwa-platform="desktop">
                 <div class="info-pwa-card-title">
-                  <span class="material-symbols-outlined">desktop_windows</span>
+                  <i class="hgi-stroke hgi-computer" aria-hidden="true"></i>
                   <span>${t('info.pwa.desktop.title')}</span>
                 </div>
                 <ol class="info-pwa-steps">
@@ -450,43 +445,43 @@ class InfoPage {
               <div class="github-stats-grid">
                 <a href="https://github.com/SummaCristian/poliaule/stargazers" target="_blank" rel="noopener" class="github-stat-card">
                   <div class="star-avatars" data-github="stargazers">
-                    <span class="material-symbols-outlined github-stat-icon">star</span>
+                    <i class="hgi-stroke hgi-star github-stat-icon" aria-hidden="true"></i>
                   </div>
                   <span class="github-stat-number" data-stat="stars">—</span>
                   <span class="github-stat-label">${t('info.github.stars')}</span>
                 </a>
                 <a href="https://github.com/SummaCristian/poliaule/commits/main" target="_blank" rel="noopener" class="github-stat-card">
-                  <span class="material-symbols-outlined github-stat-icon">commit</span>
+                  <i class="hgi-stroke hgi-git-commit github-stat-icon" aria-hidden="true"></i>
                   <span class="github-stat-number" data-stat="commits">—</span>
                   <span class="github-stat-label">${t('info.github.commits')}</span>
                 </a>
                 <a href="https://github.com/SummaCristian/poliaule/issues" target="_blank" rel="noopener" class="github-stat-card">
-                  <span class="material-symbols-outlined github-stat-icon">bug_report</span>
+                  <i class="hgi-stroke hgi-bug-01 github-stat-icon" aria-hidden="true"></i>
                   <span class="github-stat-number" data-stat="issues">—</span>
                   <span class="github-stat-label">${t('info.github.issues')}</span>
                 </a>
                 <a href="https://github.com/SummaCristian/poliaule/blob/main/LICENSE" target="_blank" rel="noopener" class="github-stat-card">
-                  <span class="material-symbols-outlined github-stat-icon">balance</span>
+                  <i class="hgi-stroke hgi-balance-scale github-stat-icon" aria-hidden="true"></i>
                   <span class="github-stat-number" data-stat="license">—</span>
                   <span class="github-stat-label">${t('info.github.license')}</span>
                 </a>
               </div>
 
               <a href="https://github.com/SummaCristian/poliaule/issues/new" target="_blank" rel="noopener" class="create-issue-btn">
-                <span class="material-symbols-outlined">bug_report</span>
+                <i class="hgi-stroke hgi-bug-01" aria-hidden="true"></i>
                 <span>${t('info.github.createIssue')}</span>
               </a>
               <div class="github-extended">
                 <div class="github-subsection">
                   <div class="github-subsection-header">
-                    <span class="material-symbols-outlined">code</span>
+                    <i class="hgi-stroke hgi-code" aria-hidden="true"></i>
                     <span>${t('info.github.languages')}</span>
                   </div>
                   <div data-github="lang-bar"><div class="github-skeleton" style="height:2rem"></div></div>
                 </div>
                 <div class="github-subsection">
                   <div class="github-subsection-header">
-                    <span class="material-symbols-outlined">group</span>
+                    <i class="hgi-stroke hgi-user-group" aria-hidden="true"></i>
                     <span>${t('info.github.contributors')}</span>
                   </div>
                   <div data-github="contributors"><div class="github-skeleton" style="height:3rem"></div></div>
@@ -559,7 +554,6 @@ class InfoPage {
       pwaTabbar.addEventListener('click', (e) => {
         const btn = e.target.closest('.pwa-tab');
         if (!btn || btn.classList.contains('active')) return;
-        haptics.trigger(defaultPatterns.light);
         const idx = tabs.indexOf(btn);
         tabs.forEach((t, i) => {
           t.classList.toggle('active', i === idx);

@@ -1077,15 +1077,30 @@ class ClassroomDetail {
       // Re-position the indicator when resizing from desktop → mobile, because
       // offsetLeft/offsetWidth read as 0 while the selector is display:none.
       const mobileQuery = window.matchMedia('(max-width: 599px)');
+      const relayoutMobile = () => {
+        daySelector.refresh();
+        selectScheduleDay(selectedDayIndex, { silent: true, animate: false });
+        positionDetailTodayIndicator();
+      };
       mobileQuery.addEventListener('change', e => {
-        if (e.matches) {
-          daySelector.refresh();
-          selectScheduleDay(selectedDayIndex, { silent: true, animate: false });
-          positionDetailTodayIndicator();
-        } else {
-          positionDesktopTodayIndicator();
-        }
+        if (e.matches) relayoutMobile();
+        else positionDesktopTodayIndicator();
       });
+      // The picker is centered in its wrapper, so resizing the window moves it
+      // without necessarily changing its own size; the pill and Today badge are
+      // placed with absolute offsets and would stay behind. Re-measure whenever
+      // the wrapper or the picker changes size (also covers display:none → block).
+      if (typeof ResizeObserver !== 'undefined') {
+        let raf = 0;
+        const ro = new ResizeObserver(() => {
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(() => {
+            if (pickerContainer.offsetWidth) relayoutMobile();
+          });
+        });
+        ro.observe(pickerContainer);
+        ro.observe(pickerContainer.parentElement);
+      }
 
       // ---------- TIMELINE HOVER ----------
       let _activeBar = null;

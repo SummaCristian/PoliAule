@@ -5,9 +5,10 @@ import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, photoUrlCache, extractPhotoColor, getCachedPhotoColor, getCachedPhotoLuminance } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
-import { createPopover } from 'vitrium';
+import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { arcGroup } from '../utils/vt-motion.js';
 import { createPillSelector } from './pill-selector.js';
+import { embedMap, parkMap, releaseMap, getEmbedPov, setEmbedPov } from './campus-map.js';
 
 function minutesToTimeDisplay(minutes) {
   const d = new Date();
@@ -253,6 +254,7 @@ class ClassroomDetail {
     if (!this._overlay || this._overlay.hidden) return;
     this._currentId = null;
     this._enteredId = null;
+    releaseMap();
     clearInterval(this._nowTimer);
     document.body.classList.remove('detail-open');
     // Leave tabbar.detail-open and backBtn visibility intact — info page takes over both
@@ -441,6 +443,7 @@ class ClassroomDetail {
     const headerEl = document.querySelector('.header');
 
     const cleanup = () => {
+      releaseMap();
       this._overlay.innerHTML = '';
       this._openTrigger = null;
       this._queryContext = null;
@@ -499,6 +502,13 @@ class ClassroomDetail {
 
         // Restore scroll position so VT can morph back to the correct spot
         window.scrollTo(0, this._savedScrollPos);
+
+        // Hand the shared map back to the Campus tab now, so this transition's
+        // new-state snapshot already shows it (releasing in cleanup() left the
+        // tab map-less until the animation ended). The tab's container just
+        // regained its size above; flush layout so the map resizes into it.
+        void document.body.offsetHeight;
+        releaseMap();
 
         // Force a synchronous layout flush before naming the card, so its
         // resolved position/size (list re-scrolled above) is fully settled at
@@ -585,6 +595,12 @@ class ClassroomDetail {
       })
       .join('');
 
+    const hasMap = typeof building.lat === 'number' && typeof building.long === 'number';
+    const mapLabel = building.altName?.trim() || `${t('building.prefix')} ${building.name}`;
+    const mapLinks = hasMap ? {
+      google: `https://www.google.com/maps/search/?api=1&query=${building.lat},${building.long}`,
+      apple: `https://maps.apple.com/?ll=${building.lat},${building.long}&q=${encodeURIComponent(mapLabel)}`,
+    } : null;
     const status = getClassroomStatusNow(classroom.id);
     let statusHtml = '';
     if (status) {
@@ -602,6 +618,9 @@ class ClassroomDetail {
     }
 
     this._overlay.removeAttribute('data-title-tone');
+    // The shared campus Map() may be sitting inside the old card — step it
+    // out before the markup is replaced, or it would be destroyed with it.
+    parkMap();
     this._overlay.innerHTML = `
       ${classroom.idfoto ? `
         <div class="detail-photo-backdrop"></div>
@@ -639,6 +658,13 @@ class ClassroomDetail {
       }
         </section>
 
+        ${hasMap ? `
+        <section class="detail-section detail-map-section">
+          <h2 class="detail-section-title">${t('detail.location')}</h2>
+          <div class="detail-map"></div>
+          <div class="detail-map-links"></div>
+        </section>` : ''}
+
         <section class="detail-section">
           <div class="detail-section-header">
             <h2 class="detail-section-title">${t('detail.weeklySchedule')}</h2>
@@ -663,6 +689,47 @@ class ClassroomDetail {
       this._loadSchedule(classroom.id);
       if (classroom.idfoto) this._loadPhoto(classroom.id);
     });
+
+    if (hasMap) {
+      const links = this._overlay.querySelector('.detail-map-links');
+      for (const [href, icon, key] of [
+        [mapLinks.google, 'google-maps', 'detail.openGoogleMaps'],
+        [mapLinks.apple, 'apple-maps', 'detail.openAppleMaps'],
+      ]) {
+        const img = new Image();
+        img.className = 'detail-map-link-icon';
+        img.src = `/assets/${icon}.png`;
+        img.alt = '';
+        links.appendChild(createButton({
+          icon: img,
+          text: t(key),
+          className: 'detail-map-link',
+          onClick: () => window.open(href, '_blank', 'noopener,noreferrer'),
+        }));
+      }
+      const mapHost = this._overlay.querySelector('.detail-map');
+      const pov = document.createElement('div');
+      pov.className = 'detail-map-pov';
+      mapHost.appendChild(pov);
+      createSegmentedControl(pov, {
+        items: [{ value: '2d', label: '2D' }, { value: '3d', label: '3D' }],
+        value: getEmbedPov(),
+        orientation: 'vertical',
+        blur: true,
+        onSelect: setEmbedPov,
+      });
+      embedMap(mapHost, {
+        lat: building.lat,
+        long: building.long,
+        label: mapLabel,
+        // Every building on the campus, for the 2D overview.
+        siblings: (campus.buildings ?? [])
+          .filter(b => typeof b.lat === 'number' && typeof b.long === 'number')
+          .map(b => ({ lat: b.lat, long: b.long })),
+      });
+    } else {
+      releaseMap();
+    }
 
     this._animateMasonry(this._overlay.querySelector('.detail-content'));
   }

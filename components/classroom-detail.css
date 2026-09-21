@@ -964,6 +964,62 @@ body.detail-open .tab-content * {
   color: var(--text-color-accent);
 }
 
+/* ── Location map ───────────────────────────────────────────────── */
+
+/* Host of the shared campus map (components/campus-map.js embedMap()). */
+.detail-map {
+  position: relative;
+  height: 280px;
+  --detail-map-radius: calc(var(--radius-xl) - 0.5rem);
+  border-radius: var(--detail-map-radius);
+  overflow: hidden;
+  /* Firefox doesn't clip the composited WebGL canvas to `overflow: hidden` +
+     border-radius (it happens inside the backdrop-filtered card), so clip the
+     box explicitly as well. */
+  clip-path: inset(0 round var(--detail-map-radius));
+  isolation: isolate;
+  background: var(--lg-tint-clear);
+}
+
+.detail-map .campus-map,
+.detail-map .mapboxgl-canvas-container,
+.detail-map .mapboxgl-canvas {
+  border-radius: inherit;
+}
+
+.detail-map-pov {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+}
+
+.detail-map-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.detail-map-link {
+  height: 2.5rem;
+  padding: 0 1rem 0 0.75rem;
+  font-size: var(--text-90);
+  font-weight: 600;
+}
+
+.detail-map-link-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.3rem;
+  pointer-events: none;
+}
+
+.detail-map-section {
+  /* Keep the card's own title inside its glass; the map fills the rest. */
+  overflow: hidden;
+}
+
 /* Staggered entrance: each chip fades and pops in a beat after the last. */
 .detail-feature-chip--enter {
   animation: detail-chip-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;

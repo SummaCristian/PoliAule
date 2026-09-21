@@ -672,3 +672,44 @@ html:has(#search-classrooms-container.visible) .footer {
   font-weight: 600;
   color: var(--text-color-secondary);
 }
+
+/* --- Embedded in the classroom detail page ------------------------------
+   The one shared Map() (see embedMap() in campus-map.js) is moved into the
+   detail page's location card. The Campus tab's fullscreen chrome placement
+   (fixed controls clearing the sheet/tabbar) makes no sense there, so: hide
+   the interactive controls (the preview is view-only) and pin the required
+   Mapbox logo / attribution to the card's own bottom corners. */
+.campus-map.campus-map--embedded .mapboxgl-ctrl-top-right {
+  display: none;
+}
+
+.campus-map.campus-map--embedded .mapboxgl-ctrl-bottom-left,
+.campus-map.campus-map--embedded .mapboxgl-ctrl-bottom-right {
+  position: absolute;
+  bottom: 4px;
+}
+
+.campus-map.campus-map--embedded .mapboxgl-ctrl-bottom-left {
+  left: 6px;
+  right: auto;
+}
+
+.campus-map.campus-map--embedded .mapboxgl-ctrl-bottom-right {
+  right: 6px;
+  left: auto;
+}
+
+.campus-marker--static {
+  pointer-events: none;
+}
+
+/* 2D overview of the detail preview: the other buildings of the campus are
+   quiet dots, the building being viewed keeps its label. */
+.campus-marker--dim {
+  padding: 0.2rem;
+  opacity: 0.7;
+}
+
+.campus-marker--current .campus-marker__dot {
+  background: var(--marker-accent);
+}

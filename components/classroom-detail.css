@@ -807,6 +807,148 @@ body.detail-open .tab-content * {
 
 /* ── Content ─────────────────────────────────────────────────────── */
 
+/* Mobile: the title row sticks beside the back button.
+   .detail-header dissolves (display: contents) so the row becomes a direct
+   child of the overlay, whose height is the sticky containing block; a
+   header-sized box would unstick as soon as the header scrolled away. When
+   stuck (.title-stuck, toggled from classroom-detail.js) the title slides right
+   of the back button and gets a glass pill. */
+@media (max-width: 599px) {
+  .detail-header {
+    display: contents;
+  }
+
+  .detail-title-row,
+  .detail-subtitle,
+  .detail-stats {
+    width: 100%;
+    max-width: 680px;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+    box-sizing: border-box;
+  }
+
+  .detail-stats {
+    padding-bottom: 0.5rem;
+  }
+
+  /* No longer painted through .detail-header's z-index: 2 (it is display:
+     contents now), so without this the sticky photo paints over them. */
+  .detail-subtitle,
+  .detail-stats {
+    position: relative;
+    z-index: 2;
+  }
+
+  .detail-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 3rem;
+    margin-top: 1rem;
+  }
+
+  #classroom-detail-overlay:has(.detail-photo-container) .detail-title-row {
+    margin-top: -5rem; /* the header's old -6rem pull-up minus its 1rem padding */
+  }
+
+  /* Same centre line as #detail-back-btn (a 3rem circle). */
+  #classroom-detail-overlay .detail-title-row {
+    position: sticky;
+    top: calc(11px + var(--header-height, 84px) - 3.25rem);
+    z-index: 1001; /* above .header (1000), below the back button (1002) */
+    pointer-events: none;
+  }
+
+  .detail-title-row > * {
+    pointer-events: auto;
+  }
+
+  .detail-title {
+    position: relative;
+    display: block;
+    min-width: 0;
+    height: 3rem;
+    line-height: 3rem;
+    padding: 0 0.875rem;
+    margin-left: -0.875rem; /* text stays on the page gutter until stuck */
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition:
+      margin-left 0.35s var(--lg-ease-spring, ease),
+      background-color 0.25s ease,
+      box-shadow 0.25s ease,
+      color 0.6s ease;
+  }
+
+  .detail-title::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 0.5px;
+    background: var(--lg-stroke-gradient);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  #classroom-detail-overlay.title-stuck .detail-title {
+    /* 1rem gutter + 3rem button + 0.5rem gap, less the row's own 1.25rem */
+    margin-left: 3.25rem;
+    background: var(--lg-tint);
+    -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+    backdrop-filter: blur(var(--lg-blur-sm));
+    box-shadow:
+      0 0 0 0.1px var(--lg-outline),
+      var(--lg-highlight),
+      0 4px 40px 0 var(--lg-shadow-color);
+  }
+
+  #classroom-detail-overlay.title-stuck .detail-title::after {
+    opacity: var(--lg-stroke-opacity);
+  }
+
+  /* The photo-tone colours are for text over the photo; the pill sits over
+     scrolled content, so back to the theme's own. */
+  #classroom-detail-overlay.title-stuck[data-title-tone] .detail-title {
+    color: var(--text-color-primary);
+  }
+
+  /* Same for the status badge: back to the system theme's tokens and label
+     colour instead of the photo-tone ones. */
+  #classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-wrapper {
+    --color-status-free: unset;
+    --color-status-free-soon: unset;
+    --color-status-partial: unset;
+    --color-status-busy: unset;
+    --text-color-primary: unset;
+  }
+
+  #classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-wrapper .classroom-status-txt {
+    --status-mix: black;
+    --status-keep: 82%;
+  }
+
+  #classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-label {
+    color: var(--text-color-secondary);
+    opacity: 0.65;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-wrapper .classroom-status-txt {
+      --status-mix: white;
+      --status-keep: 85%;
+    }
+  }
+}
+
 .detail-content {
   width: 100%;
   padding: 1rem 1.25rem 4rem;

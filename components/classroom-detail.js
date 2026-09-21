@@ -96,6 +96,23 @@ class ClassroomDetail {
     this._backBtn = document.getElementById('detail-back-btn');
     this._favBtn = document.getElementById('favourite-btn');
 
+    // Mobile: flags the overlay once the sticky title row reaches its stuck
+    // position (see the max-width: 599px block in classroom-detail.css).
+    let stuckRaf = 0;
+    const syncTitleStuck = () => {
+      stuckRaf = 0;
+      const row = this._overlay.querySelector('.detail-title-row');
+      let stuck = false;
+      if (row && !this._overlay.hidden && getComputedStyle(row).position === 'sticky') {
+        const top = parseFloat(getComputedStyle(row).top);
+        stuck = window.scrollY > 0 && row.getBoundingClientRect().top <= top + 0.5;
+      }
+      this._overlay.classList.toggle('title-stuck', stuck);
+    };
+    window.addEventListener('scroll', () => {
+      if (!stuckRaf) stuckRaf = requestAnimationFrame(syncTitleStuck);
+    }, { passive: true });
+
     this._favBtn?.addEventListener('click', () => {
       if (this._currentId === null) return;
       toggleFavourite(this._currentId);
@@ -645,6 +662,7 @@ class ClassroomDetail {
     // The shared campus Map() may be sitting inside the old card — step it
     // out before the markup is replaced, or it would be destroyed with it.
     parkMap();
+    this._overlay.classList.remove('title-stuck');
     this._overlay.innerHTML = `
       ${classroom.idfoto ? `
         <div class="detail-photo-backdrop"></div>

@@ -323,8 +323,6 @@ class ClassroomDetail {
       // Strip the glass blur off the scaling header controls for the transition
       // (see .header-ctl-vt in classroom-detail.css).
       document.documentElement.classList.add('header-ctl-vt');
-      // Open-only zoom timing (see .detail-vt-open in classroom-detail.css).
-      document.documentElement.classList.add('detail-vt-open');
 
       const vt = document.startViewTransition(() => {
         if (fromInfo) {
@@ -378,7 +376,6 @@ class ClassroomDetail {
         if (cardEl) cardEl.style.viewTransitionName = '';
         if (headerEl) headerEl.style.viewTransitionName = '';
         document.documentElement.classList.remove('header-ctl-vt');
-        document.documentElement.classList.remove('detail-vt-open');
         if (fromInfo) infoPage._cleanupReturnVT();
       };
       // A second VT firing before this one settles rejects .ready/.finished with

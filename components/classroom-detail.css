@@ -1809,6 +1809,37 @@ body.detail-open .tab-content * {
     animation-fill-mode: both;
   }
 
+  /* Open only: the card BECOMES the page. Close keeps the base rules above.
+     - The morph eases in (not expo-out), so there is a visible "lift-off" from
+       the card instead of an instant jump.
+     - The base rules fade the page in on the same expo curve as the morph, so it
+       was nearly opaque while the box was still card-sized. Here the page's
+       opacity ramps slowly and only picks up as the box grows (nothing of it for
+       the first 30%: Safari doesn't scale that snapshot with the group, so an
+       early page showed up "from the middle"), while the card dissolves
+       alongside it, so neither ever reads as a separate full-size layer. */
+  :root.detail-vt-open::view-transition-group(classroom-detail-zoom) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.15, 1);
+  }
+
+  :root.detail-vt-open::view-transition-old(classroom-detail-zoom) {
+    animation: detail-zoom-card-out 0.5s cubic-bezier(0.4, 0, 0.6, 1) both;
+  }
+
+  :root.detail-vt-open::view-transition-new(classroom-detail-zoom) {
+    animation: detail-zoom-page-in 0.5s cubic-bezier(0.4, 0, 0.6, 1) both;
+  }
+
+  /* Blur that hides the swap. It goes on the image-pair wrapper (which holds
+     both layers and is never moved by the group animation), NOT on -old/-new:
+     Safari applied a filter on those outside the group's scaling and displaced
+     the page snapshot to the bottom-right until the end. One blur over the pair
+     rises and falls across the crossfade, sharp at both ends. */
+  :root.detail-vt-open::view-transition-image-pair(classroom-detail-zoom) {
+    animation: detail-zoom-swap-blur 0.5s cubic-bezier(0.4, 0, 0.6, 1) both;
+  }
+
   /* Detail-only header controls get their own VT groups (pulled out of the
      pinned `app-header` snapshot) so they scale in on open / out on close,
      on top of the header, in step with the page morph — instead of popping
@@ -1856,4 +1887,23 @@ body.detail-open .tab-content * {
   .detail-today-indicator:hover {
     background: var(--color-accent-dark-hover);
   }
+}
+
+/* No `filter: blur()` on these: Safari applies a filter on
+   ::view-transition-old/new outside the group's scaling, which displaced the
+   page snapshot to the bottom-right of the screen until the end. */
+@keyframes detail-zoom-card-out {
+  0%, 10%   { opacity: 1; }
+  80%, 100% { opacity: 0; }
+}
+
+@keyframes detail-zoom-page-in {
+  0%, 30% { opacity: 0; }
+  100%    { opacity: 1; }
+}
+
+@keyframes detail-zoom-swap-blur {
+  0%, 15%   { filter: blur(0); }
+  50%       { filter: blur(10px); }
+  90%, 100% { filter: blur(0); }
 }

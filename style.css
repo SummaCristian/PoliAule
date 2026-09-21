@@ -466,7 +466,7 @@ label {
 
   height: 11px;
 
-  background-color: var(--background-color);
+  background-color: var(--header-bg, var(--background-color));
 }
 
 .header {
@@ -497,7 +497,7 @@ label {
   position: absolute;
   inset: 0 0 auto 0;
   height: env(safe-area-inset-top);
-  background-color: var(--background-color);
+  background-color: var(--header-bg, var(--background-color));
   z-index: 0;
   pointer-events: none;
 }
@@ -552,9 +552,9 @@ label {
   inset: 0;
 
   background: linear-gradient(to bottom,
-    var(--background-color) 0%,
-    color-mix(in srgb, var(--background-color) 70%, transparent) 45%,
-    color-mix(in srgb, var(--background-color) 25%, transparent) 70%,
+    var(--header-bg, var(--background-color)) 0%,
+    color-mix(in srgb, var(--header-bg, var(--background-color)) 70%, transparent) 45%,
+    color-mix(in srgb, var(--header-bg, var(--background-color)) 25%, transparent) 70%,
     transparent 100%);
 }
 

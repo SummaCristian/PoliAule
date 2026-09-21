@@ -81,7 +81,23 @@
    <html> for this reason. */
 body.detail-open {
   background-color: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
-  transition: background-color 0.6s ease;
+  /* The header's top strip, safe-area rectangle and fade gradient (style.css)
+     take the same color, so the top of the screen follows the page instead of
+     staying the plain theme background. */
+  --header-bg: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
+  transition: background-color 0.6s ease, --header-bg 0.6s ease;
+}
+
+/* Registered so it can transition (a gradient can't, but the color stops that
+   read it can). Everywhere but the detail page it is just the theme background. */
+@property --header-bg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
+:root {
+  --header-bg: var(--background-color);
 }
 
 /* Hide tab contents and footer while the detail panel is open */

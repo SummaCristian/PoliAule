@@ -14,10 +14,19 @@
      is exactly --background-color. */
   background: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
   transition: background-color 0.6s ease;
-  /* Stacking context for .detail-photo-backdrop (z-index: -1), so it paints
-     above this background but below all the page content. */
+  /* Containing block for .detail-photo-backdrop. Deliberately NOT a stacking
+     context (no isolation / z-index / will-change): an isolated overlay is its
+     own compositing surface in Safari, and the header's progressive
+     backdrop-filter then doesn't sample it until something forces a repaint
+     (it stayed blank until scrolled). The backdrop instead sits at z-index: 0
+     and the page content above it at z-index: 1 (rule below), which paints in
+     the same order without isolating the overlay. */
   position: relative;
-  isolation: isolate;
+}
+
+#classroom-detail-overlay > :not(.detail-photo-backdrop) {
+  position: relative;
+  z-index: 1;
 }
 
 /* Fallback fade-in for browsers without View Transitions only. When VT IS
@@ -269,7 +278,7 @@ body.detail-open .tab-content * {
      so a backdrop poking out below the overlay made the "new" image taller than
      the group and squeezed it during the zoom. */
   max-height: 100%;
-  z-index: -1;
+  z-index: 0; /* above the overlay's background, below its other children (z-index: 1) */
   overflow: hidden; /* the bleed must not cause horizontal scroll */
   container-type: inline-size;
   pointer-events: none;

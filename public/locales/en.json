@@ -224,5 +224,5 @@
   "changelog.item2": "Added a map view to show where the building is located inside the Details page",
   "changelog.item3": "Added the building's opening hours in the Details page",
   "changelog.item4": "Improved the performance of the whole webapp",
-  "changelog.item5": "Ported the whole design system to Vitrium, the component library extrazcted from PoliAule"
+  "changelog.item5": "Ported the whole design system to Vitrium, the component library extracted from PoliAule"
 }

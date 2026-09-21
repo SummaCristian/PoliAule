@@ -420,15 +420,6 @@ body.detail-open .tab-content * {
   gap: 1rem;
 }
 
-@media (min-width: 600px) {
-  .detail-title-row {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    width: auto;
-  }
-}
-
 .detail-status-wrapper {
   position: relative;
   display: flex;
@@ -462,12 +453,6 @@ body.detail-open .tab-content * {
   mask-composite: exclude;
 
   pointer-events: none;
-}
-
-@media (min-width: 600px) {
-  .detail-status-wrapper {
-    align-items: center;
-  }
 }
 
 .detail-status-label {
@@ -551,70 +536,67 @@ body.detail-open .tab-content * {
   }
 }
 
-@media (min-width: 600px) {
-  .detail-header {
-    align-items: center; /* Desktop centered */
-  }
+/* Header layout (same on mobile and desktop) */
+.detail-header {
+  /* Same column as .detail-content below, so the edges line up */
+  width: 100%;
+  max-width: 680px;
+  margin-inline: auto;
+  padding-top: 1rem;
+  gap: 0;
+  position: relative;
+  z-index: 2; /* Stay above the blur layer */
+
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  text-align: left;
 }
 
-@media (max-width: 599px) {
-  .detail-header {
-    padding-top: 1rem;
-    gap: 0;
-    position: relative;
-    z-index: 2; /* Stay above the blur layer */
+.detail-title-row {
+  display: contents;
+}
 
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: start;
-    text-align: left;
-  }
+.detail-title {
+  grid-column: 1;
+  grid-row: 1;
+  text-align: left;
+  /* Align perfectly with the floating back button */
+  padding-top: 0.25rem;
+  /* Shrink to text width (like it did as a flex item before) so the VT morph
+     from the card name stays positional rather than expanding across the full column */
+  width: fit-content;
+  max-width: 100%;
+}
 
-  .detail-title-row {
-    display: contents;
-  }
+.detail-status-wrapper {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  align-self: start;
+}
 
-  .detail-title {
-    grid-column: 1;
-    grid-row: 1;
-    text-align: left;
-    /* Align perfectly with the floating back button */
-    padding-top: 0.25rem;
-    /* Shrink to text width (like it did as a flex item before) so the VT morph
-       from the card name stays positional rather than expanding across the full column */
-    width: fit-content;
-    max-width: 100%;
-  }
+.detail-subtitle {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-bottom: 0.25rem;
+  text-align: left;
+  align-self: start;
+}
 
-  .detail-status-wrapper {
-    grid-column: 2;
-    grid-row: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    align-self: start;
-  }
+.detail-stats {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  margin-top: 0;
+}
 
-  .detail-subtitle {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    margin-bottom: 0.25rem;
-    text-align: left;
-    align-self: start;
-  }
-
-  .detail-stats {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    margin-top: 0;
-  }
-
-  /* Pull header up to overlay the blurred hero only when the photo container is present.
-     This also handles the photo-load-error case: once the container is removed from the DOM
-     the negative margin is lifted and the header reflows into its natural position. */
-  #classroom-detail-overlay:has(.detail-photo-container) .detail-header {
-    margin-top: -6rem;
-  }
+/* Pull header up to overlay the blurred hero only when the photo container is present.
+   This also handles the photo-load-error case: once the container is removed from the DOM
+   the negative margin is lifted and the header reflows into its natural position. */
+#classroom-detail-overlay:has(.detail-photo-container) .detail-header {
+  margin-top: -6rem;
 }
 
 .detail-title {
@@ -802,16 +784,13 @@ body.detail-open .tab-content * {
   transition: color 0.6s ease;
 }
 
-@media (min-width: 600px) {
-  .detail-subtitle {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-}
-
 /* Desktop: sections flow as a masonry grid of cards (CSS multi-column, so
    each card lands in the shortest column and keeps its natural height). */
 @media (min-width: 1000px) {
+  .detail-header {
+    max-width: 1100px;
+  }
+
   .detail-content {
     max-width: 1100px;
     column-count: 2;

@@ -94,6 +94,7 @@ class ClassroomDetail {
     this._vtSettled = null;     // pending open/close transition, see _beginTransition
     this._vtResolve = null;
     this._mapObserver = null;   // waits for the map section to come into view
+    this._mapTimer = 0;         // ...and then for the page to settle
   }
 
   // Called from script.js after all data is loaded.
@@ -305,8 +306,7 @@ class ClassroomDetail {
     this._currentId = null;
     this._enteredId = null;
     releaseMap();
-    this._mapObserver?.disconnect();
-    this._mapObserver = null;
+    this._cancelMapEmbed();
     clearInterval(this._nowTimer);
     document.body.classList.remove('detail-open');
     // Leave tabbar.detail-open and backBtn visibility intact — info page takes over both
@@ -319,12 +319,21 @@ class ClassroomDetail {
 
   // ---------- TRANSITION PLUMBING ----------
 
-  /* The page's end of the card morph: the hero photo, or — for a room with no
-     photo — the invisible box that stands in for it at the top of the page
-     (see .detail-hero-anchor in classroom-detail.css), so the card grows into
-     the page there instead of just fading where it stands. */
+  /* The page's end of the card morph: the hero photo. Null for a room with no
+     photo, and deliberately so — there is nothing on that page for the card to
+     become, and every stand-in is worse than none. The card's snapshot is
+     `object-fit: cover`-ed into whatever box the morph lands on, so a stand-in
+     the size of its box blows the card up by that box's scale: an empty,
+     viewport-sized one (what this used to return) scaled a 152x193 card to
+     390x844 and cross-faded a 4.4x blow-up of its own text across the screen.
+
+     With no page-side element the card is alone in its group, the group stays
+     at the card's own rect, and the `:only-child` rules in
+     classroom-detail.css fade it out in place over the page growing out from
+     under it. That is also what SwiftUI's `.zoom` does with nothing to pair up:
+     the source view simply becomes the destination page. */
   _heroTarget() {
-    return this._overlay?.querySelector('.detail-photo-container, .detail-hero-anchor') ?? null;
+    return this._overlay?.querySelector('.detail-photo-container') ?? null;
   }
 
   /* Anything that blocks the main thread while the snapshots are animating is
@@ -348,30 +357,66 @@ class ClassroomDetail {
     else fn();
   }
 
+  /* The header's progressive blur samples whatever is painted behind it, and
+     on this page that is the hero photo. refreshHeaderBlur() runs when the
+     transition settles and again 320ms later — which covers a photo that was
+     already cached and stamped inside the transition, and misses one that was
+     not: a cold room has to resolve /v1/photos/:id, fetch the bytes and decode
+     them first, so its photo lands well after both nudges. Safari then keeps
+     the blur it sampled over the empty skeleton until something else forces a
+     repaint, which is why it came back on the first scroll. Whether a given
+     room was cached is stable within a session — the list only warms the cache
+     for cards it has scrolled near — so it showed up as "always these two
+     classrooms" rather than as flakiness.
+
+     So: refresh again when the photo is actually up. refreshHeaderBlur() does
+     its own sweep from there, which covers the photo's 0.6s reveal and the
+     page tint's transition behind it. */
+  _photoRevealed() {
+    refreshHeaderBlur();
+  }
+
+  _cancelMapEmbed() {
+    this._mapObserver?.disconnect();
+    this._mapObserver = null;
+    clearTimeout(this._mapTimer);
+    this._mapTimer = 0;
+  }
+
   /* Booting the map is the most expensive thing on this page by a distance:
      fetching the token, parsing mapbox-gl, building a WebGL context and its
      first tiles, all on the main thread. Doing that inside the view
      transition's update callback is what made the very first open of any
      detail page stutter.
 
-     So it waits for two things: the map section coming close to the viewport
-     (it sits below the features, the schedule and the opening hours — a
-     reader who doesn't scroll down there never pays for it at all), and the
-     transition being over.
-     Then it goes in an idle slot, and the map fades in when it arrives (see
-     .detail-map in classroom-detail.css). */
+     So it waits for three things: the map section coming close to the viewport
+     (on a long page — features, schedule, opening hours — a reader who doesn't
+     scroll down there never pays for it at all), the transition being over,
+     and then a beat longer.
+
+     That last wait is not politeness. A room with no photo has a short page,
+     short enough that the map section is already in range when it opens, so
+     "after the transition" meant a ~1.3s Mapbox boot starting the instant the
+     zoom landed — on top of the page's own entrance animations (the feature
+     chips, the section blocks), which are still running for another half
+     second. That is what made photo-less rooms feel janky while rooms with a
+     photo, whose maps are far below the fold, felt fine. */
   _scheduleMapEmbed(host, opts) {
-    this._mapObserver?.disconnect();
+    this._cancelMapEmbed();
     const start = () => {
       this._mapObserver?.disconnect();
       this._mapObserver = null;
       this._afterTransition(() => {
         const run = () => {
           if (!host.isConnected) return;
-          embedMap(host, opts).then((ok) => { if (ok) host.classList.add('detail-map--ready'); });
+          embedMap(host, opts);
         };
-        if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 500 });
-        else setTimeout(run, 120);
+        const idle = () => {
+          if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 500 });
+          else run();
+        };
+        // Long enough for the page's own entrance animations to be over.
+        this._mapTimer = setTimeout(idle, 600);
       });
     };
     if (typeof IntersectionObserver !== 'function') { start(); return; }
@@ -445,7 +490,13 @@ class ClassroomDetail {
       const headerEl = document.querySelector('.header');
       if (headerEl) headerEl.style.viewTransitionName = 'app-header';
       if (fromInfo) infoPage._prepareReturnVT();
-      if (zooming) cardEl.style.viewTransitionName = 'detail-hero';
+      // Only when the page has a hero for it to become. A room with no photo
+      // has none, and naming the card anyway put its snapshot on top of the
+      // growing page at its own unscaled size — so for the length of the fade
+      // you saw the card's title over the page's title, same words at two
+      // sizes. Unnamed, the card stays in the list's snapshot, which does not
+      // move, and the page's box covers it from frame one: nothing to ghost.
+      if (zooming && hasPhoto) cardEl.style.viewTransitionName = 'detail-hero';
       // The page's end of the morph, resolved inside the callback.
       let heroTargetEl = null;
 
@@ -492,9 +543,6 @@ class ClassroomDetail {
           if (heroTargetEl) {
             heroTargetEl.style.viewTransitionName = 'detail-hero';
             document.documentElement.classList.add('detail-vt-hero');
-            // Landing on the stand-in rather than a photo: nothing matching
-            // underneath the card, so it dissolves a little more gently.
-            if (!hasPhoto) document.documentElement.classList.add('detail-vt-anchor');
           }
         }
 
@@ -517,8 +565,7 @@ class ClassroomDetail {
         if (heroTargetEl) heroTargetEl.style.viewTransitionName = '';
         if (cardEl) cardEl.style.viewTransitionName = '';
         if (headerEl) headerEl.style.viewTransitionName = '';
-        document.documentElement.classList.remove(
-          'header-ctl-vt', 'detail-vt-open', 'detail-vt-hero', 'detail-vt-anchor');
+        document.documentElement.classList.remove('header-ctl-vt', 'detail-vt-open', 'detail-vt-hero');
         clearZoomOrigin();
         if (fromInfo) infoPage._cleanupReturnVT();
         this._settleTransition();
@@ -580,14 +627,13 @@ class ClassroomDetail {
 
     const cleanup = () => {
       releaseMap();
-      this._mapObserver?.disconnect();
-      this._mapObserver = null;
+      this._cancelMapEmbed();
       this._overlay.innerHTML = '';
       this._openTrigger = null;
       this._queryContext = null;
       if (headerEl) headerEl.style.viewTransitionName = '';
       document.documentElement.classList.remove(
-        'header-vt-fixed', 'header-ctl-vt', 'detail-vt-close', 'detail-vt-hero', 'detail-vt-anchor');
+        'header-vt-fixed', 'header-ctl-vt', 'detail-vt-close', 'detail-vt-hero');
       clearZoomOrigin();
       if (cardEl) {
         cardEl.style.viewTransitionName = '';
@@ -663,15 +709,17 @@ class ClassroomDetail {
         // the rect the page shrinks into is the one the card really lands on.
         if (cardInDom && !reduceMotion?.matches) {
           void cardEl.offsetHeight;
-          if (setZoomOrigin(cardEl.getBoundingClientRect(), cardRadius(cardEl), true)) {
+          if (setZoomOrigin(cardEl.getBoundingClientRect(), cardRadius(cardEl))) {
             document.documentElement.classList.add('detail-vt-close');
+            // Named only against a real hero, the same way the open is: with
+            // nothing to pair with, the card's snapshot would fade in at its
+            // own small size on top of a page that is still full-screen, which
+            // is the opening ghost played backwards. Unnamed, the page simply
+            // shrinks into the card's rect and uncovers it.
             if (heroEl) {
               document.documentElement.classList.add('detail-vt-hero');
-              if (heroEl.classList.contains('detail-hero-anchor')) {
-                document.documentElement.classList.add('detail-vt-anchor');
-              }
+              cardEl.style.viewTransitionName = 'detail-hero';
             }
-            cardEl.style.viewTransitionName = 'detail-hero';
           }
         }
       });
@@ -807,7 +855,7 @@ class ClassroomDetail {
           <img class="detail-photo" alt="">
           <div class="detail-photo-gradient"></div>
         </div>`
-      : '<div class="detail-hero-anchor" aria-hidden="true"></div>'}
+      : ''}
         <div class="detail-header">
         <div class="detail-title-row">
           <h1 class="detail-title" role="button" tabindex="0">${escapeHtml(classroom.name)}</h1>
@@ -1070,6 +1118,7 @@ class ClassroomDetail {
         container.classList.add('loaded');
         img.src = cachedUrl;
         this._setBackdrop(cachedUrl);
+        this._photoRevealed();
         return;
       }
 
@@ -1084,6 +1133,7 @@ class ClassroomDetail {
         if (this._currentId !== classroomId) return;
         img.classList.add('loaded');
         container.classList.add('loaded');
+        this._photoRevealed();
       }).catch(() => {
         if (this._currentId === classroomId) container.remove();
       });

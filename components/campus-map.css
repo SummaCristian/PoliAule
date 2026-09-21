@@ -129,6 +129,24 @@ html:has(#search-classrooms-container.visible) .footer {
   inset: 0;
   width: 100%;
   height: 100%;
+
+  /* The map is booted late on purpose (see deferredBoot() in campus-map.js and
+     _scheduleMapEmbed() in classroom-detail.js), so it arrives after whatever
+     brought it into view has settled — fade it in rather than having it snap
+     in. Once it is up this class stays on, so moving the same map into the
+     detail page later is instant. */
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+.campus-map--ready {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-map {
+    transition: none;
+  }
 }
 
 .campus-map:focus,

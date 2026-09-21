@@ -14,10 +14,12 @@
 const VARS = ['--zoom-x', '--zoom-y', '--zoom-scale', '--zoom-clip', '--zoom-radius',
   '--zoom-card-radius', '--arc-x', '--arc-y'];
 
-// How far the leading axis runs ahead of the straight line, as a fraction of
-// its own distance. Peak of detail-zoom-arc's bump in classroom-detail.css —
+// Peak of each half of the arc, as a fraction of that axis's own distance: the
+// horizontal running ahead of the spring, the vertical dragging behind it.
+// These are the peaks of detail-zoom-arc's two tracks in classroom-detail.css —
 // change one and the other has to be re-derived from the same spring.
-const ARC_PEAK = 0.163;
+const ARC_LEAD = 0.163;  // horizontal, ahead
+const ARC_DRAG = 0.148;  // vertical, behind
 
 /**
  * Writes the zoom's starting geometry to <html>.
@@ -26,12 +28,10 @@ const ARC_PEAK = 0.163;
  *               pressed card's scale is already baked in — the zoom then
  *               continues out of the pressed state instead of jumping)
  * @param radius the card's corner radius, in px
- * @param reverse true on close, where the box travels the other way and so
- *                does the arc
  * @returns      false when the rect is unusable (zero-sized, off-screen), so
  *               the caller can fall back to a plain cross-fade
  */
-export function setZoomOrigin(rect, radius = 16, reverse = false) {
+export function setZoomOrigin(rect, radius = 16) {
   const vw = document.documentElement.clientWidth;
   const vh = document.documentElement.clientHeight;
   if (!rect || rect.width < 1 || rect.height < 1 || !vw || !vh) return false;
@@ -53,16 +53,15 @@ export function setZoomOrigin(rect, radius = 16, reverse = false) {
   // with the page's clip instead of guessing at the card's shape.
   style.setProperty('--zoom-card-radius', `${radius}px`);
 
-  // The arc's peak offset, on whichever axis has further to go — that one
-  // leads and the other trails, which is what bends the path. The page travels
-  // from the card's corner to the viewport's, so the distance is just the
-  // card's offset, negated (and negated again on close, where it travels back).
-  const dir = reverse ? 1 : -1;
-  const dx = dir * rect.left;
-  const dy = dir * rect.top;
-  const xLeads = Math.abs(dx) >= Math.abs(dy);
-  style.setProperty('--arc-x', `${xLeads ? ARC_PEAK * dx : 0}px`);
-  style.setProperty('--arc-y', `${xLeads ? 0 : ARC_PEAK * dy}px`);
+  // The arc's two peak offsets. The page travels from the card's top left
+  // corner to the viewport's, so its distance is just the card's offset,
+  // negated: x runs ahead of that (further left, sooner), y falls behind it
+  // (still low, later) — which is what bows the path downwards rather than
+  // over the top. Both are written the same way for open and close: the close
+  // uses its own keyframes to retrace this same curve, rather than mirroring
+  // it, so the two directions follow one path.
+  style.setProperty('--arc-x', `${-ARC_LEAD * rect.left}px`);
+  style.setProperty('--arc-y', `${ARC_DRAG * rect.top}px`);
   return true;
 }
 

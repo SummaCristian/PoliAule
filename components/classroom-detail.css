@@ -129,6 +129,17 @@ body.detail-open .tab-content {
   pointer-events: none;
   height: 0;
   overflow: hidden;
+
+  /* Out of flow so it stops being a flex item (`.tab-content.visible` is
+     `flex: 1` and would otherwise grow straight back to full height), but
+     pinned to the same width it has in flow. Without these insets it
+     shrink-to-fits — 284px instead of 390 — the results grid re-lays-out at
+     that width, and every card's `contain-intrinsic-size: auto` remembers the
+     wrong size (220x280 rather than 157x200). That stale size is what the list
+     then reports for the whole of the closing transition, which put the card's
+     captured rect 300px from where it actually lands. */
+  left: 0;
+  right: 0;
 }
 
 body.detail-open .footer {
@@ -172,21 +183,6 @@ body.detail-open .tab-content * {
      scroll over the photo instead of carrying it away. */
   position: sticky;
   top: 0;
-}
-
-/* Rooms with no photo get the same card → page morph anyway: this invisible
-   box stands in for the hero photo as the page's end of it, so the card grows
-   into the page and dissolves there instead of fading where it stood. It is
-   the whole viewport, which is exactly the box the page's own zoom reveals, so
-   the card's snapshot and the growing page stay perfectly registered — the
-   card really does become the page. Fixed and empty: it paints nothing, so
-   pulling it out of the page's snapshot during the transition costs nothing.
-   The id keeps it ahead of the `> :not(.detail-photo-backdrop)` rule above,
-   which would otherwise make it position: relative. */
-#classroom-detail-overlay > .detail-hero-anchor {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
 }
 
 /* Mobile "Hero Header" style */
@@ -1196,24 +1192,6 @@ body.detail-open .tab-content * {
   clip-path: inset(0 round var(--detail-map-radius));
   isolation: isolate;
   background: var(--lg-tint-clear);
-}
-
-/* The map is booted lazily (see _scheduleMapEmbed in classroom-detail.js), so
-   it arrives some time after the page — fade it in over the glass placeholder
-   instead of having it snap into place. */
-.detail-map .campus-map {
-  opacity: 0;
-  transition: opacity 0.45s ease;
-}
-
-.detail-map--ready .campus-map {
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .detail-map .campus-map {
-    transition: none;
-  }
 }
 
 .detail-map .campus-map,
@@ -2331,7 +2309,7 @@ body.detail-open .tab-content * {
   :root.detail-vt-close::view-transition-old(root) {
     animation:
       detail-zoom-out var(--vt-duration) var(--vt-spring) both,
-      detail-zoom-arc var(--vt-duration) linear both;
+      detail-zoom-arc-back var(--vt-duration) linear both;
     transform-origin: 0 0;
     z-index: 1; /* the shrinking page rides above the list it shrinks into */
   }
@@ -2381,11 +2359,11 @@ body.detail-open .tab-content * {
     opacity: 1;
   }
 
-  /* Rooms with no photo land on the empty stand-in instead (.detail-hero-anchor),
-     so there is nothing matching underneath the card: it dissolves straight
-     onto the page growing out from under it, and takes a little longer over
-     it. Same for the rare case of no page-side element at all. */
-  :root.detail-vt-anchor::view-transition-old(detail-hero),
+  /* Safety net. classroom-detail.js names the card only when the page has a
+     hero for it to pair with, so a half-empty group should not happen — but if
+     one ever does (a hero that went missing between the two snapshots) this
+     keeps it a fade instead of a hard pop. Gentler than the paired fade above:
+     there is no second snapshot underneath to hide the swap. */
   ::view-transition-old(detail-hero):only-child { animation-name: detail-hero-solo-out; }
 
   ::view-transition-new(detail-hero):only-child {
@@ -2405,13 +2383,19 @@ body.detail-open .tab-content * {
   :root.detail-vt-hero.detail-vt-close::view-transition-image-pair(detail-hero) {
     animation:
       detail-hero-round var(--vt-duration) var(--vt-spring) both,
-      detail-zoom-arc var(--vt-duration) linear both;
+      detail-zoom-arc-back var(--vt-duration) linear both;
   }
 
-  /* No pair to round off (no hero on the page side at all) — still arc. */
-  :root.detail-vt-open::view-transition-image-pair(detail-hero),
-  :root.detail-vt-close::view-transition-image-pair(detail-hero) {
+  /* A room with no photo: nothing to round off, but the lone card snapshot
+     still has to arc. The page surface it sits on is arcing, and the card is
+     supposed to be glued to the box the page grows out of — without this it
+     would hang back on a straight line while the page swung out from under it. */
+  :root.detail-vt-open::view-transition-image-pair(detail-hero) {
     animation: detail-zoom-arc var(--vt-duration) linear both;
+  }
+
+  :root.detail-vt-close::view-transition-image-pair(detail-hero) {
+    animation: detail-zoom-arc-back var(--vt-duration) linear both;
   }
 
   ::view-transition-image-pair(detail-hero) {
@@ -2524,26 +2508,53 @@ body.detail-open .tab-content * {
 }
 
 /* The arc. A straight line from the card to the page reads as a slide; Apple's
-   zoom sweeps. The axis with further to travel runs ahead of the other on a
-   time-compressed copy of the same spring, so the box leaves along that axis
-   and curves into the other one at the end — the offset from the straight line
-   is this bump, peaking a quarter of the way in at 16% of that axis's
-   distance. utils/vt-motion.js writes the peak (signed, and negated on close)
-   into --arc-x / --arc-y; the stops here are its shape, sampled from the
-   spring, so they stay right whatever the distance is. Linear timing: the
-   shape IS the easing. */
+   zoom sweeps, and it sweeps *under* the straight line, not over it. Two
+   things put it there: the horizontal runs ahead of the spring (a
+   time-compressed copy of it) while the vertical drags behind (the spring
+   raised to a power), so the box swings out and stays low, then rises into
+   place at the end. Both parts are back to zero when the spring lands, so the
+   box still arrives exactly where the zoom puts it.
+
+   utils/vt-motion.js writes the two peak offsets into --arc-x / --arc-y; the
+   stops here are the shape, sampled from the spring, so they hold at any
+   distance. Linear timing: the shape IS the easing.
+
+   The close is not this played backwards. Its spring is front-loaded the same
+   way the open's is, so reversing in time would put the bulge of the curve at
+   the wrong end of the journey; -back is the same offset expressed against how
+   far along the straight line the box is, which is what makes the two
+   directions trace the same path through space. */
 @keyframes detail-zoom-arc {
   0%   { translate: 0 0; }
-  5%   { translate: calc(var(--arc-x, 0px) * 0.183) calc(var(--arc-y, 0px) * 0.183); }
-  10%  { translate: calc(var(--arc-x, 0px) * 0.5)   calc(var(--arc-y, 0px) * 0.5); }
-  15%  { translate: calc(var(--arc-x, 0px) * 0.768) calc(var(--arc-y, 0px) * 0.768); }
-  20%  { translate: calc(var(--arc-x, 0px) * 0.933) calc(var(--arc-y, 0px) * 0.933); }
-  25%  { translate: calc(var(--arc-x, 0px) * 0.997) calc(var(--arc-y, 0px) * 0.997); }
-  30%  { translate: calc(var(--arc-x, 0px) * 0.983) calc(var(--arc-y, 0px) * 0.983); }
-  40%  { translate: calc(var(--arc-x, 0px) * 0.822) calc(var(--arc-y, 0px) * 0.822); }
-  50%  { translate: calc(var(--arc-x, 0px) * 0.607) calc(var(--arc-y, 0px) * 0.607); }
-  60%  { translate: calc(var(--arc-x, 0px) * 0.414) calc(var(--arc-y, 0px) * 0.414); }
-  75%  { translate: calc(var(--arc-x, 0px) * 0.208) calc(var(--arc-y, 0px) * 0.208); }
+  5%   { translate: calc(var(--arc-x, 0px) * 0.183) calc(var(--arc-y, 0px) * 0.231); }
+  10%  { translate: calc(var(--arc-x, 0px) * 0.5)   calc(var(--arc-y, 0px) * 0.592); }
+  15%  { translate: calc(var(--arc-x, 0px) * 0.768) calc(var(--arc-y, 0px) * 0.857); }
+  20%  { translate: calc(var(--arc-x, 0px) * 0.933) calc(var(--arc-y, 0px) * 0.982); }
+  25%  { translate: calc(var(--arc-x, 0px) * 0.997) calc(var(--arc-y, 0px) * 0.993); }
+  30%  { translate: calc(var(--arc-x, 0px) * 0.983) calc(var(--arc-y, 0px) * 0.927); }
+  35%  { translate: calc(var(--arc-x, 0px) * 0.917) calc(var(--arc-y, 0px) * 0.819); }
+  40%  { translate: calc(var(--arc-x, 0px) * 0.822) calc(var(--arc-y, 0px) * 0.696); }
+  50%  { translate: calc(var(--arc-x, 0px) * 0.607) calc(var(--arc-y, 0px) * 0.461); }
+  60%  { translate: calc(var(--arc-x, 0px) * 0.414) calc(var(--arc-y, 0px) * 0.28); }
+  75%  { translate: calc(var(--arc-x, 0px) * 0.208) calc(var(--arc-y, 0px) * 0.112); }
+  90%  { translate: calc(var(--arc-x, 0px) * 0.052) calc(var(--arc-y, 0px) * 0.029); }
+  100% { translate: 0 0; }
+}
+
+@keyframes detail-zoom-arc-back {
+  0%   { translate: 0 0; }
+  5%   { translate: calc(var(--arc-x, 0px) * 0.25)  calc(var(--arc-y, 0px) * 0.141); }
+  10%  { translate: calc(var(--arc-x, 0px) * 0.567) calc(var(--arc-y, 0px) * 0.422); }
+  15%  { translate: calc(var(--arc-x, 0px) * 0.82)  calc(var(--arc-y, 0px) * 0.694); }
+  20%  { translate: calc(var(--arc-x, 0px) * 0.961) calc(var(--arc-y, 0px) * 0.887); }
+  25%  { translate: calc(var(--arc-x, 0px) * 1)     calc(var(--arc-y, 0px) * 0.983); }
+  30%  { translate: calc(var(--arc-x, 0px) * 0.963) calc(var(--arc-y, 0px) * 0.996); }
+  35%  { translate: calc(var(--arc-x, 0px) * 0.879) calc(var(--arc-y, 0px) * 0.947); }
+  40%  { translate: calc(var(--arc-x, 0px) * 0.77)  calc(var(--arc-y, 0px) * 0.859); }
+  50%  { translate: calc(var(--arc-x, 0px) * 0.541) calc(var(--arc-y, 0px) * 0.635); }
+  60%  { translate: calc(var(--arc-x, 0px) * 0.346) calc(var(--arc-y, 0px) * 0.421); }
+  75%  { translate: calc(var(--arc-x, 0px) * 0.148) calc(var(--arc-y, 0px) * 0.187); }
+  90%  { translate: calc(var(--arc-x, 0px) * 0.04)  calc(var(--arc-y, 0px) * 0.052); }
   100% { translate: 0 0; }
 }
 

@@ -28,6 +28,17 @@ body.info-open .tab-content {
   pointer-events: none;
   height: 0;
   overflow: hidden;
+
+  /* Out of flow so it stops being a flex item (`.tab-content.visible` is
+     `flex: 1` and would otherwise grow straight back to full height), but
+     pinned to the same width it has in flow. Without these insets it
+     shrink-to-fits — 284px instead of 390 — the results grid re-lays-out at
+     that width, and every card's `contain-intrinsic-size: auto` remembers the
+     wrong size (220x280 rather than 157x200). That stale size is what the list
+     then reports for the whole of the closing transition, which put the card's
+     captured rect 300px from where it actually lands. */
+  left: 0;
+  right: 0;
 }
 
 body.info-open .footer {

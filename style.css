@@ -517,34 +517,75 @@ label {
 .header-blur-layer {
   position: absolute;
   inset: 0;
+  /* Both the radius and the box are variables so the refresh below can nudge
+     all four layers at once. Zero except for the few frames after a view
+     transition; see the comment on .header-blur-refresh. */
+  bottom: var(--hbl-bottom-nudge, 0px);
+  backdrop-filter: blur(calc(var(--hbl-blur) + var(--hbl-nudge, 0px)));
+  -webkit-backdrop-filter: blur(calc(var(--hbl-blur) + var(--hbl-nudge, 0px)));
 }
 
 .header-blur-layer:nth-child(1) {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  --hbl-blur: 8px;
   mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
 }
 
 .header-blur-layer:nth-child(2) {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  --hbl-blur: 4px;
   mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
 }
 
 .header-blur-layer:nth-child(3) {
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  --hbl-blur: 2px;
   mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
 }
 
 .header-blur-layer:nth-child(4) {
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
+  --hbl-blur: 1px;
   mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 100%);
+}
+
+/* A backdrop-filter samples what is painted behind it, and a view transition
+   replaces everything behind this header with snapshots and then takes them
+   away again — after which the filter can keep showing what it sampled before
+   the transition (the list), leaving the detail photo unblurred under the
+   header until some later repaint, typically the first scroll.
+
+   refreshHeaderBlur() (utils/header-blur.js) sets this for a couple of frames
+   to force the effect to be rebuilt against what is actually behind it now. It
+   changes two independent things, because one of them alone is a value change
+   a compositor is entitled to treat as a no-op: the blur radius, and the
+   layers' own box. Three quarters of a pixel is invisible on an 8px blur and
+   invisible on a 1px one under a mask that fades it out anyway; two hundredths
+   of a pixel of height is invisible full stop.
+
+   What it deliberately does NOT do any more is hint the wrapper with
+   `will-change: backdrop-filter`. That was in here as a third nudge, and it is
+   the reason this kept not working in Safari: per Filter Effects 2, `filter`,
+   `opacity`, `mask`, `backdrop-filter` — and `will-change` naming any of them
+   — make an element a *backdrop root*, and a backdrop-filter only samples
+   what is painted inside its nearest one. Hinting .header-blur-layers made it
+   the backdrop root for the very layers it wraps, whose backdrop is then the
+   empty inside of that wrapper. Blink does not enforce backdrop roots here (the
+   blur is pixel-identical with and without the hint), so it looked harmless;
+   WebKit does, so for those frames the blur had nothing to sample — and that
+   is the state it held on to until the next scroll. The remedy was blanking
+   the thing it was meant to restore. */
+.header-blur-refresh .header-blur-layer {
+  --hbl-nudge: 0.75px;
+  --hbl-bottom-nudge: -0.02px;
+}
+
+/* Alternated with the above, so two refreshes in a row are still a *change*:
+   re-applying an identical computed value is exactly the no-op we are trying
+   to avoid. */
+.header-blur-refresh-alt .header-blur-layer {
+  --hbl-nudge: 0.6px;
+  --hbl-bottom-nudge: -0.04px;
 }
 
 .header-fade-overlay {

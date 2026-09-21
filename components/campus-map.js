@@ -220,7 +220,7 @@ export function initCampusMap() {
 
   const onVisible = () => {
     if (!bootPromise) {
-      ensureMap();
+      deferredBoot(container);
     } else if (map) {
       // Container may have resized (rotation, toolbar) while the tab was hidden.
       map.resize();
@@ -286,6 +286,39 @@ export function initCampusMap() {
     if (!isScrollLocked()) return;
     if (scrollY !== 0) window.scrollTo(0, 0);
   }, { passive: true });
+}
+
+/* Booting Mapbox — token, script parse, WebGL context, first tiles — is about
+   a second of main-thread work, and the tab it lands in is running its own
+   0.3s blur-and-scale entrance (`appear` in style.css) at exactly that moment,
+   so doing it on `tabvisible` is what made switching to the Campus tab stutter
+   the first time in a session. It can't move off the main thread (Mapbox needs
+   the DOM and a WebGL context; its own workers only handle tiles), but it can
+   wait: first for the tab's entrance animation to finish, then for an idle
+   slot. The map fades in when it's ready (see .campus-map in campus-map.css),
+   which is also why nothing is missed by waiting.
+
+   The classroom detail page defers its own embed the same way, and waits for
+   the map section to be scrolled near as well — see _scheduleMapEmbed() in
+   classroom-detail.js. */
+function deferredBoot(container) {
+  const entrance = container.getAnimations?.() ?? [];
+  // Raced against a deadline: waiting on an animation is only worth doing if
+  // it actually ends, and nothing here should be able to hold the map back for
+  // longer than the entrance itself takes.
+  const settled = entrance.length
+    ? Promise.race([
+        Promise.allSettled(entrance.map(a => a.finished)),
+        new Promise(resolve => setTimeout(resolve, 400)),
+      ])
+    : Promise.resolve();
+  settled.then(() => {
+    // A short idle deadline, not a long one: by now the entrance is over and
+    // the thread is usually free anyway, so this is about slotting in politely
+    // rather than about waiting.
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(() => ensureMap(), { timeout: 150 });
+    else setTimeout(ensureMap, 60);
+  });
 }
 
 // Boots the map once (from whichever surface asks first: the Campus tab or a
@@ -461,17 +494,30 @@ async function boot() {
     observer.disconnect();
   }).observe(map.getContainer(), { childList: true, subtree: true });
 
-  // Match the map's daylight to the app theme (Standard style only).
-  map.on('style.load', applyLightPreset);
+  // Match the map's daylight to the app theme (Standard style only), and
+  // reveal the map here rather than on 'load': 'load' means the first
+  // *visually complete* render — every tile, every glyph — which on a slow
+  // connection is seconds away. From 'style.load' the map paints its
+  // background and fills in tiles as they arrive, which is what it looked like
+  // before any of this was deferred, only now it fades in instead of popping.
+  map.on('style.load', () => {
+    applyLightPreset();
+    el.classList.add('campus-map--ready');
+  });
   darkScheme.addEventListener('change', applyLightPreset);
 
   map.on('load', () => {
+    el.classList.add('campus-map--ready');  // belt: a style that loaded without firing style.load
     map.resize();
     if (markers.length) return;  // an embed/release already put its own up
     if (embed) showEmbedMarker(mapboxgl);
     else if (startCampus) showBuildingMarkers(mapboxgl, startCampus);
     else showCampusMarkers(mapboxgl);
   });
+
+  // And braces: a style that never loads at all shouldn't leave the map (and
+  // its own error UI) invisible behind the fade-in.
+  setTimeout(() => el.classList.add('campus-map--ready'), 3000);
 
   if (startEmbed) setInteractive(false);
 

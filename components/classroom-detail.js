@@ -3,7 +3,7 @@ import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, photoUrlCache, extractPhotoColor, getCachedPhotoColor } from '../utils/photo.js';
+import { fetchPhotoUrl, photoUrlCache, extractPhotoColor, getCachedPhotoColor, getCachedPhotoLuminance } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createPopover } from 'vitrium';
 import { arcGroup } from '../utils/vt-motion.js';
@@ -594,6 +594,7 @@ class ClassroomDetail {
         </div>`;
     }
 
+    this._overlay.removeAttribute('data-title-tone');
     this._overlay.innerHTML = `
       ${classroom.idfoto ? `
         <div class="detail-photo-backdrop"></div>
@@ -671,9 +672,28 @@ class ClassroomDetail {
     // background). Best-effort: without it the page just stays --background-color.
     const cached = getCachedPhotoColor(url);
     if (cached) document.documentElement.style.setProperty('--detail-tint', cached);
+    this._applyTitleTone(url, el);
     extractPhotoColor(url).then(color => {
       if (color && el.isConnected) document.documentElement.style.setProperty('--detail-tint', color);
+      this._applyTitleTone(url, el);
     });
+  }
+
+  /**
+   * Picks black or white for the title from what's actually behind it: the
+   * photo's bottom strip, faded into the theme background (the title sits in
+   * that fade). Sets data-title-tone="light"|"dark" on the overlay, meaning
+   * the backdrop is light/dark; CSS turns that into the text color.
+   */
+  _applyTitleTone(url, el) {
+    const photoLum = getCachedPhotoLuminance(url);
+    if (photoLum == null || !el.isConnected) return;
+    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const bgLum = dark ? 0.02 : 0.9;
+    const lum = photoLum * 0.8 + bgLum * 0.2;
+    // 0.179 is where black and white text have equal WCAG contrast; sitting
+    // higher gives white the benefit on mid-tones, where it reads better.
+    this._overlay.dataset.titleTone = lum > 0.3 ? 'light' : 'dark';
   }
 
   async _loadPhoto(classroomId) {

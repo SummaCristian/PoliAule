@@ -13,6 +13,13 @@ export async function fetchPhotoUrl(classroomId) {
 
 // photo URL → CSS color string, or null when it couldn't be read (canvas taint, decode error)
 const photoColorCache = new Map();
+// photo URL → average relative luminance (0–1, linear light) of the same bottom strip
+const photoLumCache = new Map();
+
+/** Synchronous read of the strip's average luminance (null if not extracted yet / unreadable). */
+export function getCachedPhotoLuminance(url) {
+  return photoLumCache.get(url) ?? null;
+}
 
 /** Synchronous read of extractPhotoColor's cache (null if not extracted yet / unreadable). */
 export function getCachedPhotoColor(url) {
@@ -45,14 +52,16 @@ export function extractPhotoColor(url) {
         ctx.drawImage(img, 0, img.naturalHeight - sh, img.naturalWidth, sh, 0, 0, W, H);
         const data = ctx.getImageData(0, 0, W, H).data;
 
-        let r = 0, g = 0, b = 0, wSum = 0;
+        let r = 0, g = 0, b = 0, wSum = 0, lum = 0;
         for (let i = 0; i < data.length; i += 4) {
+          lum += relativeLuminance(data[i], data[i + 1], data[i + 2]);
           const max = Math.max(data[i], data[i + 1], data[i + 2]);
           const min = Math.min(data[i], data[i + 1], data[i + 2]);
           const w = 0.1 + (max - min) / 255; // favor colorful pixels over grey walls
           r += data[i] * w; g += data[i + 1] * w; b += data[i + 2] * w;
           wSum += w;
         }
+        photoLumCache.set(url, lum / (data.length / 4));
         done(rgbToTint(r / wSum, g / wSum, b / wSum));
       } catch {
         done(null);
@@ -60,6 +69,12 @@ export function extractPhotoColor(url) {
     };
     img.src = url;
   });
+}
+
+// WCAG relative luminance of an 8-bit sRGB pixel
+function relativeLuminance(r, g, b) {
+  const lin = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 }
 
 function rgbToTint(r, g, b) {

@@ -80,6 +80,7 @@ class ClassroomDetail {
     this._openTrigger = null;   // same, kept for reverse morph on close
     this._openedViaPushState = false;
     this._currentId = null;
+    this._enteredId = null;
     this._savedScrollPos = 0;
     this._queryContext = null;  // { date, from, to } when opened from Available Tab, else null
     this._nowTimer = null;
@@ -251,6 +252,7 @@ class ClassroomDetail {
   _silentClose() {
     if (!this._overlay || this._overlay.hidden) return;
     this._currentId = null;
+    this._enteredId = null;
     clearInterval(this._nowTimer);
     document.body.classList.remove('detail-open');
     // Leave tabbar.detail-open and backBtn visibility intact — info page takes over both
@@ -432,6 +434,7 @@ class ClassroomDetail {
     if (!this._overlay || this._overlay.hidden) return;
 
     this._currentId = null;
+    this._enteredId = null;
 
     const cardEl = this._openTrigger?.cardEl ?? null;
     const cardInDom = !!(cardEl && document.body.contains(cardEl));
@@ -566,12 +569,16 @@ class ClassroomDetail {
   // ---------- RENDER: STATIC CONTENT ----------
 
   _renderContent({ classroom, building, campus }) {
+    // Chips only stagger in when opening a classroom, not on re-renders
+    // (occupancy refresh) of the one already showing.
+    const enter = this._enteredId !== classroom.id;
+    this._enteredId = classroom.id;
     const featuresHtml = (classroom.features ?? [])
       .filter(f => FEATURE_ICONS[f.id])
-      .map(({ id }) => {
+      .map(({ id }, i) => {
         const { icon, key } = FEATURE_ICONS[id];
         return `
-          <div class="detail-feature-chip liquid-glass" data-feature-id="${id}">
+          <div class="detail-feature-chip liquid-glass${enter ? ' detail-feature-chip--enter' : ''}" data-feature-id="${id}" style="--i:${i}">
             <i class="hgi-stroke ${icon}" aria-hidden="true"></i>
             <span>${t(key)}</span>
           </div>`;
@@ -657,6 +664,57 @@ class ClassroomDetail {
       if (classroom.idfoto) this._loadPhoto(classroom.id);
     });
 
+    this._animateMasonry(this._overlay.querySelector('.detail-content'));
+  }
+
+  /**
+   * FLIP-animates layout reflows on resize that CSS can't transition on its
+   * own: the masonry cards, and the wrapping feature chips. Each
+   * ResizeObserver tick measures where an item landed, then slides it from
+   * where it visually was (including any in-flight slide) to its new spot.
+   * Uses the Web Animations API so it never fights the elements' own
+   * transform/translate/transition styles.
+   */
+  _animateReflow(container, itemSelector, observers) {
+    if (!container || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const items = [...container.querySelectorAll(itemSelector)];
+    const measure = () => new Map(items.map(el => {
+      const r = el.getBoundingClientRect();
+      const m = new DOMMatrix(getComputedStyle(el).transform);
+      return [el, { x: r.left - m.e, y: r.top - m.f, tx: m.e, ty: m.f }];
+    }));
+
+    let prev = null;
+    const ro = new ResizeObserver(() => {
+      const cur = measure();
+      if (prev) {
+        for (const el of items) {
+          const a = prev.get(el), b = cur.get(el);
+          // Old visual spot = old layout spot + the slide still in flight now
+          const dx = a.x + b.tx - b.x;
+          const dy = a.y + b.ty - b.y;
+          if (Math.abs(dx - b.tx) < 1 && Math.abs(dy - b.ty) < 1) continue;
+          el.getAnimations().filter(an => an.id === 'reflow').forEach(an => an.cancel());
+          const anim = el.animate(
+            [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }],
+            { duration: 350, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+          );
+          anim.id = 'reflow';
+        }
+      }
+      prev = measure();
+    });
+    ro.observe(container);
+    observers.push(ro);
+  }
+
+  _animateMasonry(content) {
+    this._reflowObservers?.forEach(o => o.disconnect());
+    this._reflowObservers = [];
+    if (!content) return;
+    this._animateReflow(content, ':scope > .detail-section', this._reflowObservers);
+    this._animateReflow(content.querySelector('.detail-features'), '.detail-feature-chip', this._reflowObservers);
   }
 
   // ---------- RENDER: HERO PHOTO ----------

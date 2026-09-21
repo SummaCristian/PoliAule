@@ -809,6 +809,22 @@ body.detail-open .tab-content * {
   }
 }
 
+/* Desktop: sections flow as a masonry grid of cards (CSS multi-column, so
+   each card lands in the shortest column and keeps its natural height). */
+@media (min-width: 1000px) {
+  .detail-content {
+    max-width: 1100px;
+    column-count: 2;
+    column-gap: 1rem;
+  }
+
+  .detail-content > .detail-section {
+    break-inside: avoid;
+    display: inline-block; /* keeps backdrop-filter cards unsplit in WebKit */
+    width: 100%;
+  }
+}
+
 /* ── Section ─────────────────────────────────────────────────────── */
 
 .detail-section {
@@ -946,6 +962,25 @@ body.detail-open .tab-content * {
 .detail-feature-chip .hgi-stroke {
   font-size: var(--text-110);
   color: var(--text-color-accent);
+}
+
+/* Staggered entrance: each chip fades and pops in a beat after the last. */
+.detail-feature-chip--enter {
+  animation: detail-chip-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(0.15s + var(--i, 0) * 45ms);
+}
+
+@keyframes detail-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-feature-chip--enter {
+    animation: none;
+  }
 }
 
 .detail-no-features {

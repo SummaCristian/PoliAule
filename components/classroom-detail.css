@@ -29,6 +29,12 @@
   z-index: 1;
 }
 
+/* Sticky (not relative) so the photo stays pinned while the content scrolls
+   over it; needs the overlay's specificity to beat the rule above. */
+#classroom-detail-overlay > .detail-photo-container {
+  position: sticky;
+}
+
 /* Fallback fade-in for browsers without View Transitions only. When VT IS
    supported, `will-change: opacity` here promoted the overlay to its own
    compositing layer, and Firefox (and Safari, until scrolled) then would not
@@ -162,6 +168,11 @@ body.detail-open .tab-content * {
      through the blurred header instead of sitting below it. Using the real
      height instead of a fixed guess keeps this correct at every breakpoint. */
   margin-top: calc(-1 * var(--header-height, 84px) - 0.5rem);
+
+  /* Pinned in place: the header and content (z-index above, later in the DOM)
+     scroll over the photo instead of carrying it away. */
+  position: sticky;
+  top: 0;
 }
 
 /* Mobile "Hero Header" style */
@@ -196,6 +207,30 @@ body.detail-open .tab-content * {
   /* Transparent so the photo's bottom fade dissolves into the blurred
      backdrop behind the container, not into a flat page color. */
   background: transparent;
+}
+
+/* Shrinks a little as the page scrolls (scroll-driven, no JS). Only once
+   loaded, so it doesn't fight the skeleton pulse. Mobile animates the height,
+   desktop the aspect-ratio. */
+@supports (animation-timeline: scroll()) {
+  .detail-photo-container.loaded {
+    animation: detail-photo-shrink linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 220px;
+  }
+  @media (min-width: 600px) {
+    .detail-photo-container.loaded {
+      animation-name: detail-photo-shrink-wide;
+    }
+  }
+}
+
+@keyframes detail-photo-shrink {
+  to { height: max(33vh, 240px); min-height: 0; }
+}
+
+@keyframes detail-photo-shrink-wide {
+  to { aspect-ratio: 21 / 8; }
 }
 
 .detail-photo {
@@ -300,10 +335,14 @@ body.detail-open .tab-content * {
   /* Bleed is what keeps the blur's transparent fringe outside the clip, so it
      has to grow with the blur radius. */
   --bd-bleed: calc(var(--bd-blur) * 1.5);
-  position: absolute;
+  /* Sticky like the photo, but pulled out of the flow with a negative bottom
+     margin (and the overlay's top padding cancelled) so it still sits exactly
+     behind the photo and the content scrolls over it. */
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
+  flex-shrink: 0;
+  margin-top: calc(-1 * var(--header-height, 84px) - 0.5rem);
+  margin-bottom: calc(var(--photo-h) * -2 + var(--header-height, 84px) + 0.5rem);
   height: calc(var(--photo-h) * 2);
   /* Never taller than the overlay: the overlay is the VT's shared element, and
      Safari sizes its snapshot from ink overflow (Chromium uses the border box),

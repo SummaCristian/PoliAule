@@ -84,8 +84,8 @@ body.detail-open {
   /* The header's top strip, safe-area rectangle and fade gradient (style.css)
      take the same color, so the top of the screen follows the page instead of
      staying the plain theme background. */
-  --header-bg: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
-  transition: background-color 0.6s ease, --header-bg 0.6s ease;
+  --header-bg: var(--detail-page-bg);
+  transition: background-color 0.6s ease, --header-bg 0.35s ease;
 }
 
 /* Registered so it can transition (a gradient can't, but the color stops that
@@ -97,6 +97,22 @@ body.detail-open {
 }
 
 :root {
+  --header-bg: var(--background-color);
+}
+
+/* Header color across the open/close VT. During the VT the header is a frozen
+   snapshot pinned to its OLD state, so its color can't interpolate inside it.
+   Hold --header-bg at the plain theme background for the whole VT, open or
+   close (a tinted header over the untinted list, which is what close would
+   otherwise show, looks wrong). On open the registered property then
+   transitions theme -> tint right after the morph, when .header-ctl-vt is
+   removed; on close it is already at the theme color, so nothing changes. */
+body {
+  --detail-page-bg: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
+  transition: --header-bg 0.35s ease;
+}
+
+.header-ctl-vt body {
   --header-bg: var(--background-color);
 }
 

@@ -12,7 +12,6 @@ import { createPillSelector } from './pill-selector.js';
 export function setupDatePicker(getPreferInitialDate = () => null) {
   const datePicker = document.getElementById('date-picker');
   const availableDates = classroomsData.map(day => day.date);
-  const toInputFormat = d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
   const formatLocal = d => [
     d.getFullYear(),
     String(d.getMonth() + 1).padStart(2, '0'),
@@ -51,7 +50,10 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
   }
 
   allDates.forEach((dateStr, index) => {
-    const date = new Date(dateStr);
+    // `new Date("YYYY-MM-DD")` parses as UTC midnight, which reads back a day
+    // early with local getters for any viewer behind UTC — parse locally
+    // instead, same as everywhere else in this function.
+    const date = parseLocalFromKey(dateStr.replace(/-/g, ''));
     const dayOfWeek = DAY_NAMES[date.getDay()];
     const dayNumber = date.getDate();
     const isSunday = date.getDay() === 0;
@@ -111,7 +113,10 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
   }
 
   document.getElementById('today-indicator').addEventListener('click', () => {
-    const todayStr = new Date().toISOString().slice(0, 10);
+    // Use the local calendar date (matching data-date's own formatLocal),
+    // not toISOString() — which is UTC and picks the wrong day between local
+    // midnight and 01:00/02:00 CET/CEST.
+    const todayStr = formatLocal(new Date());
     const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
     if (todayEl) pillSelector.selectElement(todayEl);
   });

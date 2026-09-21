@@ -81,7 +81,6 @@ function scrollerFor(container, stickyTop) {
 }
 
 class BuildingOverview {
-  #isOpen = false;
   #phase = 'idle';     // 'idle' | 'opening' | 'open' | 'closing'
   #ctx = null;
   #container = null;   // #available-classrooms-results
@@ -156,7 +155,6 @@ class BuildingOverview {
     if (!container || !list) return;
 
     this.#phase = 'opening';
-    this.#isOpen = true;
     this.#ctx = { campusId, date, from, to, results };
     this.#container = container;
     this.#list = list;
@@ -239,7 +237,6 @@ class BuildingOverview {
     if (this.#phase === 'opening') return this.#reverseOpen();
     if (this.#phase !== 'open') return;
     this.#phase = 'closing';
-    this.#isOpen = false;
     clearTimeout(this.#prewarmTimer);
     cancelAnimationFrame(this.#prewarmRaf);
     document.removeEventListener('keydown', this.#onKey);
@@ -444,7 +441,6 @@ class BuildingOverview {
   #reverseOpen() {
     if (!this.#anims.length) return;
     this.#phase = 'closing';
-    this.#isOpen = false;
     document.removeEventListener('keydown', this.#onKey);
     this.#onKey = null;
 
@@ -575,7 +571,6 @@ class BuildingOverview {
     this.#grid = null;
     this.#scroller = null;
     this.#pendingNavName = null;
-    this.#isOpen = false;
     this.#phase = 'idle';
   }
 

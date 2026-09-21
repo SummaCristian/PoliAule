@@ -299,7 +299,11 @@ function flipTitleBox(mutate) {
     backBtn.style.position = 'absolute';
     const clearAbsolute = () => { backBtn.style.position = ''; };
     backBtn.addEventListener('transitionend', function onEnd(e) {
-      if (e.target !== backBtn) return;
+      // Several properties transition on this element at once (press
+      // feedback's translate/scale/filter alongside the hide fade); only
+      // opacity finishing actually means the hide animation is done —
+      // matches the titleBox handler's own propertyName check below.
+      if (e.target !== backBtn || e.propertyName !== 'opacity') return;
       backBtn.removeEventListener('transitionend', onEnd);
       clearAbsolute();
     });
@@ -440,7 +444,7 @@ function buildBuildingPage(building) {
     if (first || classroom.floor !== lastFloor) {
       const label = document.createElement('div');
       label.className = 'bo-floor-label';
-      label.innerHTML = `<i class="hgi-stroke hgi-stairs-01" aria-hidden="true"></i><span>${floorLabel(classroom.floor)}</span>`;
+      label.innerHTML = `<i class="hgi-stroke hgi-stairs-01" aria-hidden="true"></i><span>${escapeHtml(floorLabel(classroom.floor))}</span>`;
       grid.appendChild(label);
       lastFloor = classroom.floor;
       first = false;

@@ -3,6 +3,7 @@ import { escapeHtml, safeUrl } from '../utils/html.js';
 
 const HASH = '#info';
 const GITHUB_REPO = 'SummaCristian/poliaule';
+const GITHUB_REPO_URL = `https://github.com/${GITHUB_REPO}`;
 const STATS_CACHE_KEY = 'poliaule_github_stats';
 const STATS_CACHE_TTL =  60 * 60 * 1000; // 1 hour
 
@@ -185,9 +186,15 @@ class InfoPage {
     }
   }
 
+  _disconnectObservers() {
+    this._observers?.forEach(o => o.disconnect());
+    this._observers = [];
+  }
+
   _doClose() {
     if (!this._overlay || this._overlay.hidden) return;
     this._isOpen = false;
+    this._disconnectObservers();
 
     const logoEl = this._logoEl;
     const titleEl = this._titleEl;
@@ -266,6 +273,7 @@ class InfoPage {
   // closes the info overlay and names the header elements as morph targets.
   _applyReturnVT() {
     document.body.classList.remove('info-open');
+    this._disconnectObservers();
     if (this._overlay) {
       this._overlay.setAttribute('hidden', '');
       this._overlay.classList.remove('visible');
@@ -297,6 +305,13 @@ class InfoPage {
   }
 
   _renderContent(showBadge) {
+    // Each render replaces this._overlay's contents wholesale (innerHTML = ...
+    // below), which detaches any previously-observed elements without
+    // disconnecting the IntersectionObservers watching them — disconnect the
+    // last render's observers before creating this render's.
+    this._disconnectObservers();
+    this._observers = [];
+
     this._showBadge = showBadge;
     const badgeText = this._badgeEl?.textContent ?? '';
     this._overlay.innerHTML = `
@@ -420,7 +435,7 @@ class InfoPage {
             <div class="about-me-section">
               <h2>${t('info.aboutMe.title')}</h2>
               <div class="about-me-container">
-                <img src="/assets/profile.jpg" alt="Profile picture of Cristian Summa" class="about-me-photo" draggable="false">
+                <img src="/images/profile.jpg" alt="Profile picture of Cristian Summa" class="about-me-photo" draggable="false">
                 <div class="about-me-bubbles">
                   <p class="message-bubble">${t('info.aboutMe.parag1')}</p>
                   <p class="message-bubble">${t('info.aboutMe.parag2')}</p>
@@ -437,37 +452,37 @@ class InfoPage {
             <div class="github-stats-section">
               <div class="github-section-head">
                 <h2>${t('info.github.title')}</h2>
-                <a href="https://github.com/SummaCristian/poliaule" target="_blank" rel="noopener" class="github-repo-chip">
+                <a href="${GITHUB_REPO_URL}" target="_blank" rel="noopener" class="github-repo-chip">
                   <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
                   <span>GitHub</span>
                 </a>
               </div>
               <div class="github-stats-grid">
-                <a href="https://github.com/SummaCristian/poliaule/stargazers" target="_blank" rel="noopener" class="github-stat-card">
+                <a href="${GITHUB_REPO_URL}/stargazers" target="_blank" rel="noopener" class="github-stat-card">
                   <div class="star-avatars" data-github="stargazers">
                     <i class="hgi-stroke hgi-star github-stat-icon" aria-hidden="true"></i>
                   </div>
                   <span class="github-stat-number" data-stat="stars">—</span>
                   <span class="github-stat-label">${t('info.github.stars')}</span>
                 </a>
-                <a href="https://github.com/SummaCristian/poliaule/commits/main" target="_blank" rel="noopener" class="github-stat-card">
+                <a href="${GITHUB_REPO_URL}/commits/main" target="_blank" rel="noopener" class="github-stat-card">
                   <i class="hgi-stroke hgi-git-commit github-stat-icon" aria-hidden="true"></i>
                   <span class="github-stat-number" data-stat="commits">—</span>
                   <span class="github-stat-label">${t('info.github.commits')}</span>
                 </a>
-                <a href="https://github.com/SummaCristian/poliaule/issues" target="_blank" rel="noopener" class="github-stat-card">
+                <a href="${GITHUB_REPO_URL}/issues" target="_blank" rel="noopener" class="github-stat-card">
                   <i class="hgi-stroke hgi-bug-01 github-stat-icon" aria-hidden="true"></i>
                   <span class="github-stat-number" data-stat="issues">—</span>
                   <span class="github-stat-label">${t('info.github.issues')}</span>
                 </a>
-                <a href="https://github.com/SummaCristian/poliaule/blob/main/LICENSE" target="_blank" rel="noopener" class="github-stat-card">
+                <a href="${GITHUB_REPO_URL}/blob/main/LICENSE" target="_blank" rel="noopener" class="github-stat-card">
                   <i class="hgi-stroke hgi-balance-scale github-stat-icon" aria-hidden="true"></i>
                   <span class="github-stat-number" data-stat="license">—</span>
                   <span class="github-stat-label">${t('info.github.license')}</span>
                 </a>
               </div>
 
-              <a href="https://github.com/SummaCristian/poliaule/issues/new" target="_blank" rel="noopener" class="create-issue-btn">
+              <a href="${GITHUB_REPO_URL}/issues/new" target="_blank" rel="noopener" class="create-issue-btn">
                 <i class="hgi-stroke hgi-bug-01" aria-hidden="true"></i>
                 <span>${t('info.github.createIssue')}</span>
               </a>
@@ -503,10 +518,7 @@ class InfoPage {
       // We temporarily "force" the final state to measure it
       const bubbles = bubblesContainer.querySelector('.about-me-bubbles');
       const allBubbles = bubbles.querySelectorAll('.message-bubble');
-      
-      // Save current styles
-      const originalSectionStyle = aboutMeSection.style.cssText;
-      
+
       // Apply final state styles for measurement
       allBubbles.forEach(b => {
         b.style.maxHeight = '500px';
@@ -531,6 +543,7 @@ class InfoPage {
         });
       }, { threshold: 0.1 });
       observer.observe(aboutMeSection);
+      this._observers.push(observer);
     }
 
     const observe = (selector, threshold = 0.1) => {
@@ -542,6 +555,7 @@ class InfoPage {
         });
       }, { threshold });
       obs.observe(el);
+      this._observers.push(obs);
     };
 
     observe('.info-pwa-section', 0.05);

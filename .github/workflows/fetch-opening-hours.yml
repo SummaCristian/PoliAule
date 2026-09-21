@@ -5,6 +5,9 @@ on:
     - cron: '0 6 * * 0'  # Once a week, Sunday 6am UTC (clear of the occupancy fetches, which run at 3am UTC and hourly from 5am to 7pm UTC)
   workflow_dispatch:      # Allow manual runs from the GitHub Actions tab
 
+permissions:
+  contents: read
+
 jobs:
   fetch:
     runs-on: ubuntu-latest

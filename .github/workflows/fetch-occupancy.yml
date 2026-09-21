@@ -11,6 +11,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -105,7 +108,11 @@ jobs:
           npx --yes wrangler@4 r2 object put "poliaule-data/logs/occupancy/latest.json" --file logs/run.json --content-type application/json --remote
 
       - name: Upload occupancy data to R2 (main)
-        if: hashFiles('occupancy/*.json') != ''
+        # Skip publishing if any room's occupancy is unknown (REST fallback
+        # exhausted its retries) — that room's data is occupancy=[], which
+        # would otherwise be served indistinguishably from "free all day".
+        # The Telegram alert above already surfaces this run for a human.
+        if: hashFiles('occupancy/*.json') != '' && steps.fetch_main.outputs.has_unknown_occupancy != 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -144,7 +151,7 @@ jobs:
           echo "enabled=${ENABLED:-false}" >> "$GITHUB_OUTPUT"
 
       - name: Copy main's data to beta (flag off)
-        if: hashFiles('occupancy/*.json') != '' && steps.beta_flag.outputs.enabled != 'true'
+        if: hashFiles('occupancy/*.json') != '' && steps.beta_flag.outputs.enabled != 'true' && steps.fetch_main.outputs.has_unknown_occupancy != 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -254,7 +261,7 @@ jobs:
           npx --yes wrangler@4 r2 object put "poliaule-data-beta/logs/occupancy/latest.json" --file logs/run.json --content-type application/json --remote
 
       - name: Upload occupancy data to R2 (beta)
-        if: steps.beta_flag.outputs.enabled == 'true'
+        if: steps.beta_flag.outputs.enabled == 'true' && steps.fetch_beta.outputs.has_unknown_occupancy != 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

@@ -185,7 +185,7 @@ graph TD
     IH["index.html"]:::entry
     SC["script.js"]:::shell
     ARS["available-rooms-script.js"]:::data
-    SCS["search-classrooms-script.js"]:::data
+    SCS["classroom-search-data.js"]:::data
     I18N["i18n.js"]:::i18n
 
     CP["campus-picker.js"]:::component
@@ -219,7 +219,7 @@ graph TD
 |---|---|
 | `script.js` | App shell: splash screen, tab routing, form wiring, campus picker init |
 | `available-rooms-script.js` | Fetches occupancy JSON and opening hours, exposes `findAvailableClassrooms()` |
-| `search-classrooms-script.js` | Search tab: full-text index, hierarchy navigation, classroom status |
+| `classroom-search-data.js` | Search tab: full-text index, hierarchy navigation, classroom status |
 | `i18n.js` | Locale detection (browser / localStorage), `t()` translation helper |
 | `components/campus-picker.js` | Campus selector (Vitrium list picker) |
 | `components/bottom-nav.js` | Main navigation (Vitrium tab bar) |
@@ -298,4 +298,5 @@ The app detects its environment from `location.hostname` at startup and shows a 
 | Library | Used for |
 |---|---|
 | Google Fonts (Nunito) | Typography |
-| Google Material Symbols | Icons |
+
+Icons (Hugeicons) are self-hosted, not loaded from a CDN — see `public/fonts/hugeicons/` and the minification step in `vite.config.js`.

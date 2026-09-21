@@ -32,7 +32,13 @@
        lands. All the ".splash-*" rules are intentionally NOT duplicated
        there (see style.css's "Splash Screen" comment) — this is their only
        copy. ".noscript-overlay" IS duplicated there on purpose (that one
-       isn't transient); keep the two in sync if it changes. -->
+       isn't transient); keep the two in sync if it changes.
+
+       --background-color/--text-color-primary/--text-color-secondary below
+       ARE also duplicated on purpose (the splash has to paint before
+       style.css arrives), but their VALUES must stay in sync with style.css's
+       own :root / prefers-color-scheme:dark blocks — there's no build-time
+       check for this, so a color token change needs updating both places. -->
   <style>
     :root {
       box-sizing: border-box;
@@ -422,7 +428,7 @@
 
 
   <!-- Rest of the UI under the header -->
-  <div class="body-container">
+  <main class="body-container">
 
     <!-- Available Classrooms -->
     <div id="available-classrooms-container" class="tab-content visible">
@@ -509,7 +515,7 @@
     <!-- Info Page Panel (sibling to tab-content divs, shown in-place) -->
     <div id="info-page-overlay" hidden></div>
 
-  </div>
+  </main>
 
   <footer class="footer">
     <button class="transparent-button version-info-button">

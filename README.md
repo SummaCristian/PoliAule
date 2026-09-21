@@ -5,7 +5,7 @@
   [![Visit poliaule.com](https://img.shields.io/badge/%F0%9F%8C%90_Visit-poliaule.com-2ecc5a?style=for-the-badge)](https://poliaule.com)
 
   [![Latest Release](https://img.shields.io/github/v/release/SummaCristian/poliaule?label=Release&color=blue&include_prereleases)](https://github.com/SummaCristian/poliaule/releases/latest)
-  [![GitHub Pages](https://img.shields.io/website?url=https%3A%2F%2Fpoliaule.com&label=poliaule.com)](https://poliaule.com)
+  [![Website](https://img.shields.io/website?url=https%3A%2F%2Fpoliaule.com&label=poliaule.com)](https://poliaule.com)
   [![Fetch Occupancy](https://img.shields.io/github/actions/workflow/status/SummaCristian/poliaule/fetch-occupancy.yml?label=Data+Fetch)](https://github.com/SummaCristian/poliaule/actions/workflows/fetch-occupancy.yml)
 </div>
 
@@ -54,7 +54,7 @@ A picture of the classroom will also help you avoid unwanted surprises (coff cof
 
 ## How it works
 
-Twice a day, a scheduled job pulls fresh occupancy data from the Politecnico di Milano API and uploads it to Cloudflare R2. When you open PoliAule, the app fetches that data through a small REST API backed by R2, not from Politecnico directly.
+Hourly (roughly 07:00–20:00 Italian time, plus a 3 AM UTC run), a scheduled job pulls fresh occupancy data from the Politecnico di Milano API and uploads it to Cloudflare R2. When you open PoliAule, the app fetches that data through a small REST API backed by R2, not from Politecnico directly.
 
 This keeps things fast for users and avoids hammering the upstream endpoint with every visit.
 

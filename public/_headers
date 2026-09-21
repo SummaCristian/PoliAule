@@ -1,2 +1,17 @@
+# script-src/style-src keep 'unsafe-inline' because index.html has a few inline
+# <script>/onload handlers and critical-CSS <style> blocks with no nonce/hash
+# pipeline yet; tighten this once those are removed or nonced at build time.
+# The Mapbox origins here are temporary and should be dropped once the map
+# provider is replaced.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://api.mapbox.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://api.poliaule.com https://api-beta.poliaule.com https://*.tiles.mapbox.com https://avatars.githubusercontent.com; connect-src 'self' https://api.poliaule.com https://api-beta.poliaule.com https://api.mapbox.com https://events.mapbox.com https://*.tiles.mapbox.com https://api.github.com; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+
 /fonts/hugeicons/*
   Cache-Control: public, max-age=31536000, immutable
+
+/images/*
+  Cache-Control: public, max-age=604800

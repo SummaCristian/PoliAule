@@ -98,6 +98,7 @@
   "data.reload": "Ricarica dati",
   "data.reloading": "Ricaricamento…",
   "settings.title": "Impostazioni",
+  "settings.close": "Chiudi impostazioni",
   "settings.language": "Lingua",
   "settings.sectionDateTime": "Data e ora",
   "settings.timeFormat": "Formato orario",

@@ -11,6 +11,19 @@ const TRANSITION_DURATION = 420; // ms — must match CSS
 // ── Breakpoint ────────────────────────────────────────────────────────────────
 
 const DESKTOP_MQ = window.matchMedia('(min-width: 52rem)');
+const REDUCE_MOTION_MQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+// vitrium's morphGeometry/snapGeometry (unlike its createMorphPopup, used by
+// e.g. data-fetch-card.js) don't check prefers-reduced-motion themselves —
+// skip straight to the end state instead of animating when it's set.
+function maybeMorph(el, fromRect, toRect, { fromRadius, toRadius, onSettle } = {}) {
+  if (REDUCE_MOTION_MQ.matches) {
+    snapGeometry(el, toRect, toRadius ?? fromRadius);
+    onSettle?.();
+    return;
+  }
+  morphGeometry(el, fromRect, toRect, { fromRadius, toRadius, onSettle });
+}
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -155,7 +168,7 @@ function switchPicker(nextCard) {
   // look, visibly stretching it.
   hideInnerBoxInstantly(prevInner);
   requestAnimationFrame(() => {
-    morphGeometry(prevPopup, prevVisualRect, prevRect, {
+    maybeMorph(prevPopup, prevVisualRect, prevRect, {
       toRadius: '18px',
       onSettle: () => { prevPopup.style.boxShadow = 'var(--shadow)'; },
     });
@@ -177,7 +190,7 @@ function switchPicker(nextCard) {
   nextCard.classList.add('tp-card--morphing');
 
   requestAnimationFrame(() => {
-    morphGeometry(nextPopup, nextRect, getPopupTarget(), {
+    maybeMorph(nextPopup, nextRect, getPopupTarget(), {
       fromRadius: '18px',
       toRadius: '22px',
       onSettle: () => {
@@ -214,7 +227,7 @@ export function openPicker(cardEl, sourceRect = null) {
   cardEl.classList.add('tp-card--morphing');
 
   requestAnimationFrame(() => {
-    morphGeometry(popup, rect, getPopupTarget(), {
+    maybeMorph(popup, rect, getPopupTarget(), {
       fromRadius: initialRadius,
       toRadius: '22px',
       onSettle: () => {
@@ -249,7 +262,7 @@ function closePicker() {
   const closingInner = popup.querySelector('.tp-popup__inner');
   hideInnerBoxInstantly(closingInner);
   requestAnimationFrame(() => {
-    morphGeometry(popup, visualRect, rect, {
+    maybeMorph(popup, visualRect, rect, {
       toRadius: '18px',
       onSettle: () => { popup.style.boxShadow = 'var(--shadow)'; },
     });
@@ -455,8 +468,11 @@ function buildTimePicker(wrapperEl) {
   popup.querySelector('.tp-quick-preset').addEventListener('click', () => {
     const now = new Date();
     if (isFrom) {
+      // Clamp instead of wrapping past midnight — in the last 15 minutes of
+      // the day, `% 24` would wrap back to hour 0, producing a target time
+      // earlier than "now" and on the wrong side of the day.
       const h = now.getMinutes() >= 45
-        ? (now.getHours() + 1) % 24
+        ? Math.min(now.getHours() + 1, 23)
         : now.getHours();
       
       const maxVal = popupInput.max || '20:15';
@@ -469,12 +485,12 @@ function buildTimePicker(wrapperEl) {
       }
       applyPreset(Math.floor(targetTotal / 60), targetTotal % 60);
     } else {
-      const fromInput = document.querySelector('.time-picker input[type="time"]');
+      const fromInput = document.getElementById('from-time-picker');
       if (fromInput?.value) {
         const [fh, fm] = fromInput.value.split(':').map(Number);
-        applyPreset((fh + 1) % 24, fm);
+        applyPreset(Math.min(fh + 1, 23), fm);
       } else {
-        applyPreset((now.getHours() + 1) % 24, now.getMinutes());
+        applyPreset(Math.min(now.getHours() + 1, 23), now.getMinutes());
       }
     }
   });
@@ -499,7 +515,7 @@ function buildTimePicker(wrapperEl) {
   function updateQuickLabel() {
     if (isFrom) {
       const now = new Date();
-      const h = now.getMinutes() >= 45 ? (now.getHours() + 1) % 24 : now.getHours();
+      const h = now.getMinutes() >= 45 ? Math.min(now.getHours() + 1, 23) : now.getHours();
 
       const maxVal = popupInput.max || '20:15';
       const [maxH, maxM] = maxVal.split(':').map(Number);
@@ -516,10 +532,10 @@ function buildTimePicker(wrapperEl) {
       quickLabelEl.textContent =
         formatTimeDisplay(`${String(targetH).padStart(2, '0')}:${String(targetM).padStart(2, '0')}`);
     } else {
-      const fromInput = document.querySelector('.time-picker input[type="time"]');
+      const fromInput = document.getElementById('from-time-picker');
       if (fromInput?.value) {
         const [fh, fm] = fromInput.value.split(':').map(Number);
-        const h = (fh + 1) % 24;
+        const h = Math.min(fh + 1, 23);
         quickLabelEl.textContent =
           formatTimeDisplay(`${String(h).padStart(2, '0')}:${String(fm).padStart(2, '0')}`);
       } else {
@@ -529,7 +545,7 @@ function buildTimePicker(wrapperEl) {
   }
 
   if (!isFrom) {
-    const fromInput = document.querySelector('.time-picker input[type="time"]');
+    const fromInput = document.getElementById('from-time-picker');
     if (fromInput) fromInput.addEventListener('input', updateQuickLabel);
   }
   updateQuickLabel();

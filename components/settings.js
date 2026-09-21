@@ -46,6 +46,7 @@ export function getStartupTabId() {
 let isAnimating = false;
 let isOpen = false;
 let overlay = null;
+let previouslyFocusedEl = null; // restored on close, for keyboard/screen-reader users
 
 // Module-level refs set by initSettings()
 let triggerEl = null;
@@ -209,10 +210,41 @@ function removeOverlay() {
 
 // ── Open / close ──────────────────────────────────────────────────────────────
 
+// Focusable elements inside the popup, for the Tab trap and initial focus.
+function getFocusableEls() {
+  return [...popupEl.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )].filter(el => el.offsetParent !== null);
+}
+
+function onSettingsKeydown(e) {
+  if (!isOpen) return;
+  if (e.key === 'Escape') { closeSettings(); return; }
+  if (e.key !== 'Tab') return;
+
+  const focusable = getFocusableEls();
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  } else if (!popupEl.contains(document.activeElement)) {
+    // Focus somehow escaped the popup (e.g. programmatic focus elsewhere) — pull it back in.
+    e.preventDefault();
+    first.focus();
+  }
+}
+
 function openSettings() {
   if (isAnimating || isOpen) return;
   isAnimating = true;
 
+  previouslyFocusedEl = document.activeElement;
   lockScroll();
 
   const rect = triggerEl.getBoundingClientRect();
@@ -247,6 +279,10 @@ function openSettings() {
   onTransitionEnd(popupEl, () => {
     isAnimating = false;
     isOpen = true;
+    // Move focus into the dialog once it's actually visible/interactive —
+    // keyboard/screen-reader users otherwise stay on the (now morphed-away)
+    // trigger button with no indication the popup opened.
+    (getFocusableEls()[0] ?? popupEl).focus();
   });
 }
 
@@ -282,6 +318,10 @@ function closeSettings() {
     isOpen = false;
     isAnimating = false;
     unlockScroll();
+    // Return focus to wherever it was before opening (usually the settings
+    // button) instead of leaving it on the now-hidden popup.
+    (previouslyFocusedEl && document.body.contains(previouslyFocusedEl) ? previouslyFocusedEl : triggerEl)?.focus();
+    previouslyFocusedEl = null;
   });
 }
 
@@ -564,12 +604,16 @@ function buildPopup() {
   const popup = document.createElement('div');
   popup.className = 'settings-popup';
   popup.style.display = 'none';
+  popup.setAttribute('role', 'dialog');
+  popup.setAttribute('aria-modal', 'true');
+  popup.setAttribute('aria-labelledby', 'settings-popup-title');
+  popup.setAttribute('tabindex', '-1'); // programmatic-focus fallback if no focusable child exists
   popup.innerHTML = `
     <div class="settings-popup__clip">
     <div class="settings-popup__inner">
       <div class="settings-popup__title-row">
-        <h2 class="settings-popup__title">${t('settings.title')}</h2>
-        <button class="settings-close-btn" aria-label="Close settings">
+        <h2 class="settings-popup__title" id="settings-popup-title">${t('settings.title')}</h2>
+        <button class="settings-close-btn" aria-label="${t('settings.close')}">
           <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
         </button>
       </div>
@@ -983,10 +1027,11 @@ export function initSettings() {
     retranslateCampus();
   });
 
-  // Escape closes the popup
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeSettings();
-  });
+  // Escape closes the popup; Tab is trapped inside it while open (see
+  // getFocusableEls/onSettingsKeydown above) — the popup renders on top of
+  // background content that's still in the DOM, so without this a sighted
+  // keyboard user could tab straight into it while the dialog is "open".
+  document.addEventListener('keydown', onSettingsKeydown);
 
   // Keep popup centred on resize while open
   window.addEventListener('resize', () => {

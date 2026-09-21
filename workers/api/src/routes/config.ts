@@ -11,6 +11,9 @@ config.get("/", (c) =>
   c.json(
     { mapboxToken: c.env.MAPBOX_TOKEN ?? null },
     c.env.MAPBOX_TOKEN ? 200 : 503,
-    { "Cache-Control": "public, max-age=3600" }
+    // Only cache the success response. Caching the 503 (secret not yet set)
+    // would let a browser/intermediary hold onto "no token" for up to an
+    // hour even after MAPBOX_TOKEN is configured.
+    c.env.MAPBOX_TOKEN ? { "Cache-Control": "public, max-age=3600" } : undefined
   )
 );

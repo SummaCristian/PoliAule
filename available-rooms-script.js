@@ -96,7 +96,7 @@ export async function fetchClassroomsData() {
 // useful to return relevant data, 
 // especially when full availability is not possible.
 export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
-  const formattedDate = formatDateYYYYMMDD(new Date(date));
+  const formattedDate = dateKeyFromISODate(date);
 
   // Find the day's data
   const dayData = classroomsData.find(day => day.date === formattedDate);
@@ -135,7 +135,10 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
       }
     }
 
-    const STATUS_ORDER = { 'free': 0, 'partially-free': 1, 'not-free': 2 };
+    // Only 'free'/'partially-free' are ever assigned above — sort() falls
+    // back to NaN (no-op, stable order) for anything else, so if a future
+    // status value is added here it must also be added to this map.
+    const STATUS_ORDER = { 'free': 0, 'partially-free': 1 };
     availableRooms.sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
 
     if (availableRooms.length > 0) {
@@ -157,6 +160,16 @@ function formatDateYYYYMMDD(date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}${month}${day}`;
+}
+
+// Converts a "YYYY-MM-DD" date-picker value straight into the API's YYYYMMDD
+// key via string manipulation, deliberately avoiding a Date round-trip:
+// `new Date("YYYY-MM-DD")` parses as UTC midnight, so reading it back with
+// local getters (as formatDateYYYYMMDD does) silently shifts the date by a
+// day for any viewer behind UTC. Use this for date-only strings; keep
+// formatDateYYYYMMDD for real Date instances (e.g. `new Date()`).
+function dateKeyFromISODate(isoDate) {
+  return isoDate.replace(/-/g, '');
 }
 
 // Returns the free time slots within [fromTime, toTime]
@@ -264,7 +277,7 @@ export function getClassroomStatusNow(classroomId) {
  * in the campus's building order.
  */
 export function getCampusBuildingsOverview(campusId, date, fromTime, toTime) {
-  const formattedDate = formatDateYYYYMMDD(new Date(date));
+  const formattedDate = dateKeyFromISODate(date);
   const dayData = classroomsData.find(day => day.date === formattedDate);
   if (!dayData) return [];
 

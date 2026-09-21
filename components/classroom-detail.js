@@ -61,7 +61,7 @@ function buildOccupationPopoverHtml(slot) {
   `;
 }
 
-const HASH_PATTERN    = /^#classroom\/([^\/]+)\/(.+)$/;
+const HASH_PATTERN    = /^#classroom\/([^/]+)\/(.+)$/;
 const HASH_PATTERN_V1 = /^#classroom\/(\d+)$/;
 
 // ---------- CLASS ----------
@@ -251,6 +251,8 @@ class ClassroomDetail {
     if (!this._overlay || this._overlay.hidden) return;
     this._currentId = null;
     clearInterval(this._nowTimer);
+    this._timelinePopoverCleanup?.();
+    this._timelinePopoverCleanup = null;
     document.body.classList.remove('detail-open');
     // Leave tabbar.detail-open and backBtn visibility intact — info page takes over both
     this._overlay.setAttribute('hidden', '');
@@ -415,6 +417,8 @@ class ClassroomDetail {
     if (!this._overlay || this._overlay.hidden) return;
 
     this._currentId = null;
+    this._timelinePopoverCleanup?.();
+    this._timelinePopoverCleanup = null;
 
     const cardEl = this._openTrigger?.cardEl ?? null;
     const cardInDom = !!(cardEl && document.body.contains(cardEl));

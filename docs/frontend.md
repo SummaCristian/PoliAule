@@ -1,6 +1,6 @@
 # PoliAule - Frontend
 
-The frontend is plain HTML + vanilla ES modules, no framework. Cloudflare Pages builds it with Vite (`npm run build`), which bundles and minifies the JS/CSS graph reachable from `index.html` into hashed files under `dist/assets/`. Static files referenced by absolute path at runtime rather than imported (`public/favicons/`, `public/fonts/`, `public/locales/`, `public/assets/`) are copied through unprocessed via Vite's `public/` convention. See the "Development Commands" section of the root `CLAUDE.md` for the exact build commands.
+The frontend is plain HTML + vanilla ES modules, no framework. Cloudflare Pages builds it with Vite (`npm run build`), which bundles and minifies the JS/CSS graph reachable from `index.html` into hashed files under `dist/assets/`. Static files referenced by absolute path at runtime rather than imported (`public/favicons/`, `public/fonts/`, `public/locales/`, `public/images/`) are copied through unprocessed via Vite's `public/` convention. Build commands: `npm run dev`, `npm run build`, `npm run lint`.
 
 ---
 
@@ -194,7 +194,7 @@ Any URL that fails this check causes the photo container to be removed silently,
 |---|---|
 | `script.js` | App shell: splash, tab bar, form wiring, startup preferences |
 | `available-rooms-script.js` | Data fetch, `findAvailableClassrooms()` filtering |
-| `search-classrooms-script.js` | Full-text search index, hierarchy navigation |
+| `classroom-search-data.js` | Full-text search index, hierarchy navigation |
 | `i18n.js` | Locale loading, `t()`, language switch callbacks |
 | `components/campus-picker.js` | `<campus-chip-picker>`: Vitrium list picker, `campuschange` event, docked mode |
 | `components/chip-shell.js` | Shared shell of the date and time chip pickers (Vitrium chip, docked mode) |

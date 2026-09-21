@@ -400,14 +400,15 @@ def write_run_log(log: dict) -> None:
     print(f"Run log written to {RUN_LOG_FILE} (R2 key: {log['log_key']})")
 
 
-def write_github_output(status: str, message: str):
-    """Append a `status` and multi-line `message` output for the GitHub Actions step, if running in CI."""
+def write_github_output(status: str, message: str, has_unknown_occupancy: bool):
+    """Append `status`, `message` and `has_unknown_occupancy` outputs for the GitHub Actions step, if running in CI."""
     output_path = os.environ.get("GITHUB_OUTPUT")
     if not output_path:
         return
     delimiter = "FETCH_MESSAGE_EOF"
     with open(output_path, "a", encoding="utf-8") as f:
         f.write(f"status={status}\n")
+        f.write(f"has_unknown_occupancy={'true' if has_unknown_occupancy else 'false'}\n")
         f.write(f"message<<{delimiter}\n{message}\n{delimiter}\n")
 
 
@@ -536,7 +537,7 @@ def run(args, log: dict) -> None:
             "No days to fetch (all within holiday periods or skipped weekdays). Exiting."
         )
         log["status"], log["message"] = "ok", "No days to fetch (all within holiday periods or skipped weekdays)."
-        write_github_output(log["status"], log["message"])
+        write_github_output(log["status"], log["message"], has_unknown_occupancy=False)
         return
 
     print(f"Fetching occupancy for {len(days)} day(s): {[d.isoformat() for d in days]}")
@@ -589,7 +590,12 @@ def run(args, log: dict) -> None:
     print(f"\nWritten date list to {list_path}")
 
     status, message = summarize(days, page_errors, failures, missing_rows, slot_drops)
-    write_github_output(status, message)
+    # `failures` (REST fallback exhausted its retries) is the one anomaly that
+    # actually poisons a room's data: fetch_occupancy() returning None falls
+    # back to occupancy=[], which is indistinguishable downstream from "free
+    # all day". page_errors/missing_rows/slot_drops all still carry real data
+    # (via the REST fallback), so don't gate the upload on those.
+    write_github_output(status, message, has_unknown_occupancy=bool(failures))
     log.update({
         "status": status,
         "message": message,

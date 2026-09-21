@@ -30,7 +30,7 @@ import {
   SKIP_DAYS
 } from './available-rooms-script.js';
 
-import { ensureClassroomDirectory, classroomsData as staticClassroomsData } from './classroom-search-data.js';
+import { ensureClassroomDirectory, classroomsData as staticClassroomsData, invalidateOccIndex } from './classroom-search-data.js';
 import { initSearchOverlay } from './components/search-overlay.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
@@ -252,7 +252,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
       <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
       ${building.altName ? `<span class="building-alt-name">${escapeHtml(building.altName)}</span>` : ''}
     </button>
-    <button class="header-button building-section-btn liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
+    <button class="header-button building-section-btn liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', () => buildingName))}">
       <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
     </button>
   `;
@@ -387,6 +387,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup the time pickers to ensure valid time ranges
     // (these don't depend on occupancy data)
     setupTimePickers();
+    _resolveTimePickersReady();
     initTimePickers();
     initTimeRangeSlider();
 
@@ -457,6 +458,9 @@ async function initOccupancyData() {
 
   const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
   if (autoSearchEnabled) {
+    // Wait for setupTimePickers() so #from-time-picker/#to-time-picker are
+    // actually populated before we submit — see timePickersReady above.
+    await timePickersReady;
     document.getElementById('available-classrooms-form').dispatchEvent(
       new Event('submit', { cancelable: true, bubbles: true })
     );
@@ -496,10 +500,6 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   buildingOverview.reset(); // tear down the zoom-out view if it's open
   container.dataset.searched = 'true';
   container.innerHTML = ''; // Clear previous results
-
-  // Find the day entry matching the selected date
-  const dateKey = date.replace(/-/g, ''); // "2026-03-16" → "20260316"
-  const dayData = classroomsData.find(day => day.date === dateKey) ?? classroomsData[0];
 
   if (results.length === 0) {
     renderNoResultsClassroomsContainer(container);
@@ -571,6 +571,14 @@ const TIME_MAX_MINS = 20 * 60 + 15; // 20:15
 
 // Set by setupTimePickers when the current time is after 20:15 (need tomorrow's date)
 let preferInitialDate = null;
+
+// initOccupancyData() and the DOMContentLoaded handler's setupTimePickers()
+// call race each other — both start from an unawaited fire-and-forget branch.
+// If occupancy resolves first, an auto-search submit would fire with the
+// #from-time-picker/#to-time-picker inputs still empty (no HTML default
+// value). Gate the auto-search on this instead of assuming ordering.
+let _resolveTimePickersReady;
+const timePickersReady = new Promise(resolve => { _resolveTimePickersReady = resolve; });
 
 // Sets up the time pickers to ensure that the 'to' time
 // is always at least 1 hour after the 'from' time, within 07:15–20:15
@@ -757,6 +765,7 @@ async function reloadOccupancyData() {
   btn.querySelector('.data-reload-label').textContent = t('data.reloading');
 
   await fetchClassroomsData();
+  invalidateOccIndex(); // the day count can stay the same across a reload; force a rebuild
 
   const indicator = document.getElementById('data-fetch-indicator');
   indicator.classList.remove('green', 'yellow', 'red');

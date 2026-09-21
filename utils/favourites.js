@@ -37,7 +37,11 @@ function write(ids) {
   try {
     localStorage.setItem(KEY, JSON.stringify(ids));
   } catch {
-    /* storage full or unavailable — favourites just won't persist */
+    // Storage full or unavailable — favourites just won't persist. Don't
+    // dispatch: listeners re-derive their state via getFavouriteIds(), which
+    // re-reads localStorage and would still see the pre-toggle list, so
+    // notifying them here would just flicker the UI back to the old state.
+    return;
   }
   window.dispatchEvent(new CustomEvent('favourites-changed'));
 }

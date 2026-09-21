@@ -1,0 +1,31 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    paths:
+      - '**/*.js'
+      - '**/*.css'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - 'eslint.config.js'
+      - '.github/workflows/frontend-ci.yml'
+  push:
+    branches: [main, beta, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build

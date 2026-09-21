@@ -112,6 +112,7 @@
   "data.reloading": "Reloading…",
 
   "settings.title": "Settings",
+  "settings.close": "Close settings",
   "settings.language": "Language",
   "settings.sectionDateTime": "Date & Time",
   "settings.timeFormat": "Time Format",

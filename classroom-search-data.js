@@ -17,6 +17,7 @@ export const SEARCH_MAX_RESULTS = 40;
 async function loadData() {
   if (classroomsData) return;
   const res = await fetch(`${getApiBase()}/v1/classrooms`);
+  if (!res.ok) throw new Error(`Failed to load classroom directory: ${res.status}`);
   classroomsData = await res.json();
 }
 
@@ -88,10 +89,17 @@ export const OCC_MAX_GROUPS = 24;
 const OCC_MAX_SESSIONS = 6;
 
 let occIndex = null;
-let occIndexDayCount = -1;
 
 export function hasOccupationData() {
   return occupancyDays.length > 0;
+}
+
+// Call after replacing the contents of occupancyDays (e.g. a manual "Reload
+// data") so the next search rebuilds the index instead of serving stale
+// results. The index used to only rebuild when the day *count* changed,
+// which silently missed same-length refreshes (the common case).
+export function invalidateOccIndex() {
+  occIndex = null;
 }
 
 // Occupancy JSON stores the day as "YYYYMMDD"; normalise to ISO so Date() and
@@ -145,9 +153,8 @@ function buildOccupationIndex() {
 }
 
 function ensureOccIndex() {
-  if (!occIndex || occIndexDayCount !== occupancyDays.length) {
+  if (!occIndex) {
     occIndex = buildOccupationIndex();
-    occIndexDayCount = occupancyDays.length;
   }
 }
 

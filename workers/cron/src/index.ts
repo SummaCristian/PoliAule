@@ -41,11 +41,27 @@ async function dispatchWorkflow(env: Env, noDelay = false): Promise<void> {
 
 async function notifyTelegram(env: Env, text: string): Promise<void> {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return;
-  await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+  const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text }),
   });
+  // This is the one alert channel for a dispatch failure — don't let it fail silently.
+  if (!res.ok) {
+    console.error(`Telegram notification failed: ${res.status} ${res.statusText} — ${await res.text()}`);
+  }
+}
+
+// Constant-time string compare so the shared trigger secret isn't leaked via
+// a timing side-channel on the endpoint's response latency.
+function timingSafeEqual(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const bufA = enc.encode(a);
+  const bufB = enc.encode(b);
+  if (bufA.length !== bufB.length) return false;
+  let diff = 0;
+  for (let i = 0; i < bufA.length; i++) diff |= bufA[i] ^ bufB[i];
+  return diff === 0;
 }
 
 async function run(env: Env): Promise<void> {
@@ -76,7 +92,8 @@ export default {
     if (!env.TRIGGER_SECRET) {
       return new Response("manual trigger disabled\n", { status: 403 });
     }
-    if (request.headers.get("authorization") !== `Bearer ${env.TRIGGER_SECRET}`) {
+    const authHeader = request.headers.get("authorization") ?? "";
+    if (!timingSafeEqual(authHeader, `Bearer ${env.TRIGGER_SECRET}`)) {
       return new Response("forbidden\n", { status: 403 });
     }
     const noDelay = new URL(request.url).searchParams.get("no_delay") === "true";

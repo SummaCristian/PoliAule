@@ -682,19 +682,6 @@ class ClassroomDetail {
       }
         </section>
 
-        ${hasMap ? `
-        <section class="detail-section detail-map-section">
-          <h2 class="detail-section-title">${t('detail.location')}</h2>
-          <div class="detail-map"></div>
-          <div class="detail-map-links"></div>
-        </section>` : ''}
-
-        ${hoursHtml ? `
-        <section class="detail-section">
-          <h2 class="detail-section-title">${t('detail.openingHours')}</h2>
-          ${hoursHtml}
-        </section>` : ''}
-
         <section class="detail-section">
           <div class="detail-section-header">
             <h2 class="detail-section-title">${t('detail.weeklySchedule')}</h2>
@@ -711,6 +698,19 @@ class ClassroomDetail {
             </div>
           </div>
         </section>
+
+        ${hoursHtml ? `
+        <section class="detail-section">
+          <h2 class="detail-section-title">${t('detail.openingHours')}</h2>
+          ${hoursHtml}
+        </section>` : ''}
+
+        ${hasMap ? `
+        <section class="detail-section detail-map-section">
+          <h2 class="detail-section-title">${t('detail.location')}</h2>
+          <div class="detail-map"></div>
+          <div class="detail-map-links"></div>
+        </section>` : ''}
       </div>
     `;
 

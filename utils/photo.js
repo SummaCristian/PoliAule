@@ -15,6 +15,13 @@ export async function fetchPhotoUrl(classroomId) {
 const photoColorCache = new Map();
 // photo URL → average relative luminance (0–1, linear light) of the same bottom strip
 const photoLumCache = new Map();
+// photo URL → average relative luminance of the whole photo (drives dark-mode dimming)
+const photoAvgLumCache = new Map();
+
+/** Synchronous read of the whole photo's average luminance (null if not extracted yet / unreadable). */
+export function getCachedPhotoAverageLuminance(url) {
+  return photoAvgLumCache.get(url) ?? null;
+}
 
 /** Synchronous read of the strip's average luminance (null if not extracted yet / unreadable). */
 export function getCachedPhotoLuminance(url) {
@@ -62,6 +69,14 @@ export function extractPhotoColor(url) {
           wSum += w;
         }
         photoLumCache.set(url, lum / (data.length / 4));
+
+        // Whole photo, for how bright it reads overall.
+        ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(img, 0, 0, W, H);
+        const all = ctx.getImageData(0, 0, W, H).data;
+        let avg = 0;
+        for (let i = 0; i < all.length; i += 4) avg += relativeLuminance(all[i], all[i + 1], all[i + 2]);
+        photoAvgLumCache.set(url, avg / (all.length / 4));
         done(rgbToTint(r / wSum, g / wSum, b / wSum));
       } catch {
         done(null);

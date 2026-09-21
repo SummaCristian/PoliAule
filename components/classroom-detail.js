@@ -3,7 +3,7 @@ import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, photoUrlCache, extractPhotoColor, getCachedPhotoColor, getCachedPhotoLuminance } from '../utils/photo.js';
+import { fetchPhotoUrl, photoUrlCache, extractPhotoColor, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { arcGroup } from '../utils/vt-motion.js';
@@ -95,6 +95,16 @@ class ClassroomDetail {
     this._tabbar = document.querySelector('.bn-wrapper');
     this._backBtn = document.getElementById('detail-back-btn');
     this._favBtn = document.getElementById('favourite-btn');
+
+    // The dark-mode dimming and the title tone both depend on the theme, so
+    // redo them for the open photo when the device theme flips at runtime.
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      const el = this._overlay.querySelector('.detail-photo-backdrop');
+      const url = photoUrlCache.get(this._currentId);
+      if (!el || !url) return;
+      this._applyPhotoDim(url, el);
+      this._applyTitleTone(url, el);
+    });
 
     // Mobile: flags the overlay once the sticky title row reaches its stuck
     // position (see the max-width: 599px block in classroom-detail.css).
@@ -845,11 +855,33 @@ class ClassroomDetail {
     // background). Best-effort: without it the page just stays --background-color.
     const cached = getCachedPhotoColor(url);
     if (cached) document.documentElement.style.setProperty('--detail-tint', cached);
+    this._applyPhotoDim(url, el);
     this._applyTitleTone(url, el);
     extractPhotoColor(url).then(color => {
       if (color && el.isConnected) document.documentElement.style.setProperty('--detail-tint', color);
+      this._applyPhotoDim(url, el);
       this._applyTitleTone(url, el);
     });
+  }
+
+  /**
+   * Brightness multiplier for the photo: 1 for dark/mid photos, down to 0.7 for
+   * very bright ones. Dark mode only (1 in light mode). CSS applies it to the
+   * photo and its backdrop together so the fade between them stays seamless.
+   */
+  _photoDim(url) {
+    if (!window.matchMedia('(prefers-color-scheme: dark)').matches) return 1;
+    const lum = getCachedPhotoAverageLuminance(url);
+    if (lum == null) return 1;
+    // Linear-light: mid-grey is ~0.18, a white-walled room ~0.5+.
+    const t = Math.min(1, Math.max(0, (lum - 0.2) / 0.35));
+    return 1 - 0.3 * t;
+  }
+
+  /** Publishes _photoDim as --photo-dim on the overlay (read by the dark-mode CSS). */
+  _applyPhotoDim(url, el) {
+    if (getCachedPhotoAverageLuminance(url) == null || !el.isConnected) return;
+    this._overlay.style.setProperty('--photo-dim', this._photoDim(url).toFixed(3));
   }
 
   /**
@@ -863,7 +895,10 @@ class ClassroomDetail {
     if (photoLum == null || !el.isConnected) return;
     const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const bgLum = dark ? 0.02 : 0.9;
-    const lum = photoLum * 0.8 + bgLum * 0.2;
+    // The photo is what's on screen after dark-mode dimming: CSS brightness()
+    // scales sRGB values, which is roughly dim^2.2 in linear light.
+    const shownLum = photoLum * this._photoDim(url) ** 2.2;
+    const lum = shownLum * 0.8 + bgLum * 0.2;
     // 0.179 is where black and white text have equal WCAG contrast; sitting
     // higher gives white the benefit on mid-tones, where it reads better.
     this._overlay.dataset.titleTone = lum > 0.3 ? 'light' : 'dark';

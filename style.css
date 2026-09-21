@@ -633,6 +633,24 @@ label {
 
   user-select: none;
   -webkit-user-drag: none;
+
+  transition: filter 0.35s ease;
+}
+
+/* The detail page tints the header with the classroom's colour, so the logo
+   loses contrast against it. A tight halo in the theme background colour
+   separates it without adding a container (which would show up in the
+   app-header view-transition snapshot). Filter is on the logo only: on the
+   title it would isolate its multiply blend. */
+body.detail-open .header-logo {
+  filter:
+    drop-shadow(0 0 0.5px color-mix(in srgb, var(--background-color) 90%, transparent))
+    drop-shadow(0 0 6px color-mix(in srgb, var(--background-color) 75%, transparent));
+}
+
+.header-ctl-vt .header-logo {
+  filter: none;
+  transition: none;
 }
 
 .header-buttons-container {

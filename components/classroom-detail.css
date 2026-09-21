@@ -424,6 +424,21 @@ body.detail-open .tab-content * {
   }
 }
 
+/* Adaptive dimming (dark mode only): --photo-dim is set per photo from its
+   average brightness (classroom-detail.js _applyPhotoDim). The backdrop copies
+   get the same factor so they keep matching the sharp photo's edge. */
+@media (prefers-color-scheme: dark) {
+  .detail-photo {
+    filter: brightness(var(--photo-dim, 1));
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+  }
+
+  .detail-photo-backdrop::before,
+  .detail-photo-backdrop::after {
+    filter: blur(var(--bd-blur)) saturate(1.25) brightness(var(--photo-dim, 1));
+  }
+}
+
 /* ── Header ─────────────────────────────────────────────────────── */
 
 /* Back button is a sibling of <header> (not a child — see index.html) so it

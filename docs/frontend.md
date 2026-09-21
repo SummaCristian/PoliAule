@@ -59,17 +59,36 @@ If the detail page was opened programmatically (e.g., a direct link load), `hist
 
 ## View Transition API
 
-Classroom open/close is animated with the [View Transition API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) (`document.startViewTransition`). The browser snapshots the current state, applies the DOM change, and crossfades, with named elements morphing between their old and new positions.
+Classroom open/close is animated with the [View Transition API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) (`document.startViewTransition`). The browser snapshots the current state, applies the DOM change, and then animates between the two — by default a cross-fade, plus a morph for every element that carries the same `view-transition-name` on both sides.
 
-Named transitions used:
+### The card → page zoom
+
+The card→page transition is a recreation of SwiftUI's `.zoom` navigation transition, and is built out of two pieces (`utils/vt-motion.js` + the `detail-vt-*` rules in `components/classroom-detail.css`):
+
+1. **The page surface.** The detail page is the *root* snapshot, which the browser always captures at exactly viewport size. `::view-transition-new(root)` (on close, `-old(root)`) is scaled down until its width matches the card's, translated so its top-left corner sits on the card's, and `clip-path`-ed to the card's rounded box — then it springs out to fill the screen. Because the hero photo is full-bleed and starts at the very top of the page, that one transform is also what lands the photo on the card. The screen behind it does not animate at all: it is covered, then uncovered, the way iOS pushes a zoomed view over its source.
+2. **The hero.** The card and the page's hero photo share one `view-transition-name` (`detail-hero`) and morph into each other on top of that growing box, with the corner radius interpolating with them. Both snapshots are `object-fit: cover`, so they are crops of the same photo rather than two stretched rectangles, and the outgoing one dissolves over an opaque incoming one in the first fifth of the transition (~80ms), while the box is small and moving fastest.
+3. **The arc.** A straight line from the card to the page reads as a slide, so the axis with further to travel runs ahead of the other on a time-compressed copy of the same spring, and the box leaves along that axis and curves into the other at the end. It is one `translate` animation (`detail-zoom-arc`), applied identically to the page snapshot and to the hero's image pair — individual transform properties compose outside `transform`, so the offset is in screen pixels for both and the two layers stay registered to the pixel.
+
+Rooms with no photo have nothing on the page to morph into, so they get `.detail-hero-anchor`: an empty, `position: fixed`, viewport-sized box that stands in for the photo. It is exactly the box the page's own zoom reveals, so the card's snapshot grows with the page and dissolves into it — the card really does become the page — and since it paints nothing, pulling it out of the page's snapshot costs the page nothing.
+
+The geometry lives in `--zoom-x/-y/-scale/-clip/-radius` and `--arc-x/-y` on `<html>`, written just before the transition starts; the motion is a critically damped spring (`--vt-spring`) over `--vt-duration` (0.4s) in CSS, so no JavaScript runs per frame. Nothing is filtered and nothing larger than the viewport is captured, which is what keeps it cheap on mobile.
+
+Two things deliberately happen *after* `vt.finished` rather than during the transition:
+
+- **The map.** Booting Mapbox (token, script parse, WebGL context, first tiles) is by far the most expensive thing on the detail page, and doing it inside the update callback is what made the first open of a session stutter. `_scheduleMapEmbed()` waits for the map section to come within 600px of the viewport *and* for the transition to be over, then goes in an idle slot and fades the map in (`.detail-map--ready`). A reader who never scrolls that far never loads Mapbox at all.
+- **The header's blur.** A `backdrop-filter` samples what is painted behind it, and a transition replaces all of that with snapshots and then removes them; Safari can go on showing what it sampled before, leaving the photo unblurred under the header until the next scroll. `refreshHeaderBlur()` (`utils/header-blur.js`) nudges the blur radii by a fraction of a pixel for one frame, twice, which forces the effect to be rebuilt against what is actually behind it now.
+
+### Other named elements
 
 | `view-transition-name` | Old state | New state |
 |---|---|---|
-| `classroom-nav` | Tab bar | Back button |
-| `classroom-detail-name` | Classroom name in card | Title in detail page |
-| `classroom-status` | Status badge in card | Status badge in header |
+| `detail-hero` | Classroom card | Hero photo on the detail page, or `.detail-hero-anchor` for rooms with no photo |
+| `app-header` | Header | Header — pinned, not animated: it is a constant translucent bar, and a frozen `backdrop-filter` cross-fade would show the wrong blur |
+| `detail-back-btn`, `favourite-btn` | — | Detail-only header buttons, scaled in on open and out on close |
 
-The names are assigned immediately before `startViewTransition()` and cleared once `vt.finished` resolves, so they never accidentally affect unrelated elements.
+The names are assigned immediately before `startViewTransition()` and cleared once `vt.finished` resolves, so they never accidentally affect unrelated elements. With no card to zoom from (a direct link, or coming back from the info page) the `detail-vt-*` classes are never set and the transition stays a plain root cross-fade.
+
+Under `prefers-reduced-motion: reduce` the zoom and the morph are dropped for a short cross-fade in place.
 
 On browsers that don't support the API, open/close still works: the `if (document.startViewTransition)` guard falls back to a plain CSS class toggle.
 

@@ -517,34 +517,52 @@ label {
 .header-blur-layer {
   position: absolute;
   inset: 0;
+  /* Radius as a variable so .header-blur-refresh below can nudge all four at
+     once. --hbl-nudge is 0 except for the one frame after a view transition. */
+  backdrop-filter: blur(calc(var(--hbl-blur) + var(--hbl-nudge, 0px)));
+  -webkit-backdrop-filter: blur(calc(var(--hbl-blur) + var(--hbl-nudge, 0px)));
 }
 
 .header-blur-layer:nth-child(1) {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  --hbl-blur: 8px;
   mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
 }
 
 .header-blur-layer:nth-child(2) {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  --hbl-blur: 4px;
   mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
 }
 
 .header-blur-layer:nth-child(3) {
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  --hbl-blur: 2px;
   mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
 }
 
 .header-blur-layer:nth-child(4) {
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
+  --hbl-blur: 1px;
   mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 100%);
+}
+
+/* A backdrop-filter samples what is painted behind it, and a view transition
+   replaces everything behind this header with snapshots and then takes them
+   away again — after which the filter can keep showing what it sampled before
+   the transition (the list), leaving the detail photo unblurred under the
+   header until some later repaint, typically the first scroll. Set for exactly
+   one frame after a transition settles (refreshHeaderBlur() in
+   utils/header-blur.js): a new blur radius and a new compositing hint force
+   the effect to be rebuilt against what is actually behind it now. Three
+   quarters of a pixel is invisible on an 8px blur and invisible on a 1px one
+   under a mask that fades it out anyway. */
+.header-blur-refresh .header-blur-layers {
+  will-change: backdrop-filter;
+}
+
+.header-blur-refresh .header-blur-layer {
+  --hbl-nudge: 0.75px;
 }
 
 .header-fade-overlay {

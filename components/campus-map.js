@@ -74,6 +74,7 @@ let campusContainer = null;
 let mapEl = null;        // the .campus-map element the one Map() lives in — reparented, never rebuilt
 let mapboxglLib = null;  // set once loaded — reused by the picker's change listener below
 let mode = 'campus';   // 'campus' | 'buildings'
+let mapLoaded = false; // true once the map has fired 'load' (style + first tiles)
 let markers = [];      // currently-rendered mapboxgl.Marker[]
 let markerCampus = null; // the campus whose building markers are up (mode 'buildings')
 
@@ -466,6 +467,7 @@ async function boot() {
   darkScheme.addEventListener('change', applyLightPreset);
 
   map.on('load', () => {
+    mapLoaded = true;
     map.resize();
     if (markers.length) return;  // an embed/release already put its own up
     if (embed) showEmbedMarker(mapboxgl);
@@ -861,7 +863,11 @@ export async function embedMap(host, { lat, long, label, siblings }) {
   placeEl();
   map.resize();
   applyEmbedView();
-  return true;
+  // Hold the promise until there is actually something to look at: the detail
+  // page fades the map in when this resolves, and fading in an empty canvas
+  // that then pops full of tiles is worse than waiting a beat longer.
+  if (!mapLoaded) await new Promise((resolve) => map.once('load', resolve));
+  return token === embedToken;
 }
 
 /** Moves the map out of the detail page (still in preview state) before its DOM is rebuilt. */

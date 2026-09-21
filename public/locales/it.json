@@ -1,4 +1,7 @@
 {
+  "infoHint.text": "Tocca qui per saperne di più",
+  "infoHint.dismiss": "Chiudi",
+
   "tabs.available": "Disponibili",
   "tabs.campus": "Campus",
   "tabs.search": "Cerca",

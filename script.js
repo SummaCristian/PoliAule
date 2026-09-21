@@ -34,6 +34,7 @@ import { ensureClassroomDirectory, classroomsData as staticClassroomsData } from
 import { initSearchOverlay } from './components/search-overlay.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
+import { initInfoHint } from './components/info-hint.js';
 
 import { initTimePickers } from './components/time-picker.js';
 import { initTimeRangeSlider } from './components/time-range-slider.js';
@@ -350,6 +351,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Init info page overlay immediately — no data dependency
     infoPage.init();
+    initInfoHint();
 
     // Search overlay (bottom-nav FAB) — lazy-loads its data on first open
     initSearchOverlay();

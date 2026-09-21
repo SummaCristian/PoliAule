@@ -1,4 +1,7 @@
 {
+  "infoHint.text": "Tap here to find out more",
+  "infoHint.dismiss": "Dismiss",
+
   "tabs.available": "Available",
   "tabs.campus": "Campus",
   "tabs.search": "Search",

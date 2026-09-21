@@ -4,8 +4,8 @@ import { createPopover } from 'vitrium';
 import { t } from '../i18n.js';
 
 const SEEN_KEY = 'poliAule_infoHintSeen';
-const MIN_DELAY_MS = 1000; //25_000;
-const MAX_DELAY_MS = 6000; //60_000;
+const MIN_DELAY_MS = 25_000;
+const MAX_DELAY_MS = 60_000;
 
 const store = {
   get: () => { try { return localStorage.getItem(SEEN_KEY) === '1'; } catch { return false; } },

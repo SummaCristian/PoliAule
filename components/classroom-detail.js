@@ -595,6 +595,30 @@ class ClassroomDetail {
       })
       .join('');
 
+    // building.hours is resolved upstream (building > campus default > global
+    // default); opening hours are only defined per building, never per room.
+    let hoursHtml = '';
+    const hours = building.hours
+      ?? occupancyData.flatMap(d => d.campuses ?? [])
+        .find(c => c.id === campus.id)?.buildings
+        ?.find(b => b.name === building.name)?.hours;
+    if (hours) {
+      const dow = new Date().getDay(); // 0 = Sunday
+      const rows = [
+        ['mon_fri', 'detail.monFri', dow >= 1 && dow <= 5],
+        ['sat', 'detail.saturday', dow === 6],
+        ['sun', 'detail.sunday', dow === 0],
+      ].map(([key, label, isToday]) => {
+        const range = hours[key];
+        const value = range ? `${escapeHtml(range[0])} – ${escapeHtml(range[1])}` : t('detail.closed');
+        return `<div class="detail-hours-row${isToday ? ' detail-hours-row--today' : ''}${range ? '' : ' detail-hours-row--closed'}">
+          <span class="detail-hours-day">${t(label)}</span>
+          <span class="detail-hours-time">${value}</span>
+        </div>`;
+      }).join('');
+      hoursHtml = `<div class="detail-hours">${rows}</div>`;
+    }
+
     const hasMap = typeof building.lat === 'number' && typeof building.long === 'number';
     const mapLabel = building.altName?.trim() || `${t('building.prefix')} ${building.name}`;
     const mapLinks = hasMap ? {
@@ -663,6 +687,12 @@ class ClassroomDetail {
           <h2 class="detail-section-title">${t('detail.location')}</h2>
           <div class="detail-map"></div>
           <div class="detail-map-links"></div>
+        </section>` : ''}
+
+        ${hoursHtml ? `
+        <section class="detail-section">
+          <h2 class="detail-section-title">${t('detail.openingHours')}</h2>
+          ${hoursHtml}
         </section>` : ''}
 
         <section class="detail-section">

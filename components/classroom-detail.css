@@ -2183,3 +2183,33 @@ body.detail-open .tab-content * {
   42%       { filter: blur(10px); }
   85%, 100% { filter: blur(0); }
 }
+
+.detail-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-hours-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-color-primary);
+}
+
+.detail-hours-day {
+  color: var(--text-color-secondary);
+}
+
+.detail-hours-row--today,
+.detail-hours-row--today .detail-hours-day {
+  font-weight: 700;
+  color: var(--text-color-accent);
+}
+
+.detail-hours-row--closed:not(.detail-hours-row--today) .detail-hours-time {
+  color: var(--text-color-secondary);
+}

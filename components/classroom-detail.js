@@ -3,7 +3,7 @@ import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, photoUrlCache, extractPhotoColor } from '../utils/photo.js';
+import { fetchPhotoUrl, photoUrlCache, extractPhotoColor, getCachedPhotoColor } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createPopover } from 'vitrium';
 import { createPillSelector } from './pill-selector.js';
@@ -295,6 +295,11 @@ class ClassroomDetail {
       // (which removes the photo container entirely) run normally instead of being
       // skipped via its "already loaded" short-circuit.
       if (!decoded) validPhotoUrl = null;
+      // Warm the tint cache too, so _setBackdrop can apply --detail-tint
+      // synchronously inside the VT callback (the "new" snapshot is taken
+      // right after it, before any async extraction could land).
+      if (validPhotoUrl) await extractPhotoColor(validPhotoUrl);
+      if (this._currentId !== id) return;
     }
 
     if (document.startViewTransition) {
@@ -318,6 +323,8 @@ class ClassroomDetail {
       // Strip the glass blur off the scaling header controls for the transition
       // (see .header-ctl-vt in classroom-detail.css).
       document.documentElement.classList.add('header-ctl-vt');
+      // Open-only zoom timing (see .detail-vt-open in classroom-detail.css).
+      document.documentElement.classList.add('detail-vt-open');
 
       const vt = document.startViewTransition(() => {
         if (fromInfo) {
@@ -371,6 +378,7 @@ class ClassroomDetail {
         if (cardEl) cardEl.style.viewTransitionName = '';
         if (headerEl) headerEl.style.viewTransitionName = '';
         document.documentElement.classList.remove('header-ctl-vt');
+        document.documentElement.classList.remove('detail-vt-open');
         if (fromInfo) infoPage._cleanupReturnVT();
       };
       // A second VT firing before this one settles rejects .ready/.finished with
@@ -650,6 +658,8 @@ class ClassroomDetail {
 
     // Base color under the backdrop's fade (see #classroom-detail-overlay's
     // background). Best-effort: without it the page just stays --background-color.
+    const cached = getCachedPhotoColor(url);
+    if (cached) document.documentElement.style.setProperty('--detail-tint', cached);
     extractPhotoColor(url).then(color => {
       if (color && el.isConnected) document.documentElement.style.setProperty('--detail-tint', color);
     });

@@ -264,6 +264,11 @@ body.detail-open .tab-content * {
   left: 0;
   right: 0;
   height: calc(var(--photo-h) * 2);
+  /* Never taller than the overlay: the overlay is the VT's shared element, and
+     Safari sizes its snapshot from ink overflow (Chromium uses the border box),
+     so a backdrop poking out below the overlay made the "new" image taller than
+     the group and squeezed it during the zoom. */
+  max-height: 100%;
   z-index: -1;
   overflow: hidden; /* the bleed must not cause horizontal scroll */
   container-type: inline-size;
@@ -1667,6 +1672,20 @@ body.detail-open .tab-content * {
   50% { opacity: 0.8; }
 }
 
+/* The photo backdrop and tinted backgrounds fade in over 0.6s for the normal
+   (non-VT) load. During an open/close VT that fade would start inside the
+   update callback, so the "new" snapshot would capture a transparent backdrop
+   and an untinted background that then pop in when the live DOM takes over.
+   Same for the photo's own opacity + scale(1.05 -> 1.001) settle: it would
+   start mid-callback, so the snapshot catches it faded/zoomed and the live
+   image finishes the zoom after the morph ends. */
+.header-ctl-vt #classroom-detail-overlay,
+.header-ctl-vt .detail-photo-backdrop,
+.header-ctl-vt .detail-photo,
+.header-ctl-vt body {
+  transition: none;
+}
+
 /* Detail-only header controls (back button, favourite toggle) scaling in/out
    in step with the page morph. */
 
@@ -1790,6 +1809,26 @@ body.detail-open .tab-content * {
     animation-fill-mode: both;
   }
 
+  /* Open only: let the card be seen zooming. The new page is now a full-bleed
+     photo, and with the expo-out curve shared by the group and both fades it
+     was nearly opaque and nearly full-size within ~100ms, so the card never
+     read as growing. A gentler curve on the morph, the card snapshot held
+     swapped for the page over the first quarter of the run, so the page
+     (shrunk to the card's width) is what grows out of the card's spot and the
+     card scaled up to full width is never on screen keep the card visible while it grows. */
+  :root.detail-vt-open::view-transition-group(classroom-detail-zoom) {
+    animation-duration: 0.55s;
+    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  :root.detail-vt-open::view-transition-old(classroom-detail-zoom) {
+    animation: detail-zoom-card-out 0.55s linear both;
+  }
+
+  :root.detail-vt-open::view-transition-new(classroom-detail-zoom) {
+    animation: detail-zoom-page-in 0.55s linear both;
+  }
+
   /* Detail-only header controls get their own VT groups (pulled out of the
      pinned `app-header` snapshot) so they scale in on open / out on close,
      on top of the header, in step with the page morph — instead of popping
@@ -1837,4 +1876,14 @@ body.detail-open .tab-content * {
   .detail-today-indicator:hover {
     background: var(--color-accent-dark-hover);
   }
+}
+
+@keyframes detail-zoom-card-out {
+  0%   { opacity: 1; }
+  25%, 100% { opacity: 0; }
+}
+
+@keyframes detail-zoom-page-in {
+  0%   { opacity: 0; }
+  25%, 100% { opacity: 1; }
 }

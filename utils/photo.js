@@ -14,6 +14,11 @@ export async function fetchPhotoUrl(classroomId) {
 // photo URL → CSS color string, or null when it couldn't be read (canvas taint, decode error)
 const photoColorCache = new Map();
 
+/** Synchronous read of extractPhotoColor's cache (null if not extracted yet / unreadable). */
+export function getCachedPhotoColor(url) {
+  return photoColorCache.get(url) ?? null;
+}
+
 /**
  * Dominant color of the photo's bottom edge, saturation-boosted so grey/beige
  * rooms don't average to mud. That edge is the one the hero fades out of, so

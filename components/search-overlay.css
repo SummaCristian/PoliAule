@@ -284,8 +284,9 @@ html.search-vt .lg-tabbar__prominent {
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain; /* don't chain into the page behind when the list ends */
 
-  padding: 1.75rem; /* 28px all around */
+  padding: 1.25rem; /* section labels/rows carry their own inset, see below */
   border-radius: var(--radius-xl);
   background: var(--lg-tint);
   backdrop-filter: blur(var(--lg-blur-md));
@@ -294,6 +295,8 @@ html.search-vt .lg-tabbar__prominent {
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
     0 4px 40px 0 var(--lg-shadow-color);
+
+  animation: appear 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Nothing to show yet — collapse the container so it isn't an empty glass slab. */
@@ -301,29 +304,7 @@ html.search-vt .lg-tabbar__prominent {
   display: none;
 }
 
-.search-overlay-results .search-grid {
-  display: grid;
-  gap: 1rem;
-  padding: 0;
-
-  animation: appear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.search-overlay-results .search-grid.appeared {
-  animation: none;
-}
-
-.search-overlay-results .search-grid--classroom {
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-}
-
-@media (max-width: 600px) {
-  .search-overlay-results .search-grid {
-    gap: 0.75rem;
-  }
-}
-
-/* ── Section labels (Classrooms / Lessons & exams) ─────────────────── */
+/* ── Section labels (Top Hit / Classrooms / Buildings / …) ──────────── */
 
 .search-section-label {
   font-size: var(--text-75);
@@ -331,92 +312,496 @@ html.search-vt .lg-tabbar__prominent {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
-  padding: 0 0.25rem 0.5rem;
+  padding: 0 0.4rem 0.5rem;
 }
 
 .search-section-label:not(:first-child) {
-  margin-top: 1.25rem;
+  margin-top: 1.1rem;
 }
 
-/* ── Lesson / exam result cards ────────────────────────────────────── */
+/* ── Top Hit ──────────────────────────────────────────────────────────
+   A single larger row, styled the same as everything below it but with a
+   bigger leading visual and its own translucent card so it reads as "the"
+   answer rather than the first item of a list. */
 
-.search-event-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.search-event-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-
-  padding: 1rem;
+.search-tophit-row {
+  margin-bottom: 0.25rem;
   border-radius: var(--radius-lg, 1rem);
-  background-color: var(--background-color-secondary);
-  border: 1px solid color-mix(in srgb, var(--text-color-primary) 6%, transparent);
-  box-shadow: var(--shadow);
+  overflow: clip;
+  background: color-mix(in srgb, var(--text-color-primary) 3.5%, transparent);
 }
 
-.search-event-head {
+/* Spotlight-style contact-card tint for a professor Top Hit: a muted, deeper
+   tone of the SAME hue as the avatar (search-overlay.js sets --prof-hue on
+   this element from the identical key→hue function the avatar uses), never
+   the avatar's own vivid tone, so the avatar keeps standing out on top of it.
+   Re-scoping --text-color-primary here (rather than setting `color` directly)
+   is deliberate: every descendant text/chevron/hover/selected style already
+   derives from that token via color-mix, so the whole card — including the
+   :hover/:active/--selected tint further down — repaints in a legible,
+   theme-appropriate pairing with no per-property overrides needed. */
+.search-tophit-row--professor {
+  background: hsl(var(--prof-hue, 210) 42% 92%);
+  --text-color-primary: hsl(var(--prof-hue, 210) 45% 20%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-tophit-row--professor {
+    background: hsl(var(--prof-hue, 210) 36% 16%);
+    --text-color-primary: hsl(var(--prof-hue, 210) 28% 93%);
+  }
+}
+
+/* ── Grouped row lists (iOS inset-grouped feel) ──────────────────────
+   Rows sit directly in the glass panel, separated by hairlines, rather than
+   floating as individual cards — calmer and denser for a Spotlight list. */
+
+.search-section-list,
+.search-item {
+  border-radius: var(--radius-lg, 1rem);
+  overflow: clip;
+  background: color-mix(in srgb, var(--text-color-primary) 3.5%, transparent);
+}
+
+.search-section-list {
   display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  flex-direction: column;
 }
 
-.search-event-title {
+.search-section-list .search-item + .search-item,
+.search-section-list > .search-row + .search-row,
+.search-section-list > .search-row + .search-item,
+.search-section-list > .search-item + .search-row {
+  box-shadow: inset 0 1px 0 0 color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+}
+
+/* Exam/lesson groups read as accordions, not plain inset rows — each item
+   gets its own rounded block with a gap between them, instead of being
+   fused into one continuous list. */
+.search-section-list--spaced {
+  background: transparent;
+  gap: 0.6rem;
+}
+
+.search-section-list--spaced > .search-item {
+  background: color-mix(in srgb, var(--text-color-primary) 3.5%, transparent);
+  border-radius: var(--radius-lg, 1rem);
+  overflow: clip;
+}
+
+.search-section-list--spaced > .search-item + .search-item {
+  box-shadow: none;
+}
+
+/* ── Row (shared shape for every result type) ────────────────────────
+   40px leading visual + title/subtitle + trailing accessory. Real <button>s
+   throughout, so the native default cursor applies — no cursor:pointer. */
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  min-width: 0;
+
+  border: none;
+  background: transparent;
+  padding: 0.55rem 0.75rem;
+  text-align: start;
+  font-family: inherit;
+  color: inherit;
+
+  transition: background-color 0.12s ease;
+}
+
+.search-row:hover,
+.search-row--selected {
+  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+}
+
+.search-row:active {
+  background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+}
+
+.search-row-lead {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md, 0.75rem);
+  overflow: clip;
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: color-mix(in srgb, var(--text-color-primary) 7%, transparent);
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+  font-size: var(--text-110);
+}
+
+.search-row-lead--lg {
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: var(--radius-lg, 1rem);
+  font-size: var(--text-150);
+}
+
+.search-row-lead--avatar {
+  border-radius: 50%;
+}
+
+.search-row-lead--tile.search-row-lead--accent {
+  background: color-mix(in srgb, var(--color-status-busy) 18%, transparent);
+  color: var(--color-status-busy);
+}
+
+/* Classroom photo: flush against the row's leading edge, full row height,
+   clipped by the ROW's own corner radius (not the tile's) and faded out into
+   the row background as it nears the text via a mask-image ON THE IMAGE
+   ITSELF. Deliberately not on an ancestor: a `mask`/`filter`/`opacity` on an
+   ancestor of a backdrop-filter element disables that element's blur in
+   Chromium (see the note in classroom-list.css) — the image has no
+   backdrop-filter descendants, so it's safe here regardless, but the rule of
+   thumb is kept the same everywhere in this app. */
+.search-row:has(> .search-row-lead--photo) {
+  position: relative;
+  overflow: clip;
+  border-radius: var(--radius-md, 0.75rem);
+  padding-left: calc(2.5rem + 0.9rem);
+}
+
+.search-row--tophit:has(> .search-row-lead--photo) {
+  border-radius: var(--radius-lg, 1rem);
+  padding-left: calc(3.75rem + 1.15rem);
+}
+
+.search-row-lead--photo {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2.5rem;
+  height: 100%;
+  border-radius: 0;
+}
+
+.search-row-lead--photo.search-row-lead--lg {
+  width: 3.75rem;
+  height: 100%;
+  border-radius: 0;
+}
+
+.search-row-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  mask-image: linear-gradient(to right, #000 55%, transparent 97%);
+  -webkit-mask-image: linear-gradient(to right, #000 55%, transparent 97%);
+}
+
+.search-row-photo.loaded {
+  opacity: 1;
+}
+
+.search-row-lead--photo.photo-failed .search-row-photo {
+  display: none;
+}
+
+.search-row-lead--photo.photo-failed::before {
+  content: '\f1e97';
+  font-family: 'hugeicons-stroke-rounded';
+}
+
+/* Deterministic per-professor colour (search-overlay.js sets --avatar-hue),
+   mixed against the theme surface so it stays legible light and dark. */
+.search-avatar {
+  background: color-mix(in srgb, hsl(var(--avatar-hue, 210) 70% 50%) 20%, var(--background-color-secondary));
+  color: hsl(var(--avatar-hue, 210) 55% 38%);
+  font-weight: 800;
+  font-size: var(--text-90);
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-avatar {
+    background: color-mix(in srgb, hsl(var(--avatar-hue, 210) 70% 50%) 30%, var(--background-color-secondary));
+    color: hsl(var(--avatar-hue, 210) 70% 74%);
+  }
+}
+
+.search-row-body {
   flex: 1;
   min-width: 0;
-  font-size: var(--text-95);
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--text-color-primary);
-}
-
-/* .timeline-popover-meta / .timeline-popover-badge come from
-   classroom-detail.css (always loaded) — reused verbatim here. */
-
-.search-event-sessions {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.05rem;
+}
+
+.search-row-title {
+  font-size: var(--text-90);
+  font-weight: 700;
+  color: var(--text-color-primary);
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.search-row--tophit .search-row-title {
+  font-size: var(--text-110);
+}
+
+/* Every highlight()-produced fragment (raw text interleaved with <mark>) is
+   wrapped in this single span rather than dropped straight into the flex
+   title row — otherwise each <mark> becomes its own flex item and a
+   partially-highlighted word visually splits apart. Doubles as the title's
+   ellipsis truncation, which needs an element of its own to shrink (a flex
+   child's default min-width:auto otherwise refuses to shrink below its
+   content, so text-overflow on the flex row itself never had anywhere to
+   apply). */
+.search-row-title-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-row-title-alt,
+.search-row-badge {
+  flex-shrink: 0;
+}
+
+.search-row-title-alt {
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+}
+
+.search-row-subtitle,
+.search-row-extra {
+  font-size: var(--text-80);
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-row-badge {
+  flex-shrink: 0;
+  font-size: var(--text-65);
+  vertical-align: middle;
+}
+
+.search-row-features {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   margin-top: 0.15rem;
 }
 
-.search-event-session {
+.search-row-feature {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: var(--text-75);
+  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
+}
+
+.search-row-feature .hgi-stroke {
+  font-size: var(--text-90) !important;
+}
+
+.search-row-trailing {
+  flex-shrink: 0;
+  font-size: var(--text-75);
+}
+
+.search-row-chevron {
+  display: flex;
+  color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
+}
+
+.search-row-chevron .hgi-stroke {
+  font-size: var(--text-100) !important;
+  transition: transform 0.2s ease;
+}
+
+.search-row--expanded .search-row-chevron .hgi-stroke {
+  transform: rotate(180deg);
+}
+
+/* ── "Show all" expander row ─────────────────────────────────────────── */
+
+.search-show-all {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--text-80);
+  font-weight: 700;
+  text-align: start;
+  color: var(--text-color-accent);
+  transition: background-color 0.12s ease;
+}
+
+.search-show-all:hover,
+.search-show-all.search-row--selected {
+  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+}
+
+/* ── Exam/lesson accordion (in-place expand/collapse) ─────────────────
+   The session list always exists in the DOM (search-overlay.js never
+   rebuilds it on toggle) — only these two classes are flipped, which is what
+   lets the grid-template-rows 0fr→1fr technique actually animate. */
+
+.search-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s var(--lg-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.search-collapse--open {
+  grid-template-rows: 1fr;
+}
+
+.search-collapse-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-collapse {
+    transition: none;
+  }
+}
+
+/* ── Expanded exam/lesson sessions, and the professor view's day lists ── */
+
+.search-session-list {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
-  text-align: start;
+  padding: 0.3rem 0.75rem 0.6rem calc(2.5rem + 0.7rem + 0.75rem); /* align under the row's title */
+  gap: 0.35rem;
+}
 
-  padding: 0.5rem 0.7rem;
+/* Each session reads as its own tappable pill: a subtle background, a visible
+   gap from its neighbours (the list's own `gap` above), a hover/press state,
+   and a trailing arrow — see .search-session-arrow. No cursor:pointer (native
+   default cursor only, project-wide rule). */
+.search-session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-align: start;
   border: none;
   border-radius: var(--radius-md, 0.75rem);
   background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
+  font-family: inherit;
+  padding: 0.5rem 0.65rem;
+  transition: background-color 0.12s ease;
 }
 
-.search-event-session .ses-when {
-  font-size: var(--text-80);
+.search-session-row:hover {
+  background: color-mix(in srgb, var(--text-color-primary) 9%, transparent);
+}
+
+.search-session-row:active,
+.search-session-row.search-row--selected {
+  background: color-mix(in srgb, var(--text-color-primary) 13%, transparent);
+}
+
+.search-session-row--past {
+  opacity: 0.5;
+}
+
+.search-session-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.search-session-when {
+  font-size: var(--text-75);
   font-weight: 700;
   color: var(--text-color-accent);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.search-event-session .ses-where {
-  font-size: var(--text-75);
-  font-weight: 600;
-}
-
-.search-event-more {
+.search-session-where {
   font-size: var(--text-72);
-  font-weight: 600;
-  padding: 0.15rem 0.7rem 0;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* The classroom cards run large for this context on a phone — scale the grid
-   down a touch. (zoom keeps layout/hit-testing correct, unlike transform.) */
+.search-session-arrow {
+  flex-shrink: 0;
+  display: flex;
+  color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
+}
+
+.search-session-arrow .hgi-stroke {
+  font-size: var(--text-90) !important;
+}
+
+/* Professor-view-only extras: several different courses share one day list,
+   so each row also carries its own title (+ exam tint/badge, + a "Now"
+   marker for a session in progress). */
+
+.search-session-title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.search-session-course {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-80);
+  font-weight: 700;
+  color: var(--text-color-primary);
+}
+
+.search-session-now {
+  flex-shrink: 0;
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--text-color-accent);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.search-session-row--exam {
+  background: color-mix(in srgb, var(--color-status-busy) 12%, transparent);
+}
+
+.search-session-row--exam:hover {
+  background: color-mix(in srgb, var(--color-status-busy) 18%, transparent);
+}
+
+.search-session-row--exam:active,
+.search-session-row--exam.search-row--selected {
+  background: color-mix(in srgb, var(--color-status-busy) 24%, transparent);
+}
+
 @media (max-width: 599px) {
-  .search-overlay-results .search-grid--classroom {
-    zoom: 0.72;
+  .search-session-list {
+    padding-left: calc(2.5rem + 0.7rem + 0.75rem);
   }
 
   /* The search bar now sits in the header's slot, so the header itself is
@@ -548,4 +933,166 @@ html.search-vt .lg-tabbar__prominent {
   font-size: var(--text-75);
   color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
   padding: 0.75rem 1rem 0.25rem;
+}
+
+/* ── Results ⇄ professor view slide ─────────────────────────────────────
+   transitionPane() (search-overlay.js) builds a 200%-wide flex track holding
+   the outgoing and incoming panes side by side and animates its transform;
+   once it lands, the winning pane becomes resultsEl's only child again (no
+   .search-slide-track/.search-pane sizing needed outside the transition). */
+
+.search-overlay-results {
+  overflow-x: hidden;
+}
+
+.search-slide-track {
+  display: flex;
+  align-items: flex-start;
+  width: 200%;
+}
+
+.search-slide-track > .search-pane {
+  width: 50%;
+  flex: none;
+  min-width: 0;
+}
+
+/* ── Professor view ──────────────────────────────────────────────────── */
+
+.search-pv-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.25rem 0.4rem 0.9rem;
+}
+
+.search-pv-back {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  color: var(--text-color-primary);
+  font-family: inherit;
+  transition: background-color 0.12s ease;
+}
+
+.search-pv-back:hover,
+.search-pv-back.search-row--selected {
+  background: color-mix(in srgb, var(--text-color-primary) 14%, transparent);
+}
+
+.search-pv-back:active {
+  background: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
+}
+
+.search-pv-back .hgi-stroke {
+  font-size: var(--text-110) !important;
+}
+
+.search-pv-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.search-pv-name-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.search-pv-name {
+  font-size: var(--text-125);
+  font-weight: 800;
+  color: var(--text-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-pv-counts {
+  font-size: var(--text-80);
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+}
+
+.search-pv-meta {
+  padding: 0 0.4rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.search-pv-courses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.search-pv-course-chip {
+  font-size: var(--text-72);
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  color: color-mix(in srgb, var(--text-color-primary) 65%, transparent);
+}
+
+.search-pv-course-chip--more {
+  background: transparent;
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+}
+
+.search-pv-range-note {
+  font-size: var(--text-72);
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+}
+
+.search-pv-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* Sticky day headers — same translucent material as the results panel so
+   content scrolling underneath doesn't show through illegibly. */
+.search-pv-day-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.5rem 0.4rem;
+  font-size: var(--text-75);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+}
+
+.search-pv-day-header:not(:first-child) {
+  margin-top: 0.4rem;
+}
+
+.search-pv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 0;
+  text-align: center;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+}
+
+.search-pv-empty .hgi-stroke {
+  font-size: var(--text-150);
+  color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
 }

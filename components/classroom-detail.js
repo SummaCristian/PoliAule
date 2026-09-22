@@ -1583,10 +1583,6 @@ class ClassroomDetail {
       const timelinePopover = createPopover({ placement: 'top', role: 'tooltip', dismissable: false });
       timelinePopover.el.style.setProperty('--lg-popover-max-width', 'min(280px, 70vw)');
       let _popoverBlock = null;
-      // Suppresses the close-on-scroll handler below while the auto-scroll to
-      // a searched lesson is still animating, so it doesn't dismiss the
-      // popover it just opened.
-      let _autoScrolling = false;
 
       const showOccupationPopover = (blockEl) => {
         const slot = scheduleSlots[Number(blockEl.dataset.slotIdx)];
@@ -1610,18 +1606,25 @@ class ClassroomDetail {
           if (this._currentId !== classroomId) return;
           const primaryBlock = container.querySelector('.detail-schedule-block--highlight');
           if (!primaryBlock) return;
-          showOccupationPopover(primaryBlock);
-          if (reduceMotion?.matches) {
+          // Open the popover only once the page has settled: the close-on-scroll
+          // handler would dismiss one opened mid-scroll.
+          const rect = primaryBlock.getBoundingClientRect();
+          const maxY = document.documentElement.scrollHeight - window.innerHeight;
+          const targetY = Math.min(Math.max(0, window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2), maxY);
+          if (reduceMotion?.matches || Math.abs(targetY - window.scrollY) < 1) {
             primaryBlock.scrollIntoView({ block: 'center', behavior: 'auto' });
-          } else {
-            _autoScrolling = true;
-            const startY = window.scrollY;
-            primaryBlock.scrollIntoView({ block: 'center', behavior: 'smooth' });
-            window.addEventListener('scrollend', () => { _autoScrolling = false; }, { once: true });
-            // Already in view: no scroll, so no scrollend — don't leave the
-            // close-on-scroll handler suppressed for good.
-            requestAnimationFrame(() => { if (window.scrollY === startY) _autoScrolling = false; });
+            showOccupationPopover(primaryBlock);
+            return;
           }
+          let shown = false;
+          const show = () => {
+            if (shown || this._currentId !== classroomId || !primaryBlock.isConnected) return;
+            shown = true;
+            showOccupationPopover(primaryBlock);
+          };
+          window.addEventListener('scrollend', show, { once: true });
+          setTimeout(show, 800); // no scrollend in older Safari
+          primaryBlock.scrollIntoView({ block: 'center', behavior: 'smooth' });
         });
       }
 
@@ -1674,10 +1677,7 @@ class ClassroomDetail {
         // On desktop this already happens implicitly (scrolling moves the hovered
         // block out from under a stationary cursor, firing pointerout), but a tap
         // on mobile leaves the popover open with no such gesture to close it.
-        const onScroll = () => {
-          if (_autoScrolling) return;
-          hideOccupationPopover();
-        };
+        const onScroll = () => hideOccupationPopover();
         window.addEventListener('scroll', onScroll, { capture: true, passive: true });
 
         this._timelinePopoverCleanup = () => {

@@ -54,6 +54,18 @@ export function escapeHtml(str) {
   ));
 }
 
+// Splits a query into lowercase words, same rule as classroom-search-data.js's
+// tokenize(). Reimplemented locally (rather than imported) to avoid an import
+// cycle: that module pulls in components/classroom-list.js, which imports this
+// file for escapeHtml/highlight.
+function tokenizeQuery(query) {
+  return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+}
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * Validates that a URL uses the https: scheme before it is placed in a
  * security-sensitive attribute such as `href` or `action`.
@@ -80,17 +92,24 @@ export function escapeHtml(str) {
  */
 /**
  * Escapes `text` and wraps every case-insensitive occurrence of `query` in it
- * with <mark>. Returns plain escaped HTML when query is empty.
+ * with <mark> — either the full phrase or any of its individual tokens (so a
+ * multi-word query like "space engineering" highlights both words separately
+ * even when they don't appear adjacent in the matched text). Returns plain
+ * escaped HTML when query is empty.
  *
- * Used to highlight the part of a classroom/building/campus name that matched
- * a user's search query (e.g. in the Campus tab's search results).
+ * Used to highlight the part of a classroom/building/campus name (or search
+ * overlay result) that matched a user's search query.
  */
 export function highlight(text, query) {
   const safe = escapeHtml(text);
   if (!query) return safe;
   // Escape special regex chars, then allow spaces to also match dots (for x.y.z names queried as "x y z")
-  const safeQ = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '[\\s.]');
-  return safe.replace(new RegExp(`(${safeQ})`, 'gi'), '<mark>$1</mark>');
+  const fullPattern = escapeRegExp(escapeHtml(query)).replace(/ /g, '[\\s.]');
+  const tokenPatterns = tokenizeQuery(query).map(tok => escapeRegExp(escapeHtml(tok)));
+  // Longest alternatives first so the full-phrase match (when it exists) wins
+  // over its own individual tokens in the regex alternation.
+  const pattern = [fullPattern, ...tokenPatterns].sort((a, b) => b.length - a.length).join('|');
+  return safe.replace(new RegExp(`(${pattern})`, 'gi'), '<mark>$1</mark>');
 }
 
 export function safeUrl(url) {

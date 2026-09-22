@@ -151,16 +151,25 @@ function ensureOccIndex() {
   }
 }
 
+// Order-independent: "rossi analisi" and "analisi rossi" tokenize the same.
+export function tokenize(query) {
+  return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+}
+
+// Codes are stored as ints, so a leading zero the user typed ("061182") is
+// gone from the haystack ("61182") — match on both.
+function rowMatchesToken(row, token) {
+  if (row.haystack.includes(token)) return true;
+  const alt = token.replace(/^0+/, '');
+  return alt !== '' && alt !== token && row.haystack.includes(alt);
+}
+
 export function runOccupationSearch(query) {
   ensureOccIndex();
-  const q = query.trim().toLowerCase();
-  if (!q || occIndex.length === 0) return { groups: [], total: 0, capped: false, maxSessions: OCC_MAX_SESSIONS };
+  const tokens = tokenize(query);
+  if (!tokens.length || occIndex.length === 0) return { groups: [], total: 0, capped: false, maxSessions: OCC_MAX_SESSIONS };
 
-  // Codes are stored as ints, so a leading zero the user typed ("061182") is
-  // gone from the haystack ("61182") — match on both.
-  const qAlt = q.replace(/^0+/, '');
-  const matched = occIndex.filter(r =>
-    r.haystack.includes(q) || (qAlt && qAlt !== q && r.haystack.includes(qAlt)));
+  const matched = occIndex.filter(r => tokens.every(tok => rowMatchesToken(r, tok)));
 
   const groups = new Map();
   for (const r of matched) {

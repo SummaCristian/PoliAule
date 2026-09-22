@@ -89,6 +89,8 @@ class ClassroomDetail {
     this._enteredId = null;
     this._savedScrollPos = 0;
     this._queryContext = null;  // { date, from, to } when opened from Available Tab, else null
+    this._highlight = null;     // { date, from, to } when opened from a search result, else null
+    this._highlightConsumed = false; // true once the highlight's scroll/popover has fired for this open
     this._nowTimer = null;
     this._timelinePopoverCleanup = null; // removes the previous _loadSchedule's document-level listener
     this._vtSettled = null;     // pending open/close transition, see _beginTransition
@@ -228,7 +230,14 @@ class ClassroomDetail {
         ? { date: queryDate, from: queryFrom, to: queryTo }
         : null;
 
-      this._pendingTrigger = { queryContext, cardEl: card };
+      const highlightDate = card.dataset.highlightDate ?? null;
+      const highlightFrom = card.dataset.highlightFrom ?? null;
+      const highlightTo = card.dataset.highlightTo ?? null;
+      const highlight = highlightDate && highlightFrom && highlightTo
+        ? { date: highlightDate, from: highlightFrom, to: highlightTo }
+        : null;
+
+      this._pendingTrigger = { queryContext, highlight, cardEl: card };
       this._openedViaPushState = true;
       this._buildFlatIndex();
       const _entry = this._flatIndex?.get(id);
@@ -315,6 +324,7 @@ class ClassroomDetail {
     this._overlay.innerHTML = '';
     this._openTrigger = null;
     this._queryContext = null;
+    this._highlight = null;
   }
 
   // ---------- TRANSITION PLUMBING ----------
@@ -439,6 +449,8 @@ class ClassroomDetail {
     this._currentId = id;
     this._openTrigger = pending ?? null;
     this._queryContext = pending?.queryContext ?? null;
+    this._highlight = pending?.highlight ?? null;
+    this._highlightConsumed = false;
 
     // Save scroll position for when we return
     this._savedScrollPos = window.scrollY;
@@ -631,6 +643,7 @@ class ClassroomDetail {
       this._overlay.innerHTML = '';
       this._openTrigger = null;
       this._queryContext = null;
+      this._highlight = null;
       if (headerEl) headerEl.style.viewTransitionName = '';
       document.documentElement.classList.remove(
         'header-vt-fixed', 'header-ctl-vt', 'detail-vt-close', 'detail-vt-hero');
@@ -1207,6 +1220,8 @@ class ClassroomDetail {
 
       // Query context: from/to range carried over from the Available Tab
       const queryDateKey = this._queryContext?.date?.replace(/-/g, '') ?? null;
+      // Same shape, from a clicked search-result session instead.
+      const highlightDateKey = this._highlight?.date?.replace(/-/g, '') ?? null;
       let queryFromPct = null, queryToPct = null, queryFromDisplay = '', queryToDisplay = '';
       if (this._queryContext) {
         const qFrom = Math.max(timeToMinutes(this._queryContext.from), DAY_START);
@@ -1261,7 +1276,12 @@ class ClassroomDetail {
           const left  = ((s - DAY_START) / total * 100).toFixed(2);
           const width = ((e - s)         / total * 100).toFixed(2);
           const slotIdx = scheduleSlots.push(slot) - 1;
-          return `<div class="detail-schedule-block" data-slot-idx="${slotIdx}" tabindex="0" role="button" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
+          const isPrimaryHighlight = highlightDateKey !== null
+            && dayData.date === highlightDateKey
+            && slot.inizio === this._highlight?.from
+            && slot.fine === this._highlight?.to;
+          const blockClass = 'detail-schedule-block' + (isPrimaryHighlight ? ' detail-schedule-block--highlight' : '');
+          return `<div class="${blockClass}" data-slot-idx="${slotIdx}" tabindex="0" role="button" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
         }).join('');
 
         const queryOverlayHtml = isQueryDay && queryFromPct !== null
@@ -1383,6 +1403,17 @@ class ClassroomDetail {
       const gridEl = container.querySelector('.detail-schedule-bars');
       const rowEls = gridEl.querySelectorAll('.detail-schedule-row');
 
+      // The highlight is a one-shot cue for the lesson the user just searched
+      // for — the first tap or keypress anywhere in the schedule drops it.
+      const clearHighlight = () => {
+        if (!this._highlight) return;
+        this._highlight = null;
+        container.querySelectorAll('.detail-schedule-block--highlight')
+          .forEach(el => el.classList.remove('detail-schedule-block--highlight'));
+      };
+      container.addEventListener('pointerdown', clearHighlight);
+      container.addEventListener('keydown', clearHighlight);
+
       let selectedDayIndex = 0;
 
       const daySelector = createPillSelector(pickerContainer, {
@@ -1402,14 +1433,16 @@ class ClassroomDetail {
         if (chip) daySelector.selectElement(chip, opts);
       }
 
-      // Auto-select: prefer the queried day when coming from the Available Tab,
-      // otherwise today, or next available day if after 20:15, or first available
+      // Auto-select: prefer the queried or highlighted day when coming from the
+      // Available Tab or search overlay, otherwise today, or next available day
+      // if after 20:15, or first available
       const todayDayIndex = days.findIndex(d => d.dayData?.date === todayKey);
       const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+      const preferredDateKey = queryDateKey ?? highlightDateKey;
       let initialDayIndex;
-      if (queryDateKey) {
-        const queryDayIndex = days.findIndex(d => d.dayData?.date === queryDateKey);
-        initialDayIndex = queryDayIndex >= 0 ? queryDayIndex : (todayDayIndex >= 0 ? todayDayIndex : days.findIndex(d => d.dayData !== null));
+      if (preferredDateKey) {
+        const preferredDayIndex = days.findIndex(d => d.dayData?.date === preferredDateKey);
+        initialDayIndex = preferredDayIndex >= 0 ? preferredDayIndex : (todayDayIndex >= 0 ? todayDayIndex : days.findIndex(d => d.dayData !== null));
       } else if (nowMins > DAY_END && todayDayIndex >= 0) {
         const nextIndex = days.findIndex((d, i) => i > todayDayIndex && d.dayData !== null);
         initialDayIndex = nextIndex >= 0 ? nextIndex : todayDayIndex;
@@ -1550,6 +1583,10 @@ class ClassroomDetail {
       const timelinePopover = createPopover({ placement: 'top', role: 'tooltip', dismissable: false });
       timelinePopover.el.style.setProperty('--lg-popover-max-width', 'min(280px, 70vw)');
       let _popoverBlock = null;
+      // Suppresses the close-on-scroll handler below while the auto-scroll to
+      // a searched lesson is still animating, so it doesn't dismiss the
+      // popover it just opened.
+      let _autoScrolling = false;
 
       const showOccupationPopover = (blockEl) => {
         const slot = scheduleSlots[Number(blockEl.dataset.slotIdx)];
@@ -1559,6 +1596,34 @@ class ClassroomDetail {
         timelinePopover.show(blockEl);
       };
       const hideOccupationPopover = () => { _popoverBlock = null; timelinePopover.hide(); };
+
+      // Scroll to and open the popover on the searched lesson — once per open,
+      // so a later re-render (language switch, refreshOccupancy) doesn't jump
+      // the page back or re-pop it after the user has moved on. Deferred past
+      // the open transition: _doOpen's own cleanup resets window.scrollY to 0
+      // once the View Transition finishes if anything moved it in the
+      // meantime (its safety net against stray scroll during the snapshot
+      // animation), which would otherwise race and cancel this scroll.
+      if (this._highlight && !this._highlightConsumed) {
+        this._highlightConsumed = true;
+        this._afterTransition(() => {
+          if (this._currentId !== classroomId) return;
+          const primaryBlock = container.querySelector('.detail-schedule-block--highlight');
+          if (!primaryBlock) return;
+          showOccupationPopover(primaryBlock);
+          if (reduceMotion?.matches) {
+            primaryBlock.scrollIntoView({ block: 'center', behavior: 'auto' });
+          } else {
+            _autoScrolling = true;
+            const startY = window.scrollY;
+            primaryBlock.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            window.addEventListener('scrollend', () => { _autoScrolling = false; }, { once: true });
+            // Already in view: no scroll, so no scrollend — don't leave the
+            // close-on-scroll handler suppressed for good.
+            requestAnimationFrame(() => { if (window.scrollY === startY) _autoScrolling = false; });
+          }
+        });
+      }
 
       {
         // Desktop hover
@@ -1609,7 +1674,10 @@ class ClassroomDetail {
         // On desktop this already happens implicitly (scrolling moves the hovered
         // block out from under a stationary cursor, firing pointerout), but a tap
         // on mobile leaves the popover open with no such gesture to close it.
-        const onScroll = () => hideOccupationPopover();
+        const onScroll = () => {
+          if (_autoScrolling) return;
+          hideOccupationPopover();
+        };
         window.addEventListener('scroll', onScroll, { capture: true, passive: true });
 
         this._timelinePopoverCleanup = () => {

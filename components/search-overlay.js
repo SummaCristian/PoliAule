@@ -159,6 +159,9 @@ function buildEventCard(g, maxSessions, query, dateFmt, timeFmt) {
     b.type = 'button';
     b.className = 'search-event-session liquid-glass';
     b.dataset.openClassroom = s.roomId;
+    b.dataset.highlightDate = s.date;
+    b.dataset.highlightFrom = s.inizio;
+    b.dataset.highlightTo = s.fine;
     b.innerHTML =
       `<span class="ses-when">${escapeHtml(fmtDate(s.date, dateFmt))} · ` +
       `${escapeHtml(fmtTime(s.inizio, timeFmt))}–${escapeHtml(fmtTime(s.fine, timeFmt))}</span>` +

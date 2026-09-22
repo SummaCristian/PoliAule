@@ -1490,6 +1490,46 @@ body.detail-open .tab-content * {
   }
 }
 
+/* ── Search highlight (clicked a lesson in search results) ──────────── */
+
+.detail-schedule-block--highlight {
+  opacity: 1;
+  border: 2px solid var(--text-color-accent);
+  box-shadow: var(--glow-accent);
+  animation: detail-highlight-pulse 1.2s ease-out 1;
+}
+
+@keyframes detail-highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--text-color-accent) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--text-color-accent) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-schedule-block--highlight {
+    animation: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .detail-schedule-block--highlight {
+    border-color: var(--color-accent-dark);
+    box-shadow: 0 0 0 1px var(--color-accent-dark);
+  }
+
+  @keyframes detail-highlight-pulse {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent-dark) 55%, transparent);
+    }
+    100% {
+      box-shadow: 0 0 0 10px color-mix(in srgb, var(--color-accent-dark) 0%, transparent);
+    }
+  }
+}
+
 .timeline-popover-body {
   display: flex;
   flex-direction: column;

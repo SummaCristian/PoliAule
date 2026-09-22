@@ -2,6 +2,11 @@
 // whatever tab is currently showing, rather than switching to its own tab
 // page. It owns only the presentation/UX; the actual classroom text search
 // (data, index, card builders) lives in classroom-search-data.js.
+//
+// Mobile layout is classic Spotlight: the bar sits at a fixed top offset (the
+// header's old slot, which fades out) and results grow downward beneath it.
+// The keyboard only ever clips the results' available height — see the
+// visualViewport tracking below and the panel rule in search-overlay.css.
 
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { escapeHtml, highlight } from '../utils/html.js';
@@ -49,11 +54,6 @@ let savedScrollPos = 0;
 
 let occRecheckTimer = null;
 
-function renderResults(query) {
-  _renderResults(query);
-  requestAnimationFrame(syncHeaderClearance);
-}
-
 function sectionLabel(text) {
   const el = document.createElement('div');
   el.className = 'search-section-label';
@@ -68,7 +68,7 @@ function tooManyNotice(n) {
   return p;
 }
 
-function _renderResults(query) {
+function renderResults(query) {
   const q = query.trim();
   resultsEl.innerHTML = '';
   clearTimeout(occRecheckTimer);
@@ -186,26 +186,21 @@ function scheduleOccRecheck(query, tries = 0) {
   }, 1200);
 }
 
-// Hide the header only once the results box has actually grown tall enough to
-// reach up behind it (body.search-covers-header, consumed by the mobile CSS).
-// opacity:0 on the header doesn't change its box, so this can't oscillate.
-function syncHeaderClearance() {
-  const header = document.querySelector('.header');
-  if (!header || !panel || !isOpen) return;
-  const covers = panel.getBoundingClientRect().top < header.getBoundingClientRect().bottom + 8;
-  document.body.classList.toggle('search-covers-header', covers);
-}
-
-// Mobile pins the search field just above the on-screen keyboard. iOS Safari
-// doesn't shrink the layout viewport for the keyboard, so `position: fixed;
-// bottom` alone would sit behind it — track visualViewport and expose the
-// keyboard height as --search-kb for the CSS to offset by.
+// Mobile anchors the search bar at a fixed top offset (the header's old
+// slot), but iOS Safari can pan the *visual* viewport down when the keyboard
+// opens rather than shrinking it, which would carry a `top`-anchored fixed
+// element off screen with it. Track visualViewport and expose its offset and
+// height as custom properties so the CSS can compensate: --search-vv-top
+// shifts the panel down by however much the viewport has panned, and
+// --search-vv-height caps the results' height at the visible area (which
+// already excludes the keyboard). If these numbers are ever off, the failure
+// is benign — the list scrolls a bit under the keyboard, the field is never
+// hidden.
 function onViewportResize() {
   const vv = window.visualViewport;
   if (!vv) return;
-  const kb = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
-  overlay.style.setProperty('--search-kb', kb + 'px');
-  requestAnimationFrame(syncHeaderClearance);
+  overlay.style.setProperty('--search-vv-top', vv.offsetTop + 'px');
+  overlay.style.setProperty('--search-vv-height', vv.height + 'px');
 }
 
 function startViewportTracking() {
@@ -222,14 +217,14 @@ function stopViewportTracking() {
     vv.removeEventListener('resize', onViewportResize);
     vv.removeEventListener('scroll', onViewportResize);
   }
-  overlay.style.removeProperty('--search-kb');
+  overlay.style.removeProperty('--search-vv-top');
+  overlay.style.removeProperty('--search-vv-height');
 }
 
 function conceal() {
   overlay.classList.remove('visible');
   overlay.setAttribute('hidden', '');
   document.body.classList.remove('search-overlay-open');
-  document.body.classList.remove('search-covers-header');
   clearTimeout(occRecheckTimer);
   stopViewportTracking();
   window.scrollTo(0, savedScrollPos);
@@ -252,8 +247,9 @@ export async function openSearchOverlay() {
   // opens the keyboard). The overlay is only opacity:0 here, not display:none,
   // so focus() works. `search-overlay-open` (which hides the FAB/nav) is held
   // back until inside the VT callback so the FAB stays in the "old" snapshot
-  // to morph from. The panel rides above the keyboard via the visualViewport
-  // tracking below, so it doesn't matter that Safari resizes late.
+  // to morph from. The panel's top offset doesn't depend on the keyboard at
+  // all (mobile Spotlight layout — see search-overlay.css), so it doesn't
+  // matter that Safari resizes/pans the visual viewport late.
   overlay.removeAttribute('hidden');
   grabInput();
 

@@ -89,8 +89,11 @@ html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:
   padding: 0;
 
   /* The shared .tab-content intro animates transform + filter; that would
-     churn the GL canvas, so use a plain fade here instead. */
-  animation: campus-map-fade-in 0.3s ease both;
+     churn the GL canvas, so use a plain fade here instead. `backwards`, not
+     `both`: `both` keeps the finished animation applying `opacity: 1`
+     forever, which (animated values winning over normal declarations)
+     permanently overrides body.search-overlay-open's 0.4 dim. */
+  animation: campus-map-fade-in 0.3s ease backwards;
 }
 
 /* When the classroom detail or info overlay opens on top of this tab, it

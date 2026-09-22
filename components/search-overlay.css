@@ -4,8 +4,11 @@
    layer is kept but transparent, purely as the tap-outside-to-dismiss hit
    area. Also dismissed by its own close button or Esc.
 
-   Mobile: the search bar is pinned to the bottom, just above the on-screen
-   keyboard (visualViewport-tracked), and results stack upward above it.
+   Mobile: classic Spotlight layout — the search bar sits where the app
+   header was, results grow downward, and the keyboard
+   only clips the results' height, never the bar's position. --search-vv-top
+   / --search-vv-height (visualViewport-tracked, search-overlay.js) keep the
+   panel anchored correctly if iOS Safari pans the visual viewport open.
    Desktop: the panel is centred, ~27% down from the top. */
 
 .search-overlay-backdrop[hidden] {
@@ -86,18 +89,25 @@ html.search-vt .lg-tabbar__prominent {
   position: fixed;
   left: 0;
   right: 0;
-  /* Sit just above the on-screen keyboard. --search-kb is the keyboard height
-     from visualViewport (search-overlay.js); 0 when it's closed, leaving the
-     bar the same 16px clearance the pill nav has. Grows upward as results fill
-     in (column-reverse). */
-  bottom: calc(var(--search-kb, 0px) + 16px + env(safe-area-inset-bottom, 0px));
+  /* Mirrors the tab bar's clearance from the bottom safe area, which is sized
+     to keep clear of Safari's fixed-element edge handling (see Vitrium's
+     tabbar.css). */
+  --search-top-gap: var(--lg-tabbar-bottom-offset, 28px);
+  /* --search-vv-top is visualViewport's offsetTop (search-overlay.js) — iOS
+     Safari can pan the visual viewport when the keyboard opens, which would
+     otherwise push a top-anchored fixed element off screen; 0px when
+     unset/unsupported. */
+  top: calc(var(--search-vv-top, 0px) + var(--search-top-gap) + env(safe-area-inset-top, 0px));
 
   width: min(100% - 2rem, 640px);
   margin-inline: auto;
-  max-height: calc(100dvh - var(--search-kb, 0px) - 32px - env(safe-area-inset-top, 0px));
+  /* Fit between the bar's top and the keyboard (or the screen bottom when
+     there is none), with ~16px clearance. --search-vv-height is
+     visualViewport's height, which already excludes the keyboard. */
+  max-height: calc(var(--search-vv-height, 100dvh) - var(--search-top-gap) - env(safe-area-inset-top, 0px) - 16px);
 
   display: flex;
-  flex-direction: column-reverse; /* search bar at the bottom, results above */
+  flex-direction: column; /* search bar on top, results grow downward */
   gap: 0.85rem;
   min-height: 0;
 }
@@ -409,14 +419,12 @@ html.search-vt .lg-tabbar__prominent {
     zoom: 0.72;
   }
 
-  /* Hide the app header on mobile only once the results box has actually
-     grown up behind it (toggled from search-overlay.js). */
-  body.search-overlay-open.search-covers-header .header {
+  /* The search bar now sits in the header's slot, so the header itself is
+     always faded out while search is open on mobile (not just once results
+     grow tall enough to reach it). */
+  body.search-overlay-open .header {
     opacity: 0;
     pointer-events: none;
-  }
-
-  body.search-overlay-open .header {
     transition: opacity 0.2s ease;
   }
 }
@@ -485,12 +493,10 @@ html.search-vt .lg-tabbar__prominent {
     left: 50%;
     right: auto;
     top: 27vh;
-    bottom: auto;
     transform: translateX(-50%);
     margin-inline: 0;
 
     max-height: 65vh;
-    flex-direction: column; /* search bar on top, results below */
   }
 
   /* The side rail stays put; only the FAB (which morphs into the search bar)

@@ -422,10 +422,29 @@ html.search-vt .lg-tabbar__prominent {
   /* The search bar now sits in the header's slot, so the header itself is
      always faded out while search is open on mobile (not just once results
      grow tall enough to reach it). */
-  body.search-overlay-open .header {
+  body.search-overlay-open .header,
+  body.search-overlay-open .header-top-strip {
     opacity: 0;
+    /* opacity alone isn't enough: Safari still samples these top-edge sticky
+       fills to tint the status-bar strip. visibility flips after the fade. */
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+  }
+
+  /* Takes over the header's status-bar fill while it's hidden: solid under
+     the safe area, fading out across the gap above the search bar. */
+  .search-overlay-backdrop::before {
+    content: "";
+    position: fixed;
+    top: var(--search-vv-top, 0px);
+    left: 0;
+    right: 0;
+    height: calc(env(safe-area-inset-top, 0px) + var(--lg-tabbar-bottom-offset, 28px));
+    background: linear-gradient(to bottom,
+      var(--background-color) env(safe-area-inset-top, 0px),
+      transparent 100%);
+    pointer-events: none;
   }
 }
 

@@ -280,9 +280,10 @@ export function settleMorph() { finish(); }
 
 /**
  * Replaces root's content with `next`, animating from what was there before
- * when both are the same keyed pane.
+ * when both are the same keyed pane. `scroller` is the scroll container whose
+ * position to keep, when that isn't root itself.
  */
-export function morphInto(root, next, { animate = true } = {}) {
+export function morphInto(root, next, { animate = true, scroller = root } = {}) {
   const prev = root.firstElementChild;
   const canMorph = animate && !reduceMotionMQ.matches && prev && root.children.length === 1
     && prev.dataset.animKey != null && prev.dataset.animKey === next.dataset.animKey;
@@ -305,7 +306,7 @@ export function morphInto(root, next, { animate = true } = {}) {
     running = null;
   }
 
-  const scrollTop = root.scrollTop;
+  const scrollTop = scroller.scrollTop;
   root.replaceChildren(next);
   const plan = { enter: [], exit: [], keep: [] };
   diff(prev, next, old, plan);
@@ -338,7 +339,7 @@ export function morphInto(root, next, { animate = true } = {}) {
     !k.resize && k.from.op === 1 && k.from.sc === 1 && Math.abs(k.from.rel - k.finalRel) < 0.5)) {
     // Nothing moved or changed shape (the same results re-rendered): no
     // spring, just put the scroll back.
-    root.scrollTop = scrollTop;
+    scroller.scrollTop = scrollTop;
     return;
   }
 
@@ -355,7 +356,7 @@ export function morphInto(root, next, { animate = true } = {}) {
   render(plan, 0);
   // The end-state measurement above may have briefly shortened the content
   // and clamped the scroll.
-  root.scrollTop = scrollTop;
+  scroller.scrollTop = scrollTop;
 
   const spring = new ClockedSpring(0, () => {
     if (!running || running.spring !== spring) return;

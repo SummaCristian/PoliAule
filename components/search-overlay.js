@@ -35,6 +35,7 @@ import { classroomsData as occupancyDays } from '../available-rooms-script.js';
 import { activateGroupTab } from './bottom-nav.js';
 import { goToBuilding } from './campus-buildings.js';
 import { morphInto, settleMorph, isSettled, fadeIn, ClockedSpring } from './search-motion.js';
+import { createBackButton, createSegmentedControl } from 'vitrium';
 
 const DEBOUNCE_MS = 200;
 const SECTION_CAP = 4;
@@ -104,11 +105,16 @@ const FEATURE_ICONS = {
 /* ── Section registry: fixed order, skipped when empty ─────────────────── */
 
 const SECTIONS = [
-  { key: 'classrooms', type: 'classroom', labelKey: 'search.sectionClassrooms', build: buildClassroomRow },
-  { key: 'buildings', type: 'building', labelKey: 'search.sectionBuildings', build: buildBuildingRow },
-  { key: 'professors', type: 'professor', labelKey: 'search.sectionProfessors', build: buildProfessorRow },
-  { key: 'exams', type: 'exam', labelKey: 'search.sectionExams', build: buildExamRow },
-  { key: 'lessons', type: 'lesson', labelKey: 'search.sectionLessons', build: buildLessonRow },
+  // `icon`: the section title's, matching the rest of the app where there's a
+  // counterpart (the Campus tab's for classrooms) and the rows' own tiles
+  // otherwise. `spaced`: rows as separate rounded blocks rather than one
+  // fused inset list — classroom rows (whose photo gives them their own
+  // rounded shape) and the exam/lesson accordions.
+  { key: 'classrooms', type: 'classroom', labelKey: 'search.sectionClassrooms', icon: 'hgi-university', spaced: true, build: buildClassroomRow },
+  { key: 'buildings', type: 'building', labelKey: 'search.sectionBuildings', icon: 'hgi-building-06', build: buildBuildingRow },
+  { key: 'professors', type: 'professor', labelKey: 'search.sectionProfessors', icon: 'hgi-user', build: buildProfessorRow },
+  { key: 'exams', type: 'exam', labelKey: 'search.sectionExams', icon: 'hgi-mortarboard-02', spaced: true, build: buildExamRow },
+  { key: 'lessons', type: 'lesson', labelKey: 'search.sectionLessons', icon: 'hgi-book-02', spaced: true, build: buildLessonRow },
 ];
 
 // Per-section "show all" state and the single currently-expanded exam/lesson
@@ -121,10 +127,11 @@ let lastQuery = null;
 
 /* ── Small building blocks ──────────────────────────────────────────────── */
 
-function sectionLabel(text) {
+// A smaller take on the app's .section-header-title: icon + title.
+function sectionLabel(text, icon) {
   const el = document.createElement('div');
   el.className = 'search-section-label';
-  el.textContent = text;
+  el.innerHTML = `<i class="hgi-stroke ${icon} search-section-label-icon" aria-hidden="true"></i><span>${escapeHtml(text)}</span>`;
   return el;
 }
 
@@ -536,18 +543,11 @@ function buildProfessorPane(container, key) {
   const ctx = professorViewCtx();
   const schedule = getProfessorSchedule(key);
 
+  // The back button isn't part of the pane: it's Vitrium's glass back button,
+  // pinned over the box's corner (see backBtn below); the header leaves it
+  // room.
   const header = document.createElement('div');
   header.className = 'search-pv-header';
-
-  const backBtn = document.createElement('button');
-  backBtn.type = 'button';
-  backBtn.className = 'search-pv-back';
-  backBtn.dataset.row = '';
-  backBtn.tabIndex = -1;
-  backBtn.setAttribute('aria-label', t('search.backToResults'));
-  backBtn.innerHTML = `<i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>`;
-  backBtn.addEventListener('click', (e) => { e.stopPropagation(); exitProfessorView(); });
-  header.appendChild(backBtn);
 
   const identity = document.createElement('div');
   identity.className = 'search-pv-identity';
@@ -584,6 +584,32 @@ function buildProfessorPane(container, key) {
 
   const meta = document.createElement('div');
   meta.className = 'search-pv-meta';
+  const lessonCount = schedule.sessionCount - schedule.examCount;
+  let filter = 'all';
+  const body = document.createElement('div');
+  body.className = 'search-pv-body';
+  // Lessons and exams both on the schedule: a Vitrium segmented control
+  // narrows it to one kind. The days re-render through search-motion.js, so
+  // the sessions leaving collapse out and the rest close up, like the results.
+  if (schedule.examCount > 0 && lessonCount > 0) {
+    const seg = document.createElement('div');
+    seg.className = 'search-pv-filter';
+    createSegmentedControl(seg, {
+      items: [
+        { value: 'all', label: t('search.filterAll') },
+        { value: 'lessons', label: t('search.sectionLessons') },
+        { value: 'exams', label: t('search.sectionExams') },
+      ],
+      value: filter,
+      onSelect(v, { silent } = {}) {
+        if (silent || v === filter) return;
+        filter = v;
+        morphInto(body, buildProfessorDays(schedule, filter, ctx), { scroller: resultsEl });
+        refreshActionable();
+      },
+    });
+    meta.appendChild(seg);
+  }
   if (schedule.courses.length) {
     const chips = document.createElement('div');
     chips.className = 'search-pv-courses';
@@ -608,19 +634,32 @@ function buildProfessorPane(container, key) {
   meta.appendChild(note);
   container.appendChild(meta);
 
-  const body = document.createElement('div');
-  body.className = 'search-pv-body';
-  schedule.days.forEach(day => {
+  body.appendChild(buildProfessorDays(schedule, filter, ctx));
+  container.appendChild(body);
+}
+
+// The schedule, grouped by day, keyed for search-motion.js. Each day is its
+// own block, so its sticky header only sticks while that day is on screen
+// and is pushed off by the next one.
+function buildProfessorDays(schedule, filter, ctx) {
+  const days = keyed(document.createElement('div'), 'days');
+  days.className = 'search-pv-days';
+  for (const day of schedule.days) {
+    const sessions = day.sessions.filter(s => filter === 'all' || (filter === 'exams') === !!s.isExam);
+    if (!sessions.length) continue;
+    const dayEl = keyed(document.createElement('div'), `day:${day.date}`);
+    dayEl.className = 'search-pv-day';
     const dayHeader = document.createElement('div');
     dayHeader.className = 'search-pv-day-header';
     dayHeader.textContent = fmtDay(day.date, ctx.dateFmt);
-    body.appendChild(dayHeader);
-    const list = document.createElement('div');
+    dayEl.appendChild(dayHeader);
+    const list = keyed(document.createElement('div'), 'list');
     list.className = 'search-section-list search-section-list--spaced';
-    day.sessions.forEach(s => list.appendChild(buildProfessorSessionRow(s, ctx)));
-    body.appendChild(list);
-  });
-  container.appendChild(body);
+    sessions.forEach(s => list.appendChild(keyed(buildProfessorSessionRow(s, ctx), `s:${s.roomId}:${s.inizio}:${s.title ?? ''}`)));
+    dayEl.appendChild(list);
+    days.appendChild(dayEl);
+  }
+  return days;
 }
 
 function newProfessorPane(key) {
@@ -650,9 +689,29 @@ function measurePane(pane) {
   return { h: resultsEl.offsetHeight, maxScroll: resultsEl.scrollHeight - resultsEl.clientHeight };
 }
 
+// Vitrium's glass back button, pinned over the top-left corner of the box
+// (outside the scrolling content, so it stays put as the schedule scrolls
+// under it). It rides the slide: fading and growing in as the professor view
+// comes in, and back out as it leaves.
+let backBtn = null;
+
+function setBackProgress(x) {
+  if (!backBtn) return;
+  backBtn.style.opacity = x >= 1 ? '' : `${x}`;
+  backBtn.style.transform = x >= 1 ? '' : `scale(${0.6 + 0.4 * x})`;
+  const shown = x > 0.5;
+  backBtn.classList.toggle('search-pv-back--shown', shown);
+  backBtn.inert = !shown;
+}
+
 function renderSlide() {
   const { spring, track, left, right, hL, hR } = slide;
   const x = Math.min(1, Math.max(0, spring.value));
+  setBackProgress(x);
+  // The box isn't really scrolled while the panes are on the track (their
+  // offsets are translates), so the edge fade follows them instead.
+  setEdgeFade(slide.leftScroll + (slide.rightScroll - slide.leftScroll) * x,
+    slide.leftRest + (slide.rightRest - slide.leftRest) * x);
   track.style.translate = `${-50 * x}% 0`;
   left.style.opacity = `${1 - 0.7 * x}`;
   right.style.opacity = `${0.3 + 0.7 * x}`;
@@ -671,6 +730,8 @@ function landSlide() {
   resultsEl.style.height = '';
   resultsEl.replaceChildren(pane);
   resultsEl.scrollTop = to === 1 ? rightScroll : leftScroll;
+  setBackProgress(to);
+  updateEdgeFade();
   refreshActionable();
 }
 
@@ -686,16 +747,20 @@ function startSlide({ left, right, leftScroll, rightScroll, from, profKey, query
   if (reduceMotionMQ.matches) {
     resultsEl.replaceChildren(target);
     resultsEl.scrollTop = from === 0 ? rightScroll : leftScroll;
+    setBackProgress(1 - from);
     fadeIn(target);
     refreshActionable();
     return;
   }
 
   const hOn = resultsEl.offsetHeight;
+  const restOn = resultsEl.scrollHeight - resultsEl.clientHeight - resultsEl.scrollTop;
   const other = measurePane(target);
   const clampScroll = (v) => Math.max(0, Math.min(v, other.maxScroll));
   if (from === 0) rightScroll = clampScroll(rightScroll);
   else leftScroll = clampScroll(leftScroll);
+  // How much is left below each pane's scroll position, for the edge fade.
+  const restOther = other.maxScroll - (from === 0 ? rightScroll : leftScroll);
 
   const track = document.createElement('div');
   track.className = 'search-slide-track';
@@ -715,6 +780,8 @@ function startSlide({ left, right, leftScroll, rightScroll, from, profKey, query
     track, left, right, leftScroll, rightScroll, spring, profKey, query, to: from,
     hL: from === 0 ? hOn : other.h,
     hR: from === 0 ? other.h : hOn,
+    leftRest: from === 0 ? restOn : restOther,
+    rightRest: from === 0 ? restOther : restOn,
   };
   // Nothing is selectable until a pane has landed.
   actionable = [];
@@ -849,7 +916,7 @@ function buildResultsPane(container, query) {
   const ctx = { q, dateFmt: new Intl.DateTimeFormat(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' }), timeFmt: createTimeFormatter(), large: false };
 
   const top = block('tophit');
-  top.appendChild(keyed(sectionLabel(t('search.topHit')), 'label'));
+  top.appendChild(keyed(sectionLabel(t('search.topHit'), 'hgi-sparkles'), 'label'));
   // A swap slot: a different Top Hit cross-fades in place of the old one
   // while the slot's height morphs between them (see search-motion.js).
   const slot = keyed(document.createElement('div'), 'slot');
@@ -880,12 +947,10 @@ function buildResultsPane(container, query) {
     if (!items.length) continue;
 
     const blk = block(`sec:${sec.key}`);
-    blk.appendChild(keyed(sectionLabel(t(sec.labelKey)), 'label'));
+    blk.appendChild(keyed(sectionLabel(t(sec.labelKey), sec.icon), 'label'));
     const list = keyed(document.createElement('div'), 'list');
     list.className = 'search-section-list';
-    // Exam/lesson groups get their own separated, rounded blocks rather than
-    // being fused into one inset list — they're accordions, not plain rows.
-    if (sec.key === 'exams' || sec.key === 'lessons') list.classList.add('search-section-list--spaced');
+    if (sec.spaced) list.classList.add('search-section-list--spaced');
     const expanded = expandedSections.has(sec.key);
     const shown = expanded ? items : items.slice(0, SECTION_CAP);
     shown.forEach(item => list.appendChild(keyed(sec.build(item, ctx), animKeyFor(sec.type, item))));
@@ -910,6 +975,47 @@ function buildResultsPane(container, query) {
   }
 
   if (!hasOccupationData()) scheduleOccRecheck(query);
+}
+
+/* ── Scroll-edge fade ─────────────────────────────────────────────────────
+   The results scroller's mask (search-overlay.css) fades each edge by as much
+   as there is left to scroll that way, capped at --search-fade — so the fade
+   grows in as the list leaves its top, and is gone again at its end. Kept
+   current on scroll (synchronously, so it never trails the content) and on
+   any change in the content's size (a render, a morph frame, an accordion). */
+
+function setEdgeFade(top, bottom) {
+  resultsEl.style.setProperty('--search-fade-top', `${Math.max(0, top)}px`);
+  resultsEl.style.setProperty('--search-fade-bottom', `${Math.max(0, bottom)}px`);
+}
+
+function updateEdgeFade() {
+  if (slide) return; // renderSlide() drives it while the panes are on the track
+  const top = resultsEl.scrollTop;
+  setEdgeFade(top, resultsEl.scrollHeight - resultsEl.clientHeight - top);
+}
+
+let edgeFadeRaf = 0;
+function scheduleEdgeFade() {
+  if (edgeFadeRaf) return;
+  edgeFadeRaf = requestAnimationFrame(() => { edgeFadeRaf = 0; updateEdgeFade(); });
+}
+
+function initEdgeFade() {
+  resultsEl.addEventListener('scroll', updateEdgeFade, { passive: true });
+  const ro = new ResizeObserver(scheduleEdgeFade);
+  ro.observe(resultsEl);
+  // The content is swapped wholesale on every render; follow whichever pane
+  // is current.
+  let watched = null;
+  new MutationObserver(() => {
+    const pane = resultsEl.firstElementChild;
+    if (pane === watched) return;
+    if (watched) ro.unobserve(watched);
+    watched = pane;
+    if (pane) ro.observe(pane);
+    scheduleEdgeFade();
+  }).observe(resultsEl, { childList: true });
 }
 
 /* ── Results box ──────────────────────────────────────────────────────────
@@ -954,7 +1060,8 @@ function setResultsBox(show, animate = true) {
   }
   const reduce = reduceMotionMQ.matches;
   const frames = reduce ? BOX_KEYFRAMES_FADE : BOX_KEYFRAMES;
-  const anim = resultsEl.animate(show ? frames : [...frames].reverse(), {
+  // The frame, not resultsEl: it's the one carrying the glass.
+  const anim = resultsEl.parentElement.animate(show ? frames : [...frames].reverse(), {
     duration: reduce ? 180 : 280, easing: reduce ? 'ease-out' : boxEasing(), fill: 'both',
   });
   boxAnim = anim;
@@ -978,6 +1085,7 @@ function renderResults(query, { animate = true } = {}) {
     landSlide();
     currentView = 'results';
     currentProfessorKey = null;
+    setBackProgress(0);
     setResultsBox(false, animate);
     actionable = [];
     updateSelectionVisual();
@@ -989,6 +1097,7 @@ function renderResults(query, { animate = true } = {}) {
   }
   currentView = 'results';
   currentProfessorKey = null;
+  setBackProgress(0);
   const pane = newResultsPane();
   buildResultsPane(pane, query);
   morphInto(resultsEl, pane, { animate });
@@ -1266,6 +1375,15 @@ export function initSearchOverlay() {
   closeBtn = document.getElementById('search-overlay-close');
   resultsEl = document.getElementById('search-overlay-results');
 
+  backBtn = createBackButton({
+    label: t('search.backToResults'),
+    onClick: (e) => { e.stopPropagation(); exitProfessorView(); },
+  });
+  backBtn.classList.add('search-pv-back');
+  resultsEl.parentElement.appendChild(backBtn);
+  setBackProgress(0);
+  initEdgeFade();
+
   closeBtn.addEventListener('click', () => {
     closeSearchOverlay();
   });
@@ -1318,5 +1436,8 @@ export function initSearchOverlay() {
 
   input.addEventListener('keydown', onInputKeyDown);
 
-  onLanguageSwitch(() => { if (isOpen) refreshActiveView(); });
+  onLanguageSwitch(() => {
+    backBtn.setAttribute('aria-label', t('search.backToResults'));
+    if (isOpen) refreshActiveView();
+  });
 }

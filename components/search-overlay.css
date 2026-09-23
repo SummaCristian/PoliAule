@@ -71,7 +71,7 @@ html.search-vt .lg-tabbar__bar,
 html.search-vt .lg-tabbar__prominent,
 html.search-vt .search-overlay-header .search-bar-wrapper,
 html.search-vt .search-overlay-close,
-html.search-vt .search-overlay-results {
+html.search-vt .search-results-frame {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
@@ -277,8 +277,38 @@ html.search-vt .lg-tabbar__prominent {
 
 /* ── Results ────────────────────────────────────────────────────────── */
 
-/* Results live in their own glass container rather than floating loose on
-   the page. */
+/* Results live in their own glass box rather than floating loose on the
+   page. The glass is the frame's; the scroller inside it is transparent, so
+   its edges can fade (below) without fading the box itself — a mask on the
+   element carrying the backdrop-filter would take the glass with it. The
+   frame also positions what floats over the results (the professor view's
+   back button), and is the point the box materialises from: its top edge,
+   right under the bar (setResultsBox in search-overlay.js). */
+.search-results-frame {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  transform-origin: 50% 0;
+
+  border-radius: var(--radius-xl);
+  overflow: clip;
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
+}
+
+/* Nothing to show: take the frame out of the panel's flow, so there's no
+   empty glass slab. */
+.search-results-frame:has(> .search-overlay-results:empty) {
+  display: none;
+}
+
 .search-overlay-results {
   flex: 1;
   min-height: 0;
@@ -287,20 +317,23 @@ html.search-vt .lg-tabbar__prominent {
   overscroll-behavior: contain; /* don't chain into the page behind when the list ends */
 
   padding: 1.25rem; /* section labels/rows carry their own inset, see below */
-  border-radius: var(--radius-xl);
-  background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-md));
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
 
-  /* Offset parent for search-motion.js's per-frame measurements, and the
-     point the box materialises from: its top edge, right under the bar
-     (setResultsBox in search-overlay.js). */
+  /* Scroll-edge fade: content dissolves into the box's top and bottom edges
+     rather than being cut off by them. Each side's depth is how far there's
+     more to scroll that way, up to --search-fade (search-overlay.js keeps
+     them current), so a list at rest at the top has no top fade at all. */
+  --search-fade: 1.5rem;
+  --search-fade-top: 0px;
+  --search-fade-bottom: 0px;
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent, #000 min(var(--search-fade), var(--search-fade-top)),
+    #000 calc(100% - min(var(--search-fade), var(--search-fade-bottom))), transparent);
+  mask-image: linear-gradient(to bottom,
+    transparent, #000 min(var(--search-fade), var(--search-fade-top)),
+    #000 calc(100% - min(var(--search-fade), var(--search-fade-bottom))), transparent);
+
+  /* Offset parent for search-motion.js's per-frame measurements. */
   position: relative;
-  transform-origin: 50% 0;
 }
 
 /* Dissolving back into the bar: its rows are on their way out. */
@@ -331,13 +364,36 @@ html.search-vt .lg-tabbar__prominent {
 
 /* ── Section labels (Top Hit / Classrooms / Buildings / …) ──────────── */
 
+/* A smaller variant of the app's .section-header-title (style.css): same
+   bold sentence-case title with a leading icon, same solid colour dimmed
+   with opacity. The opacity sits on the children rather than the label, as
+   search-motion.js may animate the label's own opacity. */
 .search-section-label {
-  font-size: var(--text-75);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
-  padding: 0 0.4rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-100);
+  font-weight: bold;
+  color: #000;
+  padding: 0 0.25rem 0.5rem;
+}
+
+.search-section-label > * {
+  opacity: 0.5;
+}
+
+.search-section-label-icon {
+  flex: none;
+  font-size: 1em;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-section-label {
+    color: #fff;
+  }
 }
 
 /* ── Top Hit ──────────────────────────────────────────────────────────
@@ -424,14 +480,27 @@ html.search-vt .lg-tabbar__prominent {
   margin-top: 0.6rem;
 }
 
-.search-section-list--spaced > .search-item {
+.search-section-list--spaced > .search-item,
+.search-section-list--spaced > .search-row {
   background: color-mix(in srgb, var(--text-color-primary) 3.5%, transparent);
   border-radius: var(--radius-lg, 1rem);
   overflow: clip;
 }
 
-.search-section-list--spaced > .search-item + .search-item {
+.search-section-list--spaced > .search-item + .search-item,
+.search-section-list--spaced > .search-row + .search-row {
   box-shadow: none;
+}
+
+/* Separate blocks: hover/press tint their own rounded background instead of
+   painting a bare row over the list's. */
+.search-section-list--spaced > .search-row:hover,
+.search-section-list--spaced > .search-row.search-row--selected {
+  background: color-mix(in srgb, var(--text-color-primary) 7%, transparent);
+}
+
+.search-section-list--spaced > .search-row:active {
+  background: color-mix(in srgb, var(--text-color-primary) 11%, transparent);
 }
 
 /* ── Row (shared shape for every result type) ────────────────────────
@@ -510,6 +579,12 @@ html.search-vt .lg-tabbar__prominent {
   overflow: clip;
   border-radius: var(--radius-md, 0.75rem);
   padding-left: calc(2.5rem + 0.9rem);
+}
+
+/* As its own block in a spaced list, the same corners as the exam/lesson
+   blocks beside it. */
+.search-section-list--spaced > .search-row:has(> .search-row-lead--photo) {
+  border-radius: var(--radius-lg, 1rem);
 }
 
 .search-row--tophit:has(> .search-row-lead--photo) {
@@ -750,10 +825,9 @@ html.search-vt .lg-tabbar__prominent {
   transition: background-color 0.12s ease, scale 0.15s ease-out;
 }
 
-/* Session pills and the back button are free-standing tap targets (unlike
-   the full-width rows of an inset list, which only highlight): they press in. */
-.search-session-row:active,
-.search-pv-back:active {
+/* Session pills are free-standing tap targets (unlike the full-width rows of
+   an inset list, which only highlight): they press in. */
+.search-session-row:active {
   scale: 0.97;
 }
 
@@ -1017,54 +1091,52 @@ html.search-vt .lg-tabbar__prominent {
 
 /* ── Professor view ──────────────────────────────────────────────────── */
 
+/* Centred, contact-card style: leaves the top-left corner to the floating
+   back button, and reads as the page's title. */
 .search-pv-header {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: center;
   padding: 0.25rem 0.4rem 0.9rem;
 }
 
-.search-pv-back {
-  flex-shrink: 0;
-  width: 2.25rem;
-  height: 2.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
-  color: var(--text-color-primary);
-  font-family: inherit;
-  transition: background-color 0.12s ease, scale 0.15s ease-out;
+/* Vitrium's glass back button (createBackButton), pinned over the results
+   box's top-left corner — outside the scrolling content (it's a child of
+   .search-results-frame), so the schedule scrolls under it while it stays
+   put. search-overlay.js drives its opacity and scale along with the
+   professor-view slide; hidden (and inert) in the results view. */
+.search-pv-back.lg-button {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 3;
+  width: 2.5rem;
+  height: 2.5rem;
+  transform-origin: 50% 50%;
+  pointer-events: none;
 }
 
-.search-pv-back:hover,
-.search-pv-back.search-row--selected {
-  background: color-mix(in srgb, var(--text-color-primary) 14%, transparent);
-}
-
-.search-pv-back:active {
-  background: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
-}
-
-.search-pv-back .hgi-stroke {
-  font-size: var(--text-110) !important;
+.search-pv-back.search-pv-back--shown {
+  pointer-events: auto;
 }
 
 .search-pv-identity {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  flex: 1;
+  gap: 0.6rem;
   min-width: 0;
+  max-width: 100%;
+  text-align: center;
 }
 
 .search-pv-name-wrap {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.15rem;
   min-width: 0;
+  max-width: 100%;
 }
 
 .search-pv-name {
@@ -1085,12 +1157,21 @@ html.search-vt .lg-tabbar__prominent {
   padding: 0 0.4rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+/* Vitrium segmented control (All / Lessons / Exams): its track has no blur
+   of its own by default, as it sits on the results box's glass. */
+.search-pv-filter {
+  font-size: var(--text-80);
 }
 
 .search-pv-courses {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.4rem;
 }
 
@@ -1119,25 +1200,35 @@ html.search-vt .lg-tabbar__prominent {
   gap: 0.3rem;
 }
 
+/* One block per day (keyed for search-motion.js), so a day's sticky header
+   is pushed off by the next day's rather than stacking under it. */
+.search-pv-day {
+  position: relative;
+}
+
+.search-pv-day + .search-pv-day {
+  margin-top: 0.4rem;
+}
+
 /* Sticky day headers — same translucent material as the results panel so
-   content scrolling underneath doesn't show through illegibly. */
+   content scrolling underneath doesn't show through illegibly. Centred, and
+   as tall as the back button's corner, so once stuck the button sits beside
+   the day's title rather than over it. Same type as the section titles. */
 .search-pv-day-header {
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: 0.5rem 0.4rem;
-  font-size: var(--text-75);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0 3rem;
+  font-size: var(--text-90);
+  font-weight: bold;
+  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
   background: var(--lg-tint);
   backdrop-filter: blur(var(--lg-blur-sm));
   -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-}
-
-.search-pv-day-header:not(:first-child) {
-  margin-top: 0.4rem;
 }
 
 .search-pv-empty {

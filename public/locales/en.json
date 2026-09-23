@@ -65,6 +65,7 @@
   "search.examsCount": "{n} exams",
   "search.next": "next",
   "search.noUpcoming": "no upcoming sessions",
+  "search.filterAll": "All",
   "search.backToResults": "Back to results",
   "search.professorDaysNote": "Next {n} days",
   "search.professorEmpty": "No lessons in the loaded days",
@@ -80,8 +81,8 @@
   "overview.floor": "Floor {n}",
   "overview.floorUnknown": "Floor unknown",
 
-  "search.emptyTitle": "No classrooms found",
-  "search.emptySubtitle": "Try a different name or spelling",
+  "search.emptyTitle": "No results found",
+  "search.emptySubtitle": "Try a different name, course or code",
   "search.tooManyResults": "Showing first {n} results. Narrow your search to see more.",
 
   "wip.title": "Work in Progress",

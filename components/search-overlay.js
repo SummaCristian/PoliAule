@@ -632,15 +632,16 @@ function buildProfessorPane(container, key) {
   note.className = 'search-pv-range-note';
   note.textContent = t('search.professorDaysNote').replace('{n}', occupancyDays.length);
   meta.appendChild(note);
-  container.appendChild(meta);
+  // Beside the identity when the box is wide enough, under it otherwise (a
+  // container query on the pane, search-overlay.css).
+  header.appendChild(meta);
 
   body.appendChild(buildProfessorDays(schedule, filter, ctx));
   container.appendChild(body);
 }
 
-// The schedule, grouped by day, keyed for search-motion.js. Each day is its
-// own block, so its sticky header only sticks while that day is on screen
-// and is pushed off by the next one.
+// The schedule, grouped by day, keyed for search-motion.js (the filter
+// animates whole days in and out), each titled like a results section.
 function buildProfessorDays(schedule, filter, ctx) {
   const days = keyed(document.createElement('div'), 'days');
   days.className = 'search-pv-days';
@@ -649,10 +650,8 @@ function buildProfessorDays(schedule, filter, ctx) {
     if (!sessions.length) continue;
     const dayEl = keyed(document.createElement('div'), `day:${day.date}`);
     dayEl.className = 'search-pv-day';
-    const dayHeader = document.createElement('div');
-    dayHeader.className = 'search-pv-day-header';
-    dayHeader.textContent = fmtDay(day.date, ctx.dateFmt);
-    dayEl.appendChild(dayHeader);
+    // Same title as the results' sections (icon + bold sentence case).
+    dayEl.appendChild(sectionLabel(fmtDay(day.date, ctx.dateFmt), 'hgi-calendar-03'));
     const list = keyed(document.createElement('div'), 'list');
     list.className = 'search-section-list search-section-list--spaced';
     sessions.forEach(s => list.appendChild(keyed(buildProfessorSessionRow(s, ctx), `s:${s.roomId}:${s.inizio}:${s.title ?? ''}`)));
@@ -664,7 +663,7 @@ function buildProfessorDays(schedule, filter, ctx) {
 
 function newProfessorPane(key) {
   const pane = document.createElement('div');
-  pane.className = 'search-pane';
+  pane.className = 'search-pane search-pane--professor';
   buildProfessorPane(pane, key);
   return pane;
 }

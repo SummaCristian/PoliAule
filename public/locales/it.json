@@ -42,7 +42,7 @@
   "status.partiallyFree": "Parzialmente libera",
   "status.freeSoon": "Libera tra poco",
   "status.occupiedSoon": "Occupata tra poco",
-  "search.inputPlaceholder": "Aula, corso, docente, codice…",
+  "search.inputPlaceholder": "Aule, corsi, docenti",
   "search.topHit": "Miglior risultato",
   "search.sectionClassrooms": "Aule",
   "search.sectionBuildings": "Edifici",

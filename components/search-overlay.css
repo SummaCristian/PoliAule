@@ -34,22 +34,30 @@ body.search-overlay-open {
   overflow: hidden;
 }
 
-/* No scrim element — instead the tab behind just recedes. The class is toggled
-   inside the open/close view-transition callback, so the root cross-fade
-   animates this; the transition is the no-VT fallback. */
-.tab-content.visible {
-  /* Also carries the padding that follows the tab bar (see style.css): a
-     `transition` here replaces that one wholesale, so both are listed. */
-  transition: opacity 0.2s ease, padding-left var(--nav-shift);
+/* No scrim, and the page behind isn't dimmed either: the search surfaces
+   stand off it by elevation alone — a dense glass (heavier blur and a
+   saturation lift, so whatever sits behind reads as colour, not detail) and a
+   deep, layered shadow, as command bars do. --search-elevation is shared by
+   the field, the close button and the results box. */
+.search-overlay-panel {
+  --search-glass: blur(var(--lg-blur-lg)) saturate(1.6);
+  --search-elevation:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 10px 28px -8px rgba(0, 0, 0, 0.16),
+    0 28px 72px -16px rgba(0, 0, 0, 0.22);
 }
 
-.footer {
-  transition: opacity 0.2s ease, padding-bottom var(--nav-shift);
-}
-
-body.search-overlay-open .tab-content.visible,
-body.search-overlay-open .footer {
-  opacity: 0.4;
+@media (prefers-color-scheme: dark) {
+  .search-overlay-panel {
+    --search-elevation:
+      0 0 0 0.1px var(--lg-outline),
+      var(--lg-highlight),
+      0 1px 3px rgba(0, 0, 0, 0.3),
+      0 10px 28px -8px rgba(0, 0, 0, 0.45),
+      0 28px 72px -16px rgba(0, 0, 0, 0.6);
+  }
 }
 
 /* Mobile: the whole pill nav steps aside while the overlay is open — the
@@ -112,92 +120,193 @@ html.search-vt .lg-tabbar__prominent {
   min-height: 0;
 }
 
-/* ── Header row: search bar + close button ──────────────────────────── */
+/* ── Header row: search bar + close button ──────────────────────────────
+   The field and the close button are one pair: same height, same glass,
+   centred on one line. */
 
 .search-overlay-header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-shrink: 0;
-}
-
-/* ── Search bar ────────────────────────────────────────────────────── */
-
-.search-bar-wrapper {
+  --search-field-h: 3.25rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
+}
 
-  background-color: var(--background-color-secondary);
-  border-radius: var(--radius-pill);
-  padding: 0.75rem 1.25rem;
-  box-shadow: var(--shadow);
-  border: 1px solid color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+/* ── Search field ─────────────────────────────────────────────────────
+   Glass capsule (the same material as the header buttons / pill nav);
+   press feedback, lit hover and swipe-deform come from Vitrium's
+   .liquid-glass (the class is on the element in index.html). It has no
+   focus ring: it holds focus for as long as search is open, so a ring would
+   just be a permanent coloured border — the accent caret marks it instead. */
 
+.search-bar-wrapper {
+  flex: 1;
+  min-width: 0;
+  height: var(--search-field-h);
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  /* Tighter on the right, where the round clear button sits in its own
+     inset — optically the same margin as the icon's on the left. */
+  padding: 0 0.6875rem 0 1.05rem;
+
+  border-radius: var(--radius-pill);
+  background: var(--lg-tint);
+  backdrop-filter: var(--search-glass);
+  -webkit-backdrop-filter: var(--search-glass);
+  box-shadow: var(--search-elevation);
+
   /* Restates Vitrium's `.liquid-glass` spring (translate / scale / filter): a
      `transition` here, being later in the cascade, would otherwise replace it,
      and a released press or stretch would snap back instead of springing. */
   transition:
     box-shadow 0.2s ease,
-    border-color 0.2s ease,
     translate var(--lg-press-out-dur) var(--lg-ease-spring),
     scale var(--lg-press-out-dur) var(--lg-ease-spring),
     filter 0.2s ease;
 }
 
-.search-bar-wrapper .hgi-stroke {
-  color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
-  font-size: var(--text-125) !important;
+/* The magnifier sits back while the field is empty and comes forward with
+   the query, so the field visibly "holds" something once you type. */
+.search-bar-icon {
   flex-shrink: 0;
+  font-size: 1.2rem !important;
+  color: color-mix(in srgb, var(--text-color-primary) 42%, transparent);
+  transition: color 0.2s ease;
+}
+
+.search-bar-wrapper:has(.search-input:not(:placeholder-shown)) .search-bar-icon {
+  color: color-mix(in srgb, var(--text-color-primary) 72%, transparent);
 }
 
 .search-input {
   flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
   border: none;
   outline: none;
   background: transparent;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: var(--text-100);
-  font-weight: 500;
+  /* 18px: a touch larger than the platform's own search field, and well over
+     iOS Safari's 16px zoom-on-focus threshold. */
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
   color: var(--text-color-primary);
+  caret-color: var(--text-color-accent);
+  text-overflow: ellipsis;
+  /* .liquid-glass sets user-select:none on the surface — the field itself
+     must stay typable and selectable. */
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .search-input::placeholder {
-  color: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
+  /* Only reached on the narrowest phones: better an ellipsis than a word cut
+     off mid-letter. */
+  text-overflow: ellipsis;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text-color-primary) 38%, transparent);
+  opacity: 1; /* Firefox dims placeholders on its own */
 }
 
-.search-clear-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Trailing slot: the clear button, or — on desktop, while the field is empty
+   — an `esc` key hint, stacked in the same spot. With nothing typed it gives
+   its width back (negative margin), so a long placeholder isn't cut short
+   by an invisible button. */
+.search-bar-trailing {
   flex-shrink: 0;
+  display: grid;
+  place-items: center end;
+}
 
-  background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+.search-bar-trailing > * {
+  grid-area: 1 / 1;
+}
+
+.search-input:placeholder-shown ~ .search-bar-trailing {
+  /* Its width and the flex gap before it. */
+  margin-inline-start: calc(-1.75rem - 0.6rem);
+}
+
+/* iOS-style clear: a filled disc with the ✕ knocked out of it — distinct at
+   a glance from the close button's outlined ✕ right beside it. Springs in
+   from a smaller size as the first character lands. */
+.search-clear-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
   border: none;
   border-radius: 50%;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--text-color-primary) 24%, transparent);
+  color: var(--background-color-secondary);
 
   opacity: 0;
+  scale: 0.6;
   pointer-events: none;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  transition:
+    opacity 0.18s ease-out,
+    scale 0.3s var(--vt-spring, cubic-bezier(0.16, 1, 0.3, 1)),
+    background-color 0.15s ease;
+}
+
+/* A comfortable touch target around the small disc. */
+.search-clear-btn::before {
+  content: "";
+  position: absolute;
+  inset: -0.5rem;
 }
 
 .search-clear-btn:hover {
-  background: color-mix(in srgb, var(--text-color-primary) 16%, transparent);
+  background: color-mix(in srgb, var(--text-color-primary) 34%, transparent);
+}
+
+.search-clear-btn:active {
+  scale: 0.9;
 }
 
 .search-clear-btn .hgi-stroke {
-  font-size: var(--text-100) !important;
+  font-size: 0.95rem !important;
 }
 
-/* Show only when the input has content (placeholder is hidden) */
-.search-input:not(:placeholder-shown) ~ .search-clear-btn {
+.search-input:not(:placeholder-shown) ~ .search-bar-trailing .search-clear-btn {
   opacity: 1;
+  scale: 1;
   pointer-events: auto;
+}
+
+/* Desktop only (a real pointer and keyboard): how to leave, shown while
+   there's nothing to clear. */
+.search-kbd {
+  display: none;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 14%, transparent);
+  font-family: inherit;
+  font-size: var(--text-72);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--text-color-primary) 42%, transparent);
+  /* A hint, never a target: it's stacked over the clear button. */
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .search-kbd {
+    display: block;
+  }
+
+  .search-input:not(:placeholder-shown) ~ .search-bar-trailing .search-kbd {
+    opacity: 0;
+  }
 }
 
 /* Match highlight in result cards (utils/html.js highlight() emits <mark>). */
@@ -215,64 +324,70 @@ html.search-vt .lg-tabbar__prominent {
   }
 }
 
-/* The moved-in search bar drops its old centring constraints, and swaps its
-   flat card background for the same glass material as the header buttons /
-   pill nav. Press feedback + lit hover + swipe-deform come from the shared
-   .liquid-glass rules (the class is on the element in index.html). */
-.search-overlay-header .search-bar-wrapper {
-  margin: 0;
-  max-width: none;
-  flex: 1;
-
-  background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-md));
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
-  border-color: transparent;
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
-}
-
-.search-overlay-header .search-bar-wrapper:focus-within {
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--text-color-accent) 22%, transparent),
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
-}
-
-/* .liquid-glass sets user-select:none on the surface — the field itself must
-   stay typable and selectable. */
-.search-overlay-header .search-input {
-  user-select: text;
-  -webkit-user-select: text;
-}
-
 .search-overlay-close {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 
-  width: 2.75rem;
-  height: 2.75rem;
+  width: var(--search-field-h);
+  height: var(--search-field-h);
   padding: 0;
   border: none;
   border-radius: 50%;
   color: var(--text-color-secondary);
 
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
+  backdrop-filter: var(--search-glass);
+  -webkit-backdrop-filter: var(--search-glass);
+  box-shadow: var(--search-elevation);
 }
 
 .search-overlay-close .hgi-stroke {
-  font-size: var(--text-125) !important;
+  font-size: 1.2rem !important;
+}
+
+/* Desktop: macOS Spotlight's proportions — one tall capsule with large,
+   medium-weight type and a big magnifier, and no close button (Esc, shown by
+   the key hint, or a click outside dismisses it, as in Spotlight). */
+@media (min-width: 600px) and (hover: hover) and (pointer: fine) {
+  .search-overlay-header {
+    --search-field-h: 3.75rem;
+  }
+
+  .search-bar-wrapper {
+    gap: 0.85rem;
+    padding: 0 1.1rem 0 1.35rem;
+  }
+
+  .search-bar-icon {
+    font-size: 1.5rem !important;
+  }
+
+  .search-input {
+    font-size: 1.5rem;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
+
+  .search-input::placeholder {
+    font-weight: 400;
+  }
+
+  .search-input:placeholder-shown ~ .search-bar-trailing {
+    margin-inline-start: 0;
+  }
+
+  .search-overlay-close {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-clear-btn {
+    scale: 1;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+  }
 }
 
 /* ── Results ────────────────────────────────────────────────────────── */
@@ -294,13 +409,14 @@ html.search-vt .lg-tabbar__prominent {
 
   border-radius: var(--radius-xl);
   overflow: clip;
-  background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-md));
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
+  /* A thicker material than the field's: it's a large surface you read from,
+     and with the page behind no longer dimmed, Vitrium's control tint (~80%)
+     let the page's own text show through it. Mixed from that same tint, so
+     it follows the theme and the no-blur fallback. */
+  background: color-mix(in srgb, var(--lg-tint) 55%, var(--background-color-secondary));
+  backdrop-filter: var(--search-glass);
+  -webkit-backdrop-filter: var(--search-glass);
+  box-shadow: var(--search-elevation);
 }
 
 /* Nothing to show: take the frame out of the panel's flow, so there's no
@@ -406,11 +522,32 @@ html.search-vt .lg-tabbar__prominent {
   margin-bottom: 0.25rem;
 }
 
+/* Lifted off the list below it: a soft shadow and a hairline edge, so the
+   card stays distinct even when its fill is faint (a professor's tint). The
+   edge is the inverse of the theme — white on light, black on dark — so it
+   reads as the card's lit rim rather than a drawn outline. It's an outline,
+   not a border (no layout) or an inset shadow (which a classroom's photo
+   would cover along the left). */
 .search-tophit-row {
+  --tophit-edge: rgba(255, 255, 255, 0.5);
   transition: scale 0.15s ease-out;
   border-radius: var(--radius-lg, 1rem);
   overflow: clip;
   background: color-mix(in srgb, var(--text-color-primary) 3.5%, transparent);
+  outline: 0.5px solid var(--tophit-edge);
+  outline-offset: -0.5px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 8px 20px -8px rgba(0, 0, 0, 0.16);
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-tophit-row {
+    --tophit-edge: rgba(0, 0, 0, 0.5);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 8px 20px -8px rgba(0, 0, 0, 0.5);
+  }
 }
 
 /* The card is its own surface, so it presses in like one. Keeping the scale
@@ -1091,13 +1228,43 @@ html.search-vt .lg-tabbar__prominent {
 
 /* ── Professor view ──────────────────────────────────────────────────── */
 
-/* Centred, contact-card style: leaves the top-left corner to the floating
-   back button, and reads as the page's title. */
+/* The professor's header: a large avatar and name on the left (stepped in
+   past the floating back button in the corner), and their courses, the
+   filter and the range note beside it on the right — or, when the box is too
+   narrow for two columns (phones), below it. Sized off the pane, not the
+   viewport, so it follows the box through the slide too. */
+.search-pane--professor {
+  container-type: inline-size;
+}
+
 .search-pv-header {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 0.25rem 0.4rem 0.9rem;
+  gap: 1rem;
+  padding: 0.25rem 0.25rem 1.25rem;
+}
+
+@container (min-width: 520px) {
+  .search-pv-header {
+    display: grid;
+    /* The identity at its natural width (up to 60%), the courses in the rest. */
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .search-pv-header .search-pv-identity {
+    max-width: 60cqi;
+  }
+
+  .search-pv-header .search-pv-meta {
+    align-items: flex-end;
+    text-align: end;
+  }
+
+  .search-pv-header .search-pv-courses {
+    justify-content: flex-end;
+  }
 }
 
 /* Vitrium's glass back button (createBackButton), pinned over the results
@@ -1122,44 +1289,51 @@ html.search-vt .lg-tabbar__prominent {
 
 .search-pv-identity {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
+  gap: 1rem;
   min-width: 0;
-  max-width: 100%;
-  text-align: center;
+  text-align: start;
+  /* Clears the back button (0.5rem in from the box's edge, 2.5rem wide),
+     which sits over this corner. */
+  padding-left: 2.25rem;
+}
+
+.search-pv-identity .search-row-lead--lg {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: var(--text-125);
 }
 
 .search-pv-name-wrap {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
+  gap: 0.2rem;
   min-width: 0;
-  max-width: 100%;
 }
 
+/* Wraps (balanced) rather than truncating: it's the page's title. */
 .search-pv-name {
-  font-size: var(--text-125);
+  font-size: var(--text-150);
   font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   color: var(--text-color-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 .search-pv-counts {
-  font-size: var(--text-80);
+  font-size: var(--text-90);
+  font-weight: 600;
   color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
 }
 
 .search-pv-meta {
-  padding: 0 0.4rem 1rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
-  text-align: center;
+  min-width: 0;
 }
 
 /* Vitrium segmented control (All / Lessons / Exams): its track has no blur
@@ -1171,11 +1345,11 @@ html.search-vt .lg-tabbar__prominent {
 .search-pv-courses {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 0.4rem;
 }
 
 .search-pv-course-chip {
+  text-align: center;
   font-size: var(--text-72);
   font-weight: 700;
   padding: 0.25rem 0.65rem;
@@ -1200,35 +1374,20 @@ html.search-vt .lg-tabbar__prominent {
   gap: 0.3rem;
 }
 
-/* One block per day (keyed for search-motion.js), so a day's sticky header
-   is pushed off by the next day's rather than stacking under it. */
+/* One block per day (keyed for search-motion.js), titled with the same
+   .search-section-label as the results' sections and spaced like them. The
+   titles scroll with their day rather than sticking: they have no background
+   of their own to stick over the rows with. The spacing is every day's own
+   padding, inside the block, so it collapses with a day the filter removes;
+   the list pulls the first one back (a `+` rule instead would snap the next
+   day's spacing when a leaving first day is removed — see .search-block). */
+.search-pv-days {
+  margin-top: -1.1rem;
+}
+
 .search-pv-day {
   position: relative;
-}
-
-.search-pv-day + .search-pv-day {
-  margin-top: 0.4rem;
-}
-
-/* Sticky day headers — same translucent material as the results panel so
-   content scrolling underneath doesn't show through illegibly. Centred, and
-   as tall as the back button's corner, so once stuck the button sits beside
-   the day's title rather than over it. Same type as the section titles. */
-.search-pv-day-header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 3rem;
-  padding: 0 3rem;
-  font-size: var(--text-90);
-  font-weight: bold;
-  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
-  background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  padding-top: 1.1rem;
 }
 
 .search-pv-empty {

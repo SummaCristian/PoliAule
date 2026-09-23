@@ -62,6 +62,10 @@ function tokenizeQuery(query) {
   return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
 }
 
+// Same separators classroom-search-data.js ignores in room names ("T11" ->
+// "T.1.1"); duplicated for the same import-cycle reason as tokenizeQuery.
+const ROOM_NAME_SEPARATORS = /[\s._\-/]+/g;
+
 function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -100,15 +104,26 @@ function escapeRegExp(str) {
  * Used to highlight the part of a classroom/building/campus name (or search
  * overlay result) that matched a user's search query.
  */
-export function highlight(text, query) {
+export function highlight(text, query, extraTerms = []) {
   const safe = escapeHtml(text);
   if (!query) return safe;
   // Escape special regex chars, then allow spaces to also match dots (for x.y.z names queried as "x y z")
   const fullPattern = escapeRegExp(escapeHtml(query)).replace(/ /g, '[\\s.]');
   const tokenPatterns = tokenizeQuery(query).map(tok => escapeRegExp(escapeHtml(tok)));
+  // "T11" should also mark "T.1.1": the separator-less query with optional
+  // separators between its characters.
+  const compactPattern = [...query.toLowerCase().replace(ROOM_NAME_SEPARATORS, '')]
+    .map(ch => escapeRegExp(escapeHtml(ch)))
+    .join(`(?:${ROOM_NAME_SEPARATORS.source})?`);
+  // Words the search matched through a typo correction (runSearch's
+  // `corrections`), which the literal query can't find on its own.
+  const extraPatterns = extraTerms.map(term => escapeRegExp(escapeHtml(term)));
   // Longest alternatives first so the full-phrase match (when it exists) wins
   // over its own individual tokens in the regex alternation.
-  const pattern = [fullPattern, ...tokenPatterns].sort((a, b) => b.length - a.length).join('|');
+  const pattern = [fullPattern, ...tokenPatterns, compactPattern, ...extraPatterns]
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+    .join('|');
   return safe.replace(new RegExp(`(${pattern})`, 'gi'), '<mark>$1</mark>');
 }
 

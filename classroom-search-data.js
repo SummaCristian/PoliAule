@@ -125,12 +125,136 @@ export function tokenize(query) {
   return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
 }
 
-// Codes are stored as ints, so a leading zero the user typed ("061182") is
-// gone from the haystack ("61182") — match on both.
+// A token matches a row when any of its variants (the token itself, its
+// leading-zero-less form, or a typo correction — see expandToken) does.
 function rowMatchesToken(row, token) {
-  if (row.haystack.includes(token)) return true;
-  const alt = token.replace(/^0+/, '');
-  return alt !== '' && alt !== token && row.haystack.includes(alt);
+  return token.variants.some(v => row.haystack.includes(v.text));
+}
+
+// ---------- TYPO TOLERANCE ----------
+//
+// Every query token is expanded, once, into the vocabulary words it could be a
+// typo of: all distinct words across the directory and the occupancy rows,
+// compared accent-insensitively with an edit distance that counts a swap of
+// two adjacent letters as one edit ("anlaisi" -> "analisi"). The corrections
+// are then matched as plain substrings, exactly like the typed token, so the
+// scorer and the row filter stay substring-based; fuzzy hits just score lower
+// than exact ones (see scoreMatch).
+
+// Edits allowed for a token of this (accent-folded) length. A 3-letter token
+// gets one only when it matches nothing as typed ("usr" -> "user"): one edit
+// on 3 letters reaches half the vocabulary, so it can't be the norm.
+function maxTypos(len, hasExact) {
+  if (len < 3) return 0;
+  if (len === 3) return hasExact ? 0 : 1;
+  if (len < 7) return 1;
+  return 2;
+}
+
+function foldAccents(s) {
+  return s.normalize('NFD').replace(/\p{M}/gu, '');
+}
+
+// Optimal-string-alignment distance between `a` and `b` (or, with
+// `prefix`, between `a` and the closest prefix of `b` — the last token may
+// still be half-typed). Returns Infinity once it's certain to exceed `max`.
+function editDistance(a, b, max, prefix) {
+  const m = a.length;
+  const n = b.length;
+  if (!prefix && Math.abs(m - n) > max) return Infinity;
+  let prev2 = null;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    let rowMin = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let d = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d = Math.min(d, prev2[j - 2] + 1);
+      cur.push(d);
+      if (d < rowMin) rowMin = d;
+    }
+    if (rowMin > max) return Infinity;
+    prev2 = prev;
+    prev = cur;
+  }
+  return prefix ? Math.min(...prev) : prev[n];
+}
+
+// Distinct lowercase words (letters only, 3+ chars) across everything the
+// search can match, keyed by their accent-folded form. Rebuilt when either
+// index is rebuilt.
+let vocab = null;
+let vocabSources = null;
+let expansionCache = new Map();
+
+function addWords(words, text) {
+  for (const w of String(text ?? '').toLowerCase().split(/[^\p{L}]+/u)) {
+    if (w.length >= 3) words.add(w);
+  }
+}
+
+function ensureVocab() {
+  const dir = ensureDirIndexes();
+  if (vocab && vocabSources?.dir === dir && vocabSources?.occ === occIndex) return;
+  const words = new Set();
+  if (dir) {
+    for (const b of dir.buildings) { addWords(words, b.name); addWords(words, b.altName); }
+    for (const r of dir.rooms) addWords(words, r.room.name);
+  }
+  for (const r of occIndex ?? []) addWords(words, r.haystack);
+  vocab = [...words].map(word => ({ word, folded: foldAccents(word) }));
+  vocabSources = { dir, occ: occIndex };
+  expansionCache = new Map();
+}
+
+// Caps how many corrections one token can pull in, closest first, so a vague
+// token can't flood the results (or the row filter's substring checks).
+const MAX_CORRECTIONS = 12;
+
+// Turns a raw query token into { raw, variants: [{ text, typos }] }, variants
+// ordered best first. Tokens with digits (codes, room numbers) are never
+// corrected: 61182 -> 61183 is a different course, not a typo.
+function expandToken(tok, isLast) {
+  const cacheKey = `${isLast ? 1 : 0}|${tok}`;
+  const cached = expansionCache.get(cacheKey);
+  if (cached) return cached;
+
+  const variants = [{ text: tok, typos: 0 }];
+  const alt = tok.replace(/^0+/, '');
+  if (alt && alt !== tok) variants.push({ text: alt, typos: 0 });
+
+  if (!/\d/.test(tok) && vocab) {
+    const folded = foldAccents(tok);
+    const hasExact = vocab.some(({ word }) => word.includes(tok));
+    const max = maxTypos(folded.length, hasExact);
+    // Half-typed last word: also compare against word prefixes, but only when
+    // it matches nothing as typed (otherwise "rossi" drags in "possibile"),
+    // and only words sharing its first letter, which people rarely mistype.
+    const prefix = isLast && !hasExact;
+    const corrections = [];
+    for (const { word, folded: fw } of vocab) {
+      if (word.includes(tok)) continue; // already an exact substring hit
+      // Accents only ("universita" -> "università") count as exact.
+      if (fw.includes(folded)) { corrections.push({ text: word, typos: 0 }); continue; }
+      if (!max) continue;
+      const asPrefix = prefix && fw[0] === folded[0];
+      const d = editDistance(folded, fw, max, asPrefix);
+      if (d <= max) corrections.push({ text: word, typos: d });
+    }
+    corrections.sort((a, b) => a.typos - b.typos || a.text.length - b.text.length);
+    variants.push(...corrections.slice(0, MAX_CORRECTIONS));
+  }
+
+  const token = { raw: tok, variants };
+  expansionCache.set(cacheKey, token);
+  return token;
+}
+
+// Every word the current query matched through a correction, for the results'
+// <mark> highlighting (highlight() only knows the literal query).
+function correctedTerms(tokens) {
+  return [...new Set(tokens.flatMap(t => t.variants.slice(1).map(v => v.text)))];
 }
 
 // ---------- UNIFIED SPOTLIGHT SEARCH ----------
@@ -255,59 +379,78 @@ function firstUpcomingSession(sessions) {
 
 // -- scoring --
 // Single relevance function every result type goes through, so rankings are
-// comparable across types for the Top Hit. This is the one place to swap in
-// fuzzy matching later.
+// comparable across types for the Top Hit. Tokens arrive expanded (see
+// expandToken): typo corrections match, but score below exact hits.
 
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Codes are stored as ints, so a leading zero the user typed is missing from
-// the field text ("061182" -> "61182") — match on both, like rowMatchesToken.
+// The best variant of `tok` found in `field` (variants are ordered best
+// first), or null.
 function fieldHasToken(field, tok) {
-  if (field.includes(tok)) return tok;
-  const alt = tok.replace(/^0+/, '');
-  if (alt && alt !== tok && field.includes(alt)) return alt;
-  return null;
+  return tok.variants.find(v => field.includes(v.text)) ?? null;
 }
 
 function isWordStart(field, variant) {
   return new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(variant)}`, 'iu').test(field);
 }
 
-function scoreMatch(fields, tokens) {
+// Separators ignored when matching room names, so "T11" finds "T.1.1".
+// Mirrored in utils/html.js's highlight() (import cycle, see there).
+const ROOM_NAME_SEPARATORS = /[\s._\-/]+/g;
+
+// Lowercases `name` and drops its separators: "T.1.1" and "t 1-1" both
+// become "t11".
+function compactName(name) {
+  return name.toLowerCase().replace(ROOM_NAME_SEPARATORS, '');
+}
+
+// `compactPrimary`: also accept the whole query matching the primary field
+// with separators stripped from both (room names: "T11" -> "T.1.1").
+function scoreMatch(fields, tokens, { compactPrimary = false } = {}) {
   const values = fields.map(f => (f ?? '').toString().toLowerCase()).filter(Boolean);
   if (!tokens.length || !values.length) return 0;
   const primary = values[0];
   const secondary = values.slice(1);
 
-  // Every token must match somewhere, or this isn't a match at all.
-  for (const tok of tokens) {
-    const hit = fieldHasToken(primary, tok) || secondary.some(f => fieldHasToken(f, tok));
-    if (!hit) return 0;
+  // Every token must match somewhere, or this isn't a match at all — unless
+  // the separator-less query is inside the separator-less primary field.
+  const allTokensHit = tokens.every(tok => fieldHasToken(primary, tok) || secondary.some(f => fieldHasToken(f, tok)));
+  if (!allTokensHit) {
+    if (!compactPrimary) return 0;
+    const q = compactName(tokens.map(t => t.raw).join(''));
+    const name = compactName(primary);
+    if (!q || !name.includes(q)) return 0;
+    return name === q ? 100 : name.startsWith(q) ? 60 : 30;
   }
 
   // Tokens match in any order, but typing them in the name's own order should
   // win: "t 2 1" ranks T.2.1 above T.1.2. Separators (dots, dashes…) count as
   // spaces on both sides.
   const phrase = s => s.replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
-  const query = phrase(tokens.join(' '));
+  const query = phrase(tokens.map(t => t.raw).join(' '));
   const primaryPhrase = phrase(primary);
   let score = 0;
   if (primaryPhrase === query) score += 100;
   else if (primaryPhrase.startsWith(query)) score += 60;
   else if (` ${primaryPhrase} `.includes(` ${query} `)) score += 40;
 
+  // A corrected token scores as a weaker hit, one step lower per typo, so an
+  // exact match always outranks the same match through a typo.
   for (const tok of tokens) {
     const primaryHit = fieldHasToken(primary, tok);
     if (primaryHit) {
-      score += isWordStart(primary, primaryHit) ? 20 : 8;
+      score += (isWordStart(primary, primaryHit.text) ? 20 : 8) - primaryHit.typos * 6;
       continue;
     }
-    const secondaryHit = secondary.find(f => fieldHasToken(f, tok));
-    if (secondaryHit) score += isWordStart(secondaryHit, fieldHasToken(secondaryHit, tok)) ? 6 : 2;
+    const field = secondary.find(f => fieldHasToken(f, tok));
+    if (field) {
+      const hit = fieldHasToken(field, tok);
+      score += Math.max(1, (isWordStart(field, hit.text) ? 6 : 2) - hit.typos * 2);
+    }
   }
-  return score;
+  return Math.max(1, score);
 }
 
 function scoreClassrooms(tokens) {
@@ -316,7 +459,7 @@ function scoreClassrooms(tokens) {
   const items = [];
   for (const entry of dir.rooms) {
     // Not the campus name: every room on a campus would match it.
-    const score = scoreMatch([entry.room.name, entry.buildingName, entry.buildingAltName], tokens);
+    const score = scoreMatch([entry.room.name, entry.buildingName, entry.buildingAltName], tokens, { compactPrimary: true });
     if (score <= 0) continue;
     items.push({
       type: 'classroom', score, room: entry.room,
@@ -448,12 +591,14 @@ function pickTopHit(orderedFirstItems) {
 }
 
 export function runSearch(query) {
-  const tokens = tokenize(query);
-  if (!tokens.length) {
-    return { topHit: null, classrooms: emptyResult(), buildings: emptyResult(), professors: emptyResult(), exams: emptyResult(), lessons: emptyResult() };
+  const words = tokenize(query);
+  if (!words.length) {
+    return { topHit: null, classrooms: emptyResult(), buildings: emptyResult(), professors: emptyResult(), exams: emptyResult(), lessons: emptyResult(), corrections: [] };
   }
 
   ensureOccIndex();
+  ensureVocab();
+  const tokens = words.map((w, i) => expandToken(w, i === words.length - 1));
 
   const classroomItems = scoreClassrooms(tokens);
   const buildingItems = scoreBuildings(tokens);
@@ -468,7 +613,7 @@ export function runSearch(query) {
 
   const topHit = pickTopHit([classrooms.items[0], buildings.items[0], professors.items[0], exams.items[0], lessons.items[0]]);
 
-  return { topHit, classrooms, buildings, professors, exams, lessons };
+  return { topHit, classrooms, buildings, professors, exams, lessons, corrections: correctedTerms(tokens) };
 }
 
 // Rebuilt fresh from the current occupancy index every call (professorIndex

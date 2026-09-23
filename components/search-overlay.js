@@ -228,7 +228,7 @@ function buildAvatarLead(initials, key, large) {
 
 /* ── Row builders — one per result type. Each takes (item, ctx) and returns
    a DOM node ready to drop into a section list or the Top Hit slot. ctx
-   carries { q, dateFmt, timeFmt, large }. Every row that's independently
+   carries { q, corrections, dateFmt, timeFmt, large }. Every row that's independently
    selectable/activatable carries data-row (keyboard nav walks these in DOM
    order — see refreshActionable). Highlighted title text is always wrapped in
    its own <span class="search-row-title-text"> — highlight() can emit a bare
@@ -261,8 +261,8 @@ function buildClassroomRow(item, ctx) {
     if (bits.length) metaHtml = `<div class="search-row-extra search-row-features">${bits.join('')}</div>`;
   }
   body.innerHTML = `
-    <div class="search-row-title"><span class="search-row-title-text">${highlight(room.name, ctx.q)}</span></div>
-    <div class="search-row-subtitle">${highlight(buildingLine, ctx.q)}</div>
+    <div class="search-row-title"><span class="search-row-title-text">${highlight(room.name, ctx.q, ctx.corrections)}</span></div>
+    <div class="search-row-subtitle">${highlight(buildingLine, ctx.q, ctx.corrections)}</div>
     ${metaHtml}
   `;
   row.appendChild(body);
@@ -292,7 +292,7 @@ function buildBuildingRow(item, ctx) {
   const subtitleParts = [campusName, t('search.roomsCount').replace('{n}', roomCount)];
   if (freeNow != null) subtitleParts.push(t('search.freeNowCount').replace('{n}', freeNow));
   body.innerHTML = `
-    <div class="search-row-title"><span class="search-row-title-text">${highlight(name, ctx.q)}</span>${altName ? `<span class="search-row-title-alt">${highlight(altName, ctx.q)}</span>` : ''}</div>
+    <div class="search-row-title"><span class="search-row-title-text">${highlight(name, ctx.q, ctx.corrections)}</span>${altName ? `<span class="search-row-title-alt">${highlight(altName, ctx.q, ctx.corrections)}</span>` : ''}</div>
     <div class="search-row-subtitle">${escapeHtml(subtitleParts.join(' · '))}</div>
   `;
   row.appendChild(body);
@@ -328,7 +328,7 @@ function buildProfessorRow(item, ctx) {
     ? `${t('search.next')}: ${fmtDay(next.date, ctx.dateFmt)} ${fmtTime(next.inizio, ctx.timeFmt)}, ${next.roomName}`
     : t('search.noUpcoming'));
   body.innerHTML = `
-    <div class="search-row-title"><span class="search-row-title-text">${highlight(name, ctx.q)}</span></div>
+    <div class="search-row-title"><span class="search-row-title-text">${highlight(name, ctx.q, ctx.corrections)}</span></div>
     <div class="search-row-subtitle">${escapeHtml(subtitle)}</div>
   `;
   row.appendChild(body);
@@ -484,7 +484,7 @@ function buildExamRow(item, ctx) {
   const next = item.sessions.find(s => new Date(`${s.date}T${s.fine}:00`).getTime() > Date.now()) ?? item.sessions[0];
   const more = item.sessionCount - 1;
   body.innerHTML = `
-    <div class="search-row-title"><span class="search-row-title-text">${highlight(item.title || t('detail.occupied'), ctx.q)}</span><span class="timeline-popover-badge search-row-badge">${t('detail.examLabel')}</span></div>
+    <div class="search-row-title"><span class="search-row-title-text">${highlight(item.title || t('detail.occupied'), ctx.q, ctx.corrections)}</span><span class="timeline-popover-badge search-row-badge">${t('detail.examLabel')}</span></div>
     <div class="search-row-subtitle">${escapeHtml(fmtWhen(next, ctx))}${more > 0 ? ' · ' + escapeHtml(t('search.moreSessions').replace('{n}', more)) : ''}</div>
   `;
   row.appendChild(body);
@@ -508,8 +508,8 @@ function buildLessonRow(item, ctx) {
   const next = item.sessions.find(s => new Date(`${s.date}T${s.fine}:00`).getTime() > Date.now()) ?? item.sessions[0];
   const more = item.sessionCount - 1;
   body.innerHTML = `
-    <div class="search-row-title"><span class="search-row-title-text">${highlight(item.title || t('detail.occupied'), ctx.q)}</span></div>
-    <div class="search-row-subtitle">${highlight(meta, ctx.q)}</div>
+    <div class="search-row-title"><span class="search-row-title-text">${highlight(item.title || t('detail.occupied'), ctx.q, ctx.corrections)}</span></div>
+    <div class="search-row-subtitle">${highlight(meta, ctx.q, ctx.corrections)}</div>
     <div class="search-row-extra">${escapeHtml(fmtWhen(next, ctx))}${more > 0 ? ' · ' + escapeHtml(t('search.moreSessions').replace('{n}', more)) : ''}</div>
   `;
   row.appendChild(body);
@@ -912,7 +912,7 @@ function buildResultsPane(container, query) {
     return;
   }
 
-  const ctx = { q, dateFmt: new Intl.DateTimeFormat(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' }), timeFmt: createTimeFormatter(), large: false };
+  const ctx = { q, corrections: result.corrections, dateFmt: new Intl.DateTimeFormat(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' }), timeFmt: createTimeFormatter(), large: false };
 
   const top = block('tophit');
   top.appendChild(keyed(sectionLabel(t('search.topHit'), 'hgi-sparkles'), 'label'));

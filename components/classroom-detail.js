@@ -1650,10 +1650,13 @@ class ClassroomDetail {
           hideOccupationPopover();
         });
 
-        // Keyboard focus (mirrors hover for accessibility)
+        // Keyboard focus (mirrors hover for accessibility). Blocks are
+        // tabindex="0", so a tap or click focuses them too — only react to
+        // keyboard focus, or the click toggle below would immediately close
+        // the popover focusin just opened (first tap appeared to do nothing).
         container.addEventListener('focusin', e => {
           const block = e.target.closest?.('.detail-schedule-block');
-          if (block) showOccupationPopover(block);
+          if (block && block.matches(':focus-visible')) showOccupationPopover(block);
         });
         container.addEventListener('focusout', e => {
           const block = e.target.closest?.('.detail-schedule-block');
@@ -1665,6 +1668,8 @@ class ClassroomDetail {
           const block = e.target.closest?.('.detail-schedule-block');
           if (!block) { hideOccupationPopover(); return; }
           e.stopPropagation();
+          // A mouse click on the hovered block keeps the hover popover open.
+          if (block === _hoveredBlock) { showOccupationPopover(block); return; }
           if (_popoverBlock === block) hideOccupationPopover();
           else showOccupationPopover(block);
         });

@@ -16,6 +16,15 @@
 // jump to the Campus tab; professor rows swap the results panel for an
 // in-place professor view (openProfessorView/exitProfessorView below) that
 // slides in from the right and back.
+//
+// MOTION: every change to the results is animated. A new query's results are
+// diffed against the ones on screen by components/search-motion.js (rows and
+// sections grow in, collapse out and glide to their new places, all off one
+// interruptible spring); the results box itself materialises under the bar
+// and dissolves back when the field is cleared (setResultsBox); the professor
+// view slides on a spring that can be turned around mid-flight (startSlide);
+// and a classroom result hands itself to the detail page's zoom as the card
+// it grows out of (handOffToDetail).
 
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { escapeHtml, highlight } from '../utils/html.js';
@@ -25,6 +34,7 @@ import { runSearch, getProfessorSchedule, hasOccupationData } from '../classroom
 import { classroomsData as occupancyDays } from '../available-rooms-script.js';
 import { activateGroupTab } from './bottom-nav.js';
 import { goToBuilding } from './campus-buildings.js';
+import { morphInto, settleMorph, isSettled, fadeIn, ClockedSpring } from './search-motion.js';
 
 const DEBOUNCE_MS = 200;
 const SECTION_CAP = 4;
@@ -94,11 +104,11 @@ const FEATURE_ICONS = {
 /* ── Section registry: fixed order, skipped when empty ─────────────────── */
 
 const SECTIONS = [
-  { key: 'classrooms', labelKey: 'search.sectionClassrooms', build: buildClassroomRow },
-  { key: 'buildings', labelKey: 'search.sectionBuildings', build: buildBuildingRow },
-  { key: 'professors', labelKey: 'search.sectionProfessors', build: buildProfessorRow },
-  { key: 'exams', labelKey: 'search.sectionExams', build: buildExamRow },
-  { key: 'lessons', labelKey: 'search.sectionLessons', build: buildLessonRow },
+  { key: 'classrooms', type: 'classroom', labelKey: 'search.sectionClassrooms', build: buildClassroomRow },
+  { key: 'buildings', type: 'building', labelKey: 'search.sectionBuildings', build: buildBuildingRow },
+  { key: 'professors', type: 'professor', labelKey: 'search.sectionProfessors', build: buildProfessorRow },
+  { key: 'exams', type: 'exam', labelKey: 'search.sectionExams', build: buildExamRow },
+  { key: 'lessons', type: 'lesson', labelKey: 'search.sectionLessons', build: buildLessonRow },
 ];
 
 // Per-section "show all" state and the single currently-expanded exam/lesson
@@ -613,94 +623,203 @@ function buildProfessorPane(container, key) {
   container.appendChild(body);
 }
 
-// Slides resultsEl's content from whatever it currently holds to a freshly
-// built pane. `direction` is 'forward' (professor in from the right, results
-// out to the left) or 'backward' (reversed). Reduced motion: swap instantly,
-// no motion.
-function transitionPane(builder, direction, onLanded) {
-  const oldWrap = document.createElement('div');
-  oldWrap.className = 'search-pane';
-  while (resultsEl.firstChild) oldWrap.appendChild(resultsEl.firstChild);
+function newProfessorPane(key) {
+  const pane = document.createElement('div');
+  pane.className = 'search-pane';
+  buildProfessorPane(pane, key);
+  return pane;
+}
 
-  const newWrap = document.createElement('div');
-  newWrap.className = 'search-pane';
-  builder(newWrap);
+/* ── Results ⇄ professor view slide ──────────────────────────────────────
+   Both panes sit side by side on a 200%-wide track. One spring, x (0 = the
+   results on the left, 1 = the professor on the right), drives the track, a
+   cross-fade between the two and the box's height, which morphs from one
+   pane's height to the other's. Each pane keeps its own scroll offset while
+   it's on the track (drawn as a translate), so the one leaving doesn't jump
+   to its top first. The spring is only ever retargeted, never restarted:
+   backing out while the professor is still sliding in turns the same motion
+   around, velocity and all. ── */
 
-  const land = () => {
-    resultsEl.replaceChildren(newWrap);
-    refreshActionable();
-    onLanded?.();
-  };
+// Response 0.32s, damping ratio 1: k = (2π / 0.32)², c = 2·√k.
+const SLIDE_SPRING = { stiffness: 386, damping: 39.3, mass: 1 };
+let slide = null;
 
+// A pane's resting height in the box, and how far it can scroll there.
+function measurePane(pane) {
+  resultsEl.replaceChildren(pane);
+  return { h: resultsEl.offsetHeight, maxScroll: resultsEl.scrollHeight - resultsEl.clientHeight };
+}
+
+function renderSlide() {
+  const { spring, track, left, right, hL, hR } = slide;
+  const x = Math.min(1, Math.max(0, spring.value));
+  track.style.translate = `${-50 * x}% 0`;
+  left.style.opacity = `${1 - 0.7 * x}`;
+  right.style.opacity = `${0.3 + 0.7 * x}`;
+  resultsEl.style.height = `${hL + (hR - hL) * x}px`;
+}
+
+function landSlide() {
+  if (!slide) return;
+  const { spring, to, left, right, leftScroll, rightScroll } = slide;
+  slide = null;
+  spring.dispose();
+  const pane = to === 1 ? right : left;
+  pane.style.translate = '';
+  pane.style.opacity = '';
+  resultsEl.classList.remove('search-overlay-results--sliding');
+  resultsEl.style.height = '';
+  resultsEl.replaceChildren(pane);
+  resultsEl.scrollTop = to === 1 ? rightScroll : leftScroll;
+  refreshActionable();
+}
+
+function retargetSlide(to) {
+  slide.to = to;
+  slide.spring.to(to, SLIDE_SPRING);
+}
+
+// `from` is the side currently on screen (0 = left, 1 = right); the other one
+// is the pane being navigated to.
+function startSlide({ left, right, leftScroll, rightScroll, from, profKey, query }) {
+  const target = from === 0 ? right : left;
   if (reduceMotionMQ.matches) {
-    land();
+    resultsEl.replaceChildren(target);
+    resultsEl.scrollTop = from === 0 ? rightScroll : leftScroll;
+    fadeIn(target);
+    refreshActionable();
     return;
   }
 
+  const hOn = resultsEl.offsetHeight;
+  const other = measurePane(target);
+  const clampScroll = (v) => Math.max(0, Math.min(v, other.maxScroll));
+  if (from === 0) rightScroll = clampScroll(rightScroll);
+  else leftScroll = clampScroll(leftScroll);
+
   const track = document.createElement('div');
   track.className = 'search-slide-track';
-  if (direction === 'forward') track.append(oldWrap, newWrap);
-  else track.append(newWrap, oldWrap);
+  track.append(left, right);
+  resultsEl.classList.add('search-overlay-results--sliding');
   resultsEl.replaceChildren(track);
   resultsEl.scrollTop = 0;
-  track.style.transform = direction === 'forward' ? 'translateX(0%)' : 'translateX(-50%)';
-  void track.offsetWidth; // force layout so the transition below animates from this starting point
-  track.style.transition = 'transform 0.36s var(--lg-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1))';
-  requestAnimationFrame(() => {
-    track.style.transform = direction === 'forward' ? 'translateX(-50%)' : 'translateX(0%)';
-  });
+  left.style.translate = `0 ${-leftScroll}px`;
+  right.style.translate = `0 ${-rightScroll}px`;
 
-  let done = false;
-  const finish = (e) => {
-    if (done) return;
-    if (e && e.target !== track) return;
-    done = true;
-    track.removeEventListener('transitionend', finish);
-    land();
+  const spring = new ClockedSpring(from, () => {
+    if (!slide || slide.spring !== spring) return;
+    renderSlide();
+    if (spring.resting || isSettled(spring, slide.to)) landSlide();
+  });
+  slide = {
+    track, left, right, leftScroll, rightScroll, spring, profKey, query, to: from,
+    hL: from === 0 ? hOn : other.h,
+    hR: from === 0 ? other.h : hOn,
   };
-  track.addEventListener('transitionend', finish);
-  setTimeout(finish, 500); // fallback if transitionend doesn't fire
+  // Nothing is selectable until a pane has landed.
+  actionable = [];
+  updateSelectionVisual();
+  renderSlide();
+  retargetSlide(1 - from);
 }
 
 function openProfessorView(key) {
-  if (!isOpen || currentView === 'professor') return;
+  if (!isOpen) return;
+  if (slide) {
+    // Still sliding back to the results: the same professor turns it around.
+    if (slide.to === 0 && slide.profKey === key) {
+      currentView = 'professor';
+      currentProfessorKey = key;
+      retargetSlide(1);
+      return;
+    }
+    landSlide();
+  }
+  if (currentView === 'professor') return;
+  settleMorph();
+  const resultsPane = resultsEl.firstElementChild;
+  if (!resultsPane) return;
   resultsScrollPos = resultsEl.scrollTop;
   currentView = 'professor';
   currentProfessorKey = key;
-  transitionPane((el) => buildProfessorPane(el, key), 'forward');
+  startSlide({
+    left: resultsPane, right: newProfessorPane(key),
+    leftScroll: resultsScrollPos, rightScroll: 0,
+    from: 0, profKey: key, query: input.value,
+  });
 }
 
 function exitProfessorView() {
   if (currentView !== 'professor') return;
+  const profKey = currentProfessorKey;
   currentView = 'results';
   currentProfessorKey = null;
-  const query = input.value;
-  const restoreScroll = resultsScrollPos;
-  transitionPane((el) => buildResultsPane(el, query), 'backward', () => {
-    resultsEl.scrollTop = restoreScroll;
+  if (slide) {
+    // Still sliding in: the results it left are intact on the track, so just
+    // turn around — unless the query has changed since.
+    if (slide.to === 1 && slide.query === input.value) { retargetSlide(0); return; }
+    landSlide();
+  }
+  const profPane = resultsEl.firstElementChild;
+  const resultsPane = newResultsPane();
+  buildResultsPane(resultsPane, input.value);
+  startSlide({
+    left: resultsPane, right: profPane,
+    leftScroll: resultsScrollPos, rightScroll: resultsEl.scrollTop,
+    from: 1, profKey, query: input.value,
   });
 }
 
 // Rebuilds whichever panel is currently showing — used when occupancy data
-// finishes loading late (scheduleOccRecheck) or the language switches. Never
-// animated: it's a data refresh, not a navigation.
+// finishes loading late (scheduleOccRecheck) or the language switches. The
+// results animate into their new shape like any other render; the professor
+// view is swapped in place.
 function refreshActiveView() {
-  const scrollTop = resultsEl.scrollTop;
-  resultsEl.replaceChildren();
+  landSlide();
   if (currentView === 'professor' && currentProfessorKey) {
-    buildProfessorPane(resultsEl, currentProfessorKey);
+    const scrollTop = resultsEl.scrollTop;
+    resultsEl.replaceChildren(newProfessorPane(currentProfessorKey));
+    resultsEl.scrollTop = scrollTop;
+    refreshActionable();
   } else {
-    buildResultsPane(resultsEl, input.value);
+    renderResults(input.value);
   }
-  resultsEl.scrollTop = scrollTop;
-  refreshActionable();
 }
 
 /* ── Results rendering ───────────────────────────────────────────────────── */
 
-// Builds the results list (Top Hit + sections) into `container`. Doesn't
-// touch currentView/currentProfessorKey — callers decide whether this is a
-// plain re-render or the landing pane of a professor-view exit.
+// Every animated piece of the results carries a data-anim-key, stable across
+// renders for the same thing, which is what search-motion.js matches on.
+function animKeyFor(type, item) {
+  switch (type) {
+    case 'classroom': return `c:${item.room.id}`;
+    case 'building': return `b:${item.campusId}:${item.name}`;
+    case 'professor': return `p:${item.key}`;
+    default: return `${type}:${itemKey(item)}`;
+  }
+}
+
+function keyed(el, key) {
+  el.dataset.animKey = key;
+  return el;
+}
+
+function block(key) {
+  const el = document.createElement('div');
+  el.className = 'search-block';
+  return keyed(el, key);
+}
+
+function newResultsPane() {
+  const pane = document.createElement('div');
+  pane.className = 'search-pane search-pane--results';
+  return keyed(pane, 'results');
+}
+
+// Builds the results list (Top Hit + sections) into `container`, as one
+// keyed block per section. Doesn't touch currentView/currentProfessorKey —
+// callers decide whether this is a plain re-render or the landing pane of a
+// professor-view exit.
 function buildResultsPane(container, query) {
   const q = query.trim();
   clearTimeout(occRecheckTimer);
@@ -713,6 +832,7 @@ function buildResultsPane(container, query) {
   const { topHit, classrooms, buildings, professors, exams, lessons } = result;
 
   if (!topHit) {
+    const empty = block('empty');
     const state = document.createElement('div');
     state.className = 'search-empty-state';
     state.innerHTML = `
@@ -720,18 +840,23 @@ function buildResultsPane(container, query) {
       <p class="empty-container-title">${t('search.emptyTitle')}</p>
       <p class="empty-container-subtitle">${t('search.emptySubtitle')}</p>
     `;
-    container.appendChild(state);
+    empty.appendChild(state);
+    container.appendChild(empty);
     if (!hasOccupationData()) scheduleOccRecheck(query);
     return;
   }
 
   const ctx = { q, dateFmt: new Intl.DateTimeFormat(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' }), timeFmt: createTimeFormatter(), large: false };
 
-  const topWrap = document.createElement('div');
-  topWrap.className = 'search-tophit-wrap';
-  topWrap.appendChild(sectionLabel(t('search.topHit')));
+  const top = block('tophit');
+  top.appendChild(keyed(sectionLabel(t('search.topHit')), 'label'));
+  // A swap slot: a different Top Hit cross-fades in place of the old one
+  // while the slot's height morphs between them (see search-motion.js).
+  const slot = keyed(document.createElement('div'), 'slot');
+  slot.className = 'search-tophit-slot';
+  slot.setAttribute('data-anim-swap', '');
   const topRow = TOP_HIT_BUILD[topHit.type](topHit, { ...ctx, large: true });
-  const topCard = document.createElement('div');
+  const topCard = keyed(document.createElement('div'), `hit:${animKeyFor(topHit.type, topHit)}`);
   topCard.className = 'search-tophit-row'; // same grouped-list background as the sections below
   if (topHit.type === 'professor') {
     // Spotlight-style contact-card tint: a muted/deep tone of the same hue as
@@ -743,8 +868,9 @@ function buildResultsPane(container, query) {
     topCard.style.setProperty('--prof-hue', String(hueFromKey(topHit.key)));
   }
   topCard.appendChild(topRow);
-  container.appendChild(topWrap);
-  container.appendChild(topCard);
+  slot.appendChild(topCard);
+  top.appendChild(slot);
+  container.appendChild(top);
 
   const sectionData = { classrooms, buildings, professors, exams, lessons };
   for (const sec of SECTIONS) {
@@ -753,56 +879,121 @@ function buildResultsPane(container, query) {
     const items = data.items.filter(it => it !== topHit);
     if (!items.length) continue;
 
-    container.appendChild(sectionLabel(t(sec.labelKey)));
-    const list = document.createElement('div');
+    const blk = block(`sec:${sec.key}`);
+    blk.appendChild(keyed(sectionLabel(t(sec.labelKey)), 'label'));
+    const list = keyed(document.createElement('div'), 'list');
     list.className = 'search-section-list';
     // Exam/lesson groups get their own separated, rounded blocks rather than
     // being fused into one inset list — they're accordions, not plain rows.
     if (sec.key === 'exams' || sec.key === 'lessons') list.classList.add('search-section-list--spaced');
     const expanded = expandedSections.has(sec.key);
     const shown = expanded ? items : items.slice(0, SECTION_CAP);
-    shown.forEach(item => list.appendChild(sec.build(item, ctx)));
-    container.appendChild(list);
+    shown.forEach(item => list.appendChild(keyed(sec.build(item, ctx), animKeyFor(sec.type, item))));
+    blk.appendChild(list);
 
     if (!expanded && items.length > SECTION_CAP) {
       const remaining = items.length - SECTION_CAP;
-      const more = document.createElement('button');
+      const more = keyed(document.createElement('button'), 'more');
       more.type = 'button';
       more.className = 'search-show-all';
       more.dataset.row = '';
       more.tabIndex = -1;
       more.textContent = t('search.showAll').replace('{n}', remaining);
       // stopPropagation — see the identical note on buildProfessorRow's click.
-      more.addEventListener('click', (e) => { e.stopPropagation(); expandedSections.add(sec.key); rerenderPreservingScroll(); });
-      container.appendChild(more);
+      more.addEventListener('click', (e) => { e.stopPropagation(); expandedSections.add(sec.key); renderResults(input.value); });
+      blk.appendChild(more);
     } else if (data.total - 1 > items.length) {
       // Even fully expanded, the capped index held fewer than the true total.
-      container.appendChild(tooManyNotice(items.length));
+      blk.appendChild(keyed(tooManyNotice(items.length), 'notice'));
     }
+    container.appendChild(blk);
   }
 
   if (!hasOccupationData()) scheduleOccRecheck(query);
 }
 
-// Top-level entry point for a plain (non-animated) results render: a typed
-// query, opening the overlay, or clearing the field. Always leaves/keeps the
-// results view — typing while the professor view is open returns to it.
-function renderResults(query) {
-  currentView = 'results';
-  currentProfessorKey = null;
-  resultsEl.replaceChildren();
-  buildResultsPane(resultsEl, query);
-  refreshActionable();
+/* ── Results box ──────────────────────────────────────────────────────────
+   The glass box materialises under the search bar (scaling up from its top
+   edge, as if dropping out of the bar) when the first results arrive, and
+   dissolves back into it when the field is cleared — its content stays put
+   until then, and is only emptied (which hides the box, see :empty in the
+   CSS) once it's gone. A Web Animation rather than a CSS one so it can be
+   reversed from wherever it is: typing again mid-dissolve brings the same
+   box straight back. */
+
+const BOX_KEYFRAMES = [
+  { opacity: 0, scale: '0.96', translate: '0 -6px' },
+  { opacity: 1, scale: '1', translate: '0 0' },
+];
+// Reduced motion: the same appearance, as a plain fade.
+const BOX_KEYFRAMES_FADE = [{ opacity: 0 }, { opacity: 1 }];
+let boxShown = false;
+let boxAnim = null;
+
+function boxEasing() {
+  const spring = getComputedStyle(document.documentElement).getPropertyValue('--vt-spring').trim();
+  return spring && CSS.supports('animation-timing-function', spring) ? spring : 'cubic-bezier(0.16, 1, 0.3, 1)';
 }
 
-// Redraws the current query's results without resetting expand/collapse state
-// (query is unchanged) or losing scroll position — used by "Show all", which
-// (unlike the exam/lesson accordion) does need a full rebuild since more rows
-// are appearing.
-function rerenderPreservingScroll() {
-  const scrollTop = resultsEl.scrollTop;
-  renderResults(input.value);
-  resultsEl.scrollTop = scrollTop;
+function setResultsBox(show, animate = true) {
+  if (show === boxShown) return;
+  boxShown = show;
+  resultsEl.classList.toggle('search-overlay-results--leaving', !show);
+
+  const empty = !resultsEl.firstElementChild;
+  if (!animate || empty) {
+    boxAnim?.cancel();
+    boxAnim = null;
+    if (!show) { settleMorph(); resultsEl.replaceChildren(); }
+    return;
+  }
+
+  if (boxAnim) {
+    boxAnim.reverse();
+    return;
+  }
+  const reduce = reduceMotionMQ.matches;
+  const frames = reduce ? BOX_KEYFRAMES_FADE : BOX_KEYFRAMES;
+  const anim = resultsEl.animate(show ? frames : [...frames].reverse(), {
+    duration: reduce ? 180 : 280, easing: reduce ? 'ease-out' : boxEasing(), fill: 'both',
+  });
+  boxAnim = anim;
+  anim.onfinish = () => {
+    if (boxAnim !== anim) return;
+    boxAnim = null;
+    if (!boxShown) { settleMorph(); resultsEl.replaceChildren(); }
+    anim.cancel();
+  };
+}
+
+// Top-level entry point for every results render: a typed query, opening the
+// overlay, "Show all", or a data/language refresh. Animated against whatever
+// is on screen unless `animate` is false (the overlay's own open transition
+// is already moving everything). Typing while the professor view is open
+// slides back to the results for the new query.
+function renderResults(query, { animate = true } = {}) {
+  clearTimeout(occRecheckTimer);
+  if (!query.trim()) {
+    lastQuery = null;
+    landSlide();
+    currentView = 'results';
+    currentProfessorKey = null;
+    setResultsBox(false, animate);
+    actionable = [];
+    updateSelectionVisual();
+    return;
+  }
+  if (currentView === 'professor') {
+    if (animate) { exitProfessorView(); return; }
+    landSlide();
+  }
+  currentView = 'results';
+  currentProfessorKey = null;
+  const pane = newResultsPane();
+  buildResultsPane(pane, query);
+  morphInto(resultsEl, pane, { animate });
+  setResultsBox(true, animate);
+  refreshActionable();
 }
 
 function scheduleOccRecheck(query, tries = 0) {
@@ -865,7 +1056,7 @@ function onInputKeyDown(e) {
   }
 }
 
-/* ── Viewport / open / close plumbing (unchanged) ───────────────────────── */
+/* ── Viewport / open / close plumbing ───────────────────────────────────── */
 
 // Mobile anchors the search bar at a fixed top offset (the header's old
 // slot), but iOS Safari can pan the *visual* viewport down when the keyboard
@@ -910,6 +1101,38 @@ function conceal() {
   stopViewportTracking();
   unlockScroll();
   window.scrollTo(0, savedScrollPos);
+  // Nothing is left mid-flight for the next open: the slide and any results
+  // morph land where they were heading, and a dissolving box is finished off.
+  landSlide();
+  settleMorph();
+  if (boxAnim) {
+    boxAnim.cancel();
+    boxAnim = null;
+    if (!boxShown) resultsEl.replaceChildren();
+  }
+}
+
+// Opening a classroom result: the detail page zooms out of the tapped row
+// (utils/vt-motion.js), the same way it does from a classroom card, so the
+// overlay has to still be on screen when that view transition snapshots the
+// "old" state — closing it with its own transition first would both hide the
+// row and be cut short by the detail page's. It's concealed from inside the
+// detail page's update callback instead (the classroomdetail:enter event), so
+// the overlay and the row fade into the growing page as part of that one
+// transition. The timeout covers an open that never happens (a stale id).
+function handOffToDetail() {
+  if (!isOpen) return;
+  isOpen = false;
+  clearTimeout(debounce);
+  input.blur();
+  let timer = 0;
+  const done = () => {
+    clearTimeout(timer);
+    document.removeEventListener('classroomdetail:enter', done);
+    if (!isOpen) conceal();
+  };
+  document.addEventListener('classroomdetail:enter', done);
+  timer = setTimeout(done, 1500);
 }
 
 // ── Scroll lock ──────────────────────────────────────────────────────────
@@ -987,7 +1210,8 @@ export async function openSearchOverlay() {
     grabInput();
   }
 
-  if (isOpen) renderResults(input.value);
+  // The open transition is already moving the whole panel in.
+  if (isOpen) renderResults(input.value, { animate: false });
 }
 
 export function closeSearchOverlay() {
@@ -1059,10 +1283,10 @@ export function initSearchOverlay() {
     else closeSearchOverlay();
   });
 
-  // Opening a result navigates to the classroom detail page — get the
-  // overlay out of the way so the card → page morph isn't behind the blur.
+  // Opening a result navigates to the classroom detail page, which grows out
+  // of the tapped row — see handOffToDetail.
   resultsEl.addEventListener('click', (e) => {
-    if (e.target.closest('[data-open-classroom]')) closeSearchOverlay();
+    if (e.target.closest('[data-open-classroom]')) handOffToDetail();
   });
 
   // The header sits above the overlay (z-index), so its controls stay

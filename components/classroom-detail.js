@@ -520,6 +520,9 @@ class ClassroomDetail {
       if (zooming) document.documentElement.classList.add('detail-vt-open');
 
       const vt = document.startViewTransition(() => {
+        // Lets whatever the page is opening from leave as part of this
+        // transition's new state (the search overlay hands off this way).
+        document.dispatchEvent(new Event('classroomdetail:enter'));
         if (fromInfo) {
           infoPage._applyReturnVT();
         } else if (this._tabbar) {
@@ -593,6 +596,7 @@ class ClassroomDetail {
       vt.finished.then(cleanup).catch(cleanup);
     } else {
       // Fallback: show overlay, swap tabbar for back button without animation
+      document.dispatchEvent(new Event('classroomdetail:enter'));
       if (fromInfo) {
         infoPage._applyReturnVT();
       } else {

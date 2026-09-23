@@ -296,12 +296,37 @@ html.search-vt .lg-tabbar__prominent {
     var(--lg-highlight),
     0 4px 40px 0 var(--lg-shadow-color);
 
-  animation: appear 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Offset parent for search-motion.js's per-frame measurements, and the
+     point the box materialises from: its top edge, right under the bar
+     (setResultsBox in search-overlay.js). */
+  position: relative;
+  transform-origin: 50% 0;
+}
+
+/* Dissolving back into the bar: its rows are on their way out. */
+.search-overlay-results--leaving {
+  pointer-events: none;
 }
 
 /* Nothing to show yet — collapse the container so it isn't an empty glass slab. */
 .search-overlay-results:empty {
   display: none;
+}
+
+/* ── Blocks (Top Hit / one per section) ───────────────────────────────
+   The space between sections is each block's own padding-top — inside the
+   block, so it grows and collapses with it when search-motion.js animates a
+   section in or out — and the pane pulls the first one back up. (A
+   :first-child exception instead would snap the next block's spacing the
+   moment a leaving first block is removed.) */
+
+.search-pane--results {
+  margin-top: -1.1rem;
+}
+
+.search-block {
+  position: relative;
+  padding-top: 1.1rem;
 }
 
 /* ── Section labels (Top Hit / Classrooms / Buildings / …) ──────────── */
@@ -315,20 +340,29 @@ html.search-vt .lg-tabbar__prominent {
   padding: 0 0.4rem 0.5rem;
 }
 
-.search-section-label:not(:first-child) {
-  margin-top: 1.1rem;
-}
-
 /* ── Top Hit ──────────────────────────────────────────────────────────
    A single larger row, styled the same as everything below it but with a
    bigger leading visual and its own translucent card so it reads as "the"
    answer rather than the first item of a list. */
 
-.search-tophit-row {
+.search-tophit-slot {
+  position: relative; /* the outgoing Top Hit is laid over the incoming one */
   margin-bottom: 0.25rem;
+}
+
+.search-tophit-row {
+  transition: scale 0.15s ease-out;
   border-radius: var(--radius-lg, 1rem);
   overflow: clip;
   background: color-mix(in srgb, var(--text-color-primary) 3.5%, transparent);
+}
+
+/* The card is its own surface, so it presses in like one. Keeping the scale
+   while the classroom page opens is deliberate: the page zooms out of the
+   card from its pressed size (see the pressed-card note in
+   classroom-detail.js). */
+.search-tophit-row:has(.search-row:active) {
+  scale: 0.98;
 }
 
 /* Spotlight-style contact-card tint for a professor Top Hit: a muted, deeper
@@ -364,6 +398,7 @@ html.search-vt .lg-tabbar__prominent {
 }
 
 .search-section-list {
+  position: relative;
   display: flex;
   flex-direction: column;
 }
@@ -377,10 +412,16 @@ html.search-vt .lg-tabbar__prominent {
 
 /* Exam/lesson groups read as accordions, not plain inset rows — each item
    gets its own rounded block with a gap between them, instead of being
-   fused into one continuous list. */
+   fused into one continuous list. The gap is each item's margin rather than
+   `gap`, so it collapses along with an item leaving (search-motion.js
+   animates margin-top with the height); the list pulls the first one back. */
 .search-section-list--spaced {
   background: transparent;
-  gap: 0.6rem;
+  margin-top: -0.6rem;
+}
+
+.search-section-list--spaced > * {
+  margin-top: 0.6rem;
 }
 
 .search-section-list--spaced > .search-item {
@@ -625,7 +666,7 @@ html.search-vt .lg-tabbar__prominent {
 
 .search-row-chevron .hgi-stroke {
   font-size: var(--text-100) !important;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s var(--vt-spring, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .search-row--expanded .search-row-chevron .hgi-stroke {
@@ -658,10 +699,12 @@ html.search-vt .lg-tabbar__prominent {
    rebuilds it on toggle) — only these two classes are flipped, which is what
    lets the grid-template-rows 0fr→1fr technique actually animate. */
 
+/* Critically damped (--vt-spring, classroom-detail.css): a height that
+   overshoots reads as a wobble, not as physics. */
 .search-collapse {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.32s var(--lg-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  transition: grid-template-rows 0.3s var(--vt-spring, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .search-collapse--open {
@@ -674,7 +717,8 @@ html.search-vt .lg-tabbar__prominent {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .search-collapse {
+  .search-collapse,
+  .search-row-chevron .hgi-stroke {
     transition: none;
   }
 }
@@ -703,7 +747,14 @@ html.search-vt .lg-tabbar__prominent {
   background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
   font-family: inherit;
   padding: 0.5rem 0.65rem;
-  transition: background-color 0.12s ease;
+  transition: background-color 0.12s ease, scale 0.15s ease-out;
+}
+
+/* Session pills and the back button are free-standing tap targets (unlike
+   the full-width rows of an inset list, which only highlight): they press in. */
+.search-session-row:active,
+.search-pv-back:active {
+  scale: 0.97;
 }
 
 .search-session-row:hover {
@@ -936,13 +987,20 @@ html.search-vt .lg-tabbar__prominent {
 }
 
 /* ── Results ⇄ professor view slide ─────────────────────────────────────
-   transitionPane() (search-overlay.js) builds a 200%-wide flex track holding
-   the outgoing and incoming panes side by side and animates its transform;
-   once it lands, the winning pane becomes resultsEl's only child again (no
-   .search-slide-track/.search-pane sizing needed outside the transition). */
+   startSlide() (search-overlay.js) builds a 200%-wide flex track holding the
+   outgoing and incoming panes side by side and springs its translate, while
+   the box's height morphs between the two panes' (an explicit height, so it
+   leaves the flex sizing for the duration). Once it lands, the winning pane
+   becomes resultsEl's only child again. */
 
 .search-overlay-results {
   overflow-x: hidden;
+}
+
+.search-overlay-results--sliding {
+  flex: none;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .search-slide-track {
@@ -978,7 +1036,7 @@ html.search-vt .lg-tabbar__prominent {
   background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
   color: var(--text-color-primary);
   font-family: inherit;
-  transition: background-color 0.12s ease;
+  transition: background-color 0.12s ease, scale 0.15s ease-out;
 }
 
 .search-pv-back:hover,

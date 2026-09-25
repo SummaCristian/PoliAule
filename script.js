@@ -59,6 +59,21 @@ import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY } from './components/settings.js';
 import { initKeybindings } from './components/keybindings.js';
+import { takeImportHash } from './utils/transfer.js';
+import { promptImport } from './components/transfer-dialog.js';
+
+// Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
+// payload out of the URL now, before the hash routers (info page, classroom
+// detail) look at it; the import prompt is shown once the splash is gone.
+const _pendingImport = takeImportHash();
+// Same for a transfer link opened in a tab that's already running PoliAule
+// (a same-document hash change, no reload).
+window.addEventListener('hashchange', () => {
+  const raw = takeImportHash();
+  // Favourites are validated against the classroom directory, which may
+  // still be loading if the link arrived during start-up.
+  if (raw) ensureClassroomDirectory().then(() => promptImport(raw, staticClassroomsData));
+});
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -423,6 +438,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const elapsed = Date.now() - _splashStartTime;
     const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
     setTimeout(dismissSplash, remaining);
+    // Leave the splash hand-off time to finish before the prompt pops up.
+    if (_pendingImport) setTimeout(() => promptImport(_pendingImport, staticClassroomsData), remaining + 600);
 
     // Once things have settled, spend a moment of genuine idle time
     // benchmarking blur for real (first load / no cached verdict only).

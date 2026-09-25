@@ -271,6 +271,30 @@ export function computeClassroomStatus(occupancy, refDate) {
  * Possible return values: 'free', 'occupied', 'free-soon', 'occupied-soon',
  * 'closed' (its building is closed right now), or null if no data.
  */
+// Each loaded day's rooms by id, with their building, so a status lookup is one
+// Map hit instead of a walk over every campus: lists and the search call it once
+// per room shown. Keyed by the day object, so a refresh (which brings new day
+// objects) starts a new index and the old one is dropped with its day.
+const roomIndexes = new WeakMap();
+
+function roomsById(dayData) {
+  let index = roomIndexes.get(dayData);
+  if (!index) {
+    index = new Map();
+    for (const campus of dayData.campuses) {
+      for (const building of campus.buildings) {
+        for (const classroom of building.classrooms) {
+          // First one wins, as the linear search it replaces did
+          const key = String(classroom.id);
+          if (!index.has(key)) index.set(key, { classroom, building });
+        }
+      }
+    }
+    roomIndexes.set(dayData, index);
+  }
+  return index;
+}
+
 export function getClassroomStatusNow(classroomId) {
   if (!classroomsData || classroomsData.length === 0) return null;
 
@@ -281,16 +305,9 @@ export function getClassroomStatusNow(classroomId) {
   const dayData = classroomsData.find(day => day.date === dateKey);
   if (!dayData) return null;
 
-  let classroom = null;
-  let building = null;
-  outer: for (const campus of dayData.campuses) {
-    for (const b of campus.buildings) {
-      classroom = b.classrooms.find(r => String(r.id) === String(classroomId));
-      if (classroom) { building = b; break outer; }
-    }
-  }
-
-  if (!classroom) return null;
+  const entry = roomsById(dayData).get(String(classroomId));
+  if (!entry) return null;
+  const { classroom, building } = entry;
 
   const opening = getBuildingOpening(building, dateKey);
   if (opening) {

@@ -94,6 +94,10 @@ function buildOccupationIndex() {
               buildingName: building.name,
               buildingAltName: building.altName,
               campusName: campus.name,
+              // Query-independent parts of buildExamLessonItems' grouping, worked out
+              // once here instead of for every matched row on every keystroke
+              groupKey: [slot.category ?? null, slot.code ?? null, title, slot.section ?? null, professors.join(',')].join('|').toLowerCase(),
+              professorNames: normalizedProfessors(professors),
               haystack: [
                 title,
                 slot.code != null ? String(slot.code) : '',
@@ -321,6 +325,16 @@ function toDisplayName(stripped) {
   return stripped.split(' ').filter(Boolean).map(titleCaseWord).join(' ');
 }
 
+// Each professor as { key, name } (dedup key, display name), empty names dropped
+function normalizedProfessors(raws) {
+  const out = [];
+  for (const raw of raws) {
+    const stripped = normalizeProfessorName(raw);
+    if (stripped) out.push({ key: stripped.toUpperCase(), name: toDisplayName(stripped) });
+  }
+  return out;
+}
+
 function getInitials(stripped) {
   return stripped.split(' ').filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
 }
@@ -367,12 +381,21 @@ function buildProfessorIndex(rows) {
   return map;
 }
 
+// "YYYY-MM-DDTHH:MM" for the current local time. Sessions' date + end time use the
+// same shape, so plain string comparison orders them like the times they stand for.
+function localNowKey() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 // First session that hasn't finished yet relative to now; sessions must
 // already be sorted ascending by date/time. Null if everything's past.
-function firstUpcomingSession(sessions) {
-  const now = Date.now();
+// Compares strings rather than parsing a Date per session: this runs for every
+// professor and lesson a keystroke matches.
+function firstUpcomingSession(sessions, nowKey = localNowKey()) {
   for (const s of sessions) {
-    if (new Date(`${s.date}T${s.fine}:00`).getTime() > now) return s;
+    if (`${s.date}T${s.fine}` > nowKey) return s;
   }
   return null;
 }
@@ -381,6 +404,11 @@ function firstUpcomingSession(sessions) {
 // Single relevance function every result type goes through, so rankings are
 // comparable across types for the Top Hit. Tokens arrive expanded (see
 // expandToken): typo corrections match, but score below exact hits.
+
+// One collator for every name sort. localeCompare(b, undefined, { numeric: true })
+// orders the same way, but builds a new Intl.Collator on each call, which made
+// the sorts most of a keystroke's cost.
+const numericCollator = new Intl.Collator(undefined, { numeric: true });
 
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -392,8 +420,16 @@ function fieldHasToken(field, tok) {
   return tok.variants.find(v => field.includes(v.text)) ?? null;
 }
 
+// Compiled once per term: the same few repeat across every field of every result
+const wordStartPatterns = new Map();
+
 function isWordStart(field, variant) {
-  return new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(variant)}`, 'iu').test(field);
+  let pattern = wordStartPatterns.get(variant);
+  if (!pattern) {
+    pattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(variant)}`, 'iu');
+    wordStartPatterns.set(variant, pattern);
+  }
+  return pattern.test(field);
 }
 
 // Separators ignored when matching room names, so "T11" finds "T.1.1".
@@ -468,7 +504,7 @@ function scoreClassrooms(tokens) {
       status: getClassroomStatusNow(entry.room.id),
     });
   }
-  items.sort((a, b) => b.score - a.score || a.room.name.localeCompare(b.room.name, undefined, { numeric: true }));
+  items.sort((a, b) => b.score - a.score || numericCollator.compare(a.room.name, b.room.name));
   return items;
 }
 
@@ -499,22 +535,23 @@ function scoreBuildings(tokens) {
       name: b.name, altName: b.altName, roomCount: b.rooms.length, freeNow,
     });
   }
-  items.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, undefined, { numeric: true }));
+  items.sort((a, b) => b.score - a.score || numericCollator.compare(a.name, b.name));
   return items;
 }
 
 function scoreProfessors(tokens) {
   const items = [];
+  const nowKey = localNowKey();
   for (const p of professorIndex.values()) {
     const score = scoreMatch([p.name, p.courses.join(' ')], tokens);
     if (score <= 0) continue;
     items.push({
       type: 'professor', score, key: p.key, name: p.name, initials: p.initials,
       sessionCount: p.sessionCount, examCount: p.examCount, courses: p.courses,
-      next: firstUpcomingSession(p.sessions),
+      next: firstUpcomingSession(p.sessions, nowKey),
     });
   }
-  items.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, undefined, { numeric: true }));
+  items.sort((a, b) => b.score - a.score || numericCollator.compare(a.name, b.name));
   return items;
 }
 
@@ -525,19 +562,15 @@ function buildExamLessonItems(tokens) {
   const matched = occIndex.filter(r => tokens.every(tok => rowMatchesToken(r, tok)));
   const groups = new Map();
   for (const r of matched) {
-    const key = [r.category, r.code, r.title, r.section, r.professors.join(',')].join('|').toLowerCase();
-    let g = groups.get(key);
+    let g = groups.get(r.groupKey);
     if (!g) {
       g = { title: r.title, code: r.code, section: r.section, professors: [], profKeys: new Set(), isExam: r.isExam, sessions: [] };
-      groups.set(key, g);
+      groups.set(r.groupKey, g);
     }
-    for (const raw of r.professors) {
-      const stripped = normalizeProfessorName(raw);
-      if (!stripped) continue;
-      const pk = stripped.toUpperCase();
+    for (const { key: pk, name } of r.professorNames) {
       if (!g.profKeys.has(pk)) {
         g.profKeys.add(pk);
-        g.professors.push(toDisplayName(stripped));
+        g.professors.push(name);
       }
     }
     g.sessions.push({
@@ -559,12 +592,14 @@ function buildExamLessonItems(tokens) {
     (g.isExam ? exams : lessons).push(item);
   }
 
-  const tieKey = item => {
-    const next = firstUpcomingSession(item.sessions);
-    const s = next ?? item.sessions[0];
-    return s.date + s.inizio;
-  };
-  const sorter = (a, b) => b.score - a.score || tieKey(a).localeCompare(tieKey(b));
+  // Each item's tie key worked out once, not on every comparison the sort makes
+  const nowKey = localNowKey();
+  const tieKeys = new Map();
+  for (const item of [...exams, ...lessons]) {
+    const s = firstUpcomingSession(item.sessions, nowKey) ?? item.sessions[0];
+    tieKeys.set(item, s.date + s.inizio);
+  }
+  const sorter = (a, b) => b.score - a.score || tieKeys.get(a).localeCompare(tieKeys.get(b));
   exams.sort(sorter);
   lessons.sort(sorter);
   return { exams, lessons };

@@ -120,13 +120,16 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
   const results = [];
 
   for (const building of campusData.buildings) {
-    // A closed building has no available rooms, whatever its bookings say
-    if (isBuildingClosed(building, formattedDate, fromTime, toTime)) continue;
+    // A closed building has no available rooms, whatever its bookings say. One
+    // that opens late or closes early only has free time while it's open, so its
+    // rooms come out partially free.
+    const open = clipToOpeningHours(building, formattedDate, fromTime, toTime);
+    if (!open) continue;
 
     const availableRooms = [];
 
     for (const classroom of building.classrooms) {
-      const freeSlots = getFreeSlots(classroom.occupancy, fromTime, toTime);
+      const freeSlots = getFreeSlots(classroom.occupancy, open.from, open.to);
       if (freeSlots.length > 0) {
         const isFree = freeSlots.length === 1
           && freeSlots[0].start === fromTime
@@ -167,23 +170,35 @@ function formatDateYYYYMMDD(date) {
   return `${year}${month}${day}`;
 }
 
-// Whether a building is closed for the whole of [fromTime, toTime] on dateKey
-// ("YYYYMMDD"): a holiday, a weekday it never opens, or a window that falls
-// entirely outside its hours. Hours that never loaded count as open, so a
-// failed /v1/opening-hours fetch can't hide every room.
-function isBuildingClosed(building, dateKey, fromTime, toTime) {
-  const hours = building.hours;
-  if (!hours) return false;
+// A building's opening hours on dateKey ("YYYYMMDD"), one of:
+//   null              its hours never loaded, so treat it as always open (a
+//                     failed /v1/opening-hours fetch mustn't hide every room)
+//   { closed: true }  a holiday, or a weekday it never opens
+//   { opens, closes } "HH:MM" strings
+export function getBuildingOpening(building, dateKey) {
+  const hours = building?.hours;
+  if (!hours) return null;
 
   const isoDate = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
-  if (holidayPeriods?.some(p => p.start <= isoDate && isoDate <= p.end)) return true;
+  if (holidayPeriods?.some(p => p.start <= isoDate && isoDate <= p.end)) return { closed: true };
 
   const dow = new Date(isoDate + 'T00:00').getDay(); // 0 = Sunday
   const range = hours[dow === 0 ? 'sun' : dow === 6 ? 'sat' : 'mon_fri'];
-  if (!range) return true;
+  if (!range) return { closed: true };
 
-  const [opens, closes] = range;
-  return toTime <= opens || fromTime >= closes;
+  return { opens: range[0], closes: range[1] };
+}
+
+// Narrows [fromTime, toTime] to the part the building is open for on dateKey,
+// as { from, to }. Null when it's closed for all of it.
+function clipToOpeningHours(building, dateKey, fromTime, toTime) {
+  const opening = getBuildingOpening(building, dateKey);
+  if (!opening) return { from: fromTime, to: toTime };
+  if (opening.closed) return null;
+
+  const from = fromTime > opening.opens ? fromTime : opening.opens;
+  const to = toTime < opening.closes ? toTime : opening.closes;
+  return from < to ? { from, to } : null;
 }
 
 // Returns the free time slots within [fromTime, toTime]
@@ -253,7 +268,8 @@ export function computeClassroomStatus(occupancy, refDate) {
 
 /**
  * Returns the current availability status of a classroom relative to NOW.
- * Possible return values: 'free', 'occupied', 'free-soon', 'occupied-soon', or null if no data.
+ * Possible return values: 'free', 'occupied', 'free-soon', 'occupied-soon',
+ * 'closed' (its building is closed right now), or null if no data.
  */
 export function getClassroomStatusNow(classroomId) {
   if (!classroomsData || classroomsData.length === 0) return null;
@@ -266,14 +282,21 @@ export function getClassroomStatusNow(classroomId) {
   if (!dayData) return null;
 
   let classroom = null;
+  let building = null;
   outer: for (const campus of dayData.campuses) {
-    for (const building of campus.buildings) {
-      classroom = building.classrooms.find(r => String(r.id) === String(classroomId));
-      if (classroom) break outer;
+    for (const b of campus.buildings) {
+      classroom = b.classrooms.find(r => String(r.id) === String(classroomId));
+      if (classroom) { building = b; break outer; }
     }
   }
 
   if (!classroom) return null;
+
+  const opening = getBuildingOpening(building, dateKey);
+  if (opening) {
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    if (opening.closed || currentTime < opening.opens || currentTime >= opening.closes) return 'closed';
+  }
 
   return computeClassroomStatus(classroom.occupancy ?? [], now);
 }
@@ -298,22 +321,24 @@ export function getCampusBuildingsOverview(campusId, date, fromTime, toTime) {
   const campusData = dayData.campuses.find(c => c.id === campusId);
   if (!campusData) return [];
 
-  // Closed buildings are left out, as findAvailableClassrooms() leaves them out of the results
-  return campusData.buildings
-    .filter(building => !isBuildingClosed(building, formattedDate, fromTime, toTime))
-    .map(building => {
-      const counts = { 'free': 0, 'partially-free': 0, 'occupied': 0 };
-      for (const room of building.classrooms ?? []) {
-        const freeSlots = getFreeSlots(room.occupancy ?? [], fromTime, toTime);
-        if (freeSlots.length === 0) {
-          counts.occupied++;
-        } else {
-          const isFullyFree = freeSlots.length === 1
-            && freeSlots[0].start === fromTime
-            && freeSlots[0].end === toTime;
-          counts[isFullyFree ? 'free' : 'partially-free']++;
-        }
+  // Closed buildings are left out and free time is cut to opening hours, as
+  // findAvailableClassrooms() does for the results
+  return campusData.buildings.flatMap(building => {
+    const open = clipToOpeningHours(building, formattedDate, fromTime, toTime);
+    if (!open) return [];
+
+    const counts = { 'free': 0, 'partially-free': 0, 'occupied': 0 };
+    for (const room of building.classrooms ?? []) {
+      const freeSlots = getFreeSlots(room.occupancy ?? [], open.from, open.to);
+      if (freeSlots.length === 0) {
+        counts.occupied++;
+      } else {
+        const isFullyFree = freeSlots.length === 1
+          && freeSlots[0].start === fromTime
+          && freeSlots[0].end === toTime;
+        counts[isFullyFree ? 'free' : 'partially-free']++;
       }
-      return { building, counts };
-    });
+    }
+    return [{ building, counts }];
+  });
 }

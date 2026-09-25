@@ -29,6 +29,7 @@ const STATUS_KEYS = {
   'occupied': 'status.occupied',
   'free-soon': 'status.freeSoon',
   'occupied-soon': 'status.occupiedSoon',
+  'closed': 'status.closed',
 };
 
 // Builds and returns a Card DOM element for the classroom passed as parameter.

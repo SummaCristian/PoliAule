@@ -42,6 +42,7 @@
   "status.partiallyFree": "Parzialmente libera",
   "status.freeSoon": "Libera tra poco",
   "status.occupiedSoon": "Occupata tra poco",
+  "status.closed": "Chiusa",
   "search.inputPlaceholder": "Aule, corsi, docenti",
   "search.topHit": "Miglior risultato",
   "search.sectionClassrooms": "Aule",

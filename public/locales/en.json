@@ -47,6 +47,7 @@
   "status.partiallyFree": "Partially Free",
   "status.freeSoon": "Free soon",
   "status.occupiedSoon": "Occupied soon",
+  "status.closed": "Closed",
 
   "search.inputPlaceholder": "Rooms, courses, professors",
   "search.topHit": "Top Hit",

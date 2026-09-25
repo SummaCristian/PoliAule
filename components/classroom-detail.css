@@ -1490,6 +1490,37 @@ body.detail-open .tab-content * {
   }
 }
 
+/* ── Building closed (outside opening hours, holidays) ───────────────── */
+
+/* Hatched and colorless so it reads as "shut", not as another booking.
+   Sits under the blocks and the query region, and lets the hover through. */
+.detail-schedule-closed {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--block-start);
+  width: var(--block-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--text-color-primary) 9%, transparent) 0 4px,
+    transparent 4px 9px
+  );
+}
+
+.detail-schedule-closed span {
+  font-size: var(--text-70);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+}
+
 /* ── Search highlight (clicked a lesson in search results) ──────────── */
 
 .detail-schedule-block--highlight {
@@ -2063,6 +2094,15 @@ body.detail-open .tab-content * {
     width: auto;
     bottom: auto;
     border-radius: 6px;
+  }
+
+  .detail-schedule-closed {
+    top: var(--block-start);
+    height: var(--block-size);
+    left: 0;
+    right: 0;
+    width: auto;
+    bottom: auto;
   }
 
   /* Grid lines on mobile: horizontal */

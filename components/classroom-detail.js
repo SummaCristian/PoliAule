@@ -1,4 +1,4 @@
-import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow } from '../available-rooms-script.js';
+import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow, getBuildingOpening } from '../available-rooms-script.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
@@ -851,7 +851,8 @@ class ClassroomDetail {
         'free': 'status.free',
         'occupied': 'status.occupied',
         'free-soon': 'status.freeSoon',
-        'occupied-soon': 'status.occupiedSoon'
+        'occupied-soon': 'status.occupiedSoon',
+        'closed': 'status.closed'
       };
       statusHtml = `
         <div class="detail-status-wrapper">
@@ -1265,12 +1266,36 @@ class ClassroomDetail {
         }
 
         let occupancy = [];
+        let roomBuilding = null;
         outer: for (const c of dayData.campuses ?? []) {
           for (const b of c.buildings ?? []) {
             const room = b.classrooms?.find(r => String(r.id) === String(classroomId));
-            if (room) { occupancy = room.occupancy ?? []; break outer; }
+            if (room) { occupancy = room.occupancy ?? []; roomBuilding = b; break outer; }
           }
         }
+
+        // The hours the building is shut, shown as their own "Closed" areas so
+        // they don't read as bookings. The bar carries the open range too, for
+        // the hover cursor. Unknown hours draw nothing.
+        const opening = getBuildingOpening(roomBuilding, dayData.date);
+        let openFrom = DAY_START, openTo = DAY_END;
+        if (opening?.closed) {
+          openFrom = openTo = DAY_START;
+        } else if (opening) {
+          openFrom = Math.max(timeToMinutes(opening.opens), DAY_START);
+          openTo = Math.min(timeToMinutes(opening.closes), DAY_END);
+        }
+        const closedRanges = openFrom >= openTo
+          ? [[DAY_START, DAY_END]]
+          : [[DAY_START, openFrom], [openTo, DAY_END]].filter(([s, e]) => e > s);
+        const closedHtml = closedRanges.map(([s, e]) => {
+          const left  = ((s - DAY_START) / total * 100).toFixed(2);
+          const width = ((e - s)         / total * 100).toFixed(2);
+          // Label only where there's room for it; the hatching still says it
+          const label = (e - s) / total >= 0.15 ? `<span>${escapeHtml(t('detail.closed'))}</span>` : '';
+          return `<div class="detail-schedule-closed" role="img" aria-label="${escapeHtml(t('detail.closed'))} ${minutesToTimeDisplay(s)}–${minutesToTimeDisplay(e)}" style="--block-start:${left}%;--block-size:${width}%">${label}</div>`;
+        }).join('');
+        const openAttrs = opening ? ` data-open-from="${openFrom}" data-open-to="${openTo}"` : '';
 
         const blocksHtml = (occupancy || []).map((slot, idx) => {
           if (!slot.inizio || !slot.fine) return '';
@@ -1302,7 +1327,8 @@ class ClassroomDetail {
               <div class="timeline-hover-cursor" hidden></div>
               ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>` : ''}
               ${querySideIndicatorsHtml}
-              <div class="detail-schedule-bar">
+              <div class="detail-schedule-bar"${openAttrs}>
+                ${closedHtml}
                 ${queryOverlayHtml}
                 ${blocksHtml}
                 ${isToday && nowPct !== null ? `<div class="timeline-now-bar-line" style="--pos:${nowPct}%"></div>` : ''}
@@ -1567,7 +1593,10 @@ class ClassroomDetail {
           line.style.top = '';
         }
 
-        cursor.textContent = minutesToTimeDisplay(minutes);
+        const { openFrom, openTo } = bar.dataset;
+        const isClosedHere = openFrom !== undefined
+          && (minutes < Number(openFrom) || minutes >= Number(openTo));
+        cursor.textContent = minutesToTimeDisplay(minutes) + (isClosedHere ? ` · ${t('detail.closed')}` : '');
         cursor.hidden = false;
         line.hidden = false;
       });

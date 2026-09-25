@@ -89,6 +89,7 @@ const STATUS_KEYS = {
   'occupied': 'status.occupied',
   'free-soon': 'status.freeSoon',
   'occupied-soon': 'status.occupiedSoon',
+  'closed': 'status.closed',
 };
 
 // Duplicated from components/classroom-detail.js (not exported) — only the

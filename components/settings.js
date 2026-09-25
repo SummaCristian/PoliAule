@@ -7,6 +7,7 @@ import { classroomsData } from '../available-rooms-script.js';
 import { selectCampusById } from './campus-picker.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
+import { openTransferDialog } from './transfer-dialog.js';
 import { createToggle, createSegmentedControl, getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState, snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from 'vitrium';
 
 const TRANSITION_DURATION = 420;
@@ -19,11 +20,11 @@ const DRAG_RUBBER_GIVE = 60;        // rubber-band give (px) when dragging upwar
 // campus-sheet.js's own rubber().
 const rubber = (x, give) => (x * give) / (give + Math.abs(x));
 
-const PREFERRED_CAMPUS_ENABLED_KEY = 'poliAule_preferredCampusEnabled';
-const PREFERRED_CAMPUS_ID_KEY      = 'poliAule_preferredCampusId';
-const REMEMBER_LAST_CAMPUS_KEY     = 'poliAule_rememberLastCampus';
+export const PREFERRED_CAMPUS_ENABLED_KEY = 'poliAule_preferredCampusEnabled';
+export const PREFERRED_CAMPUS_ID_KEY      = 'poliAule_preferredCampusId';
+export const REMEMBER_LAST_CAMPUS_KEY     = 'poliAule_rememberLastCampus';
 const LAST_CAMPUS_ID_KEY           = 'poliAule_lastCampusId';
-const HIDE_SUNDAYS_KEY             = 'poliAule_hideSundays';
+export const HIDE_SUNDAYS_KEY             = 'poliAule_hideSundays';
 export const SHOW_PARTIAL_KEY      = 'poliAule_showPartial';
 export const INTERVAL_HOURS_KEY    = 'poliAule_intervalHours';
 export const DEFAULT_TAB_KEY       = 'poliAule_defaultTab';
@@ -775,6 +776,32 @@ function buildPopup() {
         </div>
       </div>
 
+      <div class="settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__icon-badge">
+            <i class="hgi-stroke hgi-arrow-data-transfer-horizontal" aria-hidden="true"></i>
+          </div>
+          <span class="settings-section__header-label" data-i18n="settings.sectionTransfer">${t('settings.sectionTransfer')}</span>
+        </div>
+        <div class="settings-group">
+          <div class="settings-row" data-transfer-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #30B0C7">
+                <i class="hgi-stroke hgi-smart-phone-01" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.transfer">${t('settings.transfer')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.transferDesc">${t('settings.transferDesc')}</span>
+              </div>
+            </div>
+            <button type="button" class="settings-action-btn" data-transfer-btn>
+              <i class="hgi-stroke hgi-qr-code" aria-hidden="true"></i>
+              <span data-i18n="settings.transferShow">${t('settings.transferShow')}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       ${IS_STABLE_BUILD ? '' : `
       <div class="settings-section">
         <div class="settings-section__header">
@@ -920,6 +947,10 @@ function buildPopup() {
 
   langSegControl = langSeg;
   segControls.push(langSeg, timeFmtSeg, defaultTabSeg, blurModeSeg);
+
+  // Transfer to another device: QR dialog grows out of the button
+  const transferBtn = popup.querySelector('[data-transfer-btn]');
+  transferBtn.addEventListener('click', () => openTransferDialog(transferBtn));
 
   // Wire Use Beta Backend toggle (non-stable builds only, default: true)
   const useBetaBackendRow = popup.querySelector('[data-use-beta-backend-row]');

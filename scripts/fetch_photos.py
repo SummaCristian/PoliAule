@@ -1,19 +1,28 @@
 """
-Fetches classroom photos from Polimi and writes changed ones to photos/<classroom_id>.jpg.
+Fetches classroom photos from Polimi and writes changed ones to photos/<classroom_id>.jpg,
+each with a small copy next to it, photos/<classroom_id>_thumb.jpg.
 
 Polimi's photo flow is two calls: resolve idfoto -> a docmanager.polimi.it URL carrying
 a short-lived signed token, then download the bytes from that URL. Both calls need a
 browser-like User-Agent or Polimi's WAF rejects them (same as fetch.py/fetch_opening_hours.py).
 
 To avoid re-uploading and re-purging 291 unchanged images every month, each photo's MD5 is
-compared against photos/manifest.json (restored from the previous run via actions/cache in
-the workflow). Only new/changed photos are written to disk; the workflow then only uploads
-and purges what's on disk, and this script always rewrites manifest.json so unchanged hashes
-carry forward to the next run.
+compared against photos/manifest.json (downloaded from R2 at the start of the workflow run,
+where it lives next to the photos as the single source of truth for what's uploaded; a
+7-day actions/cache eviction window can't outlast this monthly job). Only new/changed photos
+are written to disk; the workflow then only uploads and purges what's on disk, and this
+script always rewrites manifest.json so unchanged hashes carry forward to the next run.
+
+The thumbnail is what the list's cards, the search rows and the detail page's opening zoom
+show: the full photo is 1500x1125 (~6.7 MB once decoded) for a card ~160 CSS px wide, and a
+list of those was what made older phones stutter. It is made from the same bytes, so it only
+changes when the photo does. --backfill-thumbs also writes thumbnails for unchanged photos,
+for when they're missing from R2 (the first run after thumbnails were introduced).
 """
 
 import argparse
 import hashlib
+import io
 import json
 import os
 import sys
@@ -22,6 +31,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -50,6 +60,11 @@ REQUEST_HEADERS = {
 }
 
 MAX_DETAIL_LINES = 10  # per category, in the Telegram summary
+
+# Thumbnails: long side in px, and JPEG quality. 640 covers a card (~160x200 CSS px, the
+# photo `cover`-ed into it) at 2-3x device pixel ratios without visible softening.
+THUMB_MAX_SIDE = 640
+THUMB_QUALITY = 80
 
 
 # ---------------------------------------------------------------------------
@@ -108,11 +123,29 @@ def fetch_photo_bytes(client: httpx.Client, room: dict) -> bytes:
     raise RuntimeError(last_error)
 
 
-def summarize(new: list[dict], updated: list[dict], unchanged_count: int, failures: list[dict]) -> tuple[str, str]:
+def make_thumbnail(content: bytes) -> bytes:
+    """Downscale a photo to THUMB_MAX_SIDE on its long side, as a baseline JPEG.
+
+    EXIF orientation is applied first: browsers honour it on the full photo, and the
+    thumbnail has to come out the same way up once its EXIF is gone.
+    """
+    with Image.open(io.BytesIO(content)) as original:
+        image = ImageOps.exif_transpose(original).convert("RGB")
+    image.thumbnail((THUMB_MAX_SIDE, THUMB_MAX_SIDE), Image.Resampling.LANCZOS)
+    out = io.BytesIO()
+    image.save(out, "JPEG", quality=THUMB_QUALITY, optimize=True)
+    return out.getvalue()
+
+
+def summarize(new: list[dict], updated: list[dict], unchanged_count: int, failures: list[dict],
+              thumbs_backfilled: int = 0, thumb_failures: list[dict] | None = None) -> tuple[str, str]:
     """Build a (status, message) pair describing the run, for the Telegram notification step."""
+    thumb_failures = thumb_failures or []
     lines = [
         f"{len(new)} new, {len(updated)} updated, {unchanged_count} unchanged, {len(failures)} failed."
     ]
+    if thumbs_backfilled:
+        lines.append(f"{thumbs_backfilled} thumbnail(s) backfilled for unchanged photos.")
 
     def add_section(title: str, rooms: list[dict]):
         if not rooms:
@@ -131,8 +164,14 @@ def summarize(new: list[dict], updated: list[dict], unchanged_count: int, failur
             lines.append(f"    {f['name']} (id={f['id']}): {f['error']}")
         if len(failures) > MAX_DETAIL_LINES:
             lines.append(f"    ...and {len(failures) - MAX_DETAIL_LINES} more")
+    if thumb_failures:
+        lines.append("Thumbnail failed (the API serves the full photo instead; retried next run):")
+        for f in thumb_failures[:MAX_DETAIL_LINES]:
+            lines.append(f"    {f['name']} (id={f['id']}): {f['error']}")
+        if len(thumb_failures) > MAX_DETAIL_LINES:
+            lines.append(f"    ...and {len(thumb_failures) - MAX_DETAIL_LINES} more")
 
-    status = "failed" if failures else "ok"
+    status = "failed" if failures or thumb_failures else "ok"
     return status, "\n".join(lines)
 
 
@@ -144,6 +183,8 @@ def summarize(new: list[dict], updated: list[dict], unchanged_count: int, failur
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--no-delay", action="store_true", help="Skip delay between API calls")
+    parser.add_argument("--backfill-thumbs", action="store_true",
+                        help="Also write thumbnails for unchanged photos (when R2 is missing them)")
     args = parser.parse_args()
 
     with open(CLASSROOMS_FILE, encoding="utf-8") as f:
@@ -169,6 +210,8 @@ def main() -> int:
     updated: list[dict] = []
     failures: list[dict] = []
     unchanged_count = 0
+    thumbs_backfilled = 0
+    thumb_failures: list[dict] = []
 
     with httpx.Client(headers=REQUEST_HEADERS) as client:
         for i, room in enumerate(rooms, start=1):
@@ -185,15 +228,34 @@ def main() -> int:
 
             digest = hashlib.md5(content).hexdigest()
             previous_digest = manifest.get(key)
+            changed = digest != previous_digest
 
-            if digest == previous_digest:
+            thumb = None
+            if changed or args.backfill_thumbs:
+                try:
+                    thumb = make_thumbnail(content)
+                except Exception as e:  # Pillow raises a variety of errors on bad input
+                    error = "not a readable image" if isinstance(e, UnidentifiedImageError) else str(e)
+                    print(f"  {label}: thumbnail failed - {error}")
+                    thumb_failures.append({**room, "error": error})
+                if thumb is not None:
+                    with open(OUTPUT_DIR / f"{key}_thumb.jpg", "wb") as f:
+                        f.write(thumb)
+
+            if not changed:
                 unchanged_count += 1
-                print(f"  {label}: unchanged")
+                if thumb is not None:
+                    thumbs_backfilled += 1
+                print(f"  {label}: unchanged{' (thumbnail written)' if thumb is not None else ''}")
             else:
                 (new if previous_digest is None else updated).append(room)
                 with open(OUTPUT_DIR / f"{key}.jpg", "wb") as f:
                     f.write(content)
-                manifest[key] = digest
+                # Without a thumbnail the digest isn't recorded, so the next run sees the
+                # photo as changed again and retries both. The API serves the full photo
+                # in the thumbnail's place meanwhile.
+                if thumb is not None:
+                    manifest[key] = digest
                 print(f"  {label}: {'new' if previous_digest is None else 'updated'}")
 
             if not args.no_delay:
@@ -202,7 +264,7 @@ def main() -> int:
     with open(MANIFEST_FILE, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
 
-    status, message = summarize(new, updated, unchanged_count, failures)
+    status, message = summarize(new, updated, unchanged_count, failures, thumbs_backfilled, thumb_failures)
     print(f"\n{message}")
     write_github_output(status, message)
 

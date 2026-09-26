@@ -896,6 +896,7 @@ class ClassroomDetail {
         </div>
       </div>
       <div class="detail-content">
+        <div class="detail-column">
         <section class="detail-section">
           <h2 class="detail-section-title">${t('detail.features')}</h2>
           ${featuresHtml
@@ -920,7 +921,9 @@ class ClassroomDetail {
             </div>
           </div>
         </section>
+        </div>
 
+        <div class="detail-column">
         ${hoursHtml ? `
         <section class="detail-section">
           <h2 class="detail-section-title">${t('detail.openingHours')}</h2>
@@ -933,6 +936,7 @@ class ClassroomDetail {
           <div class="detail-map"></div>
           <div class="detail-map-links"></div>
         </section>` : ''}
+        </div>
       </div>
     `;
 
@@ -1032,7 +1036,7 @@ class ClassroomDetail {
     this._reflowObservers?.forEach(o => o.disconnect());
     this._reflowObservers = [];
     if (!content) return;
-    this._animateReflow(content, ':scope > .detail-section', this._reflowObservers);
+    this._animateReflow(content, ':scope > .detail-column > .detail-section', this._reflowObservers);
     this._animateReflow(content.querySelector('.detail-features'), '.detail-feature-chip', this._reflowObservers);
   }
 

@@ -1018,8 +1018,16 @@ body.detail-open .tab-content * {
   transition: color 0.6s ease;
 }
 
-/* Desktop: sections flow as a masonry grid of cards (CSS multi-column, so
-   each card lands in the shortest column and keeps its natural height). */
+/* The cards are split into two .detail-column wrappers (features + schedule,
+   hours + map). Narrow: the wrappers dissolve and the cards stack. Desktop:
+   the wrappers sit side by side, each card keeping its natural height. Not
+   CSS multi-column: WebKit doesn't paint backdrop-filtered cards in a
+   multicol's second column (the opening-hours card was invisible, though
+   still selectable, on iPad). */
+.detail-column {
+  display: contents;
+}
+
 @media (min-width: 1000px) {
   .detail-header {
     max-width: 1100px;
@@ -1027,14 +1035,15 @@ body.detail-open .tab-content * {
 
   .detail-content {
     max-width: 1100px;
-    column-count: 2;
-    column-gap: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .detail-content > .detail-section {
-    break-inside: avoid;
-    display: inline-block; /* keeps backdrop-filter cards unsplit in WebKit */
-    width: 100%;
+  .detail-column {
+    display: block;
+    flex: 1 1 0;
+    min-width: 0;
   }
 }
 

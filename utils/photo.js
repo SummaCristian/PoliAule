@@ -2,12 +2,33 @@ import { getApiBase } from '../config.js';
 
 // classroom id (number) → resolved URL string
 export const photoUrlCache = new Map();
+// classroom id (number) → resolved thumbnail URL string
+export const thumbUrlCache = new Map();
 
 export async function fetchPhotoUrl(classroomId) {
   if (photoUrlCache.has(classroomId)) return photoUrlCache.get(classroomId);
 
   const url = `${getApiBase()}/v1/photos/${classroomId}`;
   photoUrlCache.set(classroomId, url);
+  return url;
+}
+
+/**
+ * The room's thumbnail URL, without marking it as loaded. It's 640px on its
+ * long side (scripts/fetch_photos.py writes it next to the full photo), where
+ * the full photo is 1500x1125, about 6.7 MB once decoded, for a card ~160 CSS
+ * px wide; a list of those was what made older phones stutter.
+ */
+export function thumbUrl(classroomId) {
+  return `${getApiBase()}/v1/photos/${classroomId}/thumb`;
+}
+
+/** fetchPhotoUrl for the thumbnail: what cards, search rows and the detail page's zoom show. */
+export async function fetchThumbUrl(classroomId) {
+  if (thumbUrlCache.has(classroomId)) return thumbUrlCache.get(classroomId);
+
+  const url = thumbUrl(classroomId);
+  thumbUrlCache.set(classroomId, url);
   return url;
 }
 

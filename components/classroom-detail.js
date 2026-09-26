@@ -3,7 +3,7 @@ import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, photoUrlCache, extractPhotoColor, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
+import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
@@ -111,7 +111,7 @@ class ClassroomDetail {
     // redo them for the open photo when the device theme flips at runtime.
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
       const el = this._overlay.querySelector('.detail-photo-backdrop');
-      const url = photoUrlCache.get(this._currentId);
+      const url = this._currentId !== null ? thumbUrl(this._currentId) : null;
       if (!el || !url) return;
       this._applyPhotoDim(url, el);
       this._applyTitleTone(url, el);
@@ -459,10 +459,13 @@ class ClassroomDetail {
     // hero elements should morph into the header instead of touching the tabbar.
     const fromInfo = !!(this._backBtn && !this._backBtn.hidden);
 
-    // Photo VT: if the URL is already cached, pre-decode it so the detail photo
-    // is bitmap-ready when the VT snapshots the new state.
+    // Photo VT: if the room's photo is already cached, pre-decode it so the
+    // detail photo is bitmap-ready when the VT snapshots the new state. The
+    // thumbnail the card was showing, by preference: already decoded, and a
+    // fraction of the full photo to upload and draw on every frame of the zoom.
+    // _loadPhoto swaps the full photo in once the page has landed.
     const hasPhoto = !!entry.classroom.idfoto;
-    let validPhotoUrl = hasPhoto ? (photoUrlCache.get(id) ?? null) : null;
+    let validPhotoUrl = hasPhoto ? (thumbUrlCache.get(id) ?? photoUrlCache.get(id) ?? null) : null;
     if (validPhotoUrl) {
       const tmp = new Image();
       tmp.src = validPhotoUrl;
@@ -476,7 +479,7 @@ class ClassroomDetail {
       // Warm the tint cache too, so _setBackdrop can apply --detail-tint
       // synchronously inside the VT callback (the "new" snapshot is taken
       // right after it, before any async extraction could land).
-      if (validPhotoUrl) await extractPhotoColor(validPhotoUrl);
+      if (validPhotoUrl) await extractPhotoColor(thumbUrl(id));
       if (this._currentId !== id) return;
     }
 
@@ -566,7 +569,7 @@ class ClassroomDetail {
           const detailContainer = this._overlay.querySelector('.detail-photo-container');
           if (detailImg) {
             detailImg.src = validPhotoUrl;
-            this._setBackdrop(validPhotoUrl);
+            this._setBackdrop(thumbUrl(id));
             detailImg.classList.add('loaded');
             detailContainer?.classList.add('loaded');
           }
@@ -611,7 +614,7 @@ class ClassroomDetail {
         const detailContainer = this._overlay.querySelector('.detail-photo-container');
         if (detailImg) {
           detailImg.src = validPhotoUrl;
-          this._setBackdrop(validPhotoUrl);
+          this._setBackdrop(thumbUrl(id));
           detailImg.classList.add('loaded');
           detailContainer?.classList.add('loaded');
         }
@@ -1042,7 +1045,9 @@ class ClassroomDetail {
 
   // ---------- RENDER: HERO PHOTO ----------
 
-  /** Feeds the blurred backdrop behind the hero photo (see .detail-photo-backdrop). */
+  /** Feeds the blurred backdrop behind the hero photo (see .detail-photo-backdrop).
+      Always the thumbnail: under a 40px blur its resolution is lost anyway, and
+      the tint / dimming / title-tone caches are keyed by this URL. */
   _setBackdrop(url) {
     const el = this._overlay.querySelector('.detail-photo-backdrop');
     if (!el) return;
@@ -1102,14 +1107,38 @@ class ClassroomDetail {
     this._overlay.dataset.titleTone = lum > 0.3 ? 'light' : 'dark';
   }
 
+  /* Replaces the thumbnail the hero is showing with the full photo, once the
+     transition has landed and the page has a moment: decoding and uploading a
+     1500x1125 photo is exactly what an older phone can't do while the zoom or
+     the page's entrance animations are running. Decoded off to the side first,
+     so the <img> changes source with its pixels ready — no flash — and a full
+     photo that fails to load just leaves the thumbnail where it is. */
+  async _upgradePhoto(classroomId, img) {
+    const full = await fetchPhotoUrl(classroomId);
+    if (img.src === full) return;
+    await new Promise(resolve => this._afterTransition(resolve));
+    await new Promise(resolve => {
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(resolve, { timeout: 800 });
+      else setTimeout(resolve, 300);
+    });
+    if (this._currentId !== classroomId || !img.isConnected || img.src === full) return;
+    const pre = new Image();
+    pre.src = full;
+    try { await pre.decode(); } catch { return; }
+    if (this._currentId !== classroomId || !img.isConnected) return;
+    img.src = full;
+  }
+
   async _loadPhoto(classroomId) {
     if (this._currentId !== classroomId) return;
 
     try {
-      // The photo URL is a plain, stable route (/v1/photos/:id). Once it's been
-      // resolved for this room this session (an earlier open, or a card thumbnail),
-      // it sits in photoUrlCache and its bytes are almost certainly in the HTTP cache.
-      const cachedUrl = photoUrlCache.get(classroomId);
+      // The photo URLs are plain, stable routes (/v1/photos/:id and its /thumb).
+      // Once one has been resolved for this room this session (an earlier open, a
+      // card, a search row), its bytes are almost certainly in the HTTP cache. The
+      // full photo if we have it, else the thumbnail, which _upgradePhoto replaces.
+      const cachedUrl = photoUrlCache.get(classroomId) ?? thumbUrlCache.get(classroomId);
+
 
       // Ensure we have a container for the photo (it might have been removed on previous error)
       let container = this._overlay.querySelector('.detail-photo-container');
@@ -1124,8 +1153,13 @@ class ClassroomDetail {
       const img = container?.querySelector('.detail-photo');
       if (!img) return;
 
-      // Already revealed (by the ViewTransition, or an earlier call) — nothing to do.
-      if (img.classList.contains('loaded')) return;
+      // Already revealed (by the ViewTransition, or an earlier call): at most the
+      // thumbnail the zoom carried still has to make way for the full photo.
+      if (img.classList.contains('loaded')) {
+        this._upgradePhoto(classroomId, img);
+        return;
+      }
+
 
       if (cachedUrl) {
         // This <img> is fresh from a full re-render (occupancy refresh, language
@@ -1139,14 +1173,16 @@ class ClassroomDetail {
         img.classList.add('loaded');
         container.classList.add('loaded');
         img.src = cachedUrl;
-        this._setBackdrop(cachedUrl);
+        this._setBackdrop(thumbUrl(classroomId));
         this._photoRevealed();
+        this._upgradePhoto(classroomId, img);
         return;
       }
 
       // First time we've needed this room's photo this session — resolve, load,
-      // decode, then reveal with the intro transition.
-      const url = await fetchPhotoUrl(classroomId);
+      // decode, then reveal with the intro transition. The thumbnail first: a
+      // third of the bytes over a phone's connection. The full photo follows.
+      const url = await fetchThumbUrl(classroomId);
       if (this._currentId !== classroomId) return;
 
       img.src = url;
@@ -1156,6 +1192,7 @@ class ClassroomDetail {
         img.classList.add('loaded');
         container.classList.add('loaded');
         this._photoRevealed();
+        this._upgradePhoto(classroomId, img);
       }).catch(() => {
         if (this._currentId === classroomId) container.remove();
       });

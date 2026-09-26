@@ -1,13 +1,13 @@
 import { t } from '../i18n.js';
 import { escapeHtml, highlight } from '../utils/html.js';
-import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
+import { fetchThumbUrl, thumbUrlCache } from '../utils/photo.js';
 import { isFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 
 // ---------- PHOTO ----------
 
 async function _loadCardPhoto(classroomId, card) {
   const img = card.querySelector('.classroom-card-photo');
-  const url = await fetchPhotoUrl(classroomId);
+  const url = await fetchThumbUrl(classroomId);
   img.onerror = () => card.classList.add('photo-failed');
   img.src = url;
   img.decode().then(() => img.classList.add('loaded')).catch(() => card.classList.add('photo-failed'));
@@ -86,13 +86,14 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
 
   if (hasPhoto) {
     el.dataset.idfoto = classroom.idfoto;
-    // If we've already resolved this room's photo URL this session (a previous
-    // render of this card, or the detail page), its bytes are almost certainly in
+    // Cards show the thumbnail, never the full photo (see thumbUrl in
+    // utils/photo.js). If we've already resolved it this session (a previous
+    // render of this card, a search row), its bytes are almost certainly in
     // the HTTP cache. Render the <img> already pointing at it and already marked
     // `loaded`, so a re-render (filter change, occupancy refresh, favourites
     // update) rebuilds the card without replaying the 0.4s opacity fade — the
     // "blink". Fresh rooms still stream in lazily via the observer.
-    const cachedUrl = photoUrlCache.get(classroom.id);
+    const cachedUrl = thumbUrlCache.get(classroom.id);
     el.innerHTML = `
       <div class="classroom-card-clip">
         <img class="classroom-card-photo${cachedUrl ? ' loaded' : ''}" alt=""${cachedUrl ? ` src="${escapeHtml(cachedUrl)}"` : ''}>

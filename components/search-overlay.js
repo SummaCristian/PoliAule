@@ -29,7 +29,7 @@
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { escapeHtml, highlight } from '../utils/html.js';
 import { createTimeFormatter } from '../utils/time-format.js';
-import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
+import { fetchThumbUrl, thumbUrlCache } from '../utils/photo.js';
 import { runSearch, getProfessorSchedule, hasOccupationData } from '../classroom-search-data.js';
 import { classroomsData as occupancyDays } from '../available-rooms-script.js';
 import { activateGroupTab } from './bottom-nav.js';
@@ -176,7 +176,7 @@ const rowPhotoObserver = new IntersectionObserver((entries) => {
     rowPhotoObserver.unobserve(entry.target);
     const roomId = Number(entry.target.dataset.photoFor);
     const img = entry.target.querySelector('img');
-    fetchPhotoUrl(roomId).then(url => {
+    fetchThumbUrl(roomId).then(url => {
       img.onerror = () => entry.target.classList.add('photo-failed');
       img.src = url;
       img.decode().then(() => img.classList.add('loaded')).catch(() => entry.target.classList.add('photo-failed'));
@@ -190,7 +190,7 @@ function buildPhotoLead(room, large) {
   if (room.idfoto) {
     lead.classList.add('search-row-lead--photo');
     lead.dataset.photoFor = room.id;
-    const cachedUrl = photoUrlCache.get(room.id);
+    const cachedUrl = thumbUrlCache.get(room.id);
     lead.innerHTML = `<img class="search-row-photo${cachedUrl ? ' loaded' : ''}" alt=""${cachedUrl ? ` src="${escapeHtml(cachedUrl)}"` : ''}>`;
     if (cachedUrl) lead.querySelector('img').onerror = () => lead.classList.add('photo-failed');
     else rowPhotoObserver.observe(lead);

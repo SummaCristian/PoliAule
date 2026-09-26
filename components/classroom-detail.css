@@ -1094,16 +1094,11 @@ body.detail-open .tab-content * {
 .detail-schedule-legend-box {
   width: 0.75rem;
   height: 0.75rem;
-  border-radius: 2px;
-  background: var(--busy-gradient);
-  border: 1px solid color-mix(in srgb, var(--color-status-busy) 20%, black);
-  opacity: 0.85;
-}
-
-@media (prefers-color-scheme: dark) {
-  .detail-schedule-legend-box {
-    border-color: color-mix(in srgb, var(--color-status-busy) 20%, white);
-  }
+  border-radius: 3px;
+  /* Same Vitrium tinted glass as .detail-schedule-block (classes set in JS),
+     minus the drop shadow, which would swamp a 12px swatch. */
+  --lg-glass-tint: var(--color-status-busy);
+  box-shadow: 0 0 0 0.1px var(--lg-outline), var(--lg-highlight);
 }
 
 .detail-schedule-legend-label {
@@ -1465,18 +1460,19 @@ body.detail-open .tab-content * {
   /* Increased side gaps for better separation between consecutive blocks */
   left: calc(var(--block-start) + 2px);
   width: calc(var(--block-size) - 4px);
-  border-radius: var(--radius-xs);
-  background: var(--busy-gradient);
-  opacity: 0.85;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  border: 1px solid color-mix(in srgb, var(--color-status-busy) 20%, black);
-  transition: opacity 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 9px;
+  /* Vitrium's tinted glass (.lg-glass.lg-glass--tinted, set in JS) in the
+     busy red. This file loads after Vitrium, so the positioning and radius
+     here win over .lg-glass's own. The compact shadow suits a small block. */
+  --lg-glass-tint: var(--color-status-busy);
+  box-shadow: var(--lg-shadow-compact);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .detail-schedule-block:hover,
 .detail-schedule-block:focus-visible {
-  opacity: 1;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  transform: scaleY(1.06);
+  box-shadow: 0 0 0 0.1px var(--lg-outline), var(--lg-highlight), 0 4px 20px 0 var(--lg-shadow-color-strong);
 }
 
 .detail-schedule-block:focus-visible {
@@ -1484,9 +1480,10 @@ body.detail-open .tab-content * {
   outline-offset: 1px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .detail-schedule-block {
-    border-color: color-mix(in srgb, var(--color-status-busy) 20%, white);
+@media (prefers-reduced-motion: reduce) {
+  .detail-schedule-block:hover,
+  .detail-schedule-block:focus-visible {
+    transform: none;
   }
 }
 
@@ -2062,7 +2059,7 @@ body.detail-open .tab-content * {
       filter: blur(4px);
     }
     to {
-      opacity: 0.85;
+      opacity: 1;
       transform: scaleX(1) scaleY(1);
       filter: blur(0);
     }
@@ -2093,7 +2090,6 @@ body.detail-open .tab-content * {
     right: 3px;
     width: auto;
     bottom: auto;
-    border-radius: 6px;
   }
 
   .detail-schedule-closed {

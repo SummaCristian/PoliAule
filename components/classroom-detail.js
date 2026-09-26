@@ -909,7 +909,7 @@ class ClassroomDetail {
             <h2 class="detail-section-title">${t('detail.weeklySchedule')}</h2>
             <div class="detail-schedule-legend">
               <div class="detail-schedule-legend-item">
-                <span class="detail-schedule-legend-box"></span>
+                <span class="detail-schedule-legend-box lg-glass lg-glass--tinted"></span>
                 <span class="detail-schedule-legend-label">${t('detail.occupied')}</span>
               </div>
             </div>
@@ -1309,7 +1309,7 @@ class ClassroomDetail {
             && dayData.date === highlightDateKey
             && slot.inizio === this._highlight?.from
             && slot.fine === this._highlight?.to;
-          const blockClass = 'detail-schedule-block' + (isPrimaryHighlight ? ' detail-schedule-block--highlight' : '');
+          const blockClass = 'detail-schedule-block lg-glass lg-glass--tinted' + (isPrimaryHighlight ? ' detail-schedule-block--highlight' : '');
           return `<div class="${blockClass}" data-slot-idx="${slotIdx}" tabindex="0" role="button" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
         }).join('');
 

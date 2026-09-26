@@ -7,8 +7,9 @@ import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, e
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
+import { startTrackedTransition, vtFlag } from '../utils/vt-debug.js';
 import { createPillSelector } from './pill-selector.js';
-import { embedMap, parkMap, releaseMap, getEmbedPov, setEmbedPov } from './campus-map.js';
+import { embedMap, parkMap, releaseMap, isMapTabShowing, getEmbedPov, setEmbedPov } from './campus-map.js';
 import { refreshHeaderBlur } from '../utils/header-blur.js';
 
 // No zoom and no shared element when motion is unwelcome: the pair of them is
@@ -144,7 +145,16 @@ class ClassroomDetail {
       this._overlay.classList.toggle('title-stuck', stuck);
     };
     const queueTitleStuck = () => {
-      if (!stuckRaf) stuckRaf = requestAnimationFrame(syncTitleStuck);
+      if (stuckRaf) return;
+      // Opening scrolls to the top, which lands here on the zoom's first
+      // frames — forced layouts of a page that is still under the snapshot.
+      // Measure it once it has landed instead.
+      if (this._vtSettled) {
+        stuckRaf = -1;
+        this._afterTransition(() => { stuckRaf = requestAnimationFrame(syncTitleStuck); });
+        return;
+      }
+      stuckRaf = requestAnimationFrame(syncTitleStuck);
     };
     document.addEventListener('scroll', queueTitleStuck, { passive: true, capture: true });
     window.addEventListener('resize', queueTitleStuck);
@@ -367,6 +377,51 @@ class ClassroomDetail {
     else fn();
   }
 
+  /* The snapshot of the page a transition animates is live, so anything that
+     moves on the page underneath it — the entrance animations, a transition,
+     a glass surface's backdrop-filter — repaints that whole page layer, blurred
+     backdrop and all, on every frame of the zoom. .detail-vt-freeze (see
+     classroom-detail.css) holds all of it still for the length of the
+     transition; ?vtdebug=live turns that off, for comparison. */
+  _freezeForTransition() {
+    if (vtFlag('live')) return;
+    document.documentElement.classList.add('detail-vt-freeze');
+  }
+
+  /* Holds the page at `y` on every frame until the returned function is
+     called. Mobile Safari runs a flick's glide outside the page and reports
+     where it stopped a moment later; tap a card as the glide ends and that
+     report can land after the open's own scrollTo(0, 0), putting the page
+     back at the list's offset (clamped: the page's bottom). The transition's
+     live snapshot then showed the page's bottom for the whole zoom, and the
+     jump to the top came when cleanup reset it. Held, a late report is undone
+     on the next frame, while the box is still small. */
+  _pinScroll(y) {
+    let raf = 0;
+    const hold = () => {
+      if (Math.abs(window.scrollY - y) > 1) window.scrollTo(0, y);
+      raf = requestAnimationFrame(hold);
+    };
+    raf = requestAnimationFrame(hold);
+    return () => cancelAnimationFrame(raf);
+  }
+
+  /* The entrance animations (feature chips, schedule blocks, the Today badge)
+     were created paused under the freeze, and their delays count from the tap.
+     Spend as much of them as the zoom already took — all by the same amount,
+     so a stagger stays a stagger — and let them go: the first of them starts
+     the moment the zoom lands instead of a delay after it. */
+  _releaseFreeze(since) {
+    const root = document.documentElement;
+    if (!root.classList.contains('detail-vt-freeze')) return;
+    const anims = (this._overlay?.getAnimations?.({ subtree: true }) ?? [])
+      .filter(a => a.playState === 'paused' && typeof a.currentTime === 'number');
+    const delays = anims.map(a => a.effect?.getTiming?.().delay ?? 0).filter(d => d > 0);
+    const skip = delays.length ? Math.min(performance.now() - since, ...delays) : 0;
+    if (skip > 0) for (const a of anims) a.currentTime += skip;
+    root.classList.remove('detail-vt-freeze');
+  }
+
   /* The header's progressive blur samples whatever is painted behind it, and
      on this page that is the hero photo. refreshHeaderBlur() runs when the
      transition settles and again 320ms later — which covers a photo that was
@@ -511,18 +566,24 @@ class ClassroomDetail {
       // you saw the card's title over the page's title, same words at two
       // sizes. Unnamed, the card stays in the list's snapshot, which does not
       // move, and the page's box covers it from frame one: nothing to ghost.
-      if (zooming && hasPhoto) cardEl.style.viewTransitionName = 'detail-hero';
+      const pairHero = zooming && hasPhoto && !vtFlag('nohero');
+      if (pairHero) cardEl.style.viewTransitionName = 'detail-hero';
       // The page's end of the morph, resolved inside the callback.
       let heroTargetEl = null;
+      // When the page's animations were created, for _releaseFreeze.
+      let frozenAt = performance.now();
+      let unpinScroll = null;
 
       this._beginTransition();
       // Strip the glass blur off the scaling header controls for the transition
       // (see .header-ctl-vt in classroom-detail.css).
       document.documentElement.classList.add('header-ctl-vt');
+      this._freezeForTransition();
       // Direction of the zoom (see .detail-vt-open in classroom-detail.css).
       if (zooming) document.documentElement.classList.add('detail-vt-open');
 
-      const vt = document.startViewTransition(() => {
+      const vt = startTrackedTransition('open', () => {
+        frozenAt = performance.now();
         // Lets whatever the page is opening from leave as part of this
         // transition's new state (the search overlay hands off this way).
         document.dispatchEvent(new Event('classroomdetail:enter'));
@@ -550,13 +611,14 @@ class ClassroomDetail {
         if (this._backBtn) this._backBtn.removeAttribute('hidden');
         if (this._favBtn) { this._favBtn.removeAttribute('hidden'); this._syncFavBtn(); }
         window.scrollTo(0, 0);
+        unpinScroll = this._pinScroll(0);
 
         // The card's counterpart: the hero photo, which the page's zoom lands
         // exactly on top of. Named after the layout flush below so it is
         // captured at its settled size (siblings hidden via .detail-open
         // above), and only when there is a card to morph out of.
         void this._overlay.offsetHeight;
-        if (zooming) {
+        if (pairHero) {
           heroTargetEl = this._heroTarget();
           if (heroTargetEl) {
             heroTargetEl.style.viewTransitionName = 'detail-hero';
@@ -577,12 +639,14 @@ class ClassroomDetail {
 
         this._loadSchedule(id);
         if (hasPhoto) this._loadPhoto(id);
-      });
+      }, () => ({ zoom: zooming, hero: !!heroTargetEl }));
 
       const cleanup = () => {
+        unpinScroll?.();
         if (heroTargetEl) heroTargetEl.style.viewTransitionName = '';
         if (cardEl) cardEl.style.viewTransitionName = '';
         if (headerEl) headerEl.style.viewTransitionName = '';
+        this._releaseFreeze(frozenAt);
         document.documentElement.classList.remove('header-ctl-vt', 'detail-vt-open', 'detail-vt-hero');
         clearZoomOrigin();
         if (fromInfo) infoPage._cleanupReturnVT();
@@ -653,7 +717,7 @@ class ClassroomDetail {
       this._highlight = null;
       if (headerEl) headerEl.style.viewTransitionName = '';
       document.documentElement.classList.remove(
-        'header-vt-fixed', 'header-ctl-vt', 'detail-vt-close', 'detail-vt-hero');
+        'header-vt-fixed', 'header-ctl-vt', 'detail-vt-close', 'detail-vt-hero', 'detail-vt-freeze');
       clearZoomOrigin();
       if (cardEl) {
         cardEl.style.viewTransitionName = '';
@@ -682,15 +746,19 @@ class ClassroomDetail {
 
       // The hero the page shrinks into the card around. Only worth pulling out
       // of the page when there is a card waiting for it on the other side.
-      const heroEl = cardInDom && !reduceMotion?.matches ? this._heroTarget() : null;
+      const heroEl = cardInDom && !reduceMotion?.matches && !vtFlag('nohero') ? this._heroTarget() : null;
       if (heroEl) heroEl.style.viewTransitionName = 'detail-hero';
+      let zoomed = false;
 
       this._beginTransition();
       // Strip the glass blur off the scaling header controls for the transition
       // (see .header-ctl-vt in classroom-detail.css).
       document.documentElement.classList.add('header-ctl-vt');
+      // Set before the old state is captured, which is the page here: Safari
+      // keeps compositing a backdrop-filter live even inside an old snapshot.
+      this._freezeForTransition();
 
-      const vt = document.startViewTransition(() => {
+      const vt = startTrackedTransition('close', () => {
         // -- DOM changes (defines NEW state) --
 
         // Fully hide the overlay and back button
@@ -720,8 +788,15 @@ class ClassroomDetail {
         // new-state snapshot already shows it (releasing in cleanup() left the
         // tab map-less until the animation ended). The tab's container just
         // regained its size above; flush layout so the map resizes into it.
-        void document.body.offsetHeight;
-        releaseMap();
+        // Only when that is the tab we are going back to, though: releasing
+        // resizes the WebGL canvas, jumps the camera and pulls in fresh tiles,
+        // which then renders on every frame of the close — into a tab nobody
+        // can see, whenever the page was opened from any other. cleanup()
+        // releases it in that case.
+        if (isMapTabShowing()) {
+          void document.body.offsetHeight;
+          releaseMap();
+        }
 
         // Force a synchronous layout flush before naming the card, so its
         // resolved position/size (list re-scrolled above) is fully settled at
@@ -730,6 +805,7 @@ class ClassroomDetail {
         if (cardInDom && !reduceMotion?.matches) {
           void cardEl.offsetHeight;
           if (setZoomOrigin(cardEl.getBoundingClientRect(), cardRadius(cardEl))) {
+            zoomed = true;
             document.documentElement.classList.add('detail-vt-close');
             // Named only against a real hero, the same way the open is: with
             // nothing to pair with, the card's snapshot would fade in at its
@@ -742,7 +818,7 @@ class ClassroomDetail {
             }
           }
         }
-      });
+      }, () => ({ zoom: zoomed, hero: zoomed && !!heroEl }));
 
       vt.ready.catch(() => {});
       vt.finished.then(cleanup).catch(cleanup);
@@ -1031,7 +1107,10 @@ class ClassroomDetail {
       }
       prev = measure();
     });
-    ro.observe(container);
+    // Its first callback only takes the starting measurements, but it runs
+    // on the open transition's first frames, as forced layouts. Nothing can
+    // reflow under the snapshot anyway, so start watching once it has landed.
+    this._afterTransition(() => { if (container.isConnected) ro.observe(container); });
     observers.push(ro);
   }
 
@@ -1139,7 +1218,6 @@ class ClassroomDetail {
       // full photo if we have it, else the thumbnail, which _upgradePhoto replaces.
       const cachedUrl = photoUrlCache.get(classroomId) ?? thumbUrlCache.get(classroomId);
 
-
       // Ensure we have a container for the photo (it might have been removed on previous error)
       let container = this._overlay.querySelector('.detail-photo-container');
       if (!container) {
@@ -1159,7 +1237,6 @@ class ClassroomDetail {
         this._upgradePhoto(classroomId, img);
         return;
       }
-
 
       if (cachedUrl) {
         // This <img> is fresh from a full re-render (occupancy refresh, language
@@ -1184,6 +1261,14 @@ class ClassroomDetail {
       // third of the bytes over a phone's connection. The full photo follows.
       const url = await fetchThumbUrl(classroomId);
       if (this._currentId !== classroomId) return;
+
+      // Most of the time this lands in the middle of the open transition, and
+      // the backdrop blurring in underneath the zoom's live snapshot repaints
+      // the whole page on every remaining frame of it. Wait for it to land.
+      if (!vtFlag('live')) {
+        await new Promise(resolve => this._afterTransition(resolve));
+        if (this._currentId !== classroomId || !img.isConnected) return;
+      }
 
       img.src = url;
       this._setBackdrop(url);
@@ -1588,8 +1673,13 @@ class ClassroomDetail {
             if (pickerContainer.offsetWidth) relayoutMobile();
           });
         });
-        ro.observe(pickerContainer);
-        ro.observe(pickerContainer.parentElement);
+        // The picker was just laid out above; a first relayout on the open
+        // transition's opening frames would only repeat it. See _animateReflow.
+        this._afterTransition(() => {
+          if (!pickerContainer.isConnected) return;
+          ro.observe(pickerContainer);
+          ro.observe(pickerContainer.parentElement);
+        });
       }
 
       // ---------- TIMELINE HOVER ----------

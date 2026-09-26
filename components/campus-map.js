@@ -917,6 +917,11 @@ export function parkMap() {
   placeEl();
 }
 
+/** Whether the map's own tab (Campus) is the one on screen. */
+export function isMapTabShowing() {
+  return !!document.getElementById(CONTAINER_ID)?.classList.contains('visible');
+}
+
 /** Ends the preview: the map goes back to the Campus tab exactly as it was left. */
 export function releaseMap() {
   embedToken++;

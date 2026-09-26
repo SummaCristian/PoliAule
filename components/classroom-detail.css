@@ -149,10 +149,15 @@ body.detail-open .footer {
   pointer-events: none;
 }
 
-/* Disable background animations while the detail panel is open to save CPU/GPU */
+/* Hold background animations while the detail panel is open to save CPU/GPU.
+   Paused, not `animation: none`: lifting a `none` restarts every animation it
+   covered, so closing the page used to replay the tab's own entrance (`appear`,
+   an 8px blur and a scale over the whole list) underneath the closing zoom,
+   repainting the list's snapshot on every frame of it. Paused, they carry on
+   from where they were, which for all of them is long finished. */
 body.detail-open .tab-content,
 body.detail-open .tab-content * {
-  animation: none !important;
+  animation-play-state: paused !important;
   transition: none !important;
 }
 
@@ -2276,6 +2281,67 @@ body.detail-open .tab-content * {
   transition: none;
 }
 
+/* Hold the page still for the length of an open/close transition (toggled by
+   classroom-detail.js). The page's snapshot is live, so anything moving on the
+   page repaints that whole layer — blurred backdrop, masks, glass — on every
+   frame of the zoom, and that repaint is what the slower engines can't keep
+   up with. So, for those ~0.4s:
+   - entrance animations are held at their first frame and let go when the
+     zoom lands (the photo's scroll-driven shrink is left alone: it sits at 0
+     anyway, and pausing a scroll timeline is asking for trouble);
+   - transitions snap, so the snapshot shows the settled state;
+   - glass loses its backdrop-filter but keeps its tint. Over the page's
+     near-flat background the blur shows almost nothing, and Safari composites
+     backdrop-filter live even inside a snapshot, at the snapshot's original
+     size, ignoring the zoom (the same bug as .header-ctl-vt above). */
+.detail-vt-freeze #classroom-detail-overlay *:not(.detail-photo-container.loaded) {
+  animation-play-state: paused !important;
+}
+
+.detail-vt-freeze #classroom-detail-overlay * {
+  transition: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Outside the page, two more things kept the snapshots repainting: the
+   container's padding-bottom easing to 0 as the tab bar leaves (a layout
+   animation of the whole document, on every frame), and the header's data
+   status dot, which pulses forever. The header only ever shows its old,
+   still snapshot during the transition, so pausing it changes nothing on
+   screen. */
+.detail-vt-freeze .body-container {
+  transition: none !important;
+}
+
+.detail-vt-freeze .header *,
+.detail-vt-freeze .header *::before,
+.detail-vt-freeze .header *::after {
+  animation-play-state: paused !important;
+}
+
+/* Measurement switches for ?vtdebug (utils/vt-debug.js): each takes one piece
+   of the transition away, to see what a given browser is paying for. They
+   look wrong on purpose. */
+:root.vtd-slow {
+  --vt-duration: 2s;
+}
+
+.vtd-noblur .detail-photo-backdrop {
+  display: none !important;
+}
+
+/* The list's cards without their photos (full 1500x1125 JPEGs, ~6.7 MB each
+   decoded), to see what bringing the list back costs on close. */
+.vtd-noimg .classroom-card-photo {
+  display: none !important;
+}
+
+:root.vtd-noglass.header-ctl-vt * {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 /* Detail-only header controls (back button, favourite toggle) scaling in/out
    in step with the page morph. */
 
@@ -2444,6 +2510,19 @@ body.detail-open .tab-content * {
     opacity: 1;
   }
 
+  /* The close can't reuse that timing. Its box starts page-sized, so fading
+     the photo out early showed the card's snapshot underneath `cover`-ed into
+     a box several times its size — a card blown up 6–7x (desktop), for as
+     long as the photo took to clear. Chrome is past it in three frames;
+     Firefox, dropping frames, could hold one of them on screen. So the
+     page's photo stays on top while the box shrinks, and hands over to the
+     card in the second half, when the box is back near the card's own size
+     (the mirror of the open, which fades while the box is still near it). */
+  :root.detail-vt-hero.detail-vt-close::view-transition-old(detail-hero) {
+    animation-name: detail-hero-out-late;
+    animation-timing-function: ease-in-out;
+  }
+
   /* Safety net. classroom-detail.js names the card only when the page has a
      hero for it to pair with, so a half-empty group should not happen — but if
      one ever does (a hero that went missing between the two snapshots) this
@@ -2485,6 +2564,19 @@ body.detail-open .tab-content * {
 
   ::view-transition-image-pair(detail-hero) {
     overflow: hidden;
+  }
+
+  /* ?vtdebug=noclip / noarc (see the switches above). !important declarations
+     outrank animations, so these switch the animated value off outright. */
+  :root.vtd-noclip::view-transition-new(root),
+  :root.vtd-noclip::view-transition-old(root) {
+    clip-path: none !important;
+  }
+
+  :root.vtd-noarc::view-transition-new(root),
+  :root.vtd-noarc::view-transition-old(root),
+  :root.vtd-noarc::view-transition-image-pair(detail-hero) {
+    translate: none !important;
   }
 
   /* ---- Header ---------------------------------------------------------- */
@@ -2646,6 +2738,13 @@ body.detail-open .tab-content * {
 @keyframes detail-hero-out {
   0%   { opacity: 1; }
   20%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes detail-hero-out-late {
+  0%   { opacity: 1; }
+  45%  { opacity: 1; }
+  80%  { opacity: 0; }
   100% { opacity: 0; }
 }
 

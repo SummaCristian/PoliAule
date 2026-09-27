@@ -239,7 +239,9 @@
   "footer.versionInfo": "Versione 2.0.0-beta8",
   "changelog.item1": "Ridisegnata l'intera interfaccia di ricerca, rendendo più facile trovare aule, professori e corsi. Aggiunta una nuova sezione 'Top Hit' per i risultati più rilevanti.",
   "changelog.item2": "Ridisegnata la pagina Info",
-  "changelog.item3": "Migliorata significativamente la performance della transizione di navigazione, riprodotta all'apertura dei dettagli di un'app. Questo garantisce framerate più elevati anche su dispositivi più datati.",
+  "changelog.item3": "Migliorata significativamente la performance della transizione di navigazione, riprodotta all'apertura dei dettagli di un'aula. Questo garantisce framerate più elevati anche su dispositivi più datati.",
   "changelog.item4": "Migliorata la performance di caricamento del tab Campus: la mappa è ora caricata in background, mantenendo la UI reattiva mentre la mappa viene caricata.",
-  "changelog.item5": "Modificato il design del grafico delle occupazioni nella pagina Dettagli, rendendolo vetro colorato."
+  "changelog.item5": "Aggiunto il supporto alle thumbnail per le immagini delle aule. Questo comporta l'introduzione di un nuovo endpoint per richiederle, ma porta enormi benefici sulle prestazioni della UI",
+  "changelog.item6": "Modificato il design del grafico delle occupazioni nella pagina Dettagli, rendendolo vetro colorato.",
+  "changelog.item7": "Aggiunta una nuova funzione 'Trasferimento', che permette di spostare preferiti e impostazioni su un altro dispositivo tramite un codice QR."
 }

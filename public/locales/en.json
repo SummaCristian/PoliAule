@@ -264,6 +264,7 @@
   "changelog.item2": "Redesigned the Info page",
   "changelog.item3": "Massively improved the performance of the navigation transition, played when opening the details of an app. This guarantees higher framerates even on older devices.",
   "changelog.item4": "Improved the loading performance for the Campus tab: the map is now loaded in the background, keeping the UI responsive while the map is being fetched.",
-  "changelog.item5": "Tweaked the design of the occupation graph inside the Details page, turning it into tinted glass.",
-  "changelog.item6": "Added a new 'Transfer' feature, allowing you to move your favourites and settings to another device using a QR code."
+  "changelog.item5": "Added support for thumbnails for the images of the classrooms. This involves introducing a new endpoint to request them, but brings significant benefits to the UI performance.",
+  "changelog.item6": "Tweaked the design of the occupation graph inside the Details page, turning it into tinted glass.",
+  "changelog.item7": "Added a new 'Transfer' feature, allowing you to move your favourites and settings to another device using a QR code."
 }

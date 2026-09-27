@@ -693,8 +693,10 @@ class BuildingOverview {
       // tap only played the :active scale. pointerup is a real event and always
       // fires. click stays for keyboard / assistive-tech; close() is idempotent.
       let downAt = null;
+      let wentByTap = false;
       card.addEventListener('pointerdown', (e) => {
         downAt = { x: e.clientX, y: e.clientY, t: performance.now() };
+        wentByTap = false;
         this.prewarmClose(building.name);
       });
       card.addEventListener('pointerup', (e) => {
@@ -702,8 +704,20 @@ class BuildingOverview {
         const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
         const held = performance.now() - downAt.t;
         downAt = null;
-        if (moved <= 12 && held < 700) go();
+        if (moved <= 12 && held < 700) {
+          wentByTap = e.pointerType === 'touch';
+          go();
+        }
       });
+      // The rest of that tap, once it has gone: Chrome on Android sends its
+      // click to whatever is under the finger by then, and with the list back
+      // in place that is often one of this building's classroom cards, which
+      // then opened. Cancelling the touchend cancels the click it would make.
+      card.addEventListener('touchend', (e) => {
+        if (!wentByTap) return;
+        wentByTap = false;
+        if (e.cancelable) e.preventDefault();
+      }, { passive: false });
       card.addEventListener('pointercancel', () => { downAt = null; });
       card.addEventListener('click', go);
       card.addEventListener('keydown', (e) => {

@@ -82,6 +82,12 @@ GET /v1/photos/:id
 
 Returns the classroom's photo as a JPEG image. `:id` is the classroom's stable `id` from `/v1/classrooms` (not PoliMi's internal `idfoto`). Only classrooms with a non-null `idfoto` have a photo; requesting any other id returns 404. Photos are re-fetched from PoliMi once a month, so responses are cacheable for a long time (`Cache-Control: public, max-age=2592000, immutable`).
 
+```
+GET /v1/photos/:id/thumb
+```
+
+The same photo scaled down to 640px on its long side (the full one is typically 1500x1125), for places that show it small: list cards, search rows. Same caching. A classroom whose thumbnail hasn't been generated yet gets the full photo here instead, with a short `Cache-Control: public, max-age=3600` so the real thumbnail takes over once it's uploaded.
+
 ### Frontend config
 
 ```

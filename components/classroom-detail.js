@@ -1,14 +1,15 @@
-import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow } from '../available-rooms-script.js';
+import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow, getBuildingOpening } from '../available-rooms-script.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, photoUrlCache, extractPhotoColor, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
+import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
+import { startTrackedTransition, vtFlag } from '../utils/vt-debug.js';
 import { createPillSelector } from './pill-selector.js';
-import { embedMap, parkMap, releaseMap, getEmbedPov, setEmbedPov } from './campus-map.js';
+import { embedMap, parkMap, releaseMap, isMapTabShowing, getEmbedPov, setEmbedPov } from './campus-map.js';
 import { refreshHeaderBlur } from '../utils/header-blur.js';
 
 // No zoom and no shared element when motion is unwelcome: the pair of them is
@@ -89,6 +90,8 @@ class ClassroomDetail {
     this._enteredId = null;
     this._savedScrollPos = 0;
     this._queryContext = null;  // { date, from, to } when opened from Available Tab, else null
+    this._highlight = null;     // { date, from, to } when opened from a search result, else null
+    this._highlightConsumed = false; // true once the highlight's scroll/popover has fired for this open
     this._nowTimer = null;
     this._timelinePopoverCleanup = null; // removes the previous _loadSchedule's document-level listener
     this._vtSettled = null;     // pending open/close transition, see _beginTransition
@@ -109,7 +112,7 @@ class ClassroomDetail {
     // redo them for the open photo when the device theme flips at runtime.
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
       const el = this._overlay.querySelector('.detail-photo-backdrop');
-      const url = photoUrlCache.get(this._currentId);
+      const url = this._currentId !== null ? thumbUrl(this._currentId) : null;
       if (!el || !url) return;
       this._applyPhotoDim(url, el);
       this._applyTitleTone(url, el);
@@ -142,7 +145,16 @@ class ClassroomDetail {
       this._overlay.classList.toggle('title-stuck', stuck);
     };
     const queueTitleStuck = () => {
-      if (!stuckRaf) stuckRaf = requestAnimationFrame(syncTitleStuck);
+      if (stuckRaf) return;
+      // Opening scrolls to the top, which lands here on the zoom's first
+      // frames — forced layouts of a page that is still under the snapshot.
+      // Measure it once it has landed instead.
+      if (this._vtSettled) {
+        stuckRaf = -1;
+        this._afterTransition(() => { stuckRaf = requestAnimationFrame(syncTitleStuck); });
+        return;
+      }
+      stuckRaf = requestAnimationFrame(syncTitleStuck);
     };
     document.addEventListener('scroll', queueTitleStuck, { passive: true, capture: true });
     window.addEventListener('resize', queueTitleStuck);
@@ -177,7 +189,7 @@ class ClassroomDetail {
       const scrollY = window.scrollY;
       this._renderContent(entry);
       this._loadSchedule(this._currentId);
-      if (entry.classroom.idfoto) this._loadPhoto(this._currentId);
+      if (this._hasPhoto(entry.classroom)) this._loadPhoto(this._currentId);
       window.scrollTo(0, scrollY);
     });
 
@@ -210,6 +222,22 @@ class ClassroomDetail {
     document.addEventListener('pointerup', () => requestAnimationFrame(clearPressed));
     document.addEventListener('pointercancel', clearPressed);
 
+    // A card's photo color and pre-blurred backdrop, made while the finger is
+    // still down: the first open of a room otherwise loads its thumbnail again
+    // and reads its pixels (~10ms on an older phone) before the transition can
+    // start, and renders the backdrop inside it. Cached per photo, so a press
+    // that turns into a scroll costs them only once.
+    document.addEventListener('pointerdown', (e) => {
+      const trigger = e.target.closest?.('[data-open-classroom]');
+      if (!trigger) return;
+      const id = parseInt(trigger.dataset.openClassroom);
+      if (!thumbUrlCache.has(id)) return;
+      const url = thumbUrl(id);
+      extractPhotoColor(url).then(() => {
+        if (this._backdropBox && !vtFlag('liveblur')) blurredBackdrop(url, this._backdropBox);
+      });
+    }, { passive: true });
+
     // Click delegation — handles classroom cards on both the available and campus tabs
     document.addEventListener('click', (e) => {
       const trigger = e.target.closest('[data-open-classroom]');
@@ -228,7 +256,14 @@ class ClassroomDetail {
         ? { date: queryDate, from: queryFrom, to: queryTo }
         : null;
 
-      this._pendingTrigger = { queryContext, cardEl: card };
+      const highlightDate = card.dataset.highlightDate ?? null;
+      const highlightFrom = card.dataset.highlightFrom ?? null;
+      const highlightTo = card.dataset.highlightTo ?? null;
+      const highlight = highlightDate && highlightFrom && highlightTo
+        ? { date: highlightDate, from: highlightFrom, to: highlightTo }
+        : null;
+
+      this._pendingTrigger = { queryContext, highlight, cardEl: card };
       this._openedViaPushState = true;
       this._buildFlatIndex();
       const _entry = this._flatIndex?.get(id);
@@ -273,7 +308,7 @@ class ClassroomDetail {
     const scrollY = window.scrollY;
     this._renderContent(entry);
     this._loadSchedule(this._currentId);
-    if (entry.classroom.idfoto) this._loadPhoto(this._currentId);
+    if (this._hasPhoto(entry.classroom)) this._loadPhoto(this._currentId);
     window.scrollTo(0, scrollY);
   }
 
@@ -315,6 +350,7 @@ class ClassroomDetail {
     this._overlay.innerHTML = '';
     this._openTrigger = null;
     this._queryContext = null;
+    this._highlight = null;
   }
 
   // ---------- TRANSITION PLUMBING ----------
@@ -336,6 +372,11 @@ class ClassroomDetail {
     return this._overlay?.querySelector('.detail-photo-container') ?? null;
   }
 
+  /** Whether the page shows a photo: an idfoto whose image hasn't failed to load. */
+  _hasPhoto(classroom) {
+    return !!classroom.idfoto && !isPhotoBroken(classroom.id);
+  }
+
   /* Anything that blocks the main thread while the snapshots are animating is
      a stutter in the animation, so work that can wait (the map's WebGL boot,
      mainly) waits on this. */
@@ -355,6 +396,96 @@ class ClassroomDetail {
   _afterTransition(fn) {
     if (this._vtSettled) this._vtSettled.then(fn);
     else fn();
+  }
+
+  /* The snapshot of the page a transition animates is live, so anything that
+     moves on the page underneath it — the entrance animations, a transition,
+     a glass surface's backdrop-filter — repaints that whole page layer, blurred
+     backdrop and all, on every frame of the zoom. .detail-vt-freeze (see
+     classroom-detail.css) holds all of it still for the length of the
+     transition; ?vtdebug=live turns that off, for comparison.
+
+     It goes on the parts it holds still, not on <html>, and the container
+     around the whole page gets a class of its own: Chrome restyles everything
+     inside an element that gains a class with a rule ending in `*`, whichever
+     element that rule was written for. On <html>, or on that container, it
+     restyled all of the page (~20-30ms on an older phone), in the very frame
+     the transition captures the old state in. */
+  _freezeTargets() {
+    return [
+      [this._overlay, 'detail-vt-freeze'],
+      [document.querySelector('.header'), 'detail-vt-freeze'],
+      [document.querySelector('.body-container'), 'detail-vt-snap'],
+    ].filter(([el]) => el);
+  }
+
+  _freezeForTransition({ page = true } = {}) {
+    if (vtFlag('live')) return;
+    for (const [el, cls] of this._freezeTargets()) {
+      if (el === this._overlay && !page) continue;
+      el.classList.add(cls);
+    }
+  }
+
+  _unfreeze() {
+    for (const [el, cls] of this._freezeTargets()) el.classList.remove(cls);
+  }
+
+  /* --header-height is normally kept live by a ResizeObserver (script.js),
+     but that fires too late for a transition, which captures its new state
+     synchronously right after its update callback: the photo's margin-top
+     (which reads it) used the other mode's header height for the whole
+     animation, and the "tucked behind the header" look only snapped in once
+     it ended. So the callbacks set it themselves, in two steps: first what the
+     header measured the last time the page was in this mode, before anything
+     reads layout, then checked once layout is up to date. It's on <html>, so
+     every change to it restyles the whole page; measuring first and writing
+     after cost a second full pass. */
+  _presetHeaderHeight(mode) {
+    const h = this._headerHeights?.[mode];
+    if (h) document.documentElement.style.setProperty('--header-height', h);
+  }
+
+  _checkHeaderHeight(mode, headerEl) {
+    if (!headerEl) return;
+    const h = `${headerEl.offsetHeight}px`;
+    (this._headerHeights ??= {})[mode] = h;
+    if (document.documentElement.style.getPropertyValue('--header-height') !== h) {
+      document.documentElement.style.setProperty('--header-height', h);
+    }
+  }
+
+  /* Holds the page at `y` on every frame until the returned function is
+     called. Mobile Safari runs a flick's glide outside the page and reports
+     where it stopped a moment later; tap a card as the glide ends and that
+     report can land after the open's own scrollTo(0, 0), putting the page
+     back at the list's offset (clamped: the page's bottom). The transition's
+     live snapshot then showed the page's bottom for the whole zoom, and the
+     jump to the top came when cleanup reset it. Held, a late report is undone
+     on the next frame, while the box is still small. */
+  _pinScroll(y) {
+    let raf = 0;
+    const hold = () => {
+      if (Math.abs(window.scrollY - y) > 1) window.scrollTo(0, y);
+      raf = requestAnimationFrame(hold);
+    };
+    raf = requestAnimationFrame(hold);
+    return () => cancelAnimationFrame(raf);
+  }
+
+  /* The entrance animations (feature chips, schedule blocks, the Today badge)
+     were created paused under the freeze, and their delays count from the tap.
+     Spend as much of them as the zoom already took — all by the same amount,
+     so a stagger stays a stagger — and let them go: the first of them starts
+     the moment the zoom lands instead of a delay after it. */
+  _releaseFreeze(since) {
+    if (!this._overlay?.classList.contains('detail-vt-freeze')) return;
+    const anims = (this._overlay.getAnimations?.({ subtree: true }) ?? [])
+      .filter(a => a.playState === 'paused' && typeof a.currentTime === 'number');
+    const delays = anims.map(a => a.effect?.getTiming?.().delay ?? 0).filter(d => d > 0);
+    const skip = delays.length ? Math.min(performance.now() - since, ...delays) : 0;
+    if (skip > 0) for (const a of anims) a.currentTime += skip;
+    this._unfreeze();
   }
 
   /* The header's progressive blur samples whatever is painted behind it, and
@@ -435,10 +566,19 @@ class ClassroomDetail {
     const entry = this._flatIndex?.get(id);
     if (!entry) return;
 
-    if (this._currentId !== id) document.documentElement.style.removeProperty('--detail-tint');
+    // A different room's page tint is cleared once the page is being rendered
+    // (clearTint below), not here: --detail-tint is on <html>, so changing it
+    // restyles the whole page, and the scrollY read just below would pay for
+    // that right away, before the transition has even started.
+    const newRoom = this._currentId !== id;
+    const clearTint = () => {
+      if (newRoom) document.documentElement.style.removeProperty('--detail-tint');
+    };
     this._currentId = id;
     this._openTrigger = pending ?? null;
     this._queryContext = pending?.queryContext ?? null;
+    this._highlight = pending?.highlight ?? null;
+    this._highlightConsumed = false;
 
     // Save scroll position for when we return
     this._savedScrollPos = window.scrollY;
@@ -447,24 +587,40 @@ class ClassroomDetail {
     // hero elements should morph into the header instead of touching the tabbar.
     const fromInfo = !!(this._backBtn && !this._backBtn.hidden);
 
-    // Photo VT: if the URL is already cached, pre-decode it so the detail photo
-    // is bitmap-ready when the VT snapshots the new state.
-    const hasPhoto = !!entry.classroom.idfoto;
-    let validPhotoUrl = hasPhoto ? (photoUrlCache.get(id) ?? null) : null;
+    // Photo VT: if the room's photo is already cached, pre-decode it so the
+    // detail photo is bitmap-ready when the VT snapshots the new state. The
+    // thumbnail the card was showing, by preference: already decoded, and a
+    // fraction of the full photo to upload and draw on every frame of the zoom.
+    // _loadPhoto swaps the full photo in once the page has landed.
+    let hasPhoto = this._hasPhoto(entry.classroom);
+    let validPhotoUrl = hasPhoto ? (thumbUrlCache.get(id) ?? photoUrlCache.get(id) ?? null) : null;
     if (validPhotoUrl) {
-      const tmp = new Image();
-      tmp.src = validPhotoUrl;
-      const decoded = await tmp.decode().then(() => true).catch(() => false);
+      // The card being tapped usually shows this very thumbnail, already
+      // decoded (it's marked loaded once its own decode() resolves): waiting
+      // on another decode() of it still cost a frame (~15ms on an older phone)
+      // before the transition could start.
+      const shown = pending?.cardEl?.querySelector('.classroom-card-photo.loaded');
+      let decoded = !!shown && shown.src === validPhotoUrl && shown.naturalWidth > 0;
+      if (!decoded) {
+        const tmp = new Image();
+        tmp.src = validPhotoUrl;
+        decoded = await tmp.decode().then(() => true).catch(() => false);
+      }
       if (this._currentId !== id) return; // navigated away during decode
-      // Decode failed (e.g. a 404 from a stale idfoto) — don't stamp a broken image as
-      // "loaded" below. Leaving validPhotoUrl unset lets _loadPhoto()'s own error path
-      // (which removes the photo container entirely) run normally instead of being
-      // skipped via its "already loaded" short-circuit.
-      if (!decoded) validPhotoUrl = null;
+      // Decode failed (a 404 from a stale idfoto, mostly): the room opens as a
+      // photo-less one. Opened as a room with a photo, it paired the card with
+      // an empty photo box, and the photo's error handler then removed that box
+      // mid-zoom: removing a named element ends the transition on the spot (the
+      // snap), and everything below it jumped up by the photo's height.
+      if (!decoded) {
+        markPhotoBroken(id);
+        hasPhoto = false;
+        validPhotoUrl = null;
+      }
       // Warm the tint cache too, so _setBackdrop can apply --detail-tint
       // synchronously inside the VT callback (the "new" snapshot is taken
       // right after it, before any async extraction could land).
-      if (validPhotoUrl) await extractPhotoColor(validPhotoUrl);
+      if (validPhotoUrl) await extractPhotoColor(thumbUrl(id));
       if (this._currentId !== id) return;
     }
 
@@ -496,18 +652,27 @@ class ClassroomDetail {
       // you saw the card's title over the page's title, same words at two
       // sizes. Unnamed, the card stays in the list's snapshot, which does not
       // move, and the page's box covers it from frame one: nothing to ghost.
-      if (zooming && hasPhoto) cardEl.style.viewTransitionName = 'detail-hero';
+      const pairHero = zooming && hasPhoto && !vtFlag('nohero');
+      if (pairHero) cardEl.style.viewTransitionName = 'detail-hero';
       // The page's end of the morph, resolved inside the callback.
       let heroTargetEl = null;
+      // When the page's animations were created, for _releaseFreeze.
+      let frozenAt = performance.now();
+      let unpinScroll = null;
 
       this._beginTransition();
       // Strip the glass blur off the scaling header controls for the transition
       // (see .header-ctl-vt in classroom-detail.css).
       document.documentElement.classList.add('header-ctl-vt');
+      this._freezeForTransition();
       // Direction of the zoom (see .detail-vt-open in classroom-detail.css).
       if (zooming) document.documentElement.classList.add('detail-vt-open');
 
-      const vt = document.startViewTransition(() => {
+      const vt = startTrackedTransition('open', () => {
+        frozenAt = performance.now();
+        // Lets whatever the page is opening from leave as part of this
+        // transition's new state (the search overlay hands off this way).
+        document.dispatchEvent(new Event('classroomdetail:enter'));
         if (fromInfo) {
           infoPage._applyReturnVT();
         } else if (this._tabbar) {
@@ -515,30 +680,45 @@ class ClassroomDetail {
         }
         if (zooming) cardEl.style.viewTransitionName = '';
 
+        // The list's header height, for the close to preset (the page has only
+        // ever been in list mode before the first open).
+        (this._headerHeights ??= {}).list ??= document.documentElement.style.getPropertyValue('--header-height') || undefined;
+
+        // Everything this changes first, then everything it measures: a read of
+        // layout after a change restyles and lays out the page again, and
+        // .detail-open and the tint restyle all of it. The schedule's day
+        // picker measures itself as it is built, so it comes last of the
+        // changes and pays for the one full pass the reads below then reuse.
         document.body.classList.add('detail-open');
-        // --header-height is normally kept live by a ResizeObserver (script.js),
-        // but that callback fires asynchronously — too late for the VT, which
-        // snapshots the "new" state synchronously right after this callback
-        // returns. Without this, the photo's margin-top (which reads that var)
-        // uses the stale, pre-detail-open header height for the whole
-        // animation, so the "tucked behind the header" look only snaps in
-        // once the transition ends and the real DOM/ResizeObserver catch up.
-        if (headerEl) {
-          document.documentElement.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
-        }
+        this._presetHeaderHeight('detail');
         this._overlay.removeAttribute('hidden');
         this._renderContent(entry);
         this._overlay.classList.add('visible');
         if (this._backBtn) this._backBtn.removeAttribute('hidden');
         if (this._favBtn) { this._favBtn.removeAttribute('hidden'); this._syncFavBtn(); }
+        clearTint();
+        if (validPhotoUrl) {
+          const detailImg = this._overlay.querySelector('.detail-photo');
+          const detailContainer = this._overlay.querySelector('.detail-photo-container');
+          if (detailImg) {
+            detailImg.src = validPhotoUrl;
+            this._setBackdrop(thumbUrl(id));
+            detailImg.classList.add('loaded');
+            detailContainer?.classList.add('loaded');
+          }
+        }
+        this._loadSchedule(id);
+
+        this._checkHeaderHeight('detail', headerEl);
         window.scrollTo(0, 0);
+        unpinScroll = this._pinScroll(0);
 
         // The card's counterpart: the hero photo, which the page's zoom lands
         // exactly on top of. Named after the layout flush below so it is
         // captured at its settled size (siblings hidden via .detail-open
         // above), and only when there is a card to morph out of.
         void this._overlay.offsetHeight;
-        if (zooming) {
+        if (pairHero) {
           heroTargetEl = this._heroTarget();
           if (heroTargetEl) {
             heroTargetEl.style.viewTransitionName = 'detail-hero';
@@ -546,25 +726,16 @@ class ClassroomDetail {
           }
         }
 
-        if (validPhotoUrl) {
-          const detailImg = this._overlay.querySelector('.detail-photo');
-          const detailContainer = this._overlay.querySelector('.detail-photo-container');
-          if (detailImg) {
-            detailImg.src = validPhotoUrl;
-            this._setBackdrop(validPhotoUrl);
-            detailImg.classList.add('loaded');
-            detailContainer?.classList.add('loaded');
-          }
-        }
-
-        this._loadSchedule(id);
         if (hasPhoto) this._loadPhoto(id);
-      });
+      }, () => ({ zoom: zooming, hero: !!heroTargetEl }));
 
       const cleanup = () => {
+        unpinScroll?.();
         if (heroTargetEl) heroTargetEl.style.viewTransitionName = '';
         if (cardEl) cardEl.style.viewTransitionName = '';
         if (headerEl) headerEl.style.viewTransitionName = '';
+        this._releaseFreeze(frozenAt);
+        this._measureBackdrop();
         document.documentElement.classList.remove('header-ctl-vt', 'detail-vt-open', 'detail-vt-hero');
         clearZoomOrigin();
         if (fromInfo) infoPage._cleanupReturnVT();
@@ -581,6 +752,7 @@ class ClassroomDetail {
       vt.finished.then(cleanup).catch(cleanup);
     } else {
       // Fallback: show overlay, swap tabbar for back button without animation
+      document.dispatchEvent(new Event('classroomdetail:enter'));
       if (fromInfo) {
         infoPage._applyReturnVT();
       } else {
@@ -589,13 +761,14 @@ class ClassroomDetail {
       document.body.classList.add('detail-open');
       this._overlay.removeAttribute('hidden');
       this._renderContent(entry);
+      clearTint();
       // Stamp cached photo immediately in the fallback path too
       if (validPhotoUrl) {
         const detailImg = this._overlay.querySelector('.detail-photo');
         const detailContainer = this._overlay.querySelector('.detail-photo-container');
         if (detailImg) {
           detailImg.src = validPhotoUrl;
-          this._setBackdrop(validPhotoUrl);
+          this._setBackdrop(thumbUrl(id));
           detailImg.classList.add('loaded');
           detailContainer?.classList.add('loaded');
         }
@@ -631,9 +804,11 @@ class ClassroomDetail {
       this._overlay.innerHTML = '';
       this._openTrigger = null;
       this._queryContext = null;
+      this._highlight = null;
       if (headerEl) headerEl.style.viewTransitionName = '';
       document.documentElement.classList.remove(
         'header-vt-fixed', 'header-ctl-vt', 'detail-vt-close', 'detail-vt-hero');
+      this._unfreeze();
       clearZoomOrigin();
       if (cardEl) {
         cardEl.style.viewTransitionName = '';
@@ -662,25 +837,33 @@ class ClassroomDetail {
 
       // The hero the page shrinks into the card around. Only worth pulling out
       // of the page when there is a card waiting for it on the other side.
-      const heroEl = cardInDom && !reduceMotion?.matches ? this._heroTarget() : null;
+      const heroEl = cardInDom && !reduceMotion?.matches && !vtFlag('nohero') ? this._heroTarget() : null;
       if (heroEl) heroEl.style.viewTransitionName = 'detail-hero';
+      let zoomed = false;
 
       this._beginTransition();
       // Strip the glass blur off the scaling header controls for the transition
       // (see .header-ctl-vt in classroom-detail.css).
       document.documentElement.classList.add('header-ctl-vt');
+      // Set before the old state is captured, which is the page here. The page
+      // itself only needs it in Safari, which keeps compositing a
+      // backdrop-filter live even inside an old snapshot; elsewhere that
+      // snapshot is a still image, and freezing the page would only restyle
+      // all of it in the frame the snapshot is taken in.
+      this._freezeForTransition({ page: !document.documentElement.classList.contains('no-safari') });
 
-      const vt = document.startViewTransition(() => {
+      const vt = startTrackedTransition('close', () => {
         // -- DOM changes (defines NEW state) --
 
-        // Fully hide the overlay and back button
+        // Fully hide the overlay and back button. Changes first, reads after,
+        // as in the open: the scrollTo below is the one full layout pass.
         document.body.classList.remove('detail-open');
+        this._presetHeaderHeight('list');
         this._overlay.setAttribute('hidden', '');
         this._overlay.classList.remove('visible');
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
         if (this._favBtn) this._favBtn.setAttribute('hidden', '');
         if (headerEl) {
-          document.documentElement.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
           // Safari captures a position:sticky element's ::view-transition-group at
           // its unstuck flow position, so this new-state snapshot of the header
           // would land off-screen whenever the list was scrolled. Pin it with
@@ -695,13 +878,21 @@ class ClassroomDetail {
 
         // Restore scroll position so VT can morph back to the correct spot
         window.scrollTo(0, this._savedScrollPos);
+        this._checkHeaderHeight('list', headerEl);
 
         // Hand the shared map back to the Campus tab now, so this transition's
         // new-state snapshot already shows it (releasing in cleanup() left the
         // tab map-less until the animation ended). The tab's container just
         // regained its size above; flush layout so the map resizes into it.
-        void document.body.offsetHeight;
-        releaseMap();
+        // Only when that is the tab we are going back to, though: releasing
+        // resizes the WebGL canvas, jumps the camera and pulls in fresh tiles,
+        // which then renders on every frame of the close — into a tab nobody
+        // can see, whenever the page was opened from any other. cleanup()
+        // releases it in that case.
+        if (isMapTabShowing()) {
+          void document.body.offsetHeight;
+          releaseMap();
+        }
 
         // Force a synchronous layout flush before naming the card, so its
         // resolved position/size (list re-scrolled above) is fully settled at
@@ -710,6 +901,7 @@ class ClassroomDetail {
         if (cardInDom && !reduceMotion?.matches) {
           void cardEl.offsetHeight;
           if (setZoomOrigin(cardEl.getBoundingClientRect(), cardRadius(cardEl))) {
+            zoomed = true;
             document.documentElement.classList.add('detail-vt-close');
             // Named only against a real hero, the same way the open is: with
             // nothing to pair with, the card's snapshot would fade in at its
@@ -722,7 +914,7 @@ class ClassroomDetail {
             }
           }
         }
-      });
+      }, () => ({ zoom: zoomed, hero: zoomed && !!heroEl }));
 
       vt.ready.catch(() => {});
       vt.finished.then(cleanup).catch(cleanup);
@@ -834,7 +1026,8 @@ class ClassroomDetail {
         'free': 'status.free',
         'occupied': 'status.occupied',
         'free-soon': 'status.freeSoon',
-        'occupied-soon': 'status.occupiedSoon'
+        'occupied-soon': 'status.occupiedSoon',
+        'closed': 'status.closed'
       };
       statusHtml = `
         <div class="detail-status-wrapper">
@@ -849,7 +1042,7 @@ class ClassroomDetail {
     parkMap();
     this._overlay.classList.remove('title-stuck');
     this._overlay.innerHTML = `
-      ${classroom.idfoto ? `
+      ${this._hasPhoto(classroom) ? `
         <div class="detail-photo-backdrop"></div>
         <div class="detail-photo-container">
           <img class="detail-photo" alt="">
@@ -878,6 +1071,7 @@ class ClassroomDetail {
         </div>
       </div>
       <div class="detail-content">
+        <div class="detail-column">
         <section class="detail-section">
           <h2 class="detail-section-title">${t('detail.features')}</h2>
           ${featuresHtml
@@ -891,7 +1085,7 @@ class ClassroomDetail {
             <h2 class="detail-section-title">${t('detail.weeklySchedule')}</h2>
             <div class="detail-schedule-legend">
               <div class="detail-schedule-legend-item">
-                <span class="detail-schedule-legend-box"></span>
+                <span class="detail-schedule-legend-box lg-glass lg-glass--tinted"></span>
                 <span class="detail-schedule-legend-label">${t('detail.occupied')}</span>
               </div>
             </div>
@@ -902,7 +1096,9 @@ class ClassroomDetail {
             </div>
           </div>
         </section>
+        </div>
 
+        <div class="detail-column">
         ${hoursHtml ? `
         <section class="detail-section">
           <h2 class="detail-section-title">${t('detail.openingHours')}</h2>
@@ -915,13 +1111,14 @@ class ClassroomDetail {
           <div class="detail-map"></div>
           <div class="detail-map-links"></div>
         </section>` : ''}
+        </div>
       </div>
     `;
 
     // Title click -> manual refresh of photo and schedule
     this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {
       this._loadSchedule(classroom.id);
-      if (classroom.idfoto) this._loadPhoto(classroom.id);
+      if (this._hasPhoto(classroom)) this._loadPhoto(classroom.id);
     });
 
     if (hasMap) {
@@ -1006,7 +1203,10 @@ class ClassroomDetail {
       }
       prev = measure();
     });
-    ro.observe(container);
+    // Its first callback only takes the starting measurements, but it runs
+    // on the open transition's first frames, as forced layouts. Nothing can
+    // reflow under the snapshot anyway, so start watching once it has landed.
+    this._afterTransition(() => { if (container.isConnected) ro.observe(container); });
     observers.push(ro);
   }
 
@@ -1014,17 +1214,43 @@ class ClassroomDetail {
     this._reflowObservers?.forEach(o => o.disconnect());
     this._reflowObservers = [];
     if (!content) return;
-    this._animateReflow(content, ':scope > .detail-section', this._reflowObservers);
+    this._animateReflow(content, ':scope > .detail-column > .detail-section', this._reflowObservers);
     this._animateReflow(content.querySelector('.detail-features'), '.detail-feature-chip', this._reflowObservers);
   }
 
   // ---------- RENDER: HERO PHOTO ----------
 
-  /** Feeds the blurred backdrop behind the hero photo (see .detail-photo-backdrop). */
+  /* The backdrop's blurred box as its CSS lays it out, for the next open to
+     pre-render: it only depends on the viewport, so the last open's is the
+     next one's. Read after the transition, when style is already up to date. */
+  _measureBackdrop() {
+    const el = this._overlay?.querySelector('.detail-photo-backdrop');
+    if (!el) return;
+    const cs = getComputedStyle(el, '::before');
+    const box = {
+      width: parseFloat(cs.width),
+      height: parseFloat(cs.height),
+      bleed: parseFloat(cs.paddingLeft),
+      blur: parseFloat(cs.getPropertyValue('--bd-blur-px')),
+      repeatY: cs.getPropertyValue('--bd-repeat').trim() !== 'repeat-x',
+    };
+    if (box.width > 0 && box.height > 0 && box.blur > 0) this._backdropBox = box;
+  }
+
+  /** Feeds the blurred backdrop behind the hero photo (see .detail-photo-backdrop).
+      Always the thumbnail: under a 40px blur its resolution is lost anyway, and
+      the tint / dimming / title-tone caches are keyed by this URL. */
   _setBackdrop(url) {
     const el = this._overlay.querySelector('.detail-photo-backdrop');
     if (!el) return;
-    el.style.setProperty('--backdrop-img', `url("${url}")`);
+    // Pre-blurred when it can be (utils/photo.js blurredBackdrop): the GPU
+    // otherwise redoes the blur on every frame the page moves. That needs the
+    // backdrop's box, measured once an earlier open has landed
+    // (_measureBackdrop); until then, the live filter. ?vtdebug=liveblur keeps
+    // the live one, to compare.
+    const pre = this._backdropBox && !vtFlag('liveblur') ? blurredBackdrop(url, this._backdropBox) : null;
+    el.style.setProperty('--backdrop-img', `url("${pre ?? url}")`);
+    el.classList.toggle('prerendered', !!pre);
     el.classList.add('loaded');
 
     // Base color under the backdrop's fade (see #classroom-detail-overlay's
@@ -1080,14 +1306,37 @@ class ClassroomDetail {
     this._overlay.dataset.titleTone = lum > 0.3 ? 'light' : 'dark';
   }
 
+  /* Replaces the thumbnail the hero is showing with the full photo, once the
+     transition has landed and the page has a moment: decoding and uploading a
+     1500x1125 photo is exactly what an older phone can't do while the zoom or
+     the page's entrance animations are running. Decoded off to the side first,
+     so the <img> changes source with its pixels ready — no flash — and a full
+     photo that fails to load just leaves the thumbnail where it is. */
+  async _upgradePhoto(classroomId, img) {
+    const full = await fetchPhotoUrl(classroomId);
+    if (img.src === full) return;
+    await new Promise(resolve => this._afterTransition(resolve));
+    await new Promise(resolve => {
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(resolve, { timeout: 800 });
+      else setTimeout(resolve, 300);
+    });
+    if (this._currentId !== classroomId || !img.isConnected || img.src === full) return;
+    const pre = new Image();
+    pre.src = full;
+    try { await pre.decode(); } catch { return; }
+    if (this._currentId !== classroomId || !img.isConnected) return;
+    img.src = full;
+  }
+
   async _loadPhoto(classroomId) {
     if (this._currentId !== classroomId) return;
 
     try {
-      // The photo URL is a plain, stable route (/v1/photos/:id). Once it's been
-      // resolved for this room this session (an earlier open, or a card thumbnail),
-      // it sits in photoUrlCache and its bytes are almost certainly in the HTTP cache.
-      const cachedUrl = photoUrlCache.get(classroomId);
+      // The photo URLs are plain, stable routes (/v1/photos/:id and its /thumb).
+      // Once one has been resolved for this room this session (an earlier open, a
+      // card, a search row), its bytes are almost certainly in the HTTP cache. The
+      // full photo if we have it, else the thumbnail, which _upgradePhoto replaces.
+      const cachedUrl = photoUrlCache.get(classroomId) ?? thumbUrlCache.get(classroomId);
 
       // Ensure we have a container for the photo (it might have been removed on previous error)
       let container = this._overlay.querySelector('.detail-photo-container');
@@ -1102,8 +1351,12 @@ class ClassroomDetail {
       const img = container?.querySelector('.detail-photo');
       if (!img) return;
 
-      // Already revealed (by the ViewTransition, or an earlier call) — nothing to do.
-      if (img.classList.contains('loaded')) return;
+      // Already revealed (by the ViewTransition, or an earlier call): at most the
+      // thumbnail the zoom carried still has to make way for the full photo.
+      if (img.classList.contains('loaded')) {
+        this._upgradePhoto(classroomId, img);
+        return;
+      }
 
       if (cachedUrl) {
         // This <img> is fresh from a full re-render (occupancy refresh, language
@@ -1113,19 +1366,32 @@ class ClassroomDetail {
         // changed — the "blink". Stamp src + `loaded` synchronously (same task as
         // the innerHTML that created it, so it's painted only once, already
         // revealed). onerror still culls a genuinely broken URL (stale idfoto).
-        img.onerror = () => { if (this._currentId === classroomId) { container?.remove(); this._overlay.querySelector('.detail-photo-backdrop')?.remove(); } };
+        img.onerror = () => {
+          markPhotoBroken(classroomId);
+          if (this._currentId === classroomId) { container?.remove(); this._overlay.querySelector('.detail-photo-backdrop')?.remove(); }
+        };
         img.classList.add('loaded');
         container.classList.add('loaded');
         img.src = cachedUrl;
-        this._setBackdrop(cachedUrl);
+        this._setBackdrop(thumbUrl(classroomId));
         this._photoRevealed();
+        this._upgradePhoto(classroomId, img);
         return;
       }
 
       // First time we've needed this room's photo this session — resolve, load,
-      // decode, then reveal with the intro transition.
-      const url = await fetchPhotoUrl(classroomId);
+      // decode, then reveal with the intro transition. The thumbnail first: a
+      // third of the bytes over a phone's connection. The full photo follows.
+      const url = await fetchThumbUrl(classroomId);
       if (this._currentId !== classroomId) return;
+
+      // Most of the time this lands in the middle of the open transition, and
+      // the backdrop blurring in underneath the zoom's live snapshot repaints
+      // the whole page on every remaining frame of it. Wait for it to land.
+      if (!vtFlag('live')) {
+        await new Promise(resolve => this._afterTransition(resolve));
+        if (this._currentId !== classroomId || !img.isConnected) return;
+      }
 
       img.src = url;
       this._setBackdrop(url);
@@ -1134,8 +1400,14 @@ class ClassroomDetail {
         img.classList.add('loaded');
         container.classList.add('loaded');
         this._photoRevealed();
+        this._upgradePhoto(classroomId, img);
       }).catch(() => {
-        if (this._currentId === classroomId) container.remove();
+        // Only while this room is still up: a decode is also abandoned when
+        // the page moves on, which says nothing about the photo.
+        if (this._currentId !== classroomId) return;
+        markPhotoBroken(classroomId);
+        container.remove();
+        this._overlay.querySelector('.detail-photo-backdrop')?.remove();
       });
     } catch (err) {
       console.error('Classroom photo load error:', err);
@@ -1207,6 +1479,8 @@ class ClassroomDetail {
 
       // Query context: from/to range carried over from the Available Tab
       const queryDateKey = this._queryContext?.date?.replace(/-/g, '') ?? null;
+      // Same shape, from a clicked search-result session instead.
+      const highlightDateKey = this._highlight?.date?.replace(/-/g, '') ?? null;
       let queryFromPct = null, queryToPct = null, queryFromDisplay = '', queryToDisplay = '';
       if (this._queryContext) {
         const qFrom = Math.max(timeToMinutes(this._queryContext.from), DAY_START);
@@ -1246,12 +1520,36 @@ class ClassroomDetail {
         }
 
         let occupancy = [];
+        let roomBuilding = null;
         outer: for (const c of dayData.campuses ?? []) {
           for (const b of c.buildings ?? []) {
             const room = b.classrooms?.find(r => String(r.id) === String(classroomId));
-            if (room) { occupancy = room.occupancy ?? []; break outer; }
+            if (room) { occupancy = room.occupancy ?? []; roomBuilding = b; break outer; }
           }
         }
+
+        // The hours the building is shut, shown as their own "Closed" areas so
+        // they don't read as bookings. The bar carries the open range too, for
+        // the hover cursor. Unknown hours draw nothing.
+        const opening = getBuildingOpening(roomBuilding, dayData.date);
+        let openFrom = DAY_START, openTo = DAY_END;
+        if (opening?.closed) {
+          openFrom = openTo = DAY_START;
+        } else if (opening) {
+          openFrom = Math.max(timeToMinutes(opening.opens), DAY_START);
+          openTo = Math.min(timeToMinutes(opening.closes), DAY_END);
+        }
+        const closedRanges = openFrom >= openTo
+          ? [[DAY_START, DAY_END]]
+          : [[DAY_START, openFrom], [openTo, DAY_END]].filter(([s, e]) => e > s);
+        const closedHtml = closedRanges.map(([s, e]) => {
+          const left  = ((s - DAY_START) / total * 100).toFixed(2);
+          const width = ((e - s)         / total * 100).toFixed(2);
+          // Label only where there's room for it; the hatching still says it
+          const label = (e - s) / total >= 0.15 ? `<span>${escapeHtml(t('detail.closed'))}</span>` : '';
+          return `<div class="detail-schedule-closed" role="img" aria-label="${escapeHtml(t('detail.closed'))} ${minutesToTimeDisplay(s)}–${minutesToTimeDisplay(e)}" style="--block-start:${left}%;--block-size:${width}%">${label}</div>`;
+        }).join('');
+        const openAttrs = opening ? ` data-open-from="${openFrom}" data-open-to="${openTo}"` : '';
 
         const blocksHtml = (occupancy || []).map((slot, idx) => {
           if (!slot.inizio || !slot.fine) return '';
@@ -1261,7 +1559,12 @@ class ClassroomDetail {
           const left  = ((s - DAY_START) / total * 100).toFixed(2);
           const width = ((e - s)         / total * 100).toFixed(2);
           const slotIdx = scheduleSlots.push(slot) - 1;
-          return `<div class="detail-schedule-block" data-slot-idx="${slotIdx}" tabindex="0" role="button" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
+          const isPrimaryHighlight = highlightDateKey !== null
+            && dayData.date === highlightDateKey
+            && slot.inizio === this._highlight?.from
+            && slot.fine === this._highlight?.to;
+          const blockClass = 'detail-schedule-block lg-glass lg-glass--tinted' + (isPrimaryHighlight ? ' detail-schedule-block--highlight' : '');
+          return `<div class="${blockClass}" data-slot-idx="${slotIdx}" tabindex="0" role="button" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
         }).join('');
 
         const queryOverlayHtml = isQueryDay && queryFromPct !== null
@@ -1278,7 +1581,8 @@ class ClassroomDetail {
               <div class="timeline-hover-cursor" hidden></div>
               ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>` : ''}
               ${querySideIndicatorsHtml}
-              <div class="detail-schedule-bar">
+              <div class="detail-schedule-bar"${openAttrs}>
+                ${closedHtml}
                 ${queryOverlayHtml}
                 ${blocksHtml}
                 ${isToday && nowPct !== null ? `<div class="timeline-now-bar-line" style="--pos:${nowPct}%"></div>` : ''}
@@ -1383,6 +1687,17 @@ class ClassroomDetail {
       const gridEl = container.querySelector('.detail-schedule-bars');
       const rowEls = gridEl.querySelectorAll('.detail-schedule-row');
 
+      // The highlight is a one-shot cue for the lesson the user just searched
+      // for — the first tap or keypress anywhere in the schedule drops it.
+      const clearHighlight = () => {
+        if (!this._highlight) return;
+        this._highlight = null;
+        container.querySelectorAll('.detail-schedule-block--highlight')
+          .forEach(el => el.classList.remove('detail-schedule-block--highlight'));
+      };
+      container.addEventListener('pointerdown', clearHighlight);
+      container.addEventListener('keydown', clearHighlight);
+
       let selectedDayIndex = 0;
 
       const daySelector = createPillSelector(pickerContainer, {
@@ -1402,14 +1717,16 @@ class ClassroomDetail {
         if (chip) daySelector.selectElement(chip, opts);
       }
 
-      // Auto-select: prefer the queried day when coming from the Available Tab,
-      // otherwise today, or next available day if after 20:15, or first available
+      // Auto-select: prefer the queried or highlighted day when coming from the
+      // Available Tab or search overlay, otherwise today, or next available day
+      // if after 20:15, or first available
       const todayDayIndex = days.findIndex(d => d.dayData?.date === todayKey);
       const nowMins = new Date().getHours() * 60 + new Date().getMinutes();
+      const preferredDateKey = queryDateKey ?? highlightDateKey;
       let initialDayIndex;
-      if (queryDateKey) {
-        const queryDayIndex = days.findIndex(d => d.dayData?.date === queryDateKey);
-        initialDayIndex = queryDayIndex >= 0 ? queryDayIndex : (todayDayIndex >= 0 ? todayDayIndex : days.findIndex(d => d.dayData !== null));
+      if (preferredDateKey) {
+        const preferredDayIndex = days.findIndex(d => d.dayData?.date === preferredDateKey);
+        initialDayIndex = preferredDayIndex >= 0 ? preferredDayIndex : (todayDayIndex >= 0 ? todayDayIndex : days.findIndex(d => d.dayData !== null));
       } else if (nowMins > DAY_END && todayDayIndex >= 0) {
         const nextIndex = days.findIndex((d, i) => i > todayDayIndex && d.dayData !== null);
         initialDayIndex = nextIndex >= 0 ? nextIndex : todayDayIndex;
@@ -1484,8 +1801,13 @@ class ClassroomDetail {
             if (pickerContainer.offsetWidth) relayoutMobile();
           });
         });
-        ro.observe(pickerContainer);
-        ro.observe(pickerContainer.parentElement);
+        // The picker was just laid out above; a first relayout on the open
+        // transition's opening frames would only repeat it. See _animateReflow.
+        this._afterTransition(() => {
+          if (!pickerContainer.isConnected) return;
+          ro.observe(pickerContainer);
+          ro.observe(pickerContainer.parentElement);
+        });
       }
 
       // ---------- TIMELINE HOVER ----------
@@ -1530,7 +1852,10 @@ class ClassroomDetail {
           line.style.top = '';
         }
 
-        cursor.textContent = minutesToTimeDisplay(minutes);
+        const { openFrom, openTo } = bar.dataset;
+        const isClosedHere = openFrom !== undefined
+          && (minutes < Number(openFrom) || minutes >= Number(openTo));
+        cursor.textContent = minutesToTimeDisplay(minutes) + (isClosedHere ? ` · ${t('detail.closed')}` : '');
         cursor.hidden = false;
         line.hidden = false;
       });
@@ -1560,6 +1885,41 @@ class ClassroomDetail {
       };
       const hideOccupationPopover = () => { _popoverBlock = null; timelinePopover.hide(); };
 
+      // Scroll to and open the popover on the searched lesson — once per open,
+      // so a later re-render (language switch, refreshOccupancy) doesn't jump
+      // the page back or re-pop it after the user has moved on. Deferred past
+      // the open transition: _doOpen's own cleanup resets window.scrollY to 0
+      // once the View Transition finishes if anything moved it in the
+      // meantime (its safety net against stray scroll during the snapshot
+      // animation), which would otherwise race and cancel this scroll.
+      if (this._highlight && !this._highlightConsumed) {
+        this._highlightConsumed = true;
+        this._afterTransition(() => {
+          if (this._currentId !== classroomId) return;
+          const primaryBlock = container.querySelector('.detail-schedule-block--highlight');
+          if (!primaryBlock) return;
+          // Open the popover only once the page has settled: the close-on-scroll
+          // handler would dismiss one opened mid-scroll.
+          const rect = primaryBlock.getBoundingClientRect();
+          const maxY = document.documentElement.scrollHeight - window.innerHeight;
+          const targetY = Math.min(Math.max(0, window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2), maxY);
+          if (reduceMotion?.matches || Math.abs(targetY - window.scrollY) < 1) {
+            primaryBlock.scrollIntoView({ block: 'center', behavior: 'auto' });
+            showOccupationPopover(primaryBlock);
+            return;
+          }
+          let shown = false;
+          const show = () => {
+            if (shown || this._currentId !== classroomId || !primaryBlock.isConnected) return;
+            shown = true;
+            showOccupationPopover(primaryBlock);
+          };
+          window.addEventListener('scrollend', show, { once: true });
+          setTimeout(show, 800); // no scrollend in older Safari
+          primaryBlock.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        });
+      }
+
       {
         // Desktop hover
         let _hoveredBlock = null;
@@ -1578,10 +1938,13 @@ class ClassroomDetail {
           hideOccupationPopover();
         });
 
-        // Keyboard focus (mirrors hover for accessibility)
+        // Keyboard focus (mirrors hover for accessibility). Blocks are
+        // tabindex="0", so a tap or click focuses them too — only react to
+        // keyboard focus, or the click toggle below would immediately close
+        // the popover focusin just opened (first tap appeared to do nothing).
         container.addEventListener('focusin', e => {
           const block = e.target.closest?.('.detail-schedule-block');
-          if (block) showOccupationPopover(block);
+          if (block && block.matches(':focus-visible')) showOccupationPopover(block);
         });
         container.addEventListener('focusout', e => {
           const block = e.target.closest?.('.detail-schedule-block');
@@ -1593,6 +1956,8 @@ class ClassroomDetail {
           const block = e.target.closest?.('.detail-schedule-block');
           if (!block) { hideOccupationPopover(); return; }
           e.stopPropagation();
+          // A mouse click on the hovered block keeps the hover popover open.
+          if (block === _hoveredBlock) { showOccupationPopover(block); return; }
           if (_popoverBlock === block) hideOccupationPopover();
           else showOccupationPopover(block);
         });

@@ -59,6 +59,21 @@ import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY } from './components/settings.js';
 import { initKeybindings } from './components/keybindings.js';
+import { takeImportHash } from './utils/transfer.js';
+import { promptImport } from './components/transfer-dialog.js';
+
+// Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
+// payload out of the URL now, before the hash routers (info page, classroom
+// detail) look at it; the import prompt is shown once the splash is gone.
+const _pendingImport = takeImportHash();
+// Same for a transfer link opened in a tab that's already running PoliAule
+// (a same-document hash change, no reload).
+window.addEventListener('hashchange', () => {
+  const raw = takeImportHash();
+  // Favourites are validated against the classroom directory, which may
+  // still be loading if the link arrived during start-up.
+  if (raw) ensureClassroomDirectory().then(() => promptImport(raw, staticClassroomsData));
+});
 
 // ---------- SPLASH SCREEN ----------
 const _splashStartTime = Date.now();
@@ -271,8 +286,10 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     buildingName,
   });
   let downAt = null;
+  let openedByTap = false;
   titlesBtn.addEventListener('pointerdown', (e) => {
     downAt = { x: e.clientX, y: e.clientY, t: performance.now() };
+    openedByTap = false;
     buildingOverview.prewarm(section);
   });
   // Open on pointerup, not click: iOS Safari swallows the click when the tap
@@ -285,8 +302,21 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
     const held = performance.now() - downAt.t;
     downAt = null;
-    if (moved <= 12 && held < 700) openOverview();
+    if (moved <= 12 && held < 700) {
+      openedByTap = e.pointerType === 'touch';
+      openOverview();
+    }
   });
+  // The rest of that tap, once it has opened the overview: Chrome on Android
+  // sends its click to whatever is under the finger by then, which is the
+  // overview's card for this very building, and a card's click navigates back
+  // out of the overview. So it opened and closed in one tap. Cancelling the
+  // touchend cancels the click it would have made.
+  titlesBtn.addEventListener('touchend', (e) => {
+    if (!openedByTap) return;
+    openedByTap = false;
+    if (e.cancelable) e.preventDefault();
+  }, { passive: false });
   // Fallback for keyboard / assistive-tech activation, which fires click only.
   titlesBtn.addEventListener('click', openOverview);
 
@@ -423,6 +453,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const elapsed = Date.now() - _splashStartTime;
     const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
     setTimeout(dismissSplash, remaining);
+    // Leave the splash hand-off time to finish before the prompt pops up.
+    if (_pendingImport) setTimeout(() => promptImport(_pendingImport, staticClassroomsData), remaining + 600);
 
     // Once things have settled, spend a moment of genuine idle time
     // benchmarking blur for real (first load / no cached verdict only).

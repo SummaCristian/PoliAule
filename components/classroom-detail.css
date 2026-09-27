@@ -86,11 +86,17 @@
    <html> for this reason. */
 body.detail-open {
   background-color: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
-  /* The header's top strip, safe-area rectangle and fade gradient (style.css)
-     take the same color, so the top of the screen follows the page instead of
-     staying the plain theme background. */
+  transition: background-color 0.6s ease;
+}
+
+/* The header's top strip, safe-area rectangle and fade gradient (style.css)
+   take the same color, so the top of the screen follows the page instead of
+   staying the plain theme background. Set on the two elements that read it,
+   not on body: it's inherited, so a change on body restyled every element in
+   the page (the close's hold below, in the frame its old state is captured
+   in). */
+body.detail-open :is(.header, .header-top-strip) {
   --header-bg: var(--detail-page-bg);
-  transition: background-color 0.6s ease, --header-bg 0.35s ease;
 }
 
 /* Registered so it can transition (a gradient can't, but the color stops that
@@ -114,11 +120,21 @@ body.detail-open {
    removed; on close it is already at the theme color, so nothing changes. */
 body {
   --detail-page-bg: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
+}
+
+:is(.header, .header-top-strip) {
   transition: --header-bg 0.35s ease;
 }
 
-.header-ctl-vt body {
+/* :root for the specificity: this has to outrank body.detail-open's rule above
+   ((0,3,0) against (0,2,1)), or the top strip, which is live in the page's
+   snapshot, takes the tint the moment the page opens while the header's
+   frozen one only shows it at the end. And it snaps rather than transitions,
+   so the close's old snapshot, taken the frame the hold starts, already has
+   the plain color. */
+:root.header-ctl-vt :is(.header, .header-top-strip) {
   --header-bg: var(--background-color);
+  transition: none;
 }
 
 /* Hide tab contents and footer while the detail panel is open */
@@ -149,10 +165,15 @@ body.detail-open .footer {
   pointer-events: none;
 }
 
-/* Disable background animations while the detail panel is open to save CPU/GPU */
+/* Hold background animations while the detail panel is open to save CPU/GPU.
+   Paused, not `animation: none`: lifting a `none` restarts every animation it
+   covered, so closing the page used to replay the tab's own entrance (`appear`,
+   an 8px blur and a scale over the whole list) underneath the closing zoom,
+   repainting the list's snapshot on every frame of it. Paused, they carry on
+   from where they were, which for all of them is long finished. */
 body.detail-open .tab-content,
 body.detail-open .tab-content * {
-  animation: none !important;
+  animation-play-state: paused !important;
   transition: none !important;
 }
 
@@ -409,9 +430,30 @@ body.detail-open .tab-content * {
   height: calc(var(--photo-h) + var(--bd-bleed) * 2);
   padding: var(--bd-bleed);
   box-sizing: border-box;
-  background: var(--backdrop-img) center / cover repeat;
+  /* Read back by classroom-detail.js (_measureBackdrop) to pre-render the same
+     thing: the blur resolved to px here, where cqw means the backdrop. */
+  --bd-blur-px: var(--bd-blur);
+  --bd-repeat: repeat;
+  background: var(--backdrop-img) center / cover var(--bd-repeat);
   background-origin: content-box;
   filter: blur(var(--bd-blur)) saturate(1.25);
+}
+
+@property --bd-blur-px {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+/* Pre-rendered (utils/photo.js blurredBackdrop): --backdrop-img is already
+   this whole box, tiles, blur and saturation included, so it is stretched
+   over it with no filter left for the GPU to redo on every frame the page
+   moves (all of the zoom). */
+.detail-photo-backdrop.prerendered::before,
+.detail-photo-backdrop.prerendered::after {
+  background: var(--backdrop-img) 0 0 / 100% 100% no-repeat;
+  background-origin: border-box;
+  filter: none;
 }
 
 .detail-photo-backdrop::after {
@@ -430,7 +472,7 @@ body.detail-open .tab-content * {
   }
 
   .detail-photo-backdrop::before {
-    background-repeat: repeat-x;
+    --bd-repeat: repeat-x;
   }
 }
 
@@ -446,6 +488,18 @@ body.detail-open .tab-content * {
   .detail-photo-backdrop::before,
   .detail-photo-backdrop::after {
     filter: blur(var(--bd-blur)) saturate(1.25) brightness(var(--photo-dim, 1));
+  }
+
+  /* brightness() without a filter: black over the image at 1 - the factor
+     is the same multiplication. */
+  .detail-photo-backdrop.prerendered::before,
+  .detail-photo-backdrop.prerendered::after {
+    --bd-shade: rgb(0 0 0 / calc(1 - var(--photo-dim, 1)));
+    background:
+      linear-gradient(var(--bd-shade), var(--bd-shade)),
+      var(--backdrop-img) 0 0 / 100% 100% no-repeat;
+    background-origin: border-box;
+    filter: none;
   }
 }
 
@@ -1018,8 +1072,16 @@ body.detail-open .tab-content * {
   transition: color 0.6s ease;
 }
 
-/* Desktop: sections flow as a masonry grid of cards (CSS multi-column, so
-   each card lands in the shortest column and keeps its natural height). */
+/* The cards are split into two .detail-column wrappers (features + schedule,
+   hours + map). Narrow: the wrappers dissolve and the cards stack. Desktop:
+   the wrappers sit side by side, each card keeping its natural height. Not
+   CSS multi-column: WebKit doesn't paint backdrop-filtered cards in a
+   multicol's second column (the opening-hours card was invisible, though
+   still selectable, on iPad). */
+.detail-column {
+  display: contents;
+}
+
 @media (min-width: 1000px) {
   .detail-header {
     max-width: 1100px;
@@ -1027,14 +1089,15 @@ body.detail-open .tab-content * {
 
   .detail-content {
     max-width: 1100px;
-    column-count: 2;
-    column-gap: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .detail-content > .detail-section {
-    break-inside: avoid;
-    display: inline-block; /* keeps backdrop-filter cards unsplit in WebKit */
-    width: 100%;
+  .detail-column {
+    display: block;
+    flex: 1 1 0;
+    min-width: 0;
   }
 }
 
@@ -1094,16 +1157,11 @@ body.detail-open .tab-content * {
 .detail-schedule-legend-box {
   width: 0.75rem;
   height: 0.75rem;
-  border-radius: 2px;
-  background: var(--busy-gradient);
-  border: 1px solid color-mix(in srgb, var(--color-status-busy) 20%, black);
-  opacity: 0.85;
-}
-
-@media (prefers-color-scheme: dark) {
-  .detail-schedule-legend-box {
-    border-color: color-mix(in srgb, var(--color-status-busy) 20%, white);
-  }
+  border-radius: 3px;
+  /* Same Vitrium tinted glass as .detail-schedule-block (classes set in JS),
+     minus the drop shadow, which would swamp a 12px swatch. */
+  --lg-glass-tint: var(--color-status-busy);
+  box-shadow: 0 0 0 0.1px var(--lg-outline), var(--lg-highlight);
 }
 
 .detail-schedule-legend-label {
@@ -1465,18 +1523,19 @@ body.detail-open .tab-content * {
   /* Increased side gaps for better separation between consecutive blocks */
   left: calc(var(--block-start) + 2px);
   width: calc(var(--block-size) - 4px);
-  border-radius: var(--radius-xs);
-  background: var(--busy-gradient);
-  opacity: 0.85;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  border: 1px solid color-mix(in srgb, var(--color-status-busy) 20%, black);
-  transition: opacity 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 9px;
+  /* Vitrium's tinted glass (.lg-glass.lg-glass--tinted, set in JS) in the
+     busy red. This file loads after Vitrium, so the positioning and radius
+     here win over .lg-glass's own. The compact shadow suits a small block. */
+  --lg-glass-tint: var(--color-status-busy);
+  box-shadow: var(--lg-shadow-compact);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .detail-schedule-block:hover,
 .detail-schedule-block:focus-visible {
-  opacity: 1;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  transform: scaleY(1.06);
+  box-shadow: 0 0 0 0.1px var(--lg-outline), var(--lg-highlight), 0 4px 20px 0 var(--lg-shadow-color-strong);
 }
 
 .detail-schedule-block:focus-visible {
@@ -1484,9 +1543,81 @@ body.detail-open .tab-content * {
   outline-offset: 1px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .detail-schedule-block:hover,
+  .detail-schedule-block:focus-visible {
+    transform: none;
+  }
+}
+
+/* ── Building closed (outside opening hours, holidays) ───────────────── */
+
+/* Hatched and colorless so it reads as "shut", not as another booking.
+   Sits under the blocks and the query region, and lets the hover through. */
+.detail-schedule-closed {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--block-start);
+  width: var(--block-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--text-color-primary) 9%, transparent) 0 4px,
+    transparent 4px 9px
+  );
+}
+
+.detail-schedule-closed span {
+  font-size: var(--text-70);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+}
+
+/* ── Search highlight (clicked a lesson in search results) ──────────── */
+
+.detail-schedule-block--highlight {
+  opacity: 1;
+  border: 2px solid var(--text-color-accent);
+  box-shadow: var(--glow-accent);
+  animation: detail-highlight-pulse 1.2s ease-out 1;
+}
+
+@keyframes detail-highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--text-color-accent) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--text-color-accent) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-schedule-block--highlight {
+    animation: none;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
-  .detail-schedule-block {
-    border-color: color-mix(in srgb, var(--color-status-busy) 20%, white);
+  .detail-schedule-block--highlight {
+    border-color: var(--color-accent-dark);
+    box-shadow: 0 0 0 1px var(--color-accent-dark);
+  }
+
+  @keyframes detail-highlight-pulse {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent-dark) 55%, transparent);
+    }
+    100% {
+      box-shadow: 0 0 0 10px color-mix(in srgb, var(--color-accent-dark) 0%, transparent);
+    }
   }
 }
 
@@ -1991,7 +2122,7 @@ body.detail-open .tab-content * {
       filter: blur(4px);
     }
     to {
-      opacity: 0.85;
+      opacity: 1;
       transform: scaleX(1) scaleY(1);
       filter: blur(0);
     }
@@ -2022,7 +2153,15 @@ body.detail-open .tab-content * {
     right: 3px;
     width: auto;
     bottom: auto;
-    border-radius: 6px;
+  }
+
+  .detail-schedule-closed {
+    top: var(--block-start);
+    height: var(--block-size);
+    left: 0;
+    right: 0;
+    width: auto;
+    bottom: auto;
   }
 
   /* Grid lines on mobile: horizontal */
@@ -2191,6 +2330,64 @@ body.detail-open .tab-content * {
   transition: none;
 }
 
+/* Hold the page still for the length of an open/close transition (toggled by
+   classroom-detail.js). The page's snapshot is live, so anything moving on the
+   page repaints that whole layer — blurred backdrop, masks, glass — on every
+   frame of the zoom, and that repaint is what the slower engines can't keep
+   up with. So, for those ~0.4s:
+   - entrance animations are held at their first frame and let go when the
+     zoom lands (the photo's scroll-driven shrink is left alone: it sits at 0
+     anyway, and pausing a scroll timeline is asking for trouble);
+   - transitions snap, so the snapshot shows the settled state;
+   - glass loses its backdrop-filter but keeps its tint. Over the page's
+     near-flat background the blur shows almost nothing, and Safari composites
+     backdrop-filter live even inside a snapshot, at the snapshot's original
+     size, ignoring the zoom (the same bug as .header-ctl-vt above). */
+#classroom-detail-overlay.detail-vt-freeze *:not(.detail-photo-container.loaded) {
+  animation-play-state: paused !important;
+}
+
+#classroom-detail-overlay.detail-vt-freeze * {
+  transition: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Outside the page, two more things kept the snapshots repainting: the
+   container's padding-bottom easing to 0 as the tab bar leaves (a layout
+   animation of the whole document, on every frame), and the header's data
+   status dot, which pulses forever. The header only ever shows its old,
+   still snapshot during the transition, so pausing it changes nothing on
+   screen. */
+/* Its own class, not .detail-vt-freeze: see _freezeTargets() in
+   classroom-detail.js. */
+.body-container.detail-vt-snap {
+  transition: none !important;
+}
+
+.header.detail-vt-freeze *,
+.header.detail-vt-freeze *::before,
+.header.detail-vt-freeze *::after {
+  animation-play-state: paused !important;
+}
+
+/* Measurement switches for ?vtdebug (utils/vt-debug.js): each takes one piece
+   of the transition away, to see what a given browser is paying for. They
+   look wrong on purpose. */
+:root.vtd-slow {
+  --vt-duration: 2s;
+}
+
+.vtd-noblur .detail-photo-backdrop {
+  display: none !important;
+}
+
+/* The list's cards without their photos (full 1500x1125 JPEGs, ~6.7 MB each
+   decoded), to see what bringing the list back costs on close. */
+.vtd-noimg .classroom-card-photo {
+  display: none !important;
+}
+
 /* Detail-only header controls (back button, favourite toggle) scaling in/out
    in step with the page morph. */
 
@@ -2240,8 +2437,9 @@ body.detail-open .tab-content * {
      SAME image. It happens in the first third, while the box is small and
      moving fastest, which is why this needs no blur to hide the swap.
 
-   Everything animates `transform` / `clip-path` / `opacity` on snapshots that
-   are at most viewport-sized: no filters, and no full-page snapshot (the
+   Everything animates `transform` / `opacity`, and the page's box its own
+   `height` / `border-radius`, on snapshots that are at most viewport-sized:
+   no filters, no clip-path, and no full-page snapshot (the
    overlay is ~2000px tall — capturing it was the single most expensive thing
    the old version did).
 
@@ -2281,10 +2479,10 @@ body.detail-open .tab-content * {
      is scaled down so its width matches the card's and translated so its top
      left corner sits on the card's, which — because the hero photo is
      full-bleed and starts at the very top of the page — puts the page's photo
-     exactly where the card is. `clip-path` then trims it to the card's box:
-     `inset(0 0 B 0)`, where B is in the snapshot's own (pre-scale)
-     coordinates, so only the bottom edge needs a value — the left and right
-     ones stay at 0 at every scale, since the scale is derived from the width.
+     exactly where the card is. Its height then trims it to the card's box:
+     `100% - B`, where B is in the snapshot's own (pre-scale) coordinates,
+     so only the bottom edge needs a value — the width stays whole at every
+     scale, since the scale is derived from the width.
 
      The other snapshot doesn't animate at all: the page we came from stays
      put and gets covered / uncovered, which is both what iOS does and one
@@ -2303,15 +2501,30 @@ body.detail-open .tab-content * {
     animation:
       detail-zoom-in var(--vt-duration) var(--vt-spring) both,
       detail-zoom-arc var(--vt-duration) linear both;
-    transform-origin: 0 0;
   }
 
   :root.detail-vt-close::view-transition-old(root) {
     animation:
       detail-zoom-out var(--vt-duration) var(--vt-spring) both,
       detail-zoom-arc-back var(--vt-duration) linear both;
-    transform-origin: 0 0;
     z-index: 1; /* the shrinking page rides above the list it shrinks into */
+  }
+
+  /* The trim to the card's box is the snapshot's own height, shortened from
+     the bottom and cropped (not squashed) by `cover` from the top, and its
+     corners are its border-radius. That was one `clip-path: inset(... round
+     ...)` before, which Chrome can't animate without repainting a mask the
+     size of the screen on every frame: on an older phone at a high pixel
+     ratio, that re-raster was what the GPU spent the open on. The clip is
+     on the snapshot itself (Chrome doesn't clip a view-transition image to
+     its box otherwise), not on the image pair the hero uses it on: this
+     pair also holds the list's snapshot, which stays whole. */
+  :root.detail-vt-open::view-transition-new(root),
+  :root.detail-vt-close::view-transition-old(root) {
+    transform-origin: 0 0;
+    object-fit: cover;
+    object-position: top;
+    overflow: clip;
   }
 
   /* ---- The shared element (card <-> hero photo) ------------------------ */
@@ -2359,6 +2572,19 @@ body.detail-open .tab-content * {
     opacity: 1;
   }
 
+  /* The close can't reuse that timing. Its box starts page-sized, so fading
+     the photo out early showed the card's snapshot underneath `cover`-ed into
+     a box several times its size — a card blown up 6–7x (desktop), for as
+     long as the photo took to clear. Chrome is past it in three frames;
+     Firefox, dropping frames, could hold one of them on screen. So the
+     page's photo stays on top while the box shrinks, and hands over to the
+     card in the second half, when the box is back near the card's own size
+     (the mirror of the open, which fades while the box is still near it). */
+  :root.detail-vt-hero.detail-vt-close::view-transition-old(detail-hero) {
+    animation-name: detail-hero-out-late;
+    animation-timing-function: ease-in-out;
+  }
+
   /* Safety net. classroom-detail.js names the card only when the page has a
      hero for it to pair with, so a half-empty group should not happen — but if
      one ever does (a hero that went missing between the two snapshots) this
@@ -2400,6 +2626,20 @@ body.detail-open .tab-content * {
 
   ::view-transition-image-pair(detail-hero) {
     overflow: hidden;
+  }
+
+  /* ?vtdebug=noclip / noarc (see the switches above). !important declarations
+     outrank animations, so these switch the animated value off outright. */
+  :root.vtd-noclip::view-transition-new(root),
+  :root.vtd-noclip::view-transition-old(root) {
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
+
+  :root.vtd-noarc::view-transition-new(root),
+  :root.vtd-noarc::view-transition-old(root),
+  :root.vtd-noarc::view-transition-image-pair(detail-hero) {
+    translate: none !important;
   }
 
   /* ---- Header ---------------------------------------------------------- */
@@ -2482,28 +2722,61 @@ body.detail-open .tab-content * {
   }
 }
 
-/* The page grows out of / shrinks into the card's rounded box. --zoom-* are
-   written by utils/vt-motion.js right before the transition starts; the
-   fallbacks make these a plain no-op if they ever aren't. */
+/* The zoom's geometry, written onto <html> by utils/vt-motion.js right before a
+   transition starts. Registered as not inherited, and handed down the
+   transition's pseudo-element tree by hand: only those pseudo-elements read
+   it, and a custom property that is inherited reaches every element of the
+   page, so each change to one restyled all of them (~20ms on an older phone,
+   in the frame the transition captures its old state in). */
+@property --zoom-x { syntax: '*'; inherits: false; }
+@property --zoom-y { syntax: '*'; inherits: false; }
+@property --zoom-scale { syntax: '*'; inherits: false; }
+@property --zoom-clip { syntax: '*'; inherits: false; }
+@property --zoom-radius { syntax: '*'; inherits: false; }
+@property --zoom-card-radius { syntax: '*'; inherits: false; }
+@property --arc-x { syntax: '*'; inherits: false; }
+@property --arc-y { syntax: '*'; inherits: false; }
+
+::view-transition,
+::view-transition-group(*),
+::view-transition-image-pair(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  --zoom-x: inherit;
+  --zoom-y: inherit;
+  --zoom-scale: inherit;
+  --zoom-clip: inherit;
+  --zoom-radius: inherit;
+  --zoom-card-radius: inherit;
+  --arc-x: inherit;
+  --arc-y: inherit;
+}
+
+/* The page grows out of / shrinks into the card's rounded box. The fallbacks
+   make these a plain no-op if the geometry ever isn't there. */
 @keyframes detail-zoom-in {
   from {
     transform: translate(var(--zoom-x, 0px), var(--zoom-y, 0px)) scale(var(--zoom-scale, 1));
-    clip-path: inset(0 0 var(--zoom-clip, 0px) 0 round var(--zoom-radius, 0px));
+    height: calc(100% - var(--zoom-clip, 0px));
+    border-radius: var(--zoom-radius, 0px);
   }
   to {
     transform: none;
-    clip-path: inset(0 0 0 0 round 0);
+    height: 100%;
+    border-radius: 0;
   }
 }
 
 @keyframes detail-zoom-out {
   from {
     transform: none;
-    clip-path: inset(0 0 0 0 round 0);
+    height: 100%;
+    border-radius: 0;
   }
   to {
     transform: translate(var(--zoom-x, 0px), var(--zoom-y, 0px)) scale(var(--zoom-scale, 1));
-    clip-path: inset(0 0 var(--zoom-clip, 0px) 0 round var(--zoom-radius, 0px));
+    height: calc(100% - var(--zoom-clip, 0px));
+    border-radius: var(--zoom-radius, 0px);
   }
 }
 
@@ -2561,6 +2834,13 @@ body.detail-open .tab-content * {
 @keyframes detail-hero-out {
   0%   { opacity: 1; }
   20%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes detail-hero-out-late {
+  0%   { opacity: 1; }
+  45%  { opacity: 1; }
+  80%  { opacity: 0; }
   100% { opacity: 0; }
 }
 

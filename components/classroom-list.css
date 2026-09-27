@@ -502,6 +502,11 @@
   color: var(--color-status-busy);
 }
 
+/* The building is closed: not a booking, so no status color */
+.classroom-status-txt.closed {
+  color: var(--text-color-secondary);
+}
+
 .classroom-name {
   font-size: var(--text-150);
   font-weight: 800;

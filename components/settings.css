@@ -479,3 +479,72 @@
   opacity: 0.4;
   cursor: default;
 }
+
+/* ── Transfer to another device ─────────────────────────────────────────────── */
+
+.settings-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+  color: var(--text-color-primary);
+  font: inherit;
+  font-size: var(--text-80);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.settings-action-btn .hgi-stroke {
+  font-size: 16px !important;
+}
+
+@media (hover: hover) {
+  .settings-action-btn:hover {
+    background: color-mix(in srgb, var(--text-color-primary) 16%, transparent);
+  }
+}
+
+/* The QR dialog (components/transfer-dialog.js). The code keeps a light
+   background in both themes: inverted codes don't scan on some phones. */
+.lg-alert-layer:has(.transfer-dialog) {
+  --lg-alert-width: 340px;
+}
+
+.transfer-dialog {
+  --qr-fg: #1c1c1e;
+  --qr-finder: #1c1c1e;
+  --qr-bg: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.transfer-dialog__qr {
+  width: min(100%, 240px);
+  aspect-ratio: 1;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.transfer-dialog__qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.transfer-dialog__status {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: var(--text-80);
+  color: var(--text-color-secondary);
+}

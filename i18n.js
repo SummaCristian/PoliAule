@@ -1,7 +1,7 @@
 // i18n.js — lightweight localization module
 
 const SUPPORTED = ['en', 'it'];
-const STORAGE_KEY = 'poliAule_locale';
+export const STORAGE_KEY = 'poliAule_locale';
 
 let translations = {};
 let currentLocale = 'en';

@@ -1,16 +1,20 @@
 import { t } from '../i18n.js';
 import { escapeHtml, highlight } from '../utils/html.js';
-import { fetchPhotoUrl, photoUrlCache } from '../utils/photo.js';
+import { fetchThumbUrl, thumbUrlCache, markPhotoBroken, isPhotoBroken } from '../utils/photo.js';
 import { isFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 
 // ---------- PHOTO ----------
 
 async function _loadCardPhoto(classroomId, card) {
   const img = card.querySelector('.classroom-card-photo');
-  const url = await fetchPhotoUrl(classroomId);
-  img.onerror = () => card.classList.add('photo-failed');
+  const url = await fetchThumbUrl(classroomId);
+  const fail = () => {
+    markPhotoBroken(classroomId);
+    card.classList.add('photo-failed');
+  };
+  img.onerror = fail;
   img.src = url;
-  img.decode().then(() => img.classList.add('loaded')).catch(() => card.classList.add('photo-failed'));
+  img.decode().then(() => img.classList.add('loaded')).catch(fail);
 }
 
 const _photoObserver = new IntersectionObserver((entries) => {
@@ -29,6 +33,7 @@ const STATUS_KEYS = {
   'occupied': 'status.occupied',
   'free-soon': 'status.freeSoon',
   'occupied-soon': 'status.occupiedSoon',
+  'closed': 'status.closed',
 };
 
 // Builds and returns a Card DOM element for the classroom passed as parameter.
@@ -85,13 +90,17 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
 
   if (hasPhoto) {
     el.dataset.idfoto = classroom.idfoto;
-    // If we've already resolved this room's photo URL this session (a previous
-    // render of this card, or the detail page), its bytes are almost certainly in
+    // Cards show the thumbnail, never the full photo (see thumbUrl in
+    // utils/photo.js). If we've already resolved it this session (a previous
+    // render of this card, a search row), its bytes are almost certainly in
     // the HTTP cache. Render the <img> already pointing at it and already marked
     // `loaded`, so a re-render (filter change, occupancy refresh, favourites
     // update) rebuilds the card without replaying the 0.4s opacity fade — the
     // "blink". Fresh rooms still stream in lazily via the observer.
-    const cachedUrl = photoUrlCache.get(classroom.id);
+    // A photo that has already failed isn't asked for again (see
+    // markPhotoBroken): the card is simply built as a failed one.
+    const broken = isPhotoBroken(classroom.id);
+    const cachedUrl = broken ? null : thumbUrlCache.get(classroom.id);
     el.innerHTML = `
       <div class="classroom-card-clip">
         <img class="classroom-card-photo${cachedUrl ? ' loaded' : ''}" alt=""${cachedUrl ? ` src="${escapeHtml(cachedUrl)}"` : ''}>
@@ -101,7 +110,12 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
       </div>
     `;
     if (cachedUrl) {
-      el.querySelector('.classroom-card-photo').onerror = () => el.classList.add('photo-failed');
+      el.querySelector('.classroom-card-photo').onerror = () => {
+        markPhotoBroken(classroom.id);
+        el.classList.add('photo-failed');
+      };
+    } else if (broken) {
+      el.classList.add('photo-failed');
     } else {
       _photoObserver.observe(el);
     }

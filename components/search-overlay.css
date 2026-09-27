@@ -4,8 +4,11 @@
    layer is kept but transparent, purely as the tap-outside-to-dismiss hit
    area. Also dismissed by its own close button or Esc.
 
-   Mobile: the search bar is pinned to the bottom, just above the on-screen
-   keyboard (visualViewport-tracked), and results stack upward above it.
+   Mobile: classic Spotlight layout — the search bar sits where the app
+   header was, results grow downward, and the keyboard
+   only clips the results' height, never the bar's position. --search-vv-top
+   / --search-vv-height (visualViewport-tracked, search-overlay.js) keep the
+   panel anchored correctly if iOS Safari pans the visual viewport open.
    Desktop: the panel is centred, ~27% down from the top. */
 
 .search-overlay-backdrop[hidden] {
@@ -31,22 +34,30 @@ body.search-overlay-open {
   overflow: hidden;
 }
 
-/* No scrim element — instead the tab behind just recedes. The class is toggled
-   inside the open/close view-transition callback, so the root cross-fade
-   animates this; the transition is the no-VT fallback. */
-.tab-content.visible {
-  /* Also carries the padding that follows the tab bar (see style.css): a
-     `transition` here replaces that one wholesale, so both are listed. */
-  transition: opacity 0.2s ease, padding-left var(--nav-shift);
+/* No scrim, and the page behind isn't dimmed either: the search surfaces
+   stand off it by elevation alone — a dense glass (heavier blur and a
+   saturation lift, so whatever sits behind reads as colour, not detail) and a
+   deep, layered shadow, as command bars do. --search-elevation is shared by
+   the field, the close button and the results box. */
+.search-overlay-panel {
+  --search-glass: blur(var(--lg-blur-lg)) saturate(1.6);
+  --search-elevation:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 10px 28px -8px rgba(0, 0, 0, 0.16),
+    0 28px 72px -16px rgba(0, 0, 0, 0.22);
 }
 
-.footer {
-  transition: opacity 0.2s ease, padding-bottom var(--nav-shift);
-}
-
-body.search-overlay-open .tab-content.visible,
-body.search-overlay-open .footer {
-  opacity: 0.4;
+@media (prefers-color-scheme: dark) {
+  .search-overlay-panel {
+    --search-elevation:
+      0 0 0 0.1px var(--lg-outline),
+      var(--lg-highlight),
+      0 1px 3px rgba(0, 0, 0, 0.3),
+      0 10px 28px -8px rgba(0, 0, 0, 0.45),
+      0 28px 72px -16px rgba(0, 0, 0, 0.6);
+  }
 }
 
 /* Mobile: the whole pill nav steps aside while the overlay is open — the
@@ -68,7 +79,7 @@ html.search-vt .lg-tabbar__bar,
 html.search-vt .lg-tabbar__prominent,
 html.search-vt .search-overlay-header .search-bar-wrapper,
 html.search-vt .search-overlay-close,
-html.search-vt .search-overlay-results {
+html.search-vt .search-results-frame {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
@@ -86,108 +97,216 @@ html.search-vt .lg-tabbar__prominent {
   position: fixed;
   left: 0;
   right: 0;
-  /* Sit just above the on-screen keyboard. --search-kb is the keyboard height
-     from visualViewport (search-overlay.js); 0 when it's closed, leaving the
-     bar the same 16px clearance the pill nav has. Grows upward as results fill
-     in (column-reverse). */
-  bottom: calc(var(--search-kb, 0px) + 16px + env(safe-area-inset-bottom, 0px));
+  /* Mirrors the tab bar's clearance from the bottom safe area, which is sized
+     to keep clear of Safari's fixed-element edge handling (see Vitrium's
+     tabbar.css). */
+  --search-top-gap: var(--lg-tabbar-bottom-offset, 28px);
+  /* --search-vv-top is visualViewport's offsetTop (search-overlay.js) — iOS
+     Safari can pan the visual viewport when the keyboard opens, which would
+     otherwise push a top-anchored fixed element off screen; 0px when
+     unset/unsupported. */
+  top: calc(var(--search-vv-top, 0px) + var(--search-top-gap) + env(safe-area-inset-top, 0px));
 
   width: min(100% - 2rem, 640px);
   margin-inline: auto;
-  max-height: calc(100dvh - var(--search-kb, 0px) - 32px - env(safe-area-inset-top, 0px));
+  /* Fit between the bar's top and the keyboard (or the screen bottom when
+     there is none), with ~16px clearance. --search-vv-height is
+     visualViewport's height, which already excludes the keyboard. */
+  max-height: calc(var(--search-vv-height, 100dvh) - var(--search-top-gap) - env(safe-area-inset-top, 0px) - 16px);
 
   display: flex;
-  flex-direction: column-reverse; /* search bar at the bottom, results above */
+  flex-direction: column; /* search bar on top, results grow downward */
   gap: 0.85rem;
   min-height: 0;
 }
 
-/* ── Header row: search bar + close button ──────────────────────────── */
+/* ── Header row: search bar + close button ──────────────────────────────
+   The field and the close button are one pair: same height, same glass,
+   centred on one line. */
 
 .search-overlay-header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-shrink: 0;
-}
-
-/* ── Search bar ────────────────────────────────────────────────────── */
-
-.search-bar-wrapper {
+  --search-field-h: 3.25rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
+}
 
-  background-color: var(--background-color-secondary);
-  border-radius: var(--radius-pill);
-  padding: 0.75rem 1.25rem;
-  box-shadow: var(--shadow);
-  border: 1px solid color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+/* ── Search field ─────────────────────────────────────────────────────
+   Glass capsule (the same material as the header buttons / pill nav);
+   press feedback, lit hover and swipe-deform come from Vitrium's
+   .liquid-glass (the class is on the element in index.html). It has no
+   focus ring: it holds focus for as long as search is open, so a ring would
+   just be a permanent coloured border — the accent caret marks it instead. */
 
+.search-bar-wrapper {
+  flex: 1;
+  min-width: 0;
+  height: var(--search-field-h);
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  /* Tighter on the right, where the round clear button sits in its own
+     inset — optically the same margin as the icon's on the left. */
+  padding: 0 0.6875rem 0 1.05rem;
+
+  border-radius: var(--radius-pill);
+  background: var(--lg-tint);
+  backdrop-filter: var(--search-glass);
+  -webkit-backdrop-filter: var(--search-glass);
+  box-shadow: var(--search-elevation);
+
   /* Restates Vitrium's `.liquid-glass` spring (translate / scale / filter): a
      `transition` here, being later in the cascade, would otherwise replace it,
      and a released press or stretch would snap back instead of springing. */
   transition:
     box-shadow 0.2s ease,
-    border-color 0.2s ease,
     translate var(--lg-press-out-dur) var(--lg-ease-spring),
     scale var(--lg-press-out-dur) var(--lg-ease-spring),
     filter 0.2s ease;
 }
 
-.search-bar-wrapper .hgi-stroke {
-  color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
-  font-size: var(--text-125) !important;
+/* The magnifier sits back while the field is empty and comes forward with
+   the query, so the field visibly "holds" something once you type. */
+.search-bar-icon {
   flex-shrink: 0;
+  font-size: 1.2rem !important;
+  color: color-mix(in srgb, var(--text-color-primary) 42%, transparent);
+  transition: color 0.2s ease;
+}
+
+.search-bar-wrapper:has(.search-input:not(:placeholder-shown)) .search-bar-icon {
+  color: color-mix(in srgb, var(--text-color-primary) 72%, transparent);
 }
 
 .search-input {
   flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
   border: none;
   outline: none;
   background: transparent;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: var(--text-100);
-  font-weight: 500;
+  /* 18px: a touch larger than the platform's own search field, and well over
+     iOS Safari's 16px zoom-on-focus threshold. */
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
   color: var(--text-color-primary);
+  caret-color: var(--text-color-accent);
+  text-overflow: ellipsis;
+  /* .liquid-glass sets user-select:none on the surface — the field itself
+     must stay typable and selectable. */
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .search-input::placeholder {
-  color: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
+  /* Only reached on the narrowest phones: better an ellipsis than a word cut
+     off mid-letter. */
+  text-overflow: ellipsis;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text-color-primary) 38%, transparent);
+  opacity: 1; /* Firefox dims placeholders on its own */
 }
 
-.search-clear-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Trailing slot: the clear button, or — on desktop, while the field is empty
+   — an `esc` key hint, stacked in the same spot. With nothing typed it gives
+   its width back (negative margin), so a long placeholder isn't cut short
+   by an invisible button. */
+.search-bar-trailing {
   flex-shrink: 0;
+  display: grid;
+  place-items: center end;
+}
 
-  background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+.search-bar-trailing > * {
+  grid-area: 1 / 1;
+}
+
+.search-input:placeholder-shown ~ .search-bar-trailing {
+  /* Its width and the flex gap before it. */
+  margin-inline-start: calc(-1.75rem - 0.6rem);
+}
+
+/* iOS-style clear: a filled disc with the ✕ knocked out of it — distinct at
+   a glance from the close button's outlined ✕ right beside it. Springs in
+   from a smaller size as the first character lands. */
+.search-clear-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
   border: none;
   border-radius: 50%;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--text-color-primary) 24%, transparent);
+  color: var(--background-color-secondary);
 
   opacity: 0;
+  scale: 0.6;
   pointer-events: none;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  transition:
+    opacity 0.18s ease-out,
+    scale 0.3s var(--vt-spring, cubic-bezier(0.16, 1, 0.3, 1)),
+    background-color 0.15s ease;
+}
+
+/* A comfortable touch target around the small disc. */
+.search-clear-btn::before {
+  content: "";
+  position: absolute;
+  inset: -0.5rem;
 }
 
 .search-clear-btn:hover {
-  background: color-mix(in srgb, var(--text-color-primary) 16%, transparent);
+  background: color-mix(in srgb, var(--text-color-primary) 34%, transparent);
+}
+
+.search-clear-btn:active {
+  scale: 0.9;
 }
 
 .search-clear-btn .hgi-stroke {
-  font-size: var(--text-100) !important;
+  font-size: 0.95rem !important;
 }
 
-/* Show only when the input has content (placeholder is hidden) */
-.search-input:not(:placeholder-shown) ~ .search-clear-btn {
+.search-input:not(:placeholder-shown) ~ .search-bar-trailing .search-clear-btn {
   opacity: 1;
+  scale: 1;
   pointer-events: auto;
+}
+
+/* Desktop only (a real pointer and keyboard): how to leave, shown while
+   there's nothing to clear. */
+.search-kbd {
+  display: none;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--text-color-primary) 14%, transparent);
+  font-family: inherit;
+  font-size: var(--text-72);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--text-color-primary) 42%, transparent);
+  /* A hint, never a target: it's stacked over the clear button. */
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .search-kbd {
+    display: block;
+  }
+
+  .search-input:not(:placeholder-shown) ~ .search-bar-trailing .search-kbd {
+    opacity: 0;
+  }
 }
 
 /* Match highlight in result cards (utils/html.js highlight() emits <mark>). */
@@ -205,85 +324,137 @@ html.search-vt .lg-tabbar__prominent {
   }
 }
 
-/* The moved-in search bar drops its old centring constraints, and swaps its
-   flat card background for the same glass material as the header buttons /
-   pill nav. Press feedback + lit hover + swipe-deform come from the shared
-   .liquid-glass rules (the class is on the element in index.html). */
-.search-overlay-header .search-bar-wrapper {
-  margin: 0;
-  max-width: none;
-  flex: 1;
-
-  background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-md));
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
-  border-color: transparent;
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
-}
-
-.search-overlay-header .search-bar-wrapper:focus-within {
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--text-color-accent) 22%, transparent),
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
-}
-
-/* .liquid-glass sets user-select:none on the surface — the field itself must
-   stay typable and selectable. */
-.search-overlay-header .search-input {
-  user-select: text;
-  -webkit-user-select: text;
-}
-
 .search-overlay-close {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 
-  width: 2.75rem;
-  height: 2.75rem;
+  width: var(--search-field-h);
+  height: var(--search-field-h);
   padding: 0;
   border: none;
   border-radius: 50%;
   color: var(--text-color-secondary);
 
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
+  backdrop-filter: var(--search-glass);
+  -webkit-backdrop-filter: var(--search-glass);
+  box-shadow: var(--search-elevation);
 }
 
 .search-overlay-close .hgi-stroke {
-  font-size: var(--text-125) !important;
+  font-size: 1.2rem !important;
+}
+
+/* Desktop: macOS Spotlight's proportions — one tall capsule with large,
+   medium-weight type and a big magnifier, and no close button (Esc, shown by
+   the key hint, or a click outside dismisses it, as in Spotlight). */
+@media (min-width: 600px) and (hover: hover) and (pointer: fine) {
+  .search-overlay-header {
+    --search-field-h: 3.75rem;
+  }
+
+  .search-bar-wrapper {
+    gap: 0.85rem;
+    padding: 0 1.1rem 0 1.35rem;
+  }
+
+  .search-bar-icon {
+    font-size: 1.5rem !important;
+  }
+
+  .search-input {
+    font-size: 1.5rem;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
+
+  .search-input::placeholder {
+    font-weight: 400;
+  }
+
+  .search-input:placeholder-shown ~ .search-bar-trailing {
+    margin-inline-start: 0;
+  }
+
+  .search-overlay-close {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-clear-btn {
+    scale: 1;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+  }
 }
 
 /* ── Results ────────────────────────────────────────────────────────── */
 
-/* Results live in their own glass container rather than floating loose on
-   the page. */
+/* Results live in their own glass box rather than floating loose on the
+   page. The glass is the frame's; the scroller inside it is transparent, so
+   its edges can fade (below) without fading the box itself — a mask on the
+   element carrying the backdrop-filter would take the glass with it. The
+   frame also positions what floats over the results (the professor view's
+   back button), and is the point the box materialises from: its top edge,
+   right under the bar (setResultsBox in search-overlay.js). */
+.search-results-frame {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  transform-origin: 50% 0;
+
+  border-radius: var(--radius-xl);
+  overflow: clip;
+  /* A thicker material than the field's: it's a large surface you read from,
+     and with the page behind no longer dimmed, Vitrium's control tint (~80%)
+     let the page's own text show through it. Mixed from that same tint, so
+     it follows the theme and the no-blur fallback. */
+  background: color-mix(in srgb, var(--lg-tint) 55%, var(--background-color-secondary));
+  backdrop-filter: var(--search-glass);
+  -webkit-backdrop-filter: var(--search-glass);
+  box-shadow: var(--search-elevation);
+}
+
+/* Nothing to show: take the frame out of the panel's flow, so there's no
+   empty glass slab. */
+.search-results-frame:has(> .search-overlay-results:empty) {
+  display: none;
+}
+
 .search-overlay-results {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain; /* don't chain into the page behind when the list ends */
 
-  padding: 1.75rem; /* 28px all around */
-  border-radius: var(--radius-xl);
-  background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-md));
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
+  padding: 1.25rem; /* section labels/rows carry their own inset, see below */
+
+  /* Scroll-edge fade: content dissolves into the box's top and bottom edges
+     rather than being cut off by them. Each side's depth is how far there's
+     more to scroll that way, up to --search-fade (search-overlay.js keeps
+     them current), so a list at rest at the top has no top fade at all. */
+  --search-fade: 1.5rem;
+  --search-fade-top: 0px;
+  --search-fade-bottom: 0px;
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent, #000 min(var(--search-fade), var(--search-fade-top)),
+    #000 calc(100% - min(var(--search-fade), var(--search-fade-bottom))), transparent);
+  mask-image: linear-gradient(to bottom,
+    transparent, #000 min(var(--search-fade), var(--search-fade-top)),
+    #000 calc(100% - min(var(--search-fade), var(--search-fade-bottom))), transparent);
+
+  /* Offset parent for search-motion.js's per-frame measurements. */
+  position: relative;
+}
+
+/* Dissolving back into the bar: its rows are on their way out. */
+.search-overlay-results--leaving {
+  pointer-events: none;
 }
 
 /* Nothing to show yet — collapse the container so it isn't an empty glass slab. */
@@ -291,133 +462,636 @@ html.search-vt .lg-tabbar__prominent {
   display: none;
 }
 
-.search-overlay-results .search-grid {
-  display: grid;
-  gap: 1rem;
-  padding: 0;
+/* ── Blocks (Top Hit / one per section) ───────────────────────────────
+   The space between sections is each block's own padding-top — inside the
+   block, so it grows and collapses with it when search-motion.js animates a
+   section in or out — and the pane pulls the first one back up. (A
+   :first-child exception instead would snap the next block's spacing the
+   moment a leaving first block is removed.) */
 
-  animation: appear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.search-pane--results {
+  margin-top: -1.1rem;
 }
 
-.search-overlay-results .search-grid.appeared {
-  animation: none;
+.search-block {
+  position: relative;
+  padding-top: 1.1rem;
 }
 
-.search-overlay-results .search-grid--classroom {
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-}
+/* ── Section labels (Top Hit / Classrooms / Buildings / …) ──────────── */
 
-@media (max-width: 600px) {
-  .search-overlay-results .search-grid {
-    gap: 0.75rem;
-  }
-}
-
-/* ── Section labels (Classrooms / Lessons & exams) ─────────────────── */
-
+/* A smaller variant of the app's .section-header-title (style.css): same
+   bold sentence-case title with a leading icon, same solid colour dimmed
+   with opacity. The opacity sits on the children rather than the label, as
+   search-motion.js may animate the label's own opacity. */
 .search-section-label {
-  font-size: var(--text-75);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-100);
+  font-weight: bold;
+  color: #000;
   padding: 0 0.25rem 0.5rem;
 }
 
-.search-section-label:not(:first-child) {
-  margin-top: 1.25rem;
+.search-section-label > * {
+  opacity: 0.5;
 }
 
-/* ── Lesson / exam result cards ────────────────────────────────────── */
-
-.search-event-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.search-section-label-icon {
+  flex: none;
+  font-size: 1em;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
 }
 
-.search-event-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+@media (prefers-color-scheme: dark) {
+  .search-section-label {
+    color: #fff;
+  }
+}
 
-  padding: 1rem;
+/* ── Top Hit ──────────────────────────────────────────────────────────
+   A single larger row, styled the same as everything below it but with a
+   bigger leading visual and its own translucent card so it reads as "the"
+   answer rather than the first item of a list. */
+
+.search-tophit-slot {
+  position: relative; /* the outgoing Top Hit is laid over the incoming one */
+  margin-bottom: 0.25rem;
+}
+
+/* Lifted off the list below it: a soft shadow and a hairline edge, so the
+   card stays distinct even when its fill is faint (a professor's tint). The
+   edge is the inverse of the theme — white on light, black on dark — so it
+   reads as the card's lit rim rather than a drawn outline. It's an outline,
+   not a border (no layout) or an inset shadow (which a classroom's photo
+   would cover along the left). */
+.search-tophit-row {
+  --tophit-edge: rgba(255, 255, 255, 0.5);
+  transition: scale 0.15s ease-out;
   border-radius: var(--radius-lg, 1rem);
-  background-color: var(--background-color-secondary);
-  border: 1px solid color-mix(in srgb, var(--text-color-primary) 6%, transparent);
-  box-shadow: var(--shadow);
+  overflow: clip;
+  background: color-mix(in srgb, var(--text-color-primary) 3.5%, transparent);
+  outline: 0.5px solid var(--tophit-edge);
+  outline-offset: -0.5px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 8px 20px -8px rgba(0, 0, 0, 0.16);
 }
 
-.search-event-head {
+@media (prefers-color-scheme: dark) {
+  .search-tophit-row {
+    --tophit-edge: rgba(0, 0, 0, 0.5);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 8px 20px -8px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* The card is its own surface, so it presses in like one. Keeping the scale
+   while the classroom page opens is deliberate: the page zooms out of the
+   card from its pressed size (see the pressed-card note in
+   classroom-detail.js). */
+.search-tophit-row:has(.search-row:active) {
+  scale: 0.98;
+}
+
+/* Spotlight-style contact-card tint for a professor Top Hit: a muted, deeper
+   tone of the SAME hue as the avatar (search-overlay.js sets --prof-hue on
+   this element from the identical key→hue function the avatar uses), never
+   the avatar's own vivid tone, so the avatar keeps standing out on top of it.
+   Re-scoping --text-color-primary here (rather than setting `color` directly)
+   is deliberate: every descendant text/chevron/hover/selected style already
+   derives from that token via color-mix, so the whole card — including the
+   :hover/:active/--selected tint further down — repaints in a legible,
+   theme-appropriate pairing with no per-property overrides needed. */
+.search-tophit-row--professor {
+  background: hsl(var(--prof-hue, 210) 42% 92%);
+  --text-color-primary: hsl(var(--prof-hue, 210) 45% 20%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-tophit-row--professor {
+    background: hsl(var(--prof-hue, 210) 36% 16%);
+    --text-color-primary: hsl(var(--prof-hue, 210) 28% 93%);
+  }
+}
+
+/* ── Grouped row lists (iOS inset-grouped feel) ──────────────────────
+   Rows sit directly in the glass panel, separated by hairlines, rather than
+   floating as individual cards — calmer and denser for a Spotlight list. */
+
+.search-section-list,
+.search-item {
+  border-radius: var(--radius-lg, 1rem);
+  overflow: clip;
+  background: color-mix(in srgb, var(--text-color-primary) 3.5%, transparent);
+}
+
+.search-section-list {
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  flex-direction: column;
 }
 
-.search-event-title {
+.search-section-list .search-item + .search-item,
+.search-section-list > .search-row + .search-row,
+.search-section-list > .search-row + .search-item,
+.search-section-list > .search-item + .search-row {
+  box-shadow: inset 0 1px 0 0 color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+}
+
+/* Exam/lesson groups read as accordions, not plain inset rows — each item
+   gets its own rounded block with a gap between them, instead of being
+   fused into one continuous list. The gap is each item's margin rather than
+   `gap`, so it collapses along with an item leaving (search-motion.js
+   animates margin-top with the height); the list pulls the first one back. */
+.search-section-list--spaced {
+  background: transparent;
+  margin-top: -0.6rem;
+}
+
+.search-section-list--spaced > * {
+  margin-top: 0.6rem;
+}
+
+.search-section-list--spaced > .search-item,
+.search-section-list--spaced > .search-row {
+  background: color-mix(in srgb, var(--text-color-primary) 3.5%, transparent);
+  border-radius: var(--radius-lg, 1rem);
+  overflow: clip;
+}
+
+.search-section-list--spaced > .search-item + .search-item,
+.search-section-list--spaced > .search-row + .search-row {
+  box-shadow: none;
+}
+
+/* Separate blocks: hover/press tint their own rounded background instead of
+   painting a bare row over the list's. */
+.search-section-list--spaced > .search-row:hover,
+.search-section-list--spaced > .search-row.search-row--selected {
+  background: color-mix(in srgb, var(--text-color-primary) 7%, transparent);
+}
+
+.search-section-list--spaced > .search-row:active {
+  background: color-mix(in srgb, var(--text-color-primary) 11%, transparent);
+}
+
+/* ── Row (shared shape for every result type) ────────────────────────
+   40px leading visual + title/subtitle + trailing accessory. Real <button>s
+   throughout, so the native default cursor applies — no cursor:pointer. */
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  min-width: 0;
+
+  border: none;
+  background: transparent;
+  padding: 0.55rem 0.75rem;
+  text-align: start;
+  font-family: inherit;
+  color: inherit;
+
+  transition: background-color 0.12s ease;
+}
+
+.search-row:hover,
+.search-row--selected {
+  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+}
+
+.search-row:active {
+  background: color-mix(in srgb, var(--text-color-primary) 10%, transparent);
+}
+
+.search-row-lead {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md, 0.75rem);
+  overflow: clip;
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: color-mix(in srgb, var(--text-color-primary) 7%, transparent);
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+  font-size: var(--text-110);
+}
+
+.search-row-lead--lg {
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: var(--radius-lg, 1rem);
+  font-size: var(--text-150);
+}
+
+.search-row-lead--avatar {
+  border-radius: 50%;
+}
+
+.search-row-lead--tile.search-row-lead--accent {
+  background: color-mix(in srgb, var(--color-status-busy) 18%, transparent);
+  color: var(--color-status-busy);
+}
+
+/* Classroom photo: flush against the row's leading edge, full row height,
+   clipped by the ROW's own corner radius (not the tile's) and faded out into
+   the row background as it nears the text via a mask-image ON THE IMAGE
+   ITSELF. Deliberately not on an ancestor: a `mask`/`filter`/`opacity` on an
+   ancestor of a backdrop-filter element disables that element's blur in
+   Chromium (see the note in classroom-list.css) — the image has no
+   backdrop-filter descendants, so it's safe here regardless, but the rule of
+   thumb is kept the same everywhere in this app. */
+.search-row:has(> .search-row-lead--photo) {
+  position: relative;
+  overflow: clip;
+  border-radius: var(--radius-md, 0.75rem);
+  padding-left: calc(2.5rem + 0.9rem);
+}
+
+/* As its own block in a spaced list, the same corners as the exam/lesson
+   blocks beside it. */
+.search-section-list--spaced > .search-row:has(> .search-row-lead--photo) {
+  border-radius: var(--radius-lg, 1rem);
+}
+
+.search-row--tophit:has(> .search-row-lead--photo) {
+  border-radius: var(--radius-lg, 1rem);
+  padding-left: calc(3.75rem + 1.15rem);
+}
+
+.search-row-lead--photo {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2.5rem;
+  height: 100%;
+  border-radius: 0;
+}
+
+.search-row-lead--photo.search-row-lead--lg {
+  width: 3.75rem;
+  height: 100%;
+  border-radius: 0;
+}
+
+.search-row-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  mask-image: linear-gradient(to right, #000 55%, transparent 97%);
+  -webkit-mask-image: linear-gradient(to right, #000 55%, transparent 97%);
+}
+
+.search-row-photo.loaded {
+  opacity: 1;
+}
+
+.search-row-lead--photo.photo-failed .search-row-photo {
+  display: none;
+}
+
+.search-row-lead--photo.photo-failed::before {
+  content: '\f1e97';
+  font-family: 'hugeicons-stroke-rounded';
+}
+
+/* Deterministic per-professor colour (search-overlay.js sets --avatar-hue),
+   mixed against the theme surface so it stays legible light and dark. */
+.search-avatar {
+  background: color-mix(in srgb, hsl(var(--avatar-hue, 210) 70% 50%) 20%, var(--background-color-secondary));
+  color: hsl(var(--avatar-hue, 210) 55% 38%);
+  font-weight: 800;
+  font-size: var(--text-90);
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-avatar {
+    background: color-mix(in srgb, hsl(var(--avatar-hue, 210) 70% 50%) 30%, var(--background-color-secondary));
+    color: hsl(var(--avatar-hue, 210) 70% 74%);
+  }
+}
+
+.search-row-body {
   flex: 1;
   min-width: 0;
-  font-size: var(--text-95);
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--text-color-primary);
-}
-
-/* .timeline-popover-meta / .timeline-popover-badge come from
-   classroom-detail.css (always loaded) — reused verbatim here. */
-
-.search-event-sessions {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.05rem;
+}
+
+.search-row-title {
+  font-size: var(--text-90);
+  font-weight: 700;
+  color: var(--text-color-primary);
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.search-row--tophit .search-row-title {
+  font-size: var(--text-110);
+}
+
+/* Every highlight()-produced fragment (raw text interleaved with <mark>) is
+   wrapped in this single span rather than dropped straight into the flex
+   title row — otherwise each <mark> becomes its own flex item and a
+   partially-highlighted word visually splits apart. Doubles as the title's
+   ellipsis truncation, which needs an element of its own to shrink (a flex
+   child's default min-width:auto otherwise refuses to shrink below its
+   content, so text-overflow on the flex row itself never had anywhere to
+   apply). */
+.search-row-title-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-row-title-alt,
+.search-row-badge {
+  flex-shrink: 0;
+}
+
+.search-row-title-alt {
+  font-weight: 500;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+}
+
+.search-row-subtitle,
+.search-row-extra {
+  font-size: var(--text-80);
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-row-badge {
+  flex-shrink: 0;
+  font-size: var(--text-65);
+  vertical-align: middle;
+}
+
+.search-row-features {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   margin-top: 0.15rem;
 }
 
-.search-event-session {
+.search-row-feature {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: var(--text-75);
+  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
+}
+
+.search-row-feature .hgi-stroke {
+  font-size: var(--text-90) !important;
+}
+
+.search-row-trailing {
+  flex-shrink: 0;
+  font-size: var(--text-75);
+}
+
+.search-row-chevron {
+  display: flex;
+  color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
+}
+
+.search-row-chevron .hgi-stroke {
+  font-size: var(--text-100) !important;
+  transition: transform 0.3s var(--vt-spring, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.search-row--expanded .search-row-chevron .hgi-stroke {
+  transform: rotate(180deg);
+}
+
+/* ── "Show all" expander row ─────────────────────────────────────────── */
+
+.search-show-all {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--text-80);
+  font-weight: 700;
+  text-align: start;
+  color: var(--text-color-accent);
+  transition: background-color 0.12s ease;
+}
+
+.search-show-all:hover,
+.search-show-all.search-row--selected {
+  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
+}
+
+/* ── Exam/lesson accordion (in-place expand/collapse) ─────────────────
+   The session list always exists in the DOM (search-overlay.js never
+   rebuilds it on toggle) — only these two classes are flipped, which is what
+   lets the grid-template-rows 0fr→1fr technique actually animate. */
+
+/* Critically damped (--vt-spring, classroom-detail.css): a height that
+   overshoots reads as a wobble, not as physics. */
+.search-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s var(--vt-spring, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.search-collapse--open {
+  grid-template-rows: 1fr;
+}
+
+.search-collapse-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-collapse,
+  .search-row-chevron .hgi-stroke {
+    transition: none;
+  }
+}
+
+/* ── Expanded exam/lesson sessions, and the professor view's day lists ── */
+
+.search-session-list {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
-  text-align: start;
+  padding: 0.3rem 0.75rem 0.6rem calc(2.5rem + 0.7rem + 0.75rem); /* align under the row's title */
+  gap: 0.35rem;
+}
 
-  padding: 0.5rem 0.7rem;
+/* Each session reads as its own tappable pill: a subtle background, a visible
+   gap from its neighbours (the list's own `gap` above), a hover/press state,
+   and a trailing arrow — see .search-session-arrow. No cursor:pointer (native
+   default cursor only, project-wide rule). */
+.search-session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-align: start;
   border: none;
   border-radius: var(--radius-md, 0.75rem);
   background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
+  font-family: inherit;
+  padding: 0.5rem 0.65rem;
+  transition: background-color 0.12s ease, scale 0.15s ease-out;
 }
 
-.search-event-session .ses-when {
-  font-size: var(--text-80);
+/* Session pills are free-standing tap targets (unlike the full-width rows of
+   an inset list, which only highlight): they press in. */
+.search-session-row:active {
+  scale: 0.97;
+}
+
+.search-session-row:hover {
+  background: color-mix(in srgb, var(--text-color-primary) 9%, transparent);
+}
+
+.search-session-row:active,
+.search-session-row.search-row--selected {
+  background: color-mix(in srgb, var(--text-color-primary) 13%, transparent);
+}
+
+.search-session-row--past {
+  opacity: 0.5;
+}
+
+.search-session-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.search-session-when {
+  font-size: var(--text-75);
   font-weight: 700;
   color: var(--text-color-accent);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.search-event-session .ses-where {
-  font-size: var(--text-75);
-  font-weight: 600;
-}
-
-.search-event-more {
+.search-session-where {
   font-size: var(--text-72);
-  font-weight: 600;
-  padding: 0.15rem 0.7rem 0;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* The classroom cards run large for this context on a phone — scale the grid
-   down a touch. (zoom keeps layout/hit-testing correct, unlike transform.) */
+.search-session-arrow {
+  flex-shrink: 0;
+  display: flex;
+  color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
+}
+
+.search-session-arrow .hgi-stroke {
+  font-size: var(--text-90) !important;
+}
+
+/* Professor-view-only extras: several different courses share one day list,
+   so each row also carries its own title (+ exam tint/badge, + a "Now"
+   marker for a session in progress). */
+
+.search-session-title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.search-session-course {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-80);
+  font-weight: 700;
+  color: var(--text-color-primary);
+}
+
+.search-session-now {
+  flex-shrink: 0;
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--text-color-accent);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.search-session-row--exam {
+  background: color-mix(in srgb, var(--color-status-busy) 12%, transparent);
+}
+
+.search-session-row--exam:hover {
+  background: color-mix(in srgb, var(--color-status-busy) 18%, transparent);
+}
+
+.search-session-row--exam:active,
+.search-session-row--exam.search-row--selected {
+  background: color-mix(in srgb, var(--color-status-busy) 24%, transparent);
+}
+
 @media (max-width: 599px) {
-  .search-overlay-results .search-grid--classroom {
-    zoom: 0.72;
+  .search-session-list {
+    padding-left: calc(2.5rem + 0.7rem + 0.75rem);
   }
 
-  /* Hide the app header on mobile only once the results box has actually
-     grown up behind it (toggled from search-overlay.js). */
-  body.search-overlay-open.search-covers-header .header {
+  /* The search bar now sits in the header's slot, so the header itself is
+     always faded out while search is open on mobile (not just once results
+     grow tall enough to reach it). */
+  body.search-overlay-open .header,
+  body.search-overlay-open .header-top-strip {
     opacity: 0;
+    /* opacity alone isn't enough: Safari still samples these top-edge sticky
+       fills to tint the status-bar strip. visibility flips after the fade. */
+    visibility: hidden;
     pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
   }
 
-  body.search-overlay-open .header {
-    transition: opacity 0.2s ease;
+  /* Takes over the header's status-bar fill while it's hidden: solid under
+     the safe area, fading out across the gap above the search bar. */
+  .search-overlay-backdrop::before {
+    content: "";
+    position: fixed;
+    top: var(--search-vv-top, 0px);
+    left: 0;
+    right: 0;
+    height: calc(env(safe-area-inset-top, 0px) + var(--lg-tabbar-bottom-offset, 28px));
+    background: linear-gradient(to bottom,
+      var(--background-color) env(safe-area-inset-top, 0px),
+      transparent 100%);
+    pointer-events: none;
   }
 }
 
@@ -485,12 +1159,10 @@ html.search-vt .lg-tabbar__prominent {
     left: 50%;
     right: auto;
     top: 27vh;
-    bottom: auto;
     transform: translateX(-50%);
     margin-inline: 0;
 
     max-height: 65vh;
-    flex-direction: column; /* search bar on top, results below */
   }
 
   /* The side rail stays put; only the FAB (which morphs into the search bar)
@@ -523,4 +1195,212 @@ html.search-vt .lg-tabbar__prominent {
   font-size: var(--text-75);
   color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
   padding: 0.75rem 1rem 0.25rem;
+}
+
+/* ── Results ⇄ professor view slide ─────────────────────────────────────
+   startSlide() (search-overlay.js) builds a 200%-wide flex track holding the
+   outgoing and incoming panes side by side and springs its translate, while
+   the box's height morphs between the two panes' (an explicit height, so it
+   leaves the flex sizing for the duration). Once it lands, the winning pane
+   becomes resultsEl's only child again. */
+
+.search-overlay-results {
+  overflow-x: hidden;
+}
+
+.search-overlay-results--sliding {
+  flex: none;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.search-slide-track {
+  display: flex;
+  align-items: flex-start;
+  width: 200%;
+}
+
+.search-slide-track > .search-pane {
+  width: 50%;
+  flex: none;
+  min-width: 0;
+}
+
+/* ── Professor view ──────────────────────────────────────────────────── */
+
+/* The professor's header: a large avatar and name on the left (stepped in
+   past the floating back button in the corner), and their courses, the
+   filter and the range note beside it on the right — or, when the box is too
+   narrow for two columns (phones), below it. Sized off the pane, not the
+   viewport, so it follows the box through the slide too. */
+.search-pane--professor {
+  container-type: inline-size;
+}
+
+.search-pv-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0.25rem 1.25rem;
+}
+
+@container (min-width: 520px) {
+  .search-pv-header {
+    display: grid;
+    /* The identity at its natural width (up to 60%), the courses in the rest. */
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .search-pv-header .search-pv-identity {
+    max-width: 60cqi;
+  }
+
+  .search-pv-header .search-pv-meta {
+    align-items: flex-end;
+    text-align: end;
+  }
+
+  .search-pv-header .search-pv-courses {
+    justify-content: flex-end;
+  }
+}
+
+/* Vitrium's glass back button (createBackButton), pinned over the results
+   box's top-left corner — outside the scrolling content (it's a child of
+   .search-results-frame), so the schedule scrolls under it while it stays
+   put. search-overlay.js drives its opacity and scale along with the
+   professor-view slide; hidden (and inert) in the results view. */
+.search-pv-back.lg-button {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 3;
+  width: 2.5rem;
+  height: 2.5rem;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+
+.search-pv-back.search-pv-back--shown {
+  pointer-events: auto;
+}
+
+.search-pv-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  text-align: start;
+  /* Clears the back button (0.5rem in from the box's edge, 2.5rem wide),
+     which sits over this corner. */
+  padding-left: 2.25rem;
+}
+
+.search-pv-identity .search-row-lead--lg {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: var(--text-125);
+}
+
+.search-pv-name-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+/* Wraps (balanced) rather than truncating: it's the page's title. */
+.search-pv-name {
+  font-size: var(--text-150);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--text-color-primary);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.search-pv-counts {
+  font-size: var(--text-90);
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+}
+
+.search-pv-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+/* Vitrium segmented control (All / Lessons / Exams): its track has no blur
+   of its own by default, as it sits on the results box's glass. */
+.search-pv-filter {
+  font-size: var(--text-80);
+}
+
+.search-pv-courses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.search-pv-course-chip {
+  text-align: center;
+  font-size: var(--text-72);
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+  color: color-mix(in srgb, var(--text-color-primary) 65%, transparent);
+}
+
+.search-pv-course-chip--more {
+  background: transparent;
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+}
+
+.search-pv-range-note {
+  font-size: var(--text-72);
+  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
+}
+
+.search-pv-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* One block per day (keyed for search-motion.js), titled with the same
+   .search-section-label as the results' sections and spaced like them. The
+   titles scroll with their day rather than sticking: they have no background
+   of their own to stick over the rows with. The spacing is every day's own
+   padding, inside the block, so it collapses with a day the filter removes;
+   the list pulls the first one back (a `+` rule instead would snap the next
+   day's spacing when a leaving first day is removed — see .search-block). */
+.search-pv-days {
+  margin-top: -1.1rem;
+}
+
+.search-pv-day {
+  position: relative;
+  padding-top: 1.1rem;
+}
+
+.search-pv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 0;
+  text-align: center;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+}
+
+.search-pv-empty .hgi-stroke {
+  font-size: var(--text-150);
+  color: color-mix(in srgb, var(--text-color-primary) 30%, transparent);
 }

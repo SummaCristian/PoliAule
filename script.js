@@ -286,8 +286,10 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     buildingName,
   });
   let downAt = null;
+  let openedByTap = false;
   titlesBtn.addEventListener('pointerdown', (e) => {
     downAt = { x: e.clientX, y: e.clientY, t: performance.now() };
+    openedByTap = false;
     buildingOverview.prewarm(section);
   });
   // Open on pointerup, not click: iOS Safari swallows the click when the tap
@@ -300,8 +302,21 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
     const held = performance.now() - downAt.t;
     downAt = null;
-    if (moved <= 12 && held < 700) openOverview();
+    if (moved <= 12 && held < 700) {
+      openedByTap = e.pointerType === 'touch';
+      openOverview();
+    }
   });
+  // The rest of that tap, once it has opened the overview: Chrome on Android
+  // sends its click to whatever is under the finger by then, which is the
+  // overview's card for this very building, and a card's click navigates back
+  // out of the overview. So it opened and closed in one tap. Cancelling the
+  // touchend cancels the click it would have made.
+  titlesBtn.addEventListener('touchend', (e) => {
+    if (!openedByTap) return;
+    openedByTap = false;
+    if (e.cancelable) e.preventDefault();
+  }, { passive: false });
   // Fallback for keyboard / assistive-tech activation, which fires click only.
   titlesBtn.addEventListener('click', openOverview);
 

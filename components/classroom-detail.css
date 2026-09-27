@@ -2391,8 +2391,9 @@ body.detail-open .tab-content * {
      SAME image. It happens in the first third, while the box is small and
      moving fastest, which is why this needs no blur to hide the swap.
 
-   Everything animates `transform` / `clip-path` / `opacity` on snapshots that
-   are at most viewport-sized: no filters, and no full-page snapshot (the
+   Everything animates `transform` / `opacity`, and the page's box its own
+   `height` / `border-radius`, on snapshots that are at most viewport-sized:
+   no filters, no clip-path, and no full-page snapshot (the
    overlay is ~2000px tall — capturing it was the single most expensive thing
    the old version did).
 
@@ -2432,10 +2433,10 @@ body.detail-open .tab-content * {
      is scaled down so its width matches the card's and translated so its top
      left corner sits on the card's, which — because the hero photo is
      full-bleed and starts at the very top of the page — puts the page's photo
-     exactly where the card is. `clip-path` then trims it to the card's box:
-     `inset(0 0 B 0)`, where B is in the snapshot's own (pre-scale)
-     coordinates, so only the bottom edge needs a value — the left and right
-     ones stay at 0 at every scale, since the scale is derived from the width.
+     exactly where the card is. Its height then trims it to the card's box:
+     `100% - B`, where B is in the snapshot's own (pre-scale) coordinates,
+     so only the bottom edge needs a value — the width stays whole at every
+     scale, since the scale is derived from the width.
 
      The other snapshot doesn't animate at all: the page we came from stays
      put and gets covered / uncovered, which is both what iOS does and one
@@ -2454,15 +2455,30 @@ body.detail-open .tab-content * {
     animation:
       detail-zoom-in var(--vt-duration) var(--vt-spring) both,
       detail-zoom-arc var(--vt-duration) linear both;
-    transform-origin: 0 0;
   }
 
   :root.detail-vt-close::view-transition-old(root) {
     animation:
       detail-zoom-out var(--vt-duration) var(--vt-spring) both,
       detail-zoom-arc-back var(--vt-duration) linear both;
-    transform-origin: 0 0;
     z-index: 1; /* the shrinking page rides above the list it shrinks into */
+  }
+
+  /* The trim to the card's box is the snapshot's own height, shortened from
+     the bottom and cropped (not squashed) by `cover` from the top, and its
+     corners are its border-radius. That was one `clip-path: inset(... round
+     ...)` before, which Chrome can't animate without repainting a mask the
+     size of the screen on every frame: on an older phone at a high pixel
+     ratio, that re-raster was what the GPU spent the open on. The clip is
+     on the snapshot itself (Chrome doesn't clip a view-transition image to
+     its box otherwise), not on the image pair the hero uses it on: this
+     pair also holds the list's snapshot, which stays whole. */
+  :root.detail-vt-open::view-transition-new(root),
+  :root.detail-vt-close::view-transition-old(root) {
+    transform-origin: 0 0;
+    object-fit: cover;
+    object-position: top;
+    overflow: clip;
   }
 
   /* ---- The shared element (card <-> hero photo) ------------------------ */
@@ -2570,7 +2586,8 @@ body.detail-open .tab-content * {
      outrank animations, so these switch the animated value off outright. */
   :root.vtd-noclip::view-transition-new(root),
   :root.vtd-noclip::view-transition-old(root) {
-    clip-path: none !important;
+    height: 100% !important;
+    border-radius: 0 !important;
   }
 
   :root.vtd-noarc::view-transition-new(root),
@@ -2665,22 +2682,26 @@ body.detail-open .tab-content * {
 @keyframes detail-zoom-in {
   from {
     transform: translate(var(--zoom-x, 0px), var(--zoom-y, 0px)) scale(var(--zoom-scale, 1));
-    clip-path: inset(0 0 var(--zoom-clip, 0px) 0 round var(--zoom-radius, 0px));
+    height: calc(100% - var(--zoom-clip, 0px));
+    border-radius: var(--zoom-radius, 0px);
   }
   to {
     transform: none;
-    clip-path: inset(0 0 0 0 round 0);
+    height: 100%;
+    border-radius: 0;
   }
 }
 
 @keyframes detail-zoom-out {
   from {
     transform: none;
-    clip-path: inset(0 0 0 0 round 0);
+    height: 100%;
+    border-radius: 0;
   }
   to {
     transform: translate(var(--zoom-x, 0px), var(--zoom-y, 0px)) scale(var(--zoom-scale, 1));
-    clip-path: inset(0 0 var(--zoom-clip, 0px) 0 round var(--zoom-radius, 0px));
+    height: calc(100% - var(--zoom-clip, 0px));
+    border-radius: var(--zoom-radius, 0px);
   }
 }
 

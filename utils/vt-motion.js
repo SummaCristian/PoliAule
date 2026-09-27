@@ -43,10 +43,10 @@ export function setZoomOrigin(rect, radius = 16) {
   style.setProperty('--zoom-x', `${rect.left}px`);
   style.setProperty('--zoom-y', `${rect.top}px`);
   style.setProperty('--zoom-scale', `${scale}`);
-  // clip-path applies in the snapshot's own coordinates, i.e. before the scale,
-  // so the card's height has to be divided back out. The left/right insets stay
-  // 0 at every point of the animation (the scale comes from the width), which
-  // is why only the bottom one is variable.
+  // The snapshot's height and corner radius are in its own coordinates, i.e.
+  // before the scale, so the card's height has to be divided back out. Its
+  // width stays whole at every point of the animation (the scale comes from
+  // the width), which is why only the bottom edge is variable.
   style.setProperty('--zoom-clip', `${Math.max(0, vh - rect.height / scale)}px`);
   style.setProperty('--zoom-radius', `${radius / scale}px`);
   // The same radius in screen px, for the hero's own corners to morph along

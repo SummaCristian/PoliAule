@@ -3,9 +3,12 @@
 //
 // Every open/close is reported to the console and to a small panel on screen
 // (so a phone can be read without devtools), and pushed onto window.__vtRuns:
+//   tap     ms from the tap (the click, or the back navigation) to .ready:
+//           the whole lag between the finger and the first moving frame
+//   pre     how much of `tap` passed before startViewTransition() was even
+//           called (the hash navigation, and whatever the page awaits first)
 //   start   ms from startViewTransition() to .ready — capturing the old
-//           state, running the update callback, capturing the new one. This
-//           is the lag between the tap and the first moving frame.
+//           state, running the update callback, capturing the new one
 //   cb      how much of `start` the update callback itself took
 //   fps     frames drawn between .ready and .finished, per second
 //   drop    frames missed in that window, counted against the display's own
@@ -54,10 +57,29 @@ export function vtFlag(name) {
 let refreshMs = 1000 / 60;
 const runs = [];
 let panel = null;
+// When the input that led to the next transition happened, for `tap`/`pre`.
+// Event timestamps share performance.now()'s clock. A popstate only counts
+// when no click came first: the back button's click is the real start of
+// its close, and the popstate its history.back() fires comes after.
+let inputAt = 0;
 
 if (enabled) {
   for (const f of FLAGS) document.documentElement.classList.add(`vtd-${f}`);
   window.__vtRuns = runs;
+
+  // noglass lives here rather than with the other switches' rules in
+  // classroom-detail.css: a rule ending in `*` under a class on <html> makes
+  // every toggle of that class restyle the whole page, switch on or off.
+  if (FLAGS.has('noglass')) {
+    const style = document.createElement('style');
+    style.textContent = '.header-ctl-vt * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }';
+    document.head.append(style);
+  }
+
+  document.addEventListener('click', (e) => { inputAt = e.timeStamp; }, true);
+  window.addEventListener('popstate', (e) => {
+    if (!inputAt || e.timeStamp - inputAt > 1000) inputAt = e.timeStamp;
+  }, true);
 
   const gaps = [];
   let last = 0;
@@ -85,10 +107,16 @@ export function startTrackedTransition(label, update, info) {
   if (!enabled) return document.startViewTransition(update);
 
   const t0 = performance.now();
+  const input = inputAt && t0 - inputAt < 3000 ? inputAt : 0;
+  inputAt = 0;
+  performance.mark(`vt:${label}:call`);
   let cbStart = 0, cbEnd = 0;
   const vt = document.startViewTransition(() => {
     cbStart = performance.now();
-    try { return update(); } finally { cbEnd = performance.now(); }
+    try { return update(); } finally {
+      cbEnd = performance.now();
+      performance.measure(`vt:${label}:cb`, { start: cbStart, end: cbEnd });
+    }
   });
 
   const stamps = [];
@@ -125,6 +153,8 @@ export function startTrackedTransition(label, update, info) {
     const run = {
       label,
       flags: [...FLAGS].join(',') || '-',
+      tap: input ? Math.round(tReady - input) : null,
+      pre: input ? Math.round(t0 - input) : null,
       start: Math.round(tReady - t0),
       cb: Math.round(cbEnd - cbStart),
       fps: span ? Math.round((stamps.length - 1) / span * 1000) : 0,
@@ -170,9 +200,9 @@ function render() {
   // Narrow enough for a phone: the column names are spelled out in the header.
   const pad = (v, n) => String(v).padStart(n);
   const head = `vtdebug [${[...FLAGS].join(',') || 'default'}] ${refreshMs.toFixed(1)}ms\n`
-    + '       start  cb fps drop worst live';
+    + '       tap pre start  cb fps drop worst live';
   const rows = runs.slice(-6).map(r =>
-    `${r.label.padEnd(5)} ${pad(r.start, 6)} ${pad(r.cb, 3)} ${pad(r.fps, 3)} ${pad(r.drop, 4)} `
+    `${r.label.padEnd(5)} ${pad(r.tap ?? '-', 3)} ${pad(r.pre ?? '-', 3)} ${pad(r.start, 5)} ${pad(r.cb, 3)} ${pad(r.fps, 3)} ${pad(r.drop, 4)} `
     + `${pad(r.worst, 5)} ${pad(r.live, 4)}${r.zoom === false ? ' fade' : r.hero ? ' hero' : ''}`);
   // The last run frame by frame, in refresh intervals (1 = on time, 5 = four
   // frames missed there): tells one long stall from a steady struggle.

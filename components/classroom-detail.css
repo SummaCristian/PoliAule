@@ -86,11 +86,17 @@
    <html> for this reason. */
 body.detail-open {
   background-color: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
-  /* The header's top strip, safe-area rectangle and fade gradient (style.css)
-     take the same color, so the top of the screen follows the page instead of
-     staying the plain theme background. */
+  transition: background-color 0.6s ease;
+}
+
+/* The header's top strip, safe-area rectangle and fade gradient (style.css)
+   take the same color, so the top of the screen follows the page instead of
+   staying the plain theme background. Set on the two elements that read it,
+   not on body: it's inherited, so a change on body restyled every element in
+   the page (the close's hold below, in the frame its old state is captured
+   in). */
+body.detail-open :is(.header, .header-top-strip) {
   --header-bg: var(--detail-page-bg);
-  transition: background-color 0.6s ease, --header-bg 0.35s ease;
 }
 
 /* Registered so it can transition (a gradient can't, but the color stops that
@@ -114,11 +120,21 @@ body.detail-open {
    removed; on close it is already at the theme color, so nothing changes. */
 body {
   --detail-page-bg: color-mix(in srgb, var(--detail-tint, var(--background-color)) 35%, var(--background-color));
+}
+
+:is(.header, .header-top-strip) {
   transition: --header-bg 0.35s ease;
 }
 
-.header-ctl-vt body {
+/* :root for the specificity: this has to outrank body.detail-open's rule above
+   ((0,3,0) against (0,2,1)), or the top strip, which is live in the page's
+   snapshot, takes the tint the moment the page opens while the header's
+   frozen one only shows it at the end. And it snaps rather than transitions,
+   so the close's old snapshot, taken the frame the hold starts, already has
+   the plain color. */
+:root.header-ctl-vt :is(.header, .header-top-strip) {
   --header-bg: var(--background-color);
+  transition: none;
 }
 
 /* Hide tab contents and footer while the detail panel is open */
@@ -2294,11 +2310,11 @@ body.detail-open .tab-content * {
      near-flat background the blur shows almost nothing, and Safari composites
      backdrop-filter live even inside a snapshot, at the snapshot's original
      size, ignoring the zoom (the same bug as .header-ctl-vt above). */
-.detail-vt-freeze #classroom-detail-overlay *:not(.detail-photo-container.loaded) {
+#classroom-detail-overlay.detail-vt-freeze *:not(.detail-photo-container.loaded) {
   animation-play-state: paused !important;
 }
 
-.detail-vt-freeze #classroom-detail-overlay * {
+#classroom-detail-overlay.detail-vt-freeze * {
   transition: none !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
@@ -2310,13 +2326,15 @@ body.detail-open .tab-content * {
    status dot, which pulses forever. The header only ever shows its old,
    still snapshot during the transition, so pausing it changes nothing on
    screen. */
-.detail-vt-freeze .body-container {
+/* Its own class, not .detail-vt-freeze: see _freezeTargets() in
+   classroom-detail.js. */
+.body-container.detail-vt-snap {
   transition: none !important;
 }
 
-.detail-vt-freeze .header *,
-.detail-vt-freeze .header *::before,
-.detail-vt-freeze .header *::after {
+.header.detail-vt-freeze *,
+.header.detail-vt-freeze *::before,
+.header.detail-vt-freeze *::after {
   animation-play-state: paused !important;
 }
 
@@ -2335,11 +2353,6 @@ body.detail-open .tab-content * {
    decoded), to see what bringing the list back costs on close. */
 .vtd-noimg .classroom-card-photo {
   display: none !important;
-}
-
-:root.vtd-noglass.header-ctl-vt * {
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
 }
 
 /* Detail-only header controls (back button, favourite toggle) scaling in/out
@@ -2676,9 +2689,38 @@ body.detail-open .tab-content * {
   }
 }
 
-/* The page grows out of / shrinks into the card's rounded box. --zoom-* are
-   written by utils/vt-motion.js right before the transition starts; the
-   fallbacks make these a plain no-op if they ever aren't. */
+/* The zoom's geometry, written onto <html> by utils/vt-motion.js right before a
+   transition starts. Registered as not inherited, and handed down the
+   transition's pseudo-element tree by hand: only those pseudo-elements read
+   it, and a custom property that is inherited reaches every element of the
+   page, so each change to one restyled all of them (~20ms on an older phone,
+   in the frame the transition captures its old state in). */
+@property --zoom-x { syntax: '*'; inherits: false; }
+@property --zoom-y { syntax: '*'; inherits: false; }
+@property --zoom-scale { syntax: '*'; inherits: false; }
+@property --zoom-clip { syntax: '*'; inherits: false; }
+@property --zoom-radius { syntax: '*'; inherits: false; }
+@property --zoom-card-radius { syntax: '*'; inherits: false; }
+@property --arc-x { syntax: '*'; inherits: false; }
+@property --arc-y { syntax: '*'; inherits: false; }
+
+::view-transition,
+::view-transition-group(*),
+::view-transition-image-pair(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  --zoom-x: inherit;
+  --zoom-y: inherit;
+  --zoom-scale: inherit;
+  --zoom-clip: inherit;
+  --zoom-radius: inherit;
+  --zoom-card-radius: inherit;
+  --arc-x: inherit;
+  --arc-y: inherit;
+}
+
+/* The page grows out of / shrinks into the card's rounded box. The fallbacks
+   make these a plain no-op if the geometry ever isn't there. */
 @keyframes detail-zoom-in {
   from {
     transform: translate(var(--zoom-x, 0px), var(--zoom-y, 0px)) scale(var(--zoom-scale, 1));

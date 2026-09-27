@@ -258,11 +258,12 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 2.0.0-beta7",
+  "footer.versionInfo": "Version 2.0.0-beta8",
 
-  "changelog.item1": "Redesigned the Details page",
-  "changelog.item2": "Added a map view to show where the building is located inside the Details page",
-  "changelog.item3": "Added the building's opening hours in the Details page",
-  "changelog.item4": "Improved the performance of the whole webapp",
-  "changelog.item5": "Ported the whole design system to Vitrium, the component library extracted from PoliAule"
+  "changelog.item1": "Redesigned the whole Search UI, making it easier to find classrooms, professors, and courses. Added a new 'Top Hit' section for the most relevant results.",
+  "changelog.item2": "Redesigned the Info page",
+  "changelog.item3": "Massively improved the performance of the navigation transition, played when opening the details of an app. This guarantees higher framerates even on older devices.",
+  "changelog.item4": "Improved the loading performance for the Campus tab: the map is now loaded in the background, keeping the UI responsive while the map is being fetched.",
+  "changelog.item5": "Tweaked the design of the occupation graph inside the Details page, turning it into tinted glass.",
+  "changelog.item6": "Added a new 'Transfer' feature, allowing you to move your favourites and settings to another device using a QR code."
 }

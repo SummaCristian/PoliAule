@@ -236,10 +236,10 @@
   "footer.whatsNew": "Cosa c'è di nuovo?",
   "footer.checkOnGitHub": "Vedi su GitHub",
   "footer.disclaimer5": "Non affiliato al Politecnico di Milano.",
-  "footer.versionInfo": "Versione 2.0.0-beta7",
-  "changelog.item1": "Ridisegnata la pagina Dettagli delle aule",
-  "changelog.item2": "Aggiunta una vista mappa per mostrare dove si trova l'edificio all'interno della pagina Dettagli",
-  "changelog.item3": "Aggiunti gli orari di apertura dell'edificio nella pagina Dettagli",
-  "changelog.item4": "Migliorata la performance dell'intera webapp",
-  "changelog.item5": "Portato l'intero design system su Vitrium, la libreria di componenti estratta da PoliAule"
+  "footer.versionInfo": "Versione 2.0.0-beta8",
+  "changelog.item1": "Ridisegnata l'intera interfaccia di ricerca, rendendo più facile trovare aule, professori e corsi. Aggiunta una nuova sezione 'Top Hit' per i risultati più rilevanti.",
+  "changelog.item2": "Ridisegnata la pagina Info",
+  "changelog.item3": "Migliorata significativamente la performance della transizione di navigazione, riprodotta all'apertura dei dettagli di un'app. Questo garantisce framerate più elevati anche su dispositivi più datati.",
+  "changelog.item4": "Migliorata la performance di caricamento del tab Campus: la mappa è ora caricata in background, mantenendo la UI reattiva mentre la mappa viene caricata.",
+  "changelog.item5": "Modificato il design del grafico delle occupazioni nella pagina Dettagli, rendendolo vetro colorato."
 }

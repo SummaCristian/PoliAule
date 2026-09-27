@@ -1,6 +1,6 @@
 import { t } from '../i18n.js';
 import { escapeHtml, highlight } from '../utils/html.js';
-import { fetchThumbUrl, thumbUrlCache } from '../utils/photo.js';
+import { fetchThumbUrl, thumbUrlCache, markPhotoBroken, isPhotoBroken } from '../utils/photo.js';
 import { isFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 
 // ---------- PHOTO ----------
@@ -8,9 +8,13 @@ import { isFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 async function _loadCardPhoto(classroomId, card) {
   const img = card.querySelector('.classroom-card-photo');
   const url = await fetchThumbUrl(classroomId);
-  img.onerror = () => card.classList.add('photo-failed');
+  const fail = () => {
+    markPhotoBroken(classroomId);
+    card.classList.add('photo-failed');
+  };
+  img.onerror = fail;
   img.src = url;
-  img.decode().then(() => img.classList.add('loaded')).catch(() => card.classList.add('photo-failed'));
+  img.decode().then(() => img.classList.add('loaded')).catch(fail);
 }
 
 const _photoObserver = new IntersectionObserver((entries) => {
@@ -93,7 +97,10 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
     // `loaded`, so a re-render (filter change, occupancy refresh, favourites
     // update) rebuilds the card without replaying the 0.4s opacity fade — the
     // "blink". Fresh rooms still stream in lazily via the observer.
-    const cachedUrl = thumbUrlCache.get(classroom.id);
+    // A photo that has already failed isn't asked for again (see
+    // markPhotoBroken): the card is simply built as a failed one.
+    const broken = isPhotoBroken(classroom.id);
+    const cachedUrl = broken ? null : thumbUrlCache.get(classroom.id);
     el.innerHTML = `
       <div class="classroom-card-clip">
         <img class="classroom-card-photo${cachedUrl ? ' loaded' : ''}" alt=""${cachedUrl ? ` src="${escapeHtml(cachedUrl)}"` : ''}>
@@ -103,7 +110,12 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
       </div>
     `;
     if (cachedUrl) {
-      el.querySelector('.classroom-card-photo').onerror = () => el.classList.add('photo-failed');
+      el.querySelector('.classroom-card-photo').onerror = () => {
+        markPhotoBroken(classroom.id);
+        el.classList.add('photo-failed');
+      };
+    } else if (broken) {
+      el.classList.add('photo-failed');
     } else {
       _photoObserver.observe(el);
     }

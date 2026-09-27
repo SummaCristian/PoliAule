@@ -23,6 +23,19 @@ export function thumbUrl(classroomId) {
   return `${getApiBase()}/v1/photos/${classroomId}/thumb`;
 }
 
+// Rooms whose photo failed to load: an idfoto the API has no image for (it
+// couldn't be fetched from PoliMi). Shown as photo-less for the rest of the
+// session instead of being asked for, and failing, again on every render.
+const brokenPhotos = new Set();
+
+export function markPhotoBroken(classroomId) {
+  brokenPhotos.add(classroomId);
+}
+
+export function isPhotoBroken(classroomId) {
+  return brokenPhotos.has(classroomId);
+}
+
 /** fetchPhotoUrl for the thumbnail: what cards, search rows and the detail page's zoom show. */
 export async function fetchThumbUrl(classroomId) {
   if (thumbUrlCache.has(classroomId)) return thumbUrlCache.get(classroomId);

@@ -3,7 +3,7 @@ import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
+import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
@@ -189,7 +189,7 @@ class ClassroomDetail {
       const scrollY = window.scrollY;
       this._renderContent(entry);
       this._loadSchedule(this._currentId);
-      if (entry.classroom.idfoto) this._loadPhoto(this._currentId);
+      if (this._hasPhoto(entry.classroom)) this._loadPhoto(this._currentId);
       window.scrollTo(0, scrollY);
     });
 
@@ -303,7 +303,7 @@ class ClassroomDetail {
     const scrollY = window.scrollY;
     this._renderContent(entry);
     this._loadSchedule(this._currentId);
-    if (entry.classroom.idfoto) this._loadPhoto(this._currentId);
+    if (this._hasPhoto(entry.classroom)) this._loadPhoto(this._currentId);
     window.scrollTo(0, scrollY);
   }
 
@@ -365,6 +365,11 @@ class ClassroomDetail {
      the source view simply becomes the destination page. */
   _heroTarget() {
     return this._overlay?.querySelector('.detail-photo-container') ?? null;
+  }
+
+  /** Whether the page shows a photo: an idfoto whose image hasn't failed to load. */
+  _hasPhoto(classroom) {
+    return !!classroom.idfoto && !isPhotoBroken(classroom.id);
   }
 
   /* Anything that blocks the main thread while the snapshots are animating is
@@ -582,7 +587,7 @@ class ClassroomDetail {
     // thumbnail the card was showing, by preference: already decoded, and a
     // fraction of the full photo to upload and draw on every frame of the zoom.
     // _loadPhoto swaps the full photo in once the page has landed.
-    const hasPhoto = !!entry.classroom.idfoto;
+    let hasPhoto = this._hasPhoto(entry.classroom);
     let validPhotoUrl = hasPhoto ? (thumbUrlCache.get(id) ?? photoUrlCache.get(id) ?? null) : null;
     if (validPhotoUrl) {
       // The card being tapped usually shows this very thumbnail, already
@@ -597,11 +602,16 @@ class ClassroomDetail {
         decoded = await tmp.decode().then(() => true).catch(() => false);
       }
       if (this._currentId !== id) return; // navigated away during decode
-      // Decode failed (e.g. a 404 from a stale idfoto) — don't stamp a broken image as
-      // "loaded" below. Leaving validPhotoUrl unset lets _loadPhoto()'s own error path
-      // (which removes the photo container entirely) run normally instead of being
-      // skipped via its "already loaded" short-circuit.
-      if (!decoded) validPhotoUrl = null;
+      // Decode failed (a 404 from a stale idfoto, mostly): the room opens as a
+      // photo-less one. Opened as a room with a photo, it paired the card with
+      // an empty photo box, and the photo's error handler then removed that box
+      // mid-zoom: removing a named element ends the transition on the spot (the
+      // snap), and everything below it jumped up by the photo's height.
+      if (!decoded) {
+        markPhotoBroken(id);
+        hasPhoto = false;
+        validPhotoUrl = null;
+      }
       // Warm the tint cache too, so _setBackdrop can apply --detail-tint
       // synchronously inside the VT callback (the "new" snapshot is taken
       // right after it, before any async extraction could land).
@@ -1026,7 +1036,7 @@ class ClassroomDetail {
     parkMap();
     this._overlay.classList.remove('title-stuck');
     this._overlay.innerHTML = `
-      ${classroom.idfoto ? `
+      ${this._hasPhoto(classroom) ? `
         <div class="detail-photo-backdrop"></div>
         <div class="detail-photo-container">
           <img class="detail-photo" alt="">
@@ -1102,7 +1112,7 @@ class ClassroomDetail {
     // Title click -> manual refresh of photo and schedule
     this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {
       this._loadSchedule(classroom.id);
-      if (classroom.idfoto) this._loadPhoto(classroom.id);
+      if (this._hasPhoto(classroom)) this._loadPhoto(classroom.id);
     });
 
     if (hasMap) {
@@ -1326,7 +1336,10 @@ class ClassroomDetail {
         // changed — the "blink". Stamp src + `loaded` synchronously (same task as
         // the innerHTML that created it, so it's painted only once, already
         // revealed). onerror still culls a genuinely broken URL (stale idfoto).
-        img.onerror = () => { if (this._currentId === classroomId) { container?.remove(); this._overlay.querySelector('.detail-photo-backdrop')?.remove(); } };
+        img.onerror = () => {
+          markPhotoBroken(classroomId);
+          if (this._currentId === classroomId) { container?.remove(); this._overlay.querySelector('.detail-photo-backdrop')?.remove(); }
+        };
         img.classList.add('loaded');
         container.classList.add('loaded');
         img.src = cachedUrl;
@@ -1359,7 +1372,12 @@ class ClassroomDetail {
         this._photoRevealed();
         this._upgradePhoto(classroomId, img);
       }).catch(() => {
-        if (this._currentId === classroomId) container.remove();
+        // Only while this room is still up: a decode is also abandoned when
+        // the page moves on, which says nothing about the photo.
+        if (this._currentId !== classroomId) return;
+        markPhotoBroken(classroomId);
+        container.remove();
+        this._overlay.querySelector('.detail-photo-backdrop')?.remove();
       });
     } catch (err) {
       console.error('Classroom photo load error:', err);

@@ -430,9 +430,30 @@ body.detail-open .tab-content * {
   height: calc(var(--photo-h) + var(--bd-bleed) * 2);
   padding: var(--bd-bleed);
   box-sizing: border-box;
-  background: var(--backdrop-img) center / cover repeat;
+  /* Read back by classroom-detail.js (_measureBackdrop) to pre-render the same
+     thing: the blur resolved to px here, where cqw means the backdrop. */
+  --bd-blur-px: var(--bd-blur);
+  --bd-repeat: repeat;
+  background: var(--backdrop-img) center / cover var(--bd-repeat);
   background-origin: content-box;
   filter: blur(var(--bd-blur)) saturate(1.25);
+}
+
+@property --bd-blur-px {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+/* Pre-rendered (utils/photo.js blurredBackdrop): --backdrop-img is already
+   this whole box, tiles, blur and saturation included, so it is stretched
+   over it with no filter left for the GPU to redo on every frame the page
+   moves (all of the zoom). */
+.detail-photo-backdrop.prerendered::before,
+.detail-photo-backdrop.prerendered::after {
+  background: var(--backdrop-img) 0 0 / 100% 100% no-repeat;
+  background-origin: border-box;
+  filter: none;
 }
 
 .detail-photo-backdrop::after {
@@ -451,7 +472,7 @@ body.detail-open .tab-content * {
   }
 
   .detail-photo-backdrop::before {
-    background-repeat: repeat-x;
+    --bd-repeat: repeat-x;
   }
 }
 
@@ -467,6 +488,18 @@ body.detail-open .tab-content * {
   .detail-photo-backdrop::before,
   .detail-photo-backdrop::after {
     filter: blur(var(--bd-blur)) saturate(1.25) brightness(var(--photo-dim, 1));
+  }
+
+  /* brightness() without a filter: black over the image at 1 - the factor
+     is the same multiplication. */
+  .detail-photo-backdrop.prerendered::before,
+  .detail-photo-backdrop.prerendered::after {
+    --bd-shade: rgb(0 0 0 / calc(1 - var(--photo-dim, 1)));
+    background:
+      linear-gradient(var(--bd-shade), var(--bd-shade)),
+      var(--backdrop-img) 0 0 / 100% 100% no-repeat;
+    background-origin: border-box;
+    filter: none;
   }
 }
 

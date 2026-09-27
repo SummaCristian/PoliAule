@@ -32,6 +32,8 @@
 //   noglass  no backdrop-filter anywhere while the transition runs
 //   noimg    no photos on the list's cards (all the time, not just in the
 //            transition)
+//   liveblur the photo backdrop blurred live by the GPU, as before it was
+//            pre-rendered (utils/photo.js blurredBackdrop)
 //   slow     2s instead of 0.4s, to look at it
 
 const FLAGS = new Set();

@@ -3,7 +3,7 @@ import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
+import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
 import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
@@ -222,15 +222,20 @@ class ClassroomDetail {
     document.addEventListener('pointerup', () => requestAnimationFrame(clearPressed));
     document.addEventListener('pointercancel', clearPressed);
 
-    // A card's photo color, taken while the finger is still down: the first
-    // open of a room otherwise loads its thumbnail again and reads its pixels
-    // (~10ms on an older phone) before the transition can start. Cached per
-    // photo, so a press that turns into a scroll costs it only once.
+    // A card's photo color and pre-blurred backdrop, made while the finger is
+    // still down: the first open of a room otherwise loads its thumbnail again
+    // and reads its pixels (~10ms on an older phone) before the transition can
+    // start, and renders the backdrop inside it. Cached per photo, so a press
+    // that turns into a scroll costs them only once.
     document.addEventListener('pointerdown', (e) => {
       const trigger = e.target.closest?.('[data-open-classroom]');
       if (!trigger) return;
       const id = parseInt(trigger.dataset.openClassroom);
-      if (thumbUrlCache.has(id)) extractPhotoColor(thumbUrl(id));
+      if (!thumbUrlCache.has(id)) return;
+      const url = thumbUrl(id);
+      extractPhotoColor(url).then(() => {
+        if (this._backdropBox && !vtFlag('liveblur')) blurredBackdrop(url, this._backdropBox);
+      });
     }, { passive: true });
 
     // Click delegation — handles classroom cards on both the available and campus tabs
@@ -730,6 +735,7 @@ class ClassroomDetail {
         if (cardEl) cardEl.style.viewTransitionName = '';
         if (headerEl) headerEl.style.viewTransitionName = '';
         this._releaseFreeze(frozenAt);
+        this._measureBackdrop();
         document.documentElement.classList.remove('header-ctl-vt', 'detail-vt-open', 'detail-vt-hero');
         clearZoomOrigin();
         if (fromInfo) infoPage._cleanupReturnVT();
@@ -1214,13 +1220,37 @@ class ClassroomDetail {
 
   // ---------- RENDER: HERO PHOTO ----------
 
+  /* The backdrop's blurred box as its CSS lays it out, for the next open to
+     pre-render: it only depends on the viewport, so the last open's is the
+     next one's. Read after the transition, when style is already up to date. */
+  _measureBackdrop() {
+    const el = this._overlay?.querySelector('.detail-photo-backdrop');
+    if (!el) return;
+    const cs = getComputedStyle(el, '::before');
+    const box = {
+      width: parseFloat(cs.width),
+      height: parseFloat(cs.height),
+      bleed: parseFloat(cs.paddingLeft),
+      blur: parseFloat(cs.getPropertyValue('--bd-blur-px')),
+      repeatY: cs.getPropertyValue('--bd-repeat').trim() !== 'repeat-x',
+    };
+    if (box.width > 0 && box.height > 0 && box.blur > 0) this._backdropBox = box;
+  }
+
   /** Feeds the blurred backdrop behind the hero photo (see .detail-photo-backdrop).
       Always the thumbnail: under a 40px blur its resolution is lost anyway, and
       the tint / dimming / title-tone caches are keyed by this URL. */
   _setBackdrop(url) {
     const el = this._overlay.querySelector('.detail-photo-backdrop');
     if (!el) return;
-    el.style.setProperty('--backdrop-img', `url("${url}")`);
+    // Pre-blurred when it can be (utils/photo.js blurredBackdrop): the GPU
+    // otherwise redoes the blur on every frame the page moves. That needs the
+    // backdrop's box, measured once an earlier open has landed
+    // (_measureBackdrop); until then, the live filter. ?vtdebug=liveblur keeps
+    // the live one, to compare.
+    const pre = this._backdropBox && !vtFlag('liveblur') ? blurredBackdrop(url, this._backdropBox) : null;
+    el.style.setProperty('--backdrop-img', `url("${pre ?? url}")`);
+    el.classList.toggle('prerendered', !!pre);
     el.classList.add('loaded');
 
     // Base color under the backdrop's fade (see #classroom-detail-overlay's

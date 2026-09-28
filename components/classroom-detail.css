@@ -354,8 +354,7 @@ body.detail-open .tab-content * {
    Geometry: the wrapper is twice the photo's height. ::before is the photo's
    box, cropped exactly like .detail-photo (same width, same height, same
    `cover`), so the blur is aligned with the sharp image at the seam. ::after
-   is that same box mirrored underneath, which continues the photo's bottom-edge
-   colors with no jump. Both bleed 60px past the wrapper (padding + content-box
+   continues its bottom colors downward (see below). Both bleed 60px past the wrapper (padding + content-box
    origin keeps `cover` sized to the photo box) so the blur's transparent
    fringe lands outside the wrapper's overflow clip. No tint layer: the sharp
    photo is untinted, and a tinted backdrop behind it made the fade step. */
@@ -433,7 +432,7 @@ body.detail-open .tab-content * {
   /* Read back by classroom-detail.js (_measureBackdrop) to pre-render the same
      thing: the blur resolved to px here, where cqw means the backdrop. */
   --bd-blur-px: var(--bd-blur);
-  --bd-repeat: repeat;
+  --bd-repeat: repeat-x; /* nothing above or below the photo wraps around */
   background: var(--backdrop-img) center / cover var(--bd-repeat);
   background-origin: content-box;
   filter: blur(var(--bd-blur)) saturate(1.25);
@@ -456,24 +455,43 @@ body.detail-open .tab-content * {
   filter: none;
 }
 
-.detail-photo-backdrop::after {
-  top: calc(var(--photo-h) - var(--bd-bleed));
-  transform: scaleY(-1);
+/* Below the photo. Not a mirrored copy (it was, once): the gradient reversing
+   at the mirror line read as a crease, and on desktop the reflected half is
+   hundreds of px tall. Not the blurred copy running past the photo's bottom
+   alone either: its blur fringe drops to the tint in ~150px, a visible line
+   under the photo. So ::after is the same box again, stretched 60x down from
+   2 blur radii above the photo's bottom (where the blur is still opaque): the
+   few px just below that point cover the rest of the backdrop, and the
+   backdrop's own mask fades them out. Above that point it is stretched up,
+   under ::before, which covers it. ::before's fringe then fades onto the
+   photo's own bottom colors instead of onto the tint.
+
+   No clip-path on anything that has a filter: with both, Safari (iOS) drew a
+   dark-to-light seam at the cut, as if it clips before filtering (the spec
+   says after), blurring the clipped edges away. */
+.detail-photo-backdrop::before {
+  z-index: 1;
 }
 
-/* Desktop: no mirror. At this size the reflected half is hundreds of px tall and
-   the gradient reversing at the mirror line reads as a dark/light crease; the
-   tile-wrapped bleed at the seam also shows the wrong part of the photo. The
-   single blurred copy just ends at the photo's bottom edge (no vertical
-   repeat), so its own blur fringe fades into the tint. */
-@media (min-width: 600px) {
-  .detail-photo-backdrop::after {
-    display: none;
-  }
+.detail-photo-backdrop::before,
+.detail-photo-backdrop::after {
+  /* In the pseudo's own box, which starts a bleed above the photo. */
+  --bd-strip-top: calc(var(--bd-bleed) + var(--photo-h) - var(--bd-blur) * 2);
+}
 
-  .detail-photo-backdrop::before {
-    --bd-repeat: repeat-x;
-  }
+.detail-photo-backdrop::after {
+  transform-origin: 0 var(--bd-strip-top);
+  /* Only has to reach the backdrop's bottom (at most ~40 strips below it at
+     any size); the overshoot is clipped by the backdrop's overflow. */
+  transform: scaleY(60);
+}
+
+/* The pre-rendered bitmap ends its box with the fringe cut off while still
+   ~40% opaque, which reads as a line, so ::before stops where ::after starts
+   (1px past, so they never leave a hairline gap): the same pixels on both
+   sides. No filter here, so clipping is safe in every engine. */
+.detail-photo-backdrop.prerendered::before {
+  clip-path: inset(0 0 calc(100% - var(--bd-strip-top) - 1px) 0);
 }
 
 /* Adaptive dimming (dark mode only): --photo-dim is set per photo from its

@@ -1,6 +1,7 @@
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { getCampusBuildingsOverview } from '../available-rooms-script.js';
+import { scrollerFor, stickyTopOf } from '../utils/results-scroller.js';
 
 // The "zoom out" building overview.
 //
@@ -55,31 +56,6 @@ function clearLayer(el) {
   for (const p of LAYER_PROPS) el.style[p] = '';
 }
 
-// Where a scrollable area's "top" is on screen, and how to scroll it, for the
-// two places the results live: in the page (mobile / tablet) or inside the
-// self-scrolling results panel (desktop ≥1100px). "visibleTop" is the client-y
-// a stuck building header parks at — i.e. where a section's top should sit to
-// read as "scrolled to this building".
-function scrollerFor(container, stickyTop) {
-  const selfScrolls = /auto|scroll/.test(getComputedStyle(container).overflowY);
-  if (selfScrolls) {
-    return {
-      visibleTop: () => container.getBoundingClientRect().top + container.clientTop + stickyTop,
-      visibleBottom: () => container.getBoundingClientRect().top + container.clientTop + container.clientHeight,
-      scrollBy: (dy) => container.scrollBy({ top: dy, behavior: 'instant' }),
-      contentHeight: () => container.scrollHeight,
-    };
-  }
-  return {
-    visibleTop: () => stickyTop,
-    visibleBottom: () => window.innerHeight,
-    // The page has `scroll-behavior: smooth` — every scroll here has to be
-    // explicitly instant or it turns into a visible glide.
-    scrollBy: (dy) => window.scrollBy({ top: dy, behavior: 'instant' }),
-    contentHeight: () => document.documentElement.scrollHeight,
-  };
-}
-
 class BuildingOverview {
   #isOpen = false;
   #phase = 'idle';     // 'idle' | 'opening' | 'open' | 'closing'
@@ -120,6 +96,16 @@ class BuildingOverview {
     }, 1500);
   }
   #prewarmTimer = 0;
+
+  // The press turned out not to be a tap (the building scrubber took it):
+  // undo prewarm() now instead of in 1.5 s. Its hidden off-stage sections
+  // would otherwise still be hidden when the scrubber jumps to one of them.
+  cancelPrewarm() {
+    if (this.#phase !== 'idle') return;
+    clearTimeout(this.#prewarmTimer);
+    this.#unscopeSections();
+    if (this.#list) this.#list.style.willChange = '';
+  }
 
   // Same idea for the way back: on pointer-down on a building card or the ×,
   // the parked list is shown again at (near) zero opacity under the grid so
@@ -606,13 +592,8 @@ class BuildingOverview {
     return { left: r.left, top, width: r.width, height: Math.max(1, r.bottom - top) };
   }
 
-  // Client-y a stuck building header parks at (the used `top` of the sticky
-  // header — header height + picker bar + margins, or 1rem inside the panel
-  // on desktop).
   #stickyTop(section) {
-    const header = section?.querySelector('.building-section-header');
-    const px = header ? parseFloat(getComputedStyle(header).top) : NaN;
-    return Number.isFinite(px) ? px : 80;
+    return stickyTopOf(section);
   }
 
   #sectionFor(name) {

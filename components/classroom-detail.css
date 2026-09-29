@@ -2435,8 +2435,18 @@ body.detail-open .tab-content * {
 /* Targets .bn-wrapper (not .bn-tabbar) so the standalone search button
    and pill hide along with the tab group. */
 
+/* Every descendant too: Vitrium's tab bar opts parts of itself back in with
+   `pointer-events: auto` (its controls, so the page shows through the gaps
+   between them, and the pill's invisible grab target), which overrides the
+   wrapper's `none`. The invisible tab bar then caught touches over the bottom
+   of the detail page, and a drag there dragged its pill. The `*` restyles only
+   the tab bar's own few elements when the class goes on. */
 .bn-wrapper.detail-open {
   opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.bn-wrapper.detail-open * {
   pointer-events: none !important;
 }
 

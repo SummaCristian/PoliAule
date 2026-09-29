@@ -210,14 +210,11 @@ The following do **not** need escaping:
 - Numbers after `.toLocaleString()` / `.toFixed()` - numeric output contains no markup.
 - Icon names and class names from local constant maps (`FEATURE_ICONS`, `LANG_COLORS`), keyed on trusted integer IDs or hardcoded strings.
 
-### Classroom photo URL validation
+### Classroom photo URLs
 
-Classroom photos require two requests: the first fetches a URL from the Polimi API; the second is made implicitly by the browser when that URL is assigned to `img.src`. To prevent a compromised API response from redirecting the browser to an arbitrary third-party server (client-side SSRF), `_loadPhoto()` in `classroom-detail.js` validates the extracted URL before use:
+Classroom photos are served by our own API (`GET /v1/photos/:id` and `GET /v1/photos/:id/thumb`, see [api.md](./api.md)). `utils/photo.js` builds both URLs from `API_BASE` and the classroom's numeric `id`. No URL is ever read out of a response, so the browser only loads photos from our own API. The PoliMi URLs (`docmanager.polimi.it`) are only fetched server-side, by `scripts/fetch_photos.py`.
 
-- Hostname must be exactly `docmanager.polimi.it`.
-- Protocol must be `https:`.
-
-Any URL that fails this check causes the photo container to be removed silently, as if no photo existed.
+If a photo fails to load (a 404 for an `idfoto` whose image couldn't be fetched, or a decode error), `markPhotoBroken()` records the room. `_loadPhoto()` then removes the photo container and backdrop, and the room shows as photo-less for the rest of the session instead of being asked for again on every render.
 
 ---
 

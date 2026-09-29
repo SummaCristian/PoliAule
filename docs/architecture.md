@@ -192,7 +192,7 @@ graph TD
     CD["classroom-detail.js"]:::component
     CL["classroom-list.js"]:::component
     TP["time-picker.js"]:::component
-    TRS["time-range-slider.js"]:::component
+    HL["hour-lens.js"]:::component
     SET["settings.js"]:::component
     TT["tooltip.js"]:::component
 
@@ -204,7 +204,7 @@ graph TD
     SC -->|imports| CD
     SC -->|imports| CL
     SC -->|imports| TP
-    SC -->|imports| TRS
+    SC -->|imports| HL
     SC -->|imports| SET
     SC -->|registers| TT
     SCS -->|imports| ARS
@@ -226,7 +226,7 @@ graph TD
 | `components/campus-sheet.js` | Campus map sheet (Vitrium sheet) |
 | `components/classroom-detail.js` | Classroom detail page with timeline and photo |
 | `components/time-picker.js` | Morphing time input |
-| `components/time-range-slider.js` | Dual-handle slider for time range |
+| `components/hour-lens.js` | Time range picker: a glass lens over the hourly slots, with a duration stepper |
 | `components/settings.js` | User preferences (remembered campus, partial availability, etc.) |
 | `components/tooltip.js` | Side-effect module: registers a global `data-tooltip` attribute handler |
 

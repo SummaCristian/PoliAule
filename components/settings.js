@@ -27,6 +27,7 @@ const LAST_CAMPUS_ID_KEY           = 'poliAule_lastCampusId';
 export const HIDE_SUNDAYS_KEY             = 'poliAule_hideSundays';
 export const SHOW_PARTIAL_KEY      = 'poliAule_showPartial';
 export const INTERVAL_HOURS_KEY    = 'poliAule_intervalHours';
+export const BLOCK_PAST_HOURS_KEY  = 'poliAule_blockPastHours';
 export const DEFAULT_TAB_KEY       = 'poliAule_defaultTab';
 export const LAST_TAB_KEY          = 'poliAule_lastTab';
 export const AUTO_SEARCH_KEY       = 'poliAule_autoSearch';
@@ -659,6 +660,17 @@ function buildPopup() {
               </div>
             </div>
           </div>
+          <div class="settings-row" data-block-past-hours-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #FF9500">
+                <i class="hgi-stroke hgi-time-quarter-pass" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.blockPastHours">${t('settings.blockPastHours')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.blockPastHoursDesc">${t('settings.blockPastHoursDesc')}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -873,6 +885,15 @@ function buildPopup() {
     localStorage.setItem(INTERVAL_HOURS_KEY, String(v));
   });
   intervalHoursRow.appendChild(intervalStepper);
+
+  // Wire Block Past Hours toggle (default: true)
+  const blockPastRow = popup.querySelector('[data-block-past-hours-row]');
+  const blockPastToggle = buildToggle(localStorage.getItem(BLOCK_PAST_HOURS_KEY) !== 'false');
+  blockPastRow.appendChild(blockPastToggle.el);
+  blockPastToggle.onChange = (isOn) => {
+    localStorage.setItem(BLOCK_PAST_HOURS_KEY, String(isOn));
+    window.dispatchEvent(new CustomEvent('blockpasthourschange', { detail: { blocked: isOn } }));
+  };
 
   // Wire Show Partially Free toggle (default: true)
   const showPartialRow = popup.querySelector('[data-show-partial-row]');

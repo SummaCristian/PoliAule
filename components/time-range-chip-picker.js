@@ -2,8 +2,8 @@ import { t, onLanguageSwitch } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { ChipShell } from './chip-shell.js';
 
-// <time-range-chip-picker> is a thin wrapper around the drag-based time range
-// slider (components/time-range-slider.js), which stays completely untouched.
+// <time-range-chip-picker> is a thin wrapper around the hour lens time picker
+// (components/hour-lens.js).
 //
 // The pill, the morph and the panel are Vitrium's chip picker (see
 // chip-shell.js, which also handles the docked desktop mode). This element adds
@@ -11,7 +11,7 @@ import { ChipShell } from './chip-shell.js';
 //
 // The two native <input type="time"> fields (#from-time-picker / #to-time-picker)
 // stay direct children of this element so they remain submittable fields inside
-// the <form>; only the visual .trs-wrapper is relocated into the panel.
+// the <form>; only the visual .hl picker is relocated into the panel.
 export class TimeRangeChipPicker extends HTMLElement {
   #container = null;       // .time-pickers-container (holds the native inputs)
   #fromInput = null;
@@ -20,7 +20,7 @@ export class TimeRangeChipPicker extends HTMLElement {
   #body = null;            // where the slider is mounted (see getMountPoint)
   #valueFromEl = null;
   #valueToEl = null;
-  #slider = null;          // the .trs-wrapper element, set via setSlider()
+  #slider = null;          // the .hl picker element, set via setSlider()
 
   connectedCallback() {
     if (this.#shell) return; // already initialized (re-parenting, etc.)
@@ -38,11 +38,11 @@ export class TimeRangeChipPicker extends HTMLElement {
       labelKey: 'timepicker.timeLabel',
       width: 26 * 16,
       body: this.#body,
-      title: false,                    // the slider brings its own title row
-      exclude: '.trs-bar-wrapper',     // the bar, handles and Now badge track the pointer
-      deformFrom: '.trs-title',
+      title: false,                    // the picker brings its own title row
+      exclude: '.hl-rail, .hl-dur',    // the lens, the hours and the stepper keep their own presses
+      deformFrom: '.hl-readout, .hl-icon',
       onBuild: (chip) => this.#onBuild(chip),
-      // The slider had no layout while its panel was hidden.
+      // The picker had no layout while its panel was hidden.
       onShow: () => this.#slider?._render?.(),
     });
 
@@ -71,7 +71,7 @@ export class TimeRangeChipPicker extends HTMLElement {
     this.#renderValue();
   }
 
-  // Called by initTimeRangeSlider() once the .trs-wrapper is built, to keep a
+  // Called by initHourLens() once the .hl picker is built, to keep a
   // handle for on-show re-rendering. (The slider is already mounted in the body,
   // see getMountPoint.)
   setSlider(wrapper) {
@@ -81,7 +81,7 @@ export class TimeRangeChipPicker extends HTMLElement {
     requestAnimationFrame(() => wrapper?._render?.());
   }
 
-  // The mount point initTimeRangeSlider() should append the slider into when
+  // The mount point initHourLens() should append the slider into when
   // this component is present (falls back to .time-pickers-container otherwise).
   getMountPoint() {
     return this.#body;
@@ -106,8 +106,7 @@ export class TimeRangeChipPicker extends HTMLElement {
   retranslate() {
     if (!this.#shell) return;
     this.#shell.retranslate();
-    const titleText = this.#body.querySelector('.trs-title-text');
-    if (titleText) titleText.textContent = t('timepicker.timeLabel');
+    this.#slider?._retranslate?.();
     this.#renderValue();
   }
 }

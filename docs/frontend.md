@@ -238,7 +238,7 @@ Any URL that fails this check causes the photo container to be removed silently,
 | `components/classroom-detail.js` | Detail sheet with hash routing, VT animations, photo, schedule |
 | `components/classroom-list.js` | Renders classroom cards in the Available tab |
 | `components/time-picker.js` | Morphing time input |
-| `components/time-range-slider.js` | Dual-handle time range slider |
+| `components/hour-lens.js` | Time range picker: a glass lens over the hourly slots, with a duration stepper |
 | `components/settings.js` | User preferences panel + `localStorage` keys |
 | `components/tooltip.js` | Side-effect: global `data-tooltip` handler |
 | `utils/time-format.js` | `createTimeFormatter()`, locale-aware time display |

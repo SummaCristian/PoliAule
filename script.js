@@ -37,7 +37,7 @@ import { infoPage } from './components/info-page.js';
 import { initInfoHint } from './components/info-hint.js';
 
 import { initTimePickers } from './components/time-picker.js';
-import { initTimeRangeSlider } from './components/time-range-slider.js';
+import { initHourLens, refreshHourLensData } from './components/hour-lens.js';
 import { setupCampusPicker } from './components/campus-picker.js';
 import { initCampusMap } from './components/campus-map.js';
 import { initCampusSheet } from './components/campus-sheet.js';
@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // (these don't depend on occupancy data)
     setupTimePickers();
     initTimePickers();
-    initTimeRangeSlider();
+    initHourLens();
 
     // Decide pill vs. inline-expanded pickers based on the form column's width
     // (desktop two-column layout only).
@@ -476,6 +476,7 @@ async function initOccupancyData() {
 
   // Use the fetched data to set the only valid dates into the date picker
   setupDatePicker(() => preferInitialDate);
+  refreshHourLensData();
   document.getElementById('available-classrooms-form').removeAttribute('data-loading');
   document.querySelector('date-chip-picker')?.removeAttribute('data-loading');
 
@@ -794,6 +795,7 @@ async function reloadOccupancyData() {
   indicator.classList.remove('green', 'yellow', 'red');
   setupDataFetchIndicator();
   setupDatePicker(() => preferInitialDate);
+  refreshHourLensData();
 
   const resultsContainer = document.getElementById('available-classrooms-results');
   if (resultsContainer && !resultsContainer.classList.contains('empty')) {

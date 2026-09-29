@@ -160,6 +160,33 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
   return results;
 }
 
+// Share (0–1) of the campus's classrooms that are free for the whole of each
+// { from, to } window on `date` ("YYYY-MM-DD"), for the time picker's hourly
+// cells. Same rules as findAvailableClassrooms(): a room counts only if its
+// building is open for all of the window and nothing is booked in it.
+// Null when there's no data for that day or campus.
+export function getFreeShareBySlot(campusId, date, windows) {
+  const formattedDate = formatDateYYYYMMDD(new Date(date));
+  const dayData = classroomsData.find(day => day.date === formattedDate);
+  const campusData = dayData?.campuses.find(c => c.id === campusId);
+  if (!campusData) return null;
+
+  const rooms = campusData.buildings.flatMap(building =>
+    (building.classrooms ?? []).map(classroom => ({ building, classroom })));
+  if (!rooms.length) return null;
+
+  return windows.map(({ from, to }) => {
+    let free = 0;
+    for (const { building, classroom } of rooms) {
+      const open = clipToOpeningHours(building, formattedDate, from, to);
+      if (!open || open.from !== from || open.to !== to) continue;
+      const freeSlots = getFreeSlots(classroom.occupancy ?? [], from, to);
+      if (freeSlots.length === 1 && freeSlots[0].start === from && freeSlots[0].end === to) free++;
+    }
+    return free / rooms.length;
+  });
+}
+
 // ---------- HELPERS ----------
 
 // Formats Date objects in the format used by the API (YYYYMMDD)

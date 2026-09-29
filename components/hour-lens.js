@@ -97,6 +97,16 @@ function buildHourLens(fromInput, toInput, { datePicker, campusInput }) {
   }
   readInputs();
 
+  // Keeps the selection inside the selectable hours: at least one hour,
+  // starting no earlier than minStart, ending by 20:15. True if it changed.
+  function fitSelection() {
+    const d = clamp(dur, 1, N - minStart);
+    const s = clamp(start, minStart, N - d);
+    if (s === start && d === dur) return false;
+    start = s; dur = d;
+    return true;
+  }
+
   // ── DOM ─────────────────────────────────────────────────────────────────
   const wrapper = document.createElement('div');
   wrapper.className = 'hl';
@@ -318,6 +328,9 @@ function buildHourLens(fromInput, toInput, { datePicker, campusInput }) {
         if (syncing || !val) return;
         readInputs();
         committed = `${start}/${dur}`;
+        // A range in today's blocked hours is moved on, and the form told so
+        // (after this setter returns, not from inside it).
+        if (fitSelection()) queueMicrotask(commit);
         buildStepper();
         place(start, { lifted: false });
       },
@@ -500,10 +513,11 @@ function buildHourLens(fromInput, toInput, { datePicker, campusInput }) {
 
   // ── Day context: today's past hours, and free-room density ──────────────
   // Recomputes which hours are blocked and where the "now" line sits, from the
-  // selected date and the clock. `clampSelection` moves a selection that now
-  // starts in a blocked hour (on a date or setting change, not on the minute
-  // tick, so the range never shifts under the user by itself).
-  function updateDay({ clampSelection = true } = {}) {
+  // selected date and the clock, and keeps the selection inside what's left.
+  // That includes the minute tick: once an hour ends, a range starting in it
+  // moves on (and shrinks if it no longer fits before 20:15), rather than
+  // being left in hours that can't be picked.
+  function updateDay() {
     const date = datePicker?.value;
     const now = new Date();
     const isToday = !!date && date === localDateKey(now);
@@ -517,10 +531,9 @@ function buildHourLens(fromInput, toInput, { datePicker, campusInput }) {
       if (nowMark.parentElement !== cells[nowSlot]) cells[nowSlot].appendChild(nowMark);
     } else nowMark.remove();
 
-    if (!clampSelection) return;
-    if (dur > N - minStart) dur = N - minStart;
     buildStepper();
-    if (start < minStart || start > maxStart()) {
+    if (fitSelection()) {
+      buildStepper();                 // its value, now the duration changed
       place(start, { lifted: false });
       commit();
     }
@@ -541,11 +554,12 @@ function buildHourLens(fromInput, toInput, { datePicker, campusInput }) {
   document.addEventListener('campuschange', () => requestAnimationFrame(updateDensity));
   window.addEventListener('blockpasthourschange', () => updateDay());
   window.addEventListener('timeformatchange', () => { labelCells(); shown = -1; render(); });
-  setInterval(() => updateDay({ clampSelection: false }), 60_000);
+  // Mid-drag the gesture owns the lens; the next tick catches up.
+  setInterval(() => { if (!drag) updateDay(); }, 60_000);
 
   // ── Boot ────────────────────────────────────────────────────────────────
   buildStepper();
-  updateDay({ clampSelection: false });
+  updateDay();
   // Filled in now, not on the first layout: the morph panel measures its
   // height as it opens, so the title row must already hold the real text.
   showRange(start);

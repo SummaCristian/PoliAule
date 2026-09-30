@@ -18,12 +18,17 @@
 // pure CSS — see `.picker-substack` in index.html / style.css. This module only
 // decides how many pickers are compacted, and re-decides on any real viewport
 // or layout change (not just crossing the breakpoint).
+//
+// Exception: when the Favourites are expanded to fill the left column
+// (components/favourites.js), the pickers leave it and ride sticky on top of
+// the results panel instead, as on mobile — so they all stay pills.
 
 export function initPickerDock() {
   const row = document.querySelector('.picker-row');
   const date = document.querySelector('date-chip-picker');
   const time = document.querySelector('time-range-chip-picker');
   const campus = document.querySelector('campus-chip-picker');
+  const container = document.getElementById('available-classrooms-container');
   if (!row || !date || !time || typeof date.setDocked !== 'function') return;
 
   // Same breakpoint the Available tab uses to switch to two columns
@@ -46,8 +51,11 @@ export function initPickerDock() {
   // (favourites, header) changes height; its own height doesn't affect this.
   // When the fingerprint is unchanged, a settle() is just the ResizeObserver
   // echoing our own toggling — skip the expand probe so we don't thrash.
+  const docked = () =>
+    twoCol.matches && !container?.classList.contains('favourites-expanded');
+
   const fingerprint = () =>
-    `${twoCol.matches}|${window.innerWidth}|${window.innerHeight}|` +
+    `${docked()}|${window.innerWidth}|${window.innerHeight}|` +
     `${Math.round(row.getBoundingClientRect().top)}`;
   let lastPrint = '';
 
@@ -66,7 +74,7 @@ export function initPickerDock() {
 
     const changed = fingerprint() !== lastPrint;
 
-    if (!twoCol.matches) {
+    if (!docked()) {
       apply(priority.length);
     } else {
       apply(compacted);
@@ -91,8 +99,8 @@ export function initPickerDock() {
   new ResizeObserver(settle).observe(row);
   window.addEventListener('resize', settle);
   twoCol.addEventListener('change', settle);
-  document.getElementById('available-classrooms-container')
-    ?.addEventListener('tabvisible', settle);
+  container?.addEventListener('tabvisible', settle);
+  container?.addEventListener('favouritesexpandchange', settle);
 
   settle();
 }

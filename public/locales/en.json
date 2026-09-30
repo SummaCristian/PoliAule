@@ -18,6 +18,8 @@
 
   "favourites.title": "Favourites",
   "favourites.empty": "Star a classroom to pin it here.",
+  "favourites.showAll": "Show all favourites",
+  "favourites.showLess": "Show fewer favourites",
   "favourite.add": "Add to favourites",
   "favourite.remove": "Remove from favourites",
 

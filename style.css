@@ -1680,6 +1680,64 @@ are rendered as solid colors
     align-self: stretch;
     max-height: none;
   }
+
+  /* ── Favourites expanded (components/favourites.js) ──
+     The favourites take the whole left column; the right column becomes the
+     mobile layout: the "Available Classrooms" header, then the results panel
+     with the pickers (all pills, see picker-dock.js) riding sticky on top of
+     it, the cards scrolling behind their glass.
+
+     Everything in the right column spans every row: a grid item's sticky
+     range is its own grid area, so one confined to row 1 couldn't stick.
+     They stack by offset instead — the header on top, the panel and the
+     pickers starting --available-header-height below it. */
+  #available-classrooms-container.favourites-expanded>.favourites-section {
+    grid-row: 1 / -1;
+    margin-bottom: 1rem;
+  }
+
+  #available-classrooms-container.favourites-expanded>.section-header,
+  #available-classrooms-container.favourites-expanded>#available-classrooms-form,
+  #available-classrooms-container.favourites-expanded>#available-classrooms-results {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: start;
+    position: sticky;
+  }
+
+  #available-classrooms-container.favourites-expanded>.section-header {
+    top: var(--header-height, 84px);
+    z-index: 11;
+  }
+
+  #available-classrooms-container.favourites-expanded>#available-classrooms-form {
+    top: calc(var(--header-height, 84px) + var(--available-header-height, 0px));
+    margin-top: var(--available-header-height, 0px);
+    z-index: 10;
+    gap: 8px;
+  }
+
+  #available-classrooms-container.favourites-expanded>#available-classrooms-results {
+    top: calc(var(--header-height, 84px) + var(--available-header-height, 0px));
+    margin-top: var(--available-header-height, 0px);
+    max-height: calc(100dvh - var(--header-height, 84px) - var(--available-header-height, 0px) - 1rem);
+    /* The first building clears the pills; after that the cards scroll up
+       behind them. */
+    padding-top: calc(var(--picker-bar-height, 0px) + 0.5rem);
+  }
+
+  #available-classrooms-container.favourites-expanded>#available-classrooms-results.empty {
+    position: static;
+    max-height: none;
+  }
+
+  /* Stuck building headers / the overview's topbar park right under the
+     pills: sticky offsets count from inside the panel's padding, which
+     already clears them. */
+  .favourites-expanded .building-section-header,
+  .favourites-expanded .bo-topbar {
+    top: 0;
+  }
 }
 
 /* ── Global reduced-motion fallback ──────────────────────────────────────── */

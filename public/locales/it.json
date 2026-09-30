@@ -19,6 +19,8 @@
   "available.subtitle": "Trova quali aule sono disponibili adesso o in qualsiasi altro momento della giornata.",
   "favourites.title": "Preferite",
   "favourites.empty": "Aggiungi un'aula ai preferiti per ritrovarla qui.",
+  "favourites.showAll": "Mostra tutte le preferite",
+  "favourites.showLess": "Mostra meno preferite",
   "favourite.add": "Aggiungi ai preferiti",
   "favourite.remove": "Rimuovi dai preferiti",
   "form.campusTitle": "Seleziona Campus",

@@ -136,3 +136,66 @@
     flex-basis: 10.5rem;
   }
 }
+
+/* ── Expand toggle + expanded grid (desktop, >= 1100px) ─────────────────
+   The toggle only shows in the two-column layout while the carousel
+   overflows (components/favourites.js). Expanded, the section fills the whole
+   left column and the carousel becomes a wrapping card grid; the pickers move
+   over the results panel (style.css). */
+
+.favourites-header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.favourites-expand-btn {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  /* Keep the header the height it has without the button. */
+  margin-block: -0.5rem;
+  /* The carousel's shadow room (padding pulled back with a negative margin)
+     reaches up over the header; stay above it so clicks land here. */
+  z-index: 1;
+}
+
+.favourites-expand-btn[hidden] {
+  display: none;
+}
+
+.favourites-expand-btn i {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+@media (max-width: 1099.98px) {
+  .favourites-expand-btn {
+    display: none;
+  }
+}
+
+@media (min-width: 1100px) {
+  .favourites-expanded .favourites-carousel {
+    display: grid;
+    /* Same tracks as a results building section, so a favourite reads as
+       the same card in both columns. */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr));
+    gap: 0.75rem;
+
+    /* Nothing scrolls sideways any more: drop the bleed, the shadow room and
+       the edge fade (unclipped, the shadows need no room). */
+    margin: 0.75rem 0 0;
+    padding: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .favourites-expanded .favourites-carousel > .classroom-card {
+    width: auto;
+    animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+}

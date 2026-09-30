@@ -29,6 +29,9 @@
      exceed the shadow's reach (~40px). */
   --shadow-room: 3rem;
 
+  /* Containing block for a card animating out of it (components/favourites.js). */
+  position: relative;
+
   display: flex;
   /* Don't stretch cards to the row height — that would give them a definite
      height and cancel their aspect-ratio. Let width (flex-basis) drive it. */

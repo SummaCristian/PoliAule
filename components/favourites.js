@@ -131,40 +131,255 @@ function _buildBuildingFavourite(campusId, building) {
   return folder;
 }
 
-// (Re)renders the Favourites carousel on the Available page.
+// Every favourite that still exists in the directory, classrooms and
+// buildings mixed, in starred order, each with its stable key.
+function _entries() {
+  return getFavouriteEntries()
+    .map(e => {
+      const entry = typeof e === 'number' ? _index.get(e) : _buildings.get(e);
+      return entry && { ...entry, key: String(e) };
+    })
+    .filter(Boolean);
+}
+
+function _buildEntry(entry) {
+  const el = entry.classroom
+    ? buildCardForClassroom(
+        { ...entry.classroom, status: getClassroomStatusNow(entry.classroom.id) },
+        entry.building
+      )
+    : _buildBuildingFavourite(entry.campusId, entry.building);
+  el.dataset.favKey = entry.key;
+  return el;
+}
+
+// The strip's items, minus any still animating out.
+const _items = () => [..._carousel.children].filter(el => !el.classList.contains('fav-leaving'));
+
+function _setEmpty(empty) {
+  _carousel.hidden = empty;
+  if (_empty) _empty.hidden = !empty;
+}
+
+// (Re)renders the Favourites carousel on the Available page from scratch, so
+// every card shows fresh status (called again once occupancy data lands).
 export function renderFavourites() {
   if (!_carousel || !_index) return;
+  _finishListAnimation();
 
-  // Classrooms and buildings, mixed, in the order they were starred.
-  const entries = getFavouriteEntries()
-    .map(e => (typeof e === 'number' ? _index.get(e) : _buildings.get(e)))
-    .filter(Boolean);
-
-  _carousel.replaceChildren();
+  const entries = _entries();
+  _carousel.replaceChildren(...entries.map(_buildEntry));
   _count = entries.length;
+  _setEmpty(entries.length === 0);
+  _sync();
+}
 
-  if (entries.length === 0) {
-    _carousel.hidden = true;
-    if (_empty) _empty.hidden = false;
+// ── Add / remove animation ────────────────────────────────────────────────
+// A favourite can be starred or unstarred while the strip is on screen (a
+// building header's star, the building popup, the detail page), so the strip
+// updates in place rather than re-rendering: cards that stay are kept (and
+// glide to their new place, FLIP), new ones pop in, removed ones shrink away
+// where they stood. Going from none to some (or back) also grows or shrinks
+// the section, with the empty-state line cross-fading against the strip.
+
+const ENTER = { duration: 380, easing: 'cubic-bezier(0.34, 1.35, 0.64, 1)' };
+const LEAVE = { duration: 220, easing: 'cubic-bezier(0.4, 0, 1, 1)' };
+
+let _listAnims = [];
+let _listDone = null;
+
+// Snaps whatever the last add/remove was still doing to its end state.
+function _finishListAnimation() {
+  const done = _listDone;
+  _listDone = null;
+  _listAnims.forEach(a => a.cancel());
+  _listAnims = [];
+  done?.();
+}
+
+function _onFavouritesChanged() {
+  if (!_carousel || !_index) return;
+  const entries = _entries();
+  const wasExpanded = isFavouritesExpanded();
+  const willExpand = _wantsExpanded && _twoCol.matches && entries.length > 0;
+
+  // The last favourite gone from the expanded grid: the whole layout
+  // changes back, which is the expand/collapse morph's job.
+  if (wasExpanded !== willExpand && !_reduceMotion.matches) {
+    _finishListAnimation();
+    _morph(() => { _reconcile(entries); _setEmpty(entries.length === 0); _sync(); });
+    return;
+  }
+  if (_reduceMotion.matches) {
+    _finishListAnimation();
+    _reconcile(entries);
+    _setEmpty(entries.length === 0);
+    _sync();
+    return;
+  }
+  _animateTo(entries);
+}
+
+// Brings the strip's children in line with `entries`, reusing the element of
+// every key that stays. Returns the elements added and removed.
+function _reconcile(entries) {
+  const byKey = new Map(_items().map(el => [el.dataset.favKey, el]));
+  const keep = new Set(entries.map(e => e.key));
+  const left = [...byKey].filter(([key]) => !keep.has(key)).map(([, el]) => el);
+  const entered = [];
+  const next = entries.map(entry => {
+    const el = byKey.get(entry.key);
+    if (el) return el;
+    const fresh = _buildEntry(entry);
+    entered.push(fresh);
+    return fresh;
+  });
+  left.forEach(el => el.remove());
+  // Only moves what is out of place, so a card never leaves the DOM for
+  // nothing (it would lose its photo and scroll-snap state).
+  next.forEach((el, i) => {
+    if (_carousel.children[i] !== el) _carousel.insertBefore(el, _carousel.children[i] ?? null);
+  });
+  _count = entries.length;
+  return { entered, left };
+}
+
+function _animateTo(entries) {
+  _finishListAnimation();
+  _stopMorph();
+
+  const section = _carousel.closest('.favourites-section');
+  const wasEmpty = _carousel.hidden;
+  const willBeEmpty = entries.length === 0;
+
+  // Before: every card's place (screen, for the glide; in the strip, for a
+  // leaving card to stay put), and the section's height.
+  const before = new Map();
+  for (const el of _items()) {
+    before.set(el, {
+      rect: el.getBoundingClientRect(),
+      box: { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight },
+    });
+  }
+  const sectionBefore = section?.getBoundingClientRect();
+  const stripHeight = _carousel.offsetHeight;
+
+  const { entered, left } = _reconcile(entries);
+  if (!entered.length && !left.length) {
     _sync();
     return;
   }
 
-  for (const entry of entries) {
-    if (entry.classroom) {
-      const { classroom, building } = entry;
-      _carousel.appendChild(buildCardForClassroom(
-        { ...classroom, status: getClassroomStatusNow(classroom.id) },
-        building
-      ));
-    } else {
-      _carousel.appendChild(_buildBuildingFavourite(entry.campusId, entry.building));
+  // Leaving cards go back in, out of flow, exactly where they were.
+  for (const el of left) {
+    const { box } = before.get(el);
+    el.classList.add('fav-leaving');
+    el.removeAttribute('data-fav-building-folder');
+    el.inert = true;
+    Object.assign(el.style, {
+      position: 'absolute', margin: '0',
+      left: `${box.left}px`, top: `${box.top}px`,
+      width: `${box.width}px`, height: `${box.height}px`,
+    });
+    _carousel.appendChild(el);
+  }
+
+  // The section only changes size on the way in or out of empty; the last
+  // card leaves first, then the strip collapses.
+  const resize = wasEmpty !== willBeEmpty;
+  if (resize && !willBeEmpty) _setEmpty(false);
+  // Out of flow, the last card would take the strip's height with it at
+  // once: hold it until the card is gone.
+  if (resize && willBeEmpty) _carousel.style.minHeight = `${stripHeight}px`;
+  _sync();
+
+  const anims = [];
+  for (const el of _items()) {
+    const b = before.get(el);
+    if (!b) continue;
+    const a = el.getBoundingClientRect();
+    const dx = b.rect.left - a.left, dy = b.rect.top - a.top;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+    anims.push(el.animate({ translate: [`${dx}px ${dy}px`, '0 0'] }, _spring));
+  }
+  entered.forEach((el, i) => {
+    anims.push(el.animate(
+      { opacity: [0, 1], scale: [0.8, 1] },
+      { ...ENTER, delay: (left.length ? 90 : 0) + i * 40, fill: 'backwards' }
+    ));
+  });
+  const leaving = left.map(el => el.animate({ opacity: [1, 0], scale: [1, 0.8] }, { ...LEAVE, fill: 'forwards' }));
+  anims.push(...leaving);
+  if (resize && !willBeEmpty && section) anims.push(..._resizeSection(section, sectionBefore, 'in'));
+
+  // A single new card off the side of the strip: bring it into view.
+  if (entered.length === 1 && !isFavouritesExpanded() && _onScreen(section)) {
+    const el = entered[0];
+    const view = { left: _carousel.scrollLeft, right: _carousel.scrollLeft + _carousel.clientWidth };
+    if (el.offsetLeft < view.left || el.offsetLeft + el.offsetWidth > view.right) {
+      _carousel.scrollTo({ left: el.offsetLeft - (_carousel.clientWidth - el.offsetWidth) / 2, behavior: 'smooth' });
     }
   }
 
-  _carousel.hidden = false;
-  if (_empty) _empty.hidden = true;
-  _sync();
+  // The end state, reached either by the animations below or at once by
+  // _finishListAnimation (a newer change, or a full re-render).
+  const finish = () => {
+    left.forEach(el => el.remove());
+    _carousel.style.minHeight = '';
+    if (resize && willBeEmpty) _setEmpty(true);
+    _sync();
+  };
+  _listAnims = anims;
+  _listDone = finish;
+  const current = () => _listDone === finish;
+
+  (async () => {
+    await Promise.allSettled(leaving.map(a => a.finished));
+    if (!current()) return;
+    left.forEach(el => el.remove());
+    // Now empty: the strip gives way to the empty-state line.
+    if (resize && willBeEmpty && section) {
+      const from = section.getBoundingClientRect();
+      _carousel.style.minHeight = '';
+      _setEmpty(true);
+      _listAnims.push(..._resizeSection(section, from, 'out'));
+    }
+    await Promise.allSettled(_listAnims.map(a => a.finished));
+    if (!current()) return;
+    _listDone = null;
+    _listAnims = [];
+    finish();
+  })();
+}
+
+const _onScreen = (el) => {
+  const r = el?.getBoundingClientRect();
+  return !!r && r.bottom > 0 && r.top < window.innerHeight;
+};
+
+// Grows or shrinks the section from `from` (its rect before the change) to
+// its new height. Off screen above, it doesn't animate: the page is scrolled
+// by the difference instead, so what is on screen stays where it is (Chrome
+// anchors scrolling on its own; Safari doesn't).
+function _resizeSection(section, from, direction) {
+  const to = section.getBoundingClientRect();
+  if (Math.abs(to.height - from.height) < 1) return [];
+  if (from.bottom <= 0) {
+    const moved = to.top - from.top;   // what scroll anchoring already did
+    const delta = to.height - from.height;
+    if (Math.abs(moved + delta) > 1 && Math.abs(moved) < 1) window.scrollBy(0, delta);
+    return [];
+  }
+  const anims = [section.animate(
+    { height: [`${from.height}px`, `${to.height}px`] },
+    { duration: _spring.duration, easing: _spring.easing }
+  )];
+  if (_empty) {
+    anims.push(direction === 'in'
+      ? _carousel.animate({ opacity: [0, 1] }, { duration: 200, fill: 'backwards' })
+      : _empty.animate({ opacity: [0, 1] }, { duration: 240, delay: 60, fill: 'backwards' }));
+  }
+  return anims;
 }
 
 // ── Expand / collapse morph ───────────────────────────────────────────────
@@ -346,7 +561,7 @@ export function initFavourites(staticData) {
 
   _initExpand();
   initFavouriteMarkers();
-  window.addEventListener('favourites-changed', renderFavourites);
+  window.addEventListener('favourites-changed', _onFavouritesChanged);
 
   renderFavourites();
 }

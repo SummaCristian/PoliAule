@@ -111,6 +111,7 @@ function _buildBuildingFavourite(campusId, building) {
     total: building.classrooms.length,
     rooms: pickFolderRooms(rooms),
     footerHtml: _nowCountsHtml(rooms),
+    compact: true,
   });
   const key = buildingKey(campusId, building.name);
   folder.classList.add('fav-building');

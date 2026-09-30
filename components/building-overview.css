@@ -312,9 +312,10 @@
   border-radius: 18px;
 }
 
-@media (hover: hover) {
-  .bo-card[role="button"]:hover { --open: 1; }
-}
+/* Hover is .bo-card--hover, set by building-folder.js from any pointer but a
+   finger: an iPad with a trackpad, mouse or Pencil still reports
+   (hover: none), so a :hover inside that media query never fired there. */
+.bo-card[role="button"].bo-card--hover { --open: 1; }
 .bo-card[role="button"]:active { --open: 1.4; }
 
 .bo-card--inactive {
@@ -408,6 +409,55 @@
   transform-origin: 50% 100%;
   transform: perspective(700px) rotateX(calc(-1 * (var(--tilt) + var(--open) * 9deg)));
   transition: transform 0.4s cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+
+/* Compact (building-folder.js COMPACT_LIFT): no headroom above the tab, so
+   the folder's top lines up with the classroom cards beside it, and the front
+   gets that height back. A container, for the narrow case below. */
+.bo-card--compact {
+  container-type: inline-size;
+}
+
+.bo-card--compact .bo-card-back {
+  top: 0;
+}
+
+.bo-card--compact :is(.bo-card-front, .bo-card-frost) {
+  inset: 38px 0 0;
+}
+
+/* Its size follows the classroom cards beside it, down to the grid's 8.5rem
+   floor (136px), while the front's type is set for a ~170px folder. So below
+   that the whole front scales with the width: --u is 1px at 170px and wider,
+   proportionally less under it (cqi: the folder is the container). */
+.bo-card--compact .bo-card-front {
+  --u: min(1px, 100cqi / 170);
+  padding: calc(10 * var(--u)) calc(13 * var(--u)) calc(11 * var(--u));
+}
+
+.bo-card--compact .bo-card-kicker { font-size: calc(10 * var(--u)); }
+.bo-card--compact .bo-card-name { font-size: calc(50 * var(--u)); margin-top: calc(2 * var(--u)); }
+.bo-card--compact .bo-card-alt { font-size: calc(15 * var(--u)); margin-top: calc(3 * var(--u)); }
+.bo-card--compact .bo-card-total { font-size: calc(12 * var(--u)); margin-top: calc(4 * var(--u)); }
+.bo-card--compact .bo-card-alt + .bo-card-total { margin-top: calc(1 * var(--u)); }
+.bo-card--compact .bo-card-counts { gap: calc(5 * var(--u)); }
+
+.bo-card--compact .bo-count {
+  gap: calc(4 * var(--u));
+  padding: calc(3 * var(--u)) calc(7 * var(--u)) calc(3 * var(--u)) calc(6 * var(--u));
+  font-size: calc(12 * var(--u));
+}
+
+/* Too narrow for the outline beside the footer (the expanded Favourites
+   grid): the footer gets the whole row. */
+@container (max-width: 155px) {
+  .bo-card--compact .bo-card-outline {
+    display: none;
+  }
+
+  .bo-card--compact .bo-card-footer {
+    max-width: 100%;
+  }
 }
 
 /* The building's footprint (utils/building-outline.js), small and whole in

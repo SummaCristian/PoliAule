@@ -21,7 +21,8 @@ import { thumbUrl, thumbUrlCache, markPhotoBroken, isPhotoBroken } from '../util
 //
 // Hovering or pressing "opens" it: a single --open factor (0 at rest, 1 on
 // hover, 1.4 pressed) lifts and spreads the cards and leans the front toward
-// you, all in CSS. The papers are inert: the whole folder is one control, and
+// you, all in CSS. Hover comes from pointer events rather than :hover (see
+// trackHover). The papers are inert: the whole folder is one control, and
 // a tap on a card inside it must never open that classroom.
 //
 // The back's path and the cards' fan depend on the folder's width, which the
@@ -37,6 +38,10 @@ const REST_Y = 44;      // the cards' resting top edge, just under the back's ri
 
 // Where each card sits, per how many the folder holds: fraction of the free
 // width, top offset from REST_Y, and rotation (deg).
+// A compact folder (beside classroom cards, in Favourites) drops the headroom
+// above the tab, so its top lines up with theirs: everything moves up by this.
+const COMPACT_LIFT = BACK_TOP;
+
 const FAN = {
   1: [[0.5, 0, -2]],
   2: [[0.19, 2, -4], [0.79, 0, 4]],
@@ -72,7 +77,8 @@ function backPath(w, h) {
 function layout(folder, width, height = FOLDER_H) {
   if (!width) return;
   const baseScale = Number(folder.dataset.paperScale) || 0.5;
-  const backH = (height || FOLDER_H) - BACK_TOP;
+  const lift = folder.classList.contains('bo-card--compact') ? COMPACT_LIFT : 0;
+  const backH = (height || FOLDER_H) - BACK_TOP + lift;
   const svg = folder.querySelector('.bo-card-back');
   svg.setAttribute('width', width);
   svg.setAttribute('height', backH);
@@ -87,7 +93,7 @@ function layout(folder, width, height = FOLDER_H) {
   papers.forEach((paper, i) => {
     const [fx, dy, rot] = fan[i];
     paper.style.left = `${fx * free}px`;
-    paper.style.top = `${REST_Y + dy}px`;
+    paper.style.top = `${REST_Y - lift + dy}px`;
     paper.style.width = `${w}px`;
     paper.style.height = `${CARD_H * scale}px`;
     paper.style.setProperty('--rot', `${rot}deg`);
@@ -102,13 +108,27 @@ const resizer = new ResizeObserver((entries) => {
   }
 });
 
+// Hover for any pointer that can hover (mouse, trackpad, Pencil), on any
+// device. `@media (hover: hover)` goes by the primary input, which on an iPad
+// is touch even with a trackpad attached, so :hover in it never fired there;
+// and a plain :hover sticks after a finger tap. A finger never sets it.
+function trackHover(folder) {
+  const off = () => folder.classList.remove('bo-card--hover');
+  folder.addEventListener('pointerenter', (e) => {
+    if (e.pointerType !== 'touch') folder.classList.add('bo-card--hover');
+  });
+  folder.addEventListener('pointerleave', off);
+  folder.addEventListener('pointercancel', off);
+}
+
 // Builds the folder. `rooms` are the ones to show as papers (see
 // pickFolderRooms), each { classroom, status }; `footerHtml` is trusted markup
 // for the front's bottom row (the caller escapes anything in it);
-// `paperScale` is the cards' size relative to a real classroom card.
-export function buildBuildingFolder({ campusId, building, rooms, total, footerHtml = '', paperScale = 0.5 }) {
+// `paperScale` is the cards' size relative to a real classroom card;
+// `compact` drops the headroom above the tab (see COMPACT_LIFT).
+export function buildBuildingFolder({ campusId, building, rooms, total, footerHtml = '', paperScale = 0.5, compact = false }) {
   const folder = document.createElement('div');
-  folder.className = 'bo-card';
+  folder.className = compact ? 'bo-card bo-card--compact' : 'bo-card';
   folder.dataset.buildingName = building.name;
   folder.dataset.paperScale = paperScale;
 
@@ -145,6 +165,7 @@ export function buildBuildingFolder({ campusId, building, rooms, total, footerHt
     papers.appendChild(paper);
   }
 
+  trackHover(folder);
   resizer.observe(folder);
   return folder;
 }

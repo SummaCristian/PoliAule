@@ -107,6 +107,145 @@ export function renderFavourites() {
   _sync();
 }
 
+// ── Expand / collapse morph ───────────────────────────────────────────────
+// Everything that moves glides from where it was to where the new layout puts
+// it (FLIP): the favourite cards between the strip and the grid, and the
+// results panel within its column. The "Available" header and the pickers,
+// which change column (and the pickers their form: panels <-> pills), don't
+// travel: gliding, they'd cross the cards of both columns. They fade in where
+// they land. Cards that are off the strip on the collapsed side fade instead
+// of popping.
+//
+// Web Animations on translate/scale only, so the whole thing runs on the
+// compositor: a main-thread spring restyling ~20 cards every frame ran at
+// half the frame rate. The spring survives as the easing — sampled into a
+// CSS linear() curve.
+
+const _reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const MORPH_SPRING = { stiffness: 240, damping: 30, mass: 1 };  // ~critically damped
+const FADE = { duration: 260, easing: 'cubic-bezier(0.2, 0, 0, 1)' };
+
+// A spring from 0 to 1, as a linear() easing plus the duration it takes to
+// settle.
+function _springEasing({ stiffness, damping, mass }) {
+  const dt = 1 / 240;
+  let x = 0, v = 0, t = 0;
+  const samples = [0];
+  while (t < 3 && (Math.abs(1 - x) > 0.001 || Math.abs(v) > 0.01)) {
+    v += ((stiffness * (1 - x) - damping * v) / mass) * dt;
+    x += v * dt;
+    t += dt;
+    samples.push(x);
+  }
+  samples[samples.length - 1] = 1;
+  // ~60 stops are plenty for a smooth curve.
+  const step = Math.max(1, Math.round(samples.length / 60));
+  const stops = samples.filter((_, i) => i % step === 0 || i === samples.length - 1);
+  return {
+    duration: Math.round(t * 1000),
+    easing: `linear(${stops.map(v => +v.toFixed(4)).join(', ')})`,
+  };
+}
+const _spring = CSS.supports('animation-timing-function', 'linear(0, 1)')
+  ? _springEasing(MORPH_SPRING)
+  : { duration: 450, easing: 'cubic-bezier(0.2, 0.9, 0.1, 1)' };
+
+let _running = [];   // this morph's animations
+let _morphDone = null;
+
+function _stopMorph() {
+  _running.forEach(a => a.cancel());
+  _running = [];
+  _morphDone = null;
+  _container.classList.remove('favourites-morphing');
+}
+
+function _morph(apply) {
+  if (_reduceMotion.matches) {
+    _stopMorph();
+    apply();
+    return;
+  }
+
+  const header = _availableHeader;
+  const form = document.getElementById('available-classrooms-form');
+  const results = document.getElementById('available-classrooms-results');
+  const cards = [..._carousel.children];
+
+  // Cards change size too (strip <-> grid tracks): they scale as well.
+  const targets = [
+    ...cards.map(el => ({ el, scale: true })),
+    // The panel, and its content on its own: the pills' padding shifts the
+    // list inside the panel as well.
+    results && { el: results },
+    ...[...(results?.children ?? [])].map(el => ({ el, parent: results })),
+  ].filter(Boolean);
+
+  // Which cards the collapsed strip actually shows (the rest are scrolled
+  // out of it, under its edge fade).
+  const onStrip = () => {
+    const strip = _carousel.getBoundingClientRect();
+    return new Set(cards.filter(el => {
+      const r = el.getBoundingClientRect();
+      return r.right > strip.left && r.left < strip.right;
+    }));
+  };
+  const collapsing = isFavouritesExpanded();
+  let shown = collapsing ? null : onStrip();
+
+  // Measured with any running morph still applied, so a second click
+  // mid-flight picks up from where things visibly are.
+  for (const t of targets) t.before = t.el.getBoundingClientRect();
+
+  _stopMorph();
+  apply();
+  if (collapsing) shown = onStrip();
+  // Unclipped strip while cards fly in and out of it. Only now: dropping its
+  // overflow earlier would have thrown away the scroll position the cards
+  // were measured at.
+  _container.classList.add('favourites-morphing');
+
+  const delta = new Map();
+  for (const t of targets) {
+    const a = t.before, b = t.el.getBoundingClientRect();
+    // Centre to centre, so a scaled card grows about its middle.
+    const d = {
+      x: (a.left + a.width / 2) - (b.left + b.width / 2),
+      y: (a.top + a.height / 2) - (b.top + b.height / 2),
+      sx: t.scale && b.width ? a.width / b.width : 1,
+      sy: t.scale && b.height ? a.height / b.height : 1,
+    };
+    delta.set(t.el, d);
+    // A child rides along with its parent's glide; it only adds its own.
+    const p = t.parent && delta.get(t.parent);
+    const x = d.x - (p?.x ?? 0), y = d.y - (p?.y ?? 0);
+    if (Math.abs(x) < 0.5 && Math.abs(y) < 0.5 && d.sx === 1 && d.sy === 1) continue;
+    const frames = { translate: [`${x}px ${y}px`, '0 0'] };
+    if (t.scale) frames.scale = [`${d.sx} ${d.sy}`, '1 1'];
+    _running.push(t.el.animate(frames, _spring));
+  }
+
+  // Cards the strip doesn't show fade instead of flying in from (or out to)
+  // somewhere off its edge; the header and pickers fade in, in place.
+  for (const el of cards) {
+    if (shown.has(el)) continue;
+    _running.push(collapsing
+      ? el.animate({ opacity: [1, 0] }, { ...FADE, duration: 200, fill: 'forwards' })
+      : el.animate({ opacity: [0, 1] }, { ...FADE, delay: 60, fill: 'backwards' }));
+  }
+  for (const el of [header, form]) {
+    if (!el) continue;
+    _running.push(el.animate(
+      { opacity: [0, 1], scale: [0.96, 1] },
+      { ...FADE, duration: 320, delay: el === form ? 160 : 120, fill: 'backwards' }
+    ));
+  }
+
+  const done = Promise.all(_running.map(a => a.finished));
+  _morphDone = done;
+  done.then(() => { if (_morphDone === done) _stopMorph(); }, () => {});
+}
+
 function _initExpand() {
   _container = document.getElementById('available-classrooms-container');
   _expandBtn = document.getElementById('favourites-expand-btn');
@@ -118,9 +257,11 @@ function _initExpand() {
   _expandBtn.addEventListener('click', () => {
     _wantsExpanded = !isFavouritesExpanded();
     _writeExpanded(_wantsExpanded);
-    _sync();
-    // Collapsing lands the carousel back at its first card.
-    if (!_wantsExpanded) _carousel.scrollLeft = 0;
+    _morph(() => {
+      _sync();
+      // Collapsing lands the carousel back at its first card.
+      if (!_wantsExpanded) _carousel.scrollLeft = 0;
+    });
   });
 
   // Overflow changes with the column width and the cards inside it.

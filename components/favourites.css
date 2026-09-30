@@ -196,6 +196,25 @@
 
   .favourites-expanded .favourites-carousel > .classroom-card {
     width: auto;
-    animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  /* While the expand/collapse morph runs (components/favourites.js), the
+     strip doesn't clip above or below, so cards can travel between it and
+     the grid in plain sight. Its sides still clip: cards off the end of the
+     strip would otherwise sit over the results column until the morph lands.
+     Not the edge fade (a mask clips on every side), and not clip-path (Safari
+     lets composited, i.e. animating, children escape it). */
+  .favourites-morphing .favourites-carousel {
+    overflow-x: clip;
+    overflow-y: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  /* The header and pickers settle in from their leading corner, not the
+     middle of the column-wide box. */
+  .favourites-morphing > .section-header,
+  .favourites-morphing #available-classrooms-form {
+    transform-origin: top left;
   }
 }

@@ -1705,6 +1705,13 @@ are rendered as solid colors
     position: sticky;
   }
 
+  /* All pills here, so lay them out as on mobile: date + time back in the
+     row's own flow instead of the docked panels' sub-box, which would wrap
+     the time pill under the date one on its own. */
+  #available-classrooms-container.favourites-expanded .picker-row .picker-substack {
+    display: contents;
+  }
+
   #available-classrooms-container.favourites-expanded>.section-header {
     top: var(--header-height, 84px);
     z-index: 11;

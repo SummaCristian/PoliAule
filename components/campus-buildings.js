@@ -5,6 +5,7 @@ import { getClassroomStatusNow } from '../available-rooms-script.js';
 import { buildCardForClassroom } from './classroom-list.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
+import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
 
 // The Campus tab's own "pages" inside the campus sheet (components/campus-sheet.js):
 //
@@ -340,7 +341,7 @@ function buildCampusPage(campusId) {
 
   const campus = staticClassroomsData.find(c => c.id === campusId);
   for (const building of campus?.buildings ?? []) {
-    grid.appendChild(buildBuildingCard(building));
+    grid.appendChild(buildBuildingCard(campusId, building));
   }
   return page;
 }
@@ -358,23 +359,19 @@ function swapCampusPage(campusId, { animate = true } = {}) {
   }
 }
 
-function buildBuildingCard(building) {
-  const card = document.createElement('div');
-  card.className = 'bo-card campus-sheet-card';
+function buildBuildingCard(campusId, building) {
+  // Browsing here isn't tied to a query, so the cards show each room's status right now.
+  const rooms = building.classrooms.map(classroom => ({ classroom, status: getClassroomStatusNow(classroom.id) }));
+  const card = buildBuildingFolder({
+    campusId, building,
+    total: building.classrooms.length,
+    rooms: pickFolderRooms(rooms),
+    footerHtml: building.address ? `<span class="campus-sheet-card-address">${escapeHtml(building.address)}</span>` : '',
+  });
+  card.classList.add('campus-sheet-card');
   card.setAttribute('role', 'button');
   card.setAttribute('tabindex', '0');
-
-  const total = building.classrooms.length;
-  card.innerHTML = `
-    <div class="bo-card-body">
-      <div class="bo-card-head">
-        <span class="bo-card-name">${escapeHtml(t('building.prefix'))} ${escapeHtml(building.name)}</span>
-        ${building.altName ? `<span class="bo-card-alt">${escapeHtml(building.altName)}</span>` : ''}
-        <span class="bo-card-total secondary">${escapeHtml(t('overview.subtitle').replace('{n}', total))}</span>
-      </div>
-      ${building.address ? `<span class="campus-sheet-card-address secondary">${escapeHtml(building.address)}</span>` : ''}
-    </div>
-  `;
+  card.setAttribute('aria-label', `${t('building.prefix')} ${building.name}`);
 
   const go = () => {
     openBuilding(building.name, { animate: true });

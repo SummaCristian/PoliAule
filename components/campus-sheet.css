@@ -20,9 +20,9 @@
    second instance of the Available tab's own morphing <campus-chip-picker>)
    fixed in .campus-sheet-header above, a scrolling grid of that campus's
    buildings in .campus-sheet-content below it. The cards reuse the
-   Available tab's building-overview cards (.bo-card, building-overview.css)
-   without their occupancy-counts row — browsing here isn't tied to a
-   date/time. */
+   Available tab's building folders (.bo-card, building-overview.css) with
+   the address in place of their occupancy counts — browsing here isn't tied
+   to a date/time. */
 
 /* Title              [Center btn] Picker
    A bit more inset than the grid below (which already gets .campus-sheet-
@@ -250,17 +250,17 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* .bo-card reserves room for the counts row this page doesn't render, and
-   blurs its background — dropped here since these cards sit over the sheet's
-   own opaque/glass surface rather than a scrolling photo backdrop. */
-.campus-sheet-card {
-  min-height: auto;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
+/* The folder's footer here is the building's address instead of the
+   Available tab's status counts: browsing isn't tied to a date/time. */
 .campus-sheet-card-address {
-  font-size: var(--text-80);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--folder-text-secondary);
 }
 
 /* The building page's grid holds actual classroom cards (.classroom-card,

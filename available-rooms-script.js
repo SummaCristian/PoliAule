@@ -354,8 +354,9 @@ export function getClassroomStatusNow(classroomId) {
  * what the classrooms grid below is showing for that same query (free /
  * partially-free / occupied) instead of a snapshot at a single instant.
  *
- * Returns [{ building, counts: {free, 'partially-free', occupied} }]
- * in the campus's building order.
+ * Returns [{ building, counts: {free, 'partially-free', occupied}, rooms }]
+ * in the campus's building order, `rooms` being every classroom with its
+ * status over that window ([{ classroom, status }], for the folder's cards).
  */
 export function getCampusBuildingsOverview(campusId, date, fromTime, toTime) {
   const formattedDate = formatDateYYYYMMDD(new Date(date));
@@ -372,17 +373,19 @@ export function getCampusBuildingsOverview(campusId, date, fromTime, toTime) {
     if (!open) return [];
 
     const counts = { 'free': 0, 'partially-free': 0, 'occupied': 0 };
+    const rooms = [];
     for (const room of building.classrooms ?? []) {
       const freeSlots = getFreeSlots(room.occupancy ?? [], open.from, open.to);
-      if (freeSlots.length === 0) {
-        counts.occupied++;
-      } else {
+      let status = 'occupied';
+      if (freeSlots.length > 0) {
         const isFullyFree = freeSlots.length === 1
           && freeSlots[0].start === fromTime
           && freeSlots[0].end === toTime;
-        counts[isFullyFree ? 'free' : 'partially-free']++;
+        status = isFullyFree ? 'free' : 'partially-free';
       }
+      counts[status]++;
+      rooms.push({ classroom: room, status });
     }
-    return [{ building, counts }];
+    return [{ building, counts, rooms }];
   });
 }

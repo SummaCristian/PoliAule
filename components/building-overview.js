@@ -1,5 +1,6 @@
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
+import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
 import { getCampusBuildingsOverview } from '../available-rooms-script.js';
 import { scrollerFor, stickyTopOf } from '../utils/results-scroller.js';
 
@@ -632,36 +633,30 @@ class BuildingOverview {
     closeBtn.addEventListener('click', () => this.close());
     grid.appendChild(bar);
 
-    for (const { building, counts } of getCampusBuildingsOverview(campusId, date, from, to)) {
-      grid.appendChild(this.#buildCard(building, counts, active.has(building.name)));
+    for (const { building, counts, rooms } of getCampusBuildingsOverview(campusId, date, from, to)) {
+      grid.appendChild(this.#buildCard(campusId, building, counts, rooms, active.has(building.name)));
     }
     return grid;
   }
 
-  #buildCard(building, counts, isActive) {
+  #buildCard(campusId, building, counts, rooms, isActive) {
     const total = STATUS_META.reduce((n, s) => n + (counts[s.key] || 0), 0);
 
-    const card = document.createElement('div');
-    card.className = 'bo-card' + (isActive ? '' : ' bo-card--inactive');
-    card.dataset.buildingName = building.name;
-
+    // Dot + number per status; the word stays for screen readers only.
     const countsHtml = STATUS_META.map(s => {
       const n = counts[s.key] || 0;
       return `<span class="bo-count ${s.cls}${n === 0 ? ' is-zero' : ''}">
-                <b>${n}</b><span class="bo-count-label">${escapeHtml(t(s.i18n))}</span>
+                <i aria-hidden="true"></i><b>${n}</b><span class="bo-count-label">${escapeHtml(t(s.i18n))}</span>
               </span>`;
     }).join('');
 
-    card.innerHTML = `
-      <div class="bo-card-body">
-        <div class="bo-card-head">
-          <span class="bo-card-name">${escapeHtml(t('building.prefix'))} ${escapeHtml(building.name)}</span>
-          ${building.altName ? `<span class="bo-card-alt">${escapeHtml(building.altName)}</span>` : ''}
-          <span class="bo-card-total secondary">${escapeHtml(t('overview.subtitle').replace('{n}', total))}</span>
-        </div>
-        <div class="bo-card-counts">${countsHtml}</div>
-      </div>
-    `;
+    const card = buildBuildingFolder({
+      campusId, building, total,
+      rooms: pickFolderRooms(rooms),
+      paperScale: 0.42,
+      footerHtml: `<div class="bo-card-counts">${countsHtml}</div>`,
+    });
+    if (!isActive) card.classList.add('bo-card--inactive');
 
     if (isActive) {
       card.setAttribute('role', 'button');

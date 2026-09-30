@@ -4,7 +4,7 @@ import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
-import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
+import { isFavourite, toggleFavourite, syncStarButton } from '../utils/favourites.js';
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
 import { startTrackedTransition, vtFlag } from '../utils/vt-debug.js';
@@ -286,15 +286,7 @@ class ClassroomDetail {
   // Reflects the current classroom's favourite state on the header star button.
   _syncFavBtn() {
     if (!this._favBtn || this._currentId === null) return;
-    const fav = isFavourite(this._currentId);
-    // .favourite-btn--active tints the star yellow (see style.css); the outline
-    // hgi-star is swapped for a filled star SVG.
-    this._favBtn.classList.toggle('favourite-btn--active', fav);
-    this._favBtn.setAttribute('aria-label', t(fav ? 'favourite.remove' : 'favourite.add'));
-    this._favBtn.setAttribute('aria-pressed', fav ? 'true' : 'false');
-    this._favBtn.innerHTML = fav
-      ? FILLED_STAR_SVG
-      : '<i class="hgi-stroke hgi-star" aria-hidden="true"></i>';
+    syncStarButton(this._favBtn, isFavourite(this._currentId));
   }
 
   // Called by script.js once occupancy data has finished loading in the

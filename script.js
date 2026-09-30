@@ -55,6 +55,7 @@ import { buildingOverview } from './components/building-overview.js';
 import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
 import { initLiquidGlass, createPopover, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
+import { createBuildingStarButton } from './utils/favourites.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import { escapeHtml } from './utils/html.js';
@@ -269,10 +270,15 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
       <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
       ${building.altName ? `<span class="building-alt-name">${escapeHtml(building.altName)}</span>` : ''}
     </button>
-    <button class="header-button building-section-btn liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
-      <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
-    </button>
+    <div class="building-section-actions">
+      <button class="header-button building-section-btn building-section-jump liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
+        <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
+      </button>
+    </div>
   `;
+  // Stars the whole building (utils/favourites.js), next to the jump button.
+  headerEl.querySelector('.building-section-actions')
+    .prepend(createBuildingStarButton(campusId, buildingName, 'header-button building-section-btn'));
   cardIndex++;
   section.appendChild(headerEl);
 
@@ -329,7 +335,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   // Jumps straight to this building's detail page in the Campus tab — see
   // components/campus-buildings.js's goToBuilding(), which brings the picker
   // along to the right campus first if needed.
-  headerEl.querySelector('.building-section-btn').addEventListener('click', () => {
+  headerEl.querySelector('.building-section-jump').addEventListener('click', () => {
     activateGroupTab('search-classrooms-container');
     goToBuilding(campusId, buildingName);
   });

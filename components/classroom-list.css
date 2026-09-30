@@ -214,6 +214,14 @@
   pointer-events: none;
 }
 
+/* The building's star and the jump-to-Campus arrow, side by side. */
+.building-section-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .building-section-btn {
   flex: none;
 }

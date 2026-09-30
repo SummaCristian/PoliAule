@@ -1,9 +1,13 @@
 import { buildCardForClassroom } from './classroom-list.js';
 import { getClassroomStatusNow } from '../available-rooms-script.js';
-import { getFavouriteIds, initFavouriteMarkers } from '../utils/favourites.js';
+import { getFavouriteEntries, initFavouriteMarkers, buildingKey } from '../utils/favourites.js';
+import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
+import { openBuildingPopup } from './building-popup.js';
 import { t } from '../i18n.js';
+import { escapeHtml } from '../utils/html.js';
 
 let _index = null;   // Map<classroomId(number), { classroom, building }>
+let _buildings = null;   // Map<buildingKey, { campusId, building }>
 let _carousel = null;
 let _empty = null;
 let _container = null;     // #available-classrooms-container
@@ -22,8 +26,10 @@ let _count = 0;
 
 function _buildIndex(staticData) {
   _index = new Map();
+  _buildings = new Map();
   for (const campus of staticData ?? []) {
     for (const building of campus.buildings ?? []) {
+      _buildings.set(buildingKey(campus.id, building.name), { campusId: campus.id, building });
       for (const classroom of building.classrooms ?? []) {
         _index.set(Number(classroom.id), { classroom, building });
       }
@@ -76,12 +82,62 @@ function _sync() {
   }
 }
 
+// How many of the building's rooms are free right now and how many aren't, as
+// the overview's status pills (.bo-count, building-overview.css). "Now" like
+// every other favourite. Closed or without data, it says so instead.
+function _nowCountsHtml(rooms) {
+  let free = 0, busy = 0;
+  for (const { status } of rooms) {
+    if (status === 'free' || status === 'occupied-soon') free++;
+    else if (status === 'occupied' || status === 'free-soon') busy++;
+  }
+  if (free + busy === 0) {
+    return rooms.some(r => r.status === 'closed')
+      ? `<span class="bo-count is-zero">${escapeHtml(t('status.closed'))}</span>`
+      : '';
+  }
+  const pill = (cls, n, key) => `<span class="bo-count ${cls}${n === 0 ? ' is-zero' : ''}">
+      <i aria-hidden="true"></i><b>${n}</b><span class="bo-count-label">${escapeHtml(t(key))}</span>
+    </span>`;
+  return `<div class="bo-card-counts">${pill('free', free, 'status.free')}${pill('occupied', busy, 'status.occupied')}</div>`;
+}
+
+// A favourite building: its folder (components/building-folder.js), which
+// opens into the building popup (components/building-popup.js).
+function _buildBuildingFavourite(campusId, building) {
+  const rooms = building.classrooms.map(classroom => ({ classroom, status: getClassroomStatusNow(classroom.id) }));
+  const folder = buildBuildingFolder({
+    campusId, building,
+    total: building.classrooms.length,
+    rooms: pickFolderRooms(rooms),
+    footerHtml: _nowCountsHtml(rooms),
+  });
+  const key = buildingKey(campusId, building.name);
+  folder.classList.add('fav-building');
+  folder.dataset.favBuildingFolder = key;
+  folder.setAttribute('role', 'button');
+  folder.setAttribute('tabindex', '0');
+  folder.setAttribute('aria-haspopup', 'dialog');
+  folder.setAttribute('aria-label', `${t('building.prefix')} ${building.name}`);
+
+  const open = () => openBuildingPopup({
+    campusId, building, folder,
+    findTrigger: () => _carousel?.querySelector(`[data-fav-building-folder="${CSS.escape(key)}"]`) ?? null,
+  });
+  folder.addEventListener('click', open);
+  folder.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+  });
+  return folder;
+}
+
 // (Re)renders the Favourites carousel on the Available page.
 export function renderFavourites() {
   if (!_carousel || !_index) return;
 
-  const entries = getFavouriteIds()
-    .map(id => _index.get(Number(id)))
+  // Classrooms and buildings, mixed, in the order they were starred.
+  const entries = getFavouriteEntries()
+    .map(e => (typeof e === 'number' ? _index.get(e) : _buildings.get(e)))
     .filter(Boolean);
 
   _carousel.replaceChildren();
@@ -94,12 +150,16 @@ export function renderFavourites() {
     return;
   }
 
-  for (const { classroom, building } of entries) {
-    const card = buildCardForClassroom(
-      { ...classroom, status: getClassroomStatusNow(classroom.id) },
-      building
-    );
-    _carousel.appendChild(card);
+  for (const entry of entries) {
+    if (entry.classroom) {
+      const { classroom, building } = entry;
+      _carousel.appendChild(buildCardForClassroom(
+        { ...classroom, status: getClassroomStatusNow(classroom.id) },
+        building
+      ));
+    } else {
+      _carousel.appendChild(_buildBuildingFavourite(entry.campusId, entry.building));
+    }
   }
 
   _carousel.hidden = false;

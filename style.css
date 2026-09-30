@@ -791,8 +791,22 @@ body.detail-open #favourite-btn {
   display: block;
 }
 
-#favourite-btn.favourite-btn--active {
+#favourite-btn.favourite-btn--active,
+.fav-star-btn.favourite-btn--active {
   color: #f0b429;
+}
+
+/* Building star buttons (utils/favourites.js createBuildingStarButton): the
+   host's own button recipe sizes the circle, this only the two icons. */
+.fav-star-btn .hgi-star {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.fav-star-btn .star-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  display: block;
 }
 
 .pulse-indicator {

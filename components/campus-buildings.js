@@ -6,6 +6,7 @@ import { buildCardForClassroom } from './classroom-list.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
+import { createBuildingStarButton, setBuildingStarTarget } from '../utils/favourites.js';
 
 // The Campus tab's own "pages" inside the campus sheet (components/campus-sheet.js):
 //
@@ -56,6 +57,7 @@ const SLIDE_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
 let picker = null;
 let hiddenInput = null;
 let recenterBtn = null;
+let starBtn = null;     // stars the open building; only on the building page
 let backBtn = null;
 let titleBox = null;   // wraps titleEl + subtitleEl — see flipTitleBox()
 let titleEl = null;
@@ -127,6 +129,12 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
     document.dispatchEvent(new CustomEvent('campusrecenter'));
   });
   actions.appendChild(recenterBtn);
+
+  // Stars the whole building (utils/favourites.js). Kept to the right of the
+  // recenter button so that one popping in doesn't shift it.
+  starBtn = createBuildingStarButton('', '', 'campus-sheet-star');
+  starBtn.hidden = true;
+  actions.appendChild(starBtn);
 
   picker = document.createElement('campus-sheet-picker');
   hiddenInput = document.createElement('input');
@@ -329,6 +337,7 @@ function renderCampusHeader(campusId, { fade = false } = {}) {
   const buildings = campus?.buildings ?? [];
   setHeaderText(t('overview.title'), t('campus.buildingsCount').replace('{n}', buildings.length), fade);
   backBtn.hidden = true;
+  starBtn.hidden = true;
   picker.style.display = '';
 }
 
@@ -403,6 +412,8 @@ function findBuilding(campusId, buildingId) {
 function renderBuildingHeader(building, { fade = false } = {}) {
   setHeaderText(buildingLabel(building), t('overview.subtitle').replace('{n}', building.classrooms.length), fade);
   backBtn.hidden = false;
+  setBuildingStarTarget(starBtn, hiddenInput.value, building.name);
+  starBtn.hidden = false;
   picker.style.display = 'none';
 }
 
@@ -422,7 +433,14 @@ function buildBuildingPage(building) {
   const grid = document.createElement('div');
   grid.className = 'bo-grid campus-sheet-grid campus-sheet-classroom-grid';
   page.appendChild(grid);
+  appendClassroomsByFloor(grid, building);
+  return page;
+}
 
+// Fills `grid` with the building's classroom cards (status right now), floor
+// by floor under a .bo-floor-label each. Also used by the favourite building
+// popup (components/building-popup.js).
+export function appendClassroomsByFloor(grid, building) {
   const sorted = [...building.classrooms].sort((a, b) => {
     const fa = a.floor, fb = b.floor;
     if (fa === fb) return 0;
@@ -446,7 +464,6 @@ function buildBuildingPage(building) {
     const card = buildCardForClassroom({ ...classroom, status }, building, null, null, false, null, '', true);
     grid.appendChild(card);
   }
-  return page;
 }
 
 // Opens (or, if already on the building page, swaps to) the given building.

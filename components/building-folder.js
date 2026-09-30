@@ -67,12 +67,15 @@ function backPath(w, h) {
     + `Q${w} ${h} ${w - r} ${h}L${r} ${h}Q0 ${h} 0 ${h - r}Z`;
 }
 
-function layout(folder, width) {
+// `height` is the folder's own: FOLDER_H, unless its host sizes it (the
+// Favourites strip matches it to the classroom cards beside it).
+function layout(folder, width, height = FOLDER_H) {
   if (!width) return;
   const baseScale = Number(folder.dataset.paperScale) || 0.5;
-  const backH = FOLDER_H - BACK_TOP;
+  const backH = (height || FOLDER_H) - BACK_TOP;
   const svg = folder.querySelector('.bo-card-back');
   svg.setAttribute('width', width);
+  svg.setAttribute('height', backH);
   svg.querySelector('path').setAttribute('d', backPath(width, backH));
 
   // Papers grow a little with wider folders (desktop grid), never below the base size.
@@ -93,7 +96,10 @@ function layout(folder, width) {
 }
 
 const resizer = new ResizeObserver((entries) => {
-  for (const entry of entries) layout(entry.target, entry.contentBoxSize?.[0]?.inlineSize ?? entry.contentRect.width);
+  for (const entry of entries) {
+    const box = entry.contentBoxSize?.[0];
+    layout(entry.target, box?.inlineSize ?? entry.contentRect.width, box?.blockSize ?? entry.contentRect.height);
+  }
 });
 
 // Builds the folder. `rooms` are the ones to show as papers (see

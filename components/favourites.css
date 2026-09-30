@@ -95,6 +95,15 @@
   contain-intrinsic-size: auto;
 }
 
+/* A favourite building's folder (components/building-folder.js): as wide
+   and as tall as the classroom cards around it. */
+.favourites-carousel > .bo-card {
+  scroll-snap-align: center;
+  flex: 0 0 clamp(9.5rem, 42vw, 11rem);
+  height: auto;
+  aspect-ratio: 154 / 196;
+}
+
 .favourites-empty {
   margin: 0.5rem 0 0;
   font-size: var(--text-90, 0.9rem);
@@ -132,7 +141,7 @@
     margin-right: 0;
   }
 
-  .favourites-carousel > .classroom-card {
+  .favourites-carousel > :is(.classroom-card, .bo-card) {
     flex-basis: 10.5rem;
   }
 }
@@ -194,7 +203,7 @@
     mask-image: none;
   }
 
-  .favourites-expanded .favourites-carousel > .classroom-card {
+  .favourites-expanded .favourites-carousel > :is(.classroom-card, .bo-card) {
     width: auto;
   }
 

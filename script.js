@@ -47,6 +47,7 @@ import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
 import { initPickerDock } from './components/picker-dock.js';
+import { initPickerRowFlip } from './components/picker-row-flip.js';
 import './components/data-fetch-card.js';
 
 import { buildCardForClassroom } from './components/classroom-list.js';
@@ -428,6 +429,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Decide pill vs. inline-expanded pickers based on the form column's width
     // (desktop two-column layout only).
     initPickerDock();
+
+    // Pills that hop lines when another one changes width glide there instead.
+    initPickerRowFlip();
 
     // Setup the language switch handler immediately — doesn't depend on
     // fonts and shouldn't wait for the splash to dismiss

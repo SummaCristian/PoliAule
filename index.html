@@ -443,7 +443,11 @@
             <i class="hgi-stroke hgi-arrow-expand-01" aria-hidden="true"></i>
           </button>
         </div>
-        <div id="favourites-carousel" class="favourites-carousel" hidden></div>
+        <!-- Holds the strip's edge fade (favourites.css): a mask on the strip
+             itself left Chrome showing stale glass blur in the folders. -->
+        <div class="favourites-strip">
+          <div id="favourites-carousel" class="favourites-carousel" hidden></div>
+        </div>
         <p id="favourites-empty" class="favourites-empty secondary" data-i18n="favourites.empty">Star a classroom or a
           building to pin it here.</p>
       </div>

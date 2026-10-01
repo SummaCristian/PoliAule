@@ -173,9 +173,12 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
     : '';
 
   // Label on the name's row and timeline on the building's, so the name sits
-  // right on top of the building line whether or not there's an alt name
+  // right on top of the building line whether or not there's an alt name.
+  // .classroom-card-text is the block the photo's fade is hung from (see its
+  // ::before in classroom-list.css), so the fade follows its real height.
   const contentHtml = `
     <div class="classroom-card-content">
+      <div class="classroom-card-text">
       <div class="classroom-card-title-row">
         <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${highlight(classroom.name, query)}</h4>
         ${statusLabel ? `<span class="classroom-status-txt ${classroom.status}" data-full="${escapeHtml(statusLabel.full)}" data-short="${escapeHtml(statusLabel.short)}">${escapeHtml(statusLabel.full)}</span>` : ''}
@@ -188,6 +191,7 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
           </p>
         ` : ''}
         ${timeline ? _timelineHtml(timeline) : ''}
+      </div>
       </div>
     </div>
   `;
@@ -208,7 +212,6 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
     el.innerHTML = `
       <div class="classroom-card-clip">
         <img class="classroom-card-photo${cachedUrl ? ' loaded' : ''}" alt=""${cachedUrl ? ` src="${escapeHtml(cachedUrl)}"` : ''}>
-        <div class="classroom-card-scrim"></div>
         ${contentHtml}
         ${favStarHtml}
       </div>

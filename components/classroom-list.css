@@ -440,33 +440,43 @@
   pointer-events: none;
 }
 
-/* Gradient overlay laid across the full card — exact stops from the Figma
-   component — fading the photo to a solid, readable footer. */
-.classroom-card-scrim {
-  position: absolute;
-  /* 1px bleed past the true edges (clipped precisely by .classroom-card-clip's
-     overflow:hidden) — guards against a sub-pixel rounding gap at the card's
-     bottom edge on some mobile DPR/zoom combos, where inset:0 can land a
-     hair short of the actual box and let the photo show through. */
-  inset: -1px;
-  pointer-events: none;
+/* The fade from the photo to a solid, readable footer. Hung off the text
+   block (.classroom-card-text) instead of laid across the card at fixed
+   stops, so it rises with whatever the text needs: an alt name line, or a
+   label wrapped under a long name. It starts --scrim-lead above the text and
+   turns 80% opaque right where the text begins, solid soon after. Extends
+   past the text by the content padding (+1px bleed: guards against a
+   sub-pixel gap at the card's rounded bottom edge on some DPR/zoom combos,
+   clipped precisely by .classroom-card-clip's overflow:hidden). Photo cards
+   only: plain ones already sit on a solid background. */
+.classroom-card--photo .classroom-card-text {
+  --scrim-rgb: 217 217 217;
+  --scrim-lead: 2.75rem;
+  --scrim-bleed: calc(0.85rem + 1px);
+  position: relative;
+  isolation: isolate;
 
-  background: linear-gradient(
-    to bottom,
-    rgba(217, 217, 217, 0) 53%,
-    rgba(217, 217, 217, 0.8) 80%,
-    rgba(217, 217, 217, 1) 89%
-  );
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: calc(-1 * var(--scrim-lead));
+    left: calc(-1 * var(--scrim-bleed));
+    right: calc(-1 * var(--scrim-bleed));
+    bottom: calc(-1 * var(--scrim-bleed));
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgb(var(--scrim-rgb) / 0) 0,
+      rgb(var(--scrim-rgb) / 0.8) var(--scrim-lead),
+      rgb(var(--scrim-rgb) / 1) calc(var(--scrim-lead) + 1.25rem)
+    );
+  }
 }
 
 @media (prefers-color-scheme: dark) {
-  .classroom-card-scrim {
-    background: linear-gradient(
-      to bottom,
-      rgba(26, 26, 26, 0) 53%,
-      rgba(26, 26, 26, 0.8) 80%,
-      rgba(26, 26, 26, 1) 89%
-    );
+  .classroom-card--photo .classroom-card-text {
+    --scrim-rgb: 26 26 26;
   }
 }
 
@@ -526,6 +536,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Light mode: the status colours are tuned for the app's light surfaces, and
+   are too pale for a label on the card's grey footer (yellow was 1.3:1).
+   Darker shades of each, ~4.7:1 or better on it, for the label and its dot
+   only; the timeline keeps the bright ones. */
+@media (prefers-color-scheme: light) {
+  .classroom-card-title-row {
+    --color-status-free: #17692f;
+    --color-status-free-soon: #45600a;
+    --color-status-partial: #7c5000;
+    --color-status-busy: #b71c1c;
+  }
 }
 
 /* Name with the status label at its right, on the same baseline. A name too

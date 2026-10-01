@@ -461,7 +461,7 @@ export function appendClassroomsByFloor(grid, building) {
       first = false;
     }
     const status = getClassroomStatusNow(classroom.id);
-    const card = buildCardForClassroom({ ...classroom, status }, building, null, null, false, null, '', true);
+    const card = buildCardForClassroom({ ...classroom, status }, building, null, null, false, null, '', true, false);
     grid.appendChild(card);
   }
 }

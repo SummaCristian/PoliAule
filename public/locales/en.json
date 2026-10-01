@@ -53,6 +53,11 @@
   "status.freeSoon": "Free soon",
   "status.occupiedSoon": "Occupied soon",
   "status.closed": "Closed",
+  "status.cardBusy": "Busy",
+  "status.cardFrom": "From {time}",
+  "status.cardUntil": "Until {time}",
+  "status.cardPartialShort": "Part.",
+  "status.cardBusyShort": "Busy",
 
   "search.inputPlaceholder": "Rooms, courses, professors",
   "search.topHit": "Top Hit",

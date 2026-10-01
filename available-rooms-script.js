@@ -345,6 +345,83 @@ export function getClassroomStatusNow(classroomId) {
   return computeClassroomStatus(classroom.occupancy ?? [], now);
 }
 
+const toMinutes = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+const toHHMM = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+
+/**
+ * What a classroom card's small timeline shows. With fromTime/toTime, it is
+ * that queried range on dateKey ("YYYYMMDD"); without, a window around now
+ * (30 min back, 90 ahead, kept inside the day) on today. Returns null when
+ * there's no data for that day.
+ *
+ *   { from, to }   the window, in minutes since midnight
+ *   busy           [[start, end]] booked spans inside it, merged
+ *   closed         [[start, end]] spans the building is closed inside it
+ *   now            minutes since midnight when now falls inside it, else null
+ *   nextChange     "HH:MM" of the first free <-> busy switch after now (null
+ *                  without a now): what "From 11:15" / "Until 11:30" show
+ */
+export function getClassroomTimeline(classroomId, dateKey = null, fromTime = null, toTime = null) {
+  if (!classroomsData || classroomsData.length === 0) return null;
+
+  const nowDate = new Date();
+  const todayKey = formatDateYYYYMMDD(nowDate);
+  const key = dateKey ?? todayKey;
+  const dayData = classroomsData.find(day => day.date === key);
+  if (!dayData) return null;
+
+  const entry = roomsById(dayData).get(String(classroomId));
+  if (!entry) return null;
+  const { classroom, building } = entry;
+
+  const nowMins = nowDate.getHours() * 60 + nowDate.getMinutes();
+  let from, to;
+  if (fromTime && toTime) {
+    from = toMinutes(fromTime);
+    to = toMinutes(toTime);
+  } else {
+    from = Math.min(Math.max(nowMins - 30, 0), 24 * 60 - 120);
+    to = from + 120;
+  }
+  if (to <= from) return null;
+
+  const clip = ([s, e]) => [Math.max(s, from), Math.min(e, to)];
+  const inside = ([s, e]) => s < e;
+
+  const busy = [];
+  const sorted = (classroom.occupancy ?? [])
+    .map(s => [toMinutes(s.inizio), toMinutes(s.fine)])
+    .sort((a, b) => a[0] - b[0]);
+  for (const span of sorted) {
+    const last = busy[busy.length - 1];
+    if (last && span[0] <= last[1]) last[1] = Math.max(last[1], span[1]);
+    else busy.push([...span]);
+  }
+
+  const opening = getBuildingOpening(building, key);
+  let closed = [];
+  if (opening?.closed) closed = [[from, to]];
+  else if (opening) closed = [[0, toMinutes(opening.opens)], [toMinutes(opening.closes), 24 * 60]];
+
+  const now = key === todayKey && nowMins >= from && nowMins <= to ? nowMins : null;
+
+  let nextChange = null;
+  if (now !== null) {
+    const current = busy.find(([s, e]) => s <= now && now < e);
+    const next = current ? current[1] : busy.find(([s]) => s > now)?.[0];
+    if (next !== undefined && next < 24 * 60) nextChange = toHHMM(next);
+  }
+
+  return {
+    from,
+    to,
+    busy: busy.map(clip).filter(inside),
+    closed: closed.map(clip).filter(inside),
+    now,
+    nextChange,
+  };
+}
+
 /**
  * Builds the data for the "zoom out" building overview: every building in the
  * given campus on the given date, each with a per-status classroom count.

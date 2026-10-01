@@ -344,7 +344,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     const roomItem = document.createElement('div');
     roomItem.className = 'classroom-list-item-container';
     roomItem.dataset.status = room.status;
-    const cardEl = buildCardForClassroom(room, building, from, to, isToday, date, '', true);
+    const cardEl = buildCardForClassroom(room, building, from, to, isToday, date, '', true, false);
     cardEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
     roomItem.appendChild(cardEl);
     section.appendChild(roomItem);

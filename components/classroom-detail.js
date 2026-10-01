@@ -1,6 +1,5 @@
 import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow, getBuildingOpening } from '../available-rooms-script.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
-import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
@@ -9,18 +8,13 @@ import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
 import { startTrackedTransition, vtFlag } from '../utils/vt-debug.js';
 import { createPillSelector } from './pill-selector.js';
+import { DAY_START, DAY_END, dayBarHtml, timeToMinutes, minutesToTimeDisplay } from './day-bar.js';
 import { embedMap, parkMap, releaseMap, isMapTabShowing, getEmbedPov, setEmbedPov } from './campus-map.js';
 import { refreshHeaderBlur } from '../utils/header-blur.js';
 
 // No zoom and no shared element when motion is unwelcome: the pair of them is
 // the whole animation, so what is left is the browser's own cross-fade.
 const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-
-function minutesToTimeDisplay(minutes) {
-  const d = new Date();
-  d.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
-  return createTimeFormatter({ hour: 'numeric', minute: '2-digit' }).format(d);
-}
 
 // ---------- CONSTANTS ----------
 
@@ -33,11 +27,6 @@ const FEATURE_ICONS = {
   223: { icon: 'hgi-computer-video-call', key: 'features.videoconf' },
 };
 
-
-function timeToMinutes(time) {
-  const [h, m] = time.split(':').map(Number);
-  return h * 60 + m;
-}
 
 // Builds the popover body for a single occupancy slot. Course/exam slots carry
 // structured fields (course, code, professors, section); anything the scrape
@@ -1437,8 +1426,6 @@ class ClassroomDetail {
         String(today.getDate()).padStart(2, '0'),
       ].join('');
 
-      const DAY_START = 7 * 60 + 15;
-      const DAY_END = 20 * 60 + 15;
       const total = DAY_END - DAY_START;
 
       // Build chronological day list, inserting Sunday placeholders between data days
@@ -1520,48 +1507,19 @@ class ClassroomDetail {
           }
         }
 
-        // The hours the building is shut, shown as their own "Closed" areas so
-        // they don't read as bookings. The bar carries the open range too, for
-        // the hover cursor. Unknown hours draw nothing.
-        const opening = getBuildingOpening(roomBuilding, dayData.date);
-        let openFrom = DAY_START, openTo = DAY_END;
-        if (opening?.closed) {
-          openFrom = openTo = DAY_START;
-        } else if (opening) {
-          openFrom = Math.max(timeToMinutes(opening.opens), DAY_START);
-          openTo = Math.min(timeToMinutes(opening.closes), DAY_END);
-        }
-        const closedRanges = openFrom >= openTo
-          ? [[DAY_START, DAY_END]]
-          : [[DAY_START, openFrom], [openTo, DAY_END]].filter(([s, e]) => e > s);
-        const closedHtml = closedRanges.map(([s, e]) => {
-          const left  = ((s - DAY_START) / total * 100).toFixed(2);
-          const width = ((e - s)         / total * 100).toFixed(2);
-          // Label only where there's room for it; the hatching still says it
-          const label = (e - s) / total >= 0.15 ? `<span>${escapeHtml(t('detail.closed'))}</span>` : '';
-          return `<div class="detail-schedule-closed" role="img" aria-label="${escapeHtml(t('detail.closed'))} ${minutesToTimeDisplay(s)}–${minutesToTimeDisplay(e)}" style="--block-start:${left}%;--block-size:${width}%">${label}</div>`;
-        }).join('');
-        const openAttrs = opening ? ` data-open-from="${openFrom}" data-open-to="${openTo}"` : '';
-
-        const blocksHtml = (occupancy || []).map((slot, idx) => {
-          if (!slot.inizio || !slot.fine) return '';
-          const s = Math.max(timeToMinutes(slot.inizio), DAY_START);
-          const e = Math.min(timeToMinutes(slot.fine), DAY_END);
-          if (e <= s) return '';
-          const left  = ((s - DAY_START) / total * 100).toFixed(2);
-          const width = ((e - s)         / total * 100).toFixed(2);
-          const slotIdx = scheduleSlots.push(slot) - 1;
-          const isPrimaryHighlight = highlightDateKey !== null
+        // The bar's contents: closed hours, the queried range, and the
+        // bookings, each block indexing into scheduleSlots for its popover
+        const { html: barHtml, openAttrs } = dayBarHtml({
+          occupancy,
+          opening: getBuildingOpening(roomBuilding, dayData.date),
+          query: isQueryDay && this._queryContext ? this._queryContext : null,
+          blockAttrs: (slot) => ` data-slot-idx="${scheduleSlots.push(slot) - 1}" tabindex="0" role="button"`,
+          isHighlighted: (slot) => highlightDateKey !== null
             && dayData.date === highlightDateKey
             && slot.inizio === this._highlight?.from
-            && slot.fine === this._highlight?.to;
-          const blockClass = 'detail-schedule-block lg-glass lg-glass--tinted' + (isPrimaryHighlight ? ' detail-schedule-block--highlight' : '');
-          return `<div class="${blockClass}" data-slot-idx="${slotIdx}" tabindex="0" role="button" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
-        }).join('');
+            && slot.fine === this._highlight?.to,
+        });
 
-        const queryOverlayHtml = isQueryDay && queryFromPct !== null
-          ? `<div class="detail-schedule-query-region" style="--qfrom:${queryFromPct}%;--qto:${queryToPct}%"></div>`
-          : '';
         const querySideIndicatorsHtml = isQueryDay && queryFromPct !== null ? `
           <div class="detail-schedule-query-indicator" style="--qpos:${queryFromPct}%">${queryFromDisplay}</div>
           <div class="detail-schedule-query-indicator" style="--qpos:${queryToPct}%">${queryToDisplay}</div>
@@ -1574,9 +1532,7 @@ class ClassroomDetail {
               ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>` : ''}
               ${querySideIndicatorsHtml}
               <div class="detail-schedule-bar"${openAttrs}>
-                ${closedHtml}
-                ${queryOverlayHtml}
-                ${blocksHtml}
+                ${barHtml}
                 ${isToday && nowPct !== null ? `<div class="timeline-now-bar-line" style="--pos:${nowPct}%"></div>` : ''}
                 <div class="timeline-hover-line" hidden></div>
               </div>

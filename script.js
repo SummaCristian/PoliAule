@@ -55,6 +55,7 @@ import { buildingOverview } from './components/building-overview.js';
 import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
 import { initLiquidGlass, createPopover, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
+import { initCardDayPopover } from './components/card-day-popover.js';
 import { createBuildingStarButton } from './utils/favourites.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
@@ -414,6 +415,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Favourites carousel on the Available page
     initFavourites(staticClassroomsData);
+
+    // Hover preview of a room's whole day on every classroom card
+    initCardDayPopover();
 
     // Campus tab — fullscreen map, lazily initialised on first activation
     initCampusMap();

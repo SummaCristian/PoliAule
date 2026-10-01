@@ -77,18 +77,20 @@ function _statusLabel(status, timeline) {
 // a dot in the status colour (the timeline under it carries the detail). Only
 // a name too long for even the dot gets its label wrapped onto a line of its
 // own, which floats the name up, and then in full.
-// Watches the row, so it reruns when a card first lays out (cards are
-// content-visibility:auto, so off-screen ones get no size until scrolled to)
-// and on resize (a wrap changes the row's height, so a late font swap that
-// pushes the label under the name reruns it too). "Doesn't fit" is read off
-// the layout itself, the label having wrapped below the name, rather than
-// summed from rounded widths, which missed labels over by a fraction of a
-// pixel. Each step writes every row of the callback before reading them back,
-// one reflow per step.
+// Watches the card (it resizes with the grid) and the name (it gets a size
+// when the card first lays out, cards being content-visibility:auto, and
+// changes with a late font swap), never the row itself: the swap changes the
+// row's height, and reacting to a size this callback just changed is a
+// "ResizeObserver loop" error. "Doesn't fit" is read off the layout itself,
+// the label having wrapped below the name, rather than summed from rounded
+// widths, which missed labels over by a fraction of a pixel. Each step writes
+// every row of the callback before reading them back, one reflow per step.
 const _fitObserver = new ResizeObserver((entries) => {
   // A card re-rendered away reports in once more on leaving the page: let it go
   for (const e of entries) if (!e.target.isConnected) _fitObserver.unobserve(e.target);
-  let rows = entries.map(e => e.target).filter(r => r.isConnected);
+  const rowOf = (target) => target.closest('.classroom-card')?.querySelector('.classroom-card-title-row');
+  let rows = [...new Set(entries.filter(e => e.target.isConnected).map(e => rowOf(e.target)))]
+    .filter(r => r?.querySelector('.classroom-status-txt'));
   const label = (row) => row.querySelector('.classroom-status-txt');
   const wraps = (row) =>
     label(row).getBoundingClientRect().top >= row.querySelector('.classroom-name').getBoundingClientRect().bottom - 1;
@@ -231,7 +233,8 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
   }
 
   if (statusLabel) {
-    _fitObserver.observe(el.querySelector('.classroom-card-title-row'));
+    _fitObserver.observe(el);
+    _fitObserver.observe(el.querySelector('.classroom-name'));
   }
 
   return el;

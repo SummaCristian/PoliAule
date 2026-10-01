@@ -345,6 +345,13 @@ export function getClassroomStatusNow(classroomId) {
   return computeClassroomStatus(classroom.occupancy ?? [], now);
 }
 
+// A classroom and its building as they are on dateKey ("YYYYMMDD"), or null
+// when that day isn't loaded or the room isn't in it.
+export function getClassroomOnDay(classroomId, dateKey) {
+  const dayData = classroomsData?.find(day => day.date === dateKey);
+  return dayData ? roomsById(dayData).get(String(classroomId)) ?? null : null;
+}
+
 const toMinutes = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
 const toHHMM = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
 

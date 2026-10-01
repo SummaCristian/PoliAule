@@ -64,10 +64,15 @@ function _sync() {
   const was = isFavouritesExpanded();
   _container.classList.toggle('favourites-expanded', expanded);
 
-  // Scroll overflow can only be measured on the collapsed carousel.
-  const overflows = !expanded && _count > 0 &&
-    _carousel.scrollWidth > _carousel.clientWidth + 1;
-  _expandBtn.hidden = !(_twoCol.matches && (expanded || overflows));
+  // Scroll overflow can only be measured on the collapsed carousel, and not
+  // mid-morph: its overflow is clipped then, and Chrome reports no overflow
+  // for a clipped box, so the toggle vanished after a collapse. The morph
+  // syncs again once it lands.
+  if (!_container.classList.contains('favourites-morphing')) {
+    const overflows = !expanded && _count > 0 &&
+      _carousel.scrollWidth > _carousel.clientWidth + 1;
+    _expandBtn.hidden = !(_twoCol.matches && (expanded || overflows));
+  }
 
   const key = expanded ? 'favourites.showLess' : 'favourites.showAll';
   _expandBtn.setAttribute('aria-expanded', String(expanded));
@@ -519,7 +524,11 @@ function _morph(apply) {
 
   const done = Promise.all(_running.map(a => a.finished));
   _morphDone = done;
-  done.then(() => { if (_morphDone === done) _stopMorph(); }, () => {});
+  done.then(() => {
+    if (_morphDone !== done) return;
+    _stopMorph();
+    _sync();
+  }, () => {});
 }
 
 function _initExpand() {

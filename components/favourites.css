@@ -182,8 +182,11 @@
   display: none;
 }
 
-.favourites-expand-btn i {
-  font-size: 1.25rem;
+/* The arrows run corner to corner of their glyph, so at the size a round
+   icon takes (style.css's global .hgi-stroke 22px !important, hence this
+   one's) they reach the rim; smaller, they sit clear of it. */
+.favourites-expand-btn i.hgi-stroke {
+  font-size: 1.125rem !important;
   line-height: 1;
 }
 

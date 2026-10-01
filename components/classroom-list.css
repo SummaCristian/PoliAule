@@ -659,12 +659,18 @@
       inset 0 -1px 0 0 color-mix(in srgb, black 18%, transparent);
   }
 
+  /* Closed hours: a darker fill under bold stripes, so they read on the
+     8px groove. A third of partially free results are partial only because
+     the building opens late or closes early in the window, with no booking
+     at all, and the old faint hatch left their bar looking empty. */
   &.is-closed {
-    background: repeating-linear-gradient(
-      -45deg,
-      color-mix(in srgb, var(--text-color-primary) 30%, transparent) 0 1.5px,
-      transparent 1.5px 3.5px
-    );
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        color-mix(in srgb, var(--text-color-primary) 55%, transparent) 0 1.5px,
+        transparent 1.5px 4px
+      ),
+      color-mix(in srgb, var(--text-color-primary) 18%, transparent);
   }
 }
 

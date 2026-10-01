@@ -7,6 +7,10 @@
    pointer, or it would steal the hover from the card underneath */
 .lg-popover.cdp-popover {
   pointer-events: none;
+  /* Cards also live inside Vitrium's morph popup (a favourite building opened,
+     --lg-z-popup 1200), above popovers' default 1000. This one is display
+     only and closes on any press, so it can sit over everything */
+  z-index: calc(var(--lg-z-popup, 1200) + 10);
   /* Vitrium caps popovers at 22rem including its padding; the day needs the
      room to read */
   --lg-popover-max-width: min(26rem, calc(100vw - 16px));

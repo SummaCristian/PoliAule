@@ -53,7 +53,7 @@ import './components/data-fetch-card.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
 import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
-import { initLiquidGlass, createPopover, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
+import { initLiquidGlass, createPopover, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 import { initCardDayPopover } from './components/card-day-popover.js';
 import { createBuildingStarButton } from './utils/favourites.js';
@@ -570,14 +570,20 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   const showPartialDefault = showPartialSaved === null ? true : showPartialSaved === 'true';
   const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
   if (hasPartial) {
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = showPartialDefault ? 'results-filter-btn active' : 'results-filter-btn';
-    toggleBtn.innerHTML = `<i class="hgi-stroke hgi-filter" aria-hidden="true"></i> ${t('results.filterPartial')}`;
-    if (!showPartialDefault) container.classList.add('hide-partial');
-    toggleBtn.addEventListener('click', () => {
-      const isActive = toggleBtn.classList.toggle('active');
-      container.classList.toggle('hide-partial', !isActive);
+    // Vitrium glass button: clear accent-tinted glass while partially free rooms are shown, plain glass when hidden.
+    const setShown = (shown) => {
+      toggleBtn.classList.toggle('lg-glass--tinted', shown);
+      toggleBtn.classList.toggle('lg-glass--clear', shown);
+      toggleBtn.setAttribute('aria-pressed', String(shown));
+      container.classList.toggle('hide-partial', !shown);
+    };
+    const toggleBtn = createButton({
+      icon: '<i class="hgi-stroke hgi-filter" aria-hidden="true"></i>',
+      text: t('results.filterPartial'),
+      className: 'results-filter-btn',
+      onClick: () => setShown(toggleBtn.getAttribute('aria-pressed') !== 'true'),
     });
+    setShown(showPartialDefault);
     filterRow.appendChild(toggleBtn);
     container.appendChild(filterRow);
   }

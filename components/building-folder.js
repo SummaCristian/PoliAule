@@ -21,8 +21,8 @@ import { thumbUrl, thumbUrlCache, markPhotoBroken, isPhotoBroken } from '../util
 //
 // Hovering or pressing "opens" it: a single --open factor (0 at rest, 1 on
 // hover, 1.4 pressed) lifts and spreads the cards and leans the front toward
-// you, all in CSS. Hover comes from pointer events rather than :hover (see
-// trackHover). The papers are inert: the whole folder is one control, and
+// you, all in CSS. Hover and press come from pointer events rather than
+// :hover / :active (see trackPointer). The papers are inert: the whole folder is one control, and
 // a tap on a card inside it must never open that classroom.
 //
 // The back's path and the cards' fan depend on the folder's width, which the
@@ -112,13 +112,45 @@ const resizer = new ResizeObserver((entries) => {
 // device. `@media (hover: hover)` goes by the primary input, which on an iPad
 // is touch even with a trackpad attached, so :hover in it never fired there;
 // and a plain :hover sticks after a finger tap. A finger never sets it.
-function trackHover(folder) {
-  const off = () => folder.classList.remove('bo-card--hover');
+//
+// Press is .bo-card--pressed rather than :active, which a finger sets the
+// moment it lands, so every scroll that started on a folder opened it, and
+// on a phone the folder fought the scroll. A finger presses only once it has
+// rested PRESS_DELAY without moving, and lets go as soon as it moves (a
+// scroll, which also ends in pointercancel), like a native list row.
+const PRESS_DELAY = 90;   // ms
+const PRESS_SLOP = 8;     // px a finger can drift before it counts as a scroll
+
+function trackPointer(folder) {
+  let timer = 0;
+  let start = null;
+  const press = () => folder.classList.add('bo-card--pressed');
+  const release = () => {
+    clearTimeout(timer);
+    start = null;
+    folder.classList.remove('bo-card--pressed');
+  };
   folder.addEventListener('pointerenter', (e) => {
     if (e.pointerType !== 'touch') folder.classList.add('bo-card--hover');
   });
-  folder.addEventListener('pointerleave', off);
-  folder.addEventListener('pointercancel', off);
+  folder.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch') { press(); return; }
+    start = { x: e.clientX, y: e.clientY };
+    clearTimeout(timer);
+    timer = setTimeout(press, PRESS_DELAY);
+  });
+  folder.addEventListener('pointermove', (e) => {
+    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > PRESS_SLOP) release();
+  });
+  folder.addEventListener('pointerup', release);
+  folder.addEventListener('pointerleave', () => {
+    release();
+    folder.classList.remove('bo-card--hover');
+  });
+  folder.addEventListener('pointercancel', () => {
+    release();
+    folder.classList.remove('bo-card--hover');
+  });
 }
 
 // Builds the folder. `rooms` are the ones to show as papers (see
@@ -165,7 +197,7 @@ export function buildBuildingFolder({ campusId, building, rooms, total, footerHt
     papers.appendChild(paper);
   }
 
-  trackHover(folder);
+  trackPointer(folder);
   resizer.observe(folder);
   return folder;
 }

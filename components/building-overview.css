@@ -314,9 +314,11 @@
 
 /* Hover is .bo-card--hover, set by building-folder.js from any pointer but a
    finger: an iPad with a trackpad, mouse or Pencil still reports
-   (hover: none), so a :hover inside that media query never fired there. */
+   (hover: none), so a :hover inside that media query never fired there.
+   Press is .bo-card--pressed, not :active: a finger sets :active on landing,
+   so a scroll starting on a folder opened it (see trackPointer). */
 .bo-card[role="button"].bo-card--hover { --open: 1; }
-.bo-card[role="button"]:active { --open: 1.4; }
+.bo-card[role="button"].bo-card--pressed { --open: 1.4; }
 
 .bo-card--inactive {
   opacity: 0.5;
@@ -422,16 +424,18 @@
   top: 0;
 }
 
+/* Its size follows the classroom cards beside it, which can get narrower
+   than the ~170px folder the front's type is set for. So below that the
+   whole front scales with the width: --u is 1px at 170px and wider,
+   proportionally less under it (cqi: the folder is the container). Its top
+   too: the folder's height follows its width (favourites.css), and a fixed
+   inset would leave the front too short for its own text. */
 .bo-card--compact :is(.bo-card-front, .bo-card-frost) {
-  inset: 38px 0 0;
+  --u: min(1px, 100cqi / 170);
+  inset: calc(38 * var(--u)) 0 0;
 }
 
-/* Its size follows the classroom cards beside it, down to the grid's 8.5rem
-   floor (136px), while the front's type is set for a ~170px folder. So below
-   that the whole front scales with the width: --u is 1px at 170px and wider,
-   proportionally less under it (cqi: the folder is the container). */
 .bo-card--compact .bo-card-front {
-  --u: min(1px, 100cqi / 170);
   padding: calc(10 * var(--u)) calc(13 * var(--u)) calc(11 * var(--u));
 }
 

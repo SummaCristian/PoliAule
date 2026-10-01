@@ -29,6 +29,11 @@
      exceed the shadow's reach (~40px). */
   --shadow-room: 3rem;
 
+  /* A card's width in the strip. Keep these roughly the size of an
+     Available-results card (grid min track is 9.5rem) rather than letting
+     them balloon. */
+  --fav-card-w: clamp(9.5rem, 42vw, 11rem);
+
   /* Containing block for a card animating out of it (components/favourites.js). */
   position: relative;
 
@@ -85,9 +90,7 @@
 
 .favourites-carousel > .classroom-card {
   scroll-snap-align: center;
-  /* Keep these roughly the size of an Available-results card
-     (grid min track is 9.5rem) rather than letting them balloon. */
-  flex: 0 0 clamp(9.5rem, 42vw, 11rem);
+  flex: 0 0 var(--fav-card-w);
   height: auto; /* height comes from width × aspect-ratio, like in the grid */
 
   /* The grid uses content-visibility: auto for long lists; here there are only
@@ -98,13 +101,18 @@
   contain-intrinsic-size: auto;
 }
 
-/* A favourite building's folder (components/building-folder.js): as wide
-   and as tall as the classroom cards around it. */
+/* A favourite building's folder (components/building-folder.js): as wide as
+   the classroom cards around it, but its own proportions, not theirs:
+   stretched to a portrait card it looked pulled tall. 174px (FOLDER_H less
+   the compact headroom) at a 168px card, scaling with the width like the
+   cards do, so narrow grid tracks never leave it taller than them. Sits on
+   their bottom edge, in the strip and the expanded grid. */
 .favourites-carousel > .bo-card {
   scroll-snap-align: center;
-  flex: 0 0 clamp(9.5rem, 42vw, 11rem);
+  flex: 0 0 var(--fav-card-w);
   height: auto;
-  aspect-ratio: 154 / 196;
+  aspect-ratio: 168 / 174;
+  align-self: end;
 }
 
 .favourites-empty {
@@ -142,10 +150,7 @@
     --mask-left: 1.5rem;
     --mask-right: 1.5rem;
     margin-right: 0;
-  }
-
-  .favourites-carousel > :is(.classroom-card, .bo-card) {
-    flex-basis: 10.5rem;
+    --fav-card-w: 10.5rem;
   }
 }
 

@@ -14,6 +14,8 @@ PoliAule pre-fetches classroom occupancy data from Politecnico di Milano every m
 
 All endpoints are under `https://api.poliaule.com` and require no authentication. A separate `https://api-beta.poliaule.com` serves the beta deployment with the same response shapes, though it may include in-progress changes.
 
+The JSON endpoints (`/v1/classrooms`, `/v1/occupations`, `/v1/occupations/:date`, `/v1/opening-hours`) send `Cache-Control: no-store` with an `ETag` (exposed to cross-origin `fetch()`). Keep your own copy and send its ETag back as `If-None-Match`: an unchanged file comes back as a bodiless `304 Not Modified`.
+
 ### Static classroom metadata
 
 ```

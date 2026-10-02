@@ -15,7 +15,10 @@ export interface Env {
 
 const app = new Hono<{ Bindings: Env }>();
 
-app.use("*", cors());
+// ETag is exposed so the frontend can store it and revalidate with If-None-Match.
+// That header makes those requests preflighted; maxAge lets browsers reuse the
+// preflight (each caps it: Chrome at 2 h, Firefox at 24 h).
+app.use("*", cors({ exposeHeaders: ["ETag"], maxAge: 86400 }));
 
 app.route("/v1/config", config);
 app.route("/v1/classrooms", classrooms);

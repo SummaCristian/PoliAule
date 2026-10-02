@@ -27,6 +27,7 @@ import {
   classroomsData,
   findAvailableClassrooms,
   fetchClassroomsData,
+  loadCachedClassroomsData,
   SKIP_DAYS
 } from './available-rooms-script.js';
 
@@ -443,6 +444,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Pills that hop lines when another one changes width glide there instead.
     initPickerRowFlip();
 
+    // Everything the occupancy UI reads (pickers, favourites, detail page) exists now
+    resolveShellReady();
+
     // Setup the language switch handler immediately — doesn't depend on
     // fonts and shouldn't wait for the splash to dismiss
     onLanguageSwitch(() => {
@@ -488,10 +492,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+// Resolved by the DOMContentLoaded init once the page shell is set up. Data
+// from the cache can be ready before that, and an auto-search fired then would
+// read an empty campus and time range.
+let resolveShellReady;
+const shellReady = new Promise(resolve => { resolveShellReady = resolve; });
+
 // Fetches occupancy data in the background (independent of the splash
 // screen) and populates everything that depends on it once it's ready.
+// The last visit's cached copy, when there is one, draws the UI straight
+// away; the network then only confirms it (304s) or replaces it.
 async function initOccupancyData() {
-  await fetchClassroomsData();
+  const hasCache = await loadCachedClassroomsData();
+  let fetchSettled = false;
+  const fetched = fetchClassroomsData().finally(() => { fetchSettled = true; });
+  if (!hasCache) await fetched;
+
+  await shellReady;
+  // The network may have answered while the shell was still setting up
+  const drawnFromCache = hasCache && !fetchSettled;
+  populateOccupancyUi();
+  if (drawnFromCache && await fetched) refreshOccupancyUi();
+}
+
+// Fills in everything that depends on the occupancy data, the first time it's there
+function populateOccupancyUi() {
 
   // Use the fetched data to set the only valid dates into the date picker
   setupDatePicker(() => preferInitialDate);
@@ -816,12 +841,20 @@ async function reloadOccupancyData() {
   btn.querySelector('.data-reload-label').textContent = t('data.reloading');
 
   await fetchClassroomsData();
+  refreshOccupancyUi();
+}
 
+// Redraws what depends on the occupancy data after it was replaced
+function refreshOccupancyUi() {
   const indicator = document.getElementById('data-fetch-indicator');
   indicator.classList.remove('green', 'yellow', 'red');
   setupDataFetchIndicator();
-  setupDatePicker(() => preferInitialDate);
+  // Keep the day the user is on, if it's still published
+  const selectedDate = document.getElementById('date-picker').value;
+  setupDatePicker(() => selectedDate || preferInitialDate);
   refreshHourLensData();
+  classroomDetail.refreshOccupancy();
+  renderFavourites();
 
   const resultsContainer = document.getElementById('available-classrooms-results');
   if (resultsContainer && !resultsContainer.classList.contains('empty')) {

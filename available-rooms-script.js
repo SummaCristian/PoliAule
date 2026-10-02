@@ -37,31 +37,125 @@ function resolveBuildingHours(building, campusId, openingHours) {
   return openingHours.default_hours;
 }
 
-// Fetches the classrooms data from the server and
-// stores it in classroomsData.
-export async function fetchClassroomsData() {
-  try {
-    const apiBase = getApiBase();
-    const listRes = await fetch(`${apiBase}/v1/occupations`);
-    if (!listRes.ok) throw new Error(`Failed to load occupancy list: ${listRes.status}`);
-    const { dates } = await listRes.json();
+// The API's JSON responses, kept in Cache Storage with their ETags so the next
+// visit can draw from them straight away and then only ask whether they changed
+// (If-None-Match -> 304). The browser's HTTP cache isn't used: the API sends
+// no-store, so this is the only copy.
+const DATA_CACHE_NAME = 'poliaule-data-v1';
 
-    const [results, openingHours] = await Promise.all([
-      Promise.allSettled(
-        dates.map(date => {
-          const isoDate = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
-          return fetch(`${apiBase}/v1/occupations/${isoDate}`)
-            .then(res => {
-              if (!res.ok) throw new Error(`Failed to load ${date}: ${res.status}`);
-              return res.json();
-            });
-        })
-      ).then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value)),
-      fetch(`${apiBase}/v1/opening-hours`)
-        .then(res => {
-          if (!res.ok) throw new Error(`Failed to load opening hours: ${res.status}`);
-          return res.json();
-        })
+export async function openDataCache() {
+  try {
+    return await caches.open(DATA_CACHE_NAME);
+  } catch {
+    return null; // no Cache Storage (insecure origin, private mode quirks): plain fetches
+  }
+}
+
+async function readCachedJson(cache, url) {
+  try {
+    const cached = await cache?.match(url);
+    return cached ? { data: await cached.json(), etag: cached.headers.get('ETag') } : null;
+  } catch {
+    return null;
+  }
+}
+
+// Fetches one endpoint, conditionally when there's a cached copy. `changed` is
+// false when the cached copy was confirmed (304) or had to stand in because the
+// request failed; without a cached copy a failure throws.
+export async function fetchJson(cache, url) {
+  const cached = await readCachedJson(cache, url);
+  try {
+    const res = await fetch(url, {
+      cache: 'no-store',
+      headers: cached?.etag ? { 'If-None-Match': cached.etag } : {},
+    });
+    if (res.status === 304 && cached) {
+      await res.arrayBuffer(); // drain the empty body, or Chromium logs the request as canceled
+      return { data: cached.data, changed: false };
+    }
+    if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+
+    const body = await res.text();
+    const data = JSON.parse(body);
+    const etag = res.headers.get('ETag');
+    if (cache && etag) {
+      cache.put(url, new Response(body, { headers: { 'Content-Type': 'application/json', 'ETag': etag } }))
+        .catch(() => {});
+    }
+    return { data, changed: true };
+  } catch (error) {
+    if (!cached) throw error;
+    console.warn(`Using cached ${url}:`, error);
+    return { data: cached.data, changed: false };
+  }
+}
+
+const occupationsListUrl = apiBase => `${apiBase}/v1/occupations`;
+const occupationUrl = (apiBase, date) =>
+  `${apiBase}/v1/occupations/${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+const openingHoursUrl = apiBase => `${apiBase}/v1/opening-hours`;
+
+// Merges the opening hours into the days and publishes them as classroomsData
+function applyClassroomsData(days, openingHours) {
+  if (openingHours) {
+    holidayPeriods = openingHours.holiday_periods ?? [];
+    for (const day of days) {
+      for (const campus of day.campuses) {
+        for (const building of campus.buildings) {
+          building.hours = resolveBuildingHours(building, campus.id, openingHours);
+        }
+      }
+    }
+  }
+  classroomsData.splice(0, classroomsData.length, ...days);
+}
+
+// Fills classroomsData from the copies cached by the last visit, without touching
+// the network. Days already past are left out. Returns whether anything was loaded.
+export async function loadCachedClassroomsData() {
+  const cache = await openDataCache();
+  if (!cache) return false;
+  const apiBase = getApiBase();
+
+  const list = await readCachedJson(cache, occupationsListUrl(apiBase));
+  if (!list) return false;
+  const today = formatDateYYYYMMDD(new Date());
+  const dates = list.data.dates.filter(date => date >= today);
+
+  const [days, openingHours] = await Promise.all([
+    Promise.all(dates.map(date => readCachedJson(cache, occupationUrl(apiBase, date))))
+      .then(entries => entries.filter(Boolean).map(entry => entry.data)),
+    readCachedJson(cache, openingHoursUrl(apiBase)).then(entry => entry?.data ?? null),
+  ]);
+  if (!days.length) return false;
+
+  applyClassroomsData(days, openingHours);
+  console.log('Cached data loaded:', classroomsData);
+  return true;
+}
+
+// Fetches the classrooms data from the server (revalidating whatever is cached)
+// and stores it in classroomsData. Returns whether it differs from the cached
+// copies, i.e. whether a UI drawn from loadCachedClassroomsData() is now stale.
+// Concurrent calls share one run.
+let inFlightFetch = null;
+export function fetchClassroomsData() {
+  inFlightFetch ??= fetchClassroomsDataOnce().finally(() => { inFlightFetch = null; });
+  return inFlightFetch;
+}
+
+async function fetchClassroomsDataOnce() {
+  try {
+    const cache = await openDataCache();
+    const apiBase = getApiBase();
+    const list = await fetchJson(cache, occupationsListUrl(apiBase));
+    const { dates } = list.data;
+
+    const [days, openingHours] = await Promise.all([
+      Promise.allSettled(dates.map(date => fetchJson(cache, occupationUrl(apiBase, date))))
+        .then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value)),
+      fetchJson(cache, openingHoursUrl(apiBase))
         .catch(error => {
           // Non-fatal: fall through with openingHours = null so classroomsData
           // still loads (and gets used) even if opening hours can't be fetched.
@@ -70,21 +164,28 @@ export async function fetchClassroomsData() {
         }),
     ]);
 
-    if (openingHours) {
-      holidayPeriods = openingHours.holiday_periods ?? [];
-      for (const day of results) {
-        for (const campus of day.campuses) {
-          for (const building of campus.buildings) {
-            building.hours = resolveBuildingHours(building, campus.id, openingHours);
-          }
-        }
-      }
-    }
-
-    classroomsData.splice(0, classroomsData.length, ...results);
+    applyClassroomsData(days.map(day => day.data), openingHours?.data ?? null);
     console.log('All data loaded:', classroomsData);
+
+    // Days the API no longer lists would otherwise sit in the cache forever
+    if (cache && list.changed) pruneCachedDays(cache, apiBase, dates);
+
+    return list.changed || !!openingHours?.changed || days.some(day => day.changed);
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
+    return false;
+  }
+}
+
+async function pruneCachedDays(cache, apiBase, dates) {
+  try {
+    const keep = new Set(dates.map(date => occupationUrl(apiBase, date)));
+    const prefix = `${occupationsListUrl(apiBase)}/`;
+    for (const request of await cache.keys()) {
+      if (request.url.startsWith(prefix) && !keep.has(request.url)) await cache.delete(request);
+    }
+  } catch {
+    // Best effort: a leftover day is only wasted space
   }
 }
 

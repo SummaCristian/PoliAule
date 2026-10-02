@@ -508,7 +508,11 @@
   letter-spacing: -0.035em;
 }
 
+/* flex-shrink: 0 because overflow: hidden drops its min-height to 0, which
+   made it the one row to give way when the front ran short (the overview's
+   136px front with the count pills): the descenders got clipped. */
 .bo-card-alt {
+  flex-shrink: 0;
   max-width: 100%;
   margin-top: 3px;
   overflow: hidden;

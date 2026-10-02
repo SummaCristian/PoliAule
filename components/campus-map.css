@@ -621,64 +621,119 @@ html:has(#search-classrooms-container.visible) .footer {
   opacity: 0.4;
 }
 
-/* --- Markers --------------------------------------------------------------- */
-.campus-marker {
-  --marker-accent: var(--text-color-accent);
+/* --- Markers ---------------------------------------------------------------
+   A clear glass plate (Vitrium's .lg-glass--clear) holding the name, with the
+   altName under it when there is one, standing on a small dot at the actual
+   spot. Rounded rectangle, at least as wide as it is tall: a one-digit
+   building is a square, longer names grow sideways. Mapbox writes the root's
+   transform inline, so scale and lift go on the plate. */
+.map-pin {
+  --pin-dot: var(--text-color-accent);
 
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  gap: 3px;
 
   margin: 0;
-  padding: 0.4rem 0.7rem 0.4rem 0.55rem;
+  padding: 0;
   border: none;
-  border-radius: var(--radius-pill, 999px);
-
+  background: none;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-weight: 700;
-  font-size: var(--text-87, 0.875rem);
-  line-height: 1;
   color: var(--text-color-primary);
-  white-space: nowrap;
-
-  background: var(--lg-tint, rgba(250, 250, 250, 0.7));
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline, rgba(0, 0, 0, 0.25)),
-    0 4px 16px var(--lg-shadow-color, rgba(0, 0, 0, 0.18));
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-
-  will-change: transform;
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.campus-marker:active { transform: scale(0.94); }
+.map-pin__plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  max-width: 9rem;
+  padding: 0.3rem 0.55rem;
+  box-sizing: border-box;
+  border-radius: 0.8rem;
+
+  color: inherit;
+  /* A touch of saturation keeps the map's colours alive through the frost. */
+  -webkit-backdrop-filter: blur(var(--lg-blur-clear)) saturate(1.6);
+  backdrop-filter: blur(var(--lg-blur-clear)) saturate(1.6);
+  /* Tighter than the glass default's 40px glow, which on a map smears over
+     the neighbouring buildings. */
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 2px 10px var(--lg-shadow-color-strong);
+
+  transform-origin: 50% 100%;
+  transition: transform var(--lg-press-out-dur) var(--lg-ease-spring);
+}
+
+.map-pin:active .map-pin__plate {
+  transform: scale(0.92);
+  transition: transform var(--lg-press-in-dur) var(--lg-press-in-ease);
+}
 
 @media (hover: hover) {
-  .campus-marker:hover { transform: scale(1.04); }
+  .map-pin:hover .map-pin__plate { transform: translateY(-2px) scale(1.05); }
 }
 
-.campus-marker__dot {
-  flex: none;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--marker-accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--marker-accent) 25%, transparent);
+.map-pin__name {
+  font-size: 1rem;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
-.campus-marker--building {
-  padding: 0.3rem 0.6rem;
-  font-weight: 600;
-  font-size: var(--text-75, 0.8125rem);
+.map-pin__alt {
+  max-width: 100%;
+  margin-top: 1px;
+  overflow: hidden;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  line-height: 1.15;
   color: var(--text-color-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.campus-marker--building .campus-marker__dot {
-  width: 0.4rem;
-  height: 0.4rem;
-  background: var(--text-color-secondary);
-  box-shadow: none;
+/* The spot itself: an accent dot in a white ring, so it reads on both the
+   light and the dark map. */
+.map-pin__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pin-dot);
+  box-shadow: 0 0 0 2px #fff, 0 1px 3px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* Campus overview: a word, not a code, so a pill. */
+.map-pin--campus .map-pin__plate {
+  padding-inline: 0.8rem;
+  border-radius: var(--lg-radius-pill);
+}
+
+.map-pin--campus .map-pin__name {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+/* The building open in the sheet (or shown by the detail page): accent glass,
+   lifted a little. */
+.map-pin--selected .map-pin__plate {
+  --lg-glass-tint: var(--text-color-accent);
+  color: #fff;
+  transform: translateY(-3px) scale(1.08);
+}
+
+.map-pin--selected .map-pin__alt {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* --- Error state -------------------------------------------------------- */
@@ -720,17 +775,12 @@ html:has(#search-classrooms-container.visible) .footer {
   left: auto;
 }
 
-.campus-marker--static {
+.map-pin--static {
   pointer-events: none;
 }
 
-/* 2D overview of the detail preview: the other buildings of the campus are
-   quiet dots, the building being viewed keeps its label. */
-.campus-marker--dim {
-  padding: 0.2rem;
-  opacity: 0.7;
-}
-
-.campus-marker--current .campus-marker__dot {
-  background: var(--marker-accent);
+/* 2D overview of the detail preview: the rest of the campus as quiet dots. */
+.map-pin--dim .map-pin__dot {
+  --pin-dot: var(--text-color-secondary);
+  opacity: 0.8;
 }

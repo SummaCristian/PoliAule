@@ -1133,7 +1133,7 @@ class ClassroomDetail {
       this._scheduleMapEmbed(mapHost, {
         lat: building.lat,
         long: building.long,
-        label: mapLabel,
+        building: { name: building.name, alt: building.altName?.trim() },
         // Every building on the campus, for the 2D overview.
         siblings: (campus.buildings ?? [])
           .filter(b => typeof b.lat === 'number' && typeof b.long === 'number')

@@ -1,4 +1,4 @@
-import { getClassroomStatusNow, classroomsData as occupancyDays, openDataCache, fetchJson } from './available-rooms-script.js';
+import { getClassroomStatusNow, classroomsData as occupancyDays, openDataCache, readCachedJson, fetchJson } from './available-rooms-script.js';
 import { getApiBase } from './config.js';
 
 // Static classroom directory (campus → buildings → classrooms) plus the
@@ -12,10 +12,18 @@ export let classroomsData = null;
 
 async function loadData() {
   if (classroomsData) return;
-  // Revalidated against the cached copy (a 304 when unchanged), which also
-  // lets the app start when the API can't be reached
-  const { data } = await fetchJson(await openDataCache(), `${getApiBase()}/v1/classrooms`);
-  classroomsData = data;
+  const cache = await openDataCache();
+  const url = `${getApiBase()}/v1/classrooms`;
+  // The splash waits for this, and the directory rarely changes: with a cached
+  // copy, start from it and only refresh the copy in the background (a 304 when
+  // unchanged), so a change shows up on the next visit. Without one, fetch it.
+  const cached = await readCachedJson(cache, url);
+  if (cached) {
+    classroomsData = cached.data;
+    fetchJson(cache, url).catch(() => {});
+    return;
+  }
+  ({ data: classroomsData } = await fetchJson(cache, url));
 }
 
 // Loads the static classroom directory. Blocks the splash — it's what the page

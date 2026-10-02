@@ -51,7 +51,7 @@ export async function openDataCache() {
   }
 }
 
-async function readCachedJson(cache, url) {
+export async function readCachedJson(cache, url) {
   try {
     const cached = await cache?.match(url);
     return cached ? { data: await cached.json(), etag: cached.headers.get('ETag') } : null;

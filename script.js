@@ -39,7 +39,7 @@ import { initInfoHint } from './components/info-hint.js';
 
 import { initTimePickers } from './components/time-picker.js';
 import { initHourLens, refreshHourLensData } from './components/hour-lens.js';
-import { setupCampusPicker } from './components/campus-picker.js';
+import { setupCampusPicker, selectCampusById } from './components/campus-picker.js';
 import { initCampusMap } from './components/campus-map.js';
 import { initCampusSheet } from './components/campus-sheet.js';
 import { retranslateCampusBuildingsPage, goToBuilding } from './components/campus-buildings.js';
@@ -67,11 +67,16 @@ import { initKeybindings } from './components/keybindings.js';
 import { takeImportHash } from './utils/transfer.js';
 import { promptImport } from './components/transfer-dialog.js';
 import { initServiceWorker } from './utils/pwa.js';
+import { resumeState, initResumeSnapshot } from './utils/resume.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
 // detail) look at it; the import prompt is shown once the splash is gone.
 const _pendingImport = takeImportHash();
+// Relaunched where the user left off (utils/resume.js) with a classroom page
+// open: put its hash back before the detail page's router reads it on init.
+// A link the app was opened from wins.
+if (resumeState?.hash && !location.hash) history.replaceState(null, '', resumeState.hash);
 // Same for a transfer link opened in a tab that's already running PoliAule
 // (a same-document hash change, no reload).
 window.addEventListener('hashchange', () => {
@@ -180,6 +185,38 @@ function dismissSplash() {
       if (isInfo) infoPage.checkHash();
     }, { once: true });
   }
+}
+
+// The splash of a resumed launch is only its background by now (the logo is
+// hidden before first paint, see index.html). Scrolls back to where the page
+// was while still covered (programmatic scrolling works under the splash's
+// overflow: hidden), then fades it out. Two frames first, for the results the
+// restored day re-renders once the date picker selects it.
+function dismissSplashOnResume() {
+  const overlay = document.getElementById('splash-overlay');
+  if (!overlay) return;
+  if (_splashFailed) { dismissSplash(); return; }
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (!location.hash && resumeState.scrollY) window.scrollTo(0, resumeState.scrollY);
+    document.querySelectorAll('.splash-header-item')
+      .forEach(el => el.classList.add('splash-revealed'));
+    overlay.style.pointerEvents = 'none';
+    overlay.classList.add('splash-hiding');
+    setTimeout(() => overlay.remove(), 150); // the fade, see .resuming in index.html
+  }));
+}
+
+// What utils/resume.js saves each time the app goes to the background
+function collectResumeState() {
+  return {
+    tab: document.querySelector('.tab-content.visible')?.id ?? null,
+    campus: document.getElementById('campus-picker').value || null,
+    date: document.getElementById('date-picker').value || null,
+    from: document.getElementById('from-time-picker').value || null,
+    to: document.getElementById('to-time-picker').value || null,
+    hash: /^#classroom\//.test(location.hash) ? location.hash : null,
+    scrollY: Math.round(window.scrollY),
+  };
 }
 
 function showSplashError() {
@@ -431,10 +468,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupCampusPicker(staticClassroomsData);
     applyPreferredCampusIfEnabled();
     applyRememberLastCampusIfEnabled();
+    if (resumeState?.campus) selectCampusById(resumeState.campus, false);
 
     // Setup the time pickers to ensure valid time ranges
     // (these don't depend on occupancy data)
     setupTimePickers();
+    if (resumeState) restoreQuery(resumeState);
     initTimePickers();
     initHourLens();
 
@@ -475,8 +514,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     clearTimeout(_initTimeoutId);
     const elapsed = Date.now() - _splashStartTime;
-    const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
-    setTimeout(dismissSplash, remaining);
+    // A resumed launch (utils/resume.js) has nothing to show off: it goes
+    // straight back to the page, without the minimum or the logo hand-off.
+    const resuming = resumeState && location.hash !== '#info';
+    const remaining = resuming ? 0 : Math.max(0, _SPLASH_MIN_MS - elapsed);
+    setTimeout(resuming ? dismissSplashOnResume : dismissSplash, remaining);
+    initResumeSnapshot(collectResumeState);
     // Leave the splash hand-off time to finish before the prompt pops up.
     if (_pendingImport) setTimeout(() => promptImport(_pendingImport, staticClassroomsData), remaining + 600);
 
@@ -742,6 +785,22 @@ function setupTimePickers() {
   fromPicker.value = formatTime(snapped);
   toPicker.value = formatMins(toMins);
   toPicker.min = formatMins(minToMins);
+}
+
+// Puts back the day and time range a resumed launch left on (utils/resume.js).
+// The hour lens moves a range whose hours have passed on, and a day no longer
+// published falls back to the first one, like any preferred date.
+function restoreQuery({ date, from, to }) {
+  const HHMM = /^\d{2}:\d{2}$/;
+  if (HHMM.test(from) && HHMM.test(to)) {
+    const [h, m] = from.split(':').map(Number);
+    const minTo = Math.min(h * 60 + m + 60, TIME_MAX_MINS);
+    const toPicker = document.getElementById('to-time-picker');
+    document.getElementById('from-time-picker').value = from;
+    toPicker.value = to;
+    toPicker.min = `${String(Math.floor(minTo / 60)).padStart(2, '0')}:${String(minTo % 60).padStart(2, '0')}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) preferInitialDate = date;
 }
 
 function setupDataFetchIndicator() {

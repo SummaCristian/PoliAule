@@ -138,6 +138,17 @@
       transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
+    /* Relaunched where the user left off (utils/resume.js): no logo, just the
+       background, cleared as soon as the restored page is ready */
+    .resuming .splash-logo,
+    .resuming .splash-loading-label {
+      visibility: hidden;
+    }
+
+    .resuming .splash-overlay::before {
+      transition-duration: 0.15s;
+    }
+
     .splash-header-item {
       opacity: 0;
       transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -269,6 +280,18 @@
     // gating on those too (slow, cross-origin, sometimes blocked) would
     // reintroduce the render-blocking problem this async-loading trick was
     // meant to fix; their own swap-in cost is comparatively small.
+    // A home-screen app relaunched shortly after going to the background (iOS
+    // kills those almost right away) picks up where it was: utils/resume.js
+    // restores the state, and this marks the launch before first paint so the
+    // splash logo never shows. Not in a browser tab, where a reload starts over.
+    try {
+      var resume = JSON.parse(localStorage.getItem('poliAule_resume'));
+      var standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+      if (standalone && resume && Date.now() - resume.savedAt < 30 * 60 * 1000) {
+        document.documentElement.classList.add('resuming');
+      }
+    } catch (e) {}
+
     window.__onShellCssLoad = function (link) {
       link.media = 'all';
       if (!document.querySelector('link[data-shell-css][media="print"]')) {

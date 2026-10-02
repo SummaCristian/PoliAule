@@ -85,11 +85,22 @@ function _statusLabel(status, timeline) {
 // the label having wrapped below the name, rather than summed from rounded
 // widths, which missed labels over by a fraction of a pixel. Each step writes
 // every row of the callback before reading them back, one reflow per step.
+// Sizes are remembered per element: a list hidden and shown again (the
+// building overview does that on every open and close) reports every card at
+// 0×0 and then at the size it already had, and neither needs a refit.
+const _fitSizes = new WeakMap();
 const _fitObserver = new ResizeObserver((entries) => {
   // A card re-rendered away reports in once more on leaving the page: let it go
   for (const e of entries) if (!e.target.isConnected) _fitObserver.unobserve(e.target);
+  const changed = entries.filter((e) => {
+    if (!e.target.isConnected || !e.contentRect.width) return false;
+    const size = `${e.contentRect.width}x${e.contentRect.height}`;
+    if (_fitSizes.get(e.target) === size) return false;
+    _fitSizes.set(e.target, size);
+    return true;
+  });
   const rowOf = (target) => target.closest('.classroom-card')?.querySelector('.classroom-card-title-row');
-  let rows = [...new Set(entries.filter(e => e.target.isConnected).map(e => rowOf(e.target)))]
+  let rows = [...new Set(changed.map(e => rowOf(e.target)))]
     .filter(r => r?.querySelector('.classroom-status-txt'));
   const label = (row) => row.querySelector('.classroom-status-txt');
   const wraps = (row) =>

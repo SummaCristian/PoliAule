@@ -341,8 +341,10 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   titlesBtn.addEventListener('pointerdown', (e) => {
     downAt = { x: e.clientX, y: e.clientY, t: performance.now() };
     openedByTap = false;
-    buildingOverview.prewarm(section);
+    buildingOverview.prewarm(section, { campusId, date, from, to, results: allResults });
   });
+  // A press that turns into a scroll: drop what prewarm() built for it.
+  titlesBtn.addEventListener('pointercancel', () => buildingOverview.cancelPrewarm());
   // Open on pointerup, not click: iOS Safari swallows the click when the tap
   // lands while the page is still rubber-banding from a scroll (very easy to
   // hit when you've just scrolled to the bottom of the list), and the shared
@@ -675,7 +677,13 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
     list.appendChild(node);
   });
 
-  container.appendChild(list);
+  // The building overview's zoom frame (components/building-overview.js).
+  // It's here from the start because moving the list into it on tap
+  // restyled and re-laid out the whole list right when the zoom started.
+  const stage = document.createElement('div');
+  stage.className = 'bo-stage';
+  stage.appendChild(list);
+  container.appendChild(stage);
 
   // Mark the list as appeared after the staggered animation finishes.
   // This avoids re-triggering the animation when returning from the details page

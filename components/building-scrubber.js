@@ -64,6 +64,7 @@ export function cancelBuildingScrubber() {
 export function attachBuildingScrubber(pill, section) {
   let pointerId = null;
   let startX = 0, startY = 0;
+  let downStamp = 0;
   let holdTimer = 0;
   let session = null;
   // This press became a scrub: its release and click aren't a tap. Holds from
@@ -86,6 +87,7 @@ export function attachBuildingScrubber(pill, section) {
     pointerId = e.pointerId;
     startX = e.clientX;
     startY = e.clientY;
+    downStamp = e.timeStamp;
     holdTimer = setTimeout(() => {
       holdTimer = 0;
       session = Scrub.start({ pill, section, pointerId, y: startY });
@@ -108,6 +110,14 @@ export function attachBuildingScrubber(pill, section) {
   pill.addEventListener('pointerup', (e) => {
     if (e.pointerId !== pointerId) return;
     cancelHold();
+    // The finger left before the hold time, by the events' own clocks: a
+    // tap, even if a busy main thread ran the hold timer before this event.
+    // Put the scrubber away and let the tap through to the pill.
+    if (session && owned && e.timeStamp - downStamp < HOLD_MS) {
+      owned = false;
+      session.release({ cancel: true });
+      return;
+    }
     endGesture();
     session?.release();
   });

@@ -26,7 +26,8 @@
      transform) descendants against an ancestor's clip-path, so the blown-up
      grid escaped the frame and rode over the list.
    `overflow-clip-margin` keeps a little sideways room for the shadows where
-   it's supported; a tight clip is the harmless fallback. */
+   it's supported; a tight clip is the harmless fallback. building-overview.js
+   narrows it to the stage's distance from the screen's edges. */
 .bo-stage {
   position: relative;
   width: 100%;
@@ -44,8 +45,11 @@
 
 /* backdrop-filter is far too expensive to animate — drop it on every glass
    surface involved for the duration of the morph. It's restored the moment
-   the .bo-animating class comes off. */
-#available-classrooms-results.bo-animating :is(.bo-card-frost, .classroom-card, .building-section-titles, .bo-close, .bo-title) {
+   the .bo-animating class comes off (ramped back in by #blurIn in
+   building-overview.js, not snapped). The grid prebuilt during the press
+   (.bo-pregrid, see building-overview.js) goes without it from the start. */
+#available-classrooms-results.bo-animating :is(.bo-card-frost, .classroom-card, .building-section-titles, .bo-close, .bo-title),
+.bo-pregrid :is(.bo-card-frost, .bo-close, .bo-title) {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }

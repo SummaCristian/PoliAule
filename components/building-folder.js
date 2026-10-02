@@ -72,10 +72,17 @@ function backPath(w, h) {
     + `Q${w} ${h} ${w - r} ${h}L${r} ${h}Q0 ${h} 0 ${h - r}Z`;
 }
 
+const laidOut = new WeakMap(); // folder -> the size layout() last ran for
+
 // `height` is the folder's own: FOLDER_H, unless its host sizes it (the
 // Favourites strip matches it to the classroom cards beside it).
 function layout(folder, width, height = FOLDER_H) {
   if (!width) return;
+  // A ResizeObserver reports every observed folder at least once, also when
+  // nothing changed: skip those, each one is a style + layout pass.
+  const size = `${width}x${height}`;
+  if (laidOut.get(folder) === size) return;
+  laidOut.set(folder, size);
   const baseScale = Number(folder.dataset.paperScale) || 0.5;
   const lift = folder.classList.contains('bo-card--compact') ? COMPACT_LIFT : 0;
   const backH = (height || FOLDER_H) - BACK_TOP + lift;
@@ -91,13 +98,11 @@ function layout(folder, width, height = FOLDER_H) {
   const w = CARD_W * scale;
   const free = width - w;
   papers.forEach((paper, i) => {
-    const [fx, dy, rot] = fan[i];
+    const [fx, dy] = fan[i];
     paper.style.left = `${fx * free}px`;
     paper.style.top = `${REST_Y - lift + dy}px`;
     paper.style.width = `${w}px`;
     paper.style.height = `${CARD_H * scale}px`;
-    paper.style.setProperty('--rot', `${rot}deg`);
-    paper.style.setProperty('--dx', `${Math.round((i - (papers.length - 1) / 2) * 7)}px`);
   });
 }
 
@@ -178,10 +183,17 @@ export function buildBuildingFolder({ campusId, building, rooms, total, footerHt
     </div>
   `;
 
+  // Each paper's tilt and spread depend only on how many there are, so they
+  // are set here, before the folder's first style pass. Set later (from
+  // layout()), they changed the papers' transform and every paper played its
+  // 0.45s transition from flat to fanned as the folder appeared.
   const papers = folder.querySelector('.bo-card-papers');
-  for (const { classroom } of rooms) {
+  const fan = FAN[rooms.length] ?? [];
+  rooms.forEach(({ classroom }, i) => {
     const paper = document.createElement('div');
     paper.className = 'bo-paper';
+    paper.style.setProperty('--rot', `${fan[i][2]}deg`);
+    paper.style.setProperty('--dx', `${Math.round((i - (rooms.length - 1) / 2) * 7)}px`);
     if (hasPhoto(classroom)) {
       // Same thumbnail (and cache) the classroom cards use, so it is usually
       // already in the HTTP cache by the time a folder shows it.
@@ -195,7 +207,7 @@ export function buildBuildingFolder({ campusId, building, rooms, total, footerHt
       paper.appendChild(img);
     }
     papers.appendChild(paper);
-  }
+  });
 
   trackPointer(folder);
   resizer.observe(folder);

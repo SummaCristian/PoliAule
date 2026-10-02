@@ -1,5 +1,6 @@
 import { getClassroomStatusNow, classroomsData as occupancyDays, openDataCache, readCachedJson, fetchJson } from './available-rooms-script.js';
 import { getApiBase } from './config.js';
+import { EASTER_EGGS } from './data/search-easter-eggs.js';
 
 // Static classroom directory (campus → buildings → classrooms) plus the
 // unified Spotlight search that runs against it. The search UI itself lives
@@ -623,6 +624,45 @@ function emptyResult() {
   return { items: [], total: 0 };
 }
 
+// -- easter eggs (data/search-easter-eggs.js) --
+//
+// Matched on the whole normalised query only, never per token or by typo, so
+// an egg can't leak into an ordinary search.
+
+function normalizeEggKey(s) {
+  return foldAccents(s).toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+let eggIndex = null;
+
+function ensureEggIndex() {
+  if (eggIndex) return eggIndex;
+  eggIndex = new Map();
+  for (const egg of EASTER_EGGS) {
+    for (const keyword of egg.keywords) eggIndex.set(normalizeEggKey(keyword), egg);
+  }
+  return eggIndex;
+}
+
+function eggClassrooms(query) {
+  const egg = ensureEggIndex().get(normalizeEggKey(query));
+  const dir = egg && ensureDirIndexes();
+  if (!dir) return [];
+  const items = [];
+  for (const id of egg.rooms) {
+    const entry = dir.rooms.find(e => e.room.id === id);
+    if (!entry) continue;
+    items.push({
+      type: 'classroom', score: Number.MAX_SAFE_INTEGER, room: entry.room,
+      buildingName: entry.buildingName, buildingAltName: entry.buildingAltName,
+      campusId: entry.campusId, campusName: entry.campusName,
+      status: getClassroomStatusNow(entry.room.id),
+      egg: { note: egg.note ?? null },
+    });
+  }
+  return items;
+}
+
 // Top hit is the single highest-scoring item across all types; ties break by
 // type priority (classroom > building > professor > exam > lesson), which
 // falls out of evaluating the lists in that order and only replacing on '>'.
@@ -645,7 +685,11 @@ export function runSearch(query) {
   ensureVocab();
   const tokens = words.map((w, i) => expandToken(w, i === words.length - 1));
 
-  const classroomItems = scoreClassrooms(tokens);
+  // An egg's rooms go first (above any real score, so the first is the Top
+  // Hit), followed by the query's ordinary matches without them.
+  const eggItems = eggClassrooms(query);
+  const eggIds = new Set(eggItems.map(it => it.room.id));
+  const classroomItems = [...eggItems, ...scoreClassrooms(tokens).filter(it => !eggIds.has(it.room.id))];
   const buildingItems = scoreBuildings(tokens);
   const professorItems = scoreProfessors(tokens);
   const { exams: examItems, lessons: lessonItems } = buildExamLessonItems(tokens);

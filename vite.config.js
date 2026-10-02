@@ -123,9 +123,16 @@ export default defineConfig({
           'favicons/main/{favicon.svg,favicon.ico,favicon-96x96.png,apple-touch-icon.png,logo.webp,icon-*.webp,site.webmanifest,web-app-manifest-*.png}',
           'favicons/beta/icon-*.webp',
         ],
+        // Only the secret message uses it: fetched when shown, then cached (below)
+        globIgnores: ['fonts/cormorant-garamond/**'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/fonts/cormorant-garamond/'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'secret-font', cacheableResponse: { statuses: [200] } },
+          },
           {
             // Nunito's stylesheet: show the cached one, refresh it in the background
             urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',

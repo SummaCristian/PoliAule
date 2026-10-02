@@ -5,6 +5,7 @@ import { openingHours } from "./routes/opening-hours";
 import { occupancy } from "./routes/occupancy";
 import { photos } from "./routes/photos";
 import { config } from "./routes/config";
+import { eggs } from "./routes/eggs";
 
 export interface Env {
   DATA_BUCKET: R2Bucket;
@@ -25,5 +26,6 @@ app.route("/v1/classrooms", classrooms);
 app.route("/v1/opening-hours", openingHours);
 app.route("/v1/occupations", occupancy);
 app.route("/v1/photos", photos);
+app.route("/v1/eggs", eggs);
 
 export default app;

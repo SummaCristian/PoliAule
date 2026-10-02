@@ -66,6 +66,7 @@ import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfE
 import { initKeybindings } from './components/keybindings.js';
 import { takeImportHash } from './utils/transfer.js';
 import { promptImport } from './components/transfer-dialog.js';
+import { initServiceWorker } from './utils/pwa.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
@@ -482,6 +483,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Once things have settled, spend a moment of genuine idle time
     // benchmarking blur for real (first load / no cached verdict only).
     scheduleIdleBenchmark();
+
+    // Offline app shell + update prompt. Registered once the app is up, so
+    // installing it never competes with the first load.
+    initServiceWorker();
 
   } catch (error) {
     clearTimeout(_initTimeoutId);

@@ -211,6 +211,11 @@
   "import.invalidTitle": "Invalid transfer link",
   "import.invalidMessage": "This link is damaged or was made by a different version of PoliAule. Try generating a new QR code.",
 
+  "update.title": "Update available",
+  "update.message": "A new version of PoliAule is ready. Reload to start using it.",
+  "update.reload": "Reload",
+  "update.later": "Later",
+
   "detail.features": "Features",
   "detail.currentStatus": "Current status",
   "detail.noFeatures": "No features listed",

@@ -196,6 +196,11 @@
   "import.cancel": "Annulla",
   "import.invalidTitle": "Link di trasferimento non valido",
   "import.invalidMessage": "Il link è danneggiato o è stato creato da un'altra versione di PoliAule. Prova a generare un nuovo codice QR.",
+
+  "update.title": "Aggiornamento disponibile",
+  "update.message": "È pronta una nuova versione di PoliAule. Ricarica per iniziare a usarla.",
+  "update.reload": "Ricarica",
+  "update.later": "Più tardi",
   "detail.features": "Dotazioni",
   "detail.currentStatus": "Stato attuale",
   "detail.noFeatures": "Nessuna dotazione",

@@ -236,6 +236,13 @@ graph TD
 
 The frontend still loads photos on-demand when a classroom card scrolls into view or a detail page opens (`ClassroomDetail._loadPhoto()`, `utils/photo.js`'s `fetchPhotoUrl()` / `fetchThumbUrl()`), but now that's just building a URL against our own API instead of calling PoliMi directly — the response is edge- and browser-cacheable for 30 days (`Cache-Control: public, max-age=2592000, immutable`), matching the fetch cadence. Cards and search rows only ever load the thumbnail: a list of full 1500x1125 photos (~6.7 MB each, decoded) is what made older phones stutter. The detail page's hero opens on the thumbnail too (already decoded by the card, and cheap to draw through the zoom) and swaps to the full photo once the transition has landed (`ClassroomDetail._upgradePhoto()`); its blurred backdrop and extracted tint always come from the thumbnail.
 
+### Caching and offline use
+
+Two layers, independent of each other:
+
+- **Data** (`available-rooms-script.js`, `classroom-search-data.js`): every API JSON response is kept in Cache Storage (`poliaule-data-v1`) with its ETag. On start-up the UI is drawn from those copies, then each file is revalidated with `If-None-Match`; the API answers `304` when it's unchanged, and the UI is redrawn (`refreshOccupancyUi()` in `script.js`) only if something came back new. A failed request falls back to the cached copy. The API sends `Cache-Control: no-store`, so the browser's own HTTP cache isn't involved.
+- **App shell** (`utils/pwa.js`, `VitePWA` in `vite.config.js`): a Workbox service worker generated at build time precaches `index.html`, the bundles, fonts, locales and icons (~2 MB), and caches Google Fonts at runtime, so the app opens with no connection at all. It never touches API requests. A new deploy installs in the background and waits; `utils/pwa.js` asks "Update available, Reload?" (Vitrium alert) and otherwise it takes over the next time the app is opened from scratch. It also checks for updates hourly, for home-screen apps left open for days. Not active under `npm run dev`; test it with `npm run build && npm run preview`.
+
 ### Localization
 
 `i18n.js` detects locale from `localStorage` → `navigator.language` → `'en'` fallback. Supported: `en`, `it`. Translation files live in `locales/en.json` and `locales/it.json`. The `t(key)` helper is called by virtually every component.

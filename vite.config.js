@@ -107,8 +107,9 @@ export default defineConfig({
     markShellCssReadyInDev(),
     // Service worker for offline use (registered from utils/pwa.js). Precaches
     // what the app needs to open, about 2 MB; the big unused PNGs in
-    // favicons/main and the beta icons (copied over main/ by build-beta.sh
-    // before the build) stay out. Not active under `npm run dev`.
+    // favicons/ stay out. Of favicons/beta only the info page's icon-*.webp
+    // are needed: build-beta.sh copies the rest over main/ before a beta
+    // build. Not active under `npm run dev`.
     VitePWA({
       registerType: 'prompt',
       injectRegister: false,
@@ -119,7 +120,8 @@ export default defineConfig({
           'assets/*.{js,css,png,jpg,svg,webp}',
           'fonts/**/*.{css,woff,woff2}',
           'locales/*.json',
-          'favicons/main/{favicon.svg,favicon.ico,favicon-96x96.png,apple-touch-icon.png,logo.webp,site.webmanifest,web-app-manifest-*.png}',
+          'favicons/main/{favicon.svg,favicon.ico,favicon-96x96.png,apple-touch-icon.png,logo.webp,icon-*.webp,site.webmanifest,web-app-manifest-*.png}',
+          'favicons/beta/icon-*.webp',
         ],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,

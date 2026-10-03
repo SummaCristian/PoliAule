@@ -268,12 +268,13 @@
   "footer.whatsNew": "Cosa c'è di nuovo?",
   "footer.checkOnGitHub": "Vedi su GitHub",
   "footer.disclaimer5": "Non affiliato al Politecnico di Milano.",
-  "footer.versionInfo": "Versione 2.0.0-beta8",
-  "changelog.item1": "Ridisegnata l'intera interfaccia di ricerca, rendendo più facile trovare aule, professori e corsi. Aggiunta una nuova sezione 'Top Hit' per i risultati più rilevanti.",
-  "changelog.item2": "Ridisegnata la pagina Info",
-  "changelog.item3": "Migliorata significativamente la performance della transizione di navigazione, riprodotta all'apertura dei dettagli di un'aula. Questo garantisce framerate più elevati anche su dispositivi più datati.",
-  "changelog.item4": "Migliorata la performance di caricamento del tab Campus: la mappa è ora caricata in background, mantenendo la UI reattiva mentre la mappa viene caricata.",
-  "changelog.item5": "Aggiunto il supporto alle thumbnail per le immagini delle aule. Questo comporta l'introduzione di un nuovo endpoint per richiederle, ma porta enormi benefici sulle prestazioni della UI",
-  "changelog.item6": "Modificato il design del grafico delle occupazioni nella pagina Dettagli, rendendolo vetro colorato.",
-  "changelog.item7": "Aggiunta una nuova funzione 'Trasferimento', che permette di spostare preferiti e impostazioni su un altro dispositivo tramite un codice QR."
+  "footer.versionInfo": "Versione 2.0.0-beta9",
+  "changelog.item1": "Ridisegnati i marker della mappa per campus ed edifici",
+  "changelog.item2": "Ridisegnato il selettore dell'intervallo di tempo nel tab Disponibili",
+  "changelog.item3": "Aggiunti gli Edifici preferiti",
+  "changelog.item4": "Aggiunta un nuovo layout espanso per la sezione Preferiti nel tab Disponibili",
+  "changelog.item5": "Aggiunta la possibilità di vedere l'occupazione di un'aula per tutto il giorno con un semplice passaggio del mouse sul lato inferiore della sua card",
+  "changelog.item6": "Aggiunta una indicazione visiva degli slot temporali corrente e successivo dentro le card delle Aule",
+  "changelog.item7": "Migliorate le prestazioni di avvio della webapp",
+  "changelog.item8": "Aggiornati i dati per includere tutti i campus, gli edifici e le aule. Questo include il campus di Piacenza, così come molti edifici secondary nei campus già supportati"
 }

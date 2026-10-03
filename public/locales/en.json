@@ -290,13 +290,14 @@
   "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 2.0.0-beta8",
+  "footer.versionInfo": "Version 2.0.0-beta9",
 
-  "changelog.item1": "Redesigned the whole Search UI, making it easier to find classrooms, professors, and courses. Added a new 'Top Hit' section for the most relevant results.",
-  "changelog.item2": "Redesigned the Info page",
-  "changelog.item3": "Massively improved the performance of the navigation transition, played when opening the details of a classroom. This guarantees higher framerates even on older devices.",
-  "changelog.item4": "Improved the loading performance for the Campus tab: the map is now loaded in the background, keeping the UI responsive while the map is being fetched.",
-  "changelog.item5": "Added support for thumbnails for the images of the classrooms. This involves introducing a new endpoint to request them, but brings significant benefits to the UI performance.",
-  "changelog.item6": "Tweaked the design of the occupation graph inside the Details page, turning it into tinted glass.",
-  "changelog.item7": "Added a new 'Transfer' feature, allowing you to move your favourites and settings to another device using a QR code."
+  "changelog.item1": "Redesigned the Map markers for campuses and buildings",
+  "changelog.item2": "Redesigned the Time range picker in the Available tab",
+  "changelog.item3": "Added Favorite buildings",
+  "changelog.item4": "Added a new expanded layout for the Favorite section in the Available tab",
+  "changelog.item5": "Added the ability to see a classroom's full-day occupation at a glance by hovering on their card's bottom side",
+  "changelog.item6": "Added a visual indication of the current and next time slots inside the Classroom cards",
+  "changelog.item7": "Improved startup performance",
+  "changelog.item8": "Updated the data to include all the campuses, buildings and classrooms. This includes the Piacenza campus, as well as multiple secondary buildings in the existing campuses"
 }

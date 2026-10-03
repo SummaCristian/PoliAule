@@ -2,7 +2,8 @@ import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow, getB
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
+import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance, getPhotoSmall } from '../utils/photo.js';
+import { planHeaderText } from '../utils/text-contrast.js';
 import { isFavourite, toggleFavourite, syncStarButton } from '../utils/favourites.js';
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
@@ -105,6 +106,7 @@ class ClassroomDetail {
       if (!el || !url) return;
       this._applyPhotoDim(url, el);
       this._applyTitleTone(url, el);
+      this._applyTextContrast();
     });
 
     // Flags the overlay once the sticky title row reaches its stuck position
@@ -1285,6 +1287,7 @@ class ClassroomDetail {
       if (!cached) show();
       this._applyPhotoDim(url, el);
       this._applyTitleTone(url, el);
+      this._applyTextContrast();
     });
   }
 
@@ -1325,6 +1328,51 @@ class ClassroomDetail {
     }
     title.style.overflowWrap = '';
     this._measurePin();
+    this._applyTextContrast(); // the text moved over the photo
+  }
+
+  /**
+   * Colours the title and subtitle for the photo behind them
+   * (utils/text-contrast.js). Refines
+   * _applyTitleTone's black or white, which stays as the first guess. It reads
+   * the page laid out at rest, so it waits for the transition to land and an
+   * idle moment, and skips a page already scrolled (the next call made at the
+   * top redoes it).
+   */
+  _applyTextContrast() {
+    if (this._textContrastQueued) return;
+    this._textContrastQueued = true;
+    this._afterTransition(() => {
+      const run = () => { this._textContrastQueued = false; this._planTextContrast(); };
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 500 });
+      else setTimeout(run, 100);
+    });
+  }
+
+  _planTextContrast() {
+    if (this._currentId === null || this._overlay.hidden) return;
+    if ((document.scrollingElement?.scrollTop ?? 0) !== 0) return;
+    const title = this._overlay.querySelector('.detail-title');
+    const subtitle = this._overlay.querySelector('.detail-subtitle');
+    const photo = this._overlay.querySelector('.detail-photo-container');
+    const backdrop = this._overlay.querySelector('.detail-photo-backdrop');
+    const small = getPhotoSmall(thumbUrl(this._currentId));
+    if (!title || !subtitle || !photo || !small) return;
+
+    const plan = planHeaderText({
+      lines: [title, subtitle],
+      photoBox: photo.getBoundingClientRect(),
+      backdropBox: backdrop?.getBoundingClientRect() ?? null,
+      pageBg: getComputedStyle(this._overlay).backgroundColor,
+      dim: this._photoDim(thumbUrl(this._currentId)),
+      blur: backdrop ? parseFloat(getComputedStyle(backdrop, '::before').getPropertyValue('--bd-blur-px')) || 40 : 40,
+      tint: getComputedStyle(document.documentElement).getPropertyValue('--detail-tint').trim() || 'grey',
+      small,
+    });
+    if (!plan) return;
+
+    title.style.setProperty('--title-ink', plan.inks[0]);
+    subtitle.style.color = plan.inks[1];
   }
 
   /**
@@ -1389,7 +1437,7 @@ class ClassroomDetail {
       shrink = Math.max(0, ph.height - end);
     }
     const at = distance / (1 + shrink / 220) <= 220 ? distance / (1 + shrink / 220) : distance - shrink;
-    row.style.setProperty('--title-pin-at', `${Math.max(1, at).toFixed(1)}px`);
+    this._overlay.style.setProperty('--title-pin-at', `${Math.max(1, at).toFixed(1)}px`);
   }
 
   /**

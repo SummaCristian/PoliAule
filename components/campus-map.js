@@ -522,9 +522,14 @@ async function boot() {
 
   if (startEmbed) setInteractive(false);
 
-  // Zoom back out past a campus → return to the campus overview.
+  // Zoom back out past a campus → return to the campus overview. Not during
+  // one of our own flights (startFly()): starting one ends whatever camera
+  // animation was still running with a zoomend at the old, zoomed-out level,
+  // which read as the user zooming out and swapped the new campus's building
+  // markers straight back to campus ones. A flight always lands at its
+  // campus's own zoom anyway.
   map.on('zoomend', () => {
-    if (!embed && mode === 'buildings' && map.getZoom() < CAMPUS_ZOOM) {
+    if (!embed && !autoFlying && mode === 'buildings' && map.getZoom() < CAMPUS_ZOOM) {
       // A zoom-out this big leaves any single-building focus behind too —
       // fall the sheet back to its campus page in sync (see
       // clearSelectedBuildingSilently()'s own note on why this doesn't just

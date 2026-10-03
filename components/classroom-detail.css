@@ -1588,6 +1588,32 @@ body.detail-open .tab-content * {
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
+/* A day whose schedule no source had (`occupancy: null`): a hatched bar with a
+   label instead of an empty one that would read as free all day. */
+.detail-schedule-row--unknown .detail-schedule-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-linear-gradient(-45deg,
+    color-mix(in srgb, var(--text-color-primary) 6%, transparent) 0 6px,
+    transparent 6px 12px);
+}
+
+.detail-schedule-unknown {
+  font-size: var(--text-80);
+  font-weight: 700;
+  color: var(--text-color-secondary);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+/* Phones draw the day as a vertical bar: run the label along it. */
+@media (max-width: 599px) {
+  .detail-schedule-unknown {
+    writing-mode: vertical-rl;
+  }
+}
+
 .detail-schedule-block {
   position: absolute;
   top: 3px;

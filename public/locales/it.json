@@ -212,6 +212,7 @@
   "detail.noFeatures": "Nessuna dotazione",
   "detail.eventsOnlyTitle": "Generalmente chiusa",
   "detail.eventsOnlyText": "Quest'aula è generalmente chiusa quando non sono previsti eventi.",
+  "detail.scheduleUnknown": "Orario non disponibile",
   "detail.seats": "Posti",
   "detail.disabledSeats": "Posti disabili",
   "detail.weeklySchedule": "Orario settimanale",

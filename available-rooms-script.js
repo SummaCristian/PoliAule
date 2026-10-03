@@ -444,7 +444,9 @@ export function getClassroomStatusNow(classroomId) {
     if (opening.closed || currentTime < opening.opens || currentTime >= opening.closes) return 'closed';
   }
 
-  return computeClassroomStatus(classroom.occupancy ?? [], now);
+  // No source had its schedule today (scripts/fetch.py): unknown, not free.
+  if (classroom.occupancy == null) return null;
+  return computeClassroomStatus(classroom.occupancy, now);
 }
 
 // A classroom and its building as they are on dateKey ("YYYYMMDD"), or null
@@ -461,7 +463,7 @@ const toHHMM = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${St
  * What a classroom card's small timeline shows. With fromTime/toTime, it is
  * that queried range on dateKey ("YYYYMMDD"); without, a window around now
  * (30 min back, 90 ahead, kept inside the day) on today. Returns null when
- * there's no data for that day.
+ * there's no data for that day, or the room's schedule that day is unknown.
  *
  *   { from, to }   the window, in minutes since midnight
  *   busy           [[start, end]] booked spans inside it, merged
@@ -482,6 +484,7 @@ export function getClassroomTimeline(classroomId, dateKey = null, fromTime = nul
   const entry = roomsById(dayData).get(String(classroomId));
   if (!entry) return null;
   const { classroom, building } = entry;
+  if (classroom.occupancy == null) return null; // schedule unknown that day
 
   const nowMins = nowDate.getHours() * 60 + nowDate.getMinutes();
   let from, to;
@@ -556,11 +559,11 @@ export function getCampusBuildingsOverview(campusId, date, fromTime, toTime) {
   // findAvailableClassrooms() does for the results. So are buildings with
   // nothing bookable (utils/secondary.js).
   return campusData.buildings.flatMap(building => {
+    const bookable = availableTabRooms(campusId, building);
+    if (!bookable.length) return [];
     const open = clipToOpeningHours(building, formattedDate, fromTime, toTime);
     if (!open) return [];
 
-    const bookable = availableTabRooms(campusId, building);
-    if (!bookable.length) return [];
     const counts = { 'free': 0, 'partially-free': 0, 'occupied': 0 };
     const rooms = [];
     for (const room of bookable) {

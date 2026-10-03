@@ -227,6 +227,7 @@
   "detail.noFeatures": "No features listed",
   "detail.eventsOnlyTitle": "Usually closed",
   "detail.eventsOnlyText": "This classroom is generally closed when there is no event scheduled.",
+  "detail.scheduleUnknown": "Schedule not available",
   "detail.seats": "Seats",
   "detail.disabledSeats": "Accessible seats",
   "detail.weeklySchedule": "Weekly Schedule",

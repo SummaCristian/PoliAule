@@ -45,8 +45,9 @@ export function isEventsOnly(classroomId) {
 }
 
 // The rooms of `building` the Available tab works with: none for a secondary
-// building, and never an events-only room.
+// building, never an events-only room, and never one whose schedule that day is
+// unknown (`occupancy: null`, see scripts/fetch.py): claiming it free could be wrong.
 export function availableTabRooms(campusId, building) {
   if (isSecondaryCampus(campusId) || isSecondaryBuilding(campusId, building.name)) return [];
-  return (building.classrooms ?? []).filter(room => !isEventsOnly(room.id));
+  return (building.classrooms ?? []).filter(room => !isEventsOnly(room.id) && room.occupancy != null);
 }

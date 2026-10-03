@@ -1523,8 +1523,19 @@ class ClassroomDetail {
         outer: for (const c of dayData.campuses ?? []) {
           for (const b of c.buildings ?? []) {
             const room = b.classrooms?.find(r => String(r.id) === String(classroomId));
-            if (room) { occupancy = room.occupancy ?? []; roomBuilding = b; break outer; }
+            if (room) { occupancy = room.occupancy; roomBuilding = b; break outer; }
           }
+        }
+
+        // No source had this room's schedule that day (scripts/fetch.py):
+        // say so instead of drawing an empty, free-looking bar.
+        if (occupancy === null) {
+          return { labelHtml, rowHtml: `
+            <div class="detail-schedule-row detail-schedule-row--unknown${isToday ? ' detail-schedule-row--today' : ''}">
+              <div class="detail-schedule-bar-wrapper">
+                <div class="detail-schedule-bar"><span class="detail-schedule-unknown">${t('detail.scheduleUnknown')}</span></div>
+              </div>
+            </div>` };
         }
 
         // The bar's contents: closed hours, the queried range, and the

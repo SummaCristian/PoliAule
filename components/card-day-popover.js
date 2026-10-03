@@ -49,6 +49,7 @@ function contentFor(card) {
   const entry = getClassroomOnDay(id, dateKey);
   if (!entry) return null;
   const { classroom, building } = entry;
+  if (classroom.occupancy == null) return null; // schedule unknown that day
 
   const { html: barHtml } = dayBarHtml({
     occupancy: classroom.occupancy,

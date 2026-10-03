@@ -28,6 +28,7 @@
     "workbox-window": "^7.4.1"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
     "qrcode-generator": "^2.0.4",
     "vitrium": "^0.4.0"
   }

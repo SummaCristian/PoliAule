@@ -68,6 +68,7 @@ import { takeImportHash } from './utils/transfer.js';
 import { promptImport } from './components/transfer-dialog.js';
 import { initServiceWorker } from './utils/pwa.js';
 import { resumeState, initResumeSnapshot } from './utils/resume.js';
+import { initSeason } from './utils/season.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
@@ -429,6 +430,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('time-range-chip-picker')?.retranslate();
 
     initSettings();
+
+    // Holiday decorations, when today is in a season (utils/season.js)
+    initSeason();
 
     // Desktop keyboard shortcuts (no-ops on touch / narrow viewports)
     initKeybindings();

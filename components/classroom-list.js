@@ -4,6 +4,7 @@ import { fetchThumbUrl, thumbUrlCache, markPhotoBroken, isPhotoBroken } from '..
 import { isFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { getClassroomTimeline } from '../available-rooms-script.js';
+import { decorate } from '../utils/season.js';
 
 // ---------- PHOTO ----------
 
@@ -248,5 +249,6 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
     _fitObserver.observe(el.querySelector('.classroom-name'));
   }
 
+  decorate('card', el, classroom);
   return el;
 }

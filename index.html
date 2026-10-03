@@ -127,6 +127,14 @@
       animation: splash-logo-fade-in 0.5s ease-out 0.1s forwards;
     }
 
+    /* Halloween: the logo in its witch hat, the chair kept at the usual
+       10rem (same recipe as .header-logo.hw-logo in style.css) */
+    .splash-logo.hw-logo {
+      height: calc(10rem * 2313 / 1635);
+      aspect-ratio: 1499 / 2313;
+      margin: calc(10rem * -648 / 1635) calc(10rem * -1 / 1635) calc(10rem * -30 / 1635) calc(10rem * -72 / 1635);
+    }
+
     @keyframes splash-logo-fade-in {
       to {
         opacity: 1;
@@ -292,6 +300,55 @@
       }
     } catch (e) {}
 
+    // Seasonal decorations (utils/season.js): today's season, by the Milan
+    // calendar day, or null. Decided here, before first paint, so a seasonal
+    // accent never flashes in over the normal one; season.js reads
+    // window.__seasonByDate and turns seasons on or off from there. Ranges
+    // are inclusive [month, day] pairs and may wrap the new year.
+    var SEASONS = [['halloween', [10, 24], [11, 1]]];
+    function seasonFor(date) {
+      var p = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', month: 'numeric', day: 'numeric' }).formatToParts(date);
+      var md = 0;
+      for (var i = 0; i < p.length; i++) {
+        if (p[i].type === 'month') md += Number(p[i].value) * 100;
+        if (p[i].type === 'day') md += Number(p[i].value);
+      }
+      for (var j = 0; j < SEASONS.length; j++) {
+        var from = SEASONS[j][1][0] * 100 + SEASONS[j][1][1];
+        var to = SEASONS[j][2][0] * 100 + SEASONS[j][2][1];
+        if (from <= to ? md >= from && md <= to : md >= from || md <= to) return SEASONS[j][0];
+      }
+      return null;
+    }
+    try {
+      window.__seasonByDate = seasonFor(new Date());
+      // A season picked from the search wins, unless another one's dates
+      // have come round (same rule as currentSeason() in season.js)
+      var picked = localStorage.getItem('poliAule_seasonOverride');
+      var known = false;
+      for (var k = 0; k < SEASONS.length; k++) if (SEASONS[k][0] === picked) known = true;
+      var season = known && (!window.__seasonByDate || window.__seasonByDate === picked) ? picked : window.__seasonByDate;
+      if (season && localStorage.getItem('poliAule_seasonal') !== 'false') {
+        document.documentElement.dataset.season = season;
+      }
+    } catch (e) {}
+    // Halloween's logo (the usual one in a witch hat, with a pumpkin): the
+    // splash and header logos each call this right after they're parsed, so
+    // the hat is there from the very first frame. components/halloween.js
+    // takes it from there (and puts the usual logo back if turned off).
+    window.__seasonLogo = function (img) {
+      if (document.documentElement.dataset.season !== 'halloween') return;
+      img.src = '/favicons/halloween/logo.webp';
+      img.classList.add('hw-logo');
+    };
+    if (document.documentElement.dataset.season === 'halloween') {
+      var hwLogo = document.createElement('link');
+      hwLogo.rel = 'preload';
+      hwLogo.as = 'image';
+      hwLogo.href = '/favicons/halloween/logo.webp';
+      document.head.appendChild(hwLogo);
+    }
+
     window.__onShellCssLoad = function (link) {
       link.media = 'all';
       if (!document.querySelector('link[data-shell-css][media="print"]')) {
@@ -374,6 +431,7 @@
   <!-- Splash Screen -->
   <div id="splash-overlay" class="splash-overlay" aria-hidden="true">
     <img src="/favicons/main/logo.webp" class="splash-logo" alt="" draggable="false" fetchpriority="high" />
+    <script>window.__seasonLogo(document.currentScript.previousElementSibling);</script>
     <span class="splash-loading-label">Loading</span>
   </div>
 
@@ -399,6 +457,7 @@
       <div class="header-title-container">
         <button class="header-title-btn" id="info-trigger" aria-label="About PoliAule">
           <img src="/favicons/main/logo.webp" class="header-logo" width="436" height="500">
+          <script>window.__seasonLogo(document.currentScript.previousElementSibling);</script>
 
           <div class="header-title-beta-container splash-header-item">
             <h2 class="header-title">PoliAule</h2>

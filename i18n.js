@@ -32,7 +32,14 @@ async function loadLocale(lang) {
 
 // Synchronous key lookup — call only after initI18n() resolves.
 // Falls back to the key name itself so missing strings are visible.
+// During a season (utils/season.js) a "<key>@<season>" string, when the
+// locale has one, stands in for the plain one.
 export function t(key) {
+  const season = document.documentElement.dataset.season;
+  if (season) {
+    const seasonal = translations[`${key}@${season}`];
+    if (seasonal) return seasonal;
+  }
   return translations[key] ?? key;
 }
 

@@ -36,6 +36,7 @@ import { activateGroupTab } from './bottom-nav.js';
 import { goToBuilding } from './campus-buildings.js';
 import { morphInto, settleMorph, isSettled, fadeIn, ClockedSpring } from './search-motion.js';
 import { createBackButton, createSegmentedControl } from 'vitrium';
+import { SEASONS, activeSeason, toggleSeason } from '../utils/season.js';
 
 const DEBOUNCE_MS = 200;
 const SECTION_CAP = 4;
@@ -523,12 +524,40 @@ function buildLessonRow(item, ctx) {
   return buildExpandableRow(row, item, ctx);
 }
 
+// A season offered by its keyword (utils/season.js): tapping it dresses the
+// app up, or back down, and closes the search so the change shows.
+function buildSeasonRow(item, ctx) {
+  const on = activeSeason() === item.season;
+  const row = document.createElement('button');
+  row.type = 'button';
+  row.className = 'search-row search-row--season' + (ctx.large ? ' search-row--tophit' : '');
+  row.dataset.row = '';
+  row.tabIndex = -1;
+  row.appendChild(buildIconTile(SEASONS[item.season].icon, ctx.large, true));
+
+  const body = document.createElement('div');
+  body.className = 'search-row-body';
+  body.innerHTML = `
+    <div class="search-row-title"><span class="search-row-title-text">${escapeHtml(t(`season.${item.season}.name`))}</span></div>
+    <div class="search-row-subtitle">${escapeHtml(t(on ? 'season.searchOn' : 'season.searchOff'))}</div>
+  `;
+  row.appendChild(body);
+  row.innerHTML += `<span class="search-row-trailing search-row-chevron"><i class="hgi-stroke ${on ? 'hgi-toggle-on' : 'hgi-toggle-off'}" aria-hidden="true"></i></span>`;
+
+  row.addEventListener('click', () => {
+    toggleSeason(item.season);
+    closeSearchOverlay();
+  });
+  return row;
+}
+
 const TOP_HIT_BUILD = {
   classroom: buildClassroomRow,
   building: buildBuildingRow,
   professor: buildProfessorRow,
   exam: buildExamRow,
   lesson: buildLessonRow,
+  season: buildSeasonRow,
 };
 
 /* ── Professor view ──────────────────────────────────────────────────────
@@ -866,6 +895,7 @@ function animKeyFor(type, item) {
     case 'classroom': return `c:${item.room.id}`;
     case 'building': return `b:${item.campusId}:${item.name}`;
     case 'professor': return `p:${item.key}`;
+    case 'season': return `s:${item.season}`;
     default: return `${type}:${itemKey(item)}`;
   }
 }

@@ -4,6 +4,7 @@ import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { getSelectedCampusId, getSelectedBuildingId, clearSelectedBuildingSilently } from './campus-buildings.js';
 import { getSheetHeightPx, heightAfterBuildingSelect, isUserResizing } from './campus-sheet.js';
+import { decorate } from '../utils/season.js';
 
 // Fullscreen Mapbox map that fills the Campus tab. The app chrome (header,
 // footer, bottom-nav) floats above it — see components/campus-map.css, which
@@ -846,6 +847,8 @@ function showBuildingMarkers(mapboxgl, campus) {
 
     const el = markerElement('button', { name: b.name, alt: (b.altName || '').trim(), cls: b.secondary ? 'map-pin--secondary' : '' });
     el.dataset.building = b.name;
+    el.dataset.campus = campus.id;
+    decorate('marker', el, { campus, building: b });
     // Selects the building in the sheet's own building page (components/
     // campus-buildings.js) and, via the 'buildingchange' listener above,
     // flies the camera in — same tap-to-drill-in as a building card there.

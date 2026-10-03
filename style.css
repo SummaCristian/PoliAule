@@ -1788,3 +1788,358 @@ are rendered as solid colors
     transition: none;
   }
 }
+
+/* ── Seasonal themes ─────────────────────────────────────────────────
+   `data-season` on <html> swaps the accent for a holiday. Only the accent
+   moves: the free / partial / busy status colours keep their meaning. */
+:root[data-season="halloween"] {
+  --text-color-accent: #d9560b;
+  --accent-gradient: linear-gradient(135deg, #b3400a, #ff8c2e);
+  --color-accent-dark: #d9480f;
+  --color-accent-dark-hover: #bf3f0c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="halloween"] {
+    --text-color-accent: #ff7a2e;
+    --accent-gradient: linear-gradient(135deg, #e8590c, #ffb070);
+  }
+}
+
+:root[data-season="halloween"] .popover-title.green {
+  background: linear-gradient(135deg, #b3400a, #ff8c2e);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+:root[data-season="halloween"] .info-page {
+  --info-glow-1: #ff8c2e;
+  --info-glow-2: #b3400a;
+  --info-glow-3: #7b3fc4;
+}
+
+/* Halloween decorations (components/halloween.js). Everything below is
+   scoped to the season, and none of it takes taps except the hanging
+   spider. */
+
+/* The spider/web artwork */
+.hw-spider .hw-legs { fill: none; stroke: var(--hw-spider); stroke-width: 1.3; stroke-linecap: round; }
+.hw-spider .hw-body { fill: var(--hw-spider); stroke: var(--hw-spider-edge); stroke-width: 0.6; }
+.hw-eye { fill: var(--text-color-accent); }
+.hw-web-outline { fill: none; stroke: var(--hw-web-outline); stroke-width: 2; stroke-linecap: round; }
+.hw-web-thread { fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linecap: round; }
+
+:root[data-season="halloween"] {
+  --hw-spider: #1d1a18;
+  --hw-spider-edge: transparent;
+  --hw-ink: rgba(60, 45, 30, 0.38);
+  --hw-thread: rgba(40, 30, 20, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="halloween"] {
+    --hw-spider: #0e0d0c;
+    --hw-spider-edge: rgba(255, 255, 255, 0.35);
+    --hw-ink: rgba(255, 255, 255, 0.3);
+    --hw-thread: rgba(255, 255, 255, 0.45);
+  }
+}
+
+/* Webs and hanging spiders: white with a soft dark outline over a photo,
+   plain ink on a card without one and on the chips */
+.hw-decor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+  color: var(--hw-ink);
+  --hw-web-outline: transparent;
+}
+
+.hw-decor svg { display: block; overflow: visible; }
+
+.hw-decor--right {
+  left: auto;
+  right: 0;
+  transform: scaleX(-1);
+}
+
+.classroom-card--photo:not(.photo-failed) .hw-decor--card {
+  color: rgba(255, 255, 255, 0.8);
+  --hw-web-outline: rgba(0, 0, 0, 0.38);
+}
+
+.hw-hang { width: 1px; }
+.hw-hang-thread { width: 1px; background: currentColor; }
+.classroom-card--photo:not(.photo-failed) .hw-hang-thread { box-shadow: 0 0 0 0.6px rgba(0, 0, 0, 0.38); }
+.hw-hang-bug { position: absolute; left: 50%; transform: translateX(-50%); }
+
+/* The haunted room's ghost leans in from behind the card's right edge,
+   which clips it */
+.hw-ghost {
+  position: absolute;
+  top: 22%;
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+  animation: hw-peek 7s ease-in-out infinite;
+}
+
+.hw-ghost svg,
+.hw-map-ghost svg {
+  display: block;
+  animation: hw-bob 1.6s ease-in-out infinite alternate;
+}
+
+.hw-ghost-body { fill: #fbfbff; stroke: rgba(0, 0, 0, 0.28); stroke-width: 1; }
+.hw-ghost-face { fill: #1d1a18; }
+
+@keyframes hw-peek {
+  0%, 8% { transform: translateX(110%) rotate(0deg); }
+  20% { transform: translateX(30%) rotate(-12deg); }
+  45% { transform: translateX(34%) rotate(-4deg); }
+  58% { transform: translateX(30%) rotate(-10deg); }
+  70%, 100% { transform: translateX(110%) rotate(0deg); }
+}
+
+@keyframes hw-bob {
+  from { translate: 0 0; }
+  to { translate: 0 -2px; }
+}
+
+/* …and floats over its building on the map */
+.hw-map-ghost {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -11px;
+  width: 22px;
+  pointer-events: none;
+}
+
+.hw-map-ghost svg { width: 22px; height: 25px; }
+
+/* Pumpkin on the "now" markers: the cards' timeline tick, the detail page's
+   schedule line (desktop) and today's bar (phone) */
+:root[data-season="halloween"] {
+  --hw-pumpkin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 12'%3E%3Cellipse cx='6.5' cy='7.4' rx='5.8' ry='4.2' fill='%23f07a1a'/%3E%3Cpath d='M6.5 3.4v7.9M3.7 4c-1.3 2.1-1.3 4.7 0 6.6M9.3 4c1.3 2.1 1.3 4.7 0 6.6' stroke='%23c4560c' stroke-width='.7' fill='none'/%3E%3Cpath d='M6.6 3.6c0-1.3.4-2.1 1.5-2.7' stroke='%233d7a2a' stroke-width='1.4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+}
+
+:root[data-season="halloween"] .classroom-card-timeline-now::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 12px;
+  height: 11px;
+  margin-bottom: -2px;
+  transform: translateX(-50%);
+  background: var(--hw-pumpkin) center / contain no-repeat;
+}
+
+:root[data-season="halloween"] .detail-schedule-now-line::before {
+  top: -10px;
+  width: 13px;
+  height: 12px;
+  border-radius: 0;
+  background: var(--hw-pumpkin) center / contain no-repeat;
+}
+
+:root[data-season="halloween"] .timeline-now-bar-line::before {
+  left: -12px;
+  width: 13px;
+  height: 12px;
+  border-radius: 0;
+  background: var(--hw-pumpkin) center / contain no-repeat;
+}
+
+/* The logo in its witch hat (components/halloween.js swaps the image). The
+   drawing is the usual logo scaled up with a hat above and a pumpkin below,
+   the chair's box at (72, 648) and 1426×1635 in its 1499×2313 frame: sized
+   so that box is the usual 2rem-tall logo, with negative margins giving back
+   the rest, so the header's layout doesn't move and the hat rises into the
+   space above it. */
+.header-logo.hw-logo {
+  --hw-chair: 2rem;
+  height: calc(var(--hw-chair) * 2313 / 1635);
+  aspect-ratio: 1499 / 2313;
+  margin: calc(var(--hw-chair) * -648 / 1635) calc(var(--hw-chair) * -1 / 1635) calc(var(--hw-chair) * -30 / 1635) calc(var(--hw-chair) * -72 / 1635);
+}
+
+/* The spider under the settings button: hangs on a thread from behind it,
+   swaying; climbs back up when tapped */
+:root[data-season="halloween"] #settings-btn { z-index: 1; }
+
+.hw-dangler {
+  --hw-len: 58px;
+  --hw-dur: 1.6s;
+  --hw-ease: cubic-bezier(.3, 1.35, .5, 1);
+  position: absolute;
+  z-index: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.hw-dangler--up { --hw-len: 0px; }
+
+.hw-dangler--climbing {
+  --hw-dur: 0.45s;
+  --hw-ease: cubic-bezier(.5, 0, .75, .4);
+}
+
+.hw-dangler-sway {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  animation: hw-sway 3.2s ease-in-out infinite alternate;
+}
+
+.hw-dangler-line {
+  position: absolute;
+  left: -0.5px;
+  top: 0;
+  width: 1px;
+  height: var(--hw-len);
+  background: var(--hw-thread);
+  transition: height var(--hw-dur) var(--hw-ease);
+}
+
+.hw-dangler-bug {
+  position: absolute;
+  left: 0;
+  top: var(--hw-len);
+  margin: -6px;
+  padding: 6px;
+  border: 0;
+  background: none;
+  transform: translate(-50%, -2px);
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  transition: top var(--hw-dur) var(--hw-ease);
+}
+
+.hw-dangler-bug svg { width: 26px; height: 26px; display: block; }
+.hw-legs { transform-origin: 13px 13px; }
+.hw-dangler--climbing .hw-legs,
+.hw-walker .hw-legs { animation: hw-wiggle .1s linear infinite alternate; }
+
+body.detail-open .hw-dangler { display: none; }
+
+@keyframes hw-sway {
+  from { transform: rotate(-5deg); }
+  to { transform: rotate(5deg); }
+}
+
+@keyframes hw-wiggle {
+  from { transform: scaleY(.85); }
+  to { transform: scaleY(1.08); }
+}
+
+/* Bats and the spider walking on the tab bar fly in a layer over the app.
+   It, and the candy's canvas, stop short of the bottom safe area: iOS
+   Safari turns its bottom bar solid when a fixed element reaches down
+   there. */
+.hw-sky {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1001;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hw-bat,
+.hw-walker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.hw-bat svg { display: block; overflow: visible; }
+
+.hw-bat-wing {
+  transform-box: view-box;
+  transform-origin: 20px 9px;
+  animation: hw-flap var(--hw-flap, .17s) ease-in-out infinite alternate;
+}
+
+.hw-bat-shape { fill: var(--hw-spider); stroke: var(--hw-spider-edge); stroke-width: 0.7; stroke-linejoin: round; }
+
+@keyframes hw-flap {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(-0.35); }
+}
+
+.hw-candy {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1002;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-ghost { animation: none; transform: translateX(34%) rotate(-6deg); }
+  .hw-ghost svg,
+  .hw-map-ghost svg,
+  .hw-dangler-sway { animation: none; }
+  .hw-dangler-line,
+  .hw-dangler-bug { transition: none; }
+}
+
+/* The season's banner (utils/season.js): a tinted glass box with a short
+   message at the top of the Favourites section, until closed. Vitrium's
+   setGlassTint() picks its text colour. */
+.season-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 0.6rem 0.85rem 1rem;
+  border-radius: var(--radius-xl);
+  text-align: start;
+}
+
+.season-banner__icon {
+  flex: none;
+  font-size: 1.75rem;
+}
+
+.season-banner__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.season-banner__title {
+  margin: 0;
+  font-size: var(--text-100);
+  font-weight: 800;
+}
+
+.season-banner__body {
+  margin: 0.15rem 0 0;
+  font-size: var(--text-85);
+  line-height: 1.35;
+  opacity: 0.9;
+}
+
+.season-banner__close {
+  flex: none;
+  align-self: flex-start;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.35rem 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: inherit;
+  font-size: 1.1rem;
+  opacity: 0.85;
+  -webkit-tap-highlight-color: transparent;
+}

@@ -6,14 +6,17 @@
   margin-bottom: 1.25rem;
 }
 
-.favourites-carousel {
+.favourites-strip {
   /* Distance from the section edge to where the header text sits. The carousel
      bleeds out by this much (negative margin) and pads back in by the same, so
      its first/last card lines up with the header while *scrolled* cards run
      out to the container edge — and, on desktop, slide behind the glass side
-     rail (see the media query). Mobile: matches .tab-content's 1rem padding. */
+     rail (see the media query). Mobile: matches .tab-content's 1rem padding.
+     --bleed-right is how far it actually bleeds on the right (none on desktop,
+     where the right edge is the middle of the page). */
   --fade-left: 1rem;
   --fade-right: 1rem;
+  --bleed-right: var(--fade-right);
 
   /* Visual fade-ramp width, kept separate from the bleed above: on desktop the
      bleed is large (past the side rail) but the ramp stays short so cards read
@@ -22,12 +25,61 @@
   --mask-left: var(--fade-left);
   --mask-right: var(--fade-right);
 
-  /* overflow-x: auto forces overflow-y to clip too, and the mask clips to the
-     border-box — both would cut off the cards' 40px-blur drop shadows top &
-     bottom. Reserve vertical room with padding (grows the border-box) and pull
-     it back out with an equal negative margin, so nothing moves. Needs to
-     exceed the shadow's reach (~40px). */
+  /* overflow-x: auto forces overflow-y to clip too, which would cut off the
+     cards' 40px-blur drop shadows top & bottom. Reserve vertical room with
+     padding (grows the border-box) and pull it back out with an equal
+     negative margin, so nothing moves. Needs to exceed the shadow's reach
+     (~40px). */
   --shadow-room: 3rem;
+
+  /* Contains the carousel's margins, so the fades below can be placed on
+     its border box from the same variables. */
+  display: flow-root;
+  position: relative;
+}
+
+/* Soft fade at both edges so cards scrolling in/out and half-visible ones
+   dissolve rather than hard-clip: the page background, fading out over the
+   carousel's edges. Not a mask on the carousel: Chrome caches a masked
+   layer, and the folders' glass blur inside it (.bo-card-frost) came out
+   stale whenever nothing on the page was animating. So these need a plain
+   page behind the strip, which it has. Ramp widths match the paddings, so a
+   card at rest starts exactly where the fade has already gone. */
+.favourites-strip::before,
+.favourites-strip::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: calc(0.75rem - var(--shadow-room));
+  bottom: calc(-1 * var(--shadow-room));
+  pointer-events: none;
+}
+
+.favourites-strip::before {
+  left: calc(-1 * var(--fade-left));
+  width: var(--mask-left);
+  background: linear-gradient(to right, var(--background-color), transparent);
+}
+
+.favourites-strip::after {
+  right: calc(-1 * var(--bleed-right));
+  width: var(--mask-right);
+  background: linear-gradient(to left, var(--background-color), transparent);
+}
+
+.favourites-strip:has(> .favourites-carousel[hidden])::before,
+.favourites-strip:has(> .favourites-carousel[hidden])::after {
+  display: none;
+}
+
+.favourites-carousel {
+  /* A card's width in the strip. Keep these roughly the size of an
+     Available-results card (grid min track is 9.5rem) rather than letting
+     them balloon. */
+  --fav-card-w: clamp(9.5rem, 42vw, 11rem);
+
+  /* Containing block for a card animating out of it (components/favourites.js). */
+  position: relative;
 
   display: flex;
   /* Don't stretch cards to the row height — that would give them a definite
@@ -40,7 +92,7 @@
   margin-top: calc(0.75rem - var(--shadow-room));
   margin-bottom: calc(-1 * var(--shadow-room));
   margin-left: calc(-1 * var(--fade-left));
-  margin-right: calc(-1 * var(--fade-right));
+  margin-right: calc(-1 * var(--bleed-right));
   padding-block: var(--shadow-room);
   padding-left: var(--fade-left);
   padding-right: var(--fade-right);
@@ -54,26 +106,6 @@
   scroll-snap-type: x proximity;
 
   scrollbar-width: none;
-
-  /* Soft fade at both edges so cards scrolling in/out and half-visible ones
-     dissolve rather than hard-clip. The mask sits on the scroll viewport, so
-     it stays pinned to the edges while content scrolls under it. Ramp widths
-     match the paddings, so a card at rest starts exactly where the mask is
-     already fully opaque. */
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 var(--mask-left),
-    #000 calc(100% - var(--mask-right)),
-    transparent
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 var(--mask-left),
-    #000 calc(100% - var(--mask-right)),
-    transparent
-  );
 }
 
 .favourites-carousel::-webkit-scrollbar {
@@ -82,9 +114,7 @@
 
 .favourites-carousel > .classroom-card {
   scroll-snap-align: center;
-  /* Keep these roughly the size of an Available-results card
-     (grid min track is 9.5rem) rather than letting them balloon. */
-  flex: 0 0 clamp(9.5rem, 42vw, 11rem);
+  flex: 0 0 var(--fav-card-w);
   height: auto; /* height comes from width × aspect-ratio, like in the grid */
 
   /* The grid uses content-visibility: auto for long lists; here there are only
@@ -93,6 +123,20 @@
      Render them normally. */
   content-visibility: visible;
   contain-intrinsic-size: auto;
+}
+
+/* A favourite building's folder (components/building-folder.js): as wide as
+   the classroom cards around it, but its own proportions, not theirs:
+   stretched to a portrait card it looked pulled tall. 174px (FOLDER_H less
+   the compact headroom) at a 168px card, scaling with the width like the
+   cards do, so narrow grid tracks never leave it taller than them. Sits on
+   their bottom edge, in the strip and the expanded grid. */
+.favourites-carousel > .bo-card {
+  scroll-snap-align: center;
+  flex: 0 0 var(--fav-card-w);
+  height: auto;
+  aspect-ratio: 168 / 174;
+  align-self: end;
 }
 
 .favourites-empty {
@@ -113,26 +157,115 @@
   initial-value: 16px; /* a registered initial value must be absolute: rem would invalidate the rule */
 }
 
-.favourites-carousel {
+.favourites-strip {
   transition: --fade-left var(--nav-shift);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .favourites-carousel {
+  .favourites-strip {
     transition: none;
   }
 }
 
 @media (min-width: 600px) {
-  .favourites-carousel {
+  .favourites-strip {
     --fade-left: calc(20px + var(--side-nav-width, 88px) + 1.5rem);
     --fade-right: 1.5rem;
+    --bleed-right: 0px;
     --mask-left: 1.5rem;
     --mask-right: 1.5rem;
-    margin-right: 0;
   }
 
-  .favourites-carousel > .classroom-card {
-    flex-basis: 10.5rem;
+  .favourites-carousel {
+    --fav-card-w: 10.5rem;
+  }
+}
+
+/* ── Expand toggle + expanded grid (desktop, >= 1100px) ─────────────────
+   The toggle only shows in the two-column layout while the carousel
+   overflows (components/favourites.js). Expanded, the section fills the whole
+   left column and the carousel becomes a wrapping card grid; the pickers move
+   over the results panel (style.css). */
+
+.favourites-header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.favourites-expand-btn {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  /* Keep the header the height it has without the button. */
+  margin-block: -0.5rem;
+  /* The carousel's shadow room (padding pulled back with a negative margin)
+     reaches up over the header; stay above it so clicks land here, and
+     above its edge fade (.favourites-strip::after, z-index 1). */
+  z-index: 2;
+}
+
+.favourites-expand-btn[hidden] {
+  display: none;
+}
+
+/* The arrows run corner to corner of their glyph, so at the size a round
+   icon takes (style.css's global .hgi-stroke 22px !important, hence this
+   one's) they reach the rim; smaller, they sit clear of it. */
+.favourites-expand-btn i.hgi-stroke {
+  font-size: 1.125rem !important;
+  line-height: 1;
+}
+
+@media (max-width: 1099.98px) {
+  .favourites-expand-btn {
+    display: none;
+  }
+}
+
+@media (min-width: 1100px) {
+  .favourites-expanded .favourites-carousel {
+    display: grid;
+    /* Same tracks as a results building section, so a favourite reads as
+       the same card in both columns. */
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr));
+    gap: 0.75rem;
+
+    /* Nothing scrolls sideways any more: drop the bleed, the shadow room and
+       the edge fade (unclipped, the shadows need no room). */
+    margin: 0.75rem 0 0;
+    padding: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+
+  .favourites-expanded .favourites-strip::before,
+  .favourites-expanded .favourites-strip::after,
+  .favourites-morphing .favourites-strip::before,
+  .favourites-morphing .favourites-strip::after {
+    display: none;
+  }
+
+  .favourites-expanded .favourites-carousel > :is(.classroom-card, .bo-card) {
+    width: auto;
+  }
+
+  /* While the expand/collapse morph runs (components/favourites.js), the
+     strip doesn't clip above or below, so cards can travel between it and
+     the grid in plain sight. Its sides still clip: cards off the end of the
+     strip would otherwise sit over the results column until the morph lands.
+     Not clip-path (Safari lets composited, i.e. animating, children escape
+     it). The edge fade is off meanwhile (above). */
+  .favourites-morphing .favourites-carousel {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
+  /* The header and pickers settle in from their leading corner, not the
+     middle of the column-wide box. */
+  .favourites-morphing > .section-header,
+  .favourites-morphing #available-classrooms-form {
+    transform-origin: top left;
   }
 }

@@ -1,0 +1,138 @@
+/* The favourite building popup (components/building-popup.js): Vitrium's
+   .lg-morph glass shell, centred, with a header over a scrolling grid of the
+   building's classroom cards. */
+
+/* Where the panel may sit: the screen minus the safe areas and a margin.
+   Measured, never painted. */
+.bpop-safe {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  right: calc(env(safe-area-inset-right, 0px) + 12px);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The detail page opened from one of its cards covers it: hidden, not
+   closed, so the page's close zooms back into that card. */
+body.detail-open .bpop-host,
+body.info-open .bpop-host {
+  visibility: hidden;
+}
+
+/* Header and list as two rows; only the list scrolls. */
+.bpop-inner,
+.lg-morph--open .bpop-inner {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.bpop-header {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.1rem 1rem 0.5rem 1.25rem;
+  text-align: start;
+  /* The swipe-to-dismiss handle (building-popup.js). */
+  touch-action: none;
+}
+
+.bpop-titles {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bpop-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-color-secondary);
+}
+
+.bpop-name {
+  margin: 2px 0 0;
+  font-size: 2.6rem;
+  font-weight: 850;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  color: var(--text-color-primary);
+}
+
+.bpop-alt {
+  margin-top: 4px;
+  overflow: hidden;
+  font-size: var(--text-100, 1rem);
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-color-primary);
+}
+
+.bpop-total {
+  margin-top: 4px;
+  font-size: var(--text-75, 0.8rem);
+  font-weight: 700;
+}
+
+.bpop-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bpop-btn.header-button {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.bpop-btn i {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.bpop-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 0 0.75rem 0.75rem;
+  /* The cards' shadows and press scale need a little room at the edges. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 0.75rem, #000 calc(100% - 0.75rem), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 0.75rem, #000 calc(100% - 0.75rem), transparent);
+}
+
+.bpop-grid {
+  padding: 0.5rem 0.25rem 0.75rem;
+}
+
+/* ── The folder while it is open as the panel ───────────────────────────
+   Its glass front is what the panel grows from and shrinks back into, so it
+   disappears at once; the back and the cards fade around it. */
+.bo-card--popped :is(.bo-card-front, .bo-card-frost) {
+  visibility: hidden;
+}
+
+.bo-card--popped :is(.bo-card-back, .bo-card-papers) {
+  opacity: 0;
+}
+
+.bo-card :is(.bo-card-back, .bo-card-papers) {
+  transition-property: transform, opacity;
+  transition-duration: 0.4s, 0.24s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bo-card :is(.bo-card-back, .bo-card-papers) {
+    transition: none;
+  }
+}

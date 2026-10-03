@@ -138,6 +138,17 @@
       transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
+    /* Relaunched where the user left off (utils/resume.js): no logo, just the
+       background, cleared as soon as the restored page is ready */
+    .resuming .splash-logo,
+    .resuming .splash-loading-label {
+      visibility: hidden;
+    }
+
+    .resuming .splash-overlay::before {
+      transition-duration: 0.15s;
+    }
+
     .splash-header-item {
       opacity: 0;
       transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -269,6 +280,18 @@
     // gating on those too (slow, cross-origin, sometimes blocked) would
     // reintroduce the render-blocking problem this async-loading trick was
     // meant to fix; their own swap-in cost is comparatively small.
+    // A home-screen app relaunched shortly after going to the background (iOS
+    // kills those almost right away) picks up where it was: utils/resume.js
+    // restores the state, and this marks the launch before first paint so the
+    // splash logo never shows. Not in a browser tab, where a reload starts over.
+    try {
+      var resume = JSON.parse(localStorage.getItem('poliAule_resume'));
+      var standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+      if (standalone && resume && Date.now() - resume.savedAt < 30 * 60 * 1000) {
+        document.documentElement.classList.add('resuming');
+      }
+    } catch (e) {}
+
     window.__onShellCssLoad = function (link) {
       link.media = 'all';
       if (!document.querySelector('link[data-shell-css][media="print"]')) {
@@ -305,18 +328,21 @@
   <link rel="stylesheet" href="./components/chip-pickers.css" />
   <link rel="stylesheet" href="./components/data-fetch-card.css" />
   <link rel="stylesheet" href="./components/time-picker.css" />
-  <link rel="stylesheet" href="./components/time-range-slider.css" />
+  <link rel="stylesheet" href="./components/hour-lens.css" />
   <link rel="stylesheet" href="./components/classroom-list.css" />
   <link rel="stylesheet" href="./components/building-overview.css" />
+  <link rel="stylesheet" href="./components/building-scrubber.css" />
   <link rel="stylesheet" href="./components/settings.css" />
   <link rel="stylesheet" href="./components/search-overlay.css" />
   <link rel="stylesheet" href="./components/classroom-detail.css" />
+  <link rel="stylesheet" href="./components/card-day-popover.css" />
   <link rel="stylesheet" href="./components/info-page.css" />
   <link rel="stylesheet" href="./components/info-hint.css" />
   <link rel="stylesheet" href="./components/bottom-nav.css" />
   <link rel="stylesheet" href="./components/campus-map.css" />
   <link rel="stylesheet" href="./components/campus-sheet.css" />
   <link rel="stylesheet" href="./components/favourites.css" />
+  <link rel="stylesheet" href="./components/building-popup.css" />
   <link rel="stylesheet" href="./components/keybindings.css" />
 
   <!-- Nunito font. Loaded non-blocking (media="print" swap trick): the
@@ -372,7 +398,7 @@
 
       <div class="header-title-container">
         <button class="header-title-btn" id="info-trigger" aria-label="About PoliAule">
-          <img src="/favicons/main/logo.webp" class="header-logo" width="434" height="500">
+          <img src="/favicons/main/logo.webp" class="header-logo" width="436" height="500">
 
           <div class="header-title-beta-container splash-header-item">
             <h2 class="header-title">PoliAule</h2>
@@ -429,13 +455,25 @@
 
       <!-- Favourite Classrooms -->
       <div class="favourites-section">
-        <div class="section-header">
+        <div class="section-header favourites-header">
           <h3 class="section-header-title"><i class="hgi-stroke hgi-star section-header-title-icon"
               aria-hidden="true"></i><span data-i18n="favourites.title">Favourites</span></h3>
+          <!-- Desktop only (>= 1100px), and only while the carousel overflows:
+               lets the favourites fill the whole left column as a grid, with
+               the pickers moving over the results (see components/favourites.js). -->
+          <button id="favourites-expand-btn" class="header-button favourites-expand-btn liquid-glass" type="button"
+            aria-controls="favourites-carousel" aria-expanded="false"
+            data-i18n-attr="aria-label:favourites.showAll" aria-label="Show all favourites" hidden>
+            <i class="hgi-stroke hgi-arrow-expand-01" aria-hidden="true"></i>
+          </button>
         </div>
-        <div id="favourites-carousel" class="favourites-carousel" hidden></div>
-        <p id="favourites-empty" class="favourites-empty secondary" data-i18n="favourites.empty">Star a classroom to pin
-          it here.</p>
+        <!-- Holds the strip's edge fade (favourites.css): a mask on the strip
+             itself left Chrome showing stale glass blur in the folders. -->
+        <div class="favourites-strip">
+          <div id="favourites-carousel" class="favourites-carousel" hidden></div>
+        </div>
+        <p id="favourites-empty" class="favourites-empty secondary" data-i18n="favourites.empty">Star a classroom or a
+          building to pin it here.</p>
       </div>
 
       <div class="section-header">
@@ -516,7 +554,7 @@
       <label class="secondary" data-i18n="footer.versionInfo"></label>
     </button>
     <div id="version-info-content" hidden>
-      <img src="/favicons/main/logo.webp" class="changelog-logo" width="434" height="500" />
+      <img src="/favicons/main/logo.webp" class="changelog-logo" width="436" height="500" />
       <h1 class="popover-title" data-i18n="footer.versionInfo"></h1>
       <div class="changelog-container">
         <h2 class="popover-subtitle" data-i18n="footer.whatsNew">What's new?</h2>
@@ -529,6 +567,7 @@
           <li data-i18n="changelog.item5"></li>
           <li data-i18n="changelog.item6"></li>
           <li data-i18n="changelog.item7"></li>
+          <li data-i18n="changelog.item8"></li>
         </ul>
 
         <a href="https://github.com/SummaCristian/poliaule" target="_blank" class="hero-badge">

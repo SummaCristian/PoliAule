@@ -26,7 +26,8 @@
      transform) descendants against an ancestor's clip-path, so the blown-up
      grid escaped the frame and rode over the list.
    `overflow-clip-margin` keeps a little sideways room for the shadows where
-   it's supported; a tight clip is the harmless fallback. */
+   it's supported; a tight clip is the harmless fallback. building-overview.js
+   narrows it to the stage's distance from the screen's edges. */
 .bo-stage {
   position: relative;
   width: 100%;
@@ -44,8 +45,11 @@
 
 /* backdrop-filter is far too expensive to animate — drop it on every glass
    surface involved for the duration of the morph. It's restored the moment
-   the .bo-animating class comes off. */
-#available-classrooms-results.bo-animating :is(.bo-card, .classroom-card, .building-section-titles, .bo-close, .bo-title) {
+   the .bo-animating class comes off (ramped back in by #blurIn in
+   building-overview.js, not snapped). The grid prebuilt during the press
+   (.bo-pregrid, see building-overview.js) goes without it from the start. */
+#available-classrooms-results.bo-animating :is(.bo-card-frost, .classroom-card, .building-section-titles, .bo-close, .bo-title),
+.bo-pregrid :is(.bo-card-frost, .bo-close, .bo-title) {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
@@ -112,7 +116,9 @@
    scrolls it exactly as it scrolled the list it replaced. */
 .bo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  /* Folder-width columns: the folders read best around 10-12rem wide; wider
+     and the three cards inside spread thin across a mostly empty back. */
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
   gap: 0.85rem;
   padding: 0.25rem 0.25rem 1rem;
 }
@@ -257,128 +263,334 @@
   font-size: 1.25rem;
 }
 
-/* ── Card ─────────────────────────────────────────────────────────────
-   Same glass material + 0.5px gradient stroke as .building-section-titles. */
+/* ── Card: a glass folder ─────────────────────────────────────────────
+   Built by components/building-folder.js, used here and in the Campus sheet.
+   Three layers, back to front: .bo-card-back (an SVG panel with a tab, a
+   little taller than the front), .bo-card-papers (up to three classroom
+   photos, card-shaped) and .bo-card-front (Vitrium glass).
+   --open drives the whole "opening" motion: 0 at rest, 1 on hover, 1.4
+   while pressed. */
 .bo-card {
+  --open: 0;
+  --tilt: 4deg;
+  /* Softer than the app's text colours: this sits on glass, over photos. */
+  --folder-text: #2d2d31;
+  --folder-text-secondary: #6c6c72;
+  --folder-back: rgba(255, 255, 255, 0.55);
+  --folder-back-edge: rgba(0, 0, 0, 0.08);
+  --folder-back-shadow: rgba(0, 0, 0, 0.07);
+  --folder-card-contact: rgba(0, 0, 0, 0.22);
+  --folder-tuck: rgba(0, 0, 0, 0.24);
+  --folder-outline-fill: rgba(26, 26, 26, 0.025);
+  --folder-outline-stroke: rgba(26, 26, 26, 0.16);
+
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  contain: paint;
-
-  display: flex;
-  flex-direction: column;
-  min-height: 11.5rem;
-  padding: 0.9rem;
-  border-radius: var(--radius-lg);
+  display: block;
+  height: 204px; /* FOLDER_H in building-folder.js */
+  /* No `perspective` here: that would put the tilted layers in one 3D
+     context, and Firefox then depth-sorts the flat cards in front of the
+     tilted glass. Each tilted layer carries its own perspective() instead,
+     so all three stack in plain DOM order everywhere. */
   text-align: start;
-
-  background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-lg));
-  -webkit-backdrop-filter: blur(var(--lg-blur-lg));
-
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 30px 0 var(--lg-shadow-color);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-.bo-card::after {
-  content: "";
-  position: absolute;
-  inset: -0.5px;
-  border-radius: inherit;
-  padding: 0.5px;
-
-  background: var(--lg-stroke-gradient);
-  opacity: var(--lg-stroke-opacity);
-
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-
-  pointer-events: none;
+@media (prefers-color-scheme: dark) {
+  .bo-card {
+    --folder-text: #d9d9de;
+    --folder-text-secondary: #9c9ca3;
+    --folder-back: rgba(255, 255, 255, 0.055);
+    --folder-back-edge: rgba(255, 255, 255, 0.12);
+    --folder-back-shadow: rgba(0, 0, 0, 0.45);
+    --folder-card-contact: rgba(0, 0, 0, 0.6);
+    --folder-tuck: rgba(0, 0, 0, 0.7);
+    --folder-outline-fill: rgba(234, 234, 234, 0.025);
+    --folder-outline-stroke: rgba(234, 234, 234, 0.17);
+  }
 }
 
-.bo-card[role="button"] {
-  transition: transform 0.16s ease;
+.bo-card:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--text-color-accent) 72%, white);
+  outline-offset: 3px;
+  border-radius: 18px;
 }
 
-.bo-card[role="button"]:active {
-  transform: scale(0.97);
-}
+/* Hover is .bo-card--hover, set by building-folder.js from any pointer but a
+   finger: an iPad with a trackpad, mouse or Pencil still reports
+   (hover: none), so a :hover inside that media query never fired there.
+   Press is .bo-card--pressed, not :active: a finger sets :active on landing,
+   so a scroll starting on a folder opened it (see trackPointer). */
+.bo-card[role="button"].bo-card--hover { --open: 1; }
+.bo-card[role="button"].bo-card--pressed { --open: 1.4; }
 
 .bo-card--inactive {
   opacity: 0.5;
 }
 
-/* ── Card body ────────────────────────────────────────────────────────*/
-.bo-card-body {
-  position: relative;
-  z-index: 2;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.7rem;
+/* Back: its path is sized to the folder's width by building-folder.js. */
+.bo-card-back {
+  position: absolute;
+  left: 0;
+  top: 30px; /* BACK_TOP */
+  overflow: visible;
+  filter: drop-shadow(0 2px 6px var(--folder-back-shadow));
+  transform-origin: 50% 100%;
+  transform: perspective(700px) rotateX(calc(var(--open) * 4deg));
+  transition: transform 0.4s cubic-bezier(0.3, 1.35, 0.5, 1);
 }
 
-.bo-card-head {
+.bo-card-back path {
+  fill: var(--folder-back);
+  stroke: var(--folder-back-edge);
+  stroke-width: 1;
+}
+
+/* Papers: card-shaped classroom photos, sized and placed by
+   building-folder.js. A blank paper stands in when a room has no photo. */
+.bo-card-papers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bo-paper {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--background-color-secondary);
+  box-shadow:
+    0 0 0 0.5px var(--lg-outline),
+    0 2px 6px 0 var(--folder-card-contact);
+  transform:
+    translate(calc(var(--dx, 0px) * var(--open)), calc(-26px * var(--open)))
+    rotate(calc(var(--rot, 0deg) * (1 + 0.25 * var(--open))));
+  transition: transform 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.bo-paper:nth-child(2) { transition-delay: 0.025s; }
+.bo-paper:nth-child(3) { transition-delay: 0.05s; }
+
+.bo-paper img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The front's blur. Chrome drops backdrop-filter on any element with a 3D
+   transform, so it can't live on the tilted front: this untilted twin sits
+   right behind it and only stretches vertically, by how much taller the
+   front looks once tilted toward you (cos a * p / (p - h sin a), with the
+   700px perspective and the front's 136px height). The top corners of the
+   front widen slightly past it when fully open — a few px, under 70% tint. */
+.bo-card-frost {
+  --a: calc(var(--tilt) + var(--open) * 9deg);
+  position: absolute;
+  inset: 68px 0 0;
+  border-radius: 18px;
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+  backdrop-filter: blur(var(--lg-blur-md));
+  transform-origin: 50% 100%;
+  transform: scaleY(calc(cos(var(--a)) * 700 / (700 - 136 * sin(var(--a)))));
+  transition: transform 0.4s cubic-bezier(0.3, 1.35, 0.5, 1);
+  pointer-events: none;
+}
+
+/* Front: Vitrium's regular glass (.lg-glass: tint, rim and the 0.5px
+   gradient stroke), leaning toward you from its bottom edge. */
+.bo-card-front {
+  position: absolute;
+  inset: 68px 0 0; /* FRONT_TOP */
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.1rem;
+  padding: 10px 13px 11px;
+  border-radius: 18px;
+  overflow: hidden;
+  color: var(--folder-text);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--lg-shadow), 0 -6px 14px -6px var(--folder-tuck);
+  transform-origin: 50% 100%;
+  transform: perspective(700px) rotateX(calc(-1 * (var(--tilt) + var(--open) * 9deg)));
+  transition: transform 0.4s cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+
+/* Compact (building-folder.js COMPACT_LIFT): no headroom above the tab, so
+   the folder's top lines up with the classroom cards beside it, and the front
+   gets that height back. A container, for the narrow case below. */
+.bo-card--compact {
+  container-type: inline-size;
+}
+
+.bo-card--compact .bo-card-back {
+  top: 0;
+}
+
+/* Its size follows the classroom cards beside it, which can get narrower
+   than the ~170px folder the front's type is set for. So below that the
+   whole front scales with the width: --u is 1px at 170px and wider,
+   proportionally less under it (cqi: the folder is the container). Its top
+   too: the folder's height follows its width (favourites.css), and a fixed
+   inset would leave the front too short for its own text. */
+.bo-card--compact :is(.bo-card-front, .bo-card-frost) {
+  --u: min(1px, 100cqi / 170);
+  inset: calc(38 * var(--u)) 0 0;
+}
+
+.bo-card--compact .bo-card-front {
+  padding: calc(10 * var(--u)) calc(13 * var(--u)) calc(11 * var(--u));
+}
+
+.bo-card--compact .bo-card-kicker { font-size: calc(10 * var(--u)); }
+.bo-card--compact .bo-card-name { font-size: calc(50 * var(--u)); margin-top: calc(2 * var(--u)); }
+.bo-card--compact .bo-card-alt { font-size: calc(15 * var(--u)); margin-top: calc(3 * var(--u)); }
+.bo-card--compact .bo-card-total { font-size: calc(12 * var(--u)); margin-top: calc(4 * var(--u)); }
+.bo-card--compact .bo-card-alt + .bo-card-total { margin-top: calc(1 * var(--u)); }
+.bo-card--compact .bo-card-counts { gap: calc(5 * var(--u)); }
+
+.bo-card--compact .bo-count {
+  gap: calc(4 * var(--u));
+  padding: calc(3 * var(--u)) calc(7 * var(--u)) calc(3 * var(--u)) calc(6 * var(--u));
+  font-size: calc(12 * var(--u));
+}
+
+/* Too narrow for the outline beside the footer (the expanded Favourites
+   grid): the footer gets the whole row. */
+@container (max-width: 155px) {
+  .bo-card--compact .bo-card-outline {
+    display: none;
+  }
+
+  .bo-card--compact .bo-card-footer {
+    max-width: 100%;
+  }
+}
+
+/* The building's footprint (utils/building-outline.js), small and whole in
+   the bottom-right corner. */
+.bo-card-outline {
+  position: absolute;
+  right: 11px;
+  bottom: 10px;
+  width: 44px;
+  height: 44px;
+  overflow: visible;
+  pointer-events: none;
+  fill: var(--folder-outline-fill);
+  stroke: var(--folder-outline-stroke);
+  stroke-width: 1.1px;
+  stroke-linejoin: round;
+}
+
+.bo-card-outline path {
+  vector-effect: non-scaling-stroke;
+}
+
+.bo-card-kicker,
+.bo-card-name,
+.bo-card-alt,
+.bo-card-total,
+.bo-card-footer {
+  position: relative;
+}
+
+.bo-card-kicker {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--folder-text-secondary);
 }
 
 .bo-card-name {
-  font-size: var(--text-125);
-  font-weight: 800;
-  line-height: 1.15;
-  color: var(--text-color-primary);
+  margin-top: 2px;
+  font-size: 50px;
+  font-weight: 850;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
 }
 
+/* flex-shrink: 0 because overflow: hidden drops its min-height to 0, which
+   made it the one row to give way when the front ran short (the overview's
+   136px front with the count pills): the descenders got clipped. */
 .bo-card-alt {
-  font-size: var(--text-80);
-  font-weight: 600;
-  color: var(--text-color-secondary);
+  flex-shrink: 0;
+  max-width: 100%;
+  margin-top: 3px;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bo-card-total {
-  margin-top: 0.15rem;
-  font-size: var(--text-72);
+  margin-top: 4px;
+  font-size: 12px;
   font-weight: 700;
+  color: var(--folder-text-secondary);
+}
+
+.bo-card-alt + .bo-card-total {
+  margin-top: 1px;
+}
+
+.bo-card-footer {
+  margin-top: auto;
+  max-width: calc(100% - 50px); /* clear of the outline */
 }
 
 .bo-card-counts {
-  margin-top: auto;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 5px;
 }
 
 .bo-count {
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.3rem;
-
-  padding: 0.22rem 0.5rem;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px 3px 6px;
   border-radius: var(--radius-pill);
-
-  background: color-mix(in srgb, currentColor 14%, transparent);
-  font-size: var(--text-70);
-  font-weight: 700;
-  line-height: 1.2;
+  background: color-mix(in srgb, currentColor 13%, transparent);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
   white-space: nowrap;
 }
 
-.bo-count b {
-  font-size: var(--text-85);
-  font-weight: 800;
+.bo-count i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* The status word is for screen readers; the dot's colour carries it on screen. */
+.bo-count-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .bo-count.is-zero {
-  opacity: 0.32;
+  opacity: 0.35;
 }
 
 .bo-count.free           { color: var(--color-status-free); }
 .bo-count.partially-free { color: var(--color-status-partial); }
 .bo-count.occupied       { color: var(--color-status-busy); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bo-card-back,
+  .bo-paper,
+  .bo-card-frost,
+  .bo-card-front {
+    transition: none;
+  }
+}

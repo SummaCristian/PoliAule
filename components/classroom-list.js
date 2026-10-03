@@ -2,6 +2,8 @@ import { t } from '../i18n.js';
 import { escapeHtml, highlight } from '../utils/html.js';
 import { fetchThumbUrl, thumbUrlCache, markPhotoBroken, isPhotoBroken } from '../utils/photo.js';
 import { isFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
+import { createTimeFormatter } from '../utils/time-format.js';
+import { getClassroomTimeline } from '../available-rooms-script.js';
 
 // ---------- PHOTO ----------
 
@@ -27,14 +29,112 @@ const _photoObserver = new IntersectionObserver((entries) => {
 
 // ---------- CARD ----------
 
+// Shorter than the labels elsewhere (search rows, detail page): the card's
+// status column is only ~75px wide, and the timeline under it already shows
+// when things change, so "soon" becomes the time it happens.
 const STATUS_KEYS = {
   'free': 'status.free',
-  'partially-free': 'status.partiallyFree',
-  'occupied': 'status.occupied',
-  'free-soon': 'status.freeSoon',
-  'occupied-soon': 'status.occupiedSoon',
+  'partially-free': 'status.partial',
+  'occupied': 'status.cardBusy',
+  'free-soon': 'status.cardFrom',
+  'occupied-soon': 'status.cardUntil',
   'closed': 'status.closed',
 };
+
+function _formatTime(hhmm) {
+  const d = new Date();
+  d.setHours(Number(hhmm.slice(0, 2)), Number(hhmm.slice(3, 5)), 0, 0);
+  return createTimeFormatter({ hour: 'numeric', minute: '2-digit' }).format(d);
+}
+
+// Short forms for when the full label doesn't fit next to the name (see
+// _fitObserver): the soon ones drop to the bare time, the bar shows which way
+const SHORT_KEYS = {
+  'partially-free': 'status.cardPartialShort',
+  'occupied': 'status.cardBusyShort',
+};
+
+// { full, short } for the card's label; short is the same as full when there's
+// nothing shorter to say
+function _statusLabel(status, timeline) {
+  const key = STATUS_KEYS[status];
+  if (!key) return null;
+  if (status === 'free-soon' || status === 'occupied-soon') {
+    // No switch time to show (shouldn't happen): fall back to the long label
+    if (!timeline?.nextChange) {
+      const full = t(status === 'free-soon' ? 'status.freeSoon' : 'status.occupiedSoon');
+      return { full, short: full };
+    }
+    const time = _formatTime(timeline.nextChange);
+    return { full: t(key).replace('{time}', time), short: time };
+  }
+  const full = t(key);
+  return { full, short: SHORT_KEYS[status] ? t(SHORT_KEYS[status]) : full };
+}
+
+// Fits a card's label next to its name, which depends on both the name's
+// length and the card's width: the full label, else the short form, else just
+// a dot in the status colour (the timeline under it carries the detail). Only
+// a name too long for even the dot gets its label wrapped onto a line of its
+// own, which floats the name up, and then in full.
+// Watches the card (it resizes with the grid) and the name (it gets a size
+// when the card first lays out, cards being content-visibility:auto, and
+// changes with a late font swap), never the row itself: the swap changes the
+// row's height, and reacting to a size this callback just changed is a
+// "ResizeObserver loop" error. "Doesn't fit" is read off the layout itself,
+// the label having wrapped below the name, rather than summed from rounded
+// widths, which missed labels over by a fraction of a pixel. Each step writes
+// every row of the callback before reading them back, one reflow per step.
+// Sizes are remembered per element: a list hidden and shown again (the
+// building overview does that on every open and close) reports every card at
+// 0×0 and then at the size it already had, and neither needs a refit.
+const _fitSizes = new WeakMap();
+const _fitObserver = new ResizeObserver((entries) => {
+  // A card re-rendered away reports in once more on leaving the page: let it go
+  for (const e of entries) if (!e.target.isConnected) _fitObserver.unobserve(e.target);
+  const changed = entries.filter((e) => {
+    if (!e.target.isConnected || !e.contentRect.width) return false;
+    const size = `${e.contentRect.width}x${e.contentRect.height}`;
+    if (_fitSizes.get(e.target) === size) return false;
+    _fitSizes.set(e.target, size);
+    return true;
+  });
+  const rowOf = (target) => target.closest('.classroom-card')?.querySelector('.classroom-card-title-row');
+  let rows = [...new Set(changed.map(e => rowOf(e.target)))]
+    .filter(r => r?.querySelector('.classroom-status-txt'));
+  const label = (row) => row.querySelector('.classroom-status-txt');
+  const wraps = (row) =>
+    label(row).getBoundingClientRect().top >= row.querySelector('.classroom-name').getBoundingClientRect().bottom - 1;
+
+  rows.forEach(r => { const l = label(r); l.classList.remove('is-dot'); l.textContent = l.dataset.full; });
+  rows = rows.filter(wraps);
+  rows.forEach(r => { const l = label(r); l.textContent = l.dataset.short; });
+  rows = rows.filter(wraps);
+  rows.forEach(r => { const l = label(r); l.textContent = ''; l.classList.add('is-dot'); });
+  // A name that fills the whole row: the label has to wrap anyway, so it may
+  // as well say everything on its own line
+  rows = rows.filter(wraps);
+  rows.forEach(r => { const l = label(r); l.classList.remove('is-dot'); l.textContent = l.dataset.full; });
+});
+
+// The small timeline under the status: the window as a track, booked time
+// filled in the status's busy colour, time the building is closed hatched,
+// and a tick at now. Purely visual — the label says the same thing.
+function _timelineHtml(timeline) {
+  const span = timeline.to - timeline.from;
+  const pct = (m) => `${((m - timeline.from) / span * 100).toFixed(2)}%`;
+  const seg = (cls, [s, e]) =>
+    `<span class="classroom-card-timeline-seg ${cls}" style="left:${pct(s)};width:${((e - s) / span * 100).toFixed(2)}%"></span>`;
+  return `
+    <div class="classroom-card-timeline" aria-hidden="true">
+      <div class="classroom-card-timeline-track">
+        ${timeline.closed.map(r => seg('is-closed', r)).join('')}
+        ${timeline.busy.map(r => seg('is-busy', r)).join('')}
+      </div>
+      ${timeline.now !== null ? `<span class="classroom-card-timeline-now" style="left:${pct(timeline.now)}"></span>` : ''}
+    </div>
+  `;
+}
 
 // Builds and returns a Card DOM element for the classroom passed as parameter.
 // Every card shares the same footprint (aspect-ratio-based, see .classroom-card
@@ -53,13 +153,22 @@ const STATUS_KEYS = {
 // results) to render a top-right star marker when the room is a favourite, and
 // to opt the card into live updates from favourites.js. Omit it in the
 // Favourites carousel itself, where every card is already a favourite.
-export function buildCardForClassroom(classroom, building, fromTime = null, toTime = null, isToday = false, date = null, query = '', showFavouriteStar = false) {
+//
+// showBuilding is optional — pass false where the cards already sit under
+// their building's header (Available results, the Campus building page and
+// favourite building popup): the building line goes, and the timeline runs
+// the card's full width instead.
+export function buildCardForClassroom(classroom, building, fromTime = null, toTime = null, isToday = false, date = null, query = '', showFavouriteStar = false, showBuilding = true) {
   const hasPhoto = !!classroom.idfoto;
-  const statusKey = STATUS_KEYS[classroom.status];
-  const statusLabel = statusKey ? t(statusKey) : '';
+  // The queried range on its date (Available results), else around now
+  const timeline = fromTime && toTime && date
+    ? getClassroomTimeline(classroom.id, date.replace(/-/g, ''), fromTime, toTime)
+    : getClassroomTimeline(classroom.id);
+  const statusLabel = _statusLabel(classroom.status, timeline);
 
   const el = document.createElement('div');
   el.className = hasPhoto ? 'classroom-card classroom-card--photo' : 'classroom-card classroom-card--plain';
+  if (!showBuilding) el.classList.add('classroom-card--no-building');
   el.dataset.openClassroom = classroom.id;
   if (fromTime) el.dataset.queryFrom = fromTime;
   if (toTime) el.dataset.queryTo = toTime;
@@ -76,14 +185,26 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
     ? `<span class="classroom-card-fav-star" aria-hidden="true">${FILLED_STAR_SVG}</span>`
     : '';
 
-  const buildingLine = building.altName ? `${building.name} · ${building.altName}` : building.name;
-
+  // Label on the name's row and timeline on the building's, so the name sits
+  // right on top of the building line whether or not there's an alt name.
+  // .classroom-card-text is the block the photo's fade is hung from (see its
+  // ::before in classroom-list.css), so the fade follows its real height.
   const contentHtml = `
     <div class="classroom-card-content">
-      <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${highlight(classroom.name, query)}</h4>
+      <div class="classroom-card-text">
+      <div class="classroom-card-title-row">
+        <h4 class="classroom-name" title="${escapeHtml(classroom.name)}">${highlight(classroom.name, query)}</h4>
+        ${statusLabel ? `<span class="classroom-status-txt ${classroom.status}" data-full="${escapeHtml(statusLabel.full)}" data-short="${escapeHtml(statusLabel.short)}">${escapeHtml(statusLabel.full)}</span>` : ''}
+      </div>
       <div class="classroom-card-meta-row">
-        <p class="classroom-card-building">${t('building.prefix')} ${highlight(buildingLine, query)}</p>
-        ${statusLabel ? `<span class="classroom-status-txt ${classroom.status}">${statusLabel}</span>` : ''}
+        ${showBuilding ? `
+          <p class="classroom-card-building">
+            <span>${t('building.prefix')} ${highlight(building.name, query)}</span>
+            ${building.altName ? `<span>${highlight(building.altName, query)}</span>` : ''}
+          </p>
+        ` : ''}
+        ${timeline ? _timelineHtml(timeline) : ''}
+      </div>
       </div>
     </div>
   `;
@@ -104,7 +225,6 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
     el.innerHTML = `
       <div class="classroom-card-clip">
         <img class="classroom-card-photo${cachedUrl ? ' loaded' : ''}" alt=""${cachedUrl ? ` src="${escapeHtml(cachedUrl)}"` : ''}>
-        <div class="classroom-card-scrim"></div>
         ${contentHtml}
         ${favStarHtml}
       </div>
@@ -121,6 +241,11 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
     }
   } else {
     el.innerHTML = `<div class="classroom-card-clip">${contentHtml}${favStarHtml}</div>`;
+  }
+
+  if (statusLabel) {
+    _fitObserver.observe(el);
+    _fitObserver.observe(el.querySelector('.classroom-name'));
   }
 
   return el;

@@ -10,6 +10,7 @@ import { createTabBar } from 'vitrium';
 import { t, onLanguageSwitch } from '../i18n.js';
 import { DEFAULT_TAB_KEY, LAST_TAB_KEY, getStartupTabId } from './settings.js';
 import { openSearchOverlay } from './search-overlay.js';
+import { resumeState } from '../utils/resume.js';
 
 const icon = (name) => `<i class="hgi-stroke ${name}" aria-hidden="true"></i>`;
 
@@ -51,7 +52,8 @@ function persist(targetId) {
 }
 
 /* --- The bar ------------------------------------------------------------- */
-const startupId = getStartupTabId();
+// A relaunch that resumes (utils/resume.js) reopens the tab it left on
+const startupId = resumeState?.tab ?? getStartupTabId();
 const startup = TABS.find(tab => tab.id === startupId) ?? TABS[0];
 
 const bar = createTabBar(root, {

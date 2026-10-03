@@ -124,6 +124,9 @@ body.info-open .header-title-btn {
 
 .info-hero-icon-wrap {
   position: relative;
+  /* No callout, selection or magnifier while the icon is held (_bindIconEgg) */
+  -webkit-touch-callout: none;
+  user-select: none;
   width: 120px;
   height: 120px;
   border-radius: 28%;
@@ -167,6 +170,20 @@ body.info-open .header-title-btn {
   transition: opacity 0.35s ease;
 }
 
+/* The egg photo (_bindIconEgg) is a cutout with a transparent background:
+   no rounded frame around it, just its own shape and shadow. */
+.info-hero-icon-wrap[data-egg] .info-hero-icon {
+  object-fit: contain;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.12));
+}
+
+.info-hero-icon-wrap[data-egg] .info-hero-glow {
+  object-fit: contain;
+}
+
 /* The icon's own colors glowing out from under it. */
 .info-hero-glow {
   position: absolute;
@@ -174,6 +191,7 @@ body.info-open .header-title-btn {
   width: calc(100% - 16px);
   height: calc(100% - 4px);
   border-radius: 28%;
+  object-fit: cover; /* the egg photo isn't square */
   filter: blur(28px) saturate(1.4);
   opacity: 0.7;
   transition: opacity 0.6s ease;
@@ -779,6 +797,9 @@ body.info-open .header-title-btn {
     0 1px 2px rgba(0, 0, 0, 0.04),
     0 4px 8px rgba(0, 0, 0, 0.08);
 
+  /* Taps on it shouldn't double-tap zoom */
+  touch-action: manipulation;
+
   /* Pops in with the first message */
   opacity: 0;
   transform: scale(0.75);
@@ -892,17 +913,64 @@ body.info-open .header-title-btn {
   100% { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; }
 }
 
+/* One more round of typing, before the secret message (see _bindSecretMessage),
+   which then takes the indicator's place and grows from its size */
+.about-me-section.is-visible .typing-indicator.is-typing {
+  animation: typing-indicator-once 1.5s ease-in-out forwards;
+}
+
+.about-me-section.is-visible .typing-indicator.is-done {
+  display: none;
+}
+
+@keyframes typing-indicator-once {
+  0%   { opacity: 0; max-height: 0; transform: scale(0.8); margin-bottom: 0; }
+  13%  { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+  100% { opacity: 1; max-height: 50px; transform: scale(1); margin-bottom: 3px; }
+}
+
+.message-bubble--secret {
+  white-space: pre-line;
+}
+
+/* A name in the secret message, in a book italic */
+.message-bubble--secret i {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.2em; /* smaller x-height than Nunito: brings it level */
+  line-height: 1;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/fonts/cormorant-garamond/cormorant-garamond-italic-latin.woff2') format('woff2');
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/fonts/cormorant-garamond/cormorant-garamond-italic-latin-ext.woff2') format('woff2');
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 @keyframes message-pop-in {
   0% {
     opacity: 0;
-    max-height: 0;
+    max-height: var(--bubble-from, 0);
     transform: translateX(-20px) translateY(10px) scale(0.8);
     padding-top: 0;
     padding-bottom: 0;
   }
   100% {
     opacity: 1;
-    max-height: 500px;
+    max-height: var(--bubble-h, 500px);
     transform: translateX(0) translateY(0) scale(1);
     padding-top: 0.7rem;
     padding-bottom: 0.7rem;

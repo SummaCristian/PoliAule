@@ -14,6 +14,10 @@ export class CampusChipPicker extends HTMLElement {
   // second instance can reuse this whole class without its `change` also
   // triggering the Available tab's own `campuschange` listener.
   changeEventName = 'campuschange';
+  // Whether secondary campuses (no classrooms, utils/secondary.js) are listed,
+  // in their own "Other" section. Only the Campus sheet's picker lists them:
+  // the Available tab has nothing to show for them.
+  includeSecondary = false;
 
   static observedAttributes = ['data-loading'];
 
@@ -63,7 +67,7 @@ export class CampusChipPicker extends HTMLElement {
   }
 
   // Re-applies translations: the "CAMPUS" label, the panel's title and the
-  // "Other cities" section header. Called on language switch from script.js.
+  // "Other cities" / "Other" section headers. Called on language switch from script.js.
   retranslate() {
     if (!this.#picker) return;
     this.#picker.setLabel(t('tabs.campus'));
@@ -74,10 +78,12 @@ export class CampusChipPicker extends HTMLElement {
 
   // Group by city, then split: cities that contain a grouped campus (Milano:
   // Città Studi / Bovisa) get their own section; standalone single-campus
-  // cities are collected under "Other cities".
+  // cities are collected under "Other cities". Secondary campuses go last,
+  // under "Other", when this picker lists them at all.
   #sections() {
+    const withBuildings = this.#staticData.filter(c => c.buildings.length > 0);
     const byCity = new Map();
-    for (const campus of this.#staticData.filter(c => c.buildings.length > 0)) {
+    for (const campus of withBuildings.filter(c => !c.secondary)) {
       if (!byCity.has(campus.city)) byCity.set(campus.city, []);
       byCity.get(campus.city).push(campus);
     }
@@ -90,6 +96,8 @@ export class CampusChipPicker extends HTMLElement {
       else others.push(...list);
     }
     if (others.length) sections.push({ label: t('campus.otherLabel'), options: others.map(toOption) });
+    const secondary = this.includeSecondary ? withBuildings.filter(c => c.secondary) : [];
+    if (secondary.length) sections.push({ label: t('campus.secondaryLabel'), options: secondary.map(toOption) });
     return sections;
   }
 

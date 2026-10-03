@@ -1,0 +1,277 @@
+/* ── Hour lens (components/hour-lens.js) ─────────────────────────────────────
+   The day's hourly slots as inset cells, with a tinted glass lens over the
+   chosen hours. It has no card of its own: the chip's morph panel (or the
+   docked .chip-dock on desktop) is its surface. Colours come from the glass
+   tokens, so both themes follow. */
+
+.hl {
+  --hl-cell: color-mix(in srgb, var(--lg-text) 7%, transparent);
+  --hl-cell-lo: rgba(0, 0, 0, 0.13);
+  --hl-cell-hi: rgba(255, 255, 255, 0.9);
+  --hl-fill: color-mix(in srgb, var(--lg-text) 10%, transparent);
+  --hl-fill-lit: color-mix(in srgb, var(--lg-accent) 55%, transparent);
+  --hl-hatch: color-mix(in srgb, var(--lg-text) 8%, transparent);
+  --hl-now: var(--lg-danger);
+  /* Strength of the lens's tinted shadow (dark backgrounds need more). */
+  --hl-glow-k: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  text-align: start;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  /* iOS draws a dark tap-highlight box over anything with touch handlers after
+     a short hold, where the element was when the press began; the lens's grab
+     area moves by transform, so the box was left behind. Inherited. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root[data-theme="dark"] .hl {
+  --hl-cell-lo: rgba(0, 0, 0, 0.55);
+  --hl-cell-hi: rgba(255, 255, 255, 0.07);
+  --hl-fill: color-mix(in srgb, var(--lg-text) 9%, transparent);
+  --hl-fill-lit: color-mix(in srgb, var(--lg-accent) 50%, transparent);
+  --hl-glow-k: 1.9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hl {
+    --hl-cell-lo: rgba(0, 0, 0, 0.55);
+    --hl-cell-hi: rgba(255, 255, 255, 0.07);
+    --hl-fill: color-mix(in srgb, var(--lg-text) 9%, transparent);
+    --hl-fill-lit: color-mix(in srgb, var(--lg-accent) 50%, transparent);
+    --hl-glow-k: 1.9;
+  }
+}
+
+/* ── Title row: time readout + duration stepper ─────────────────────────── */
+
+.hl-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-inline: 2px;
+}
+
+.hl-icon {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--lg-text);
+  opacity: 0.8;
+}
+
+.hl-readout {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.hl-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lg-text-muted);
+}
+
+.hl-time {
+  font-size: 21px;              /* the most it gets; fitTime() in hour-lens.js shrinks it to fit */
+  font-weight: 800;
+  line-height: 24px;            /* fixed, so shrinking the text never changes the row's height */
+  color: var(--lg-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hl-ampm {
+  font-size: 0.62em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 380px) {
+  .hl-icon { display: none; }
+}
+
+/* Vitrium's stepper, with the duration sitting between − and +. */
+.hl-dur { flex: none; }
+.hl-dur .lg-stepper { height: 38px; }
+.hl-dur .lg-stepper__button { width: 38px; }
+
+.hl-dur-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 52px;
+  padding-inline: 2px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--lg-accent);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.hl-dur-label i { font-size: 16px; line-height: 1; }
+
+/* ── The hours ───────────────────────────────────────────────────────────── */
+
+.hl-rail {
+  position: relative;
+  will-change: transform;
+}
+
+.hl-track {
+  position: relative;
+  display: flex;
+  gap: 3px;
+  height: 50px;
+  touch-action: pan-y;
+}
+
+.hl-cell {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;           /* keep in sync with CELL_RADIUS in hour-lens.js */
+  background: var(--hl-cell);
+  box-shadow: inset 1.5px 2px 3px var(--hl-cell-lo), inset -1px -1.5px 2px var(--hl-cell-hi);
+  overflow: hidden;
+  cursor: default;
+  touch-action: pan-y;
+  font: inherit;
+  color: inherit;
+}
+
+/* The ends of the row: as round as the cell allows (the radii are measured in
+   hour-lens.js, and the lens copies them when it reaches an end). */
+.hl-cell:first-child {
+  border-radius: var(--hl-end-rx, 8px) 8px 8px var(--hl-end-rx, 8px) / var(--hl-end-ry, 8px) 8px 8px var(--hl-end-ry, 8px);
+}
+.hl-cell:last-child {
+  border-radius: 8px var(--hl-end-rx, 8px) var(--hl-end-rx, 8px) 8px / 8px var(--hl-end-ry, 8px) var(--hl-end-ry, 8px) 8px;
+}
+
+/* Free-room density: the share of the campus free for the whole hour, filled
+   from the bottom; accent-coloured under the lens. */
+.hl-cell::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: calc(var(--free, 0) * 100%);
+  background: var(--hl-fill);
+  opacity: 0;
+  transition: opacity 0.25s ease, height 0.3s ease, background 0.2s ease;
+}
+
+.hl--density .hl-cell::before { opacity: 1; }
+.hl--density .hl-cell.in-lens::before { background: var(--hl-fill-lit); }
+
+/* Today's hours that have already ended. */
+.hl-cell.is-past {
+  background:
+    repeating-linear-gradient(135deg, var(--hl-hatch) 0 3px, transparent 3px 7px),
+    var(--hl-cell);
+}
+
+.hl-cell.is-past::before { opacity: 0 !important; }
+
+.hl-now {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--hl-now);
+}
+
+/* ── The lens ────────────────────────────────────────────────────────────── */
+
+.hl-lens.lg-glass {
+  --lg-glass-tint: var(--lg-accent);
+  --lift: 0;
+  --glow-k: var(--hl-glow-k);
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 11px;
+  pointer-events: none;
+  transform-origin: center;
+  will-change: transform;
+  -webkit-backdrop-filter: blur(1.5px) saturate(1.5);
+  backdrop-filter: blur(1.5px) saturate(1.5);
+
+  /* Shadows in the glass's own colour, darkened a touch so they read as depth
+     rather than neon; --lift (0 resting … 1 held, set from JS) raises it. */
+  --glow: color-mix(in oklch, var(--lg-glass-tint) 78%, black);
+  --glow-a: calc(var(--glow-k) * 1%);
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    /* contact: grounds it on the cells */
+    0 1px 2px 0 color-mix(in srgb, var(--glow) calc(var(--glow-a) * (26 - 10 * var(--lift))), transparent),
+    /* resting ambient glow */
+    0 calc(3px + 5px * var(--lift)) calc(10px + 8px * var(--lift)) 0
+      color-mix(in srgb, var(--glow) calc(var(--glow-a) * (24 + 10 * var(--lift))), transparent),
+    /* elevation: wide and soft, only as it lifts */
+    0 calc(16px * var(--lift)) calc(38px * var(--lift)) calc(2px * var(--lift))
+      color-mix(in srgb, var(--glow) calc(var(--glow-a) * 30 * var(--lift)), transparent);
+}
+
+.hl-lens.is-focus {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 3px;
+}
+
+/* Invisible grab target laid over the lens. */
+.hl-hit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 11px;
+  touch-action: none;
+  cursor: default;
+  outline: none;
+}
+
+.hl-hours {
+  display: flex;
+  gap: 3px;
+  padding-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lg-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.hl-hours span {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+.hl-hours span.in-lens { color: var(--lg-text); }
+
+/* ── In the chip's morph panel ─────────────────────────────────────────────
+   The panel's content column has a fixed width (so it doesn't reflow while the
+   shell scales), but the shell itself is capped to the viewport: on a phone
+   narrower than that width the right edge would be clipped. */
+.lg-morph:has(.hl) .lg-morph__inner {
+  width: min(var(--lg-morph-width, 208px), calc(100vw - 16px));
+}
+
+/* The title row is the panel's press/drag handle (deformFrom in
+   time-range-chip-picker.js); the rail keeps its own drags. */
+.trc-content .hl-readout,
+.trc-content .hl-icon {
+  cursor: default;
+  touch-action: none;
+}

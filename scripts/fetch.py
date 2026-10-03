@@ -34,10 +34,12 @@ RETRY_DELAY = 2  # seconds between retries
 NEXT_DAYS_WINDOW = 7  # Number of days to fetch starting from today
 DELAY_BETWEEN_CALLS = 0.5  # seconds to wait between API calls
 
-# The scraped page is known to omit a couple of classrooms that classrooms.json
-# lists (as of writing: G.1 and G.2 in Leonardo building 11). Those fall back to
-# the REST API silently; more than this many missing rows on a single page is
-# instead reported as an anomaly, since it likely means the page changed shape.
+# A classroom missing from its scraped page falls back to the REST API; more than
+# this many missing rows on a single page is reported as an anomaly, since it
+# likely means the page changed shape. Classrooms known to be on neither the page
+# nor the REST API are marked `noSchedule` in classrooms.json instead: they get
+# their page row if one ever appears, and otherwise `"occupancy": null` with no
+# REST call and no alert.
 MAX_EXPECTED_MISSING_ROWS = 5
 
 # A page that parses fine but suddenly returns far fewer slots than the previous
@@ -255,6 +257,10 @@ def scrape_day(
         resolved = _resolved_csic(campus)
         if not csic or resolved is None or resolved in pages or resolved in errors:
             continue
+        # Nothing to look up on a campus without classrooms (classrooms.json's
+        # secondary ones: residences, offices, ...).
+        if not any(b["classrooms"] for b in campus["buildings"]):
+            continue
         last_error = "unknown error"
         for attempt in range(1, MAX_RETRIES + 1):
             try:
@@ -303,7 +309,9 @@ def build_output(
 
     Occupancy comes from the scraped page for the classroom's Sede. The REST API
     is only called for classrooms whose page failed to scrape (see scrape_day)
-    or that have no row on an otherwise healthy page.
+    or that have no row on an otherwise healthy page, never for `noSchedule`
+    ones. Occupancy is None (null in the JSON) when no source had it: the
+    frontend shows that as unknown, not as free.
     """
     result = []
     rest_calls = 0
@@ -312,7 +320,7 @@ def build_output(
         resolved = _resolved_csic(campus)
         page = pages.get(resolved) if resolved else None
         page_failed = page is None
-        if page_failed:
+        if page_failed and any(b["classrooms"] for b in campus["buildings"]):
             print(f"  Campus {campus.get('name')} ({resolved}): page unavailable, using REST API for every room.")
 
         for building in campus["buildings"]:
@@ -326,6 +334,8 @@ def build_output(
 
                 if scraped is not None:
                     occupancy = scraped_to_slots(scraped)
+                elif classroom.get("noSchedule"):
+                    occupancy = None
                 else:
                     if not page_failed:
                         missing_rows.append({
@@ -333,7 +343,7 @@ def build_output(
                         })
                     print(f"  Fetching room {room_name} (id={room_id}) via REST API...")
                     rest_calls += 1
-                    occupancy = fetch_occupancy(client, room_id, room_name, d, failures) or []
+                    occupancy = fetch_occupancy(client, room_id, room_name, d, failures)
                     if not no_delay:
                         time.sleep(DELAY_BETWEEN_CALLS)
 

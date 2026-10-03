@@ -251,6 +251,10 @@ function buildClassroomRow(item, ctx) {
   const body = document.createElement('div');
   body.className = 'search-row-body';
   const buildingLine = [buildingAltName ? `${buildingName} · ${buildingAltName}` : buildingName, campusName].filter(Boolean).join(' · ');
+  // An easter egg's note (see data/search-easter-eggs.js) takes the building line's place.
+  const note = item.egg?.note;
+  const noteText = note && (typeof note === 'string' ? note : note[getLocale()] ?? note.en);
+  const subtitleHtml = noteText ? escapeHtml(noteText) : highlight(buildingLine, ctx.q, ctx.corrections);
   let metaHtml = '';
   if (ctx.large) {
     const bits = [];
@@ -263,7 +267,7 @@ function buildClassroomRow(item, ctx) {
   }
   body.innerHTML = `
     <div class="search-row-title"><span class="search-row-title-text">${highlight(room.name, ctx.q, ctx.corrections)}</span></div>
-    <div class="search-row-subtitle">${highlight(buildingLine, ctx.q, ctx.corrections)}</div>
+    <div class="search-row-subtitle">${subtitleHtml}</div>
     ${metaHtml}
   `;
   row.appendChild(body);
@@ -916,7 +920,13 @@ function buildResultsPane(container, query) {
   const ctx = { q, corrections: result.corrections, dateFmt: new Intl.DateTimeFormat(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' }), timeFmt: createTimeFormatter(), large: false };
 
   const top = block('tophit');
-  top.appendChild(keyed(sectionLabel(t('search.topHit'), 'hgi-sparkles'), 'label'));
+  // An easter egg swaps the Top Hit label for its own, so the room reads as
+  // found on purpose rather than as a search gone wrong.
+  const topLabel = topHit.egg
+    ? sectionLabel(t('search.easterEgg'), 'hgi-egg')
+    : sectionLabel(t('search.topHit'), 'hgi-sparkles');
+  if (topHit.egg) topLabel.classList.add('search-section-label--egg');
+  top.appendChild(keyed(topLabel, 'label'));
   // A swap slot: a different Top Hit cross-fades in place of the old one
   // while the slot's height morphs between them (see search-motion.js).
   const slot = keyed(document.createElement('div'), 'slot');

@@ -27,6 +27,7 @@ import {
   classroomsData,
   findAvailableClassrooms,
   fetchClassroomsData,
+  loadCachedClassroomsData,
   SKIP_DAYS
 } from './available-rooms-script.js';
 
@@ -37,8 +38,8 @@ import { infoPage } from './components/info-page.js';
 import { initInfoHint } from './components/info-hint.js';
 
 import { initTimePickers } from './components/time-picker.js';
-import { initTimeRangeSlider } from './components/time-range-slider.js';
-import { setupCampusPicker } from './components/campus-picker.js';
+import { initHourLens, refreshHourLensData } from './components/hour-lens.js';
+import { setupCampusPicker, selectCampusById } from './components/campus-picker.js';
 import { initCampusMap } from './components/campus-map.js';
 import { initCampusSheet } from './components/campus-sheet.js';
 import { retranslateCampusBuildingsPage, goToBuilding } from './components/campus-buildings.js';
@@ -47,12 +48,16 @@ import { setupDatePicker } from './components/date-picker.js';
 import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
 import { initPickerDock } from './components/picker-dock.js';
+import { initPickerRowFlip } from './components/picker-row-flip.js';
 import './components/data-fetch-card.js';
 
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
-import { initLiquidGlass, createPopover, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
+import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
+import { initLiquidGlass, createPopover, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
+import { initCardDayPopover } from './components/card-day-popover.js';
+import { createBuildingStarButton } from './utils/favourites.js';
 
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import { escapeHtml } from './utils/html.js';
@@ -61,11 +66,17 @@ import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfE
 import { initKeybindings } from './components/keybindings.js';
 import { takeImportHash } from './utils/transfer.js';
 import { promptImport } from './components/transfer-dialog.js';
+import { initServiceWorker } from './utils/pwa.js';
+import { resumeState, initResumeSnapshot } from './utils/resume.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
 // detail) look at it; the import prompt is shown once the splash is gone.
 const _pendingImport = takeImportHash();
+// Relaunched where the user left off (utils/resume.js) with a classroom page
+// open: put its hash back before the detail page's router reads it on init.
+// A link the app was opened from wins.
+if (resumeState?.hash && !location.hash) history.replaceState(null, '', resumeState.hash);
 // Same for a transfer link opened in a tab that's already running PoliAule
 // (a same-document hash change, no reload).
 window.addEventListener('hashchange', () => {
@@ -176,6 +187,38 @@ function dismissSplash() {
   }
 }
 
+// The splash of a resumed launch is only its background by now (the logo is
+// hidden before first paint, see index.html). Scrolls back to where the page
+// was while still covered (programmatic scrolling works under the splash's
+// overflow: hidden), then fades it out. Two frames first, for the results the
+// restored day re-renders once the date picker selects it.
+function dismissSplashOnResume() {
+  const overlay = document.getElementById('splash-overlay');
+  if (!overlay) return;
+  if (_splashFailed) { dismissSplash(); return; }
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (!location.hash && resumeState.scrollY) window.scrollTo(0, resumeState.scrollY);
+    document.querySelectorAll('.splash-header-item')
+      .forEach(el => el.classList.add('splash-revealed'));
+    overlay.style.pointerEvents = 'none';
+    overlay.classList.add('splash-hiding');
+    setTimeout(() => overlay.remove(), 150); // the fade, see .resuming in index.html
+  }));
+}
+
+// What utils/resume.js saves each time the app goes to the background
+function collectResumeState() {
+  return {
+    tab: document.querySelector('.tab-content.visible')?.id ?? null,
+    campus: document.getElementById('campus-picker').value || null,
+    date: document.getElementById('date-picker').value || null,
+    from: document.getElementById('from-time-picker').value || null,
+    to: document.getElementById('to-time-picker').value || null,
+    hash: /^#classroom\//.test(location.hash) ? location.hash : null,
+    scrollY: Math.round(window.scrollY),
+  };
+}
+
 function showSplashError() {
   const overlay = document.getElementById('splash-overlay');
   if (!overlay) return;
@@ -267,10 +310,15 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
       <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
       ${building.altName ? `<span class="building-alt-name">${escapeHtml(building.altName)}</span>` : ''}
     </button>
-    <button class="header-button building-section-btn liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
-      <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
-    </button>
+    <div class="building-section-actions">
+      <button class="header-button building-section-btn building-section-jump liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
+        <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
+      </button>
+    </div>
   `;
+  // Stars the whole building (utils/favourites.js), next to the jump button.
+  headerEl.querySelector('.building-section-actions')
+    .prepend(createBuildingStarButton(campusId, buildingName, 'header-button building-section-btn'));
   cardIndex++;
   section.appendChild(headerEl);
 
@@ -285,13 +333,18 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     sourceSection: section,
     buildingName,
   });
+  // Press, hold and drag instead: pick another building to jump to (see
+  // components/building-scrubber.js). While it has the gesture, it isn't a tap.
+  const scrubber = attachBuildingScrubber(titlesBtn, section);
   let downAt = null;
   let openedByTap = false;
   titlesBtn.addEventListener('pointerdown', (e) => {
     downAt = { x: e.clientX, y: e.clientY, t: performance.now() };
     openedByTap = false;
-    buildingOverview.prewarm(section);
+    buildingOverview.prewarm(section, { campusId, date, from, to, results: allResults });
   });
+  // A press that turns into a scroll: drop what prewarm() built for it.
+  titlesBtn.addEventListener('pointercancel', () => buildingOverview.cancelPrewarm());
   // Open on pointerup, not click: iOS Safari swallows the click when the tap
   // lands while the page is still rubber-banding from a scroll (very easy to
   // hit when you've just scrolled to the bottom of the list), and the shared
@@ -302,6 +355,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
     const held = performance.now() - downAt.t;
     downAt = null;
+    if (scrubber.consumed) return;
     if (moved <= 12 && held < 700) {
       openedByTap = e.pointerType === 'touch';
       openOverview();
@@ -318,12 +372,12 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     if (e.cancelable) e.preventDefault();
   }, { passive: false });
   // Fallback for keyboard / assistive-tech activation, which fires click only.
-  titlesBtn.addEventListener('click', openOverview);
+  titlesBtn.addEventListener('click', () => { if (!scrubber.consumed) openOverview(); });
 
   // Jumps straight to this building's detail page in the Campus tab — see
   // components/campus-buildings.js's goToBuilding(), which brings the picker
   // along to the right campus first if needed.
-  headerEl.querySelector('.building-section-btn').addEventListener('click', () => {
+  headerEl.querySelector('.building-section-jump').addEventListener('click', () => {
     activateGroupTab('search-classrooms-container');
     goToBuilding(campusId, buildingName);
   });
@@ -332,7 +386,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     const roomItem = document.createElement('div');
     roomItem.className = 'classroom-list-item-container';
     roomItem.dataset.status = room.status;
-    const cardEl = buildCardForClassroom(room, building, from, to, isToday, date, '', true);
+    const cardEl = buildCardForClassroom(room, building, from, to, isToday, date, '', true, false);
     cardEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
     roomItem.appendChild(cardEl);
     section.appendChild(roomItem);
@@ -403,6 +457,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Favourites carousel on the Available page
     initFavourites(staticClassroomsData);
 
+    // Hover preview of a room's whole day on every classroom card
+    initCardDayPopover();
+
     // Campus tab — fullscreen map, lazily initialised on first activation
     initCampusMap();
 
@@ -413,16 +470,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupCampusPicker(staticClassroomsData);
     applyPreferredCampusIfEnabled();
     applyRememberLastCampusIfEnabled();
+    if (resumeState?.campus) selectCampusById(resumeState.campus, false);
 
     // Setup the time pickers to ensure valid time ranges
     // (these don't depend on occupancy data)
     setupTimePickers();
+    if (resumeState) restoreQuery(resumeState);
     initTimePickers();
-    initTimeRangeSlider();
+    initHourLens();
 
     // Decide pill vs. inline-expanded pickers based on the form column's width
     // (desktop two-column layout only).
     initPickerDock();
+
+    // Pills that hop lines when another one changes width glide there instead.
+    initPickerRowFlip();
+
+    // Everything the occupancy UI reads (pickers, favourites, detail page) exists now
+    resolveShellReady();
 
     // Setup the language switch handler immediately — doesn't depend on
     // fonts and shouldn't wait for the splash to dismiss
@@ -451,14 +516,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     clearTimeout(_initTimeoutId);
     const elapsed = Date.now() - _splashStartTime;
-    const remaining = Math.max(0, _SPLASH_MIN_MS - elapsed);
-    setTimeout(dismissSplash, remaining);
+    // A resumed launch (utils/resume.js) has nothing to show off: it goes
+    // straight back to the page, without the minimum or the logo hand-off.
+    const resuming = resumeState && location.hash !== '#info';
+    const remaining = resuming ? 0 : Math.max(0, _SPLASH_MIN_MS - elapsed);
+    setTimeout(resuming ? dismissSplashOnResume : dismissSplash, remaining);
+    initResumeSnapshot(collectResumeState);
     // Leave the splash hand-off time to finish before the prompt pops up.
     if (_pendingImport) setTimeout(() => promptImport(_pendingImport, staticClassroomsData), remaining + 600);
 
     // Once things have settled, spend a moment of genuine idle time
     // benchmarking blur for real (first load / no cached verdict only).
     scheduleIdleBenchmark();
+
+    // Offline app shell + update prompt. Registered once the app is up, so
+    // installing it never competes with the first load.
+    initServiceWorker();
 
   } catch (error) {
     clearTimeout(_initTimeoutId);
@@ -469,13 +542,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+// Resolved by the DOMContentLoaded init once the page shell is set up. Data
+// from the cache can be ready before that, and an auto-search fired then would
+// read an empty campus and time range.
+let resolveShellReady;
+const shellReady = new Promise(resolve => { resolveShellReady = resolve; });
+
 // Fetches occupancy data in the background (independent of the splash
 // screen) and populates everything that depends on it once it's ready.
+// The last visit's cached copy, when there is one, draws the UI straight
+// away; the network then only confirms it (304s) or replaces it.
 async function initOccupancyData() {
-  await fetchClassroomsData();
+  const hasCache = await loadCachedClassroomsData();
+  let fetchSettled = false;
+  const fetched = fetchClassroomsData().finally(() => { fetchSettled = true; });
+  if (!hasCache) await fetched;
+
+  await shellReady;
+  // The network may have answered while the shell was still setting up
+  const drawnFromCache = hasCache && !fetchSettled;
+  populateOccupancyUi();
+  if (drawnFromCache && await fetched) refreshOccupancyUi();
+}
+
+// Fills in everything that depends on the occupancy data, the first time it's there
+function populateOccupancyUi() {
 
   // Use the fetched data to set the only valid dates into the date picker
   setupDatePicker(() => preferInitialDate);
+  refreshHourLensData();
   document.getElementById('available-classrooms-form').removeAttribute('data-loading');
   document.querySelector('date-chip-picker')?.removeAttribute('data-loading');
 
@@ -526,6 +621,7 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
 function renderAvailableClassroomsResults(results, date, from, to, campusId = null) {
   const container = document.getElementById('available-classrooms-results');
   buildingOverview.reset(); // tear down the zoom-out view if it's open
+  cancelBuildingScrubber();
   container.dataset.searched = 'true';
   container.innerHTML = ''; // Clear previous results
 
@@ -549,14 +645,20 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   const showPartialDefault = showPartialSaved === null ? true : showPartialSaved === 'true';
   const hasPartial = results.some(b => b.rooms.some(r => r.status === 'partially-free'));
   if (hasPartial) {
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = showPartialDefault ? 'results-filter-btn active' : 'results-filter-btn';
-    toggleBtn.innerHTML = `<i class="hgi-stroke hgi-filter" aria-hidden="true"></i> ${t('results.filterPartial')}`;
-    if (!showPartialDefault) container.classList.add('hide-partial');
-    toggleBtn.addEventListener('click', () => {
-      const isActive = toggleBtn.classList.toggle('active');
-      container.classList.toggle('hide-partial', !isActive);
+    // Vitrium glass button: clear accent-tinted glass while partially free rooms are shown, plain glass when hidden.
+    const setShown = (shown) => {
+      toggleBtn.classList.toggle('lg-glass--tinted', shown);
+      toggleBtn.classList.toggle('lg-glass--clear', shown);
+      toggleBtn.setAttribute('aria-pressed', String(shown));
+      container.classList.toggle('hide-partial', !shown);
+    };
+    const toggleBtn = createButton({
+      icon: '<i class="hgi-stroke hgi-filter" aria-hidden="true"></i>',
+      text: t('results.filterPartial'),
+      className: 'results-filter-btn',
+      onClick: () => setShown(toggleBtn.getAttribute('aria-pressed') !== 'true'),
     });
+    setShown(showPartialDefault);
     filterRow.appendChild(toggleBtn);
     container.appendChild(filterRow);
   }
@@ -575,7 +677,13 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
     list.appendChild(node);
   });
 
-  container.appendChild(list);
+  // The building overview's zoom frame (components/building-overview.js).
+  // It's here from the start because moving the list into it on tap
+  // restyled and re-laid out the whole list right when the zoom started.
+  const stage = document.createElement('div');
+  stage.className = 'bo-stage';
+  stage.appendChild(list);
+  container.appendChild(stage);
 
   // Mark the list as appeared after the staggered animation finishes.
   // This avoids re-triggering the animation when returning from the details page
@@ -687,6 +795,22 @@ function setupTimePickers() {
   toPicker.min = formatMins(minToMins);
 }
 
+// Puts back the day and time range a resumed launch left on (utils/resume.js).
+// The hour lens moves a range whose hours have passed on, and a day no longer
+// published falls back to the first one, like any preferred date.
+function restoreQuery({ date, from, to }) {
+  const HHMM = /^\d{2}:\d{2}$/;
+  if (HHMM.test(from) && HHMM.test(to)) {
+    const [h, m] = from.split(':').map(Number);
+    const minTo = Math.min(h * 60 + m + 60, TIME_MAX_MINS);
+    const toPicker = document.getElementById('to-time-picker');
+    document.getElementById('from-time-picker').value = from;
+    toPicker.value = to;
+    toPicker.min = `${String(Math.floor(minTo / 60)).padStart(2, '0')}:${String(minTo % 60).padStart(2, '0')}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) preferInitialDate = date;
+}
+
 function setupDataFetchIndicator() {
   const indicator = document.getElementById('data-fetch-indicator');
 
@@ -789,11 +913,20 @@ async function reloadOccupancyData() {
   btn.querySelector('.data-reload-label').textContent = t('data.reloading');
 
   await fetchClassroomsData();
+  refreshOccupancyUi();
+}
 
+// Redraws what depends on the occupancy data after it was replaced
+function refreshOccupancyUi() {
   const indicator = document.getElementById('data-fetch-indicator');
   indicator.classList.remove('green', 'yellow', 'red');
   setupDataFetchIndicator();
-  setupDatePicker(() => preferInitialDate);
+  // Keep the day the user is on, if it's still published
+  const selectedDate = document.getElementById('date-picker').value;
+  setupDatePicker(() => selectedDate || preferInitialDate);
+  refreshHourLensData();
+  classroomDetail.refreshOccupancy();
+  renderFavourites();
 
   const resultsContainer = document.getElementById('available-classrooms-results');
   if (resultsContainer && !resultsContainer.classList.contains('empty')) {

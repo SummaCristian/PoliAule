@@ -5,6 +5,9 @@ import { getClassroomStatusNow } from '../available-rooms-script.js';
 import { buildCardForClassroom } from './classroom-list.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
+import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
+import { createBuildingStarButton, setBuildingStarTarget } from '../utils/favourites.js';
+import { createButton } from 'vitrium';
 
 // The Campus tab's own "pages" inside the campus sheet (components/campus-sheet.js):
 //
@@ -45,7 +48,9 @@ import { escapeHtml } from '../utils/html.js';
 // no-ops once already showing that selection. The back button always
 // returns to the campus page — it never leaves a stack of visited buildings
 // behind.
-class CampusSheetPicker extends CampusChipPicker {}
+class CampusSheetPicker extends CampusChipPicker {
+  includeSecondary = true;
+}
 customElements.define('campus-sheet-picker', CampusSheetPicker);
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -55,6 +60,7 @@ const SLIDE_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
 let picker = null;
 let hiddenInput = null;
 let recenterBtn = null;
+let starBtn = null;     // stars the open building; only on the building page
 let backBtn = null;
 let titleBox = null;   // wraps titleEl + subtitleEl — see flipTitleBox()
 let titleEl = null;
@@ -71,6 +77,9 @@ let selectedBuildingId = null; // building.name (unique within a campus — see 
 // grid happened to be scrolled to, and the campus grid losing its place
 // every time a building is visited.
 let savedCampusScroll = 0;
+// Whether the campus grid also lists secondary buildings (no classrooms, or
+// only events-only ones). Off on every launch; the toggle above the grid flips it.
+let showSecondary = false;
 
 export function initCampusBuildingsPage(headerContainer, gridContainer) {
   headerContainer.innerHTML = '';
@@ -126,6 +135,12 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
     document.dispatchEvent(new CustomEvent('campusrecenter'));
   });
   actions.appendChild(recenterBtn);
+
+  // Stars the whole building (utils/favourites.js). Kept to the right of the
+  // recenter button so that one popping in doesn't shift it.
+  starBtn = createBuildingStarButton('', '', 'campus-sheet-star');
+  starBtn.hidden = true;
+  actions.appendChild(starBtn);
 
   picker = document.createElement('campus-sheet-picker');
   hiddenInput = document.createElement('input');
@@ -323,11 +338,33 @@ function flipTitleBox(mutate) {
   setTimeout(clear, SLIDE_DUR + 150);
 }
 
+// The campus grid's buildings: every one when the secondary ones are shown,
+// otherwise only those with classrooms. None for a secondary campus.
+function visibleBuildings(campus) {
+  if (!campus || campus.secondary) return [];
+  return showSecondary ? campus.buildings : campus.buildings.filter(b => !b.secondary);
+}
+
+// Same empty state as the Available tab's "No results" (script.js). `kind` is
+// 'campus' or 'building', for the subtitle.
+function noClassroomsMessage(kind) {
+  const el = document.createElement('div');
+  el.className = 'campus-sheet-empty';
+  el.innerHTML = `
+    <i class="hgi-stroke hgi-school-01 empty-container-icon" aria-hidden="true"></i>
+    <p class="empty-container-title">${t('campus.noClassrooms')}</p>
+    <p class="empty-container-subtitle">${t(kind === 'campus' ? 'campus.noClassroomsCampus' : 'campus.noClassroomsBuilding')}</p>
+  `;
+  return el;
+}
+
 function renderCampusHeader(campusId, { fade = false } = {}) {
   const campus = staticClassroomsData.find(c => c.id === campusId);
-  const buildings = campus?.buildings ?? [];
+  // A secondary campus lists no buildings, but its pins are still on the map.
+  const buildings = campus?.secondary ? campus.buildings : visibleBuildings(campus);
   setHeaderText(t('overview.title'), t('campus.buildingsCount').replace('{n}', buildings.length), fade);
   backBtn.hidden = true;
+  starBtn.hidden = true;
   picker.style.display = '';
 }
 
@@ -339,10 +376,36 @@ function buildCampusPage(campusId) {
   page.appendChild(grid);
 
   const campus = staticClassroomsData.find(c => c.id === campusId);
-  for (const building of campus?.buildings ?? []) {
-    grid.appendChild(buildBuildingCard(building));
+  if (campus?.secondary) {
+    grid.replaceWith(noClassroomsMessage('campus'));
+    return page;
+  }
+  if (campus?.buildings.some(b => b.secondary)) page.prepend(buildSecondaryToggle(campusId));
+  for (const building of visibleBuildings(campus)) {
+    grid.appendChild(buildBuildingCard(campusId, building));
   }
   return page;
+}
+
+// Glass toggle button, same as the Available tab's "Partially Free" filter:
+// accent-tinted while the secondary buildings are shown.
+function buildSecondaryToggle(campusId) {
+  const row = document.createElement('div');
+  row.className = 'results-filter-row campus-sheet-filter-row';
+  const btn = createButton({
+    icon: '<i class="hgi-stroke hgi-building-03" aria-hidden="true"></i>',
+    text: t('campus.showSecondary'),
+    className: 'results-filter-btn',
+    onClick: () => {
+      showSecondary = !showSecondary;
+      swapCampusPage(campusId);
+    },
+  });
+  btn.classList.toggle('lg-glass--tinted', showSecondary);
+  btn.classList.toggle('lg-glass--clear', showSecondary);
+  btn.setAttribute('aria-pressed', String(showSecondary));
+  row.appendChild(btn);
+  return row;
 }
 
 // Re-renders the campus page's grid in place (no page-swap animation — used
@@ -358,23 +421,19 @@ function swapCampusPage(campusId, { animate = true } = {}) {
   }
 }
 
-function buildBuildingCard(building) {
-  const card = document.createElement('div');
-  card.className = 'bo-card campus-sheet-card';
+function buildBuildingCard(campusId, building) {
+  // Browsing here isn't tied to a query, so the cards show each room's status right now.
+  const rooms = building.classrooms.map(classroom => ({ classroom, status: getClassroomStatusNow(classroom.id) }));
+  const card = buildBuildingFolder({
+    campusId, building,
+    total: building.classrooms.length,
+    rooms: pickFolderRooms(rooms),
+    footerHtml: building.address ? `<span class="campus-sheet-card-address">${escapeHtml(building.address)}</span>` : '',
+  });
+  card.classList.add('campus-sheet-card');
   card.setAttribute('role', 'button');
   card.setAttribute('tabindex', '0');
-
-  const total = building.classrooms.length;
-  card.innerHTML = `
-    <div class="bo-card-body">
-      <div class="bo-card-head">
-        <span class="bo-card-name">${escapeHtml(t('building.prefix'))} ${escapeHtml(building.name)}</span>
-        ${building.altName ? `<span class="bo-card-alt">${escapeHtml(building.altName)}</span>` : ''}
-        <span class="bo-card-total secondary">${escapeHtml(t('overview.subtitle').replace('{n}', total))}</span>
-      </div>
-      ${building.address ? `<span class="campus-sheet-card-address secondary">${escapeHtml(building.address)}</span>` : ''}
-    </div>
-  `;
+  card.setAttribute('aria-label', `${t('building.prefix')} ${building.name}`);
 
   const go = () => {
     openBuilding(building.name, { animate: true });
@@ -406,6 +465,8 @@ function findBuilding(campusId, buildingId) {
 function renderBuildingHeader(building, { fade = false } = {}) {
   setHeaderText(buildingLabel(building), t('overview.subtitle').replace('{n}', building.classrooms.length), fade);
   backBtn.hidden = false;
+  setBuildingStarTarget(starBtn, hiddenInput.value, building.name);
+  starBtn.hidden = false;
   picker.style.display = 'none';
 }
 
@@ -425,7 +486,15 @@ function buildBuildingPage(building) {
   const grid = document.createElement('div');
   grid.className = 'bo-grid campus-sheet-grid campus-sheet-classroom-grid';
   page.appendChild(grid);
+  if (building.classrooms.length) appendClassroomsByFloor(grid, building);
+  else grid.replaceWith(noClassroomsMessage('building'));
+  return page;
+}
 
+// Fills `grid` with the building's classroom cards (status right now), floor
+// by floor under a .bo-floor-label each. Also used by the favourite building
+// popup (components/building-popup.js).
+export function appendClassroomsByFloor(grid, building) {
   const sorted = [...building.classrooms].sort((a, b) => {
     const fa = a.floor, fb = b.floor;
     if (fa === fb) return 0;
@@ -446,10 +515,9 @@ function buildBuildingPage(building) {
       first = false;
     }
     const status = getClassroomStatusNow(classroom.id);
-    const card = buildCardForClassroom({ ...classroom, status }, building, null, null, false, null, '', true);
+    const card = buildCardForClassroom({ ...classroom, status }, building, null, null, false, null, '', true, false);
     grid.appendChild(card);
   }
-  return page;
 }
 
 // Opens (or, if already on the building page, swaps to) the given building.

@@ -3,7 +3,7 @@
 // - promptImport(): on the receiving device, after it was opened from the link.
 import { createAlert } from 'vitrium';
 import { t } from '../i18n.js';
-import { getFavouriteIds } from '../utils/favourites.js';
+import { getFavouriteEntries } from '../utils/favourites.js';
 import { renderQrSvg } from '../utils/qr.js';
 import { buildTransferUrl, parseTransfer, applyTransfer } from '../utils/transfer.js';
 
@@ -80,12 +80,15 @@ export async function promptImport(raw, classroomsData) {
   const favCount = parsed.favourites.length;
   const settingsCount = Object.keys(parsed.settings).length;
   const parts = [];
-  if (favCount) parts.push(t(favCount === 1 ? 'import.favouritesOne' : 'import.favouritesMany').replace('{n}', favCount));
+  const buildingCount = parsed.favourites.filter(e => typeof e === 'string').length;
+  const roomCount = favCount - buildingCount;
+  if (roomCount) parts.push(t(roomCount === 1 ? 'import.favouritesOne' : 'import.favouritesMany').replace('{n}', roomCount));
+  if (buildingCount) parts.push(t(buildingCount === 1 ? 'import.favouriteBuildingsOne' : 'import.favouriteBuildingsMany').replace('{n}', buildingCount));
   if (settingsCount) parts.push(t(settingsCount === 1 ? 'import.settingsOne' : 'import.settingsMany').replace('{n}', settingsCount));
   const summary = t('import.message').replace('{summary}', parts.join(t('import.and')));
 
   // Merge vs Replace only matters when both devices have favourites.
-  const hasLocalFavs = getFavouriteIds().length > 0;
+  const hasLocalFavs = getFavouriteEntries().length > 0;
   const actions = favCount && hasLocalFavs
     ? [
         { id: 'merge', label: t('import.merge'), role: 'default' },

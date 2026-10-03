@@ -20,9 +20,9 @@
    second instance of the Available tab's own morphing <campus-chip-picker>)
    fixed in .campus-sheet-header above, a scrolling grid of that campus's
    buildings in .campus-sheet-content below it. The cards reuse the
-   Available tab's building-overview cards (.bo-card, building-overview.css)
-   without their occupancy-counts row — browsing here isn't tied to a
-   date/time. */
+   Available tab's building folders (.bo-card, building-overview.css) with
+   the address in place of their occupancy counts — browsing here isn't tied
+   to a date/time. */
 
 /* Title              [Center btn] Picker
    A bit more inset than the grid below (which already gets .campus-sheet-
@@ -81,9 +81,11 @@
    .campus-sheet-backbtn (the building page's back button) shares this exact
    recipe — same glass circle, same pop in/out — swapping only its icon and
    what toggles its [hidden]: the current page (campus vs. building) instead
-   of the map's shifted state. */
+   of the map's shifted state. So does .campus-sheet-star (stars the open
+   building), shown on the building page only. */
 .campus-sheet-recenter,
-.campus-sheet-backbtn {
+.campus-sheet-backbtn,
+.campus-sheet-star {
   position: relative;
   flex: none;
   display: inline-flex;
@@ -115,7 +117,8 @@
    cutting instantly; `@starting-style` below seeds the "just appeared" frame
    the way a keyframe `from` would. */
 .campus-sheet-recenter.liquid-glass,
-.campus-sheet-backbtn.liquid-glass {
+.campus-sheet-backbtn.liquid-glass,
+.campus-sheet-star.liquid-glass {
   transition:
     opacity 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
     transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -126,7 +129,8 @@
 }
 
 .campus-sheet-recenter::after,
-.campus-sheet-backbtn::after {
+.campus-sheet-backbtn::after,
+.campus-sheet-star::after {
   content: "";
   position: absolute;
   inset: -0.5px;
@@ -142,7 +146,8 @@
 }
 
 .campus-sheet-recenter .hgi-stroke,
-.campus-sheet-backbtn .hgi-stroke {
+.campus-sheet-backbtn .hgi-stroke,
+.campus-sheet-star .hgi-stroke {
   font-size: 1.25rem;
 }
 
@@ -152,7 +157,8 @@
    Shrinks/fades out first (header-ctl-scale-out's own ease-in, quicker than
    the pop-in), `display` only flipping to `none` once that's done. */
 .campus-sheet-recenter.liquid-glass[hidden],
-.campus-sheet-backbtn.liquid-glass[hidden] {
+.campus-sheet-backbtn.liquid-glass[hidden],
+.campus-sheet-star.liquid-glass[hidden] {
   display: none;
   opacity: 0;
   transform: scale(0.3);
@@ -164,7 +170,8 @@
 
 @starting-style {
   .campus-sheet-recenter:not([hidden]),
-  .campus-sheet-backbtn:not([hidden]) {
+  .campus-sheet-backbtn:not([hidden]),
+  .campus-sheet-star:not([hidden]) {
     opacity: 0;
     transform: scale(0.3);
   }
@@ -174,7 +181,9 @@
   .campus-sheet-recenter.liquid-glass,
   .campus-sheet-recenter.liquid-glass[hidden],
   .campus-sheet-backbtn.liquid-glass,
-  .campus-sheet-backbtn.liquid-glass[hidden] {
+  .campus-sheet-star.liquid-glass,
+  .campus-sheet-backbtn.liquid-glass[hidden],
+  .campus-sheet-star.liquid-glass[hidden] {
     transition: none;
   }
 }
@@ -250,17 +259,42 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* .bo-card reserves room for the counts row this page doesn't render, and
-   blurs its background — dropped here since these cards sit over the sheet's
-   own opaque/glass surface rather than a scrolling photo backdrop. */
-.campus-sheet-card {
-  min-height: auto;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+/* The folder's footer here is the building's address instead of the
+   Available tab's status counts: browsing isn't tied to a date/time. */
+.campus-sheet-card-address {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--folder-text-secondary);
 }
 
-.campus-sheet-card-address {
-  font-size: var(--text-80);
+/* "Other buildings" toggle above the campus grid (the Available tab's
+   .results-filter-row / .results-filter-btn, classroom-list.css). */
+.campus-sheet-filter-row {
+  padding: 0 0 0.75rem;
+}
+
+/* A secondary campus, or a building with no classrooms: the Available tab's
+   "No results" block (.empty-container-*, classroom-list.css). */
+.campus-sheet-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 0 2rem;
+  text-align: center;
+}
+
+.campus-sheet-empty .empty-container-icon {
+  font-size: 5rem !important;
+}
+
+.campus-sheet-empty .empty-container-subtitle {
+  margin: 0 1.5rem;
 }
 
 /* The building page's grid holds actual classroom cards (.classroom-card,

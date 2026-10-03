@@ -1,26 +1,20 @@
 import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow, getBuildingOpening } from '../available-rooms-script.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
-import { createTimeFormatter } from '../utils/time-format.js';
 import { escapeHtml } from '../utils/html.js';
 import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
-import { isFavourite, toggleFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
+import { isFavourite, toggleFavourite, syncStarButton } from '../utils/favourites.js';
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
 import { startTrackedTransition, vtFlag } from '../utils/vt-debug.js';
 import { createPillSelector } from './pill-selector.js';
+import { DAY_START, DAY_END, dayBarHtml, timeToMinutes, minutesToTimeDisplay } from './day-bar.js';
 import { embedMap, parkMap, releaseMap, isMapTabShowing, getEmbedPov, setEmbedPov } from './campus-map.js';
 import { refreshHeaderBlur } from '../utils/header-blur.js';
 
 // No zoom and no shared element when motion is unwelcome: the pair of them is
 // the whole animation, so what is left is the browser's own cross-fade.
 const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-
-function minutesToTimeDisplay(minutes) {
-  const d = new Date();
-  d.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
-  return createTimeFormatter({ hour: 'numeric', minute: '2-digit' }).format(d);
-}
 
 // ---------- CONSTANTS ----------
 
@@ -33,11 +27,6 @@ const FEATURE_ICONS = {
   223: { icon: 'hgi-computer-video-call', key: 'features.videoconf' },
 };
 
-
-function timeToMinutes(time) {
-  const [h, m] = time.split(':').map(Number);
-  return h * 60 + m;
-}
 
 // Builds the popover body for a single occupancy slot. Course/exam slots carry
 // structured fields (course, code, professors, section); anything the scrape
@@ -286,15 +275,7 @@ class ClassroomDetail {
   // Reflects the current classroom's favourite state on the header star button.
   _syncFavBtn() {
     if (!this._favBtn || this._currentId === null) return;
-    const fav = isFavourite(this._currentId);
-    // .favourite-btn--active tints the star yellow (see style.css); the outline
-    // hgi-star is swapped for a filled star SVG.
-    this._favBtn.classList.toggle('favourite-btn--active', fav);
-    this._favBtn.setAttribute('aria-label', t(fav ? 'favourite.remove' : 'favourite.add'));
-    this._favBtn.setAttribute('aria-pressed', fav ? 'true' : 'false');
-    this._favBtn.innerHTML = fav
-      ? FILLED_STAR_SVG
-      : '<i class="hgi-stroke hgi-star" aria-hidden="true"></i>';
+    syncStarButton(this._favBtn, isFavourite(this._currentId));
   }
 
   // Called by script.js once occupancy data has finished loading in the
@@ -1069,6 +1050,15 @@ class ClassroomDetail {
             </div>
           ` : ''}
         </div>
+        ${classroom.eventsOnly ? `
+          <div class="detail-events-only" role="note">
+            <i class="hgi-stroke hgi-alert-02" aria-hidden="true"></i>
+            <div>
+              <strong>${t('detail.eventsOnlyTitle')}</strong>
+              <p>${t('detail.eventsOnlyText')}</p>
+            </div>
+          </div>
+        ` : ''}
       </div>
       <div class="detail-content">
         <div class="detail-column">
@@ -1152,7 +1142,7 @@ class ClassroomDetail {
       this._scheduleMapEmbed(mapHost, {
         lat: building.lat,
         long: building.long,
-        label: mapLabel,
+        building: { name: building.name, alt: building.altName?.trim() },
         // Every building on the campus, for the 2D overview.
         siblings: (campus.buildings ?? [])
           .filter(b => typeof b.lat === 'number' && typeof b.long === 'number')
@@ -1246,21 +1236,32 @@ class ClassroomDetail {
     // Pre-blurred when it can be (utils/photo.js blurredBackdrop): the GPU
     // otherwise redoes the blur on every frame the page moves. That needs the
     // backdrop's box, measured once an earlier open has landed
-    // (_measureBackdrop); until then, the live filter. ?vtdebug=liveblur keeps
-    // the live one, to compare.
-    const pre = this._backdropBox && !vtFlag('liveblur') ? blurredBackdrop(url, this._backdropBox) : null;
-    el.style.setProperty('--backdrop-img', `url("${pre ?? url}")`);
-    el.classList.toggle('prerendered', !!pre);
-    el.classList.add('loaded');
+    // (_measureBackdrop), and the photo's small copy, made by extractPhotoColor;
+    // until then, the live filter. ?vtdebug=liveblur keeps the live one, to compare.
+    const show = () => {
+      const pre = this._backdropBox && !vtFlag('liveblur') ? blurredBackdrop(url, this._backdropBox) : null;
+      el.style.setProperty('--backdrop-img', `url("${pre ?? url}")`);
+      el.classList.toggle('prerendered', !!pre);
+      el.classList.add('loaded');
+    };
 
     // Base color under the backdrop's fade (see #classroom-detail-overlay's
     // background). Best-effort: without it the page just stays --background-color.
+    // The backdrop waits for it: below the photo it is the photo's bottom strip
+    // stretched down the page, which only reads as a wash of color once the
+    // tint it fades into is there. Shown early, a slow extraction left it as
+    // the photo smeared down an untinted page. Both then fade in together.
     const cached = getCachedPhotoColor(url);
-    if (cached) document.documentElement.style.setProperty('--detail-tint', cached);
+    if (cached) {
+      document.documentElement.style.setProperty('--detail-tint', cached);
+      show();
+    }
     this._applyPhotoDim(url, el);
     this._applyTitleTone(url, el);
     extractPhotoColor(url).then(color => {
-      if (color && el.isConnected) document.documentElement.style.setProperty('--detail-tint', color);
+      if (!el.isConnected) return;
+      if (color) document.documentElement.style.setProperty('--detail-tint', color);
+      if (!cached) show();
       this._applyPhotoDim(url, el);
       this._applyTitleTone(url, el);
     });
@@ -1445,8 +1446,6 @@ class ClassroomDetail {
         String(today.getDate()).padStart(2, '0'),
       ].join('');
 
-      const DAY_START = 7 * 60 + 15;
-      const DAY_END = 20 * 60 + 15;
       const total = DAY_END - DAY_START;
 
       // Build chronological day list, inserting Sunday placeholders between data days
@@ -1524,52 +1523,34 @@ class ClassroomDetail {
         outer: for (const c of dayData.campuses ?? []) {
           for (const b of c.buildings ?? []) {
             const room = b.classrooms?.find(r => String(r.id) === String(classroomId));
-            if (room) { occupancy = room.occupancy ?? []; roomBuilding = b; break outer; }
+            if (room) { occupancy = room.occupancy; roomBuilding = b; break outer; }
           }
         }
 
-        // The hours the building is shut, shown as their own "Closed" areas so
-        // they don't read as bookings. The bar carries the open range too, for
-        // the hover cursor. Unknown hours draw nothing.
-        const opening = getBuildingOpening(roomBuilding, dayData.date);
-        let openFrom = DAY_START, openTo = DAY_END;
-        if (opening?.closed) {
-          openFrom = openTo = DAY_START;
-        } else if (opening) {
-          openFrom = Math.max(timeToMinutes(opening.opens), DAY_START);
-          openTo = Math.min(timeToMinutes(opening.closes), DAY_END);
+        // No source had this room's schedule that day (scripts/fetch.py):
+        // say so instead of drawing an empty, free-looking bar.
+        if (occupancy === null) {
+          return { labelHtml, rowHtml: `
+            <div class="detail-schedule-row detail-schedule-row--unknown${isToday ? ' detail-schedule-row--today' : ''}">
+              <div class="detail-schedule-bar-wrapper">
+                <div class="detail-schedule-bar"><span class="detail-schedule-unknown">${t('detail.scheduleUnknown')}</span></div>
+              </div>
+            </div>` };
         }
-        const closedRanges = openFrom >= openTo
-          ? [[DAY_START, DAY_END]]
-          : [[DAY_START, openFrom], [openTo, DAY_END]].filter(([s, e]) => e > s);
-        const closedHtml = closedRanges.map(([s, e]) => {
-          const left  = ((s - DAY_START) / total * 100).toFixed(2);
-          const width = ((e - s)         / total * 100).toFixed(2);
-          // Label only where there's room for it; the hatching still says it
-          const label = (e - s) / total >= 0.15 ? `<span>${escapeHtml(t('detail.closed'))}</span>` : '';
-          return `<div class="detail-schedule-closed" role="img" aria-label="${escapeHtml(t('detail.closed'))} ${minutesToTimeDisplay(s)}–${minutesToTimeDisplay(e)}" style="--block-start:${left}%;--block-size:${width}%">${label}</div>`;
-        }).join('');
-        const openAttrs = opening ? ` data-open-from="${openFrom}" data-open-to="${openTo}"` : '';
 
-        const blocksHtml = (occupancy || []).map((slot, idx) => {
-          if (!slot.inizio || !slot.fine) return '';
-          const s = Math.max(timeToMinutes(slot.inizio), DAY_START);
-          const e = Math.min(timeToMinutes(slot.fine), DAY_END);
-          if (e <= s) return '';
-          const left  = ((s - DAY_START) / total * 100).toFixed(2);
-          const width = ((e - s)         / total * 100).toFixed(2);
-          const slotIdx = scheduleSlots.push(slot) - 1;
-          const isPrimaryHighlight = highlightDateKey !== null
+        // The bar's contents: closed hours, the queried range, and the
+        // bookings, each block indexing into scheduleSlots for its popover
+        const { html: barHtml, openAttrs } = dayBarHtml({
+          occupancy,
+          opening: getBuildingOpening(roomBuilding, dayData.date),
+          query: isQueryDay && this._queryContext ? this._queryContext : null,
+          blockAttrs: (slot) => ` data-slot-idx="${scheduleSlots.push(slot) - 1}" tabindex="0" role="button"`,
+          isHighlighted: (slot) => highlightDateKey !== null
             && dayData.date === highlightDateKey
             && slot.inizio === this._highlight?.from
-            && slot.fine === this._highlight?.to;
-          const blockClass = 'detail-schedule-block lg-glass lg-glass--tinted' + (isPrimaryHighlight ? ' detail-schedule-block--highlight' : '');
-          return `<div class="${blockClass}" data-slot-idx="${slotIdx}" tabindex="0" role="button" style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
-        }).join('');
+            && slot.fine === this._highlight?.to,
+        });
 
-        const queryOverlayHtml = isQueryDay && queryFromPct !== null
-          ? `<div class="detail-schedule-query-region" style="--qfrom:${queryFromPct}%;--qto:${queryToPct}%"></div>`
-          : '';
         const querySideIndicatorsHtml = isQueryDay && queryFromPct !== null ? `
           <div class="detail-schedule-query-indicator" style="--qpos:${queryFromPct}%">${queryFromDisplay}</div>
           <div class="detail-schedule-query-indicator" style="--qpos:${queryToPct}%">${queryToDisplay}</div>
@@ -1582,9 +1563,7 @@ class ClassroomDetail {
               ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>` : ''}
               ${querySideIndicatorsHtml}
               <div class="detail-schedule-bar"${openAttrs}>
-                ${closedHtml}
-                ${queryOverlayHtml}
-                ${blocksHtml}
+                ${barHtml}
                 ${isToday && nowPct !== null ? `<div class="timeline-now-bar-line" style="--pos:${nowPct}%"></div>` : ''}
                 <div class="timeline-hover-line" hidden></div>
               </div>

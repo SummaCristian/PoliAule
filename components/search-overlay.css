@@ -512,6 +512,15 @@ html.search-vt .lg-tabbar__prominent {
   }
 }
 
+/* An easter egg's Top Hit label: in the accent colour, at full strength. */
+.search-section-label.search-section-label--egg {
+  color: var(--text-color-accent);
+}
+
+.search-section-label--egg > * {
+  opacity: 1;
+}
+
 /* ── Top Hit ──────────────────────────────────────────────────────────
    A single larger row, styled the same as everything below it but with a
    bigger leading visual and its own translucent card so it reads as "the"

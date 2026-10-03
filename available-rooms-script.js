@@ -1,4 +1,5 @@
 import { getApiBase } from './config.js';
+import { availableTabRooms } from './utils/secondary.js';
 
 // ---------- DATA ----------
 
@@ -37,31 +38,125 @@ function resolveBuildingHours(building, campusId, openingHours) {
   return openingHours.default_hours;
 }
 
-// Fetches the classrooms data from the server and
-// stores it in classroomsData.
-export async function fetchClassroomsData() {
-  try {
-    const apiBase = getApiBase();
-    const listRes = await fetch(`${apiBase}/v1/occupations`);
-    if (!listRes.ok) throw new Error(`Failed to load occupancy list: ${listRes.status}`);
-    const { dates } = await listRes.json();
+// The API's JSON responses, kept in Cache Storage with their ETags so the next
+// visit can draw from them straight away and then only ask whether they changed
+// (If-None-Match -> 304). The browser's HTTP cache isn't used: the API sends
+// no-store, so this is the only copy.
+const DATA_CACHE_NAME = 'poliaule-data-v1';
 
-    const [results, openingHours] = await Promise.all([
-      Promise.allSettled(
-        dates.map(date => {
-          const isoDate = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
-          return fetch(`${apiBase}/v1/occupations/${isoDate}`)
-            .then(res => {
-              if (!res.ok) throw new Error(`Failed to load ${date}: ${res.status}`);
-              return res.json();
-            });
-        })
-      ).then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value)),
-      fetch(`${apiBase}/v1/opening-hours`)
-        .then(res => {
-          if (!res.ok) throw new Error(`Failed to load opening hours: ${res.status}`);
-          return res.json();
-        })
+export async function openDataCache() {
+  try {
+    return await caches.open(DATA_CACHE_NAME);
+  } catch {
+    return null; // no Cache Storage (insecure origin, private mode quirks): plain fetches
+  }
+}
+
+export async function readCachedJson(cache, url) {
+  try {
+    const cached = await cache?.match(url);
+    return cached ? { data: await cached.json(), etag: cached.headers.get('ETag') } : null;
+  } catch {
+    return null;
+  }
+}
+
+// Fetches one endpoint, conditionally when there's a cached copy. `changed` is
+// false when the cached copy was confirmed (304) or had to stand in because the
+// request failed; without a cached copy a failure throws.
+export async function fetchJson(cache, url) {
+  const cached = await readCachedJson(cache, url);
+  try {
+    const res = await fetch(url, {
+      cache: 'no-store',
+      headers: cached?.etag ? { 'If-None-Match': cached.etag } : {},
+    });
+    if (res.status === 304 && cached) {
+      await res.arrayBuffer(); // drain the empty body, or Chromium logs the request as canceled
+      return { data: cached.data, changed: false };
+    }
+    if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+
+    const body = await res.text();
+    const data = JSON.parse(body);
+    const etag = res.headers.get('ETag');
+    if (cache && etag) {
+      cache.put(url, new Response(body, { headers: { 'Content-Type': 'application/json', 'ETag': etag } }))
+        .catch(() => {});
+    }
+    return { data, changed: true };
+  } catch (error) {
+    if (!cached) throw error;
+    console.warn(`Using cached ${url}:`, error);
+    return { data: cached.data, changed: false };
+  }
+}
+
+const occupationsListUrl = apiBase => `${apiBase}/v1/occupations`;
+const occupationUrl = (apiBase, date) =>
+  `${apiBase}/v1/occupations/${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+const openingHoursUrl = apiBase => `${apiBase}/v1/opening-hours`;
+
+// Merges the opening hours into the days and publishes them as classroomsData
+function applyClassroomsData(days, openingHours) {
+  if (openingHours) {
+    holidayPeriods = openingHours.holiday_periods ?? [];
+    for (const day of days) {
+      for (const campus of day.campuses) {
+        for (const building of campus.buildings) {
+          building.hours = resolveBuildingHours(building, campus.id, openingHours);
+        }
+      }
+    }
+  }
+  classroomsData.splice(0, classroomsData.length, ...days);
+}
+
+// Fills classroomsData from the copies cached by the last visit, without touching
+// the network. Days already past are left out. Returns whether anything was loaded.
+export async function loadCachedClassroomsData() {
+  const cache = await openDataCache();
+  if (!cache) return false;
+  const apiBase = getApiBase();
+
+  const list = await readCachedJson(cache, occupationsListUrl(apiBase));
+  if (!list) return false;
+  const today = formatDateYYYYMMDD(new Date());
+  const dates = list.data.dates.filter(date => date >= today);
+
+  const [days, openingHours] = await Promise.all([
+    Promise.all(dates.map(date => readCachedJson(cache, occupationUrl(apiBase, date))))
+      .then(entries => entries.filter(Boolean).map(entry => entry.data)),
+    readCachedJson(cache, openingHoursUrl(apiBase)).then(entry => entry?.data ?? null),
+  ]);
+  if (!days.length) return false;
+
+  applyClassroomsData(days, openingHours);
+  console.log('Cached data loaded:', classroomsData);
+  return true;
+}
+
+// Fetches the classrooms data from the server (revalidating whatever is cached)
+// and stores it in classroomsData. Returns whether it differs from the cached
+// copies, i.e. whether a UI drawn from loadCachedClassroomsData() is now stale.
+// Concurrent calls share one run.
+let inFlightFetch = null;
+export function fetchClassroomsData() {
+  inFlightFetch ??= fetchClassroomsDataOnce().finally(() => { inFlightFetch = null; });
+  return inFlightFetch;
+}
+
+async function fetchClassroomsDataOnce() {
+  try {
+    const cache = await openDataCache();
+    const apiBase = getApiBase();
+    const list = await fetchJson(cache, occupationsListUrl(apiBase));
+    const { dates } = list.data;
+
+    const [days, openingHours] = await Promise.all([
+      Promise.allSettled(dates.map(date => fetchJson(cache, occupationUrl(apiBase, date))))
+        .then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value)),
+      fetchJson(cache, openingHoursUrl(apiBase))
         .catch(error => {
           // Non-fatal: fall through with openingHours = null so classroomsData
           // still loads (and gets used) even if opening hours can't be fetched.
@@ -70,21 +165,28 @@ export async function fetchClassroomsData() {
         }),
     ]);
 
-    if (openingHours) {
-      holidayPeriods = openingHours.holiday_periods ?? [];
-      for (const day of results) {
-        for (const campus of day.campuses) {
-          for (const building of campus.buildings) {
-            building.hours = resolveBuildingHours(building, campus.id, openingHours);
-          }
-        }
-      }
-    }
-
-    classroomsData.splice(0, classroomsData.length, ...results);
+    applyClassroomsData(days.map(day => day.data), openingHours?.data ?? null);
     console.log('All data loaded:', classroomsData);
+
+    // Days the API no longer lists would otherwise sit in the cache forever
+    if (cache && list.changed) pruneCachedDays(cache, apiBase, dates);
+
+    return list.changed || !!openingHours?.changed || days.some(day => day.changed);
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
+    return false;
+  }
+}
+
+async function pruneCachedDays(cache, apiBase, dates) {
+  try {
+    const keep = new Set(dates.map(date => occupationUrl(apiBase, date)));
+    const prefix = `${occupationsListUrl(apiBase)}/`;
+    for (const request of await cache.keys()) {
+      if (request.url.startsWith(prefix) && !keep.has(request.url)) await cache.delete(request);
+    }
+  } catch {
+    // Best effort: a leftover day is only wasted space
   }
 }
 
@@ -128,7 +230,7 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
 
     const availableRooms = [];
 
-    for (const classroom of building.classrooms) {
+    for (const classroom of availableTabRooms(campusId, building)) {
       const freeSlots = getFreeSlots(classroom.occupancy, open.from, open.to);
       if (freeSlots.length > 0) {
         const isFree = freeSlots.length === 1
@@ -158,6 +260,33 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
   }
 
   return results;
+}
+
+// Share (0–1) of the campus's classrooms that are free for the whole of each
+// { from, to } window on `date` ("YYYY-MM-DD"), for the time picker's hourly
+// cells. Same rules as findAvailableClassrooms(): a room counts only if its
+// building is open for all of the window and nothing is booked in it.
+// Null when there's no data for that day or campus.
+export function getFreeShareBySlot(campusId, date, windows) {
+  const formattedDate = formatDateYYYYMMDD(new Date(date));
+  const dayData = classroomsData.find(day => day.date === formattedDate);
+  const campusData = dayData?.campuses.find(c => c.id === campusId);
+  if (!campusData) return null;
+
+  const rooms = campusData.buildings.flatMap(building =>
+    availableTabRooms(campusId, building).map(classroom => ({ building, classroom })));
+  if (!rooms.length) return null;
+
+  return windows.map(({ from, to }) => {
+    let free = 0;
+    for (const { building, classroom } of rooms) {
+      const open = clipToOpeningHours(building, formattedDate, from, to);
+      if (!open || open.from !== from || open.to !== to) continue;
+      const freeSlots = getFreeSlots(classroom.occupancy ?? [], from, to);
+      if (freeSlots.length === 1 && freeSlots[0].start === from && freeSlots[0].end === to) free++;
+    }
+    return free / rooms.length;
+  });
 }
 
 // ---------- HELPERS ----------
@@ -315,7 +444,94 @@ export function getClassroomStatusNow(classroomId) {
     if (opening.closed || currentTime < opening.opens || currentTime >= opening.closes) return 'closed';
   }
 
-  return computeClassroomStatus(classroom.occupancy ?? [], now);
+  // No source had its schedule today (scripts/fetch.py): unknown, not free.
+  if (classroom.occupancy == null) return null;
+  return computeClassroomStatus(classroom.occupancy, now);
+}
+
+// A classroom and its building as they are on dateKey ("YYYYMMDD"), or null
+// when that day isn't loaded or the room isn't in it.
+export function getClassroomOnDay(classroomId, dateKey) {
+  const dayData = classroomsData?.find(day => day.date === dateKey);
+  return dayData ? roomsById(dayData).get(String(classroomId)) ?? null : null;
+}
+
+const toMinutes = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+const toHHMM = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+
+/**
+ * What a classroom card's small timeline shows. With fromTime/toTime, it is
+ * that queried range on dateKey ("YYYYMMDD"); without, a window around now
+ * (30 min back, 90 ahead, kept inside the day) on today. Returns null when
+ * there's no data for that day, or the room's schedule that day is unknown.
+ *
+ *   { from, to }   the window, in minutes since midnight
+ *   busy           [[start, end]] booked spans inside it, merged
+ *   closed         [[start, end]] spans the building is closed inside it
+ *   now            minutes since midnight when now falls inside it, else null
+ *   nextChange     "HH:MM" of the first free <-> busy switch after now (null
+ *                  without a now): what "From 11:15" / "Until 11:30" show
+ */
+export function getClassroomTimeline(classroomId, dateKey = null, fromTime = null, toTime = null) {
+  if (!classroomsData || classroomsData.length === 0) return null;
+
+  const nowDate = new Date();
+  const todayKey = formatDateYYYYMMDD(nowDate);
+  const key = dateKey ?? todayKey;
+  const dayData = classroomsData.find(day => day.date === key);
+  if (!dayData) return null;
+
+  const entry = roomsById(dayData).get(String(classroomId));
+  if (!entry) return null;
+  const { classroom, building } = entry;
+  if (classroom.occupancy == null) return null; // schedule unknown that day
+
+  const nowMins = nowDate.getHours() * 60 + nowDate.getMinutes();
+  let from, to;
+  if (fromTime && toTime) {
+    from = toMinutes(fromTime);
+    to = toMinutes(toTime);
+  } else {
+    from = Math.min(Math.max(nowMins - 30, 0), 24 * 60 - 120);
+    to = from + 120;
+  }
+  if (to <= from) return null;
+
+  const clip = ([s, e]) => [Math.max(s, from), Math.min(e, to)];
+  const inside = ([s, e]) => s < e;
+
+  const busy = [];
+  const sorted = (classroom.occupancy ?? [])
+    .map(s => [toMinutes(s.inizio), toMinutes(s.fine)])
+    .sort((a, b) => a[0] - b[0]);
+  for (const span of sorted) {
+    const last = busy[busy.length - 1];
+    if (last && span[0] <= last[1]) last[1] = Math.max(last[1], span[1]);
+    else busy.push([...span]);
+  }
+
+  const opening = getBuildingOpening(building, key);
+  let closed = [];
+  if (opening?.closed) closed = [[from, to]];
+  else if (opening) closed = [[0, toMinutes(opening.opens)], [toMinutes(opening.closes), 24 * 60]];
+
+  const now = key === todayKey && nowMins >= from && nowMins <= to ? nowMins : null;
+
+  let nextChange = null;
+  if (now !== null) {
+    const current = busy.find(([s, e]) => s <= now && now < e);
+    const next = current ? current[1] : busy.find(([s]) => s > now)?.[0];
+    if (next !== undefined && next < 24 * 60) nextChange = toHHMM(next);
+  }
+
+  return {
+    from,
+    to,
+    busy: busy.map(clip).filter(inside),
+    closed: closed.map(clip).filter(inside),
+    now,
+    nextChange,
+  };
 }
 
 /**
@@ -327,8 +543,9 @@ export function getClassroomStatusNow(classroomId) {
  * what the classrooms grid below is showing for that same query (free /
  * partially-free / occupied) instead of a snapshot at a single instant.
  *
- * Returns [{ building, counts: {free, 'partially-free', occupied} }]
- * in the campus's building order.
+ * Returns [{ building, counts: {free, 'partially-free', occupied}, rooms }]
+ * in the campus's building order, `rooms` being every classroom with its
+ * status over that window ([{ classroom, status }], for the folder's cards).
  */
 export function getCampusBuildingsOverview(campusId, date, fromTime, toTime) {
   const formattedDate = formatDateYYYYMMDD(new Date(date));
@@ -339,23 +556,28 @@ export function getCampusBuildingsOverview(campusId, date, fromTime, toTime) {
   if (!campusData) return [];
 
   // Closed buildings are left out and free time is cut to opening hours, as
-  // findAvailableClassrooms() does for the results
+  // findAvailableClassrooms() does for the results. So are buildings with
+  // nothing bookable (utils/secondary.js).
   return campusData.buildings.flatMap(building => {
+    const bookable = availableTabRooms(campusId, building);
+    if (!bookable.length) return [];
     const open = clipToOpeningHours(building, formattedDate, fromTime, toTime);
     if (!open) return [];
 
     const counts = { 'free': 0, 'partially-free': 0, 'occupied': 0 };
-    for (const room of building.classrooms ?? []) {
+    const rooms = [];
+    for (const room of bookable) {
       const freeSlots = getFreeSlots(room.occupancy ?? [], open.from, open.to);
-      if (freeSlots.length === 0) {
-        counts.occupied++;
-      } else {
+      let status = 'occupied';
+      if (freeSlots.length > 0) {
         const isFullyFree = freeSlots.length === 1
           && freeSlots[0].start === fromTime
           && freeSlots[0].end === toTime;
-        counts[isFullyFree ? 'free' : 'partially-free']++;
+        status = isFullyFree ? 'free' : 'partially-free';
       }
+      counts[status]++;
+      rooms.push({ classroom: room, status });
     }
-    return [{ building, counts }];
+    return [{ building, counts, rooms }];
   });
 }

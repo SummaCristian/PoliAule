@@ -1,0 +1,156 @@
+/* ── Building scrubber ───────────────────────────────────────────────
+   Press, hold and drag a building's name pill in the Available results: the
+   pill grows into a glass column of every building (components/
+   building-scrubber.js). The panel's geometry is set inline from JS; this is
+   the material and the rows. */
+
+/* The pill can be held without the browser selecting its text or showing
+   iOS's callout. */
+.building-section-titles {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* The pill the panel grew out of — hidden while the panel stands in for it. */
+.building-section-titles.bscrub-source {
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+/* Fixed layer over everything. Its padding is the band the panel keeps to
+   (read by the JS). It never takes pointer events: the pill keeps the
+   pointer for the whole gesture. */
+.bscrub {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 0 calc(env(safe-area-inset-bottom, 0px) + 12px);
+  pointer-events: none;
+}
+
+.bscrub-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bscrub-scrim {
+    background: rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Vitrium's glass material (.lg-glass), positioned by the JS. Not clipped
+   itself, so the outside gradient stroke (::after) survives: the rows are
+   clipped by .bscrub-clip inside it. */
+.bscrub-panel {
+  position: fixed;
+  border-radius: 22px;
+  box-sizing: border-box;
+}
+
+/* Clips the rows to the panel's rounded box. The edge fades are a mask on
+   this child, not on the panel: a mask on the glass itself would turn off
+   its backdrop-filter in Chromium. */
+.bscrub-clip {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+
+  --fade: 28px;
+}
+
+.bscrub-clip.is-cut-top {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--fade));
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--fade));
+}
+
+.bscrub-clip.is-cut-bottom {
+  -webkit-mask-image: linear-gradient(to top, transparent, #000 var(--fade));
+  mask-image: linear-gradient(to top, transparent, #000 var(--fade));
+}
+
+.bscrub-clip.is-cut-top.is-cut-bottom {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent);
+}
+
+/* The column of rows, moved as one by the JS (translateY) when the list
+   auto-scrolls. */
+.bscrub-rows {
+  position: absolute;
+  top: 0;
+  left: var(--pad, 6px);
+  right: var(--pad, 6px);
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+
+.bscrub-rows.is-measuring {
+  right: auto;
+  width: max-content;
+}
+
+.bscrub-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  height: var(--row, 40px);
+  padding: 0 0.9rem;
+  line-height: var(--row, 40px);
+  white-space: nowrap;
+  color: var(--lg-text);
+  transition: color 0.15s ease;
+}
+
+.bscrub-name {
+  flex: none;
+  font-size: var(--text-100);
+  font-weight: 700;
+}
+
+.bscrub-alt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-80);
+  font-weight: 600;
+  color: var(--lg-text-muted);
+}
+
+.bscrub-count {
+  flex: none;
+  margin-inline-start: auto;
+  padding-inline-start: 0.75rem;
+  font-size: var(--text-80);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--lg-text-muted);
+}
+
+.bscrub-row.is-active,
+.bscrub-row.is-active .bscrub-alt,
+.bscrub-row.is-active .bscrub-count {
+  color: var(--lg-accent);
+}
+
+/* The picked row's lens: the same accent fill + hairline as a selected
+   Vitrium list option. Moved, lifted and stretched by the JS every frame
+   (#render in building-scrubber.js) — no CSS transition. */
+.bscrub-lens {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--row, 40px);
+  border-radius: calc(var(--row, 40px) / 2);
+  background: color-mix(in srgb, var(--lg-accent) 14%, transparent);
+  box-shadow: 0 0 0 0.25px rgba(128, 128, 128, 0.25);
+  transform-origin: 50% 50%;
+  will-change: transform;
+}

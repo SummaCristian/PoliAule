@@ -75,7 +75,7 @@ For each of the next 7 days it:
 1. Reads `data/classrooms.json` to get room IDs.
 2. Reads `data/opening-hours.json` to decide which days to fetch: a day is skipped only if every building is closed that weekday, or it falls in a holiday period.
 3. For each remaining day, scrapes onlineservices.polimi.it's per-day occupancy page once per Sede (`scripts/fetch_occupation_names.py`, see below). Several campuses share a page: Leonardo and Colombo are both on `MIA`, La Masa and Durando on `MIB`. Each scraped cell becomes a slot with start/end plus course name/code/professors. 3 retries per page.
-4. Falls back to the REST occupancy endpoint (one GET per room) only for the classrooms of a page that failed to scrape after retries, and for classrooms with no row on a healthy page (as of writing only G.1 and G.2 in Leonardo building 11). In the normal case zero REST calls are made and the whole run takes seconds.
+4. Falls back to the REST occupancy endpoint (one GET per room) only for the classrooms of a page that failed to scrape after retries, and for classrooms with no row on a healthy page. Classrooms marked `noSchedule` in `classrooms.json` (on neither the page nor the REST API) are never REST-fetched: they keep a page row if one ever appears, and otherwise get `"occupancy": null`, which the frontend shows as unknown rather than free; so does a REST call that fails. Campuses without classrooms aren't scraped at all. In the normal case zero REST calls are made and the whole run takes seconds.
 5. Writes one `occupancy/occupation_YYYYMMDD.json` per day locally, mirroring the classrooms structure plus an `occupancy` array of hourly slots, plus `occupancy/list.json`.
 6. Deletes stale local files (dates before today).
 7. The GitHub Actions workflow uploads all of those files to the `poliaule-data` R2 bucket via `wrangler r2 object put --remote`. A separate R2 lifecycle rule expires occupancy objects a couple of days after they age out of the 7-day window, so nothing needs to explicitly delete stale objects from the bucket.
@@ -192,7 +192,7 @@ graph TD
     CD["classroom-detail.js"]:::component
     CL["classroom-list.js"]:::component
     TP["time-picker.js"]:::component
-    TRS["time-range-slider.js"]:::component
+    HL["hour-lens.js"]:::component
     SET["settings.js"]:::component
     TT["tooltip.js"]:::component
 
@@ -204,7 +204,7 @@ graph TD
     SC -->|imports| CD
     SC -->|imports| CL
     SC -->|imports| TP
-    SC -->|imports| TRS
+    SC -->|imports| HL
     SC -->|imports| SET
     SC -->|registers| TT
     SCS -->|imports| ARS
@@ -226,7 +226,7 @@ graph TD
 | `components/campus-sheet.js` | Campus map sheet (Vitrium sheet) |
 | `components/classroom-detail.js` | Classroom detail page with timeline and photo |
 | `components/time-picker.js` | Morphing time input |
-| `components/time-range-slider.js` | Dual-handle slider for time range |
+| `components/hour-lens.js` | Time range picker: a glass lens over the hourly slots, with a duration stepper |
 | `components/settings.js` | User preferences (remembered campus, partial availability, etc.) |
 | `components/tooltip.js` | Side-effect module: registers a global `data-tooltip` attribute handler |
 
@@ -235,6 +235,17 @@ graph TD
 `scripts/fetch_photos.py` resolves and downloads every classroom's photo from PoliMi once a month, uploads changed ones to R2 under `photos/<classroom_id>.jpg`, and serves them through the API Worker at `GET /v1/photos/:id` (keyed by the classroom's own `id`, not PoliMi's internal `idfoto`). Next to each changed photo it writes a thumbnail, `photos/<classroom_id>_thumb.jpg` (640px on the long side, made with Pillow), served at `GET /v1/photos/:id/thumb`; the workflow's `backfill_thumbs` input (`--backfill-thumbs`) also writes thumbnails for unchanged photos, for when R2 is missing them. A `photos/manifest.json` (MD5 per classroom) lets the job skip re-uploading and re-purging photos that haven't changed; it's stored in R2 alongside the photos (`photos/manifest.json`), downloaded at the start of each run and re-uploaded at the end once upload+purge succeed. It is not kept in `actions/cache` because GitHub evicts caches untouched for 7 days, which this monthly job would always exceed.
 
 The frontend still loads photos on-demand when a classroom card scrolls into view or a detail page opens (`ClassroomDetail._loadPhoto()`, `utils/photo.js`'s `fetchPhotoUrl()` / `fetchThumbUrl()`), but now that's just building a URL against our own API instead of calling PoliMi directly — the response is edge- and browser-cacheable for 30 days (`Cache-Control: public, max-age=2592000, immutable`), matching the fetch cadence. Cards and search rows only ever load the thumbnail: a list of full 1500x1125 photos (~6.7 MB each, decoded) is what made older phones stutter. The detail page's hero opens on the thumbnail too (already decoded by the card, and cheap to draw through the zoom) and swaps to the full photo once the transition has landed (`ClassroomDetail._upgradePhoto()`); its blurred backdrop and extracted tint always come from the thumbnail.
+
+### Caching and offline use
+
+Two layers, independent of each other:
+
+- **Data** (`available-rooms-script.js`, `classroom-search-data.js`): every API JSON response is kept in Cache Storage (`poliaule-data-v1`) with its ETag. On start-up the UI is drawn from those copies, then each file is revalidated with `If-None-Match`; the API answers `304` when it's unchanged, and the UI is redrawn (`refreshOccupancyUi()` in `script.js`) only if something came back new. A failed request falls back to the cached copy. `/v1/classrooms` is the exception, because the splash waits for it: when a cached copy exists the app starts from it and only refreshes the copy in the background, so a change to the directory shows up on the next visit. The API sends `Cache-Control: no-store`, so the browser's own HTTP cache isn't involved.
+- **App shell** (`utils/pwa.js`, `VitePWA` in `vite.config.js`): a Workbox service worker generated at build time precaches `index.html`, the bundles, fonts, locales and icons (~2 MB), and caches Google Fonts at runtime, so the app opens with no connection at all. It never touches API requests. A new deploy installs in the background and waits; `utils/pwa.js` asks "Update available, Reload?" (Vitrium alert) and otherwise it takes over the next time the app is opened from scratch. It also checks for updates hourly, for home-screen apps left open for days. Not active under `npm run dev`; test it with `npm run build && npm run preview`.
+
+### Resuming the home-screen app
+
+iOS kills a suspended home-screen web app soon after it goes to the background, and relaunching it loads the page from scratch. `utils/resume.js` saves a snapshot (tab, campus, date, time range, scroll position, an open classroom page's hash) to `localStorage` under `poliAule_resume` on every `visibilitychange` to hidden and on `pagehide`. An inline script in `index.html` decides before first paint whether a launch resumes: running standalone and a snapshot younger than 30 minutes. It then adds `.resuming` to `<html>`, which hides the splash logo. `script.js` restores each piece through the same start-up hooks as the saved settings, and `dismissSplashOnResume()` scrolls back and fades the bare splash out with no minimum time. Browser tabs never resume. Search, the building overview, settings and the info page aren't restored.
 
 ### Localization
 

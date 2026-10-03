@@ -10,7 +10,7 @@
 // put: lg:blur-mode (a per-device capability verdict), caches, last tab /
 // last campus, the info hint, and the beta-backend dev flag. Anything else in
 // a payload is ignored, so a crafted link can't write arbitrary keys.
-import { getFavouriteIds, setFavouriteIds } from './favourites.js';
+import { getFavouriteEntries, setFavouriteEntries, buildingKey } from './favourites.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from './time-format.js';
 import { STORAGE_KEY as LOCALE_KEY } from '../i18n.js';
 import {
@@ -67,7 +67,9 @@ function readStorage(key) {
 // so the receiving device keeps its own defaults for them.
 export function buildTransferUrl() {
   const payload = { v: VERSION };
-  const favs = getFavouriteIds();
+  // Classroom ids and building keys, in starred order (see utils/favourites.js).
+  // A build without building favourites keeps only the integers.
+  const favs = getFavouriteEntries();
   if (favs.length) payload.f = favs;
   for (const [short, [key, codec]] of Object.entries(fields(null))) {
     const raw = readStorage(key);
@@ -89,7 +91,8 @@ export function takeImportHash() {
 }
 
 // Validates a payload against the classroom directory. Returns
-// { favourites: number[], settings: { [storageKey]: string } }, or null when
+// { favourites: (number|string)[], settings: { [storageKey]: string } }, where
+// favourites are classroom ids and building keys in order, or null when
 // the payload can't be read at all. Individual bad fields are dropped.
 export function parseTransfer(raw, classroomsData) {
   let payload;
@@ -104,9 +107,13 @@ export function parseTransfer(raw, classroomsData) {
   const classroomIds = new Set(
     (classroomsData ?? []).flatMap(c => c.buildings.flatMap(b => b.classrooms.map(r => r.id)))
   );
+  const buildingKeys = new Set(
+    (classroomsData ?? []).flatMap(c => c.buildings.map(b => buildingKey(c.id, b.name)))
+  );
 
   const favourites = Array.isArray(payload.f)
-    ? [...new Set(payload.f.filter(id => Number.isInteger(id) && classroomIds.has(id)))]
+    ? [...new Set(payload.f.filter(e =>
+        (Number.isInteger(e) && classroomIds.has(e)) || (typeof e === 'string' && buildingKeys.has(e))))]
     : [];
 
   const settings = {};
@@ -127,8 +134,8 @@ export function applyTransfer({ favourites, settings }, { favouritesMode = 'merg
   if (favourites.length) {
     const next = favouritesMode === 'replace'
       ? favourites
-      : [...new Set([...getFavouriteIds(), ...favourites])];
-    setFavouriteIds(next);
+      : [...getFavouriteEntries(), ...favourites];
+    setFavouriteEntries(next);
   }
   for (const [key, value] of Object.entries(settings)) {
     try { localStorage.setItem(key, value); } catch { /* storage full or unavailable */ }

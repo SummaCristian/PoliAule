@@ -1,6 +1,8 @@
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
+import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
 import { getCampusBuildingsOverview } from '../available-rooms-script.js';
+import { scrollerFor, stickyTopOf } from '../utils/results-scroller.js';
 
 // The "zoom out" building overview.
 //
@@ -41,6 +43,8 @@ const smooth = (x, a, b) => {
 // move reads as a swoop rather than a slide.
 const ARC = 0.08;
 const KEYFRAMES = 60;
+const BLUR_IN_MS = 300;
+const PREBUILD_BUDGET_MS = 6; // of building folders per frame during a press
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 const STATUS_META = [
@@ -53,31 +57,6 @@ const LAYER_PROPS = ['position', 'insetInline', 'top', 'zIndex', 'transformOrigi
 function clearLayer(el) {
   if (!el) return;
   for (const p of LAYER_PROPS) el.style[p] = '';
-}
-
-// Where a scrollable area's "top" is on screen, and how to scroll it, for the
-// two places the results live: in the page (mobile / tablet) or inside the
-// self-scrolling results panel (desktop ≥1100px). "visibleTop" is the client-y
-// a stuck building header parks at — i.e. where a section's top should sit to
-// read as "scrolled to this building".
-function scrollerFor(container, stickyTop) {
-  const selfScrolls = /auto|scroll/.test(getComputedStyle(container).overflowY);
-  if (selfScrolls) {
-    return {
-      visibleTop: () => container.getBoundingClientRect().top + container.clientTop + stickyTop,
-      visibleBottom: () => container.getBoundingClientRect().top + container.clientTop + container.clientHeight,
-      scrollBy: (dy) => container.scrollBy({ top: dy, behavior: 'instant' }),
-      contentHeight: () => container.scrollHeight,
-    };
-  }
-  return {
-    visibleTop: () => stickyTop,
-    visibleBottom: () => window.innerHeight,
-    // The page has `scroll-behavior: smooth` — every scroll here has to be
-    // explicitly instant or it turns into a visible glide.
-    scrollBy: (dy) => window.scrollBy({ top: dy, behavior: 'instant' }),
-    contentHeight: () => document.documentElement.scrollHeight,
-  };
 }
 
 class BuildingOverview {
@@ -98,13 +77,14 @@ class BuildingOverview {
 
   // ── Public ────────────────────────────────────────────────────────
 
-  // Call on pointer-down on a name pill: promotes the list to its own
-  // compositor layer so its first rasterisation happens during the press,
-  // not on the zoom's first frame. Undone if no open() follows.
-  prewarm(sourceSection) {
+  // Call on pointer-down on a name pill, with what open() will be given:
+  // promotes the list to its own compositor layer so its first rasterisation
+  // happens during the press, not on the zoom's first frame, and builds the
+  // grid ahead of time (see #pregrid). Undone if no open() follows.
+  prewarm(sourceSection, ctx = null) {
     if (this.#phase !== 'idle') return;
     const container = sourceSection?.closest('#available-classrooms-results');
-    const list = container?.querySelector('.list-outer-container');
+    const list = container?.querySelector('.bo-stage > .list-outer-container');
     if (!container || !list) return;
     // Scoping the sections here too (open() repeats it, idempotently) means
     // the sections that are forced to render get laid out and rasterised
@@ -114,12 +94,102 @@ class BuildingOverview {
     this.#scroller = scrollerFor(container, this.#stickyTop(sourceSection));
     this.#scopeSections(sourceSection);
     list.style.willChange = 'transform';
+    // A frame later, so the press itself still gets its frame first.
+    cancelAnimationFrame(this.#prewarmRaf);
+    if (ctx) {
+      this.#prewarmRaf = requestAnimationFrame(() => {
+        if (this.#phase === 'idle') this.#prebuildGrid(list.parentElement, ctx);
+      });
+    }
     clearTimeout(this.#prewarmTimer);
     this.#prewarmTimer = setTimeout(() => {
-      if (this.#phase === 'idle') { this.#unscopeSections(); list.style.willChange = ''; }
+      if (this.#phase === 'idle') this.cancelPrewarm();
     }, 1500);
   }
   #prewarmTimer = 0;
+  #prewarmRaf = 0;
+
+  // The press turned out not to be a tap (the building scrubber took it, or
+  // it became a scroll): undo prewarm() now instead of in 1.5 s. Its hidden
+  // off-stage sections would otherwise still be hidden when the scrubber
+  // jumps to one of them.
+  cancelPrewarm() {
+    if (this.#phase !== 'idle') return;
+    clearTimeout(this.#prewarmTimer);
+    cancelAnimationFrame(this.#prewarmRaf);
+    this.#unscopeSections();
+    if (this.#list) this.#list.style.willChange = '';
+    this.#dropPregrid();
+  }
+
+  // The grid, built during the press and parked invisible in the stage, so
+  // the browser styles and lays it out (and the folders' ResizeObserver
+  // sizes them) in its own frames while the finger is still down. Built in
+  // open(), all of that was forced in one go between the tap and the zoom's
+  // first frame: by far the longest part of the wait.
+  // { grid, ctx, queue: cards still to build, raf }.
+  #pregrid = null;
+
+  #prebuildGrid(stage, ctx) {
+    this.#dropPregrid();
+    const grid = this.#gridShell();
+    grid.style.position = 'absolute';
+    grid.style.insetInline = '0';
+    grid.style.top = '0';
+    // Painted, so that is done during the press too, but not seen: an
+    // invisible layer would be skipped (same trick as prewarmClose), and
+    // .bo-pregrid keeps its glass from blurring the list underneath.
+    grid.style.opacity = '0.01';
+    grid.style.willChange = 'transform, opacity';
+    // Inert, not just pointer-events: none, which the top bar's title and ×
+    // override: its sticky title sits right on top of a stuck name pill,
+    // took the release of the very press that built it, and the pill, never
+    // seeing its pointerup, let the scrubber's hold timer open the scrubber.
+    grid.inert = true;
+    grid.classList.add('bo-pregrid');
+    stage.appendChild(grid);
+
+    // A few folders per frame, not all at once: built and laid out in one
+    // go, the grid held the main thread long enough on a slow phone that the
+    // finger's release was handled after the scrubber's 280 ms hold timer,
+    // and a tap opened the scrubber. Whatever is left when open() comes is
+    // built there.
+    const pre = { grid, ctx, queue: this.#gridEntries(ctx), raf: 0 };
+    this.#pregrid = pre;
+    const step = () => {
+      const t0 = performance.now();
+      while (pre.queue.length && performance.now() - t0 < PREBUILD_BUDGET_MS) {
+        grid.appendChild(this.#buildCard(pre.queue.shift()));
+      }
+      if (pre.queue.length) pre.raf = requestAnimationFrame(step);
+    };
+    step();
+  }
+
+  #dropPregrid() {
+    const pre = this.#pregrid;
+    if (!pre) return;
+    cancelAnimationFrame(pre.raf);
+    pre.grid.remove();
+    this.#pregrid = null;
+  }
+
+  // The prebuilt grid, if it was built for this very open(); else null.
+  #takePregrid(stage, ctx) {
+    const pre = this.#pregrid;
+    if (!pre) return null;
+    const same = pre.grid.parentElement === stage
+      && ['campusId', 'date', 'from', 'to', 'results'].every(k => pre.ctx[k] === ctx[k]);
+    if (!same) { this.#dropPregrid(); return null; }
+    cancelAnimationFrame(pre.raf);
+    this.#pregrid = null;
+    for (const entry of pre.queue) pre.grid.appendChild(this.#buildCard(entry));
+    // Its opacity is the zoom's from here on; its blur stays off under
+    // .bo-animating, which open() sets in the same frame.
+    pre.grid.classList.remove('bo-pregrid');
+    pre.grid.inert = false;
+    return pre.grid;
+  }
 
   // Same idea for the way back: on pointer-down on a building card or the ×,
   // the parked list is shown again at (near) zero opacity under the grid so
@@ -147,14 +217,15 @@ class BuildingOverview {
       if (this.#phase === 'open') { list.style.display = 'none'; list.style.opacity = ''; this.#unscopeSections(); }
     }, 1500);
   }
-  #prewarmRaf = 0;
 
   open({ campusId, date, from, to, results, sourceSection, buildingName }) {
     if (this.#phase !== 'idle') return;
     const container = sourceSection?.closest('#available-classrooms-results');
-    const list = container?.querySelector('.list-outer-container');
+    const list = container?.querySelector('.bo-stage > .list-outer-container');
     if (!container || !list) return;
 
+    clearTimeout(this.#prewarmTimer);
+    cancelAnimationFrame(this.#prewarmRaf);
     this.#phase = 'opening';
     this.#isOpen = true;
     this.#ctx = { campusId, date, from, to, results };
@@ -179,20 +250,23 @@ class BuildingOverview {
     this.#openViewport = this.#viewportKey();
     const docHeight0 = this.#scroller.contentHeight();
 
-    // A dedicated stage — a positioned, clipped frame we fully control — takes
-    // the list's place. The results container's own (sticky, grid-placed,
+    // The stage — a positioned frame we fully control, clipped while the zoom
+    // runs — already wraps the list (script.js renders it that way: moving
+    // the list into it here restyled and re-laid out the whole list on the
+    // zoom's first frame). The results container's own (sticky, grid-placed,
     // self-scrolling) rules are never touched. `overflow: clip`, not hidden:
     // hidden would make the stage a scroll container and the list's sticky
-    // building headers would snap out of their stuck spots the moment the
-    // list moves in.
-    const stage = document.createElement('div');
-    stage.className = 'bo-stage';
-    container.insertBefore(stage, list);
-    stage.appendChild(list);
+    // building headers would snap out of their stuck spots.
+    const stage = list.parentElement;
     this.#stage = stage;
 
-    this.#grid = this.#buildGrid();
-    stage.appendChild(this.#grid);
+    // A prebuilt grid is already in the stage, and must stay put: even an
+    // appendChild() that leaves it where it is rebuilds its whole layout tree.
+    this.#grid = this.#takePregrid(stage, this.#ctx);
+    if (!this.#grid) {
+      this.#grid = this.#buildGrid(this.#ctx);
+      stage.appendChild(this.#grid);
+    }
     if (this.#filterRow) this.#filterRow.hidden = true;
     container.classList.add('bo-active', 'bo-animating');
 
@@ -359,6 +433,13 @@ class BuildingOverview {
     const outRect = outgoing.getBoundingClientRect();
     const inRect = incoming.getBoundingClientRect();
     const stageRect = this.#stage.getBoundingClientRect();
+    // The clip's sideways margin (room for the cards' shadows) must stop at
+    // the screen's edges: the grid starts blown up past them, and whatever
+    // pokes out widens a phone's layout viewport for that frame, which
+    // re-lays out every fixed element (the tab bar and its observers).
+    const vw = document.documentElement.clientWidth;
+    this.#stage.style.overflowClipMargin =
+      `${Math.max(0, Math.min(48, stageRect.left, vw - stageRect.right))}px`;
 
     outgoing.style.transformOrigin = `${from.left - outRect.left}px ${from.top - outRect.top}px`;
     incoming.style.transformOrigin = `${to.left - inRect.left}px ${to.top - inRect.top}px`;
@@ -506,12 +587,19 @@ class BuildingOverview {
       lo = v - reach;
       hi = v + reach;
     }
-    for (const sec of list.children) {
+    // Every position first, then every class: toggling a section changes
+    // layout, so reading the next one after it forced a style and layout
+    // pass per section. (The estimate is generous enough not to need each
+    // section measured after the ones above it have changed.)
+    const sections = [...list.children];
+    const on = sections.map((sec) => {
       const r = sec.getBoundingClientRect();
-      const on = r.bottom - listTop >= lo && r.top - listTop <= hi;
-      sec.classList.toggle('bo-onstage', on);
-      sec.classList.toggle('bo-offstage', !on);
-    }
+      return r.bottom - listTop >= lo && r.top - listTop <= hi;
+    });
+    sections.forEach((sec, i) => {
+      sec.classList.toggle('bo-onstage', on[i]);
+      sec.classList.toggle('bo-offstage', !on[i]);
+    });
   }
 
   #unscopeSections() {
@@ -535,7 +623,29 @@ class BuildingOverview {
     this.#scroller.scrollBy(this.#grid.getBoundingClientRect().top - gridTop);
 
     this.#container.classList.remove('bo-animating');
+    this.#blurIn(this.#grid, '.bo-card-frost, .bo-title, .bo-close');
     this.#phase = 'open';
+  }
+
+  // The glass gets its blur back once the zoom has landed (see .bo-animating
+  // in building-overview.css). Ramped in instead of snapped on: by now
+  // nothing else moves, so re-blurring a couple of dozen small surfaces for
+  // BLUR_IN_MS costs about what a moment of scrolling does. Only what's on
+  // screen, and only where the blur is on at all (the blur setting).
+  #blurIn(root, selector, filter = () => true) {
+    if (!root || reduceMotion.matches) return;
+    const vh = window.innerHeight;
+    for (const el of root.querySelectorAll(selector)) {
+      if (!filter(el)) continue;
+      const to = getComputedStyle(el).backdropFilter;
+      if (!to || to === 'none') continue;
+      const r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > vh || !r.width) continue;
+      el.animate(
+        { backdropFilter: ['none', to], webkitBackdropFilter: ['none', to] },
+        { duration: BLUR_IN_MS, easing: 'cubic-bezier(0.2, 0, 0, 1)' },
+      );
+    }
   }
 
   #teardown({ restoreListTop = null } = {}) {
@@ -551,18 +661,17 @@ class BuildingOverview {
     if (container) setTimeout(() => container.classList.remove('bo-restore'), 450);
 
     // Where the list sits on screen right now — used to hold it still across
-    // the stage removal when the caller didn't ask for a specific target.
-    // Dropping the (possibly padded, grid-tall) stage for the list's natural
+    // the grid's removal when the caller didn't ask for a specific target.
+    // Shrinking the (possibly padded, grid-tall) stage to the list's natural
     // height shrinks the scroller and would otherwise clamp the scroll.
     const listTopNow = list?.getBoundingClientRect().top ?? null;
 
     if (list) {
       list.style.display = '';
       clearLayer(list);
-      if (stage?.parentNode === container) container.insertBefore(list, stage);
     }
     grid?.remove();
-    stage?.remove();
+    if (stage) stage.style.minHeight = '';
     if (this.#filterRow) this.#filterRow.hidden = false;
     container?.classList.remove('bo-active', 'bo-animating');
 
@@ -570,6 +679,11 @@ class BuildingOverview {
     if (target != null && list && this.#scroller) {
       this.#scroller.scrollBy(list.getBoundingClientRect().top - target);
     }
+    // Only a stuck name pill is over anything its blur shows; the rest sit
+    // on the plain background, where ramping them would cost frames for
+    // nothing to see.
+    this.#blurIn(list, '.building-section-titles', (pill) =>
+      pill.getBoundingClientRect().top - pill.closest('.building-section').getBoundingClientRect().top > 1);
 
     this.#stage = null;
     this.#grid = null;
@@ -606,13 +720,8 @@ class BuildingOverview {
     return { left: r.left, top, width: r.width, height: Math.max(1, r.bottom - top) };
   }
 
-  // Client-y a stuck building header parks at (the used `top` of the sticky
-  // header — header height + picker bar + margins, or 1rem inside the panel
-  // on desktop).
   #stickyTop(section) {
-    const header = section?.querySelector('.building-section-header');
-    const px = header ? parseFloat(getComputedStyle(header).top) : NaN;
-    return Number.isFinite(px) ? px : 80;
+    return stickyTopOf(section);
   }
 
   #sectionFor(name) {
@@ -626,15 +735,14 @@ class BuildingOverview {
   }
 
   // ── Grid / cards ──────────────────────────────────────────────────
-  #buildGrid() {
-    const { campusId, date, from, to, results } = this.#ctx;
+  #buildGrid(ctx) {
+    const grid = this.#gridShell();
+    for (const entry of this.#gridEntries(ctx)) grid.appendChild(this.#buildCard(entry));
+    return grid;
+  }
 
-    const active = new Set(
-      (results ?? [])
-        .filter(r => r.rooms.some(rm => rm.status === 'free' || rm.status === 'partially-free'))
-        .map(r => r.building.name)
-    );
-
+  // The grid with its top bar, and no cards yet.
+  #gridShell() {
     const grid = document.createElement('div');
     grid.className = 'bo-grid';
 
@@ -650,37 +758,39 @@ class BuildingOverview {
     closeBtn.addEventListener('pointerdown', () => this.prewarmClose());
     closeBtn.addEventListener('click', () => this.close());
     grid.appendChild(bar);
-
-    for (const { building, counts } of getCampusBuildingsOverview(campusId, date, from, to)) {
-      grid.appendChild(this.#buildCard(building, counts, active.has(building.name)));
-    }
     return grid;
   }
 
-  #buildCard(building, counts, isActive) {
+  // One entry per card, in grid order (see #buildCard).
+  #gridEntries({ campusId, date, from, to, results }) {
+    const active = new Set(
+      (results ?? [])
+        .filter(r => r.rooms.some(rm => rm.status === 'free' || rm.status === 'partially-free'))
+        .map(r => r.building.name)
+    );
+    return getCampusBuildingsOverview(campusId, date, from, to).map(({ building, counts, rooms }) => (
+      { campusId, building, counts, rooms, isActive: active.has(building.name) }
+    ));
+  }
+
+  #buildCard({ campusId, building, counts, rooms, isActive }) {
     const total = STATUS_META.reduce((n, s) => n + (counts[s.key] || 0), 0);
 
-    const card = document.createElement('div');
-    card.className = 'bo-card' + (isActive ? '' : ' bo-card--inactive');
-    card.dataset.buildingName = building.name;
-
+    // Dot + number per status; the word stays for screen readers only.
     const countsHtml = STATUS_META.map(s => {
       const n = counts[s.key] || 0;
       return `<span class="bo-count ${s.cls}${n === 0 ? ' is-zero' : ''}">
-                <b>${n}</b><span class="bo-count-label">${escapeHtml(t(s.i18n))}</span>
+                <i aria-hidden="true"></i><b>${n}</b><span class="bo-count-label">${escapeHtml(t(s.i18n))}</span>
               </span>`;
     }).join('');
 
-    card.innerHTML = `
-      <div class="bo-card-body">
-        <div class="bo-card-head">
-          <span class="bo-card-name">${escapeHtml(t('building.prefix'))} ${escapeHtml(building.name)}</span>
-          ${building.altName ? `<span class="bo-card-alt">${escapeHtml(building.altName)}</span>` : ''}
-          <span class="bo-card-total secondary">${escapeHtml(t('overview.subtitle').replace('{n}', total))}</span>
-        </div>
-        <div class="bo-card-counts">${countsHtml}</div>
-      </div>
-    `;
+    const card = buildBuildingFolder({
+      campusId, building, total,
+      rooms: pickFolderRooms(rooms),
+      paperScale: 0.42,
+      footerHtml: `<div class="bo-card-counts">${countsHtml}</div>`,
+    });
+    if (!isActive) card.classList.add('bo-card--inactive');
 
     if (isActive) {
       card.setAttribute('role', 'button');

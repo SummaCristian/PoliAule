@@ -141,31 +141,6 @@ time-range-chip-picker[data-loading] .trc-value > :not(.chip-skeleton) {
   max-width: 100%;
 }
 
-/* The panel already provides the glass shell; strip the slider's own glass
-   chrome so it reads as one surface. Its .trs-title stays as the panel heading. */
-.trc-content .trs-wrapper {
-  padding: 0;
-  border-radius: 0;
-  background: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  box-shadow: none;
-}
-
-.trc-content .trs-wrapper::after {
-  display: none;
-}
-
-/* The title row is the deform handle (see `deformFrom` in
-   time-range-chip-picker.js); everything else inside .trs-bar-wrapper stays a
-   live slider target. */
-.trc-content .trs-title {
-  cursor: default;
-  touch-action: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
 /* ── Docked (inline-expanded) mode ────────────────────────────────────────
    Desktop 2-column layout: the picker sits directly in the form column as a
    glass card instead of morphing out of a pill. Toggled by picker-dock.js. */

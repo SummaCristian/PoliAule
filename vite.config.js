@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { transform } from 'esbuild';
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 // Cloudflare Pages sets CF_PAGES_BRANCH during the build. Only `dev` ships
 // source maps; `main` and `beta` are user-facing and skip them.
@@ -100,5 +101,56 @@ export default defineConfig({
     // prefixed one, leaving blur working only in Safari. esbuild doesn't.
     cssMinify: 'esbuild',
   },
-  plugins: [minifyPublicCss(['fonts/hugeicons/icons.css']), deferMainStylesheet(), markShellCssReadyInDev()],
+  plugins: [
+    minifyPublicCss(['fonts/hugeicons/icons.css']),
+    deferMainStylesheet(),
+    markShellCssReadyInDev(),
+    // Service worker for offline use (registered from utils/pwa.js). Precaches
+    // what the app needs to open, about 2 MB; the big unused PNGs in
+    // favicons/ stay out. Of favicons/beta only the info page's icon-*.webp
+    // are needed: build-beta.sh copies the rest over main/ before a beta
+    // build. Not active under `npm run dev`.
+    VitePWA({
+      registerType: 'prompt',
+      injectRegister: false,
+      manifest: false, // index.html already links favicons/main/site.webmanifest
+      workbox: {
+        globPatterns: [
+          'index.html',
+          'assets/*.{js,css,png,jpg,svg,webp}',
+          'fonts/**/*.{css,woff,woff2}',
+          'locales/*.json',
+          'favicons/main/{favicon.svg,favicon.ico,favicon-96x96.png,apple-touch-icon.png,logo.webp,icon-*.webp,site.webmanifest,web-app-manifest-*.png}',
+          'favicons/beta/icon-*.webp',
+        ],
+        // Only the secret message uses it: fetched when shown, then cached (below)
+        globIgnores: ['fonts/cormorant-garamond/**'],
+        navigateFallback: 'index.html',
+        cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/fonts/cormorant-garamond/'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'secret-font', cacheableResponse: { statuses: [200] } },
+          },
+          {
+            // Nunito's stylesheet: show the cached one, refresh it in the background
+            urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'google-fonts-css', cacheableResponse: { statuses: [0, 200] } },
+          },
+          {
+            // The font files it points to are versioned by URL, so never refetched
+            urlPattern: ({ url }) => url.origin === 'https://fonts.gstatic.com',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-files',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 30, maxAgeSeconds: 365 * 24 * 60 * 60 },
+            },
+          },
+        ],
+      },
+    }),
+  ],
 });

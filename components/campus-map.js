@@ -22,11 +22,12 @@ const CONTAINER_ID = 'search-classrooms-container';
 // others (Cremona, Lecco, Mantova) are a pan away and always keep their marker.
 const INITIAL_CENTER = [9.195, 45.488];
 const INITIAL_ZOOM = 11.3;
-// A loose leash around Lombardy so a stray fling can't lose the map. Applied as
+// A loose leash around Lombardy (stretched south to Genova) so a stray fling
+// can't lose the map. Applied as
 // a soft post-move clamp rather than the constructor's `maxBounds` — the latter
 // silently caps the map's pitch (and blocks flyTo/setPitch from raising it), so
 // with it set the 3D tilt never engages. See panBackInBounds().
-const MAX_BOUNDS = [[8.3, 44.5], [11.6, 46.8]];
+const MAX_BOUNDS = [[8.3, 44.3], [11.6, 46.8]];
 // Below this zoom we're "looking at the region" → show campuses, not buildings.
 const CAMPUS_ZOOM = 12.3;
 // Where a campus tap settles.
@@ -34,6 +35,22 @@ const CAMPUS_FLY_ZOOM = 16.5;
 // Where a building tap settles — close enough to read as "looking at just
 // this building," one deliberate step in from the campus-wide view.
 const BUILDING_FLY_ZOOM = 18;
+// A campus whose buildings are spread across a whole city (Residenze) is
+// framed from higher up (its own `zoom` in classrooms.json), looking straight
+// down: tilted, the far ones would sink into the horizon.
+const FLAT_BELOW_ZOOM = 15;
+
+// Where a campus tap settles: its own centre, at its own zoom if it has one.
+function campusCamera(campus) {
+  const zoom = campus.zoom ?? CAMPUS_FLY_ZOOM;
+  return { center: [campus.long, campus.lat], zoom, pitch: zoom < FLAT_BELOW_ZOOM ? 0 : 55 };
+}
+
+// Zooming out past this returns to the campus overview: CAMPUS_ZOOM, or a step
+// under a campus framed wider than that.
+function overviewZoom(campus) {
+  return Math.min(CAMPUS_ZOOM, (campus?.zoom ?? CAMPUS_FLY_ZOOM) - 1);
+}
 
 // The campus sheet (components/campus-sheet.{js,css}) covers part of the map
 // — a right-pinned panel on desktop, a bottom one on mobile — so a plain
@@ -151,7 +168,7 @@ function updateShifted() {
 
   const centered = Math.abs(px.x - targetX) <= CENTER_SLACK_PX && Math.abs(px.y - targetY) <= CENTER_SLACK_PX;
   const zoomed = Math.abs(map.getZoom() - focus.zoom) <= 0.05;
-  const pitched = Math.abs(map.getPitch() - 55) <= ANGLE_SLACK_DEG;
+  const pitched = Math.abs(map.getPitch() - focus.pitch) <= ANGLE_SLACK_DEG;
   const facingNorth = Math.abs(map.getBearing()) <= ANGLE_SLACK_DEG;
 
   setShifted(!(centered && zoomed && pitched && facingNorth));
@@ -387,12 +404,7 @@ async function boot() {
   // so the initial view is padding-aware too, not just later flyTo's (see
   // flyToCampus()).
   if (startCampus) {
-    map.jumpTo({
-      center: [startCampus.long, startCampus.lat],
-      zoom: CAMPUS_FLY_ZOOM,
-      pitch: 55,
-      padding: mapPadding(),
-    });
+    map.jumpTo({ ...campusCamera(startCampus), padding: mapPadding() });
   }
 
   // Desktop trackpad: a two-finger swipe should pan the map, not zoom it.
@@ -529,7 +541,7 @@ async function boot() {
   // markers straight back to campus ones. A flight always lands at its
   // campus's own zoom anyway.
   map.on('zoomend', () => {
-    if (!embed && !autoFlying && mode === 'buildings' && map.getZoom() < CAMPUS_ZOOM) {
+    if (!embed && !autoFlying && mode === 'buildings' && map.getZoom() < overviewZoom(markerCampus)) {
       // A zoom-out this big leaves any single-building focus behind too —
       // fall the sheet back to its campus page in sync (see
       // clearSelectedBuildingSilently()'s own note on why this doesn't just
@@ -664,9 +676,12 @@ function selectedBuilding() {
 // recenter button's handler so both agree on what "centered" means right now.
 function selectedFocus() {
   const building = selectedBuilding();
-  if (building) return { lat: building.lat, long: building.long, zoom: BUILDING_FLY_ZOOM };
+  if (building) return { lat: building.lat, long: building.long, zoom: BUILDING_FLY_ZOOM, pitch: 55 };
   const campus = selectedCampus();
-  if (campus) return { lat: campus.lat, long: campus.long, zoom: CAMPUS_FLY_ZOOM };
+  if (campus) {
+    const { zoom, pitch } = campusCamera(campus);
+    return { lat: campus.lat, long: campus.long, zoom, pitch };
+  }
   return null;
 }
 
@@ -710,7 +725,7 @@ function flyToCampus(mapboxgl, campus) {
   showBuildingMarkers(mapboxgl, campus);
   // `bearing: 0` resets any rotation too — see updateShifted()'s facingNorth
   // check, and moveend re-derives `shifted` once this settles.
-  startFly({ center: [campus.long, campus.lat], zoom: CAMPUS_FLY_ZOOM, pitch: 55, bearing: 0 });
+  startFly({ ...campusCamera(campus), bearing: 0 });
 }
 
 // Zooms in further on a single building, one step past flyToCampus() above —
@@ -989,7 +1004,7 @@ export function releaseMap() {
   // Built for the detail page: give the Campus tab its usual opening view.
   const campus = selectedCampus();
   if (campus) {
-    map.jumpTo({ center: [campus.long, campus.lat], zoom: CAMPUS_FLY_ZOOM, pitch: 55, bearing: 0, padding: mapPadding() });
+    map.jumpTo({ ...campusCamera(campus), bearing: 0, padding: mapPadding() });
     showBuildingMarkers(mapboxglLib, campus);
   } else {
     map.jumpTo({ center: INITIAL_CENTER, zoom: INITIAL_ZOOM, pitch: 0, bearing: 0, padding: mapPadding() });

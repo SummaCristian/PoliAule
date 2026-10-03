@@ -124,6 +124,10 @@ class ClassroomDetail {
         const rect = row.getBoundingClientRect();
         const scrolled = window.scrollY > 0 || this._overlay.scrollTop > 0 || document.body.scrollTop > 0;
         stuck = scrolled && rect.top <= top + 0.5;
+        // The stuck row keeps this height (see .title-stuck .detail-title-row).
+        if (!this._overlay.classList.contains('title-stuck')) {
+          this._overlay.style.setProperty('--title-row-h', `${rect.height}px`);
+        }
         const back = document.getElementById('detail-back-btn');
         if (back && !back.hidden) {
           const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
@@ -131,7 +135,10 @@ class ClassroomDetail {
           this._overlay.style.setProperty('--title-shift', `${Math.round(shift)}px`);
         }
       }
-      this._overlay.classList.toggle('title-stuck', stuck);
+      if (stuck !== this._overlay.classList.contains('title-stuck')) {
+        this._overlay.classList.toggle('title-stuck', stuck);
+        this._fitTitle(); // the stuck title has its own size and width
+      }
     };
     const queueTitleStuck = () => {
       if (stuckRaf) return;
@@ -1104,6 +1111,20 @@ class ClassroomDetail {
         </div>
       </div>
     `;
+    // Refit whenever the row's width changes (the overlay being shown, a resize, the
+    // badge's text) and once the web font is in. Height changes are the fit itself.
+    this._titleRowObserver?.disconnect();
+    const titleRow = this._overlay.querySelector('.detail-title-row');
+    if (titleRow) {
+      let rowWidth = -1;
+      this._titleRowObserver = new ResizeObserver(([entry]) => {
+        if (entry.contentRect.width === rowWidth) return;
+        rowWidth = entry.contentRect.width;
+        this._fitTitle();
+      });
+      this._titleRowObserver.observe(titleRow);
+    }
+    document.fonts?.ready.then(() => this._fitTitle());
 
     // Title click -> manual refresh of photo and schedule
     this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {
@@ -1265,6 +1286,110 @@ class ClassroomDetail {
       this._applyPhotoDim(url, el);
       this._applyTitleTone(url, el);
     });
+  }
+
+  /**
+   * Shrinks the title (--title-fit, down to 60%) when its longest word is
+   * wider than the room it has, as with "AULA INFORMATIZZATA" beside the
+   * status badge: the name wraps between words, and a word that can't fit
+   * would otherwise break mid-word. Not hyphens: WebKit doesn't hyphenate
+   * capitalised words, and these names are all caps. Measured with
+   * overflow-wrap off, as the widest line the text then makes.
+   */
+  _fitTitle() {
+    const title = this._overlay.querySelector('.detail-title');
+    const row = title?.parentElement;
+    if (!title || this._overlay.hidden) return;
+    // The room the row leaves the title, not the title's own width: the title is
+    // fit-content, so once its text fits it is exactly as wide as the text.
+    const rs = getComputedStyle(row);
+    const ts = getComputedStyle(title);
+    const badge = row.querySelector('.detail-status-wrapper');
+    const room = row.clientWidth - parseFloat(rs.paddingLeft) - parseFloat(rs.paddingRight)
+      - (badge ? badge.offsetWidth + parseFloat(rs.columnGap || 0) : 0)
+      - parseFloat(ts.marginLeft) - parseFloat(ts.marginRight)
+      - parseFloat(ts.paddingLeft) - parseFloat(ts.paddingRight);
+    title.style.removeProperty('--title-fit');
+    title.style.overflowWrap = 'normal';
+    const range = document.createRange();
+    range.selectNodeContents(title);
+    const widest = () => Math.max(0, ...[...range.getClientRects()].map(r => r.width));
+    // A few rounds: the text doesn't shrink exactly in proportion to the font size
+    // (rounding, spacing), so one ratio can leave it a pixel or two over.
+    let fit = 1;
+    for (let i = 0; i < 4 && room > 0 && fit > 0.6; i++) {
+      const w = widest();
+      if (w <= room - 1) break; // a pixel spare: a word exactly as wide as its line still breaks
+      fit = Math.max(0.6, fit * ((room - 1) / w) * 0.99);
+      title.style.setProperty('--title-fit', fit.toFixed(3));
+    }
+    title.style.overflowWrap = '';
+    this._measurePin();
+  }
+
+  /**
+   * Measures the title's pin (see "The pin" in classroom-detail.css): where its
+   * text sits at rest, where it goes in the pill beside the back button and at
+   * what size, the pill's box at both ends, and the scroll at which the row
+   * sticks. All in the row's own box, from layout offsets, so transforms and
+   * the current scroll don't affect it, except the stick point, which needs
+   * the page at rest and is kept from the last time it was.
+   */
+  _measurePin() {
+    const row = this._overlay.querySelector('.detail-title-row');
+    const title = row?.querySelector('.detail-title');
+    if (!title || this._overlay.hidden || !CSS.supports('animation-timeline: scroll()')) return;
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const rs = getComputedStyle(row);
+    const ts = getComputedStyle(title);
+    const rowRect = row.getBoundingClientRect();
+    const stickyTop = parseFloat(rs.top) || 0;
+    const padL = parseFloat(ts.paddingLeft), padT = parseFloat(ts.paddingTop);
+
+    // At rest: the title's box (its glass starts there) and its text inside it.
+    const x0 = title.offsetLeft, y0 = title.offsetTop, w0 = title.offsetWidth, h0 = title.offsetHeight;
+    const textW = w0 - 2 * padL, textH = h0 - 2 * padT;
+
+    // Pinned: a pill from 0.5rem past the back button to the badge, centred on
+    // the button; the text at most 2/3 of its size (1.875rem → 1.25rem), less
+    // if that is what fits.
+    const back = document.getElementById('detail-back-btn');
+    const backRect = back && !back.hidden ? back.getBoundingClientRect() : null;
+    const pillX = (backRect ? backRect.right - rowRect.left : 4.25 * rem) + 0.5 * rem;
+    const centreY = backRect ? backRect.top + backRect.height / 2 - stickyTop : 1.5 * rem;
+    const badge = row.querySelector('.detail-status-wrapper');
+    const limit = (badge ? badge.offsetLeft : row.clientWidth - parseFloat(rs.paddingRight)) - parseFloat(rs.columnGap || 0);
+    const k = Math.max(0.3, Math.min(2 / 3, (limit - pillX - 1.75 * rem) / textW));
+    const pillW = textW * k + 1.75 * rem;
+    const pillH = Math.max(3 * rem, textH * k + 0.75 * rem);
+    const pillY = centreY - pillH / 2;
+    const dx = pillX + 0.875 * rem - (x0 + padL);
+    const dy = pillY + (pillH - textH * k) / 2 - (y0 + padT);
+
+    // The glass sits at the pill and starts transformed onto the title's resting box.
+    const set = (name, v) => row.style.setProperty(name, `${v.toFixed(2)}px`);
+    set('--pill-x', pillX); set('--pill-y', pillY); set('--pill-w', pillW); set('--pill-h', pillH);
+    set('--pill-from-x', x0 - pillX); set('--pill-from-y', y0 - pillY);
+    row.style.setProperty('--pill-from-sx', (w0 / pillW).toFixed(4));
+    row.style.setProperty('--pill-from-sy', (h0 / pillH).toFixed(4));
+    set('--pin-dx', dx); set('--pin-dy', dy);
+    row.style.setProperty('--pin-k', k.toFixed(4));
+
+    // The scroll at which the row sticks: its distance to the sticky top, less
+    // what the photo's shrink (0 → 220px of scroll, in the flow above it) takes
+    // off on the way.
+    const scroll = document.scrollingElement?.scrollTop ?? 0;
+    if (scroll !== 0) return;
+    const distance = rowRect.top - stickyTop;
+    const photo = this._overlay.querySelector('.detail-photo-container');
+    let shrink = 0;
+    if (photo) {
+      const ph = photo.getBoundingClientRect();
+      const end = innerWidth < 600 ? Math.max(0.33 * innerHeight, 240) : ph.width * 8 / 21;
+      shrink = Math.max(0, ph.height - end);
+    }
+    const at = distance / (1 + shrink / 220) <= 220 ? distance / (1 + shrink / 220) : distance - shrink;
+    row.style.setProperty('--title-pin-at', `${Math.max(1, at).toFixed(1)}px`);
   }
 
   /**

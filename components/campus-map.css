@@ -650,10 +650,10 @@ html:has(#search-classrooms-container.visible) .footer {
   align-items: center;
   justify-content: center;
 
-  min-width: 2.25rem;
-  min-height: 2.25rem;
-  max-width: 9rem;
-  padding: 0.3rem 0.55rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  max-width: 9.5rem;
+  padding: 0.35rem 0.6rem;
   box-sizing: border-box;
   border-radius: 0.8rem;
 
@@ -682,7 +682,7 @@ html:has(#search-classrooms-container.visible) .footer {
 }
 
 .map-pin__name {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   font-weight: 850;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -693,7 +693,7 @@ html:has(#search-classrooms-container.visible) .footer {
   max-width: 100%;
   margin-top: 1px;
   overflow: hidden;
-  font-size: 0.6875rem;
+  font-size: 0.71875rem;
   font-weight: 800;
   line-height: 1.15;
   color: var(--text-color-secondary);
@@ -722,6 +722,55 @@ html:has(#search-classrooms-container.visible) .footer {
   font-size: 0.9375rem;
   font-weight: 800;
   letter-spacing: 0;
+}
+
+/* Buildings with classrooms: a faint accent veil over the clear glass, so they
+   read as the places to go next to the plain secondary ones. The selected pin
+   has its own full tint (below). */
+.map-pin:not(.map-pin--campus, .map-pin--secondary, .map-pin--selected, .map-pin--static) .map-pin__plate {
+  background:
+    linear-gradient(color-mix(in srgb, var(--text-color-accent) 16%, transparent) 0 0),
+    var(--lg-tint-clear);
+}
+
+@media (prefers-color-scheme: dark) {
+  .map-pin:not(.map-pin--campus, .map-pin--secondary, .map-pin--selected, .map-pin--static) .map-pin__plate {
+    background:
+      linear-gradient(color-mix(in srgb, var(--text-color-accent) 11%, transparent) 0 0),
+      var(--lg-tint-clear);
+  }
+}
+
+/* Secondary campuses and buildings (no classrooms, or only events-only
+   ones, utils/secondary.js): a smaller plate, so the places worth walking to
+   stand out. */
+.map-pin--secondary .map-pin__plate {
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.6rem;
+}
+
+.map-pin--secondary .map-pin__name {
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.map-pin--secondary .map-pin__alt {
+  font-size: 0.5625rem;
+}
+
+.map-pin--secondary .map-pin__dot {
+  width: 5px;
+  height: 5px;
+}
+
+.map-pin--campus.map-pin--secondary .map-pin__plate {
+  padding-inline: 0.55rem;
+}
+
+.map-pin--campus.map-pin--secondary .map-pin__name {
+  font-size: 0.75rem;
 }
 
 /* The building open in the sheet (or shown by the detail page): accent glass,

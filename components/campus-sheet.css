@@ -272,6 +272,31 @@
   color: var(--folder-text-secondary);
 }
 
+/* "Other buildings" toggle above the campus grid (the Available tab's
+   .results-filter-row / .results-filter-btn, classroom-list.css). */
+.campus-sheet-filter-row {
+  padding: 0 0 0.75rem;
+}
+
+/* A secondary campus, or a building with no classrooms: the Available tab's
+   "No results" block (.empty-container-*, classroom-list.css). */
+.campus-sheet-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 0 2rem;
+  text-align: center;
+}
+
+.campus-sheet-empty .empty-container-icon {
+  font-size: 5rem !important;
+}
+
+.campus-sheet-empty .empty-container-subtitle {
+  margin: 0 1.5rem;
+}
+
 /* The building page's grid holds actual classroom cards (.classroom-card,
    reused straight from the Available tab), not the wider .bo-card building
    tiles above — so it drops .campus-sheet-grid's fixed 2-up split for the

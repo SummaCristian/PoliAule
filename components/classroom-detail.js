@@ -1050,6 +1050,15 @@ class ClassroomDetail {
             </div>
           ` : ''}
         </div>
+        ${classroom.eventsOnly ? `
+          <div class="detail-events-only" role="note">
+            <i class="hgi-stroke hgi-alert-02" aria-hidden="true"></i>
+            <div>
+              <strong>${t('detail.eventsOnlyTitle')}</strong>
+              <p>${t('detail.eventsOnlyText')}</p>
+            </div>
+          </div>
+        ` : ''}
       </div>
       <div class="detail-content">
         <div class="detail-column">

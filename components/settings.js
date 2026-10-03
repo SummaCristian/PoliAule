@@ -5,6 +5,7 @@
 import { t, getLocale, setLocale, onLanguageSwitch, animateI18nElement } from '../i18n.js';
 import { classroomsData } from '../available-rooms-script.js';
 import { selectCampusById } from './campus-picker.js';
+import { isSecondaryCampus } from '../utils/secondary.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
 import { openTransferDialog } from './transfer-dialog.js';
@@ -521,8 +522,10 @@ function buildCampusSection() {
   };
 
   // Save last used campus whenever the campus selection changes
+  // Not a secondary campus: only the Campus tab lists those, and the Available
+  // tab's picker couldn't restore one.
   document.addEventListener('campuschange', (e) => {
-    if (rememberLastEnabled) {
+    if (rememberLastEnabled && !isSecondaryCampus(e.detail.id)) {
       localStorage.setItem(LAST_CAMPUS_ID_KEY, e.detail.id);
     }
   });

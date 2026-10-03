@@ -7,6 +7,7 @@ import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
 import { createBuildingStarButton, setBuildingStarTarget } from '../utils/favourites.js';
+import { createButton } from 'vitrium';
 
 // The Campus tab's own "pages" inside the campus sheet (components/campus-sheet.js):
 //
@@ -47,7 +48,9 @@ import { createBuildingStarButton, setBuildingStarTarget } from '../utils/favour
 // no-ops once already showing that selection. The back button always
 // returns to the campus page — it never leaves a stack of visited buildings
 // behind.
-class CampusSheetPicker extends CampusChipPicker {}
+class CampusSheetPicker extends CampusChipPicker {
+  includeSecondary = true;
+}
 customElements.define('campus-sheet-picker', CampusSheetPicker);
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -74,6 +77,9 @@ let selectedBuildingId = null; // building.name (unique within a campus — see 
 // grid happened to be scrolled to, and the campus grid losing its place
 // every time a building is visited.
 let savedCampusScroll = 0;
+// Whether the campus grid also lists secondary buildings (no classrooms, or
+// only events-only ones). Off on every launch; the toggle above the grid flips it.
+let showSecondary = false;
 
 export function initCampusBuildingsPage(headerContainer, gridContainer) {
   headerContainer.innerHTML = '';
@@ -332,9 +338,30 @@ function flipTitleBox(mutate) {
   setTimeout(clear, SLIDE_DUR + 150);
 }
 
+// The campus grid's buildings: every one when the secondary ones are shown,
+// otherwise only those with classrooms. None for a secondary campus.
+function visibleBuildings(campus) {
+  if (!campus || campus.secondary) return [];
+  return showSecondary ? campus.buildings : campus.buildings.filter(b => !b.secondary);
+}
+
+// Same empty state as the Available tab's "No results" (script.js). `kind` is
+// 'campus' or 'building', for the subtitle.
+function noClassroomsMessage(kind) {
+  const el = document.createElement('div');
+  el.className = 'campus-sheet-empty';
+  el.innerHTML = `
+    <i class="hgi-stroke hgi-school-01 empty-container-icon" aria-hidden="true"></i>
+    <p class="empty-container-title">${t('campus.noClassrooms')}</p>
+    <p class="empty-container-subtitle">${t(kind === 'campus' ? 'campus.noClassroomsCampus' : 'campus.noClassroomsBuilding')}</p>
+  `;
+  return el;
+}
+
 function renderCampusHeader(campusId, { fade = false } = {}) {
   const campus = staticClassroomsData.find(c => c.id === campusId);
-  const buildings = campus?.buildings ?? [];
+  // A secondary campus lists no buildings, but its pins are still on the map.
+  const buildings = campus?.secondary ? campus.buildings : visibleBuildings(campus);
   setHeaderText(t('overview.title'), t('campus.buildingsCount').replace('{n}', buildings.length), fade);
   backBtn.hidden = true;
   starBtn.hidden = true;
@@ -349,10 +376,36 @@ function buildCampusPage(campusId) {
   page.appendChild(grid);
 
   const campus = staticClassroomsData.find(c => c.id === campusId);
-  for (const building of campus?.buildings ?? []) {
+  if (campus?.secondary) {
+    grid.replaceWith(noClassroomsMessage('campus'));
+    return page;
+  }
+  if (campus?.buildings.some(b => b.secondary)) page.prepend(buildSecondaryToggle(campusId));
+  for (const building of visibleBuildings(campus)) {
     grid.appendChild(buildBuildingCard(campusId, building));
   }
   return page;
+}
+
+// Glass toggle button, same as the Available tab's "Partially Free" filter:
+// accent-tinted while the secondary buildings are shown.
+function buildSecondaryToggle(campusId) {
+  const row = document.createElement('div');
+  row.className = 'results-filter-row campus-sheet-filter-row';
+  const btn = createButton({
+    icon: '<i class="hgi-stroke hgi-building-03" aria-hidden="true"></i>',
+    text: t('campus.showSecondary'),
+    className: 'results-filter-btn',
+    onClick: () => {
+      showSecondary = !showSecondary;
+      swapCampusPage(campusId);
+    },
+  });
+  btn.classList.toggle('lg-glass--tinted', showSecondary);
+  btn.classList.toggle('lg-glass--clear', showSecondary);
+  btn.setAttribute('aria-pressed', String(showSecondary));
+  row.appendChild(btn);
+  return row;
 }
 
 // Re-renders the campus page's grid in place (no page-swap animation — used
@@ -433,7 +486,8 @@ function buildBuildingPage(building) {
   const grid = document.createElement('div');
   grid.className = 'bo-grid campus-sheet-grid campus-sheet-classroom-grid';
   page.appendChild(grid);
-  appendClassroomsByFloor(grid, building);
+  if (building.classrooms.length) appendClassroomsByFloor(grid, building);
+  else grid.replaceWith(noClassroomsMessage('building'));
   return page;
 }
 

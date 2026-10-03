@@ -807,7 +807,7 @@ function showCampusMarkers(mapboxgl) {
     const { lat, long } = campus;
     if (typeof lat !== 'number' || typeof long !== 'number') continue;
 
-    const el = markerElement('button', { name: campus.name, cls: 'map-pin--campus' });
+    const el = markerElement('button', { name: campus.name, cls: `map-pin--campus${campus.secondary ? ' map-pin--secondary' : ''}` });
     el.addEventListener('click', () => {
       flyToCampus(mapboxgl, campus);
     });
@@ -829,7 +829,7 @@ function showBuildingMarkers(mapboxgl, campus) {
     const { lat, long } = b;
     if (typeof lat !== 'number' || typeof long !== 'number') continue;
 
-    const el = markerElement('button', { name: b.name, alt: (b.altName || '').trim() });
+    const el = markerElement('button', { name: b.name, alt: (b.altName || '').trim(), cls: b.secondary ? 'map-pin--secondary' : '' });
     el.dataset.building = b.name;
     // Selects the building in the sheet's own building page (components/
     // campus-buildings.js) and, via the 'buildingchange' listener above,

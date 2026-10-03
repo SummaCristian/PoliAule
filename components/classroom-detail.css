@@ -1333,6 +1333,60 @@ body.detail-open .tab-content * {
   margin: 0;
 }
 
+/* ── Events-only notice ──────────────────────────────────────────── */
+/* Under the stats, for a room that is generally closed outside of official
+   events (`eventsOnly` in classrooms.json). Yellow-tinted glass, sized like the
+   header's own rows (.detail-header is display: contents, see above). */
+.detail-events-only {
+  grid-column: 1 / -1;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: calc(100% - 2.5rem);
+  max-width: calc(var(--detail-col, 680px) - 2.5rem);
+  box-sizing: border-box;
+  margin: 0.25rem auto 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-xl);
+  color: var(--text-color-primary);
+
+  background: color-mix(in srgb, var(--color-status-partial) 22%, var(--lg-tint-clear));
+  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
+  backdrop-filter: blur(var(--lg-blur-clear));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-status-partial) 45%, transparent),
+    var(--lg-highlight),
+    0 4px 24px 0 var(--lg-shadow-color);
+}
+
+.detail-events-only .hgi-stroke {
+  flex: none;
+  font-size: 1.5rem;
+  color: color-mix(in oklch, var(--color-status-partial) 75%, black);
+}
+
+.detail-events-only strong {
+  display: block;
+  font-size: var(--text-100);
+  font-weight: 800;
+}
+
+.detail-events-only p {
+  margin: 0.125rem 0 0;
+  font-size: var(--text-90);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-color-secondary);
+}
+
+@media (prefers-color-scheme: dark) {
+  .detail-events-only .hgi-stroke {
+    color: var(--color-status-partial);
+  }
+}
+
 /* ── Weekly Schedule ─────────────────────────────────────────────── */
 
 /* Desktop: create space on the left for the today indicator */

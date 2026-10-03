@@ -1,4 +1,5 @@
 import { getApiBase } from './config.js';
+import { availableTabRooms } from './utils/secondary.js';
 
 // ---------- DATA ----------
 
@@ -229,7 +230,7 @@ export function findAvailableClassrooms(campusId, date, fromTime, toTime) {
 
     const availableRooms = [];
 
-    for (const classroom of building.classrooms) {
+    for (const classroom of availableTabRooms(campusId, building)) {
       const freeSlots = getFreeSlots(classroom.occupancy, open.from, open.to);
       if (freeSlots.length > 0) {
         const isFree = freeSlots.length === 1
@@ -273,7 +274,7 @@ export function getFreeShareBySlot(campusId, date, windows) {
   if (!campusData) return null;
 
   const rooms = campusData.buildings.flatMap(building =>
-    (building.classrooms ?? []).map(classroom => ({ building, classroom })));
+    availableTabRooms(campusId, building).map(classroom => ({ building, classroom })));
   if (!rooms.length) return null;
 
   return windows.map(({ from, to }) => {
@@ -552,14 +553,17 @@ export function getCampusBuildingsOverview(campusId, date, fromTime, toTime) {
   if (!campusData) return [];
 
   // Closed buildings are left out and free time is cut to opening hours, as
-  // findAvailableClassrooms() does for the results
+  // findAvailableClassrooms() does for the results. So are buildings with
+  // nothing bookable (utils/secondary.js).
   return campusData.buildings.flatMap(building => {
     const open = clipToOpeningHours(building, formattedDate, fromTime, toTime);
     if (!open) return [];
 
+    const bookable = availableTabRooms(campusId, building);
+    if (!bookable.length) return [];
     const counts = { 'free': 0, 'partially-free': 0, 'occupied': 0 };
     const rooms = [];
-    for (const room of building.classrooms ?? []) {
+    for (const room of bookable) {
       const freeSlots = getFreeSlots(room.occupancy ?? [], open.from, open.to);
       let status = 'occupied';
       if (freeSlots.length > 0) {

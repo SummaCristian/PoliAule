@@ -1227,21 +1227,32 @@ class ClassroomDetail {
     // Pre-blurred when it can be (utils/photo.js blurredBackdrop): the GPU
     // otherwise redoes the blur on every frame the page moves. That needs the
     // backdrop's box, measured once an earlier open has landed
-    // (_measureBackdrop); until then, the live filter. ?vtdebug=liveblur keeps
-    // the live one, to compare.
-    const pre = this._backdropBox && !vtFlag('liveblur') ? blurredBackdrop(url, this._backdropBox) : null;
-    el.style.setProperty('--backdrop-img', `url("${pre ?? url}")`);
-    el.classList.toggle('prerendered', !!pre);
-    el.classList.add('loaded');
+    // (_measureBackdrop), and the photo's small copy, made by extractPhotoColor;
+    // until then, the live filter. ?vtdebug=liveblur keeps the live one, to compare.
+    const show = () => {
+      const pre = this._backdropBox && !vtFlag('liveblur') ? blurredBackdrop(url, this._backdropBox) : null;
+      el.style.setProperty('--backdrop-img', `url("${pre ?? url}")`);
+      el.classList.toggle('prerendered', !!pre);
+      el.classList.add('loaded');
+    };
 
     // Base color under the backdrop's fade (see #classroom-detail-overlay's
     // background). Best-effort: without it the page just stays --background-color.
+    // The backdrop waits for it: below the photo it is the photo's bottom strip
+    // stretched down the page, which only reads as a wash of color once the
+    // tint it fades into is there. Shown early, a slow extraction left it as
+    // the photo smeared down an untinted page. Both then fade in together.
     const cached = getCachedPhotoColor(url);
-    if (cached) document.documentElement.style.setProperty('--detail-tint', cached);
+    if (cached) {
+      document.documentElement.style.setProperty('--detail-tint', cached);
+      show();
+    }
     this._applyPhotoDim(url, el);
     this._applyTitleTone(url, el);
     extractPhotoColor(url).then(color => {
-      if (color && el.isConnected) document.documentElement.style.setProperty('--detail-tint', color);
+      if (!el.isConnected) return;
+      if (color) document.documentElement.style.setProperty('--detail-tint', color);
+      if (!cached) show();
       this._applyPhotoDim(url, el);
       this._applyTitleTone(url, el);
     });

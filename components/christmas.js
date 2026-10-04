@@ -10,7 +10,7 @@
 //   - a gift room per campus and day: its card and page wrapped in a ribbon
 //     (tap the bow on its page to unwrap it), a gift over its building on the
 //     map, in its building's folder and next to its name in the search
-//   - mistletoe hanging from the settings button
+//   - mistletoe hanging from the data status button
 //   - the logo in a Santa hat with a present, in the header and the tab icon
 //     (and as the Info page's hero), and garlands, lights and snow on the
 //     Info page's cards
@@ -921,7 +921,9 @@ function clearMap() {
   } catch { /* the map was torn down already */ }
 }
 
-// ── Mistletoe under the settings button ───────────────────────────────────
+// ── Mistletoe under the data status button ────────────────────────────────
+// Not the settings button: on the Campus map the locate button sits below
+// that one, and the mistletoe would hang over it.
 // Hangs on a ribbon from behind it, swaying; a tap gives it a swing
 
 // A bunch of mistletoe tied with a red bow, hanging from the bow's knot (at
@@ -939,14 +941,14 @@ let mistletoe = null;
 let mistletoeResize = null;
 
 function placeMistletoe() {
-  const btn = document.getElementById('settings-btn');
+  const btn = document.getElementById('data-fetch-btn');
   if (!mistletoe || !btn) return;
   mistletoe.style.left = `${btn.offsetLeft + btn.offsetWidth / 2}px`;
   mistletoe.style.top = `${btn.offsetTop + btn.offsetHeight / 2}px`;
 }
 
 function startMistletoe() {
-  const btn = document.getElementById('settings-btn');
+  const btn = document.getElementById('data-fetch-btn');
   const host = btn?.offsetParent;
   if (!host) return;
   mistletoe = document.createElement('div');

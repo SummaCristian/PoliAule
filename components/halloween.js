@@ -9,7 +9,7 @@
 //   - a haunted classroom per campus and day: a ghost peeking into its card
 //     and its page's photo, rising out of its building's folder, floating
 //     over its building on the map, and next to its name in the search
-//   - a spider hanging from the settings button (tap it to scare it up)
+//   - a spider hanging from the data status button (tap it to scare it up)
 //   - now and then a flock of bats across the screen, and a spider walking
 //     along the tab bar
 //   - a burst of candy when something gets starred
@@ -633,14 +633,16 @@ function clearMap() {
   } catch { /* the map was torn down already */ }
 }
 
-// ── Spider under the settings button ──────────────────────────────────────
+// ── Spider under the data status button ───────────────────────────────────
+// Not the settings button: on the Campus map the locate button sits below
+// that one, and the spider would hang over it.
 
 let dangler = null;
 let danglerTimer = 0;
 let danglerResize = null;
 
 function placeDangler() {
-  const btn = document.getElementById('settings-btn');
+  const btn = document.getElementById('data-fetch-btn');
   if (!dangler || !btn) return;
   dangler.style.left = `${btn.offsetLeft + btn.offsetWidth / 2}px`;
   dangler.style.top = `${btn.offsetTop + btn.offsetHeight / 2}px`;
@@ -661,7 +663,7 @@ function climbDangler() {
 }
 
 function startDangler() {
-  const btn = document.getElementById('settings-btn');
+  const btn = document.getElementById('data-fetch-btn');
   const host = btn?.offsetParent;
   if (!host) return;
   dangler = document.createElement('div');

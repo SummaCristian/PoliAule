@@ -28,6 +28,8 @@ import {
   findAvailableClassrooms,
   fetchClassroomsData,
   loadCachedClassroomsData,
+  isCampusClosedAllDay,
+  getOpenCommonAreas,
   SKIP_DAYS
 } from './available-rooms-script.js';
 
@@ -635,7 +637,8 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   const dayData = classroomsData.find(day => day.date === dateKey) ?? classroomsData[0];
 
   if (results.length === 0) {
-    renderNoResultsClassroomsContainer(container);
+    if (campusId && isCampusClosedAllDay(campusId, date)) renderCampusClosedContainer(container, campusId, date);
+    else renderNoResultsClassroomsContainer(container);
     return;
   }
 
@@ -708,6 +711,32 @@ function renderNoResultsClassroomsContainer(container) {
     <i class="hgi-stroke hgi-search-remove empty-container-icon" aria-hidden="true"></i>
     <p class="empty-container-title">${t('results.noResultsTitle')}</p>
     <p class="empty-container-subtitle">${t('results.noResultsSubtitle')}</p>
+  `;
+}
+
+// The empty state when every building on the campus is closed that day (a
+// Sunday, a holiday): a tinted glass note saying so, instead of "no results",
+// plus the common areas that stay open anyway (building 11's Patio and Agorà).
+function renderCampusClosedContainer(container, campusId, date) {
+  container.classList.add('empty');
+
+  const commonAreaLines = getOpenCommonAreas(campusId, date).map(({ building, names, hours }) => {
+    const allDay = hours[0] === '00:00' && hours[1] === '23:59';
+    return `<p class="campus-closed-note__body">${t('results.campusClosedCommonAreas')
+      .replace('{building}', escapeHtml(building))
+      .replace('{areas}', names.map(escapeHtml).join(', '))
+      .replace('{hours}', allDay ? t('results.campusClosedAllDay') : `${escapeHtml(hours[0])}–${escapeHtml(hours[1])}`)}</p>`;
+  });
+
+  container.innerHTML = `
+    <div class="campus-closed-note lg-glass lg-glass--clear lg-glass--tinted liquid-glass" role="note">
+      <i class="hgi-stroke hgi-door-lock campus-closed-note__icon" aria-hidden="true"></i>
+      <div class="campus-closed-note__text">
+        <p class="campus-closed-note__title">${t('results.campusClosedTitle')}</p>
+        <p class="campus-closed-note__body">${t('results.campusClosedText')}</p>
+        ${commonAreaLines.join('')}
+      </div>
+    </div>
   `;
 }
 

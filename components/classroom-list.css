@@ -94,6 +94,48 @@
   margin: 0 3rem;
 }
 
+/* Campus closed all day (renderCampusClosedContainer in script.js), in place
+   of the "no results" icon and text. Styled like the season's banner
+   (.season-banner in style.css): clear glass with just a veil of the accent,
+   the text in the app's own colours, only the icon in the accent. */
+.campus-closed-note {
+  --lg-glass-tint: color-mix(in srgb, var(--lg-accent) 40%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: calc(100% - 2.5rem);
+  max-width: 28rem;
+  box-sizing: border-box;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-xl);
+  color: var(--text-color-primary);
+  text-align: start;
+}
+
+.campus-closed-note__icon {
+  flex: none;
+  font-size: 1.4rem;
+  color: var(--lg-accent);
+}
+
+.campus-closed-note__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.campus-closed-note__title {
+  margin: 0;
+  font-size: var(--text-90);
+  font-weight: 700;
+}
+
+.campus-closed-note__body {
+  margin: 0.1rem 0 0;
+  font-size: var(--text-80);
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text-color-primary) 70%, transparent);
+}
+
 /* Results list — a vertical stack of per-building <li> sections (see
    buildBuildingSection in script.js). Each section is its own card grid, so
    its sticky header is confined to that section's box: a new building's

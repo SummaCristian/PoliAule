@@ -70,11 +70,16 @@ Returns per-building opening hours, campus-wide defaults, and holiday closure pe
   "campus_defaults": {
     "MIA01": { "mon_fri": ["07:00", "21:00"], "sat": ["07:00", "20:00"], "sun": null }
   },
+  "common_areas": [
+    { "building": "11", "name": "Patio", "mon_fri": ["00:00", "23:59"], "sat": ["00:00", "23:59"], "sun": ["00:00", "23:59"] }
+  ],
   "default_hours": { "mon_fri": ["07:15", "20:15"], "sat": null, "sun": null }
 }
 ```
 
 To resolve a given building's hours: look it up in `buildings` by its number/code (the leading alphanumeric token of its `name` in `classrooms.json`, e.g. `"32.1"` → `"32"`); if not found, look up its campus `id` in `campus_defaults`; if that's also missing, use `default_hours`. `null` for `sat`/`sun` means closed that day.
+
+`common_areas` lists a building's common spaces with their own hours (e.g. building 11's Patio and Agorà, open around the clock), keyed by the same building code. They're open even when the building's classrooms aren't, so they never change the building's own hours. `["00:00", "23:59"]` means open 24 hours (the page's "H24").
 
 ### Classroom photos
 

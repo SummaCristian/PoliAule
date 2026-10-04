@@ -16,6 +16,11 @@ export const SKIP_DAYS = [0] // Sunday
 // because they apply to every building at once. Null until loaded.
 let holidayPeriods = null;
 
+// Common spaces with their own hours (opening-hours.json's common_areas, e.g.
+// building 11's Patio and Agorà), open even when the building's classrooms
+// aren't. Empty until loaded, or when an older file has none.
+let commonAreas = [];
+
 // ----------  FETCHING LOGIC ----------
 
 // Extracts the identifier used to key openingHours.buildings/campus_defaults
@@ -101,6 +106,7 @@ const openingHoursUrl = apiBase => `${apiBase}/v1/opening-hours`;
 function applyClassroomsData(days, openingHours) {
   if (openingHours) {
     holidayPeriods = openingHours.holiday_periods ?? [];
+    commonAreas = openingHours.common_areas ?? [];
     for (const day of days) {
       for (const campus of day.campuses) {
         for (const building of campus.buildings) {
@@ -308,14 +314,55 @@ export function getBuildingOpening(building, dateKey) {
   const hours = building?.hours;
   if (!hours) return null;
 
-  const isoDate = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
-  if (holidayPeriods?.some(p => p.start <= isoDate && isoDate <= p.end)) return { closed: true };
+  if (isHoliday(dateKey)) return { closed: true };
 
+  const isoDate = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
   const dow = new Date(isoDate + 'T00:00').getDay(); // 0 = Sunday
   const range = hours[dow === 0 ? 'sun' : dow === 6 ? 'sat' : 'mon_fri'];
   if (!range) return { closed: true };
 
   return { opens: range[0], closes: range[1] };
+}
+
+// Whether dateKey ("YYYYMMDD") falls in one of polimi.it's holiday periods.
+function isHoliday(dateKey) {
+  const isoDate = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
+  return !!holidayPeriods?.some(p => p.start <= isoDate && isoDate <= p.end);
+}
+
+// Whether every building on campusId is closed all of date ("YYYY-MM-DD"):
+// a holiday, or a weekday none of them opens. False when the hours never
+// loaded, since getBuildingOpening() then treats buildings as open.
+export function isCampusClosedAllDay(campusId, date) {
+  const formattedDate = formatDateYYYYMMDD(new Date(date));
+  const dayData = classroomsData.find(day => day.date === formattedDate);
+  const buildings = dayData?.campuses.find(c => c.id === campusId)?.buildings;
+  if (!buildings?.length) return false;
+  return buildings.every(building => getBuildingOpening(building, formattedDate)?.closed);
+}
+
+// The common areas open on campusId on date ("YYYY-MM-DD"), grouped by building
+// and hours: [{ building: "11", names: ["Patio", "Agorà"], hours: ["00:00", "23:59"] }].
+// None on holidays, which close everything.
+export function getOpenCommonAreas(campusId, date) {
+  const formattedDate = formatDateYYYYMMDD(new Date(date));
+  if (isHoliday(formattedDate)) return [];
+  const dayData = classroomsData.find(day => day.date === formattedDate);
+  const buildings = dayData?.campuses.find(c => c.id === campusId)?.buildings ?? [];
+  const keys = new Set(buildings.map(buildingHoursKey));
+
+  const dow = new Date(date + 'T00:00').getDay(); // 0 = Sunday
+  const dayField = dow === 0 ? 'sun' : dow === 6 ? 'sat' : 'mon_fri';
+
+  const groups = new Map();
+  for (const area of commonAreas) {
+    const hours = area[dayField];
+    if (!hours || !keys.has(area.building)) continue;
+    const groupKey = `${area.building}|${hours.join('-')}`;
+    if (!groups.has(groupKey)) groups.set(groupKey, { building: area.building, names: [], hours });
+    groups.get(groupKey).names.push(area.name);
+  }
+  return [...groups.values()];
 }
 
 // Narrows [fromTime, toTime] to the part the building is open for on dateKey,

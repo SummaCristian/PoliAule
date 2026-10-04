@@ -463,7 +463,7 @@ function decorateMarker(el, { campus, building }) {
 // size and scaled up so they read from campus zoom. At night (dark mode's
 // night preset) the pumpkins and ghosts glow.
 
-const MAP_MODELS = ['pumpkin', 'tombstone', 'skull', 'ghost'];
+const MAP_MODELS = ['pumpkin', 'tombstone', 'skull', 'ghost', 'pumpkin-night', 'ghost-night'];
 const MAP_LAYER = 'hw-ground';
 // Models can't light their surroundings, so at night a soft pool of light on
 // the ground under each pumpkin and ghost stands in for it: a blurred circle
@@ -478,10 +478,19 @@ let mapActive = false;
 // model layer fed from GeoJSON, hence the theme.)
 const darkScheme = matchMedia('(prefers-color-scheme: dark)');
 const glowFor = (dark) => ['match', ['get', 'model'], 'hw-pumpkin', dark ? 0.85 : 0, 'hw-ghost', dark ? 0.75 : 0, 0];
+// Mapbox adds a model's glow colours even with its emissive strength at 0, so
+// the pumpkins and ghosts glowing all over are separate night versions,
+// swapped in with dark mode (scripts/build_season_models.mjs)
+const modelIdFor = (dark) => (dark
+  ? ['match', ['get', 'model'], 'hw-pumpkin', 'hw-pumpkin-night', 'hw-ghost', 'hw-ghost-night', ['get', 'model']]
+  : ['get', 'model']);
 const poolOpacity = (dark) => (dark ? 0.55 : 0);
 const updateGlow = () => {
   const dark = darkScheme.matches;
-  if (mapRef?.getLayer(MAP_LAYER)) mapRef.setPaintProperty(MAP_LAYER, 'model-emissive-strength', glowFor(dark));
+  if (mapRef?.getLayer(MAP_LAYER)) {
+    mapRef.setLayoutProperty(MAP_LAYER, 'model-id', modelIdFor(dark));
+    mapRef.setPaintProperty(MAP_LAYER, 'model-emissive-strength', glowFor(dark));
+  }
   if (mapRef?.getLayer(GLOW_LAYER)) mapRef.setPaintProperty(GLOW_LAYER, 'circle-opacity', poolOpacity(dark));
 };
 
@@ -554,7 +563,7 @@ function decorateMap(map) {
       source: MAP_LAYER,
       slot: 'middle',
       minzoom: 15,
-      layout: { 'model-id': ['get', 'model'] },
+      layout: { 'model-id': modelIdFor(darkScheme.matches) },
       paint: {
         'model-type': 'common-3d',
         // At real size a pumpkin is a pixel or two from campus zoom (about

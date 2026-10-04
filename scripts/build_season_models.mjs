@@ -118,20 +118,31 @@ function decal(shapes, centreY, radiusAt, material) {
 
 // ── The models ────────────────────────────────────────────────────────────
 
-// `emissive` is what a model shows at night: the map layer turns the
-// pumpkins' and ghosts' emissive strength up in dark mode, and Mapbox then
-// draws them mostly in these colours (a part without one would go black)
+// `emissive` is a colour a material gives off. Mapbox adds it to the shading
+// whatever the layer's emissive strength, so by day only the pumpkin's face
+// has one; the night versions (NIGHT, below) give every part one, since with
+// the strength turned up Mapbox draws a model mostly in these colours and a
+// part without one goes black.
 const MATERIALS = {
-  pumpkin: { color: [0.93, 0.42, 0.06], roughness: 0.6, emissive: [0.95, 0.45, 0.08] },
-  rib: { color: [0.80, 0.32, 0.03], roughness: 0.6, emissive: [0.8, 0.33, 0.04] },
-  stem: { color: [0.28, 0.36, 0.15], roughness: 0.9, emissive: [0.16, 0.2, 0.08] },
-  glow: { color: [1.0, 0.78, 0.22], roughness: 1, emissive: [1.0, 0.85, 0.35] },
+  pumpkin: { color: [0.93, 0.42, 0.06], roughness: 0.6 },
+  rib: { color: [0.80, 0.32, 0.03], roughness: 0.6 },
+  stem: { color: [0.28, 0.36, 0.15], roughness: 0.9 },
+  glow: { color: [1.0, 0.78, 0.22], roughness: 1, emissive: [1.0, 0.7, 0.15] },
   stone: { color: [0.55, 0.57, 0.59], roughness: 0.95 },
   stoneDark: { color: [0.38, 0.40, 0.42], roughness: 0.95 },
   moss: { color: [0.25, 0.42, 0.18], roughness: 1 },
   bone: { color: [0.94, 0.91, 0.84], roughness: 0.7 },
   socket: { color: [0.08, 0.07, 0.07], roughness: 1 },
-  ghost: { color: [0.97, 0.97, 1.0], roughness: 0.4, emissive: [0.82, 0.88, 0.95] },
+  ghost: { color: [0.97, 0.97, 1.0], roughness: 0.4, emissive: [0.35, 0.37, 0.45] },
+};
+
+// What changes for the models' night versions (<name>-night.glb)
+const NIGHT = {
+  pumpkin: { emissive: [0.95, 0.45, 0.08] },
+  rib: { emissive: [0.8, 0.33, 0.04] },
+  stem: { emissive: [0.16, 0.2, 0.08] },
+  glow: { emissive: [1.0, 0.85, 0.35] },
+  ghost: { emissive: [0.82, 0.88, 0.95] },
 };
 
 function pumpkin() {
@@ -244,7 +255,7 @@ function normalsFor(positions, indices) {
   return normals;
 }
 
-function writeGlb(parts, file) {
+function writeGlb(parts, file, materials = MATERIALS) {
   const materialNames = [...new Set(parts.map((p) => p.material))];
   const chunks = [];
   let offset = 0;
@@ -279,7 +290,7 @@ function writeGlb(parts, file) {
     nodes: [{ mesh: 0 }],
     meshes: [{ primitives }],
     materials: materialNames.map((name) => {
-      const m = MATERIALS[name];
+      const m = materials[name];
       return {
         name,
         doubleSided: true,
@@ -314,7 +325,13 @@ function writeGlb(parts, file) {
 }
 
 mkdirSync(OUT_DIR, { recursive: true });
+const nightMaterials = Object.fromEntries(Object.entries(MATERIALS).map(([k, m]) => [k, { ...m, ...NIGHT[k] }]));
 for (const [name, build] of Object.entries({ pumpkin, tombstone, skull, ghost })) {
   const bytes = writeGlb(build(), join(OUT_DIR, `${name}.glb`));
   console.log(`${name}.glb  ${(bytes / 1024).toFixed(1)} KB`);
+  // The ones that glow at night get a version for it
+  if (name === 'pumpkin' || name === 'ghost') {
+    const night = writeGlb(build(), join(OUT_DIR, `${name}-night.glb`), nightMaterials);
+    console.log(`${name}-night.glb  ${(night / 1024).toFixed(1)} KB`);
+  }
 }

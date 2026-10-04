@@ -16,7 +16,7 @@ import { decorate, decorateLive } from '../utils/season.js';
 // a threshold returns to the campus overview. Static for now — markers don't
 // reflect live occupancy yet.
 
-const MAPBOX_VERSION = '3.9.1';
+const MAPBOX_VERSION = '3.32.0';
 const CONTAINER_ID = 'search-classrooms-container';
 
 // Milano metro — 4 of 7 campuses and almost every classroom sit here; the

@@ -526,6 +526,15 @@ function buildLessonRow(item, ctx) {
   return buildExpandableRow(row, item, ctx);
 }
 
+// The season's own logo (the usual one dressed up) on a hint of its colour
+function buildSeasonLead(season, large) {
+  const lead = document.createElement('div');
+  lead.className = 'search-row-lead search-row-lead--season' + (large ? ' search-row-lead--lg' : '');
+  lead.style.setProperty('--season-tint', season.tint);
+  lead.innerHTML = `<img src="${escapeHtml(season.logo)}" alt="" draggable="false">`;
+  return lead;
+}
+
 // A season offered by its keyword (utils/season.js): tapping it dresses the
 // app up, or back down, and closes the search so the change shows.
 function buildSeasonRow(item, ctx) {
@@ -535,7 +544,7 @@ function buildSeasonRow(item, ctx) {
   row.className = 'search-row search-row--season' + (ctx.large ? ' search-row--tophit' : '');
   row.dataset.row = '';
   row.tabIndex = -1;
-  row.appendChild(buildIconTile(SEASONS[item.season].icon, ctx.large, true));
+  row.appendChild(buildSeasonLead(SEASONS[item.season], ctx.large));
 
   const body = document.createElement('div');
   body.className = 'search-row-body';

@@ -813,8 +813,10 @@ body.detail-open #favourite-btn {
   --pulse-color: var(--text-color-secondary);
 }
 
+/* The status colours, not the accent: a seasonal accent mustn't turn a
+   fresh fetch red or orange */
 .pulse-indicator.green {
-  --pulse-color: var(--text-color-accent);
+  --pulse-color: var(--color-status-free);
 }
 
 .pulse-indicator.yellow {
@@ -1791,7 +1793,8 @@ are rendered as solid colors
 
 /* ── Seasonal themes ─────────────────────────────────────────────────
    `data-season` on <html> swaps the accent for a holiday. Only the accent
-   moves: the free / partial / busy status colours keep their meaning. */
+   moves: the free / partial / busy status colours keep their meaning, and so
+   does the data-fetch status (its dot and its card's title). */
 :root[data-season="halloween"] {
   --text-color-accent: #d9560b;
   --accent-gradient: linear-gradient(135deg, #b3400a, #ff8c2e);
@@ -1804,12 +1807,6 @@ are rendered as solid colors
     --text-color-accent: #ff7a2e;
     --accent-gradient: linear-gradient(135deg, #e8590c, #ffb070);
   }
-}
-
-:root[data-season="halloween"] .popover-title.green {
-  background: linear-gradient(135deg, #b3400a, #ff8c2e);
-  -webkit-background-clip: text;
-  background-clip: text;
 }
 
 :root[data-season="halloween"] .info-page {
@@ -2009,6 +2006,15 @@ are rendered as solid colors
   margin: calc(var(--hw-chair) * -648 / 1635) calc(var(--hw-chair) * -1 / 1635) calc(var(--hw-chair) * -30 / 1635) calc(var(--hw-chair) * -72 / 1635);
 }
 
+/* …and in its Santa hat with a present (components/christmas.js), the same
+   way: the chair's box at (0, 220) and 1428×1636 in its 1484×1857 frame */
+.header-logo.xm-logo {
+  --xm-chair: 2rem;
+  height: calc(var(--xm-chair) * 1857 / 1636);
+  aspect-ratio: 1484 / 1857;
+  margin: calc(var(--xm-chair) * -220 / 1636) calc(var(--xm-chair) * -56 / 1636) calc(var(--xm-chair) * -1 / 1636) 0;
+}
+
 /* The spider under the settings button: hangs on a thread from behind it,
    swaying; climbs back up when tapped */
 :root[data-season="halloween"] #settings-btn { z-index: 1; }
@@ -2135,6 +2141,478 @@ body.detail-open .hw-dangler { display: none; }
   .hw-dangler-sway { animation: none; }
   .hw-dangler-line,
   .hw-dangler-bug { transition: none; }
+}
+
+/* Christmas (Dec 1 – Jan 10): a Christmas red, against the garlands'
+   green. */
+:root[data-season="christmas"] {
+  --text-color-accent: #c8202e;
+  --accent-gradient: linear-gradient(135deg, #9e1220, #e8414b);
+  --color-accent-dark: #b81c2a;
+  --color-accent-dark-hover: #9e1220;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="christmas"] {
+    --text-color-accent: #ff5a62;
+    --accent-gradient: linear-gradient(135deg, #d92b35, #ff9a9f);
+  }
+}
+
+:root[data-season="christmas"] .info-page {
+  --info-glow-1: #e8414b;
+  --info-glow-2: #1f8a4c;
+  --info-glow-3: #e8b23a;
+}
+
+/* Christmas decorations (components/christmas.js, components/snowfall.js).
+   None of it takes taps except the mistletoe and the gift room's bow. */
+:root[data-season="christmas"] {
+  /* On light surfaces white snow disappears: a blue tint keeps it in view */
+  --xm-flake: #7a9fd0;
+  --xm-snow: #f2f7ff;
+  --xm-snow-edge: rgba(95, 140, 200, 0.7);
+  --xm-snow-shade: rgba(90, 130, 190, 0.35);
+  --xm-wire: rgba(30, 50, 35, 0.55);
+  --xm-thread: rgba(60, 50, 40, 0.45);
+  --xm-flyer-edge: rgba(40, 20, 10, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="christmas"] {
+    --xm-flake: #ffffff;
+    --xm-snow: #f4f8fd;
+    --xm-snow-edge: transparent;
+    --xm-snow-shade: rgba(0, 0, 0, 0.35);
+    --xm-wire: rgba(255, 255, 255, 0.3);
+    --xm-thread: rgba(255, 255, 255, 0.45);
+    --xm-flyer-edge: rgba(255, 255, 255, 0.45);
+  }
+}
+
+/* The falling snow: one canvas over everything. It stops short of the
+   bottom safe area (iOS Safari turns its bottom bar solid when a fixed
+   element reaches down there); the flakes fade out above that. */
+.xm-snow {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1400;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.xm-snow--held { opacity: 0; }
+
+/* Snow piled on an element's top edge, rising above it and hugging its
+   corners */
+.xm-pile {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.xm-pile svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.xm-pile-snow { fill: var(--xm-snow); }
+.xm-pile-edge { fill: none; stroke: var(--xm-snow-edge); stroke-width: 0.6px; stroke-linejoin: round; }
+.xm-pile-shade { fill: var(--xm-snow-shade); transform: translateY(1px); }
+
+/* A card's content-visibility clips what sticks out of it: off for the cards
+   with snow on them (which only land while on screen) */
+.classroom-card.xm-piled { content-visibility: visible; }
+
+/* Decorations sit in their element's top-left corner unless placed */
+.xm-decor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.xm-decor svg { display: block; overflow: visible; }
+.xm-garland { right: 0; }
+/* Over the tab bar's selection pill */
+.xm-garland--bar { z-index: 3; }
+
+/* The date chip's "Today" badge stays over the snow on the chip */
+:root[data-season="christmas"] .dcp-today-badge { z-index: 5; }
+
+.xm-needles { fill: none; stroke-width: 1.3px; stroke-linecap: round; }
+.xm-needle-a { stroke: #1f6b3a; }
+.xm-needle-b { stroke: #2f8a4f; }
+.xm-needle-c { stroke: #164a29; }
+.xm-wire { fill: none; stroke: var(--xm-wire); stroke-width: 0.8px; }
+.xm-glow { opacity: 0.32; }
+
+/* On light glass a bulb needs an edge, and more glow, to read as lit */
+@media (prefers-color-scheme: light) {
+  .xm-twinkle ellipse { stroke: rgba(60, 40, 20, 0.45); stroke-width: 0.5px; }
+  .xm-glow { opacity: 0.5; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .xm-needle-a { stroke: #2b7d46; }
+  .xm-needle-b { stroke: #3f9c5e; }
+  .xm-needle-c { stroke: #1d5a33; }
+  .xm-glow { opacity: 0.45; }
+}
+
+/* The lights twinkle in three groups, a step at a time rather than fading,
+   so each SVG repaints a few times a second at most */
+.xm-twinkle { animation: xm-twinkle 2.6s steps(2, jump-none) infinite; }
+.xm-twinkle--1 { animation-duration: 3.1s; animation-delay: -1s; }
+.xm-twinkle--2 { animation-duration: 3.7s; animation-delay: -2.2s; }
+
+@keyframes xm-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.xm-bow-loop { fill: #d92b35; stroke: #9c1a22; stroke-width: 0.8px; }
+.xm-bow-tail { fill: #b8202a; }
+.xm-bow-knot { fill: #b8202a; }
+
+.xm-holly-leaf { fill: #1d6b38; stroke: #0f4523; stroke-width: 0.5px; stroke-linejoin: round; }
+.xm-holly-berry { fill: #d92b35; stroke: rgba(0, 0, 0, 0.25); stroke-width: 0.4px; }
+.xm-mistle-leaf { fill: #8fb36a; stroke: #5e7d3f; stroke-width: 0.5px; }
+.xm-mistle-berry { fill: #f6f3e8; stroke: rgba(0, 0, 0, 0.25); stroke-width: 0.4px; }
+.xm-mistle-stem { stroke: #5e7d3f; stroke-width: 1.2px; fill: none; }
+
+.xm-icicle { fill: rgba(214, 235, 250, 0.85); stroke: rgba(130, 170, 205, 0.6); stroke-width: 0.5px; }
+.xm-icicle-shine { fill: none; stroke: rgba(255, 255, 255, 0.9); stroke-width: 0.7px; stroke-linecap: round; }
+
+@media (prefers-color-scheme: dark) {
+  .xm-icicle { fill: rgba(220, 240, 255, 0.72); stroke: rgba(255, 255, 255, 0.25); }
+}
+
+/* Icicles hang from their element's bottom edge */
+.xm-icicles { top: 100%; right: 0; margin-top: -1px; }
+
+/* Sprigs: tucked into a corner, half outside it */
+.xm-sprig { top: -2px; left: -2px; z-index: 3; }
+.xm-sprig--pill { top: -9px; left: auto; right: -6px; }
+.xm-sprig--thumb { top: -5px; left: -5px; }
+.xm-sprig--fab { z-index: 5; }
+.xm-sprig--chip { top: -8px; left: auto; right: 10px; z-index: 5; }
+
+/* Baubles hanging from a card's top edge, swinging */
+.xm-hang {
+  width: 1px;
+  transform-origin: 0 0;
+  animation: xm-swing 3.4s ease-in-out var(--xm-swing-delay, 0s) infinite alternate;
+}
+
+.xm-hang-thread { width: 1px; background: var(--xm-thread); }
+.classroom-card--photo:not(.photo-failed) .xm-hang-thread { background: rgba(255, 255, 255, 0.75); box-shadow: 0 0 0 0.6px rgba(0, 0, 0, 0.3); }
+.xm-hang-bauble { position: absolute; left: 50%; transform: translateX(-50%); }
+.xm-bauble-cap { fill: #c9a24a; }
+.xm-bauble-rim { fill: none; stroke: rgba(0, 0, 0, 0.18); stroke-width: 0.6px; }
+
+@keyframes xm-swing {
+  from { transform: rotate(-5deg); }
+  to { transform: rotate(5deg); }
+}
+
+/* A wreath on a building folder's glass front */
+.xm-front-wreath { top: 6px; left: auto; right: 10px; z-index: 3; }
+.xm-wreath-base { fill: none; stroke: #164a29; stroke-width: 3.5px; }
+.xm-cone { fill: #8a5a2b; }
+.xm-cone-scale { fill: none; stroke: #5e3a18; stroke-width: 0.6px; }
+
+/* Gifts: the gift rooms' badge in the search, over their building on the
+   map and sticking up out of their building's folder */
+.xm-gift-box { fill: #d92b35; }
+.xm-gift-lid { fill: #e8414b; }
+.xm-gift-ribbon { fill: #f2c14e; }
+
+.xm-search-gift {
+  display: inline-block;
+  margin-inline-start: 0.35rem;
+  vertical-align: -0.12em;
+}
+
+.xm-search-gift svg { width: 15px; height: 15px; display: block; }
+
+.xm-map-gift {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -11px;
+  width: 22px;
+  pointer-events: none;
+  animation: xm-bob 1.8s ease-in-out infinite alternate;
+}
+
+.xm-map-gift svg { width: 22px; height: 22px; display: block; }
+
+.xm-folder-gift {
+  top: 22px;
+  left: 60%;
+  rotate: -8deg;
+}
+
+.xm-folder-gift svg { width: 30px; height: 30px; }
+
+@keyframes xm-bob {
+  from { translate: 0 0; }
+  to { translate: 0 -2px; }
+}
+
+/* The gift room's ribbon: a band each way, crossing up and to the right, a
+   bow where they cross. Under the card's text, over its photo. */
+.xm-ribbon {
+  --xm-band: 10px;
+  --xm-x: 74%;
+  --xm-y: 30%;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.xm-ribbon-band {
+  position: absolute;
+  background:
+    linear-gradient(var(--xm-dir), transparent 18%, rgba(255, 255, 255, 0.35) 22%, transparent 26%, transparent 74%, rgba(255, 255, 255, 0.35) 78%, transparent 82%),
+    linear-gradient(var(--xm-dir), #a8141f, #e0323d 50%, #a8141f);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.6s cubic-bezier(.5, 0, .75, .4), opacity 0.6s ease;
+}
+
+.xm-ribbon-band--v {
+  --xm-dir: 90deg;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--xm-x) - var(--xm-band) / 2);
+  width: var(--xm-band);
+}
+
+.xm-ribbon-band--h {
+  --xm-dir: 180deg;
+  left: 0;
+  right: 0;
+  top: calc(var(--xm-y) - var(--xm-band) / 2);
+  height: var(--xm-band);
+}
+
+.xm-ribbon-bow {
+  position: absolute;
+  left: var(--xm-x);
+  top: var(--xm-y);
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  transition: transform 0.5s cubic-bezier(.3, 1.4, .5, 1), opacity 0.5s ease;
+}
+
+.xm-ribbon-bow svg { display: block; }
+
+/* …and round the classroom page's photo, bigger: the bow unwraps it */
+.xm-ribbon--photo { --xm-band: 18px; --xm-x: 70%; --xm-y: 38%; z-index: 2; }
+.xm-ribbon--photo .xm-ribbon-bow { pointer-events: auto; padding: 8px; -webkit-tap-highlight-color: transparent; animation: xm-tempt 2.4s ease-in-out infinite; }
+.xm-ribbon--photo .xm-ribbon-bow svg { width: 72px; height: 72px; }
+
+@keyframes xm-tempt {
+  0%, 70%, 100% { rotate: 0deg; }
+  76% { rotate: -9deg; }
+  84% { rotate: 7deg; }
+  92% { rotate: -3deg; }
+}
+
+.xm-ribbon--open .xm-ribbon-band--v { transform: translateY(110%); opacity: 0; }
+.xm-ribbon--open .xm-ribbon-band--h { transform: translateX(110%); opacity: 0; }
+.xm-ribbon--open .xm-ribbon-bow { transform: translate(-50%, -160%) scale(1.3) rotate(20deg); opacity: 0; animation: none; }
+
+/* A Santa hat on the date chip's "Today" badge */
+.xm-hat {
+  top: -11px;
+  left: -8px;
+  z-index: 3;
+  rotate: -20deg;
+}
+
+.xm-hat-red { fill: #d92b35; }
+.xm-hat-fur { fill: #fbfbfb; stroke: rgba(0, 0, 0, 0.18); stroke-width: 0.5px; }
+
+/* Candy cane on the "now" markers: the cards' timeline tick, the detail
+   page's schedule line (desktop) and today's bar (phone) */
+:root[data-season="christmas"] {
+  --xm-cane: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M4 13V5a3 3 0 0 1 6 0v1' stroke='%23fff' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3Cpath d='M4 13V5a3 3 0 0 1 6 0v1' stroke='%23d92b35' stroke-width='2.6' fill='none' stroke-dasharray='1.6 1.6'/%3E%3Cpath d='M4 13V5a3 3 0 0 1 6 0v1' stroke='rgba(0,0,0,.25)' stroke-width='3.4' fill='none' stroke-linecap='round' opacity='.35'/%3E%3C/svg%3E");
+}
+
+:root[data-season="christmas"] .classroom-card-timeline-now::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 11px;
+  height: 13px;
+  margin-bottom: -2px;
+  transform: translateX(-50%);
+  background: var(--xm-cane) center / contain no-repeat;
+}
+
+:root[data-season="christmas"] .detail-schedule-now-line::before {
+  top: -11px;
+  width: 12px;
+  height: 14px;
+  border-radius: 0;
+  background: var(--xm-cane) center / contain no-repeat;
+}
+
+:root[data-season="christmas"] .timeline-now-bar-line::before {
+  left: -12px;
+  width: 12px;
+  height: 14px;
+  border-radius: 0;
+  background: var(--xm-cane) center / contain no-repeat;
+}
+
+/* Mistletoe under the settings button: hangs on a ribbon from behind it,
+   swaying; a tap swings it */
+:root[data-season="christmas"] #settings-btn { z-index: 1; }
+
+.xm-mistletoe {
+  position: absolute;
+  z-index: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.xm-mistletoe-sway {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  animation: xm-swing 3.6s ease-in-out infinite alternate;
+}
+
+.xm-mistletoe-sway--swing { animation: xm-swing-hard 1.6s ease-out, xm-swing 3.6s ease-in-out 1.6s infinite alternate; }
+
+@keyframes xm-swing-hard {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(22deg); }
+  45% { transform: rotate(-14deg); }
+  70% { transform: rotate(7deg); }
+  100% { transform: rotate(-5deg); }
+}
+
+.xm-mistletoe-line {
+  position: absolute;
+  left: -0.75px;
+  top: 0;
+  width: 1.5px;
+  height: 40px;
+  background: #c8202e;
+}
+
+.xm-mistletoe-sprig {
+  position: absolute;
+  left: 0;
+  top: 40px;
+  padding: 4px;
+  border: 0;
+  background: none;
+  transform: translate(-50%, -4px);
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.xm-mistletoe-sprig svg { display: block; }
+
+body.detail-open .xm-mistletoe { display: none; }
+
+/* Santa's sleigh (or the Befana) flies in a layer over the app, above the
+   snow, leaving a trail of sparkles */
+.xm-sky {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1401;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.xm-flyer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.xm-flyer svg { display: block; overflow: visible; }
+.xm-flyer svg > *, .xm-deer > * { stroke: var(--xm-flyer-edge); stroke-width: 0.5px; stroke-linejoin: round; }
+.xm-f-coat, .xm-f-arm { fill: #d42a33; }
+.xm-f-arm { stroke: #d42a33 !important; stroke-width: 3px !important; stroke-linecap: round; fill: none; }
+.xm-f-white { fill: #fbfbfb; }
+.xm-f-skin { fill: #f2c4a2; }
+.xm-f-glove { fill: #2b2b2b; }
+.xm-f-sack { fill: #9a6834; }
+.xm-f-gift { fill: #1f8a4c; }
+.xm-f-gift2 { fill: #2f6fdc; }
+.xm-f-gold { fill: #e8b23a; }
+.xm-f-sleigh { fill: #b81c2a; }
+.xm-f-trim { fill: none; stroke: #f2c14e !important; stroke-width: 1.3px !important; stroke-linecap: round; }
+.xm-f-rein { fill: none; stroke: #6b3d1f !important; stroke-width: 0.9px !important; }
+.xm-f-deer { fill: #8b5a34; }
+.xm-f-antler { fill: none; stroke: #5a3a1e !important; stroke-width: 1.4px !important; stroke-linecap: round; }
+.xm-f-nose { fill: #1d1a18; }
+.xm-rudolph { fill: #ff3b3b; filter: drop-shadow(0 0 2px #ff5b5b); }
+.xm-f-stick { fill: #7a4a24; }
+.xm-f-straw { fill: #d9a441; }
+.xm-f-straw-line { fill: none; stroke: #a8772a !important; stroke-width: 0.6px !important; }
+.xm-f-shoe { fill: #2a2228; }
+.xm-f-skirt { fill: #5a3d78; }
+.xm-f-patch { fill: #c8902e; }
+.xm-f-shawl { fill: #2e6b4a; }
+.xm-f-nose-long { fill: #e2a98a; }
+.xm-f-scarf { fill: #b8202a; }
+
+.xm-deer { animation: xm-gallop 0.5s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 50%; }
+.xm-deer + .xm-deer { animation-delay: -0.25s; }
+
+@keyframes xm-gallop {
+  from { transform: translateY(-1px); }
+  to { transform: translateY(1.5px); }
+}
+
+.xm-sparkle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  background: #ffd36b;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: xm-sparkle 0.9s ease-out forwards;
+}
+
+@keyframes xm-sparkle {
+  from { opacity: 1; scale: 1; }
+  to { opacity: 0; scale: 0.2; translate: 0 10px; }
+}
+
+.xm-fx {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1402;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xm-twinkle,
+  .xm-hang,
+  .xm-map-gift,
+  .xm-mistletoe-sway,
+  .xm-deer,
+  .xm-ribbon--photo .xm-ribbon-bow { animation: none; }
+  .xm-ribbon-band,
+  .xm-ribbon-bow { transition: none; }
 }
 
 /* The season's banner (utils/season.js): a short message at the top of the

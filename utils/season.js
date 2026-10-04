@@ -1,6 +1,6 @@
 // Seasonal decorations: a holiday's accent, small decorations on the UI and a
 // few rare animations, on for a fixed window each year (Halloween: Oct 24 to
-// Nov 1).
+// Nov 1; Christmas: Dec 1 to Jan 10).
 //
 // Which season today falls in is decided by the inline script in index.html,
 // before first paint (the date ranges live there), and left in
@@ -26,7 +26,9 @@
 // Adding a season: its date range in index.html, an entry in SEASONS below,
 // its strings in the locales (season.<id>.name / bannerTitle / bannerText,
 // plus any "<key>@<id>" variants of existing strings, see t() in i18n.js)
-// and its CSS under :root[data-season="<id>"].
+// and its CSS under :root[data-season="<id>"]. An entry's `banner()` may
+// pick another message for some days: it returns the strings' prefix (in
+// place of season.<id>) and the icon.
 
 import { t, applyTranslations } from '../i18n.js';
 
@@ -39,10 +41,31 @@ export const SEASONS = {
   halloween: {
     load: () => import('../components/halloween.js'),
     icon: 'hgi-ghost',
+    logo: '/favicons/halloween/icon-192.png',
     tint: '#ff7a2e',
     keywords: ['halloween', 'trick or treat', 'dolcetto o scherzetto', 'spooky', 'pumpkin', 'zucca'],
   },
+  christmas: {
+    load: () => import('../components/christmas.js'),
+    icon: 'hgi-pine-tree',
+    logo: '/favicons/christmas/icon-192.png',
+    tint: '#d6303a',
+    keywords: ['christmas', 'xmas', 'natale', 'merry christmas', 'buon natale', 'babbo natale', 'santa', 'santa claus'],
+    // Christmas Day, New Year and the Befana (Epiphany) get their own message
+    banner() {
+      const [, m, d] = milanDay().split('-').map(Number);
+      if (m === 12 && d >= 24 && d <= 26) return { key: 'season.christmas.day', icon: 'hgi-gift' };
+      if ((m === 12 && d === 31) || (m === 1 && d === 1)) return { key: 'season.christmas.newYear', icon: 'hgi-fireworks' };
+      if (m === 1 && d === 6) return { key: 'season.christmas.befana', icon: 'hgi-sparkles' };
+      return null;
+    },
+  },
 };
+
+// Today in Milan, YYYY-MM-DD
+function milanDay() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+}
 
 let running = null;      // { id, mod } of the season currently started
 const decorators = {};
@@ -139,16 +162,19 @@ function showBanner(id) {
   const host = document.querySelector('#available-classrooms-container > .favourites-section');
   if (!host || host.querySelector(':scope > .season-banner') || closedBanners.has(id)) return;
   const season = SEASONS[id];
+  const variant = season.banner?.();
+  const key = variant?.key ?? `season.${id}`;
+  const icon = variant?.icon ?? season.icon;
   const el = document.createElement('div');
   // liquid-glass: Vitrium's press / stretch physics, like the app's other
   // glass; a press on the close button is left to the button
   el.className = 'season-banner lg-glass lg-glass--clear lg-glass--tinted liquid-glass';
   el.style.setProperty('--season-tint', season.tint);
   el.innerHTML = `
-    <i class="hgi-stroke ${season.icon} season-banner__icon" aria-hidden="true"></i>
+    <i class="hgi-stroke ${icon} season-banner__icon" aria-hidden="true"></i>
     <div class="season-banner__text">
-      <p class="season-banner__title" data-i18n="season.${id}.bannerTitle">${t(`season.${id}.bannerTitle`)}</p>
-      <p class="season-banner__body" data-i18n="season.${id}.bannerText">${t(`season.${id}.bannerText`)}</p>
+      <p class="season-banner__title" data-i18n="${key}.bannerTitle">${t(`${key}.bannerTitle`)}</p>
+      <p class="season-banner__body" data-i18n="${key}.bannerText">${t(`${key}.bannerText`)}</p>
     </div>
     <button type="button" class="season-banner__close" data-i18n-attr="aria-label:season.bannerClose" aria-label="${t('season.bannerClose')}">
       <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>

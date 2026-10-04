@@ -135,6 +135,15 @@
       margin: calc(10rem * -648 / 1635) calc(10rem * -1 / 1635) calc(10rem * -30 / 1635) calc(10rem * -72 / 1635);
     }
 
+    /* Christmas: in a Santa hat with a present, the chair's box at (0, 220)
+       and 1428×1636 in its 1484×1857 frame (same recipe as
+       .header-logo.xm-logo in style.css) */
+    .splash-logo.xm-logo {
+      height: calc(10rem * 1857 / 1636);
+      aspect-ratio: 1484 / 1857;
+      margin: calc(10rem * -220 / 1636) calc(10rem * -56 / 1636) calc(10rem * -1 / 1636) 0;
+    }
+
     @keyframes splash-logo-fade-in {
       to {
         opacity: 1;
@@ -305,7 +314,7 @@
     // accent never flashes in over the normal one; season.js reads
     // window.__seasonByDate and turns seasons on or off from there. Ranges
     // are inclusive [month, day] pairs and may wrap the new year.
-    var SEASONS = [['halloween', [10, 24], [11, 1]]];
+    var SEASONS = [['halloween', [10, 24], [11, 1]], ['christmas', [12, 1], [1, 10]]];
     function seasonFor(date) {
       var p = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', month: 'numeric', day: 'numeric' }).formatToParts(date);
       var md = 0;
@@ -332,21 +341,27 @@
         document.documentElement.dataset.season = season;
       }
     } catch (e) {}
-    // Halloween's logo (the usual one in a witch hat, with a pumpkin): the
-    // splash and header logos each call this right after they're parsed, so
-    // the hat is there from the very first frame. components/halloween.js
-    // takes it from there (and puts the usual logo back if turned off).
-    window.__seasonLogo = function (img) {
-      if (document.documentElement.dataset.season !== 'halloween') return;
-      img.src = '/favicons/halloween/logo.webp';
-      img.classList.add('hw-logo');
+    // The season's logo (Halloween: the usual one in a witch hat, with a
+    // pumpkin; Christmas: in a Santa hat, with a present): the splash and
+    // header logos each call this right after they're parsed, so the hat is
+    // there from the very first frame. The season's module takes it from
+    // there (and puts the usual logo back if turned off).
+    var SEASON_LOGOS = {
+      halloween: ['/favicons/halloween/logo.webp', 'hw-logo'],
+      christmas: ['/favicons/christmas/logo.webp', 'xm-logo'],
     };
-    if (document.documentElement.dataset.season === 'halloween') {
-      var hwLogo = document.createElement('link');
-      hwLogo.rel = 'preload';
-      hwLogo.as = 'image';
-      hwLogo.href = '/favicons/halloween/logo.webp';
-      document.head.appendChild(hwLogo);
+    var seasonLogo = SEASON_LOGOS[document.documentElement.dataset.season];
+    window.__seasonLogo = function (img) {
+      if (!seasonLogo) return;
+      img.src = seasonLogo[0];
+      img.classList.add(seasonLogo[1]);
+    };
+    if (seasonLogo) {
+      var logoPreload = document.createElement('link');
+      logoPreload.rel = 'preload';
+      logoPreload.as = 'image';
+      logoPreload.href = seasonLogo[0];
+      document.head.appendChild(logoPreload);
     }
 
     window.__onShellCssLoad = function (link) {

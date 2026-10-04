@@ -707,6 +707,20 @@ html.search-vt .lg-tabbar__prominent {
   border-radius: 50%;
 }
 
+/* A season's logo, on a hint of its colour */
+.search-row-lead--season {
+  background: color-mix(in srgb, var(--season-tint) 16%, transparent);
+}
+
+/* The icon (public/favicons/<season>/icon-192.png) keeps the chair at the
+   same size and spot in every season, so they line up */
+.search-row-lead--season img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  -webkit-user-drag: none;
+}
+
 .search-row-lead--tile.search-row-lead--accent {
   background: color-mix(in srgb, var(--color-status-busy) 18%, transparent);
   color: var(--color-status-busy);

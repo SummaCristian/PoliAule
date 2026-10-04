@@ -1,5 +1,6 @@
-// Builds the 3D models the seasonal decorations stand on the Campus map
-// (components/halloween.js): public/models/halloween/{pumpkin,tombstone,skull,ghost}.glb.
+// Builds the 3D models the seasonal decorations stand on the Campus map:
+// public/models/halloween/{pumpkin,tombstone,skull,ghost}.glb (components/halloween.js)
+// and public/models/christmas/{tree,gifts,snowman}.glb (components/christmas.js).
 //
 // Each one is made from a few simple shapes (lathes, an extrusion) right here,
 // with plain coloured materials, so there are no third-party assets and the
@@ -12,7 +13,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'models', 'halloween');
+const MODELS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'models');
 
 // ── Geometry ──────────────────────────────────────────────────────────────
 // A part is { positions: number[], indices: number[], material }; normals are
@@ -134,6 +135,23 @@ const MATERIALS = {
   bone: { color: [0.94, 0.91, 0.84], roughness: 0.7 },
   socket: { color: [0.08, 0.07, 0.07], roughness: 1 },
   ghost: { color: [0.97, 0.97, 1.0], roughness: 0.4, emissive: [0.35, 0.37, 0.45] },
+  // Christmas
+  pine: { color: [0.11, 0.38, 0.2], roughness: 0.9 },
+  pineDark: { color: [0.07, 0.28, 0.15], roughness: 0.9 },
+  bark: { color: [0.36, 0.22, 0.12], roughness: 1 },
+  gold: { color: [0.98, 0.76, 0.2], roughness: 0.35, emissive: [0.35, 0.25, 0.04] },
+  baubleRed: { color: [0.85, 0.1, 0.12], roughness: 0.3 },
+  baubleBlue: { color: [0.18, 0.4, 0.88], roughness: 0.3 },
+  bulb: { color: [1.0, 0.92, 0.7], roughness: 1 },
+  wrapRed: { color: [0.8, 0.12, 0.14], roughness: 0.7 },
+  wrapGreen: { color: [0.12, 0.5, 0.3], roughness: 0.7 },
+  wrapWhite: { color: [0.95, 0.95, 0.93], roughness: 0.7 },
+  ribbon: { color: [0.97, 0.8, 0.3], roughness: 0.4 },
+  ribbonRed: { color: [0.82, 0.08, 0.12], roughness: 0.4 },
+  snow: { color: [0.97, 0.98, 1.0], roughness: 0.85 },
+  coal: { color: [0.1, 0.1, 0.11], roughness: 1 },
+  carrot: { color: [0.96, 0.48, 0.1], roughness: 0.8 },
+  scarf: { color: [0.8, 0.12, 0.16], roughness: 0.9 },
 };
 
 // What changes for the models' night versions (<name>-night.glb)
@@ -143,6 +161,26 @@ const NIGHT = {
   stem: { emissive: [0.16, 0.2, 0.08] },
   glow: { emissive: [1.0, 0.85, 0.35] },
   ghost: { emissive: [0.82, 0.88, 0.95] },
+  // The tree's lights and star, lit; the tree itself only faintly, so its
+  // shape still reads against the dark
+  pine: { emissive: [0.03, 0.1, 0.05] },
+  pineDark: { emissive: [0.02, 0.07, 0.04] },
+  bark: { emissive: [0.06, 0.04, 0.02] },
+  gold: { emissive: [1.0, 0.82, 0.3] },
+  baubleRed: { emissive: [0.6, 0.06, 0.08] },
+  baubleBlue: { emissive: [0.12, 0.26, 0.6] },
+  bulb: { emissive: [1.0, 0.85, 0.5] },
+  // The snowman and the gifts, as if under a street lamp: moonlit snow, and
+  // the wrapping in its own colours, dimmed
+  snow: { emissive: [0.72, 0.78, 0.9] },
+  coal: { emissive: [0.05, 0.05, 0.06] },
+  carrot: { emissive: [0.7, 0.32, 0.06] },
+  scarf: { emissive: [0.6, 0.08, 0.1] },
+  wrapRed: { emissive: [0.62, 0.08, 0.1] },
+  wrapGreen: { emissive: [0.08, 0.38, 0.22] },
+  wrapWhite: { emissive: [0.75, 0.75, 0.74] },
+  ribbon: { emissive: [0.85, 0.66, 0.22] },
+  ribbonRed: { emissive: [0.65, 0.05, 0.08] },
 };
 
 function pumpkin() {
@@ -237,6 +275,100 @@ function ghost() {
   return [body, eyeL, eyeR, mouth];
 }
 
+// ── Christmas ─────────────────────────────────────────────────────────────
+
+// A five-pointed star standing upright (in the xy plane), centred on y = 0:
+// the core and each point are convex, so each is its own extrusion
+function star(r, depth, material) {
+  const inner = r * 0.45;
+  const at = (k, rr) => {
+    const a = Math.PI / 2 + (k * Math.PI) / 5;
+    return [Math.cos(a) * rr, Math.sin(a) * rr];
+  };
+  const core = [];
+  for (let k = 0; k < 10; k += 2) core.push(at(k + 1, inner));
+  const parts = [extrude(core, depth, material)];
+  for (let k = 0; k < 10; k += 2) parts.push(extrude([at(k - 1, inner), at(k + 1, inner), at(k, r)], depth * 0.8, material));
+  return parts;
+}
+
+function tree() {
+  // Three tiers of cones, each wider at the bottom with a little skirt, on a
+  // short trunk, a star on top and baubles and lights hung round the tiers
+  const parts = [cylinder(0.08, 0.25, 'bark', 10)];
+  const tiers = [[0.62, 0.2, 0.62], [0.48, 0.58, 0.52], [0.34, 0.92, 0.46]];
+  tiers.forEach(([r, y, h], i) => {
+    const ribs = 9 + i * 2;
+    parts.push(lathe([[0.0001, y - 0.02], [r, y], [r * 0.93, y + 0.05], [0.0001, y + h]], 36, i % 2 ? 'pineDark' : 'pine', {
+      // A ragged hem: the cone's bottom edge rises and falls round it
+      radiusAt: (theta, k) => (k === 1 ? 1 + 0.06 * Math.cos(theta * ribs) : 1),
+    }));
+  });
+  const top = tiers[2][1] + tiers[2][2];
+  parts.push(...star(0.13, 0.04, 'gold').map((p) => place(p, { t: [0, top + 0.08, 0] })));
+  // Hangings: round each tier, a little above its hem, alternating baubles
+  // and bulbs, turned so no two tiers line up
+  const kinds = ['baubleRed', 'bulb', 'gold', 'bulb', 'baubleBlue', 'bulb'];
+  let n = 0;
+  tiers.forEach(([r, y, h], i) => {
+    const count = 7 - i;
+    for (let k = 0; k < count; k++) {
+      const a = (k / count) * Math.PI * 2 + i * 0.7;
+      const yy = y + h * 0.22;
+      const rr = r * (1 - 0.22) + 0.03;
+      const kind = kinds[n++ % kinds.length];
+      const size = kind === 'bulb' ? 0.035 : 0.055;
+      parts.push(place(sphere(size, kind, { segments: 10, rings: 6 }), { t: [Math.cos(a) * rr, yy, Math.sin(a) * rr] }));
+    }
+  });
+  return parts;
+}
+
+// An axis-aligned box from its size, standing on y = 0
+function box(w, h, d, material) {
+  return place(extrude([[-w / 2, 0], [w / 2, 0], [w / 2, h], [-w / 2, h]], d, material), {});
+}
+
+function gift(w, h, d, wrap, ribbon) {
+  const parts = [box(w, h, d, wrap)];
+  // Ribbon bands round it both ways, a hair proud of the paper
+  parts.push(box(w * 0.18, h + 0.01, d + 0.01, ribbon));
+  parts.push(box(w + 0.01, h + 0.01, d * 0.18, ribbon));
+  // The bow: two loops and a knot
+  for (const s of [-1, 1]) {
+    parts.push(place(sphere(w * 0.16, ribbon, { squash: [1.3, 0.75, 0.6], segments: 12, rings: 8 }), { rz: s * 0.5, t: [s * w * 0.15, h + w * 0.08, 0] }));
+  }
+  parts.push(place(sphere(w * 0.07, ribbon, { segments: 10, rings: 6 }), { t: [0, h + w * 0.04, 0] }));
+  return parts;
+}
+
+function gifts() {
+  // A small pile: a big one, a flat one leaning on it and a small one on top
+  return [
+    ...gift(0.42, 0.3, 0.42, 'wrapRed', 'ribbon').map((p) => place(p, { ry: 0.2, t: [-0.1, 0, 0] })),
+    ...gift(0.3, 0.16, 0.36, 'wrapGreen', 'ribbonRed').map((p) => place(p, { ry: -0.5, t: [0.3, 0, 0.12] })),
+    ...gift(0.22, 0.2, 0.22, 'wrapWhite', 'ribbonRed').map((p) => place(p, { ry: 0.9, t: [-0.08, 0.31, 0.02] })),
+  ];
+}
+
+function snowman() {
+  const parts = [
+    place(sphere(0.3, 'snow', { squash: [1, 0.92, 1] }), { t: [0, 0.27, 0] }),
+    place(sphere(0.22, 'snow'), { t: [0, 0.7, 0] }),
+    place(sphere(0.16, 'snow'), { t: [0, 1.02, 0] }),
+  ];
+  // Coal eyes and buttons, a carrot nose, a scarf, a top hat
+  for (const s of [-1, 1]) parts.push(place(sphere(0.022, 'coal', { segments: 8, rings: 6 }), { t: [s * 0.055, 1.07, 0.145] }));
+  for (const [y, z] of [[0.62, 0.21], [0.74, 0.215], [0.4, 0.29]]) parts.push(place(sphere(0.025, 'coal', { segments: 8, rings: 6 }), { t: [0, y, z] }));
+  parts.push(place(lathe([[0.03, 0], [0.0001, 0.17]], 10, 'carrot'), { rx: Math.PI / 2, t: [0, 1.02, 0.15] }));
+  parts.push(place(lathe([[0.17, 0], [0.18, 0.03], [0.17, 0.07], [0.0001, 0.07]], 24, 'scarf'), { t: [0, 0.86, 0] }));
+  parts.push(place(box(0.07, 0.24, 0.03, 'scarf'), { rz: 0.15, t: [0.1, 0.66, 0.15] }));
+  parts.push(place(cylinder(0.17, 0.02, 'coal', 18), { t: [0, 1.14, 0] }));
+  parts.push(place(cylinder(0.11, 0.17, 'coal', 18), { t: [0, 1.15, 0] }));
+  parts.push(place(cylinder(0.112, 0.035, 'scarf', 18), { t: [0, 1.17, 0] }));
+  return parts;
+}
+
 // ── glTF (.glb) writer ────────────────────────────────────────────────────
 
 function normalsFor(positions, indices) {
@@ -324,14 +456,22 @@ function writeGlb(parts, file, materials = MATERIALS) {
   return total;
 }
 
-mkdirSync(OUT_DIR, { recursive: true });
 const nightMaterials = Object.fromEntries(Object.entries(MATERIALS).map(([k, m]) => [k, { ...m, ...NIGHT[k] }]));
-for (const [name, build] of Object.entries({ pumpkin, tombstone, skull, ghost })) {
-  const bytes = writeGlb(build(), join(OUT_DIR, `${name}.glb`));
-  console.log(`${name}.glb  ${(bytes / 1024).toFixed(1)} KB`);
-  // The ones that glow at night get a version for it
-  if (name === 'pumpkin' || name === 'ghost') {
-    const night = writeGlb(build(), join(OUT_DIR, `${name}-night.glb`), nightMaterials);
-    console.log(`${name}-night.glb  ${(night / 1024).toFixed(1)} KB`);
+// Per season: its models, and the ones that glow at night (they get a
+// <name>-night version)
+const SEASONS = {
+  halloween: { models: { pumpkin, tombstone, skull, ghost }, night: ['pumpkin', 'ghost'] },
+  christmas: { models: { tree, gifts, snowman }, night: ['tree', 'gifts', 'snowman'] },
+};
+for (const [season, { models, night }] of Object.entries(SEASONS)) {
+  const dir = join(MODELS_DIR, season);
+  mkdirSync(dir, { recursive: true });
+  for (const [name, build] of Object.entries(models)) {
+    const bytes = writeGlb(build(), join(dir, `${name}.glb`));
+    console.log(`${season}/${name}.glb  ${(bytes / 1024).toFixed(1)} KB`);
+    if (night.includes(name)) {
+      const lit = writeGlb(build(), join(dir, `${name}-night.glb`), nightMaterials);
+      console.log(`${season}/${name}-night.glb  ${(lit / 1024).toFixed(1)} KB`);
+    }
   }
 }

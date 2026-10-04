@@ -12,6 +12,7 @@ import { createPillSelector } from './pill-selector.js';
 import { DAY_START, DAY_END, dayBarHtml, timeToMinutes, minutesToTimeDisplay } from './day-bar.js';
 import { embedMap, parkMap, releaseMap, isMapTabShowing, getEmbedPov, setEmbedPov } from './campus-map.js';
 import { refreshHeaderBlur } from '../utils/header-blur.js';
+import { decorate } from '../utils/season.js';
 
 // No zoom and no shared element when motion is unwelcome: the pair of them is
 // the whole animation, so what is left is the browser's own cross-fade.
@@ -1115,6 +1116,8 @@ class ClassroomDetail {
     `;
     // Refit whenever the row's width changes (the overlay being shown, a resize, the
     // badge's text) and once the web font is in. Height changes are the fit itself.
+    decorate('detail', this._overlay, { classroom, building, campus });
+
     this._titleRowObserver?.disconnect();
     const titleRow = this._overlay.querySelector('.detail-title-row');
     if (titleRow) {

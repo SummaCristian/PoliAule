@@ -68,7 +68,7 @@ import { takeImportHash } from './utils/transfer.js';
 import { promptImport } from './components/transfer-dialog.js';
 import { initServiceWorker } from './utils/pwa.js';
 import { resumeState, initResumeSnapshot } from './utils/resume.js';
-import { initSeason } from './utils/season.js';
+import { initSeason, decorate } from './utils/season.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
@@ -320,6 +320,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   // Stars the whole building (utils/favourites.js), next to the jump button.
   headerEl.querySelector('.building-section-actions')
     .prepend(createBuildingStarButton(campusId, buildingName, 'header-button building-section-btn'));
+  decorate('buildingHeader', headerEl, { campusId, building });
   cardIndex++;
   section.appendChild(headerEl);
 

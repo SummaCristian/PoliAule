@@ -41,6 +41,7 @@
   "form.findButton": "Find classrooms",
 
   "results.emptyTitle": "Need a classroom?",
+  "results.emptyTitle@halloween": "Need a classroom to haunt?",
   "results.emptySubtitle": "Tell me when you need it and I'll show you what's available",
   "results.noResultsTitle": "No results",
   "results.noResultsSubtitle": "Looks like you are out of luck, there is no classroom available between the times you requested...",
@@ -97,6 +98,7 @@
   "overview.floorUnknown": "Floor unknown",
 
   "search.emptyTitle": "No results found",
+  "search.emptyTitle@halloween": "Nothing but cobwebs",
   "search.emptySubtitle": "Try a different name, course or code",
   "search.tooManyResults": "Showing first {n} results. Narrow your search to see more.",
 
@@ -190,9 +192,10 @@
   "settings.glassEffect.off": "Off",
   "settings.seasonal": "Seasonal Decorations",
   "settings.seasonalDesc": "Small touches for holidays like Halloween.",
+  "season.halloween.haunted": "Haunted today",
   "season.halloween.name": "Halloween",
   "season.halloween.bannerTitle": "Trick or treat! 🎃",
-  "season.halloween.bannerText": "PoliAule dressed up for Halloween. Can you find today's haunted room on your campus?",
+  "season.halloween.bannerText": "PoliAule dressed up for Halloween. <br>Can you find today's haunted room on your campus?",
   "season.bannerClose": "Close",
   "season.searchOff": "Tap to dress PoliAule up",
   "season.searchOn": "On · tap to take the costume off",

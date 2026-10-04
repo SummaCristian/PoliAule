@@ -1870,10 +1870,22 @@ are rendered as solid colors
   --hw-web-outline: rgba(0, 0, 0, 0.38);
 }
 
+.hw-decor--photo {
+  color: rgba(255, 255, 255, 0.8);
+  --hw-web-outline: rgba(0, 0, 0, 0.38);
+}
+
 .hw-hang { width: 1px; }
 .hw-hang-thread { width: 1px; background: currentColor; }
 .classroom-card--photo:not(.photo-failed) .hw-hang-thread { box-shadow: 0 0 0 0.6px rgba(0, 0, 0, 0.38); }
 .hw-hang-bug { position: absolute; left: 50%; transform: translateX(-50%); }
+/* Head-down from the thread, like the settings button's spider */
+.hw-hang-bug svg { rotate: 180deg; }
+
+/* Hanging below a button (the building headers' jump button), and from the
+   top edge of the search's results box */
+.hw-hang--below { top: 100%; left: 50%; }
+.hw-hang--panel { top: 0; }
 
 /* The haunted room's ghost leans in from behind the card's right edge,
    which clips it */
@@ -1907,6 +1919,36 @@ are rendered as solid colors
   from { translate: 0 0; }
   to { translate: 0 -2px; }
 }
+
+/* …leans into its classroom page's photo, bigger */
+.hw-ghost--photo { top: 46%; }
+.hw-ghost--photo svg { width: 48px; height: 54px; }
+
+/* …rises out of its building's folder, from among the papers and back down
+   behind the glass front (which starts 68px down the folder) */
+.hw-folder-ghost {
+  position: absolute;
+  top: 34px;
+  left: 62%;
+  animation: hw-rise 6s ease-in-out infinite;
+}
+
+@keyframes hw-rise {
+  0%, 10% { transform: translateY(38px) rotate(0deg); }
+  25% { transform: translateY(0) rotate(-7deg); }
+  50% { transform: translateY(3px) rotate(5deg); }
+  62% { transform: translateY(0) rotate(-3deg); }
+  75%, 100% { transform: translateY(38px) rotate(0deg); }
+}
+
+/* …and sits next to its name in the search */
+.hw-search-ghost {
+  display: inline-block;
+  margin-inline-start: 0.35rem;
+  vertical-align: -0.1em;
+}
+
+.hw-search-ghost svg { width: 14px; height: 16px; display: block; }
 
 /* …and floats over its building on the map */
 .hw-map-ghost {
@@ -2006,21 +2048,25 @@ are rendered as solid colors
   transition: height var(--hw-dur) var(--hw-ease);
 }
 
+/* The 6px padding widens the tap target. The spider hangs head-down, as
+   they do, from a thread on the tip of its abdomen: 4.6 of its 26 units
+   from the top once flipped, so the box is lifted by the padding plus that
+   to put the tip right on the thread's end. No margin: a negative one would
+   pull the spider off the thread's line. */
 .hw-dangler-bug {
   position: absolute;
   left: 0;
   top: var(--hw-len);
-  margin: -6px;
   padding: 6px;
   border: 0;
   background: none;
-  transform: translate(-50%, -2px);
+  transform: translate(-50%, calc(-6px - 4.6px));
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
   transition: top var(--hw-dur) var(--hw-ease);
 }
 
-.hw-dangler-bug svg { width: 26px; height: 26px; display: block; }
+.hw-dangler-bug svg { width: 26px; height: 26px; display: block; rotate: 180deg; }
 .hw-legs { transform-origin: 13px 13px; }
 .hw-dangler--climbing .hw-legs,
 .hw-walker .hw-legs { animation: hw-wiggle .1s linear infinite alternate; }
@@ -2083,6 +2129,7 @@ body.detail-open .hw-dangler { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .hw-ghost { animation: none; transform: translateX(34%) rotate(-6deg); }
+  .hw-folder-ghost { animation: none; transform: translateY(14px) rotate(-5deg); }
   .hw-ghost svg,
   .hw-map-ghost svg,
   .hw-dangler-sway { animation: none; }
@@ -2090,22 +2137,28 @@ body.detail-open .hw-dangler { display: none; }
   .hw-dangler-bug { transition: none; }
 }
 
-/* The season's banner (utils/season.js): a tinted glass box with a short
-   message at the top of the Favourites section, until closed. Vitrium's
-   setGlassTint() picks its text colour. */
+/* The season's banner (utils/season.js): a short message at the top of the
+   Favourites section, on clear glass with just a veil of the season's colour
+   (--season-tint). The text keeps the app's own colours, which a clear tint
+   leaves legible; only the icon is in the season's colour. */
 .season-banner {
+  /* Vitrium's clear tint at its own strength still reads as a coloured
+     panel; diluted, it stays a hint */
+  --lg-glass-tint: color-mix(in srgb, var(--season-tint) 40%, transparent);
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.75rem;
   margin-bottom: 1rem;
-  padding: 0.85rem 0.6rem 0.85rem 1rem;
+  padding: 0.65rem 0.5rem 0.65rem 0.9rem;
   border-radius: var(--radius-xl);
+  color: var(--text-color-primary);
   text-align: start;
 }
 
 .season-banner__icon {
   flex: none;
-  font-size: 1.75rem;
+  font-size: 1.4rem;
+  color: var(--season-tint);
 }
 
 .season-banner__text {
@@ -2115,31 +2168,69 @@ body.detail-open .hw-dangler { display: none; }
 
 .season-banner__title {
   margin: 0;
-  font-size: var(--text-100);
-  font-weight: 800;
+  font-size: var(--text-90);
+  font-weight: 700;
 }
 
 .season-banner__body {
-  margin: 0.15rem 0 0;
-  font-size: var(--text-85);
+  margin: 0.1rem 0 0;
+  font-size: var(--text-80);
   line-height: 1.35;
-  opacity: 0.9;
+  color: color-mix(in srgb, var(--text-color-primary) 70%, transparent);
 }
 
+/* Centred, not in the corner: the settings button's Halloween spider hangs
+   down over the banner's top-right corner and would take its taps */
 .season-banner__close {
   flex: none;
-  align-self: flex-start;
   display: grid;
   place-items: center;
   width: 2rem;
   height: 2rem;
-  margin: -0.35rem 0 0;
+  margin: 0;
   padding: 0;
   border: 0;
   border-radius: var(--radius-pill);
   background: none;
-  color: inherit;
-  font-size: 1.1rem;
-  opacity: 0.85;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  font-size: 1rem;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Cracked glass (components/glass-crack.js): an SVG inside the element, each
+   crack drawn twice, a soft dark line under a bright one, so it reads as a
+   broken edge catching the light on light and dark glass alike */
+svg.glass-crack {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  transition: opacity 1s ease;
+}
+
+.glass-crack--healing { opacity: 0; }
+
+.glass-crack__shade {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.28);
+  stroke-width: 1.8px;
+  stroke-linejoin: miter;
+  stroke-linecap: round;
+}
+
+.glass-crack__light {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.8);
+  stroke-width: 0.8px;
+  stroke-linejoin: miter;
+  stroke-linecap: round;
+}
+
+.glass-crack__chip {
+  fill: rgba(255, 255, 255, 0.44);
+  stroke: rgba(0, 0, 0, 0.24);
+  stroke-width: 0.6px;
 }

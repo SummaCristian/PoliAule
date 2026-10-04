@@ -2,20 +2,29 @@
 // The pumpkin accent, the pumpkin on the "now" markers and the spooky strings
 // are plain CSS / locale entries keyed on <html data-season="halloween">; this
 // module adds what needs the DOM:
-//   - cobwebs and small spiders on some classroom cards and on the pickers'
-//     chips, each strung to the element's real rounded outline
+//   - cobwebs and small spiders on some classroom cards, building folders,
+//     building headers, classroom page sections and search thumbnails, on
+//     the pickers' chips, the search button, the search's results box and
+//     the Campus sheet, each strung to the element's real rounded outline
 //   - a haunted classroom per campus and day: a ghost peeking into its card
-//     and floating over its building on the map
+//     and its page's photo, rising out of its building's folder, floating
+//     over its building on the map, and next to its name in the search
 //   - a spider hanging from the settings button (tap it to scare it up)
 //   - now and then a flock of bats across the screen, and a spider walking
 //     along the tab bar
 //   - a burst of candy when something gets starred
 //   - the logo in its witch hat with a pumpkin, in the header and the tab icon
+//   - cracked glass (components/glass-crack.js): the tab bar, a third of the
+//     building folders and one picker chip start out cracked, and the
+//     season's banner and the classroom page's sections crack when tapped
+//     quickly
 // Everything here is static or plays for a few seconds; nothing animates
 // continuously except the small ghost. With reduced motion the bats, the
 // walking spider and the candy stay off, and the rest holds still.
 
 import { setDecorator } from '../utils/season.js';
+import { t } from '../i18n.js';
+import { attachTapCrack, crackStatic, clearCracks } from './glass-crack.js';
 import { classroomsData as directory } from '../classroom-search-data.js';
 
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -202,12 +211,201 @@ function decorateCard(card, classroom) {
     el.classList.add('hw-hang');
     el.style.left = `${18 + ((h >>> 10) % 50)}%`;
     el.innerHTML = `<div class="hw-hang-thread" style="height:${len}px"></div>` +
-      `<div class="hw-hang-bug" style="top:${len - 2}px">${spiderSvg(16)}</div>`;
+      `<div class="hw-hang-bug" style="top:${len - 3}px">${spiderSvg(16)}</div>`;
   } else {
     if (right) el.classList.add('hw-decor--right');
     el.innerHTML = webSvg(34 + ((h >>> 12) % 14), cardRadius, h, { withSpider: kind === 'webspider' });
   }
   clip.appendChild(el);
+}
+
+// A web in a corner of `host`, which is rounded with `radius`. `photo`: over
+// a picture, so white with a dark outline rather than ink.
+function addWeb(host, { size, radius, seed, right = false, photo = false, boxHeight }) {
+  const el = document.createElement('div');
+  el.className = 'hw-decor' + (right ? ' hw-decor--right' : '') + (photo ? ' hw-decor--photo' : '');
+  el.innerHTML = webSvg(size, radius, seed, { boxHeight });
+  host.appendChild(el);
+  return el;
+}
+
+const radiusOf = (el) => parseFloat(getComputedStyle(el).borderTopRightRadius) || 0;
+
+function ghostEl(className) {
+  const ghost = document.createElement('div');
+  ghost.className = className;
+  ghost.innerHTML = GHOST_SVG;
+  return ghost;
+}
+
+// Already-cracked glass on an element that may not have its size yet (a
+// folder is built before it's on screen): drawn once it has one, and again,
+// the same crack, whenever it's resized.
+const crackSizes = new ResizeObserver((entries) => {
+  for (const { target, contentRect } of entries) {
+    if (!target.isConnected) { crackSizes.unobserve(target); continue; }
+    if (contentRect.width) crackStatic(target, Number(target.dataset.hwCrack));
+  }
+});
+
+function crackWhenSized(el, seed) {
+  el.dataset.hwCrack = seed;
+  crackSizes.observe(el);
+}
+
+// Runs `fn` once, the first time `el` has a size (a web needs the outline it
+// hangs from, which an element built off-screen doesn't have yet).
+const pendingSize = new WeakMap();
+const firstSize = new ResizeObserver((entries) => {
+  for (const { target, contentRect } of entries) {
+    if (!target.isConnected) { firstSize.unobserve(target); continue; }
+    if (!contentRect.width) continue;
+    firstSize.unobserve(target);
+    pendingSize.get(target)?.();
+    pendingSize.delete(target);
+  }
+});
+
+function whenSized(el, fn) {
+  pendingSize.set(el, fn);
+  firstSize.observe(el);
+}
+
+// ── Building folders ──────────────────────────────────────────────────────
+// A web in the top-right corner of half the folders' glass front, a crack in
+// a third of them; the haunted building's folder has its ghost rising out
+// from among the papers.
+
+const FOLDER_RADIUS = 18; // .bo-card-front's border-radius
+
+function decorateFolder(folder, { campusId, building }) {
+  if (folder.querySelector('.hw-decor, .hw-folder-ghost')) return;
+  const key = `${campusId}:${building.name}`;
+  if (hauntedRooms().buildings.has(key)) {
+    folder.querySelector('.bo-card-papers')?.appendChild(ghostEl('hw-folder-ghost'));
+  }
+  const h = hash(`folder:${building.name}`);
+  const front = folder.querySelector('.bo-card-front');
+  if (!front) return;
+  const crack = hash(`crack:${building.name}`);
+  if (crack % 3 === 0) crackWhenSized(front, crack);
+  if (h % 2) return;
+  addWeb(front, { size: 30 + (h >>> 6) % 12, radius: FOLDER_RADIUS, seed: h, right: true });
+}
+
+// ── Building headers (Available results) ──────────────────────────────────
+// Half of them get a web in their name pill's right end; a quarter a small
+// spider hanging on a thread from their jump button.
+
+function decorateBuildingHeader(header, { building }) {
+  const h = hash(`header:${building.name}`);
+  if (h % 2 === 0) {
+    const pill = header.querySelector('.building-section-titles');
+    if (!pill) return;
+    whenSized(pill, () => {
+      if (pill.querySelector(':scope > .hw-decor')) return;
+      const height = pill.offsetHeight;
+      addWeb(pill, { size: 18 + (h >>> 5) % 5, radius: Math.min(radiusOf(pill), height / 2), seed: h, right: true, boxHeight: height });
+    });
+  } else if (h % 4 === 1) {
+    const jump = header.querySelector('.building-section-jump');
+    if (!jump || jump.querySelector(':scope > .hw-hang')) return;
+    const len = 16 + (h >>> 7) % 18;
+    const el = document.createElement('div');
+    el.className = 'hw-decor hw-hang hw-hang--below';
+    el.innerHTML = `<div class="hw-hang-thread" style="height:${len}px"></div>` +
+      `<div class="hw-hang-bug" style="top:${len - 3}px">${spiderSvg(15)}</div>`;
+    jump.appendChild(el);
+  }
+}
+
+// ── Classroom page ────────────────────────────────────────────────────────
+// Webs in the top-right corner of the Features and Opening hours sections
+// (not the schedule, whose header holds the day picker there, nor the map),
+// at least one per page, and the haunted room's ghost peeking into the photo.
+
+function decorateDetail(page, { classroom }) {
+  const h = hash(`detail:${classroom.id}`);
+  const sections = [...page.querySelectorAll('.detail-section:not(.detail-map-section)')]
+    .filter((section) => !section.querySelector('.detail-section-header'));
+  // Every page gets one, on a section picked by the room; each other section
+  // gets one half the time
+  const always = h % Math.max(1, sections.length);
+  sections.forEach((section, i) => {
+    if (i !== always && ((h >>> (i + 4)) & 1) === 0) return;
+    addWeb(section, { size: 40 + ((h >>> (i * 4 + 8)) % 16), radius: radiusOf(section), seed: h + i, right: true });
+  });
+  if (hauntedRooms().ids.has(classroom.id)) {
+    page.querySelector('.detail-photo-container')?.appendChild(ghostEl('hw-ghost hw-ghost--photo'));
+  }
+  // The sections do nothing when tapped (taps on their controls don't count)
+  page.querySelectorAll('.detail-section:not(.detail-map-section)').forEach((section, i) => {
+    attachTapCrack(section, { seed: h + i, signal: listeners.signal });
+  });
+}
+
+// The season's banner (utils/season.js) cracks when tapped quickly too
+function decorateBanner(banner) {
+  attachTapCrack(banner, { seed: hash(dayKey()), signal: listeners.signal });
+}
+
+// ── Search ────────────────────────────────────────────────────────────────
+// A small web on a third of the rows' thumbnails, and a ghost by the haunted
+// rooms' names.
+
+let hauntedLabel = '';
+
+function decorateSearchRow(row, item) {
+  if (row.querySelector('.hw-decor, .hw-search-ghost')) return;
+  if (item.type === 'classroom' && hauntedRooms().ids.has(item.room.id)) {
+    const badge = ghostEl('hw-search-ghost');
+    badge.title = hauntedLabel;
+    badge.setAttribute('role', 'img');
+    badge.setAttribute('aria-label', hauntedLabel);
+    // Inside the name, so it follows it rather than the title line's far end
+    row.querySelector('.search-row-title-text')?.appendChild(badge);
+  }
+  const key = item.type === 'classroom' ? `room:${item.room.id}` : `building:${item.campusId}:${item.name}`;
+  const h = hash(`search:${key}`);
+  const lead = row.querySelector('.search-row-lead');
+  if (h % 3 || !lead) return;
+  const photo = lead.classList.contains('search-row-lead--photo');
+  const large = lead.classList.contains('search-row-lead--lg');
+  addWeb(lead, { size: (large ? 28 : 20) + (h >>> 6) % 4, radius: photo ? 0 : (large ? 16 : 12), seed: h, photo });
+}
+
+// The results box, which stays put while its list scrolls: a web in its
+// top-right corner and a spider hanging from its top edge
+function decorateSearchPanel() {
+  const frame = document.querySelector('.search-results-frame');
+  if (!frame || frame.querySelector(':scope > .hw-decor')) return;
+  const h = hash(`searchpanel:${dayKey()}`);
+  addWeb(frame, { size: 62 + h % 14, radius: radiusOf(frame) || 24, seed: h, right: true });
+  const len = 30 + (h >>> 6) % 30;
+  const hang = document.createElement('div');
+  hang.className = 'hw-decor hw-hang hw-hang--panel';
+  hang.style.left = `${40 + (h >>> 12) % 25}%`;
+  hang.innerHTML = `<div class="hw-hang-thread" style="height:${len}px"></div>` +
+    `<div class="hw-hang-bug" style="top:${len - 3}px">${spiderSvg(18)}</div>`;
+  frame.appendChild(hang);
+}
+
+// ── The Campus sheet ──────────────────────────────────────────────────────
+// A large web in its top-left corner. The sheet is rebuilt when the layout
+// flips between phone and desktop, so it's put back whenever it's missing.
+
+function decorateSheet() {
+  const glass = document.querySelector('.campus-sheet .lg-sheet__glass');
+  if (!glass || glass.querySelector(':scope > .hw-decor')) return;
+  addWeb(glass, { size: 88, radius: radiusOf(glass) || 28, seed: hash(`sheet:${dayKey()}`) });
+}
+
+// ── The search button ─────────────────────────────────────────────────────
+
+function decorateSearchButton() {
+  const btn = document.querySelector('.lg-tabbar__prominent');
+  if (!btn || btn.querySelector(':scope > .hw-decor') || !btn.offsetHeight) return;
+  addWeb(btn, { size: 20, radius: btn.offsetHeight / 2, seed: hash(`fab:${dayKey()}`), boxHeight: btn.offsetHeight });
 }
 
 // ── Picker chips ──────────────────────────────────────────────────────────
@@ -216,12 +414,13 @@ const CHIP_HOSTS = ['campus-chip-picker', 'date-chip-picker', 'time-range-chip-p
 
 function decorateChips() {
   const day = dayKey();
+  const webless = [];
   for (const tag of CHIP_HOSTS) {
     const chip = document.querySelector(`${tag} .lg-chip`);
-    if (!chip || chip.querySelector(':scope > .hw-decor')) continue;
+    if (!chip || chip.querySelector(':scope > .hw-decor, :scope > .glass-crack')) continue;
     // About half the chips, a different half each day
     const h = hash(`${tag}:${day}`);
-    if (h % 2) continue;
+    if (h % 2) { webless.push(chip); continue; }
     const cs = getComputedStyle(chip);
     const height = chip.offsetHeight;
     if (!height) continue;
@@ -231,6 +430,12 @@ function decorateChips() {
     el.className = 'hw-decor hw-decor--chip hw-decor--right';
     el.innerHTML = webSvg(15 + (h >>> 9) % 4, radius, h, { boxHeight: height });
     chip.appendChild(el);
+  }
+  // One of the others starts out cracked: the only already-cracked glass on
+  // screen, so it reads as a detail rather than a broken app
+  if (webless.length) {
+    const h = hash(`crack:${day}`);
+    crackStatic(webless[h % webless.length], h);
   }
 }
 
@@ -475,12 +680,21 @@ function stopLogo() {
 // ── Lifecycle ─────────────────────────────────────────────────────────────
 
 let chipsTimer = 0;
+// The tap-to-crack listeners, dropped together when the season stops
+let listeners = new AbortController();
 
 export function start() {
   cardRadius = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--radius-lg')) || 16;
 
+  hauntedLabel = t('season.halloween.haunted');
   setDecorator('card', decorateCard);
   setDecorator('marker', decorateMarker);
+  setDecorator('folder', decorateFolder);
+  setDecorator('detail', decorateDetail);
+  setDecorator('searchRow', decorateSearchRow);
+  setDecorator('banner', decorateBanner);
+  setDecorator('buildingHeader', decorateBuildingHeader);
+  listeners = new AbortController();
   // Whatever was built before this module loaded
   document.querySelectorAll('.classroom-card').forEach((card) => {
     const id = Number(card.dataset.openClassroom);
@@ -489,6 +703,19 @@ export function start() {
   document.querySelectorAll('.map-pin[data-building][data-campus]').forEach((el) => {
     decorateMarker(el, { campus: { id: el.dataset.campus }, building: { name: el.dataset.building } });
   });
+  document.querySelectorAll('.bo-card[data-building-name]').forEach((folder) => {
+    decorateFolder(folder, { campusId: folder.dataset.campusId, building: { name: folder.dataset.buildingName } });
+  });
+  decorateSearchButton();
+  decorateSearchPanel();
+  decorateSheet();
+  document.addEventListener('campussheetresize', decorateSheet, { signal: listeners.signal });
+  document.querySelectorAll('.building-section-header').forEach((header) => {
+    const section = header.closest('.building-section');
+    if (section) decorateBuildingHeader(header, { building: { name: section.dataset.buildingName } });
+  });
+  const tabBar = document.querySelector('.bn-wrapper .lg-tabbar__bar');
+  if (tabBar) crackWhenSized(tabBar, hash(`tabbar:${dayKey()}`));
 
   // The chips may still be upgrading
   Promise.all(CHIP_HOSTS.map((tag) => customElements.whenDefined(tag))).then(() => {
@@ -511,6 +738,10 @@ export function start() {
 
 export function stop() {
   stopLogo();
+  listeners.abort();
+  crackSizes.disconnect();
+  firstSize.disconnect();
+  clearCracks();
   clearTimeout(chipsTimer);
   clearTimeout(danglerTimer);
   clearTimeout(batTimer);
@@ -523,7 +754,7 @@ export function stop() {
   candyCanvas?.remove();
   candyCanvas = null;
   candy = null;
-  document.querySelectorAll('.hw-decor, .hw-ghost, .hw-map-ghost').forEach((el) => el.remove());
+  document.querySelectorAll('.hw-decor, .hw-ghost, .hw-map-ghost, .hw-folder-ghost, .hw-search-ghost').forEach((el) => el.remove());
   window.removeEventListener('pointerdown', rememberTap, { capture: true });
   window.removeEventListener('favourites-changed', onFavouritesChanged);
 }

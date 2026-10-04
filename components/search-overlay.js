@@ -36,7 +36,7 @@ import { activateGroupTab } from './bottom-nav.js';
 import { goToBuilding } from './campus-buildings.js';
 import { morphInto, settleMorph, isSettled, fadeIn, ClockedSpring } from './search-motion.js';
 import { createBackButton, createSegmentedControl } from 'vitrium';
-import { SEASONS, activeSeason, toggleSeason } from '../utils/season.js';
+import { SEASONS, activeSeason, toggleSeason, decorate } from '../utils/season.js';
 
 const DEBOUNCE_MS = 200;
 const SECTION_CAP = 4;
@@ -280,6 +280,7 @@ function buildClassroomRow(item, ctx) {
     pill.textContent = t(statusKey);
     row.appendChild(pill);
   }
+  decorate('searchRow', row, item);
   return row;
 }
 
@@ -311,6 +312,7 @@ function buildBuildingRow(item, ctx) {
     activateGroupTab('search-classrooms-container');
     goToBuilding(campusId, name);
   });
+  decorate('searchRow', row, item);
   return row;
 }
 

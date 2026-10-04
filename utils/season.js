@@ -12,24 +12,26 @@
 // banner above the Favourites.
 //
 // A season module exports start() and stop(), and may register decorators
-// for elements other modules build: 'card' (every classroom card,
-// components/classroom-list.js) and 'marker' (every building marker on the
-// map, components/campus-map.js).
+// for elements other modules build, each called right after building it:
+//   'card'       every classroom card (components/classroom-list.js)
+//   'folder'     every building folder (components/building-folder.js)
+//   'marker'     every building marker on the map (components/campus-map.js)
+//   'detail'     the classroom page, each time it renders (components/classroom-detail.js)
+//   'searchRow'  every classroom and building row in the search (components/search-overlay.js)
+//   'banner'     the season's banner, below (once the module has started)
+//   'buildingHeader'  each building's header in the Available results (script.js)
 //
 // Adding a season: its date range in index.html, an entry in SEASONS below,
 // its strings in the locales (season.<id>.name / bannerTitle / bannerText,
 // plus any "<key>@<id>" variants of existing strings, see t() in i18n.js)
 // and its CSS under :root[data-season="<id>"].
 
-import { setGlassTint } from 'vitrium';
 import { t, applyTranslations } from '../i18n.js';
 
 export const SEASONAL_KEY = 'poliAule_seasonal';
 // A season picked from the search, outside its dates. Ignored once another
 // season's dates come round, so it can't hide that one.
 const OVERRIDE_KEY = 'poliAule_seasonOverride';
-// "<id>:<year>" of the last banner closed, so it stays closed for that season
-const BANNER_KEY = 'poliAule_seasonBannerClosed';
 
 export const SEASONS = {
   halloween: {
@@ -42,6 +44,7 @@ export const SEASONS = {
 
 let running = null;      // { id, mod } of the season currently started
 const decorators = {};
+const closedBanners = new Set(); // closed this session; back on the next launch
 
 function read(key) {
   try { return localStorage.getItem(key); } catch { return null; }
@@ -116,20 +119,18 @@ export function decorate(kind, el, data) {
 
 // ── Banner ────────────────────────────────────────────────────────────────
 // A tinted glass box at the top of the Favourites section with a short
-// message for the season, until closed.
-
-function bannerTag(id) {
-  const year = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric' }).format(new Date());
-  return `${id}:${year}`;
-}
+// message for the season. Closing it only lasts until the app is opened
+// again, so it isn't remembered anywhere.
 
 function showBanner(id) {
   const host = document.querySelector('#available-classrooms-container > .favourites-section');
-  if (!host || host.querySelector(':scope > .season-banner') || read(BANNER_KEY) === bannerTag(id)) return;
+  if (!host || host.querySelector(':scope > .season-banner') || closedBanners.has(id)) return;
   const season = SEASONS[id];
   const el = document.createElement('div');
-  el.className = 'season-banner lg-glass';
-  setGlassTint(el, season.tint);
+  // liquid-glass: Vitrium's press / stretch physics, like the app's other
+  // glass; a press on the close button is left to the button
+  el.className = 'season-banner lg-glass lg-glass--clear lg-glass--tinted liquid-glass';
+  el.style.setProperty('--season-tint', season.tint);
   el.innerHTML = `
     <i class="hgi-stroke ${season.icon} season-banner__icon" aria-hidden="true"></i>
     <div class="season-banner__text">
@@ -141,10 +142,11 @@ function showBanner(id) {
     </button>
   `;
   el.querySelector('.season-banner__close').addEventListener('click', () => {
-    write(BANNER_KEY, bannerTag(id));
+    closedBanners.add(id);
     el.remove();
   });
   host.prepend(el);
+  decorate('banner', el);
 }
 
 function hideBanner() {

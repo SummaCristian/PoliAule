@@ -14,6 +14,8 @@
 //     along the tab bar
 //   - a burst of candy when something gets starred
 //   - the logo in its witch hat with a pumpkin, in the header and the tab icon
+//   - 3D pumpkins, tombstones, skulls and ghosts standing in the parks,
+//     squares and paths around each campus on the Campus map
 //   - cracked glass (components/glass-crack.js): the tab bar, a third of the
 //     building folders and one picker chip start out cracked, and the
 //     season's banner and the classroom page's sections crack when tapped
@@ -25,6 +27,7 @@
 import { setDecorator } from '../utils/season.js';
 import { t } from '../i18n.js';
 import { attachTapCrack, crackStatic, clearCracks } from './glass-crack.js';
+import seasonSpots from '../data/season-spots.json';
 import { classroomsData as directory } from '../classroom-search-data.js';
 
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -450,6 +453,143 @@ function decorateMarker(el, { campus, building }) {
   el.prepend(ghost);
 }
 
+// ── The map ───────────────────────────────────────────────────────────────
+// 3D pumpkins, tombstones, skulls and floating ghosts standing in the open
+// spots around each campus (parks, squares, paths: data/season-spots.json,
+// from scripts/fetch_season_spots.py), as a model layer in the map itself:
+// real 3D objects, lit by the map's sun, casting shadows, and in front of or
+// behind the 3D buildings as they really are. The models are
+// public/models/halloween/*.glb (scripts/build_season_models.mjs), at real
+// size and scaled up so they read from campus zoom. At night (dark mode's
+// night preset) the pumpkins and ghosts glow.
+
+const MAP_MODELS = ['pumpkin', 'tombstone', 'skull', 'ghost'];
+const MAP_LAYER = 'hw-ground';
+// Models can't light their surroundings, so at night a soft pool of light on
+// the ground under each pumpkin and ghost stands in for it: a blurred circle
+// lying flat, under the models and, like them, behind the buildings
+const GLOW_LAYER = 'hw-ground-glow';
+
+let mapRef = null;
+let mapActive = false;
+
+// The map's night preset follows dark mode (components/campus-map.js), and the
+// pumpkins and ghosts glow with it. (The map's own light level can't drive a
+// model layer fed from GeoJSON, hence the theme.)
+const darkScheme = matchMedia('(prefers-color-scheme: dark)');
+const glowFor = (dark) => ['match', ['get', 'model'], 'hw-pumpkin', dark ? 0.85 : 0, 'hw-ghost', dark ? 0.75 : 0, 0];
+const poolOpacity = (dark) => (dark ? 0.55 : 0);
+const updateGlow = () => {
+  const dark = darkScheme.matches;
+  if (mapRef?.getLayer(MAP_LAYER)) mapRef.setPaintProperty(MAP_LAYER, 'model-emissive-strength', glowFor(dark));
+  if (mapRef?.getLayer(GLOW_LAYER)) mapRef.setPaintProperty(GLOW_LAYER, 'circle-opacity', poolOpacity(dark));
+};
+
+// Which model stands on each spot: mostly pumpkins and tombstones, picked from
+// the spot itself so they don't move between visits; the haunted building's
+// nearest spots get a ghost and its graves
+function groundPoints() {
+  const features = [];
+  const haunted = [];
+  for (const campus of directory ?? []) {
+    for (const b of campus.buildings ?? []) {
+      if (hauntedRooms().buildings.has(`${campus.id}:${b.name}`) && typeof b.lat === 'number') haunted.push([campus.id, b.long, b.lat]);
+    }
+  }
+  for (const [campusId, list] of Object.entries(seasonSpots)) {
+    if (!Array.isArray(list)) continue;
+    const spooky = new Map();
+    for (const [cid, hx, hy] of haunted) {
+      if (cid !== campusId) continue;
+      const k = 111320 * Math.cos(hy * Math.PI / 180);
+      list.map(([x, y], i) => [Math.hypot((x - hx) * k, (y - hy) * 111320), i])
+        .filter(([d]) => d < 90)
+        .sort((p, q) => p[0] - q[0])
+        .slice(0, 3)
+        .forEach(([, i], n) => spooky.set(i, n === 0 ? 'ghost' : 'tombstone'));
+    }
+    list.forEach(([x, y], i) => {
+      const h = hash(`spot:${x},${y}`);
+      const roll = h % 100;
+      const model = spooky.get(i) ?? (roll < 42 ? 'pumpkin' : roll < 72 ? 'tombstone' : roll < 88 ? 'skull' : 'ghost');
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [x, y] },
+        properties: { model: `hw-${model}`, rotation: [0, 0, (h >>> 8) % 360] },
+      });
+    });
+  }
+  return { type: 'FeatureCollection', features };
+}
+
+function decorateMap(map) {
+  mapRef = map;
+  if (!mapActive || map.getLayer(MAP_LAYER)) return;
+  try {
+    for (const name of MAP_MODELS) {
+      // Already added the last time the season ran on this map: fine
+      try { map.addModel(`hw-${name}`, `/models/halloween/${name}.glb`); } catch { /* exists */ }
+    }
+    map.addSource(MAP_LAYER, { type: 'geojson', data: groundPoints() });
+    map.addLayer({
+      id: GLOW_LAYER,
+      type: 'circle',
+      source: MAP_LAYER,
+      slot: 'middle',
+      minzoom: 15,
+      filter: ['match', ['get', 'model'], ['hw-pumpkin', 'hw-ghost'], true, false],
+      paint: {
+        'circle-pitch-alignment': 'map',
+        // About one and a half times the model's width across, on the ground
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 15, 12, 16, 17, 17, 22, 18, 28],
+        'circle-blur': 1,
+        'circle-color': ['match', ['get', 'model'], 'hw-pumpkin', '#ff9a2e', '#b8e6ff'],
+        'circle-opacity': poolOpacity(darkScheme.matches),
+        'circle-emissive-strength': 1,
+      },
+    });
+    map.addLayer({
+      id: MAP_LAYER,
+      type: 'model',
+      source: MAP_LAYER,
+      slot: 'middle',
+      minzoom: 15,
+      layout: { 'model-id': ['get', 'model'] },
+      paint: {
+        'model-type': 'common-3d',
+        // At real size a pumpkin is a pixel or two from campus zoom (about
+        // 1.2 m a pixel at 16.5): scaled up, more when further out, so one
+        // is some 20 px across at campus zoom and about 17 px close up
+        'model-scale': ['interpolate', ['linear'], ['zoom'],
+          15, ['literal', [26, 26, 26]],
+          16, ['literal', [20, 20, 20]],
+          17, ['literal', [13, 13, 13]],
+          18, ['literal', [8, 8, 8]]],
+        'model-rotation': ['get', 'rotation'],
+        'model-cast-shadows': true,
+        'model-receive-shadows': true,
+        'model-opacity': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.6, 1],
+        'model-emissive-strength': glowFor(darkScheme.matches),
+      },
+    });
+  } catch (e) {
+    console.warn('halloween: map decorations', e);
+  }
+}
+
+function clearMap() {
+  const map = mapRef;
+  if (!map) return;
+  try {
+    if (map.getLayer(MAP_LAYER)) map.removeLayer(MAP_LAYER);
+    if (map.getLayer(GLOW_LAYER)) map.removeLayer(GLOW_LAYER);
+    if (map.getSource(MAP_LAYER)) map.removeSource(MAP_LAYER);
+    for (const name of MAP_MODELS) {
+      try { map.removeModel(`hw-${name}`); } catch { /* never added */ }
+    }
+  } catch { /* the map was torn down already */ }
+}
+
 // ── Spider under the settings button ──────────────────────────────────────
 
 let dangler = null;
@@ -684,6 +824,8 @@ let chipsTimer = 0;
 let listeners = new AbortController();
 
 export function start() {
+  // Fresh for this run: stop() aborts the last one
+  listeners = new AbortController();
   cardRadius = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--radius-lg')) || 16;
 
   hauntedLabel = t('season.halloween.haunted');
@@ -694,7 +836,9 @@ export function start() {
   setDecorator('searchRow', decorateSearchRow);
   setDecorator('banner', decorateBanner);
   setDecorator('buildingHeader', decorateBuildingHeader);
-  listeners = new AbortController();
+  mapActive = true;
+  setDecorator('map', decorateMap);
+  darkScheme.addEventListener('change', updateGlow, { signal: listeners.signal });
   // Whatever was built before this module loaded
   document.querySelectorAll('.classroom-card').forEach((card) => {
     const id = Number(card.dataset.openClassroom);
@@ -737,6 +881,8 @@ export function start() {
 }
 
 export function stop() {
+  mapActive = false;
+  clearMap();
   stopLogo();
   listeners.abort();
   crackSizes.disconnect();

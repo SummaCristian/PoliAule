@@ -4,7 +4,7 @@ import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { getSelectedCampusId, getSelectedBuildingId, clearSelectedBuildingSilently } from './campus-buildings.js';
 import { getSheetHeightPx, heightAfterBuildingSelect, isUserResizing } from './campus-sheet.js';
-import { decorate } from '../utils/season.js';
+import { decorate, decorateLive } from '../utils/season.js';
 
 // Fullscreen Mapbox map that fills the Campus tab. The app chrome (header,
 // footer, bottom-nav) floats above it — see components/campus-map.css, which
@@ -517,6 +517,8 @@ async function boot() {
   map.on('style.load', () => {
     applyLightPreset();
     el.classList.add('campus-map--ready');
+    // Seasonal decorations painted into the map itself (utils/season.js)
+    decorateLive('map', map, { campuses: classroomsData });
   });
   darkScheme.addEventListener('change', applyLightPreset);
 

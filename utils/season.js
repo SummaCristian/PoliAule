@@ -20,6 +20,8 @@
 //   'searchRow'  every classroom and building row in the search (components/search-overlay.js)
 //   'banner'     the season's banner, below (once the module has started)
 //   'buildingHeader'  each building's header in the Available results (script.js)
+//   'map'        the Campus map, once its style has loaded (components/campus-map.js);
+//                kept, so a season started later still gets it
 //
 // Adding a season: its date range in index.html, an entry in SEASONS below,
 // its strings in the locales (season.<id>.name / bannerTitle / bannerText,
@@ -44,6 +46,9 @@ export const SEASONS = {
 
 let running = null;      // { id, mod } of the season currently started
 const decorators = {};
+// Long-lived elements handed over with decorateLive(), so a season that starts
+// after they were built (picked from the search) still reaches them
+const live = {};
 const closedBanners = new Set(); // closed this session; back on the next launch
 
 function read(key) {
@@ -110,11 +115,19 @@ export function seasonForQuery(query) {
 
 export function setDecorator(kind, fn) {
   decorators[kind] = fn;
+  if (live[kind]) fn(...live[kind]);
 }
 
 // Called by the module that builds the element, right after building it.
 export function decorate(kind, el, data) {
   decorators[kind]?.(el, data);
+}
+
+// The same, for an element that lives on (the map): remembered for a season
+// that starts later.
+export function decorateLive(kind, el, data) {
+  live[kind] = [el, data];
+  decorate(kind, el, data);
 }
 
 // ── Banner ────────────────────────────────────────────────────────────────

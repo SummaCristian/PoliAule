@@ -12,6 +12,8 @@
 //     map, in its building's folder and next to its name in the search
 //   - mistletoe hanging from the settings button
 //   - the logo in a Santa hat with a present, in the header and the tab icon
+//     (and as the Info page's hero), and garlands, lights and snow on the
+//     Info page's cards
 //   - now and then Santa's sleigh across the top of the screen (the Befana on
 //     her broom on January 6th)
 //   - fireworks at midnight on New Year's Eve, and once on New Year's Day
@@ -547,6 +549,31 @@ function decorateBanner(banner) {
     const radius = radiusOf(banner);
     banner.appendChild(decor('xm-garland', garlandSvg(width, radius, h, { mode: 'rim', inset: 1, bows: false })));
     banner.appendChild(decor('xm-icicles', iciclesSvg(width, h, 13, radius)));
+  });
+}
+
+// ── Info page ─────────────────────────────────────────────────────────────
+// Snow piles up on every card; across their tops, garlands with lights and
+// plain strings of lights in turn; holly on the site badges (which clip
+// anything rising above them, so no snow there). The hero is the logo in its
+// Santa hat (components/info-page.js).
+
+function decorateInfo(page) {
+  const h = hash(`info:${dayKey()}`);
+  page.querySelectorAll('.info-section').forEach((section, i) => {
+    pile(section, { key: `info:${i}` });
+    whenSized(section, (width) => {
+      if (section.querySelector(':scope > .xm-garland')) return;
+      const radius = radiusOf(section);
+      const loops = Math.max(2, Math.round(width / 130));
+      section.appendChild(decor('xm-garland', i % 2
+        ? lightsSvg(width, radius, h + i, { loops })
+        : garlandSvg(width, radius, h + i, { loops })));
+    });
+  });
+  page.querySelectorAll('.info-badge').forEach((badge, i) => {
+    if (badge.querySelector(':scope > .xm-decor')) return;
+    badge.appendChild(decor('xm-sprig xm-sprig--badge', sprigSvg(26, h + 50 + i)));
   });
 }
 
@@ -1170,6 +1197,7 @@ export function start() {
   setDecorator('searchRow', decorateSearchRow);
   setDecorator('banner', decorateBanner);
   setDecorator('buildingHeader', decorateBuildingHeader);
+  setDecorator('info', decorateInfo);
   mapActive = true;
   setDecorator('map', decorateMap);
   darkScheme.addEventListener('change', updateGlow, { signal });

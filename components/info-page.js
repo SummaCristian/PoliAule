@@ -2,6 +2,7 @@ import { getLocale, onLanguageSwitch, t } from '../i18n.js';
 import { escapeHtml, safeUrl } from '../utils/html.js';
 import { getApiBase } from '../config.js';
 import { createSegmentedControl, createPopover } from 'vitrium';
+import { SEASONS, activeSeason, decorate } from '../utils/season.js';
 
 const HASH = '#info';
 const GITHUB_REPO = 'SummaCristian/poliaule';
@@ -129,6 +130,13 @@ class InfoPage {
           img.srcset = iconSrcset(variant);
           img.decode().catch(() => {});
         }
+      }
+      // A season's logo stands in for the hero icon (see _renderContent)
+      const hero = SEASONS[activeSeason()]?.hero;
+      if (hero) {
+        const img = new Image();
+        img.src = hero;
+        img.decode().catch(() => {});
       }
     };
     if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 3000 });
@@ -382,6 +390,9 @@ class InfoPage {
     const variant = showBadge ? 'beta' : 'main';
     const platform = detectPlatform();
     const steps = (key, n) => Array.from({ length: n }, (_, i) => `<li>${t(`info.pwa.${key}.step${i + 1}`)}</li>`).join('');
+    // While a season is on, its logo (the usual one dressed up) is the hero,
+    // larger and out of the icon's frame
+    const seasonHero = SEASONS[activeSeason()]?.hero ?? null;
 
     this._overlay.innerHTML = `
       <div class="info-page ${showBadge ? 'info-page--beta' : ''}">
@@ -389,10 +400,15 @@ class InfoPage {
 
         <!-- Hero section -->
         <div class="info-hero">
+          ${seasonHero ? `
+          <div class="info-hero-icon-wrap info-hero-icon-wrap--season">
+            <img src="${seasonHero}" class="info-hero-glow" aria-hidden="true" draggable="false" alt="">
+            <img src="${seasonHero}" class="info-hero-icon" fetchpriority="high" draggable="false" alt="">
+          </div>` : `
           <div class="info-hero-icon-wrap">
             ${iconImg(variant, 120, 'class="info-hero-glow" aria-hidden="true"')}
             ${iconImg(variant, 120, 'class="info-hero-icon" fetchpriority="high"')}
-          </div>
+          </div>`}
           <h1 class="info-hero-title">PoliAule</h1>
           <!-- 'Beta' or 'Local' badge if necessary -->
           ${showBadge ? `<h4 class="info-hero-badge secondary">${badgeText}</h4>` : ''}
@@ -605,6 +621,7 @@ class InfoPage {
 
     this._animateMasonry(this._overlay.querySelector('.info-content'));
     this._fetchGithubStats();
+    decorate('info', this._overlay.querySelector('.info-page'));
   }
 
   // A very long press on the hero icon turns it into the egg photo, until the

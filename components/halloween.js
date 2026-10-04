@@ -18,8 +18,10 @@
 //     squares and paths around each campus on the Campus map
 //   - cracked glass (components/glass-crack.js): the tab bar, a third of the
 //     building folders and one picker chip start out cracked, and the
-//     season's banner and the classroom page's sections crack when tapped
-//     quickly
+//     season's banner, the classroom page's sections and the Info page's
+//     cards crack when tapped quickly
+//   - webs and a hanging spider on the Info page, whose hero is the logo in
+//     its witch hat (components/info-page.js)
 // Everything here is static or plays for a few seconds; nothing animates
 // continuously except the small ghost. With reduced motion the bats, the
 // walking spider and the candy stay off, and the rest holds still.
@@ -350,6 +352,38 @@ function decorateDetail(page, { classroom }) {
 // The season's banner (utils/season.js) cracks when tapped quickly too
 function decorateBanner(banner) {
   attachTapCrack(banner, { seed: hash(dayKey()), signal: listeners.signal });
+}
+
+// ── Info page ─────────────────────────────────────────────────────────────
+// A web in the top-right corner of each card, a small one on each site badge,
+// a spider hanging from the top of one card, and the cards crack when tapped
+// quickly, like the classroom page's sections.
+
+function decorateInfo(page) {
+  const h = hash(`info:${dayKey()}`);
+  const sections = [...page.querySelectorAll('.info-section')];
+  sections.forEach((section, i) => {
+    whenSized(section, () => {
+      if (section.querySelector(':scope > .hw-decor')) return;
+      addWeb(section, { size: 46 + ((h >>> (i * 3)) % 18), radius: radiusOf(section), seed: h + i, right: true });
+    });
+    attachTapCrack(section, { seed: h + i, signal: listeners.signal });
+  });
+  const hangFrom = sections[h % Math.max(1, sections.length)];
+  if (hangFrom) {
+    // Short, so it hangs by the card's title rather than over its text
+    const len = 14 + (h >>> 5) % 10;
+    const hang = document.createElement('div');
+    hang.className = 'hw-decor hw-hang hw-hang--panel';
+    hang.style.left = `${45 + (h >>> 9) % 25}%`;
+    hang.innerHTML = `<div class="hw-hang-thread" style="height:${len}px"></div>` +
+      `<div class="hw-hang-bug" style="top:${len - 3}px">${spiderSvg(18)}</div>`;
+    hangFrom.appendChild(hang);
+  }
+  page.querySelectorAll('.info-badge').forEach((badge, i) => {
+    if (badge.querySelector(':scope > .hw-decor')) return;
+    addWeb(badge, { size: 30, radius: radiusOf(badge), seed: h + 50 + i });
+  });
 }
 
 // ── Search ────────────────────────────────────────────────────────────────
@@ -845,6 +879,7 @@ export function start() {
   setDecorator('searchRow', decorateSearchRow);
   setDecorator('banner', decorateBanner);
   setDecorator('buildingHeader', decorateBuildingHeader);
+  setDecorator('info', decorateInfo);
   mapActive = true;
   setDecorator('map', decorateMap);
   darkScheme.addEventListener('change', updateGlow, { signal: listeners.signal });

@@ -22,6 +22,11 @@
 //   'buildingHeader'  each building's header in the Available results (script.js)
 //   'map'        the Campus map, once its style has loaded (components/campus-map.js);
 //                kept, so a season started later still gets it
+//   'info'       the Info page, each time it renders (components/info-page.js)
+//
+// A season's `logo` (192px) is its search row's icon and its `hero` (512px)
+// the Info page's: both frame the drawing the same way, so the chair is the
+// same size in every season.
 //
 // Adding a season: its date range in index.html, an entry in SEASONS below,
 // its strings in the locales (season.<id>.name / bannerTitle / bannerText,
@@ -42,6 +47,7 @@ export const SEASONS = {
     load: () => import('../components/halloween.js'),
     icon: 'hgi-ghost',
     logo: '/favicons/halloween/icon-192.png',
+    hero: '/favicons/halloween/hero-512.webp',
     tint: '#ff7a2e',
     keywords: ['halloween', 'trick or treat', 'dolcetto o scherzetto', 'spooky', 'pumpkin', 'zucca'],
   },
@@ -49,6 +55,7 @@ export const SEASONS = {
     load: () => import('../components/christmas.js'),
     icon: 'hgi-pine-tree',
     logo: '/favicons/christmas/icon-192.png',
+    hero: '/favicons/christmas/hero-512.webp',
     tint: '#d6303a',
     keywords: ['christmas', 'xmas', 'natale', 'merry christmas', 'buon natale', 'babbo natale', 'santa', 'santa claus'],
     // Christmas Day, New Year and the Befana (Epiphany) get their own message

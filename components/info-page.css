@@ -184,6 +184,29 @@ body.info-open .header-title-btn {
   object-fit: contain;
 }
 
+/* A season's logo (utils/season.js) as the hero: larger, out of the icon's
+   frame, like the egg photo */
+.info-hero-icon-wrap--season {
+  width: 168px;
+  height: 168px;
+  border-radius: 0;
+}
+
+.info-hero-icon-wrap--season .info-hero-icon {
+  width: 168px;
+  height: 168px;
+  object-fit: contain;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.14));
+}
+
+.info-hero-icon-wrap--season .info-hero-glow {
+  object-fit: contain;
+  border-radius: 0;
+}
+
 /* The icon's own colors glowing out from under it. */
 .info-hero-glow {
   position: absolute;

@@ -2661,12 +2661,12 @@ body.detail-open .xm-mistletoe { display: none; }
 .gr-ribbon { fill: #c8202e; stroke: rgba(80, 10, 15, 0.35); stroke-width: 0.4px; }
 .gr-ribbon-knot { fill: #a3141f; }
 
-/* The confetti: one canvas over everything, like the snow's, stopping short
-   of the bottom safe area for the same reason (see .xm-snow) */
+/* The confetti: one canvas over everything, just under the snow's, stopping
+   short of the bottom safe area for the same reason (see .xm-snow) */
 .gr-fx {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1403;
+  z-index: 1399;
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;

@@ -35,7 +35,7 @@ import { classroomsData as occupancyDays } from '../available-rooms-script.js';
 import { activateGroupTab } from './bottom-nav.js';
 import { goToBuilding } from './campus-buildings.js';
 import { morphInto, settleMorph, isSettled, fadeIn, ClockedSpring } from './search-motion.js';
-import { createBackButton, createSegmentedControl } from 'vitrium';
+import { createBackButton, createSegmentedControl, createToggle } from 'vitrium';
 import { seasonEntry, seasonShown, toggleSeason, decorate } from '../utils/season.js';
 
 const DEBOUNCE_MS = 200;
@@ -539,11 +539,18 @@ function buildSeasonLead(season, large) {
 }
 
 // A season offered by its keyword (utils/season.js): tapping it dresses the
-// app up, or back down, and closes the search so the change shows.
+// app up, or back down, and closes the search so the change shows. A Vitrium
+// toggle on the right shows the state and slides over first, whether the row
+// was tapped, Enter pressed on it (keyboard nav calls click()) or the toggle
+// itself flipped; the season changes once it has landed. The row is a div:
+// a <button> can't hold the toggle's own <button>.
+const SEASON_TOGGLE_SETTLE_MS = 380;
+
 function buildSeasonRow(item, ctx) {
   const on = seasonShown(item.season);
-  const row = document.createElement('button');
-  row.type = 'button';
+  const row = document.createElement('div');
+  row.setAttribute('role', 'button');
+  row.setAttribute('aria-pressed', String(on));
   row.className = 'search-row search-row--season' + (ctx.large ? ' search-row--tophit' : '');
   row.dataset.row = '';
   row.tabIndex = -1;
@@ -556,11 +563,31 @@ function buildSeasonRow(item, ctx) {
     <div class="search-row-subtitle">${escapeHtml(t(on ? 'season.searchOn' : 'season.searchOff'))}</div>
   `;
   row.appendChild(body);
-  row.innerHTML += `<span class="search-row-trailing search-row-chevron"><i class="hgi-stroke ${on ? 'hgi-toggle-on' : 'hgi-toggle-off'}" aria-hidden="true"></i></span>`;
 
-  row.addEventListener('click', () => {
-    toggleSeason(item.season);
-    closeSearchOverlay();
+  let committed = false;
+  const commit = () => {
+    if (committed) return;
+    committed = true;
+    setTimeout(() => {
+      toggleSeason(item.season);
+      closeSearchOverlay();
+    }, SEASON_TOGGLE_SETTLE_MS);
+  };
+  // The row speaks for it (aria-pressed); the toggle is only for pointers
+  const toggle = createToggle({ value: on, onChange: commit });
+  toggle.el.tabIndex = -1;
+  toggle.el.setAttribute('aria-hidden', 'true');
+  const trailing = document.createElement('span');
+  trailing.className = 'search-row-trailing search-row-toggle';
+  trailing.appendChild(toggle.el);
+  row.appendChild(trailing);
+
+  row.addEventListener('click', (e) => {
+    // The toggle's own taps and drags flip it themselves (onChange above)
+    if (committed || toggle.el.contains(e.target)) return;
+    toggle.set(!toggle.on);
+    row.setAttribute('aria-pressed', String(toggle.on));
+    commit();
   });
   return row;
 }

@@ -921,6 +921,13 @@ html.search-vt .lg-tabbar__prominent {
   transform: rotate(180deg);
 }
 
+/* A season's row (buildSeasonRow): its Vitrium toggle on the right */
+.search-row-toggle {
+  display: flex;
+  align-items: center;
+  margin-inline-start: 0.5rem;
+}
+
 /* ── "Show all" expander row ─────────────────────────────────────────── */
 
 .search-show-all {

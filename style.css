@@ -1776,10 +1776,13 @@ are rendered as solid colors
   }
 }
 /* Vitrium bridge ------------------------------------------------------------
-   Vitrium's accent follows the app's own accent. Tripled
-   :root outranks Vitrium's dark-mode block regardless of load order. */
+   Vitrium's accent follows the app's own accent, and so does every toggle's
+   on-colour (Vitrium's default is iOS green): a season's or graduation's
+   accent recolours them all. Tripled :root outranks Vitrium's dark-mode block
+   regardless of load order. */
 :root:root:root {
   --lg-accent: var(--text-color-accent);
+  --lg-toggle-on: var(--lg-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {

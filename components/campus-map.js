@@ -5,6 +5,7 @@ import { escapeHtml } from '../utils/html.js';
 import { getSelectedCampusId, getSelectedBuildingId, clearSelectedBuildingSilently } from './campus-buildings.js';
 import { getSheetHeightPx, heightAfterBuildingSelect, isUserResizing } from './campus-sheet.js';
 import { decorate, decorateLive } from '../utils/season.js';
+import { attachSky, captureSkyLights, refreshSky } from './map-sky.js';
 
 // Fullscreen Mapbox map that fills the Campus tab. The app chrome (header,
 // footer, bottom-nav) floats above it — see components/campus-map.css, which
@@ -185,11 +186,16 @@ export function initCampusMap() {
   // flies there and shows its buildings, same motion as tapping that
   // campus's marker directly.
   campusContainer = container;
+  // TEMPORARY: the sky debug panel (components/sky-debug.js)
+  if (import.meta.env.DEV || new URLSearchParams(location.search).has('skydebug')) {
+    import('./sky-debug.js').then((m) => m.mountSkyDebug());
+  }
   document.addEventListener('campuschange', (e) => {
     if (!map || !mapboxglLib || embed) return;
     const campus = campuses().find(c => c.id === e.detail.id);
     if (!campus || typeof campus.lat !== 'number' || typeof campus.long !== 'number') return;
     flyToCampus(mapboxglLib, campus);
+    refreshSky();
   });
 
   // The sheet's own recenter button (shown once `shifted` above goes true) —
@@ -515,12 +521,21 @@ async function boot() {
   // background and fills in tiles as they arrive, which is what it looked like
   // before any of this was deferred, only now it fades in instead of popping.
   map.on('style.load', () => {
+    captureSkyLights();
     applyLightPreset();
     el.classList.add('campus-map--ready');
     // Seasonal decorations painted into the map itself (utils/season.js)
     decorateLive('map', map, { campuses: classroomsData });
   });
   darkScheme.addEventListener('change', applyLightPreset);
+  // The real sun and weather over the map (components/map-sky.js)
+  attachSky(map, {
+    isShowing: () => isMapTabShowing() && !embed,
+    location: () => {
+      const campus = selectedCampus();
+      return campus ? [campus.long, campus.lat] : INITIAL_CENTER;
+    },
+  });
 
   map.on('load', () => {
     el.classList.add('campus-map--ready');  // belt: a style that loaded without firing style.load
@@ -646,6 +661,7 @@ function applyLightPreset() {
   } catch {
     /* style not ready or not the Standard style — ignore */
   }
+  refreshSky();
 }
 
 function campuses() {
@@ -986,6 +1002,7 @@ export function releaseMap() {
   embedToken++;
   if (!embed) return;
   embed = null;
+  requestAnimationFrame(refreshSky);
   if (!map) return;  // still booting: boot() sees `embed` gone and builds for the tab
   if (!embedActive && !createdForEmbed) return;  // preview never took over this map
 

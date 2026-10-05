@@ -187,7 +187,7 @@ export function initCampusMap() {
   // campus's marker directly.
   campusContainer = container;
   // TEMPORARY: the sky debug panel (components/sky-debug.js)
-  if (import.meta.env.DEV || new URLSearchParams(location.search).has('skydebug')) {
+  if (new URLSearchParams(location.search).has('skydebug')) {
     import('./sky-debug.js').then((m) => m.mountSkyDebug());
   }
   document.addEventListener('campuschange', (e) => {

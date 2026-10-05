@@ -1,6 +1,6 @@
 // TEMPORARY: a debug panel for the Campus map's sky (components/map-sky.js),
-// to try every weather at any time of day. Shown under `npm run dev` or with
-// `?skydebug` in the URL. Light and dark mode follow the system setting.
+// to try every weather at any time of day. Shown only with `?skydebug` in the
+// URL. Light and dark mode follow the system setting.
 // To remove: delete this file, its import in campus-map.js, and the `debug`
 // bits in map-sky.js.
 import { setSkyDebug } from './map-sky.js';

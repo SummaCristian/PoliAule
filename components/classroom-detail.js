@@ -19,6 +19,13 @@ import { graduationOn, milanDay } from '../utils/graduation.js';
 // the whole animation, so what is left is the browser's own cross-fade.
 const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
 
+// Reading document.fonts.ready brings the page's style up to date on the spot
+// (the browser has to know whether any font is still loading). Read in the
+// open's update callback, that was a whole extra style pass in the middle of
+// it, so it is read once here; faces that arrive later refit the title through
+// 'loadingdone' (see init), which forces nothing.
+const fontsReady = document.fonts?.ready ?? Promise.resolve();
+
 // ---------- CONSTANTS ----------
 
 const FEATURE_ICONS = {
@@ -158,6 +165,8 @@ class ClassroomDetail {
     };
     document.addEventListener('scroll', queueTitleStuck, { passive: true, capture: true });
     window.addEventListener('resize', queueTitleStuck);
+    // A face that arrives after the page opened changes the title's width
+    document.fonts?.addEventListener('loadingdone', () => this._fitTitle());
 
     this._favBtn?.addEventListener('click', () => {
       if (this._currentId === null) return;
@@ -495,6 +504,21 @@ class ClassroomDetail {
      So: refresh again when the photo is actually up. refreshHeaderBlur() does
      its own sweep from there, which covers the photo's 0.6s reveal and the
      page tint's transition behind it. */
+  /* The open's zoom only needs the page's shell: the photo, the title and the
+     lines under it are all it shows for most of its length. The sections below
+     are built with the shell but kept out of layout (.detail-content--deferred)
+     and come in here, once the zoom has landed, with the schedule: laying them
+     out inside the transition's update callback, and the schedule's day picker
+     measuring itself there, were most of what that callback still cost. */
+  _revealContent(id) {
+    const content = this._overlay.querySelector('.detail-content--deferred');
+    if (!content) return;
+    content.querySelectorAll(':scope > .detail-column > .detail-section')
+      .forEach((section, i) => section.style.setProperty('--section-i', i));
+    content.classList.replace('detail-content--deferred', 'detail-content--enter');
+    this._loadSchedule(id);
+  }
+
   _photoRevealed() {
     refreshHeaderBlur();
   }
@@ -678,13 +702,13 @@ class ClassroomDetail {
 
         // Everything this changes first, then everything it measures: a read of
         // layout after a change restyles and lays out the page again, and
-        // .detail-open and the tint restyle all of it. The schedule's day
-        // picker measures itself as it is built, so it comes last of the
-        // changes and pays for the one full pass the reads below then reuse.
+        // .detail-open and the tint restyle all of it. Only the page's shell
+        // goes in here; its sections, and the schedule with its self-measuring
+        // day picker, come in once the zoom has landed (_revealContent).
         document.body.classList.add('detail-open');
         this._presetHeaderHeight('detail');
         this._overlay.removeAttribute('hidden');
-        this._renderContent(entry);
+        this._renderContent(entry, { deferContent: true });
         this._overlay.classList.add('visible');
         if (this._backBtn) this._backBtn.removeAttribute('hidden');
         if (this._favBtn) { this._favBtn.removeAttribute('hidden'); this._syncFavBtn(); }
@@ -699,7 +723,6 @@ class ClassroomDetail {
             detailContainer?.classList.add('loaded');
           }
         }
-        this._loadSchedule(id);
 
         this._checkHeaderHeight('detail', headerEl);
         window.scrollTo(0, 0);
@@ -731,6 +754,9 @@ class ClassroomDetail {
         document.documentElement.classList.remove('header-ctl-vt', 'detail-vt-open', 'detail-vt-hero');
         clearZoomOrigin();
         if (fromInfo) infoPage._cleanupReturnVT();
+        // Before the settle: what waits for it (the masonry's observers) takes
+        // its first measurements of the sections, which have to be laid out.
+        if (this._currentId === id) this._revealContent(id);
         this._settleTransition();
         // Nothing scrolls while the snapshots are up, so a non-zero offset here
         // is one the page kept from before (Safari restoring one as the
@@ -964,7 +990,7 @@ class ClassroomDetail {
 
   // ---------- RENDER: STATIC CONTENT ----------
 
-  _renderContent({ classroom, building, campus }) {
+  _renderContent({ classroom, building, campus }, { deferContent = false } = {}) {
     // Chips only stagger in when opening a classroom, not on re-renders
     // (occupancy refresh) of the one already showing.
     const enter = this._enteredId !== classroom.id;
@@ -1099,7 +1125,7 @@ class ClassroomDetail {
         ` : ''}
         ${graduationHtml}
       </div>
-      <div class="detail-content">
+      <div class="detail-content${deferContent ? ' detail-content--deferred' : ''}">
         <div class="detail-column">
         <section class="detail-section">
           <h2 class="detail-section-title">${t('detail.features')}</h2>
@@ -1158,7 +1184,7 @@ class ClassroomDetail {
       });
       this._titleRowObserver.observe(titleRow);
     }
-    document.fonts?.ready.then(() => this._fitTitle());
+    fontsReady.then(() => this._fitTitle());
 
     // Title click -> manual refresh of photo and schedule
     this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {

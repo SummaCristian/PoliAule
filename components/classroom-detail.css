@@ -165,14 +165,20 @@ body.detail-open .footer {
   pointer-events: none;
 }
 
-/* Hold background animations while the detail panel is open to save CPU/GPU.
-   Paused, not `animation: none`: lifting a `none` restarts every animation it
-   covered, so closing the page used to replay the tab's own entrance (`appear`,
-   an 8px blur and a scale over the whole list) underneath the closing zoom,
-   repainting the list's snapshot on every frame of it. Paused, they carry on
-   from where they were, which for all of them is long finished. */
-body.detail-open .tab-content,
-body.detail-open .tab-content * {
+/* Hold the hidden tab while the detail panel is open. Its contents are skipped
+   rather than restyled: content-visibility: hidden keeps the subtree's styles
+   and layout as they were and stops sampling the animations inside it.
+
+   It used to be `.tab-content *` with paused animations and no transitions,
+   and a rule ending in `*` keyed on a class of <body> restyled every element
+   of the list (~1000) the moment the class went on, in the middle of the
+   open's update callback.
+
+   The tab itself is still paused, not `animation: none`: lifting a `none`
+   restarts the animation, so closing the page used to replay the tab's own
+   entrance (`appear`) underneath the closing zoom. */
+body.detail-open .tab-content {
+  content-visibility: hidden;
   animation-play-state: paused !important;
   transition: none !important;
 }
@@ -1037,6 +1043,10 @@ body.detail-open .tab-content * {
     border-radius: 1.5rem;
     transform-origin: 0 0;
     pointer-events: none;
+    /* At rest the pill isn't there: without its animation (a scroll timeline
+       that has nothing to scroll is inactive) it stays hidden instead of
+       showing at its pinned spot. */
+    opacity: 0;
     animation: detail-title-glass linear both, detail-title-glass-corners linear both;
     animation-timeline: scroll(root block), scroll(root block);
     animation-range: 0 var(--title-pin-at, 150px), 0 var(--title-pin-at, 150px);
@@ -1160,6 +1170,51 @@ body.detail-open .tab-content * {
   max-width: 680px;
   margin: 0 auto;
   text-align: left;
+}
+
+/* Shell first (see _revealContent() in classroom-detail.js): the open's
+   zoom carries only the photo and the header, the sections are left out of
+   layout until it has landed, then rise into place one after the other.
+
+   Skipped, not display: none, and a screen tall: the page has to stay
+   scrollable meanwhile. The photo's shrink and the title's pin are driven by
+   the page's scroll, and a scroll timeline on a page that can't scroll is
+   inactive: with the browser's toolbar hidden the shell alone was exactly a
+   screen tall, and the zoom showed the photo at its unshrunk height (the
+   header lower than where it lands) and the title's pill glass at full
+   opacity. */
+.detail-content--deferred {
+  content-visibility: hidden;
+  contain-intrinsic-block-size: 100lvh;
+}
+
+/* A rise from well below, slow and soft: the cards come up from the bottom
+   of the screen, where they are, rather than popping in place. The fade is
+   quicker than the travel, so they are solid for most of the way up. */
+.detail-content--enter > .detail-column > .detail-section {
+  animation:
+    detail-section-rise 1s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+    detail-section-fade 0.45s ease-out backwards;
+  animation-delay: calc(var(--section-i, 0) * 60ms);
+}
+
+/* The chips wait for their card to be mostly up */
+.detail-content--enter .detail-feature-chip--enter {
+  animation-delay: calc(0.3s + var(--i, 0) * 45ms);
+}
+
+@keyframes detail-section-rise {
+  from { transform: translateY(min(40vh, 320px)) scale(0.94); }
+}
+
+@keyframes detail-section-fade {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-content--enter > .detail-column > .detail-section {
+    animation: none;
+  }
 }
 
 .detail-subtitle {
@@ -2532,14 +2587,15 @@ body.detail-open .tab-content * {
    frame of the zoom, and that repaint is what the slower engines can't keep
    up with. So, for those ~0.4s:
    - entrance animations are held at their first frame and let go when the
-     zoom lands (the photo's scroll-driven shrink is left alone: it sits at 0
-     anyway, and pausing a scroll timeline is asking for trouble);
+     zoom lands (the photo's scroll-driven shrink and the title's pin are left
+     alone: they sit at 0 anyway, and pausing a scroll timeline is asking for
+     trouble);
    - transitions snap, so the snapshot shows the settled state;
    - glass loses its backdrop-filter but keeps its tint. Over the page's
      near-flat background the blur shows almost nothing, and Safari composites
      backdrop-filter live even inside a snapshot, at the snapshot's original
      size, ignoring the zoom (the same bug as .header-ctl-vt above). */
-#classroom-detail-overlay.detail-vt-freeze *:not(.detail-photo-container.loaded) {
+#classroom-detail-overlay.detail-vt-freeze *:not(.detail-photo-container.loaded, .detail-title) {
   animation-play-state: paused !important;
 }
 

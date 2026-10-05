@@ -721,6 +721,19 @@ html.search-vt .lg-tabbar__prominent {
   -webkit-user-drag: none;
 }
 
+/* A season without a logo of its own yet (graduation): its icon, in its
+   colour */
+.search-row-lead--season .search-row-lead-icon {
+  font-size: 1.5rem;
+  color: var(--season-tint);
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-row-lead--season .search-row-lead-icon {
+    color: color-mix(in srgb, var(--season-tint) 45%, white);
+  }
+}
+
 .search-row-lead--tile.search-row-lead--accent {
   background: color-mix(in srgb, var(--color-status-busy) 18%, transparent);
   color: var(--color-status-busy);

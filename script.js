@@ -74,6 +74,7 @@ import { promptImport } from './components/transfer-dialog.js';
 import { initServiceWorker } from './utils/pwa.js';
 import { resumeState, initResumeSnapshot } from './utils/resume.js';
 import { initSeason, decorate } from './utils/season.js';
+import { graduationOn } from './utils/graduation.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
@@ -652,6 +653,18 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   renderAvailableClassroomsResults(results, date, from, to, campus);
 });
 
+// Graduation sessions that arrive (or change) after the results are drawn
+// add or drop the note above them; a campus change re-runs the search anyway
+document.addEventListener('graduationschange', () => {
+  const container = document.getElementById('available-classrooms-results');
+  if (!container?.dataset.searched || container.classList.contains('empty')) return;
+  const date = document.getElementById('date-picker')?.value;
+  const campusId = document.getElementById('campus-picker')?.value;
+  container.querySelector(':scope > .graduation-note')?.remove();
+  const note = date && graduationNote(date, campusId);
+  if (note) container.prepend(note);
+});
+
 // Builds the UI to show the results of the 'Available Classrooms' form submission,
 function renderAvailableClassroomsResults(results, date, from, to, campusId = null) {
   const container = document.getElementById('available-classrooms-results');
@@ -671,6 +684,9 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   }
 
   container.classList.remove('empty');
+
+  const graduation = graduationNote(date, campusId);
+  if (graduation) container.appendChild(graduation);
 
   // Filter row (rendered only when partial-free filter is needed)
   const filterRow = document.createElement('div');
@@ -766,6 +782,24 @@ function renderCampusClosedContainer(container, campusId, date) {
       </div>
     </div>
   `;
+}
+
+// A graduation day at the campus (utils/graduation.js): a note above the
+// results that the ceremonies may take rooms the data shows as free. Styled
+// like the campus-closed note, laurel in place of the lock.
+function graduationNote(date, campusId) {
+  if (!graduationOn(date, campusId)) return null;
+  const note = document.createElement('div');
+  note.className = 'campus-closed-note graduation-note lg-glass lg-glass--clear lg-glass--tinted liquid-glass';
+  note.setAttribute('role', 'note');
+  note.innerHTML = `
+    <i class="hgi-stroke hgi-laurel-wreath-01 campus-closed-note__icon" aria-hidden="true"></i>
+    <div class="campus-closed-note__text">
+      <p class="campus-closed-note__title">${t('results.graduationTitle')}</p>
+      <p class="campus-closed-note__body">${t('results.graduationText')}</p>
+    </div>
+  `;
+  return note;
 }
 
 const TIME_MIN_MINS = 7 * 60 + 15;  // 07:15

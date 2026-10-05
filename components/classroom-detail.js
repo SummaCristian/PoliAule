@@ -13,6 +13,7 @@ import { DAY_START, DAY_END, dayBarHtml, timeToMinutes, minutesToTimeDisplay } f
 import { embedMap, parkMap, releaseMap, isMapTabShowing, getEmbedPov, setEmbedPov } from './campus-map.js';
 import { refreshHeaderBlur } from '../utils/header-blur.js';
 import { decorate } from '../utils/season.js';
+import { graduationOn, milanDay } from '../utils/graduation.js';
 
 // No zoom and no shared element when motion is unwelcome: the pair of them is
 // the whole animation, so what is left is the browser's own cross-fade.
@@ -1027,6 +1028,33 @@ class ClassroomDetail {
         </div>`;
     }
 
+    // Graduation days at this campus among the days the schedule shows (or
+    // the next week, before the occupancy is in): the ceremonies may take
+    // the room even where it shows as free
+    const today = milanDay();
+    const scheduleDays = occupancyData.length
+      ? occupancyData.map(d => `${d.date.slice(0, 4)}-${d.date.slice(4, 6)}-${d.date.slice(6, 8)}`)
+      : Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(`${today}T12:00:00`);
+        d.setDate(d.getDate() + i);
+        return d.toISOString().slice(0, 10);
+      });
+    const graduationDays = scheduleDays.filter(d => d >= today && graduationOn(d, campus.id));
+    let graduationHtml = '';
+    if (graduationDays.length) {
+      const fmt = new Intl.DateTimeFormat(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
+      const days = graduationDays.map(d => fmt.format(new Date(`${d}T12:00:00`))).join(', ');
+      const [one, many] = t('detail.graduationText').split('|');
+      graduationHtml = `
+          <div class="detail-events-only detail-graduation" role="note">
+            <i class="hgi-stroke hgi-laurel-wreath-01" aria-hidden="true"></i>
+            <div>
+              <strong>${escapeHtml(t('detail.graduationTitle').replace('{days}', days))}</strong>
+              <p>${graduationDays.length > 1 ? (many ?? one) : one}</p>
+            </div>
+          </div>`;
+    }
+
     this._overlay.removeAttribute('data-title-tone');
     // The shared campus Map() may be sitting inside the old card — step it
     // out before the markup is replaced, or it would be destroyed with it.
@@ -1069,6 +1097,7 @@ class ClassroomDetail {
             </div>
           </div>
         ` : ''}
+        ${graduationHtml}
       </div>
       <div class="detail-content">
         <div class="detail-column">

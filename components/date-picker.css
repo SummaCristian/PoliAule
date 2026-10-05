@@ -327,7 +327,7 @@
   #today-indicator {
     /* Use a slightly darker/more saturated green for better white text contrast on dark background */
     background: var(--color-accent-dark);
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent-dark) 40%, transparent);
   }
   #today-indicator::after {
     border-top-color: var(--color-accent-dark);
@@ -395,6 +395,24 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+}
+
+/* A graduation day at the picked campus (markGraduationDays in
+   date-picker.js): a small laurel under the number, in graduation's navy */
+.date-element-container.date-graduation { position: relative; }
+
+.date-graduation-mark {
+  position: absolute;
+  bottom: -0.5rem;
+  left: 50%;
+  translate: -50% 0;
+  font-size: 0.5rem;
+  color: #3d63b3;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .date-graduation-mark { color: #8eabff; }
 }
 
 .date-element-container.date-skipped {

@@ -2,7 +2,7 @@ import { getLocale, onLanguageSwitch, t } from '../i18n.js';
 import { escapeHtml, safeUrl } from '../utils/html.js';
 import { getApiBase } from '../config.js';
 import { createSegmentedControl, createPopover } from 'vitrium';
-import { SEASONS, activeSeason, decorate } from '../utils/season.js';
+import { shownHero, decorate } from '../utils/season.js';
 
 const HASH = '#info';
 const GITHUB_REPO = 'SummaCristian/poliaule';
@@ -132,7 +132,7 @@ class InfoPage {
         }
       }
       // A season's logo stands in for the hero icon (see _renderContent)
-      const hero = SEASONS[activeSeason()]?.hero;
+      const hero = shownHero();
       if (hero) {
         const img = new Image();
         img.src = hero;
@@ -392,7 +392,7 @@ class InfoPage {
     const steps = (key, n) => Array.from({ length: n }, (_, i) => `<li>${t(`info.pwa.${key}.step${i + 1}`)}</li>`).join('');
     // While a season is on, its logo (the usual one dressed up) is the hero,
     // larger and out of the icon's frame
-    const seasonHero = SEASONS[activeSeason()]?.hero ?? null;
+    const seasonHero = shownHero();
 
     this._overlay.innerHTML = `
       <div class="info-page ${showBadge ? 'info-page--beta' : ''}">

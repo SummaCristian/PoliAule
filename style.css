@@ -2015,6 +2015,16 @@ are rendered as solid colors
   margin: calc(var(--xm-chair) * -220 / 1636) calc(var(--xm-chair) * -56 / 1636) calc(var(--xm-chair) * -1 / 1636) 0;
 }
 
+/* …and crowned with laurel, holding its diploma (components/graduation.js),
+   the same way: the chair's box at (38, 386) and 1428×1638 in its 1569×2024
+   frame */
+.header-logo.gr-logo {
+  --gr-chair: 2rem;
+  height: calc(var(--gr-chair) * 2024 / 1638);
+  aspect-ratio: 1569 / 2024;
+  margin: calc(var(--gr-chair) * -386 / 1638) calc(var(--gr-chair) * -103 / 1638) 0 calc(var(--gr-chair) * -38 / 1638);
+}
+
 /* The spider under the data status button: hangs on a thread from behind it,
    swaying; climbs back up when tapped */
 :root[data-season="halloween"] #data-fetch-btn { z-index: 1; }
@@ -2614,6 +2624,117 @@ body.detail-open .xm-mistletoe { display: none; }
   .xm-ribbon--photo .xm-ribbon-bow { animation: none; }
   .xm-ribbon-band,
   .xm-ribbon-bow { transition: none; }
+}
+
+/* Graduation day (components/graduation.js): navy, like the suits on the
+   day. A layer over the season, so it comes after the seasons' accents and
+   wins over them at the same specificity. */
+:root[data-graduation] {
+  --text-color-accent: #24427f;
+  --accent-gradient: linear-gradient(135deg, #14264f, #3d63b3);
+  --color-accent-dark: #1d3768;
+  --color-accent-dark-hover: #14264f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-graduation] {
+    --text-color-accent: #8eabff;
+    --accent-gradient: linear-gradient(135deg, #3558b0, #a9bfff);
+  }
+}
+
+:root[data-graduation] .info-page {
+  --info-glow-1: #3d63b3;
+  --info-glow-2: #ffd23f;
+  --info-glow-3: #5f8f3e;
+}
+
+/* The laurel (corona d'alloro): green leaves, red ribbon */
+.gr-laurel-stem { fill: none; stroke: #4a6b2e; stroke-width: 1.1px; stroke-linecap: round; }
+.gr-laurel-leaf { stroke: rgba(30, 50, 20, 0.35); stroke-width: 0.4px; }
+.gr-laurel-leaf--0 { fill: #5f8f3e; }
+.gr-laurel-leaf--1 { fill: #4a7a30; }
+.gr-laurel-leaf--2 { fill: #7aa64f; }
+.gr-ribbon { fill: #c8202e; stroke: rgba(80, 10, 15, 0.35); stroke-width: 0.4px; }
+.gr-ribbon-knot { fill: #a3141f; }
+
+/* The confetti: one canvas over everything, like the snow's, stopping short
+   of the bottom safe area for the same reason (see .xm-snow) */
+.gr-fx {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1403;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+/* The wreath hangs where the season's mistletoe or spider would, which make
+   way for it */
+:root[data-graduation] #data-fetch-btn { z-index: 1; }
+:root[data-graduation] .xm-mistletoe,
+:root[data-graduation] .hw-dangler { display: none; }
+
+.gr-wreath {
+  position: absolute;
+  z-index: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.gr-wreath-sway {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  animation: gr-swing 3.8s ease-in-out infinite alternate;
+}
+
+.gr-wreath-sway--swing { animation: gr-swing-hard 1.6s ease-out, gr-swing 3.8s ease-in-out 1.6s infinite alternate; }
+
+@keyframes gr-swing {
+  from { transform: rotate(-4deg); }
+  to { transform: rotate(4deg); }
+}
+
+@keyframes gr-swing-hard {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(22deg); }
+  45% { transform: rotate(-14deg); }
+  70% { transform: rotate(7deg); }
+  100% { transform: rotate(-4deg); }
+}
+
+.gr-wreath-line {
+  position: absolute;
+  left: -0.75px;
+  top: 0;
+  width: 1.5px;
+  height: 38px;
+  background: #c8202e;
+}
+
+.gr-wreath-crown {
+  position: absolute;
+  left: 0;
+  top: 38px;
+  padding: 2px;
+  border: 0;
+  background: none;
+  transform: translate(-50%, -4px);
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gr-wreath-crown svg { display: block; }
+
+body.detail-open .gr-wreath { display: none; }
+
+/* The campus chip's laurel, in the accent */
+.gr-chip-icon { color: var(--text-color-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-wreath-sway { animation: none; }
 }
 
 /* The season's banner (utils/season.js): a short message at the top of the

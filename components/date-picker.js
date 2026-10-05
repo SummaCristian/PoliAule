@@ -1,6 +1,30 @@
-import { getLocale } from '../i18n.js';
+import { getLocale, t } from '../i18n.js';
 import { classroomsData, publishedDates } from '../available-rooms-script.js';
 import { createPillSelector } from './pill-selector.js';
+import { graduationOn, graduationCampus } from '../utils/graduation.js';
+
+// Graduation days at the picked campus (utils/graduation.js) get a small laurel
+// under their date: the ceremonies may take rooms that day. Redone
+// when the campus or the sessions change.
+function markGraduationDays() {
+  const campusId = graduationCampus() ?? document.getElementById('campus-picker')?.value;
+  document.querySelectorAll('.date-picker-container .date-element-container').forEach(el => {
+    const on = !!graduationOn(el.dataset.date, campusId);
+    let mark = el.querySelector(':scope > .date-graduation-mark');
+    if (on && !mark) {
+      mark = document.createElement('i');
+      mark.className = 'hgi-stroke hgi-laurel-wreath-01 date-graduation-mark';
+      mark.setAttribute('aria-hidden', 'true');
+      el.appendChild(mark);
+    } else if (!on) {
+      mark?.remove();
+    }
+    el.classList.toggle('date-graduation', on);
+    if (on) el.title = t('date.graduationDay');
+    else el.removeAttribute('title');
+  });
+}
+document.addEventListener('graduationschange', markGraduationDays);
 
 // Sets the allowed dates into the date picker,
 // and populates the custom UI and the hidden select with the available dates.
@@ -77,6 +101,7 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
     `;
     container.appendChild(el);
   });
+  markGraduationDays();
 
   // --- Indicator logic (drag/spring physics ported from bottom-nav.js's
   // tab pill — see pill-selector.js) ---

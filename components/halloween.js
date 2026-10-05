@@ -26,7 +26,7 @@
 // continuously except the small ghost. With reduced motion the bats, the
 // walking spider and the candy stay off, and the rest holds still.
 
-import { setDecorator } from '../utils/season.js';
+import { setDecorator, graduationShown } from '../utils/season.js';
 import { t } from '../i18n.js';
 import { attachTapCrack, crackStatic, clearCracks } from './glass-crack.js';
 import seasonSpots from '../data/season-spots.json';
@@ -809,7 +809,8 @@ async function burstCandy() {
 }
 
 const onFavouritesChanged = (e) => {
-  if (e.detail?.added != null) burstCandy();
+  // On a graduation day its own burst takes this one's place (components/graduation.js)
+  if (e.detail?.added != null && !graduationShown()) burstCandy();
 };
 
 // ── Logo and tab icon ─────────────────────────────────────────────────────
@@ -828,6 +829,8 @@ let logoSwap = null;   // { el, src }
 let iconSwap = null;   // [{ link, href, type }]
 
 function startLogo() {
+  // Graduation's logo wins on its days; resumeLogo() brings this one back
+  if (graduationShown()) return;
   const el = document.querySelector('.header-logo');
   if (el?.classList.contains('hw-logo')) {
     logoSwap = { el, src: USUAL_LOGO_SRC };
@@ -836,7 +839,7 @@ function startLogo() {
     img.src = LOGO_SRC;
     // Swapped only once it's decoded, so the header never shows a blank logo
     img.decode().then(() => {
-      if (logoSwap) return;
+      if (logoSwap || graduationShown()) return;
       logoSwap = { el, src: el.getAttribute('src') };
       el.src = LOGO_SRC;
       el.classList.add('hw-logo');
@@ -847,6 +850,11 @@ function startLogo() {
     link.type = 'image/png';
     link.href = ICON_SRC;
   }
+}
+
+// Called by utils/season.js when graduation's layer ends, its logo gone
+export function resumeLogo() {
+  if (!logoSwap && !iconSwap) startLogo();
 }
 
 function stopLogo() {

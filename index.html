@@ -144,6 +144,15 @@
       margin: calc(10rem * -220 / 1636) calc(10rem * -56 / 1636) calc(10rem * -1 / 1636) 0;
     }
 
+    /* Graduation: crowned with laurel, holding its diploma, the chair's box
+       at (38, 386) and 1428×1638 in its 1569×2024 frame (same recipe as
+       .header-logo.gr-logo in style.css) */
+    .splash-logo.gr-logo {
+      height: calc(10rem * 2024 / 1638);
+      aspect-ratio: 1569 / 2024;
+      margin: calc(10rem * -386 / 1638) calc(10rem * -103 / 1638) 0 calc(10rem * -38 / 1638);
+    }
+
     @keyframes splash-logo-fade-in {
       to {
         opacity: 1;
@@ -341,6 +350,28 @@
         document.documentElement.dataset.season = season;
       }
     } catch (e) {}
+    // Graduation day (utils/graduation.js): today is one at the campus the
+    // app will start on, by the copy of the sessions kept from the last
+    // visit. The campus is the one the start-up restores (resume > preferred
+    // > last used > Leonardo, as in script.js / settings.js); season.js takes
+    // it from window.__graduationCampus and follows the picker from there.
+    try {
+      var startCampus = null;
+      if (document.documentElement.classList.contains('resuming')) startCampus = resume && resume.campus;
+      if (!startCampus && localStorage.getItem('poliAule_preferredCampusEnabled') === 'true') startCampus = localStorage.getItem('poliAule_preferredCampusId');
+      if (!startCampus && localStorage.getItem('poliAule_rememberLastCampus') !== 'false') startCampus = localStorage.getItem('poliAule_lastCampusId');
+      window.__graduationCampus = startCampus || 'MIA01';
+      var gradDays = (JSON.parse(localStorage.getItem('poliAule_graduations')) || {}).days || {};
+      var milanToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+      // A real day (unless turned off for today from the search), or the
+      // preview picked from the search (same rule as currentGraduation())
+      var gradReal = gradDays[milanToday] && gradDays[milanToday][window.__graduationCampus] && localStorage.getItem('poliAule_graduationOff') !== milanToday;
+      var gradPreview = localStorage.getItem('poliAule_graduationPreview') === 'true';
+      if ((gradReal || gradPreview) && localStorage.getItem('poliAule_seasonal') !== 'false') {
+        document.documentElement.dataset.graduation = window.__graduationCampus;
+      }
+    } catch (e) {}
+
     // The season's logo (Halloween: the usual one in a witch hat, with a
     // pumpkin; Christmas: in a Santa hat, with a present): the splash and
     // header logos each call this right after they're parsed, so the hat is
@@ -349,8 +380,11 @@
     var SEASON_LOGOS = {
       halloween: ['/favicons/halloween/logo.webp', 'hw-logo'],
       christmas: ['/favicons/christmas/logo.webp', 'xm-logo'],
+      // Graduation's (crowned with laurel, holding its diploma) wins over a
+      // season's on its days
+      graduation: ['/favicons/graduation/logo.webp', 'gr-logo'],
     };
-    var seasonLogo = SEASON_LOGOS[document.documentElement.dataset.season];
+    var seasonLogo = SEASON_LOGOS[document.documentElement.dataset.graduation ? 'graduation' : document.documentElement.dataset.season];
     window.__seasonLogo = function (img) {
       if (!seasonLogo) return;
       img.src = seasonLogo[0];

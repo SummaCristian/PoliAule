@@ -24,7 +24,7 @@
 // With reduced motion nothing falls or flies: the piles are simply there,
 // and the lights don't twinkle.
 
-import { setDecorator } from '../utils/season.js';
+import { setDecorator, graduationShown } from '../utils/season.js';
 import { t } from '../i18n.js';
 import { addPile, startSnowfall, stopSnowfall, holdSnowfall } from './snowfall.js';
 import seasonSpots from '../data/season-spots.json';
@@ -1063,7 +1063,8 @@ async function rainGifts() {
 }
 
 const onFavouritesChanged = (e) => {
-  if (e.detail?.added != null) rainGifts();
+  // On a graduation day its own burst takes this one's place (components/graduation.js)
+  if (e.detail?.added != null && !graduationShown()) rainGifts();
 };
 
 // The gift room unwrapped: a burst of red, gold and green from the bow
@@ -1127,6 +1128,8 @@ let logoSwap = null;   // { el, src }
 let iconSwap = null;   // [{ link, href, type }]
 
 function startLogo() {
+  // Graduation's logo wins on its days; resumeLogo() brings this one back
+  if (graduationShown()) return;
   const el = document.querySelector('.header-logo');
   if (el?.classList.contains('xm-logo')) {
     logoSwap = { el, src: USUAL_LOGO_SRC };
@@ -1135,7 +1138,7 @@ function startLogo() {
     img.src = LOGO_SRC;
     // Swapped only once it's decoded, so the header never shows a blank logo
     img.decode().then(() => {
-      if (logoSwap || !sky) return;
+      if (logoSwap || !sky || graduationShown()) return;
       logoSwap = { el, src: el.getAttribute('src') };
       el.src = LOGO_SRC;
       el.classList.add('xm-logo');
@@ -1146,6 +1149,11 @@ function startLogo() {
     link.type = 'image/png';
     link.href = ICON_SRC;
   }
+}
+
+// Called by utils/season.js when graduation's layer ends, its logo gone
+export function resumeLogo() {
+  if (!logoSwap && !iconSwap) startLogo();
 }
 
 function stopLogo() {

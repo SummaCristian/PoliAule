@@ -1467,6 +1467,24 @@ body.detail-open .tab-content * {
   }
 }
 
+/* Graduation days at the room's campus (see _renderContent): the same note in
+   graduation's navy, whatever the accent is that day */
+.detail-graduation {
+  --graduation-tint: #3d63b3;
+  background: color-mix(in srgb, var(--graduation-tint) 18%, var(--lg-tint-clear));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--graduation-tint) 40%, transparent),
+    var(--lg-highlight),
+    0 4px 24px 0 var(--lg-shadow-color);
+}
+
+.detail-graduation .hgi-stroke { color: var(--graduation-tint); }
+
+@media (prefers-color-scheme: dark) {
+  .detail-graduation { --graduation-tint: #8eabff; }
+  .detail-graduation .hgi-stroke { color: var(--graduation-tint); }
+}
+
 /* ── Weekly Schedule ─────────────────────────────────────────────── */
 
 /* Desktop: create space on the left for the today indicator */

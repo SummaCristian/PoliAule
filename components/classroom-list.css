@@ -29,18 +29,17 @@
   font-weight: 700;
 }
 
-/* Clear tinted glass only veils the backdrop in the accent, so white text
-   would wash out: use a deeper shade of the accent instead (lighter in dark). */
+/* On: the same glass as the notes (.campus-closed-note below, the season's
+   banner): clear, with just a veil of the accent, the text in the app's own
+   colour and only the icon in the accent. Vitrium's clear tint at its own
+   strength reads as a coloured panel. */
 .results-filter-btn.lg-glass--tinted {
-  color: color-mix(in oklch, var(--lg-accent) 70%, black);
+  --lg-glass-tint: color-mix(in srgb, var(--lg-accent) 40%, transparent);
+  color: var(--text-color-primary);
 }
 
-@media (prefers-color-scheme: dark) {
-  /* Over the near-black page the clear tint's 40% reads as solid paint. */
-  .results-filter-btn.lg-glass--tinted {
-    --lg-tint-strength-clear: 22%;
-    color: color-mix(in oklch, var(--lg-accent) 55%, white);
-  }
+.results-filter-btn.lg-glass--tinted .hgi-stroke {
+  color: var(--lg-accent);
 }
 
 .results-filter-btn .hgi-stroke {
@@ -134,6 +133,20 @@
   font-size: var(--text-80);
   line-height: 1.35;
   color: color-mix(in srgb, var(--text-color-primary) 70%, transparent);
+}
+
+/* A graduation day at the campus (graduationNote in script.js): the same
+   note above the results, in graduation's navy whatever the accent is */
+.graduation-note {
+  --lg-glass-tint: color-mix(in srgb, var(--graduation-tint) 35%, transparent);
+  --graduation-tint: #3d63b3;
+  margin: 0 auto 1rem;
+}
+
+.graduation-note .campus-closed-note__icon { color: var(--graduation-tint); }
+
+@media (prefers-color-scheme: dark) {
+  .graduation-note { --graduation-tint: #8eabff; }
 }
 
 /* Results list — a vertical stack of per-building <li> sections (see

@@ -36,7 +36,7 @@ import { activateGroupTab } from './bottom-nav.js';
 import { goToBuilding } from './campus-buildings.js';
 import { morphInto, settleMorph, isSettled, fadeIn, ClockedSpring } from './search-motion.js';
 import { createBackButton, createSegmentedControl } from 'vitrium';
-import { SEASONS, activeSeason, toggleSeason, decorate } from '../utils/season.js';
+import { seasonEntry, seasonShown, toggleSeason, decorate } from '../utils/season.js';
 
 const DEBOUNCE_MS = 200;
 const SECTION_CAP = 4;
@@ -526,25 +526,28 @@ function buildLessonRow(item, ctx) {
   return buildExpandableRow(row, item, ctx);
 }
 
-// The season's own logo (the usual one dressed up) on a hint of its colour
+// The season's own logo (the usual one dressed up) on a hint of its colour;
+// its icon until it has one (graduation)
 function buildSeasonLead(season, large) {
   const lead = document.createElement('div');
   lead.className = 'search-row-lead search-row-lead--season' + (large ? ' search-row-lead--lg' : '');
   lead.style.setProperty('--season-tint', season.tint);
-  lead.innerHTML = `<img src="${escapeHtml(season.logo)}" alt="" draggable="false">`;
+  lead.innerHTML = season.logo
+    ? `<img src="${escapeHtml(season.logo)}" alt="" draggable="false">`
+    : `<i class="hgi-stroke ${season.icon} search-row-lead-icon" aria-hidden="true"></i>`;
   return lead;
 }
 
 // A season offered by its keyword (utils/season.js): tapping it dresses the
 // app up, or back down, and closes the search so the change shows.
 function buildSeasonRow(item, ctx) {
-  const on = activeSeason() === item.season;
+  const on = seasonShown(item.season);
   const row = document.createElement('button');
   row.type = 'button';
   row.className = 'search-row search-row--season' + (ctx.large ? ' search-row--tophit' : '');
   row.dataset.row = '';
   row.tabIndex = -1;
-  row.appendChild(buildSeasonLead(SEASONS[item.season], ctx.large));
+  row.appendChild(buildSeasonLead(seasonEntry(item.season), ctx.large));
 
   const body = document.createElement('div');
   body.className = 'search-row-body';

@@ -6,13 +6,15 @@
    ============================================================ */
 
 /* The content is scrolled under the header and above the floating tab bar, so
-   it needs more bottom clearance (and a longer bottom fade) than the default:
-   at least 5.5rem, or the tab bar's height plus 1.5rem on mobile. */
+   its bottom fade has to end where the tab bar starts (--csheet-bottom-clear),
+   not at the sheet's edge, or it happens entirely behind the bar. The padding
+   covers both, so the last card can scroll fully clear of the fade. */
 .campus-sheet-content {
-  --csheet-fade-bottom: 5.5rem;
-  padding-bottom: max(var(--csheet-fade-bottom), calc(var(--bn-tabbar-height, 76px) + 1.5rem));
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--lg-sheet-header-height, 4.75rem) - var(--lg-sheet-fade)), #fff var(--lg-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--lg-sheet-header-height, 4.75rem) - var(--lg-sheet-fade)), #fff var(--lg-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
+  --csheet-bottom-clear: calc(var(--bn-tabbar-height, 72px) + 1.25rem);
+  --csheet-fade-bottom: 3rem;
+  padding-bottom: calc(var(--csheet-bottom-clear) + var(--csheet-fade-bottom));
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--lg-sheet-header-height, 4.75rem) - var(--lg-sheet-fade)), #fff var(--lg-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-bottom-clear) - var(--csheet-fade-bottom)), transparent calc(100% - var(--csheet-bottom-clear)));
+  mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--lg-sheet-header-height, 4.75rem) - var(--lg-sheet-fade)), #fff var(--lg-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-bottom-clear) - var(--csheet-fade-bottom)), transparent calc(100% - var(--csheet-bottom-clear)));
 }
 
 /* ── Buildings page ───────────────────────────────────────────────────────
@@ -310,9 +312,9 @@
 
 @media (min-width: 600px) {
   .campus-sheet-content {
-    /* Desktop's bottom-nav is a side rail, not a floating overlay, so no tabbar
-       clearance, but still keep at least --csheet-fade-bottom so the last card
-       can scroll fully clear of the fade. */
-    padding-bottom: var(--csheet-fade-bottom);
+    /* Desktop's bottom-nav is a side rail, not a floating overlay: the fade
+       runs to the sheet's own edge, and a longer one. */
+    --csheet-bottom-clear: 0px;
+    --csheet-fade-bottom: 5.5rem;
   }
 }

@@ -31,6 +31,8 @@ import {
   isCampusClosedAllDay,
   getOpenCommonAreas,
   lastFetchedAt,
+  isDayPending,
+  whenClassroomsDataSettled,
   SKIP_DAYS
 } from './available-rooms-script.js';
 
@@ -559,18 +561,27 @@ const shellReady = new Promise(resolve => { resolveShellReady = resolve; });
 // Fetches occupancy data in the background (independent of the splash
 // screen) and populates everything that depends on it once it's ready.
 // The last visit's cached copy, when there is one, draws the UI straight
-// away; the network then only confirms it (304s) or replaces it.
+// away; the network then only confirms it (304s) or replaces it. Without
+// one, the UI draws as soon as the start-up day is in, and the rest of the
+// week follows.
 async function initOccupancyData() {
   const hasCache = await loadCachedClassroomsData();
   let fetchSettled = false;
-  const fetched = fetchClassroomsData().finally(() => { fetchSettled = true; });
-  if (!hasCache) await fetched;
+  let firstDayIn;
+  const firstDay = new Promise(resolve => { firstDayIn = resolve; });
+  const fetched = fetchClassroomsData(hasCache ? {} : {
+    getFirstDate: () => preferInitialDate,
+    onFirstDay: firstDayIn,
+  }).finally(() => { fetchSettled = true; });
+  if (!hasCache) await Promise.race([firstDay, fetched]);
 
   await shellReady;
   // The network may have answered while the shell was still setting up
-  const drawnFromCache = hasCache && !fetchSettled;
+  const drawnEarly = !fetchSettled;
   populateOccupancyUi();
-  if (drawnFromCache && await fetched) refreshOccupancyUi();
+  const changed = await fetched;
+  // A partial first draw is always stale once the whole week is in
+  if (drawnEarly && (changed || !hasCache)) refreshOccupancyUi();
 }
 
 // Fills in everything that depends on the occupancy data, the first time it's there
@@ -615,6 +626,22 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   const data = new FormData(e.target);
   const campus = data.get('campus');
   const date = data.get('date'); // comes from the hidden select
+
+  // A day still on its way (first visit, see initOccupancyData): search once
+  // it's in, unless a search after the load (refreshOccupancyUi) got there
+  // first. It was requested with the first day, so the wait is short: the
+  // current results just stay up meanwhile.
+  delete e.target.dataset.waitingFor;
+  if (date && isDayPending(date.replace(/-/g, ''))) {
+    const form = e.target;
+    form.dataset.waitingFor = date;
+    whenClassroomsDataSettled().then(() => {
+      if (form.dataset.waitingFor !== date) return;
+      delete form.dataset.waitingFor;
+      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    });
+    return;
+  }
   const from = data.get('from');
   const to = data.get('to');
 
@@ -962,6 +989,8 @@ function refreshOccupancyUi() {
   refreshHourLensData();
   classroomDetail.refreshOccupancy();
   renderFavourites();
+  // The search overlay redraws an open query (components/search-overlay.js)
+  document.dispatchEvent(new CustomEvent('occupancychange'));
 
   const resultsContainer = document.getElementById('available-classrooms-results');
   if (resultsContainer && !resultsContainer.classList.contains('empty')) {

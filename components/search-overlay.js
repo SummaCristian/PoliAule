@@ -1491,4 +1491,11 @@ export function initSearchOverlay() {
     backBtn.setAttribute('aria-label', t('search.backToResults'));
     if (isOpen) refreshActiveView();
   });
+
+  // New occupancy (the rest of the week on a first visit, or a refresh that
+  // changed something): redraw an open query in place, keeping its expanded
+  // rows and professor view, instead of leaving it on the old data.
+  document.addEventListener('occupancychange', () => {
+    if (isOpen && input.value.trim()) refreshActiveView();
+  });
 }

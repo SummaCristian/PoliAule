@@ -12,6 +12,11 @@ export let classroomsData = [];
 // otherwise, so its ETag holds), so it can't tell how fresh the data is.
 export let lastFetchedAt = null;
 
+// The dates /v1/occupations publishes, known as soon as the list arrives: on a
+// first visit the days themselves load one first, then the rest (see
+// fetchClassroomsDataOnce), so classroomsData can briefly hold fewer of them.
+export let publishedDates = [];
+
 // Day of the week to skip. If one of the next 7 days is a
 // day listed here, skip to the next day.
 // This mirrors what happens in the backend.
@@ -135,6 +140,7 @@ export async function loadCachedClassroomsData() {
   const today = formatDateYYYYMMDD(new Date());
   const dates = list.data.dates.filter(date => date >= today);
   lastFetchedAt = list.data.generated_at ?? null;
+  publishedDates = dates;
 
   const [days, openingHours] = await Promise.all([
     Promise.all(dates.map(date => readCachedJson(cache, occupationUrl(apiBase, date))))
@@ -152,31 +158,62 @@ export async function loadCachedClassroomsData() {
 // and stores it in classroomsData. Returns whether it differs from the cached
 // copies, i.e. whether a UI drawn from loadCachedClassroomsData() is now stale.
 // Concurrent calls share one run.
+//
+// With `onFirstDay` (a first visit: nothing cached to draw from), the day
+// `getFirstDate()` names, or the first published one, is published on its own
+// as soon as it's in and `onFirstDay` called, so the UI can draw while the rest
+// of the week is still on its way; the whole week replaces it at the end. All
+// days are requested at once either way: only the publishing is staged.
 let inFlightFetch = null;
-export function fetchClassroomsData() {
-  inFlightFetch ??= fetchClassroomsDataOnce().finally(() => { inFlightFetch = null; });
+export function fetchClassroomsData(options = {}) {
+  inFlightFetch ??= fetchClassroomsDataOnce(options).finally(() => { inFlightFetch = null; });
   return inFlightFetch;
 }
 
-async function fetchClassroomsDataOnce() {
+// Whether `dateKey` (YYYYMMDD) is still to arrive from a fetch under way, and
+// so worth waiting for (whenClassroomsDataSettled) rather than shown as empty.
+export function isDayPending(dateKey) {
+  return !!inFlightFetch && !classroomsData.some(day => day.date === dateKey);
+}
+
+export function whenClassroomsDataSettled() {
+  return inFlightFetch ?? Promise.resolve();
+}
+
+async function fetchClassroomsDataOnce({ getFirstDate = null, onFirstDay = null } = {}) {
   try {
     const cache = await openDataCache();
     const apiBase = getApiBase();
     const list = await fetchJson(cache, occupationsListUrl(apiBase));
     const { dates } = list.data;
     lastFetchedAt = list.data.generated_at ?? null;
+    publishedDates = dates;
 
-    const [days, openingHours] = await Promise.all([
-      Promise.allSettled(dates.map(date => fetchJson(cache, occupationUrl(apiBase, date))))
-        .then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value)),
-      fetchJson(cache, openingHoursUrl(apiBase))
-        .catch(error => {
-          // Non-fatal: fall through with openingHours = null so classroomsData
-          // still loads (and gets used) even if opening hours can't be fetched.
-          console.error('Error fetching opening hours data:', error);
-          return null;
-        }),
-    ]);
+    const dayRequests = dates.map(date => fetchJson(cache, occupationUrl(apiBase, date)));
+    // Handled right away, so a day failing while the first one is awaited isn't an unhandled rejection
+    const allDays = Promise.allSettled(dayRequests)
+      .then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value));
+    const openingHoursRequest = fetchJson(cache, openingHoursUrl(apiBase))
+      .catch(error => {
+        // Non-fatal: fall through with openingHours = null so classroomsData
+        // still loads (and gets used) even if opening hours can't be fetched.
+        console.error('Error fetching opening hours data:', error);
+        return null;
+      });
+
+    if (onFirstDay && dates.length) {
+      const preferred = getFirstDate?.()?.replace(/-/g, '');
+      const first = Math.max(0, dates.indexOf(preferred));
+      try {
+        const [day, openingHours] = await Promise.all([dayRequests[first], openingHoursRequest]);
+        applyClassroomsData([day.data], openingHours?.data ?? null);
+        onFirstDay();
+      } catch {
+        // That day failed: the UI waits for the rest instead
+      }
+    }
+
+    const [days, openingHours] = await Promise.all([allDays, openingHoursRequest]);
 
     applyClassroomsData(days.map(day => day.data), openingHours?.data ?? null);
     console.log('All data loaded:', classroomsData);

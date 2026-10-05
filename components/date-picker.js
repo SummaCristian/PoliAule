@@ -1,5 +1,5 @@
 import { getLocale } from '../i18n.js';
-import { classroomsData } from '../available-rooms-script.js';
+import { classroomsData, publishedDates } from '../available-rooms-script.js';
 import { createPillSelector } from './pill-selector.js';
 
 // Sets the allowed dates into the date picker,
@@ -11,7 +11,9 @@ import { createPillSelector } from './pill-selector.js';
 // auto-select callback fires — reading it live avoids a stale-capture bug.
 export function setupDatePicker(getPreferInitialDate = () => null) {
   const datePicker = document.getElementById('date-picker');
-  const availableDates = classroomsData.map(day => day.date);
+  // Every published day, loaded or not: on a first visit the others arrive
+  // after the first one (available-rooms-script.js's fetchClassroomsData)
+  const availableDates = publishedDates.length ? publishedDates : classroomsData.map(day => day.date);
   const toInputFormat = d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
   const formatLocal = d => [
     d.getFullYear(),

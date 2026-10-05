@@ -30,6 +30,7 @@ import {
   loadCachedClassroomsData,
   isCampusClosedAllDay,
   getOpenCommonAreas,
+  lastFetchedAt,
   SKIP_DAYS
 } from './available-rooms-script.js';
 
@@ -860,7 +861,7 @@ function setupDataFetchIndicator() {
     String(today.getDate()).padStart(2, '0')
   ].join('');
 
-  const generationDate = new Date(classroomsData[0].generated_at + 'Z');
+  const generationDate = new Date((lastFetchedAt ?? classroomsData[0].generated_at) + 'Z');
   const generationKey = [
     generationDate.getFullYear(),
     String(generationDate.getMonth() + 1).padStart(2, '0'),
@@ -909,7 +910,7 @@ function setupDataFetchIndicatorText(animate = false) {
 
   // Last fetch time
   const generationDate = classroomsData[0]
-    ? new Date(classroomsData[0].generated_at + 'Z')
+    ? new Date((lastFetchedAt ?? classroomsData[0].generated_at) + 'Z')
     : null;
 
   const dateLocale = getLocale() === 'it' ? 'it-IT' : 'en-GB';

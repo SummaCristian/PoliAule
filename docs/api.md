@@ -30,7 +30,7 @@ Returns the full list of campuses, buildings, and classrooms with their static a
 GET /v1/occupations
 ```
 
-Returns the list of dates for which occupancy data currently exists. Fetch this first to know which dates are available before requesting individual dates. A `generated_at` timestamp is also included to indicate when the last fetch occurred and how fresh the data is.
+Returns the list of dates for which occupancy data currently exists. Fetch this first to know which dates are available before requesting individual dates. A `generated_at` timestamp is also included to indicate when the last fetch occurred and how fresh the data is. Use this one for freshness: each day's own `generated_at` (below) only moves when that day's data changes.
 
 ```json
 {
@@ -202,7 +202,8 @@ Same structure as `/v1/classrooms`, with a top-level metadata wrapper and an `oc
 
 ```
 {
-  generated_at: string   // ISO 8601 timestamp of when the file was built
+  generated_at: string   // ISO 8601 timestamp (UTC) of when this day's data last changed; an hourly run that finds
+                         // nothing new keeps it, so the file and its ETag stay the same (a 304 for If-None-Match)
   date:         string   // "YYYYMMDD"
   campuses: [
     {

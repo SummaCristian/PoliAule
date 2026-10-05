@@ -7,6 +7,11 @@ import { availableTabRooms } from './utils/secondary.js';
 // one entry per day inside the array, starting with 0 = today.
 export let classroomsData = [];
 
+// When the backend last ran (/v1/occupations' generated_at). A day file's own
+// generated_at only moves when its contents change (scripts/fetch.py keeps it
+// otherwise, so its ETag holds), so it can't tell how fresh the data is.
+export let lastFetchedAt = null;
+
 // Day of the week to skip. If one of the next 7 days is a
 // day listed here, skip to the next day.
 // This mirrors what happens in the backend.
@@ -129,6 +134,7 @@ export async function loadCachedClassroomsData() {
   if (!list) return false;
   const today = formatDateYYYYMMDD(new Date());
   const dates = list.data.dates.filter(date => date >= today);
+  lastFetchedAt = list.data.generated_at ?? null;
 
   const [days, openingHours] = await Promise.all([
     Promise.all(dates.map(date => readCachedJson(cache, occupationUrl(apiBase, date))))
@@ -158,6 +164,7 @@ async function fetchClassroomsDataOnce() {
     const apiBase = getApiBase();
     const list = await fetchJson(cache, occupationsListUrl(apiBase));
     const { dates } = list.data;
+    lastFetchedAt = list.data.generated_at ?? null;
 
     const [days, openingHours] = await Promise.all([
       Promise.allSettled(dates.map(date => fetchJson(cache, occupationUrl(apiBase, date))))

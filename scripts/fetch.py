@@ -316,7 +316,7 @@ def build_output(
     result = []
     rest_calls = 0
     for campus in campuses:
-        campus_out = {**_pick(campus, "name", "id", "lat", "long"), "buildings": []}
+        campus_out = {**_pick(campus, "name", "id", "lat", "long", "secondary"), "buildings": []}
         resolved = _resolved_csic(campus)
         page = pages.get(resolved) if resolved else None
         page_failed = page is None
@@ -325,7 +325,7 @@ def build_output(
 
         for building in campus["buildings"]:
             building_out = {
-                **_pick(building, "name", "altName", "lat", "long", "idEdificio", "address"),
+                **_pick(building, "name", "altName", "lat", "long", "idEdificio", "address", "secondary"),
                 "classrooms": [],
             }
             for classroom in building["classrooms"]:
@@ -350,7 +350,8 @@ def build_output(
                 building_out["classrooms"].append(
                     {
                         **_pick(classroom, "name", "id", "floor", "features",
-                                "idfoto", "seats", "accessible_seats", "workstations"),
+                                "idfoto", "seats", "accessible_seats", "workstations",
+                                "eventsOnly", "noSchedule"),
                         "occupancy": occupancy,
                     }
                 )

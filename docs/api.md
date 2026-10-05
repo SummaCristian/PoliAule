@@ -160,6 +160,7 @@ Returns `{ "mapboxToken": string }` — the URL-restricted Mapbox public token t
     group:     string | undefined   // group within the city, e.g. "Città Studi" or "Bovisa" - omitted for single-campus cities
     lat:       number
     long:      number
+    secondary: true | undefined     // nothing to book here (offices, residences, ...); omitted otherwise
     buildings: [
       {
         name:       string
@@ -168,6 +169,7 @@ Returns `{ "mapboxToken": string }` — the URL-restricted Mapbox public token t
         lat:        number
         long:       number
         idEdificio: number | null
+        secondary:  true | undefined   // no classrooms, or only events-only ones; omitted otherwise
         classrooms: [
           {
             id:                number   // stable room identifier
@@ -177,6 +179,8 @@ Returns `{ "mapboxToken": string }` — the URL-restricted Mapbox public token t
             accessible_seats:  number | null
             workstations:      number | null
             idfoto:            number | null   // photo reference
+            eventsOnly:        true | undefined   // generally closed outside official events; omitted otherwise
+            noSchedule:        true | undefined   // PoliMi publishes no schedule for it; omitted otherwise
             features: [
               {
                 id: number
@@ -206,13 +210,14 @@ Same structure as `/v1/classrooms`, with a top-level metadata wrapper and an `oc
       name:      string  // short display name
       lat:       number
       long:      number
-      buildings: [       // same building/classroom fields as classrooms.json
+      secondary: true | undefined
+      buildings: [       // same building/classroom fields as classrooms.json, `secondary` included
         {
           ...
           classrooms: [
             {
-              ...             // includes `floor`, as in /v1/classrooms
-              occupancy: [   // list of BOOKED time slots (not free slots)
+              ...             // includes `floor`, `eventsOnly` and `noSchedule`, as in /v1/classrooms
+              occupancy: [   // list of BOOKED time slots (not free slots); null when the schedule is unknown that day (e.g. a `noSchedule` room)
                 {
                   inizio: string        // start time, "HH:MM"
                   fine:   string        // end time,   "HH:MM"

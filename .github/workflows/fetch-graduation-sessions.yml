@@ -1,0 +1,79 @@
+name: Fetch Graduation Sessions
+
+on:
+  schedule:
+    - cron: '30 6 1 * *'  # Once a month, 1st at 6:30am UTC (after the monthly photos job at 5am and, on a Sunday, the opening-hours job at 6am)
+  workflow_dispatch:       # Allow manual runs from the GitHub Actions tab
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # The scraper carries over upcoming sessions of an academic year the page
+      # no longer links (its PDF swapped for next year's while July is still
+      # ahead) from the previous output, so restore the current copy first.
+      - name: Restore previous graduation sessions from R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p data
+          if npx --yes wrangler@4 r2 object get "poliaule-data/graduation-sessions.json" \
+              --file data/graduation-sessions.json --remote; then
+            echo "Restored $(jq '.sessions | length' data/graduation-sessions.json) sessions."
+          else
+            echo "No graduation-sessions.json in R2 yet (first run?)."
+            rm -f data/graduation-sessions.json
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run graduation sessions scraper
+        id: scrape
+        run: python scripts/fetch_graduation_sessions.py
+
+      # Only on anomalies: a failed scrape, or one that had to probe every PDF
+      # on the page because no link names the sessions any more.
+      - name: Notify Telegram
+        if: always() && (steps.scrape.outcome != 'success' || steps.scrape.outputs.status != 'ok')
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SCRAPE_MESSAGE: ${{ steps.scrape.outputs.message }}
+        run: |
+          TEXT=$(printf '⚠️ PoliAule graduation-sessions scrape\n%s' "${SCRAPE_MESSAGE:-Script crashed — check the Actions log.}")
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode chat_id="${TELEGRAM_CHAT_ID}" \
+            --data-urlencode text="$TEXT"
+
+      - name: Upload graduation sessions to R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes wrangler@4 r2 object put poliaule-data/graduation-sessions.json --file data/graduation-sessions.json --content-type application/json --remote
+          npx --yes wrangler@4 r2 object put poliaule-data-beta/graduation-sessions.json --file data/graduation-sessions.json --content-type application/json --remote
+
+      - name: Purge API cache
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/7ba55951cabeecf5f38d0c35762ea451/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"files":["https://api.poliaule.com/v1/graduation-sessions","https://api-beta.poliaule.com/v1/graduation-sessions"]}'

@@ -521,6 +521,7 @@ const modelIdFor = (dark) => (dark
 const poolOpacity = (dark) => (dark ? 0.55 : 0);
 const updateGlow = () => {
   const dark = darkScheme.matches;
+  if (mapRef && mapActive) fogOverMap(mapRef);
   if (mapRef?.getLayer(MAP_LAYER)) {
     mapRef.setLayoutProperty(MAP_LAYER, 'model-id', modelIdFor(dark));
     mapRef.setPaintProperty(MAP_LAYER, 'model-emissive-strength', glowFor(dark));
@@ -565,8 +566,41 @@ function groundPoints() {
   return { type: 'FeatureCollection', features };
 }
 
+// A violet haze over the night map (dark mode's night preset), with a few
+// stars above it. Mapbox's fog fades out at street-level zoom, so it's pulled
+// in close to show at the top of the pitched campus view. By day the map is
+// left alone. The fog the style had is kept, so turning the season off (or
+// going light) puts it back.
+const HAZE = {
+  range: [-1, 1.5],
+  color: '#2b1840',
+  'high-color': '#4a2470',
+  'horizon-blend': 0.15,
+  'space-color': '#0d0718',
+  'star-intensity': 0.35,
+};
+let fogBefore;   // undefined: not ours (the style's own fog is on)
+
+function fogOverMap(map) {
+  if (typeof map.setFog !== 'function') return;
+  if (!darkScheme.matches) return clearFog(map);
+  try {
+    if (fogBefore === undefined) fogBefore = map.getFog?.() ?? null;
+    map.setFog(HAZE);
+  } catch (e) {
+    console.warn('halloween: map haze', e);
+  }
+}
+
+function clearFog(map) {
+  if (fogBefore === undefined) return;
+  try { map.setFog(fogBefore); } catch { /* gone */ }
+  fogBefore = undefined;
+}
+
 function decorateMap(map) {
   mapRef = map;
+  if (mapActive) fogOverMap(map);
   if (!mapActive || map.getLayer(MAP_LAYER)) return;
   try {
     for (const name of MAP_MODELS) {
@@ -623,6 +657,7 @@ function decorateMap(map) {
 function clearMap() {
   const map = mapRef;
   if (!map) return;
+  clearFog(map);
   try {
     if (map.getLayer(MAP_LAYER)) map.removeLayer(MAP_LAYER);
     if (map.getLayer(GLOW_LAYER)) map.removeLayer(GLOW_LAYER);

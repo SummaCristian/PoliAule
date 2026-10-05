@@ -17,9 +17,14 @@
    .tab-content` / `body.info-open .tab-content`), they don't remove the
    class. Without the `:not(:has(...))` guards below, this lock stayed
    active behind those overlays too, leaving their (normal, in-flow) pages
-   unscrollable. */
-html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)),
-html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)) body {
+   unscrollable.
+
+   `html.campus-tab` is set with that `.visible` (components/bottom-nav.js),
+   and the guards only look at <html>'s direct child: a :has() that can
+   match deeper makes Chrome re-check <html> after DOM changes anywhere in
+   the page, restyling all of it every time. */
+html.campus-tab:not(:has(> body.detail-open, > body.info-open)),
+html.campus-tab:not(:has(> body.detail-open, > body.info-open)) body {
   touch-action: none;
   overscroll-behavior: none;
 
@@ -32,8 +37,8 @@ html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:
   scrollbar-width: none;
 }
 
-html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open))::-webkit-scrollbar,
-html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)) body::-webkit-scrollbar {
+html.campus-tab:not(:has(> body.detail-open, > body.info-open))::-webkit-scrollbar,
+html.campus-tab:not(:has(> body.detail-open, > body.info-open)) body::-webkit-scrollbar {
   display: none;
 }
 
@@ -75,6 +80,16 @@ html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:
      against this element's (inflated) box, not the real screen. See the
      mapbox control placement rules further down, which correct for it. */
   --campus-map-overshoot: 80px;
+}
+
+/* No padding, shown or hidden. `.tab-content`'s 1rem applied while the tab
+   was hidden, and its padding-left transition eased it out over 0.5s as the
+   tab showed: the map widened 395 -> 411px across a few frames, and Mapbox
+   reallocated and redrew its canvas on each of them (~300-450ms apiece on an
+   older phone), on every switch to this tab. */
+#search-classrooms-container {
+  padding: 0;
+  transition: none;
 }
 
 #search-classrooms-container.visible {
@@ -122,7 +137,7 @@ body.info-open #search-classrooms-container.visible {
 
 /* Keep the chrome painted above the fixed map. Header (z 1000) and bottom-nav
    (z 20) already clear it; the footer is statically positioned, so lift it. */
-html:has(#search-classrooms-container.visible) .footer {
+html.campus-tab .footer {
   position: relative;
   z-index: 5;
 }

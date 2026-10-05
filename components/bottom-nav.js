@@ -25,11 +25,20 @@ const root = document.getElementById('bn-wrapper');
 const contentContainers = document.querySelectorAll('.tab-content');
 
 /* --- Tab-content switching ---------------------------------------------- */
+// The Campus tab's scroll lock (campus-map.css) keys off this class on <html>,
+// set and cleared together with the tab's own .visible. It used to be
+// html:has(#search-classrooms-container.visible), but a :has() whose argument
+// can match anywhere in the document makes Chrome re-check <html> after DOM
+// changes anywhere, and restyle the whole page each time: opening a classroom
+// page paid for that in every forced style pass of its transition.
+const CAMPUS_TAB_ID = 'search-classrooms-container';
+
 function showContent(targetId) {
   contentContainers.forEach(container => {
     if (container.id === targetId) {
       requestAnimationFrame(() => {
         container.classList.add('visible');
+        if (container.id === CAMPUS_TAB_ID) document.documentElement.classList.add('campus-tab');
         // content-visibility:hidden->visible doesn't reliably fire
         // ResizeObserver on descendants across browsers (e.g. Safari), so
         // anything that measured its own layout (offsetTop/offsetWidth)
@@ -41,6 +50,7 @@ function showContent(targetId) {
       });
     } else {
       container.classList.remove('visible');
+      if (container.id === CAMPUS_TAB_ID) document.documentElement.classList.remove('campus-tab');
     }
   });
 }

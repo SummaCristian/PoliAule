@@ -1039,29 +1039,26 @@ body.info-open .header-nav-row {
   display: flex;
   flex-direction: column;
 
-  /* No `forwards`: with it, the frozen final keyframe leaves `filter:
-     blur(0)` / `transform: scale(1,1)` permanently applied as live
-     properties (not `none`) once the animation ends. Safari treats even a
-     no-op filter like that as an active filter root and refuses to
-     composite a *nested* backdrop-filter underneath it (e.g. the date
-     picker's lifted indicator blurring inside its already-blurred
-     container) — Firefox doesn't have this quirk. Nothing else here sets
-     filter/transform at rest, so dropping `forwards` reverts them to
-     `none` after the 0.3s animation completes, which is visually identical
-     but stops blocking descendants' own backdrop-filter in Safari. */
+  /* No `forwards`: with it, the frozen final keyframe leaves `transform:
+     scale(1,1)` permanently applied as a live property (not `none`) once
+     the animation ends, and a transformed ancestor changes what its
+     descendants' fixed positioning and backdrop-filter are relative to.
+     Nothing else here sets a transform at rest, so dropping `forwards`
+     reverts it to `none` after the 0.3s animation completes. */
   animation: appear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* A fade with a slight horizontal stretch. No blur: a filter over the whole
+   tab is redone by the GPU on every frame at the screen's full resolution,
+   and on an older phone it took the switch from ~48 to ~20 fps. */
 @keyframes appear {
   from {
     opacity: 0;
-    filter: blur(8px);
     transform: scale(0.95, 1);
   }
 
   to {
     opacity: 1;
-    filter: blur(0);
     transform: scale(1, 1);
   }
 }

@@ -1172,10 +1172,10 @@ function renderResults(query, { animate = true } = {}) {
     updateSelectionVisual();
     return;
   }
-  if (currentView === 'professor') {
-    if (animate) { exitProfessorView(); return; }
-    landSlide();
-  }
+  if (currentView === 'professor' && animate) { exitProfessorView(); return; }
+  // A slide still running (typing again while it heads back to the results)
+  // would otherwise land its own, older pane on top of this render.
+  landSlide();
   currentView = 'results';
   currentProfessorKey = null;
   setBackProgress(0);

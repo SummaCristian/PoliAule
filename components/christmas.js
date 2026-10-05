@@ -614,11 +614,37 @@ function decorateSearchPanel() {
 // ── The Campus sheet ──────────────────────────────────────────────────────
 // Coloured lights along its top rim (warm white ones vanish on light glass). The sheet is rebuilt when the layout flips
 // between phone and desktop, so they're put back whenever they're missing.
+// They're drawn for one width and redrawn when the sheet's changes, and only
+// once the Campus tab has finished fading in: in the sheet while it fades in
+// (the tab opened with Christmas already on), they turned iOS Safari's bottom
+// safe area solid, and it stayed solid on every tab.
+
+let sheetResize = null;
+let sheetLightsReady = false;
+
+function sheetLightsAfterFadeIn() {
+  const tab = document.getElementById(MAP_TAB);
+  if (!tab || !mapShowing()) return;
+  Promise.all(tab.getAnimations().map((a) => a.finished)).then(() => {
+    if (!mapActive || !mapShowing()) return;
+    sheetLightsReady = true;
+    decorateSheet();
+  }, () => { /* left mid-fade: the next tabvisible tries again */ });
+}
 
 function decorateSheet() {
   const glass = document.querySelector('.campus-sheet .lg-sheet__glass');
-  if (!glass || glass.querySelector(':scope > .xm-decor') || !glass.offsetWidth) return;
-  glass.appendChild(decor('xm-garland', lightsSvg(glass.offsetWidth, radiusOf(glass) || 28, hash(`sheet:${dayKey()}`), { mode: 'rim', inset: 3 })));
+  if (!glass) return;
+  sheetResize ??= new ResizeObserver(decorateSheet);
+  sheetResize.observe(glass);
+  if (!sheetLightsReady || !mapShowing()) return;
+  const width = glass.offsetWidth;
+  const old = glass.querySelector(':scope > .xm-decor');
+  if (!width || old?.dataset.width === String(width)) return;
+  const lights = decor('xm-garland', lightsSvg(width, radiusOf(glass) || 28, hash(`sheet:${dayKey()}`), { mode: 'rim', inset: 3 }));
+  lights.dataset.width = width;
+  if (old) old.replaceWith(lights);
+  else glass.appendChild(lights);
 }
 
 // ── Tab bar and search button ─────────────────────────────────────────────
@@ -1219,7 +1245,8 @@ export function start() {
   decorateBuilt();
   decorateTabBar();
   decorateSearchPanel();
-  decorateSheet();
+  sheetLightsAfterFadeIn();
+  document.addEventListener('tabvisible', sheetLightsAfterFadeIn, { signal });
   document.addEventListener('campussheetresize', decorateSheet, { signal });
 
   Promise.all(CHIP_HOSTS.map((tag) => customElements.whenDefined(tag))).then(() => {
@@ -1255,6 +1282,9 @@ export function stop() {
   holdSnowfall('map', false);
   stopSnowfall();
   firstSize.disconnect();
+  sheetResize?.disconnect();
+  sheetResize = null;
+  sheetLightsReady = false;
   clearTimeout(chipsTimer);
   clearTimeout(flyTimer);
   clearTimeout(midnightTimer);

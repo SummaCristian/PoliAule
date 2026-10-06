@@ -271,7 +271,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const setHeaderHeight = () =>
     document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
   setHeaderHeight();
-  new ResizeObserver(setHeaderHeight).observe(header);
+  // The header's top padding is env(safe-area-inset-top), which a home-screen
+  // app often reports as 0 (or the other orientation's value) at first layout
+  // and corrects later. That moves only the padding, so the default
+  // content-box observation never fires and --header-height stays stale, with
+  // everything stuck below it landing under the header. Observe the border box,
+  // and re-measure when the app comes back or the window changes.
+  new ResizeObserver(setHeaderHeight).observe(header, { box: 'border-box' });
+  window.addEventListener('resize', setHeaderHeight);
+  window.addEventListener('orientationchange', setHeaderHeight);
+  window.addEventListener('pageshow', setHeaderHeight);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) setHeaderHeight();
+  });
 
   // Live height of the sticky picker bar (mobile), so the results' sticky
   // per-building headers can park directly beneath it instead of overlapping.

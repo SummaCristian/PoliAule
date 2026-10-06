@@ -1,4 +1,7 @@
 .available-classrooms-container {
+  /* The containing block of the cards fading out after a rebuild
+     (utils/layout-flip.js morphRender) */
+  position: relative;
   margin: 0.5rem 0;
   padding: 0.5rem;
 
@@ -203,11 +206,12 @@
   padding: 0.25rem;
   text-align: start;
 
-  /* `backwards`, not `both`: the end keyframe is the natural resting state,
-     and letting `filter: blur(0)` linger as an applied filter breaks the
-     glass button's nested backdrop-filter in Safari (same reason
-     .tab-content.visible drops `forwards`). */
+  /* `backwards`, not `both`: the end keyframe is the natural resting state
+     (same reason .tab-content.visible drops `forwards`). */
   animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  /* The stagger (script.js), plus any wait for a card fading out of this
+     spot after a rebuild (utils/layout-flip.js) */
+  animation-delay: calc(var(--appear-delay, 0ms) + var(--lf-wait, 0ms));
 }
 
 @media (min-width: 1100px) {
@@ -318,6 +322,7 @@
 
 .classroom-list-item-container .classroom-card {
   animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--appear-delay, 0ms) + var(--lf-wait, 0ms));
 }
 
 /* Prevent re-triggering the staggered animation after the first load */
@@ -335,12 +340,10 @@
   from {
     opacity: 0;
     transform: translateY(12px);
-    filter: blur(4px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
@@ -799,4 +802,39 @@
 
 .classroom-card--fav .classroom-card-fav-star {
   display: block;
+}
+
+/* A card or header still there after the results were rebuilt glides from
+   its old place (morphRender in utils/layout-flip.js) instead of replaying
+   the entrance */
+.list-outer-container .classroom-card.lf-kept,
+.list-outer-container .building-section-header.lf-kept {
+  animation: none;
+}
+
+/* "No results" and the closed-campus note, when a search swaps them in, rise
+   in like the cards they replace (not the start-up placeholder, which shows
+   before any search) */
+.available-classrooms-container.empty[data-searched] > :not(.lf-ghosts) {
+  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: var(--lf-wait, 0ms);
+}
+
+/* Another campus: the new list rises in from further down, once the old one
+   has drifted away (morphRender's `swap`) */
+.lf-swapping .classroom-list-item-container .classroom-card,
+.lf-swapping .building-section-header,
+.lf-swapping.empty[data-searched] > :not(.lf-ghosts) {
+  animation-name: card-swap-in;
+}
+
+@keyframes card-swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(32px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

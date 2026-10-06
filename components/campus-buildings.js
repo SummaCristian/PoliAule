@@ -8,6 +8,7 @@ import { escapeHtml } from '../utils/html.js';
 import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
 import { createBuildingStarButton, setBuildingStarTarget } from '../utils/favourites.js';
 import { createButton } from 'vitrium';
+import { flipLayout, morphRender } from '../utils/layout-flip.js';
 
 // The Campus tab's own "pages" inside the campus sheet (components/campus-sheet.js):
 //
@@ -172,7 +173,16 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
     view = 'campus';
     savedCampusScroll = 0; // a saved scroll belongs to the old campus's grid, not this one
     setContentScroll(0);
-    swapCampusPage(e.detail.id, { animate: false });
+    // The old campus's folders drift up and away and the new ones rise in
+    // after them, as the Available tab's list does (utils/layout-flip.js);
+    // no-op while the Campus tab isn't the one showing
+    cancelPageTransition();
+    renderCampusHeader(e.detail.id, { fade: true });
+    morphRender(pageSwap, '.campus-sheet-card', (el) => el.dataset.building, () => {
+      const next = buildCampusPage(e.detail.id);
+      currentPage?.replaceWith(next);
+      currentPage = next;
+    }, { swap: true });
   });
   document.addEventListener('campusmapshifted', (e) => { recenterBtn.hidden = !e.detail.shifted; });
 
@@ -258,8 +268,9 @@ export function retranslateCampusBuildingsPage() {
     const building = findBuilding(hiddenInput.value, selectedBuildingId);
     if (building) {
       renderBuildingHeader(building);
-      currentPage?.replaceWith(buildBuildingPage(building));
-      currentPage = pageSwap.firstElementChild;
+      const page = buildBuildingPage(building);
+      currentPage?.replaceWith(page);
+      currentPage = page;
     }
   }
 }
@@ -381,9 +392,12 @@ function buildCampusPage(campusId) {
     return page;
   }
   if (campus?.buildings.some(b => b.secondary)) page.prepend(buildSecondaryToggle(campusId));
-  for (const building of visibleBuildings(campus)) {
-    grid.appendChild(buildBuildingCard(campusId, building));
-  }
+  visibleBuildings(campus).forEach((building, i) => {
+    const card = buildBuildingCard(campusId, building);
+    // The stagger of the rise-in after a campus change (campus-sheet.css)
+    card.style.setProperty('--appear-delay', `${Math.min(i * 40, 300)}ms`);
+    grid.appendChild(card);
+  });
   return page;
 }
 
@@ -398,14 +412,35 @@ function buildSecondaryToggle(campusId) {
     className: 'results-filter-btn',
     onClick: () => {
       showSecondary = !showSecondary;
-      swapCampusPage(campusId);
+      setPressed();
+      // The secondary buildings shrink away (or rise in) inside the grid that's
+      // there, and the others glide to their new places
+      const grid = row.parentElement?.querySelector(':scope > .campus-sheet-grid');
+      if (!grid) { swapCampusPage(campusId); return; }
+      renderCampusHeader(campusId, { fade: true });
+      // Off now that the folders are in: re-inserted ones would replay it
+      pageSwap.classList.remove('lf-swapping');
+      flipLayout(grid, '.campus-sheet-card', () => syncCampusGrid(grid, campusId), {
+        isLeaving: (el) => !showSecondary && el.dataset.secondary === 'true',
+      });
     },
   });
-  btn.classList.toggle('lg-glass--tinted', showSecondary);
-  btn.classList.toggle('lg-glass--clear', showSecondary);
-  btn.setAttribute('aria-pressed', String(showSecondary));
+  const setPressed = () => {
+    btn.classList.toggle('lg-glass--tinted', showSecondary);
+    btn.classList.toggle('lg-glass--clear', showSecondary);
+    btn.setAttribute('aria-pressed', String(showSecondary));
+  };
+  setPressed();
   row.appendChild(btn);
   return row;
+}
+
+// Brings the grid's folders in line with visibleBuildings(), keeping the
+// folder of every building that stays
+function syncCampusGrid(grid, campusId) {
+  const campus = staticClassroomsData.find(c => c.id === campusId);
+  const byName = new Map([...grid.children].map(el => [el.dataset.building, el]));
+  grid.replaceChildren(...visibleBuildings(campus).map(b => byName.get(b.name) ?? buildBuildingCard(campusId, b)));
 }
 
 // Re-renders the campus page's grid in place (no page-swap animation — used
@@ -431,6 +466,8 @@ function buildBuildingCard(campusId, building) {
     footerHtml: building.address ? `<span class="campus-sheet-card-address">${escapeHtml(building.address)}</span>` : '',
   });
   card.classList.add('campus-sheet-card');
+  card.dataset.building = building.name;
+  if (building.secondary) card.dataset.secondary = 'true';
   card.setAttribute('role', 'button');
   card.setAttribute('tabindex', '0');
   card.setAttribute('aria-label', `${t('building.prefix')} ${building.name}`);

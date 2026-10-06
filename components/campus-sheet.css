@@ -261,6 +261,14 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Another campus picked: the new folders rise in, staggered, once the old
+   ones have drifted away (utils/layout-flip.js morphRender's `swap`, the
+   same entrance as the Available tab's cards) */
+.lf-swapping .campus-sheet-grid > .campus-sheet-card {
+  animation: card-swap-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--appear-delay, 0ms) + var(--lf-wait, 0ms));
+}
+
 /* The folder's footer here is the building's address instead of the
    Available tab's status counts: browsing isn't tied to a date/time. */
 .campus-sheet-card-address {

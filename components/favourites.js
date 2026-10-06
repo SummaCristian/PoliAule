@@ -5,6 +5,7 @@ import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
 import { openBuildingPopup } from './building-popup.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
+import { springEasing } from '../utils/spring-easing.js';
 
 let _index = null;   // Map<classroomId(number), { classroom, building }>
 let _buildings = null;   // Map<buildingKey, { campusId, building }>
@@ -406,30 +407,7 @@ const _reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const MORPH_SPRING = { stiffness: 240, damping: 30, mass: 1 };  // ~critically damped
 const FADE = { duration: 260, easing: 'cubic-bezier(0.2, 0, 0, 1)' };
 
-// A spring from 0 to 1, as a linear() easing plus the duration it takes to
-// settle.
-function _springEasing({ stiffness, damping, mass }) {
-  const dt = 1 / 240;
-  let x = 0, v = 0, t = 0;
-  const samples = [0];
-  while (t < 3 && (Math.abs(1 - x) > 0.001 || Math.abs(v) > 0.01)) {
-    v += ((stiffness * (1 - x) - damping * v) / mass) * dt;
-    x += v * dt;
-    t += dt;
-    samples.push(x);
-  }
-  samples[samples.length - 1] = 1;
-  // ~60 stops are plenty for a smooth curve.
-  const step = Math.max(1, Math.round(samples.length / 60));
-  const stops = samples.filter((_, i) => i % step === 0 || i === samples.length - 1);
-  return {
-    duration: Math.round(t * 1000),
-    easing: `linear(${stops.map(v => +v.toFixed(4)).join(', ')})`,
-  };
-}
-const _spring = CSS.supports('animation-timing-function', 'linear(0, 1)')
-  ? _springEasing(MORPH_SPRING)
-  : { duration: 450, easing: 'cubic-bezier(0.2, 0.9, 0.1, 1)' };
+const _spring = springEasing(MORPH_SPRING);
 
 let _running = [];   // this morph's animations
 let _morphDone = null;

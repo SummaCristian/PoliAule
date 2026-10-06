@@ -75,6 +75,7 @@ import { initServiceWorker } from './utils/pwa.js';
 import { resumeState, initResumeSnapshot } from './utils/resume.js';
 import { initSeason, decorate } from './utils/season.js';
 import { graduationOn } from './utils/graduation.js';
+import { flipLayout, morphRender } from './utils/layout-flip.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
@@ -311,7 +312,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
 
   const headerEl = document.createElement('div');
   headerEl.className = 'building-section-header';
-  headerEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
+  headerEl.style.setProperty('--appear-delay', `${Math.min(cardIndex * 30, 300)}ms`);
   headerEl.innerHTML = `
     <button class="building-section-titles liquid-glass" type="button" aria-haspopup="dialog" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
       <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
@@ -395,7 +396,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     roomItem.className = 'classroom-list-item-container';
     roomItem.dataset.status = room.status;
     const cardEl = buildCardForClassroom(room, building, from, to, isToday, date, '', true, false);
-    cardEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
+    cardEl.style.setProperty('--appear-delay', `${Math.min(cardIndex * 30, 300)}ms`);
     roomItem.appendChild(cardEl);
     section.appendChild(roomItem);
     cardIndex++;
@@ -660,14 +661,39 @@ document.addEventListener('graduationschange', () => {
   if (!container?.dataset.searched || container.classList.contains('empty')) return;
   const date = document.getElementById('date-picker')?.value;
   const campusId = document.getElementById('campus-picker')?.value;
-  container.querySelector(':scope > .graduation-note')?.remove();
+  const old = container.querySelector(':scope > .graduation-note');
   const note = date && graduationNote(date, campusId);
-  if (note) container.prepend(note);
+  // Same note as before: nothing to redo
+  if (!old === !note) return;
+  // The note shrinks away (or rises in) and the list slides up or down to
+  // make room for it
+  flipLayout(container, ':scope > .graduation-note, .results-filter-row, .classroom-card, .building-section-header', () => {
+    old?.remove();
+    if (note) container.prepend(note);
+  }, { isLeaving: (el) => el === old });
 });
 
-// Builds the UI to show the results of the 'Available Classrooms' form submission,
+// Builds the UI to show the results of the 'Available Classrooms' form submission.
+// A new date, time or campus rebuilds the whole list, so the rooms that are in
+// both glide from their old place to the new one, the ones gone fade out
+// where they were, and the new ones run their usual entrance
+// (utils/layout-flip.js).
 function renderAvailableClassroomsResults(results, date, from, to, campusId = null) {
   const container = document.getElementById('available-classrooms-results');
+  // Another campus has nothing in common with the list on screen: replace it whole
+  const swap = container.dataset.campus != null && container.dataset.campus !== String(campusId);
+  container.dataset.campus = campusId;
+  morphRender(container, '.classroom-card, .building-section-header', resultsKey,
+    () => buildAvailableClassroomsResults(container, results, date, from, to, campusId), { swap });
+}
+
+function resultsKey(el) {
+  if (el.dataset.openClassroom) return `room:${el.dataset.openClassroom}`;
+  const building = el.closest('.building-section')?.dataset.buildingName;
+  return building != null ? `building:${building}` : null;
+}
+
+function buildAvailableClassroomsResults(container, results, date, from, to, campusId) {
   buildingOverview.reset(); // tear down the zoom-out view if it's open
   cancelBuildingScrubber();
   container.dataset.searched = 'true';
@@ -702,15 +728,26 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
       toggleBtn.classList.toggle('lg-glass--tinted', shown);
       toggleBtn.classList.toggle('lg-glass--clear', shown);
       toggleBtn.setAttribute('aria-pressed', String(shown));
-      container.classList.toggle('hide-partial', !shown);
     };
+    const applyShown = (shown) => container.classList.toggle('hide-partial', !shown);
     const toggleBtn = createButton({
       icon: '<i class="hgi-stroke hgi-filter" aria-hidden="true"></i>',
       text: t('results.filterPartial'),
       className: 'results-filter-btn',
-      onClick: () => setShown(toggleBtn.getAttribute('aria-pressed') !== 'true'),
+      onClick: () => {
+        const shown = toggleBtn.getAttribute('aria-pressed') !== 'true';
+        setShown(shown);
+        // The partly free cards shrink away (or rise in) and the rest glide
+        // into place; while the list is still running its entrance, just swap
+        const apply = () => applyShown(shown);
+        if (!list.classList.contains('appeared')) { apply(); return; }
+        flipLayout(list, '.classroom-card, .building-section-header', apply, {
+          isLeaving: (el) => !shown && !!el.closest('[data-status="partially-free"], [data-all-partial="true"]'),
+        });
+      },
     });
     setShown(showPartialDefault);
+    applyShown(showPartialDefault);
     filterRow.appendChild(toggleBtn);
     container.appendChild(filterRow);
   }
@@ -743,7 +780,7 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   requestAnimationFrame(() => {
     setTimeout(() => {
       list.classList.add('appeared');
-    }, 800);
+    }, 1100);
   });
 }
 

@@ -1,6 +1,7 @@
 import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow, getBuildingOpening } from '../available-rooms-script.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
-import { escapeHtml } from '../utils/html.js';
+import { escapeHtml, decodeEntities } from '../utils/html.js';
+import { flipLayout } from '../utils/layout-flip.js';
 import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance, getPhotoSmall } from '../utils/photo.js';
 import { planHeaderText } from '../utils/text-contrast.js';
@@ -48,17 +49,17 @@ function buildOccupationPopoverHtml(slot) {
   const metaLines = [];
 
   if (slot.category === 'COURSE' || slot.category === 'EXAM') {
-    titleText = slot.course ?? slot.name ?? t('detail.occupied');
+    titleText = decodeEntities(slot.course ?? slot.name ?? t('detail.occupied'));
     if (slot.category === 'EXAM') {
       metaLines.push(`<span class="timeline-popover-badge">${t('detail.examLabel')}</span>`);
     }
     if (slot.code != null) metaLines.push(`<span>${escapeHtml(String(slot.code))}</span>`);
-    if (slot.section) metaLines.push(`<span>${escapeHtml(slot.section)}</span>`);
+    if (slot.section) metaLines.push(`<span>${escapeHtml(decodeEntities(slot.section))}</span>`);
     if (Array.isArray(slot.professors) && slot.professors.length) {
-      metaLines.push(`<span>${escapeHtml(slot.professors.join(', '))}</span>`);
+      metaLines.push(`<span>${escapeHtml(decodeEntities(slot.professors.join(', ')))}</span>`);
     }
   } else {
-    titleText = slot.raw ?? slot.name ?? t('detail.occupied');
+    titleText = decodeEntities(slot.raw ?? slot.name ?? t('detail.occupied'));
   }
 
   return `
@@ -186,9 +187,18 @@ class ClassroomDetail {
 
     window.addEventListener('hashchange', () => this._onHashChange());
 
+    // Changed with the page open (settings over it): Sunday's row shrinks
+    // away or rises in, and what's under it slides to make room
     window.addEventListener('hidesundayschange', (e) => {
       const container = document.getElementById('detail-schedule-container');
-      if (container) container.classList.toggle('detail-schedule--hide-sundays', e.detail.hidden);
+      if (!container) return;
+      const apply = () => container.classList.toggle('detail-schedule--hide-sundays', e.detail.hidden);
+      const content = container.closest('.detail-content');
+      if (!content) { apply(); return; }
+      flipLayout(content,
+        '.detail-schedule-row, .detail-schedule-label-cell, .detail-schedule-day, .detail-section:has(#detail-schedule-container) ~ .detail-section',
+        apply,
+        { isLeaving: (el) => e.detail.hidden && /--sunday\b/.test(el.className) });
     });
 
     onLanguageSwitch(() => {

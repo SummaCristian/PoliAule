@@ -2,6 +2,7 @@ import { getClassroomStatusNow, classroomsData as occupancyDays, openDataCache, 
 import { getApiBase } from './config.js';
 import { EASTER_EGGS } from './data/search-easter-eggs.js';
 import { seasonForQuery } from './utils/season.js';
+import { decodeEntities } from './utils/html.js';
 
 // Static classroom directory (campus → buildings → classrooms) plus the
 // unified Spotlight search that runs against it. The search UI itself lives
@@ -89,8 +90,8 @@ function buildOccupationIndex() {
         for (const room of building.classrooms ?? []) {
           for (const slot of room.occupancy ?? []) {
             if (!slot.inizio || !slot.fine) continue;
-            const professors = Array.isArray(slot.professors) ? slot.professors : [];
-            const title = slot.course ?? slot.raw ?? slot.name ?? '';
+            const professors = Array.isArray(slot.professors) ? slot.professors.map(decodeEntities) : [];
+            const title = decodeEntities(slot.course ?? slot.raw ?? slot.name ?? '');
             rows.push({
               date,
               inizio: slot.inizio,
@@ -115,8 +116,8 @@ function buildOccupationIndex() {
                 slot.code != null ? String(slot.code) : '',
                 slot.section ?? '',
                 professors.join(' '),
-                slot.raw ?? '',
-                slot.name ?? '',
+                decodeEntities(slot.raw ?? ''),
+                decodeEntities(slot.name ?? ''),
               ].join('  ').toLowerCase(),
             });
           }

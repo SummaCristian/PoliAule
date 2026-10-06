@@ -47,7 +47,19 @@
   }
 }
 
-/* ── Title row: time readout + duration stepper ─────────────────────────── */
+/* ── Title row: icon + "Time", matching .chip-dock__title / .lg-morph__title ── */
+
+.hl-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--lg-text-muted);
+}
+
+/* ── Readout row: time readout + duration stepper ───────────────────────── */
 
 .hl-head {
   display: flex;
@@ -57,10 +69,8 @@
 }
 
 .hl-icon {
-  font-size: 22px;
+  font-size: 16px;
   line-height: 1;
-  color: var(--lg-text);
-  opacity: 0.8;
 }
 
 .hl-readout {
@@ -68,14 +78,6 @@
   flex-direction: column;
   flex: 1 1 auto;
   min-width: 0;
-}
-
-.hl-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--lg-text-muted);
 }
 
 .hl-time {
@@ -91,10 +93,6 @@
   font-size: 0.62em;
   font-weight: 700;
   letter-spacing: 0.02em;
-}
-
-@media (max-width: 380px) {
-  .hl-icon { display: none; }
 }
 
 /* Vitrium's stepper, with the duration sitting between − and +. */
@@ -270,8 +268,8 @@
 
 /* The title row is the panel's press/drag handle (deformFrom in
    time-range-chip-picker.js); the rail keeps its own drags. */
-.trc-content .hl-readout,
-.trc-content .hl-icon {
+.trc-content .hl-title,
+.trc-content .hl-readout {
   cursor: default;
   touch-action: none;
 }

@@ -40,7 +40,7 @@ export class TimeRangeChipPicker extends HTMLElement {
       body: this.#body,
       title: false,                    // the picker brings its own title row
       exclude: '.hl-rail, .hl-dur',    // the lens, the hours and the stepper keep their own presses
-      deformFrom: '.hl-readout, .hl-icon',
+      deformFrom: '.hl-title, .hl-readout',
       onBuild: (chip) => this.#onBuild(chip),
       // The picker had no layout while its panel was hidden.
       onShow: () => this.#slider?._render?.(),

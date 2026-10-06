@@ -36,6 +36,7 @@ import { initSearchOverlay } from './components/search-overlay.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
 import { changelogPage } from './components/changelog-page.js';
+import { initUpdateBanner } from './components/update-banner.js';
 import { ENV_LABEL } from './utils/env.js';
 import { initInfoHint } from './components/info-hint.js';
 
@@ -467,6 +468,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Holiday decorations, when today is in a season (utils/season.js)
     initSeason();
+
+    // A week-long banner announcing the version this site runs
+    initUpdateBanner();
 
     // Desktop keyboard shortcuts (no-ops on touch / narrow viewports)
     initKeybindings();

@@ -213,6 +213,8 @@
   "season.graduation.withDesign": "{levels}, Design compreso",
   "season.graduation.designTitle": "Proclamazione Design! 🎉",
   "season.graduation.designText": "Oggi a {campus} la Scuola del Design proclama i suoi nuovi dottori. Complimenti a tutti!",
+  "updateBanner.title": "PoliAule {version} è qui",
+  "updateBanner.cta": "Scopri le novità",
   "season.bannerClose": "Chiudi",
   "season.searchOff": "Tocca per travestire PoliAule",
   "season.searchOn": "Attivo · tocca per togliere il costume",

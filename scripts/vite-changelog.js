@@ -218,7 +218,14 @@ export function buildChangelog(root = ROOT) {
 
   for (const lang of LANGS) entries[lang].sort((a, b) => compareVersions(a.version, b.version));
 
-  const pick = (e) => e && ({ version: e.version, date: e.date, channel: e.channel });
+  // With its title in every language, for what shows it without fetching
+  // the index (the Info page's version, the update banner)
+  const pick = (e) => e && ({
+    version: e.version,
+    date: e.date,
+    channel: e.channel,
+    title: Object.fromEntries(LANGS.map(l => [l, entries[l].find(x => x.version === e.version).title])),
+  });
   const latest = pick(entries.en[0]);
   const stable = pick(entries.en.find(e => e.channel === 'stable'));
   return { entries, bodies, media, latest, stable };

@@ -255,7 +255,7 @@ export function decorateLive(kind, el, data) {
 // locale keys.
 function showBanner() {
   const host = document.querySelector('#available-classrooms-container > .favourites-section');
-  if (!host || host.querySelector(':scope > .season-banner')) return;
+  if (!host || host.querySelector(':scope > .season-banner:not(.update-banner)')) return;
   let id, tint, icon, title, body;
   if (graduation && !graduation.preview) {
     id = `graduation:${graduation.campusId}`;
@@ -299,12 +299,15 @@ function showBanner() {
     closedBanners.add(id);
     el.remove();
   });
-  host.prepend(el);
+  // Under the update banner (components/update-banner.js) when that's up
+  const update = host.querySelector(':scope > .update-banner');
+  if (update) update.after(el);
+  else host.prepend(el);
   decorate('banner', el);
 }
 
 function hideBanner() {
-  document.querySelector('.season-banner')?.remove();
+  document.querySelector('.season-banner:not(.update-banner)')?.remove();
 }
 
 function refreshBanner() {

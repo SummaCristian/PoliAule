@@ -2677,6 +2677,77 @@ body.detail-open .gr-wreath { display: none; }
   -webkit-tap-highlight-color: transparent;
 }
 
+/* The update banner (components/update-banner.js): the same box, in the
+   release's channel colour, with the button to that version's changelog
+   page on a row of its own */
+.update-banner {
+  flex-wrap: wrap;
+  row-gap: 0.55rem;
+  padding-bottom: 0.8rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Stacked over the season's banner: closer together than to the cards */
+.update-banner:has(+ .season-banner) {
+  margin-bottom: 0.6rem;
+}
+
+/* The released app's own icon (stable or beta) in place of a glyph */
+.update-banner__icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 24%;
+  corner-shape: superellipse;
+  user-select: none;
+  -webkit-user-drag: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.update-banner__actions {
+  flex: 1 0 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* A pill in the release's colour. Not glass of its own: glass inside the
+   banner's tinted glass would inherit its rim */
+.update-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.25rem;
+  padding: 0 1rem 0 1.1rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--season-tint) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--season-tint) 28%, transparent);
+  color: color-mix(in srgb, var(--season-tint) 75%, var(--text-color-primary));
+  font: inherit;
+  font-size: var(--text-90);
+  font-weight: 700;
+  -webkit-tap-highlight-color: transparent;
+  transition: scale 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease;
+}
+
+.update-banner__cta .hgi-stroke {
+  font-size: 1rem;
+}
+
+.update-banner__cta:active {
+  scale: 0.96;
+  background: color-mix(in srgb, var(--season-tint) 26%, transparent);
+}
+
+.update-banner__cta:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-banner__cta { transition: none; }
+}
+
 /* Cracked glass (components/glass-crack.js): an SVG inside the element, each
    crack drawn twice, a soft dark line under a bright one, so it reads as a
    broken edge catching the light on light and dark glass alike */

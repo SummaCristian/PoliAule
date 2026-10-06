@@ -227,6 +227,8 @@
   "season.graduation.withDesign": "{levels} (Design included)",
   "season.graduation.designTitle": "Design graduation day! 🎉",
   "season.graduation.designText": "Today at {campus} the School of Design proclaims its new graduates. Congratulations, everyone!",
+  "updateBanner.title": "PoliAule {version} is here",
+  "updateBanner.cta": "See what's new",
   "season.bannerClose": "Close",
   "season.searchOff": "Tap to dress PoliAule up",
   "season.searchOn": "On · tap to take the costume off",

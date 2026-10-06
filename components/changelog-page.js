@@ -16,6 +16,7 @@ import { flipLayout } from '../utils/layout-flip.js';
 import { IS_PROD, APP_VERSION } from '../utils/env.js';
 import { createToggle } from 'vitrium';
 import { infoPage } from './info-page.js';
+import { markUpdateSeen } from './update-banner.js';
 
 const HASH_RE = /^#changelog(?:\/([\w.-]+))?$/;
 const SHOW_BETAS_KEY = 'poliAule_changelogShowBetas';
@@ -529,6 +530,8 @@ class ChangelogPage {
         </div>`;
       return;
     }
+    // The update banner announcing this version has served its purpose
+    markUpdateSeen(e.version);
     const stable = e.channel === 'stable';
     const github = e.github && safeUrl(e.github);
     content.innerHTML = `

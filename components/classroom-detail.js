@@ -9,6 +9,13 @@ import { isFavourite, toggleFavourite, syncStarButton } from '../utils/favourite
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
 import { startTrackedTransition, vtFlag } from '../utils/vt-debug.js';
+
+// startViewTransition's shape without the transition: runs the update now.
+function startInstantTransition(_label, update) {
+  update();
+  const done = Promise.resolve();
+  return { ready: done, finished: done, updateCallbackDone: done, skipTransition() {} };
+}
 import { createPillSelector } from './pill-selector.js';
 import { DAY_START, DAY_END, dayBarHtml, timeToMinutes, minutesToTimeDisplay } from './day-bar.js';
 import { embedMap, parkMap, releaseMap, isMapTabShowing, getEmbedPov, setEmbedPov } from './campus-map.js';
@@ -178,6 +185,7 @@ class ClassroomDetail {
 
     this._backBtn?.addEventListener('click', () => {
       if (this._openedViaPushState) {
+        this._ownBack = true;
         history.back();
       } else {
         history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -342,7 +350,13 @@ class ClassroomDetail {
       if (location.hash === '#info') {
         this._silentClose();
       } else {
-        this._doClose();
+        // Closed by the browser (Android Back key / gesture), not by our own
+        // back button: Chrome for Android crashes the renderer (compositor
+        // SIGTRAP) when a view transition with a root snapshot runs on those,
+        // so the page closes without one.
+        const instant = !this._ownBack;
+        this._ownBack = false;
+        this._doClose(instant);
       }
     }
   }
@@ -816,7 +830,7 @@ class ClassroomDetail {
 
   // ---------- CLOSE ----------
 
-  _doClose() {
+  _doClose(instant = false) {
     if (!this._overlay || this._overlay.hidden) return;
 
     this._currentId = null;
@@ -880,7 +894,7 @@ class ClassroomDetail {
       // all of it in the frame the snapshot is taken in.
       this._freezeForTransition({ page: !document.documentElement.classList.contains('no-safari') });
 
-      const vt = startTrackedTransition('close', () => {
+      const vt = (instant ? startInstantTransition : startTrackedTransition)('close', () => {
         // -- DOM changes (defines NEW state) --
 
         // Fully hide the overlay and back button. Changes first, reads after,

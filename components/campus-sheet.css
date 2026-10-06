@@ -148,7 +148,7 @@
 .campus-sheet-recenter .hgi-stroke,
 .campus-sheet-backbtn .hgi-stroke,
 .campus-sheet-star .hgi-stroke {
-  font-size: 1.25rem;
+  font-size: var(--text-125);
 }
 
 /* This class's own `display: inline-flex` above outranks the UA `[hidden]`
@@ -274,7 +274,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  font-size: 11px;
+  font-size: var(--text-70);
   font-weight: 700;
   line-height: 1.25;
   color: var(--folder-text-secondary);

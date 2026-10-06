@@ -67,7 +67,7 @@ time-range-chip-picker[data-loading] .trc-value > :not(.chip-skeleton) {
 }
 
 .dcp-value__month {
-  font-size: 10px;
+  font-size: var(--text-60);
   line-height: 10px;
   font-weight: 400;
   color: color-mix(in srgb, var(--lg-text) 65%, transparent);
@@ -98,7 +98,7 @@ time-range-chip-picker[data-loading] .trc-value > :not(.chip-skeleton) {
   padding: 2px 9px;
   border-radius: var(--radius-pill);
 
-  font-size: 10px;
+  font-size: var(--text-60);
   line-height: 1.4;
   font-weight: 800;
   letter-spacing: 0.01em;

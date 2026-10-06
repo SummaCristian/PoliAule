@@ -116,7 +116,7 @@
 
 .campus-closed-note__icon {
   flex: none;
-  font-size: 1.4rem;
+  font-size: var(--text-150);
   color: var(--lg-accent);
 }
 
@@ -286,7 +286,7 @@
 }
 
 .building-section-btn i {
-  font-size: 1.25rem;
+  font-size: var(--text-125);
   line-height: 1;
 }
 

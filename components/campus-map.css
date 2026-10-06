@@ -388,7 +388,7 @@ body.info-open #search-classrooms-container.visible {
    later in the file, which would otherwise win the tie and blow this tiny
    24px badge's icon up to the big controls' 1.375rem size. */
 .campus-map .mapboxgl-ctrl-attrib-button .mapboxgl-ctrl-icon .hgi-stroke {
-  font-size: 0.85rem;
+  font-size: var(--text-85);
   line-height: 1;
   color: var(--text-color-secondary);
 }
@@ -572,7 +572,7 @@ body.info-open #search-classrooms-container.visible {
 }
 
 .campus-map .mapboxgl-ctrl-icon .hgi-stroke {
-  font-size: 1.375rem;
+  font-size: var(--text-150);
   /* Mapbox's own base CSS sets a fixed `line-height: 20px` on `.mapboxgl-map`
      (its default 12px/20px font shorthand), inherited all the way down here.
      Against a 1.375rem (22px) glyph that mismatched line-height pushed the
@@ -690,7 +690,7 @@ body.info-open #search-classrooms-container.visible {
 }
 
 .map-pin__name {
-  font-size: 1.0625rem;
+  font-size: var(--text-110);
   font-weight: 850;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -701,7 +701,7 @@ body.info-open #search-classrooms-container.visible {
   max-width: 100%;
   margin-top: 1px;
   overflow: hidden;
-  font-size: 0.71875rem;
+  font-size: var(--text-75);
   font-weight: 800;
   line-height: 1.15;
   color: var(--text-color-secondary);
@@ -727,7 +727,7 @@ body.info-open #search-classrooms-container.visible {
 }
 
 .map-pin--campus .map-pin__name {
-  font-size: 0.9375rem;
+  font-size: var(--text-90);
   font-weight: 800;
   letter-spacing: 0;
 }
@@ -760,12 +760,12 @@ body.info-open #search-classrooms-container.visible {
 }
 
 .map-pin--secondary .map-pin__name {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 800;
 }
 
 .map-pin--secondary .map-pin__alt {
-  font-size: 0.5625rem;
+  font-size: var(--text-60);
 }
 
 .map-pin--secondary .map-pin__dot {
@@ -778,7 +778,7 @@ body.info-open #search-classrooms-container.visible {
 }
 
 .map-pin--campus.map-pin--secondary .map-pin__name {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
 }
 
 /* The building open in the sheet (or shown by the detail page): accent glass,

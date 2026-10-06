@@ -272,7 +272,7 @@ body.info-open .header-title-btn {
 }
 
 .info-hero-version .hgi-stroke {
-  font-size: 1rem !important;
+  font-size: var(--text-100) !important;
   color: var(--text-color-secondary);
 }
 
@@ -450,7 +450,7 @@ body.info-open .header-title-btn {
 }
 
 .info-pill .hgi-stroke {
-  font-size: 1.15rem !important;
+  font-size: var(--text-125) !important;
 }
 
 .info-pill:focus-visible,
@@ -660,7 +660,7 @@ body.info-open .header-title-btn {
 }
 
 .badge-text .bottom-text {
-  font-size: 1.35rem;
+  font-size: var(--text-150);
   font-weight: 800;
   white-space: nowrap;
   color: var(--text-color-primary);
@@ -754,7 +754,7 @@ body.info-open .header-title-btn {
 }
 
 .info-pwa-switch .hgi-stroke {
-  font-size: 1.1rem !important;
+  font-size: var(--text-110) !important;
 }
 
 /* All panels share one cell: the card is as tall as the longest, and a switch
@@ -1099,13 +1099,13 @@ body.info-open .header-title-btn {
 }
 
 .github-stat-icon {
-  font-size: 1.35rem !important;
+  font-size: var(--text-150) !important;
   color: var(--text-color-accent);
   margin-bottom: 0.1rem;
 }
 
 .github-stat-number {
-  font-size: 1.5rem;
+  font-size: var(--text-150);
   font-weight: 700;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;

@@ -233,7 +233,7 @@
 
 .cl-chevron {
   flex-shrink: 0;
-  font-size: 1.15rem !important;
+  font-size: var(--text-125) !important;
   color: var(--text-color-secondary);
   transition: rotate 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -355,7 +355,7 @@
 }
 
 .cl-betas--dev .cl-betas-label .hgi-stroke {
-  font-size: 0.95rem !important;
+  font-size: var(--text-90) !important;
 }
 
 /* ── One version's page ────────────────────────────────────────────── */
@@ -546,7 +546,7 @@
   position: absolute;
   left: 0.85rem;
   top: 0.8rem;
-  font-size: 1.05rem !important;
+  font-size: var(--text-110) !important;
   color: var(--cl-callout);
 }
 
@@ -707,7 +707,7 @@
 }
 
 .cl-error .hgi-stroke {
-  font-size: 2rem !important;
+  font-size: var(--text-200) !important;
 }
 
 .cl-error p {

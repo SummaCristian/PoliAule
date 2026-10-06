@@ -289,7 +289,7 @@
   color: white;
   border-radius: var(--radius-pill);
   padding: 2px 10px;
-  font-size: var(--text-72);
+  font-size: var(--text-75);
   font-weight: 800;
   white-space: nowrap;
   box-shadow: var(--glow-accent);
@@ -402,7 +402,7 @@
   bottom: -0.5rem;
   left: 50%;
   translate: -50% 0;
-  font-size: 0.5rem;
+  font-size: var(--text-60);
   color: #3d63b3;
   pointer-events: none;
 }

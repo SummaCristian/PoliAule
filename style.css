@@ -140,13 +140,13 @@ select,
   --radius-2xl: 32px;
   --radius-pill: 999px;
 
-  /* Type scale — the 12 sizes actually used 5+ times across components,
+  /* Type scale — the sizes used across components,
      not an invented scale. Values used ≤4 times were snapped into the
      nearest step here only when within ~0.03–0.05rem (imperceptible);
      anything farther off (one-off hero sizes, icon-specific px values)
      was left as a literal rather than forced to fit. */
+  --text-60: 0.6rem;
   --text-70: 0.7rem;
-  --text-72: 0.72rem;
   --text-75: 0.75rem;
   --text-80: 0.8rem;
   --text-85: 0.85rem;
@@ -254,6 +254,12 @@ html {
 @media (pointer: fine) {
   html { scrollbar-gutter: stable; }
 }
+
+/* The app read too large at the browser's 100%: scale every rem (text,
+   spacing, most sizes) down to what 90% browser zoom looked like. px values
+   (icons, some radii and widths) are unaffected. Breakpoints use px of the
+   viewport, so they don't move. */
+html { font-size: 90%; }
 
 body {
   min-height: 100%;
@@ -782,7 +788,7 @@ body.detail-open #favourite-btn {
 /* hgi-star outline by default, filled yellow star when the current classroom
    is favourited (icon swapped in JS, see classroom-detail.js). */
 #favourite-btn .hgi-star {
-  font-size: 1.375rem;
+  font-size: var(--text-150);
 }
 
 #favourite-btn .star-icon {
@@ -799,7 +805,7 @@ body.detail-open #favourite-btn {
 /* Building star buttons (utils/favourites.js createBuildingStarButton): the
    host's own button recipe sizes the circle, this only the two icons. */
 .fav-star-btn .hgi-star {
-  font-size: 1.25rem;
+  font-size: var(--text-125);
   line-height: 1;
 }
 
@@ -1107,7 +1113,7 @@ body.info-open .header-nav-row {
 }
 
 .section-header-subtitle {
-  font-size: 1.35rem;
+  font-size: var(--text-150);
 }
 
 @media (max-width: 600px) {
@@ -1252,7 +1258,7 @@ ul li::marker {
 }
 
 .popover-title {
-  font-size: 1.65rem;
+  font-size: var(--text-175);
 
   margin: 0;
   align-self: center;
@@ -2702,7 +2708,7 @@ body.detail-open .gr-wreath { display: none; }
 
 .season-banner__icon {
   flex: none;
-  font-size: 1.4rem;
+  font-size: var(--text-150);
   color: var(--season-tint);
 }
 
@@ -2739,7 +2745,7 @@ body.detail-open .gr-wreath { display: none; }
   border-radius: var(--radius-pill);
   background: none;
   color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
-  font-size: 1rem;
+  font-size: var(--text-100);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -2797,7 +2803,7 @@ body.detail-open .gr-wreath { display: none; }
 }
 
 .update-banner__cta .hgi-stroke {
-  font-size: 1rem;
+  font-size: var(--text-100);
 }
 
 .update-banner__cta:active {

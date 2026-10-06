@@ -10,6 +10,8 @@ import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
 import { startTrackedTransition, vtFlag } from '../utils/vt-debug.js';
 
+const IS_ANDROID = /Android/i.test(navigator.userAgent);
+
 // startViewTransition's shape without the transition: runs the update now.
 function startInstantTransition(_label, update) {
   update();
@@ -193,6 +195,9 @@ class ClassroomDetail {
       }
     });
 
+    // popstate comes first and is the only place the browser says it already
+    // animated this back.
+    window.addEventListener('popstate', (e) => { this._uaAnimated = !!e.hasUAVisualTransition; });
     window.addEventListener('hashchange', () => this._onHashChange());
 
     // Changed with the page open (settings over it): Sunday's row shrinks
@@ -350,12 +355,18 @@ class ClassroomDetail {
       if (location.hash === '#info') {
         this._silentClose();
       } else {
-        // Closed by the browser (Android Back key / gesture), not by our own
-        // back button: Chrome for Android crashes the renderer (compositor
-        // SIGTRAP) when a view transition with a root snapshot runs on those,
-        // so the page closes without one.
-        const instant = !this._ownBack;
+        // Closed by the browser (Back key, swipe, toolbar), not by our own back
+        // button. Our transition is skipped where it does harm: Chrome for
+        // Android crashes the renderer (compositor SIGTRAP) on a view
+        // transition with a root snapshot there, and Safari has already played
+        // its own back animation (hasUAVisualTransition, or any browser back
+        // when it isn't reported). Desktop Chrome and Firefox keep the zoom.
+        const browserBack = !this._ownBack;
+        const uaAnimated = this._uaAnimated;
         this._ownBack = false;
+        this._uaAnimated = false;
+        const instant = browserBack && (uaAnimated || IS_ANDROID
+          || !document.documentElement.classList.contains('no-safari'));
         this._doClose(instant);
       }
     }

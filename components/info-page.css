@@ -332,19 +332,27 @@ body.info-open .header-title-btn {
   text-align: left;
 }
 
-/* Desktop: the cards flow as a masonry of two columns, like the detail page
-   (CSS multi-column: each card lands in the shortest column). */
+/* The cards are split into two .info-column wrappers. Narrow: the wrappers
+   dissolve and the cards stack. Desktop: the wrappers sit side by side, like
+   the detail page. Not CSS multi-column: WebKit doesn't paint
+   backdrop-filtered cards in a multicol's second column (the about-me chat
+   was invisible on iPad). */
+.info-column {
+  display: contents;
+}
+
 @media (min-width: 1000px) {
   .info-content {
     max-width: 1100px;
-    column-count: 2;
-    column-gap: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .info-content > .info-section {
-    break-inside: avoid;
-    display: inline-block; /* keeps backdrop-filter cards unsplit in WebKit */
-    width: 100%;
+  .info-column {
+    display: block;
+    flex: 1 1 0;
+    min-width: 0;
   }
 }
 

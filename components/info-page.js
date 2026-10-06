@@ -497,6 +497,7 @@ class InfoPage {
 
         <!-- Body: glass cards, a masonry of two columns on desktop -->
         <div class="info-content">
+         <div class="info-column">
           <section class="info-section info-intro">
             <h2 class="info-section-title">${t('info.about.title')}</h2>
             <div class="info-prose">
@@ -536,6 +537,8 @@ class InfoPage {
             </div>
           </section>
 
+         </div>
+         <div class="info-column">
           <section class="info-section about-me-section">
             <h2 class="info-section-title">${t('info.aboutMe.title')}</h2>
             <div class="about-me-container">
@@ -600,6 +603,7 @@ class InfoPage {
               <span>${t('info.github.createIssue')}</span>
             </a>
           </section>
+         </div>
         </div>
       </div>
     `;
@@ -772,7 +776,7 @@ class InfoPage {
    */
   _animateMasonry(container) {
     if (!container || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const items = [...container.querySelectorAll(':scope > .info-section')];
+    const items = [...container.querySelectorAll(':scope > .info-column > .info-section')];
     // Layout offsets, not screen rects: scrolling between two ticks, or a
     // card's rise-in `translate`, must not read as the card having moved.
     const measure = () => new Map(items.map(el => {

@@ -1019,6 +1019,16 @@ body.info-open .header-nav-row {
 /* A fade with a slight horizontal stretch. No blur: a filter over the whole
    tab is redone by the GPU on every frame at the screen's full resolution,
    and on an older phone it took the switch from ~48 to ~20 fps. */
+@keyframes results-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes results-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 @keyframes appear {
   from {
     opacity: 0;
@@ -1553,6 +1563,79 @@ are rendered as solid colors
     position: static;
     align-self: stretch;
     max-height: none;
+  }
+
+  /* Scroll edge fade: the list dissolves into the page at the top and bottom
+     of the panel, each edge only once there is something scrolled past it.
+     Sticky pseudo-elements (net zero height thanks to the negative margin)
+     paint a background-coloured gradient over the cards. A gradient rather
+     than a mask-image: a mask on the scroller leaves the cards' backdrop
+     blur stale in Chrome. Needs scroll-driven animations; without them the
+     fades simply don't show. */
+  @supports (animation-timeline: scroll()) {
+    /* Named, because `scroll(self)` on a pseudo-element means the pseudo. */
+    #available-classrooms-results:not(.empty) {
+      scroll-timeline: --results-scroll block;
+    }
+
+    #available-classrooms-results:not(.empty)::before,
+    #available-classrooms-results:not(.empty)::after {
+      content: "";
+      position: sticky;
+      flex: none;
+      height: 3rem;
+      z-index: 5;
+      pointer-events: none;
+      /* Reach across the panel's side padding (the shadows' room) */
+      margin-inline: -2.25rem -2rem;
+      opacity: 0;
+      animation-fill-mode: both;
+      animation-timing-function: linear;
+      animation-timeline: --results-scroll;
+    }
+
+    #available-classrooms-results:not(.empty)::before {
+      /* Sticky offsets count from the content box, inside the panel's 8px
+         padding; pull out to the clip edge. */
+      top: -8px;
+      margin-bottom: -3rem;
+      background: linear-gradient(to bottom,
+        var(--background-color) 0%,
+        color-mix(in srgb, var(--background-color) 70%, transparent) 40%,
+        color-mix(in srgb, var(--background-color) 25%, transparent) 70%,
+        transparent 100%);
+      animation-name: results-fade-in;
+      animation-range: 0 2rem;
+    }
+
+    /* There the panel's left overhang lies over the favourites column, so the
+       fades stay within the cards' column on that side. */
+    #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results:not(.empty)::before,
+    #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results:not(.empty)::after {
+      margin-left: 0;
+    }
+
+    /* With the pickers docked on top, the panel's padding-top clears them; the
+       fade starts at the panel's edge instead, behind them (z), not below. */
+    #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results:not(.empty)::before {
+      --fade-lead: calc(var(--picker-bar-height, 0px) + 0.5rem);
+      top: calc(-1 * var(--fade-lead));
+      /* Tall enough to still fade the cards below the pickers' own height */
+      height: calc(var(--fade-lead) + 3rem);
+      margin-bottom: calc(-1 * (var(--fade-lead) + 3rem));
+    }
+
+    #available-classrooms-results:not(.empty)::after {
+      bottom: -8px;
+      margin-top: -3rem;
+      background: linear-gradient(to top,
+        var(--background-color) 0%,
+        color-mix(in srgb, var(--background-color) 70%, transparent) 40%,
+        color-mix(in srgb, var(--background-color) 25%, transparent) 70%,
+        transparent 100%);
+      animation-name: results-fade-out;
+      animation-range: calc(100% - 2rem) 100%;
+    }
   }
 
   /* ── Favourites expanded (components/favourites.js) / pickers sticky ──

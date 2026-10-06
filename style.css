@@ -1573,7 +1573,9 @@ are rendered as solid colors
     max-height: none;
   }
 
-  /* ── Favourites expanded (components/favourites.js) ──
+  /* ── Favourites expanded (components/favourites.js) / pickers sticky ──
+     Also used when the form column is too narrow for the docked panels
+     (`.pickers-sticky`, components/picker-dock.js).
      The favourites take the whole left column; the right column becomes the
      mobile layout: the "Available Classrooms" header, then the results panel
      with the pickers (all pills, see picker-dock.js) riding sticky on top of
@@ -1583,14 +1585,14 @@ are rendered as solid colors
      range is its own grid area, so one confined to row 1 couldn't stick.
      They stack by offset instead — the header on top, the panel and the
      pickers starting --available-header-height below it. */
-  #available-classrooms-container.favourites-expanded>.favourites-section {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>.favourites-section {
     grid-row: 1 / -1;
     margin-bottom: 1rem;
   }
 
-  #available-classrooms-container.favourites-expanded>.section-header,
-  #available-classrooms-container.favourites-expanded>#available-classrooms-form,
-  #available-classrooms-container.favourites-expanded>#available-classrooms-results {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>.section-header,
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-form,
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results {
     grid-column: 2;
     grid-row: 1 / -1;
     align-self: start;
@@ -1600,23 +1602,23 @@ are rendered as solid colors
   /* All pills here, so lay them out as on mobile: date + time back in the
      row's own flow instead of the docked panels' sub-box, which would wrap
      the time pill under the date one on its own. */
-  #available-classrooms-container.favourites-expanded .picker-row .picker-substack {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky) .picker-row .picker-substack {
     display: contents;
   }
 
-  #available-classrooms-container.favourites-expanded>.section-header {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>.section-header {
     top: var(--header-height, 84px);
     z-index: 11;
   }
 
-  #available-classrooms-container.favourites-expanded>#available-classrooms-form {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-form {
     top: calc(var(--header-height, 84px) + var(--available-header-height, 0px));
     margin-top: var(--available-header-height, 0px);
     z-index: 10;
     gap: 8px;
   }
 
-  #available-classrooms-container.favourites-expanded>#available-classrooms-results {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results {
     top: calc(var(--header-height, 84px) + var(--available-header-height, 0px));
     margin-top: var(--available-header-height, 0px);
     max-height: calc(100dvh - var(--header-height, 84px) - var(--available-header-height, 0px) - 1rem);
@@ -1625,7 +1627,7 @@ are rendered as solid colors
     padding-top: calc(var(--picker-bar-height, 0px) + 0.5rem);
   }
 
-  #available-classrooms-container.favourites-expanded>#available-classrooms-results.empty {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results.empty {
     position: static;
     max-height: none;
   }
@@ -1633,8 +1635,8 @@ are rendered as solid colors
   /* Stuck building headers / the overview's topbar park right under the
      pills: sticky offsets count from inside the panel's padding, which
      already clears them. */
-  .favourites-expanded .building-section-header,
-  .favourites-expanded .bo-topbar {
+  :is(.favourites-expanded, .pickers-sticky) .building-section-header,
+  :is(.favourites-expanded, .pickers-sticky) .bo-topbar {
     top: 0;
   }
 }

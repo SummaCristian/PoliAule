@@ -20,7 +20,7 @@
   opacity: 1;
 }
 
-/* Hide tab contents and footer while the info page is open */
+/* Hide tab contents while the info page is open */
 body.info-open .tab-content {
   visibility: hidden;
   position: absolute;
@@ -39,13 +39,6 @@ body.info-open .tab-content {
      captured rect 300px from where it actually lands. */
   left: 0;
   right: 0;
-}
-
-body.info-open .footer {
-  visibility: hidden;
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* The logo+title button participates in the VT morph — hide it while open
@@ -124,14 +117,19 @@ body.info-open .header-title-btn {
 
 .info-hero-icon-wrap {
   position: relative;
-  /* No callout, selection or magnifier while the icon is held (_bindIconEgg) */
   -webkit-touch-callout: none;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
   width: 120px;
   height: 120px;
   border-radius: 28%;
   corner-shape: superellipse;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.info-hero-icon-wrap:active {
+  transform: scale(0.92);
+  transition: background-color 0.3s ease, transform 0.12s ease-out;
 }
 
 /* Only when the icon wasn't ready in time (info-page.js): a glass placeholder

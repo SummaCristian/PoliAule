@@ -1,7 +1,7 @@
 /* ── Changelog Page Overlay (components/changelog-page.js) ────────────── */
 
 /* Same footing as #info-page-overlay: a flex column in .body-container,
-   with body.info-open hiding the tabs and footer around it. The page itself
+   with body.info-open hiding the tabs around it. The page itself
    reuses .info-page for the glow behind it. */
 #changelog-overlay:not([hidden]) {
   display: flex;

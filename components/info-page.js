@@ -21,10 +21,26 @@ const SECRET_TAPS = 7;
 const SECRET_TAP_GAP = 600; // ms allowed between two taps
 const SECRET_TYPING_MS = 1500; // matches typing-indicator-once in info-page.css
 
-// Holding the hero icon this long swaps it for a photo kept in R2 (under
+// Tapping the hero icon this many times swaps it for a photo kept in R2 (under
 // eggs/icon, in both buckets), so it never enters the git history.
-const ICON_EGG_HOLD_MS = 10000;
-const ICON_EGG_SLOP = 10; // px a finger may drift before the hold counts as a scroll
+const ICON_EGG_TAPS = 10;
+
+// Calls onDone once `el` has been tapped `count` times, each within
+// SECRET_TAP_GAP of the one before. Returns a function that stops listening.
+function onQuickTaps(el, count, onDone) {
+  let taps = 0;
+  let lastTap = 0;
+  const onTap = () => {
+    const now = performance.now();
+    taps = now - lastTap < SECRET_TAP_GAP ? taps + 1 : 1;
+    lastTap = now;
+    if (taps < count) return;
+    taps = 0;
+    onDone();
+  };
+  el.addEventListener('click', onTap);
+  return () => el.removeEventListener('click', onTap);
+}
 
 const LANG_COLORS = {
   HTML: '#e34c26',
@@ -668,18 +684,16 @@ class InfoPage {
     decorate('info', this._overlay.querySelector('.info-page'));
   }
 
-  // A very long press on the hero icon turns it into the egg photo, until the
+  // Ten quick taps on the hero icon turn it into the egg photo, until the
   // page is next opened (each open renders the icon afresh).
   _bindIconEgg() {
     const wrap = this._overlay.querySelector('.info-hero-icon-wrap');
     const imgs = wrap.querySelectorAll('img');
     let egg = null;
-    let timer = 0;
-    let start = null;
-    const cancel = () => { clearTimeout(timer); start = null; };
+    let stop = () => {};
     const reveal = async () => {
-      start = null;
       try { await egg.decode(); } catch { egg = null; return; } // not uploaded, or offline: nothing happens
+      stop();
       wrap.dataset.egg = '';
       const swap = () => imgs.forEach(img => {
         img.removeAttribute('srcset');
@@ -697,20 +711,11 @@ class InfoPage {
         { duration: 450, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
       out.cancel();
     };
-    wrap.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0 || 'egg' in wrap.dataset) return;
-      start = { x: e.clientX, y: e.clientY };
-      // Start loading now, so it's decoded by the time the hold ends
+    // Start loading on the first tap, so it's decoded by the time the tenth lands
+    wrap.addEventListener('pointerdown', () => {
       if (!egg) { egg = new Image(); egg.src = `${getApiBase()}/v1/eggs/icon`; }
-      clearTimeout(timer);
-      timer = setTimeout(reveal, ICON_EGG_HOLD_MS);
     });
-    wrap.addEventListener('pointermove', (e) => {
-      if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > ICON_EGG_SLOP) cancel();
-    });
-    for (const type of ['pointerup', 'pointercancel', 'pointerleave']) wrap.addEventListener(type, cancel);
-    // Android's long-press menu (and the right-click one) would end the hold
-    wrap.addEventListener('contextmenu', e => e.preventDefault());
+    stop = onQuickTaps(wrap, ICON_EGG_TAPS, reveal);
   }
 
   // Seven quick taps on the photo: the typing indicator comes back once more,
@@ -720,14 +725,9 @@ class InfoPage {
     if (!text) return;
     const photo = section.querySelector('.about-me-photo');
     const typing = section.querySelector('.typing-indicator');
-    let taps = 0;
-    let lastTap = 0;
-    const onTap = () => {
-      const now = performance.now();
-      taps = now - lastTap < SECRET_TAP_GAP ? taps + 1 : 1;
-      lastTap = now;
-      if (taps < SECRET_TAPS) return;
-      photo.removeEventListener('click', onTap);
+    let stop = () => {};
+    stop = onQuickTaps(photo, SECRET_TAPS, () => {
+      stop();
       typing.classList.add('is-typing');
       // Fetch the name's font while the indicator types, so it never swaps in
       document.fonts.load("italic 500 1em 'Cormorant Garamond'").catch(() => {});
@@ -747,8 +747,7 @@ class InfoPage {
         bubble.style.setProperty('--bubble-h', `${height}px`);
         typing.classList.add('is-done');
       }, SECRET_TYPING_MS);
-    };
-    photo.addEventListener('click', onTap);
+    });
   }
 
   // Drops everything the last render hooked up outside its own markup: the

@@ -955,33 +955,6 @@ body.info-open .header-nav-row {
   }
 }
 
-/* Footer */
-.footer {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-
-  padding: 1rem;
-  /* --bottom-nav-height is only the pill bar's own rendered height; the bar
-     also floats 20px clear of the viewport edge (see the tab bar's
-     `bottom: 20px`), so that offset has to be added back in here. */
-  padding-bottom: calc(var(--bottom-nav-height, 88px) + 20px);
-  transition: padding-bottom var(--nav-shift);
-}
-
-@media (min-width: 600px) {
-  /* Rail moves to the top-left at this width, so the bottom clearance above
-     no longer applies (see the matching breakpoint in bottom-nav.css). */
-  .footer {
-    padding-bottom: 1rem;
-  }
-}
-
-.info-label {
-  text-align: end;
-}
-
 .slide-in-top {
   animation: slide-in-top 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -991,7 +964,9 @@ body.info-open .header-nav-row {
   /* Clears the header blur/fade layer's -2rem overhang so the first section's
      title (e.g. Favourites) isn't blurred at the top. */
   padding-top: 1.5rem;
-  padding-bottom: var(--bottom-nav-height, 88px);
+  /* --bottom-nav-height is only the pill bar's own rendered height; the bar
+     also floats 20px clear of the viewport edge, so add that offset back. */
+  padding-bottom: calc(var(--bottom-nav-height, 88px) + 20px);
   transition: padding-bottom var(--nav-shift);
 
   flex: 1;
@@ -1467,6 +1442,11 @@ are rendered as solid colors
     font-size: var(--text-125);
   }
 
+  :root {
+    /* The header's top strip (.header-top-strip) + .body-container's padding-top */
+    --page-top-offset: calc(11px + 1.5rem);
+  }
+
   #available-classrooms-container.visible {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1551,7 +1531,9 @@ are rendered as solid colors
     position: sticky;
     top: calc(var(--header-height, 84px) + 1rem);
 
-    max-height: calc(100dvh - var(--header-height, 84px) - 2rem);
+    /* Everything above the panel (header strip + the body's top padding) is
+       taken off too, so the page itself never scrolls. */
+    max-height: calc(100dvh - var(--header-height, 84px) - 1rem - var(--page-top-offset));
     overflow-y: auto;
 
     /* A scroll container clips on BOTH axes, so the cards' 40px soft shadows
@@ -1563,7 +1545,7 @@ are rendered as solid colors
        it's gone, or its cut-off reads as a faint line; the 0.75rem overlap
        stays inside the picker panels' own padding, so nothing clickable is
        under it. */
-    margin: 1rem -2rem 1rem -2.25rem;
+    margin: 1rem -2rem 0 -2.25rem;
     padding-inline: 2.25rem 2rem;
   }
 
@@ -1621,7 +1603,7 @@ are rendered as solid colors
   #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results {
     top: calc(var(--header-height, 84px) + var(--available-header-height, 0px));
     margin-top: var(--available-header-height, 0px);
-    max-height: calc(100dvh - var(--header-height, 84px) - var(--available-header-height, 0px) - 1rem);
+    max-height: calc(100dvh - var(--header-height, 84px) - var(--available-header-height, 0px) - var(--page-top-offset));
     /* The first building clears the pills; after that the cards scroll up
        behind them. */
     padding-top: calc(var(--picker-bar-height, 0px) + 0.5rem);
@@ -1665,7 +1647,6 @@ are rendered as solid colors
 
 @media (prefers-reduced-motion: reduce) {
   .body-container,
-  .footer,
   .tab-content,
   .tab-content.visible {
     transition: none;

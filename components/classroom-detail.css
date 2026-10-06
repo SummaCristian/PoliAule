@@ -137,7 +137,7 @@ body {
   transition: none;
 }
 
-/* Hide tab contents and footer while the detail panel is open */
+/* Hide tab contents while the detail panel is open */
 body.detail-open .tab-content {
   visibility: hidden;
   position: absolute;
@@ -156,13 +156,6 @@ body.detail-open .tab-content {
      captured rect 300px from where it actually lands. */
   left: 0;
   right: 0;
-}
-
-body.detail-open .footer {
-  visibility: hidden;
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* Hold the hidden tab while the detail panel is open. Its contents are skipped

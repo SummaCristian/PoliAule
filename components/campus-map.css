@@ -135,13 +135,6 @@ body.info-open #search-classrooms-container.visible {
   #search-classrooms-container.visible { animation: none; }
 }
 
-/* Keep the chrome painted above the fixed map. Header (z 1000) and bottom-nav
-   (z 20) already clear it; the footer is statically positioned, so lift it. */
-html.campus-tab .footer {
-  position: relative;
-  z-index: 5;
-}
-
 .campus-map {
   position: absolute;
   inset: 0;

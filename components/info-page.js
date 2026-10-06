@@ -3,6 +3,7 @@ import { escapeHtml, safeUrl } from '../utils/html.js';
 import { getApiBase } from '../config.js';
 import { createSegmentedControl, createPopover } from 'vitrium';
 import { shownHero, decorate } from '../utils/season.js';
+import { APP_VERSION } from '../utils/env.js';
 
 const HASH = '#info';
 const GITHUB_REPO = 'SummaCristian/poliaule';
@@ -65,6 +66,8 @@ class InfoPage {
     this._titleEl = null;
     this._badgeEl = null;
     this._isOpen = false;
+    this._covered = false;
+    this._coveredScroll = 0;
     this._openedFromDetail = false;
     this._showBadge = false;
     this._cachedStats = null;
@@ -90,7 +93,7 @@ class InfoPage {
     // Use stopImmediatePropagation to prevent classroomDetail's listener (on the same button)
     // from also firing when info is open — that would trigger a second concurrent VT.
     this._backBtn?.addEventListener('click', (e) => {
-      if (!this._isOpen) return;
+      if (!this._isOpen || this._covered) return;
       e.stopImmediatePropagation();
       if (this._openedFromDetail) {
         // Go back to the classroom hash; hashchange will trigger _silentClose() here
@@ -160,6 +163,9 @@ class InfoPage {
   }
 
   _onHashChange() {
+    // The changelog opens over this page and hands it back (cover / uncover,
+    // called from components/changelog-page.js), so its hashes are its own
+    if (/^#changelog(\/|$)/.test(location.hash) || this._covered) return;
     if (location.hash === HASH) {
       if (!this._isOpen) this._doOpen();
     } else if (this._isOpen) {
@@ -172,6 +178,38 @@ class InfoPage {
         this._doClose();
       }
     }
+  }
+
+  get isOpen() {
+    return this._isOpen;
+  }
+
+  // The changelog page opening on top: this one hides where it is, keeping
+  // its content and scroll for when the changelog closes back to it
+  cover() {
+    if (!this._isOpen) return;
+    this._covered = true;
+    this._coveredScroll = window.scrollY;
+    this._overlay.setAttribute('hidden', '');
+    this._overlay.classList.remove('visible');
+  }
+
+  uncover() {
+    if (!this._covered) return;
+    this._covered = false;
+    this._overlay.removeAttribute('hidden');
+    this._overlay.classList.add('visible');
+    window.scrollTo(0, this._coveredScroll);
+  }
+
+  // The history left both pages at once (the changelog closes everything)
+  dismissCovered() {
+    if (!this._covered) return;
+    this._covered = false;
+    this._isOpen = false;
+    this._openedFromDetail = false;
+    this._teardown();
+    this._overlay.innerHTML = '';
   }
 
   // Apply the open state inside an already-running VT (called from dismissSplash).
@@ -412,6 +450,12 @@ class InfoPage {
           <h1 class="info-hero-title">PoliAule</h1>
           <!-- 'Beta' or 'Local' badge if necessary -->
           ${showBadge ? `<h4 class="info-hero-badge secondary">${badgeText}</h4>` : ''}
+          ${APP_VERSION ? `
+          <a class="info-hero-version lg-glass liquid-glass" href="#changelog">
+            <span class="info-hero-version-number">${escapeHtml(APP_VERSION.version)}</span>
+            <span class="info-hero-version-cta">${t('changelog.title')}</span>
+            <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
+          </a>` : ''}
         </div>
 
         <!-- The two sites, as big glass badges -->

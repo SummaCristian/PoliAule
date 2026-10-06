@@ -12,14 +12,9 @@ try {
   localStorage.removeItem('poliAule_blurBenchmark');
 } catch { /* storage unavailable */ }
 
-const h = location.hostname;
-const envLabel = h === 'beta.poliaule.com' ? 'Beta'
-               : h === 'dev.poliaule.com'  ? 'Dev'
-               : h === 'poliaule.com'      ? null
-               :                             'Local';
-if (envLabel) {
+if (ENV_LABEL) {
   const badge = document.getElementById('env-badge');
-  badge.textContent = envLabel;
+  badge.textContent = ENV_LABEL;
   badge.removeAttribute('hidden');
 }
 
@@ -40,6 +35,8 @@ import { ensureClassroomDirectory, classroomsData as staticClassroomsData } from
 import { initSearchOverlay } from './components/search-overlay.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
+import { changelogPage } from './components/changelog-page.js';
+import { ENV_LABEL } from './utils/env.js';
 import { initInfoHint } from './components/info-hint.js';
 
 import { initTimePickers } from './components/time-picker.js';
@@ -59,7 +56,7 @@ import './components/data-fetch-card.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
 import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
-import { initLiquidGlass, createPopover, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
+import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 import { initCardDayPopover } from './components/card-day-popover.js';
 import { createBuildingStarButton } from './utils/favourites.js';
@@ -119,12 +116,14 @@ function dismissSplash() {
   if (_splashFailed) {
     overlay.remove();
     revealHeader();
+    changelogPage.checkHash();
     return;
   }
 
   const splashLogo = overlay.querySelector('.splash-logo');
   const realLogo = document.querySelector('.header-logo');
   const isInfo = location.hash === '#info';
+  const isChangelog = changelogPage.matchesHash;
 
   if (document.startViewTransition) {
     // --- View Transition path ---
@@ -157,6 +156,19 @@ function dismissSplash() {
       // anywhere, so it was surfacing as an unhandled rejection on every abort.
       vt.ready.catch(() => {});
       vt.finished.then(() => infoPage._clearVtNames()).catch(() => infoPage._clearVtNames());
+    } else if (isChangelog) {
+      // Same for the changelog: opened in this VT, the logo landing on its
+      // hero icon, so the app under it never flashes by first
+      const vt = document.startViewTransition(async () => {
+        splashLogo.style.viewTransitionName = '';
+        overlay.remove();
+        revealHeader();
+        await changelogPage.openInSplash('splash-icon');
+      });
+
+      vt.ready.catch(() => {});
+      const cleanup = () => changelogPage.clearSplashName();
+      vt.finished.then(cleanup).catch(cleanup);
     } else {
       const vt = document.startViewTransition(() => {
         splashLogo.style.viewTransitionName = '';
@@ -179,6 +191,8 @@ function dismissSplash() {
 
     realLogo.style.opacity = '0';
     overlay.style.pointerEvents = 'none';
+    // Under the fading splash already, rather than after it
+    if (isChangelog) changelogPage.checkHash();
 
     splashLogo.classList.add('splash-logo-flying');
     void splashLogo.offsetWidth;
@@ -459,6 +473,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Init info page overlay immediately — no data dependency
     infoPage.init();
+    changelogPage.init();
     initInfoHint();
 
     // Search overlay (bottom-nav FAB) — lazy-loads its data on first open
@@ -469,14 +484,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Delegated press / swipe-deform for every .liquid-glass control
     initLiquidGlass();
-
-    // Footer "version info" popover; its content is authored in index.html.
-    const versionTrigger = document.querySelector('.version-info-button');
-    const versionContent = document.getElementById('version-info-content');
-    if (versionTrigger && versionContent) {
-      versionContent.hidden = false;
-      createPopover({ trigger: versionTrigger, content: versionContent, placement: 'top-end' });
-    }
 
     // Favourites carousel on the Available page
     initFavourites(staticClassroomsData);

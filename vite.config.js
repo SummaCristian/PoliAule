@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { transform } from 'esbuild';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { changelogPlugin } from './scripts/vite-changelog.js';
 
 // Cloudflare Pages sets CF_PAGES_BRANCH during the build. Only `dev` ships
 // source maps; `main` and `beta` are user-facing and skip them.
@@ -105,6 +106,8 @@ export default defineConfig({
     minifyPublicCss(['fonts/hugeicons/icons.css']),
     deferMainStylesheet(),
     markShellCssReadyInDev(),
+    // changelog/<version>/*.md -> /changelog/*.json + media (see the file)
+    changelogPlugin(),
     // Service worker for offline use (registered from utils/pwa.js). Precaches
     // what the app needs to open, about 2 MB; the big unused PNGs in
     // favicons/ stay out. Of favicons/beta only the info page's icon-*.webp
@@ -122,12 +125,30 @@ export default defineConfig({
           'locales/*.json',
           'favicons/main/{favicon.svg,favicon.ico,favicon-96x96.png,apple-touch-icon.png,logo.webp,icon-*.webp,site.webmanifest,web-app-manifest-*.png}',
           'favicons/beta/icon-*.webp',
+          'changelog/index.*.json',
         ],
         // Only the secret message uses it: fetched when shown, then cached (below)
         globIgnores: ['fonts/cormorant-garamond/**'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            // A version's long-form page, once opened: kept for offline, and
+            // refreshed in the background in case its text was edited
+            urlPattern: ({ url }) => /^\/changelog\/[^/]+\.json$/.test(url.pathname),
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'changelog-pages', cacheableResponse: { statuses: [200] } },
+          },
+          {
+            // Its images (videos stream with range requests, so stay out)
+            urlPattern: ({ url }) => /^\/changelog\/[^/]+\/media\/.+\.(webp|png|jpe?g|avif|gif|svg)$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'changelog-media',
+              cacheableResponse: { statuses: [200] },
+              expiration: { maxEntries: 120 },
+            },
+          },
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/fonts/cormorant-garamond/'),
             handler: 'CacheFirst',

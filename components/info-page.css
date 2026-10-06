@@ -241,6 +241,48 @@ body.info-open .header-title-btn {
   line-height: 1;
 }
 
+/* The version this deployment runs: a glass button into the changelog */
+.info-hero-version {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 2.5rem;
+  margin-top: 0.75rem;
+  padding: 0 0.75rem 0 0.4rem;
+  box-sizing: border-box;
+  color: var(--lg-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.info-hero-version-number {
+  display: inline-flex;
+  align-items: center;
+  height: 1.75rem;
+  padding: 0 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-80);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-color-secondary);
+  background: color-mix(in srgb, var(--text-color-secondary) 12%, transparent);
+}
+
+.info-hero-version-cta {
+  font-size: var(--text-90);
+  font-weight: 700;
+}
+
+.info-hero-version .hgi-stroke {
+  font-size: 1rem !important;
+  color: var(--text-color-secondary);
+}
+
+.info-hero-version:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 3px;
+}
+
 /* ── View Transition animations ─────────────────────────────────────── */
 
 @supports (view-transition-name: none) {

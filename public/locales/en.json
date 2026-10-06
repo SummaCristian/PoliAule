@@ -334,18 +334,21 @@
   "info.github.createIssue": "Create Issue",
   "info.polinetwork": "Featured in <strong>PoliNetwork</strong>",
 
-  "footer.whatsNew": "What's new?",
-  "footer.checkOnGitHub": "Check on GitHub",
   "footer.disclaimer5": "Not affiliated with Politecnico di Milano.",
 
-  "footer.versionInfo": "Version 2.0.0-beta9",
-
-  "changelog.item1": "Redesigned the Map markers for campuses and buildings",
-  "changelog.item2": "Redesigned the Time range picker in the Available tab",
-  "changelog.item3": "Added Favorite buildings",
-  "changelog.item4": "Added a new expanded layout for the Favorite section in the Available tab",
-  "changelog.item5": "Added the ability to see a classroom's full-day occupation at a glance by hovering on their card's bottom side",
-  "changelog.item6": "Added a visual indication of the current and next time slots inside the Classroom cards",
-  "changelog.item7": "Improved startup performance",
-  "changelog.item8": "Updated the data to include all the campuses, buildings and classrooms. This includes the Piacenza campus, as well as multiple secondary buildings in the existing campuses"
+  "changelog.title": "What's new",
+  "changelog.subtitle": "Every version of PoliAule, from the first beta to today.",
+  "changelog.showBetas": "Show beta versions",
+  "changelog.showBetasDesc": "Previews of what's coming, released first on beta.poliaule.com.",
+  "changelog.stable": "Stable",
+  "changelog.beta": "Beta",
+  "changelog.current": "You're here",
+  "changelog.betasBefore": "Betas leading to {version}",
+  "changelog.inDevelopment": "In development · {version}",
+  "changelog.readMore": "Read more",
+  "changelog.viewOnGitHub": "View on GitHub",
+  "changelog.versionLabel": "Version {version}",
+  "changelog.loadError": "Couldn't load the changelog. Check your connection and try again.",
+  "changelog.retry": "Try again",
+  "changelog.notFound": "There's no version {version}."
 }

@@ -40,6 +40,7 @@ function anyOverlayOpen() {
     || !!document.querySelector('.settings-overlay--active')
     || !document.getElementById('classroom-detail-overlay')?.hidden
     || !document.getElementById('info-page-overlay')?.hidden
+    || !document.getElementById('changelog-overlay')?.hidden
     || isHelpOpen();
 }
 

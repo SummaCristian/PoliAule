@@ -960,7 +960,7 @@ body.info-open .header-nav-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
 
   padding: 1rem;
   /* --bottom-nav-height is only the pill bar's own rendered height; the bar
@@ -976,11 +976,6 @@ body.info-open .header-nav-row {
   .footer {
     padding-bottom: 1rem;
   }
-}
-
-.version-info-button>label {
-  text-decoration: underline;
-  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .info-label {
@@ -1316,104 +1311,6 @@ ul li::marker {
   font-size: var(--text-125);
 
   margin: 0 0 0.5rem 0;
-}
-
-.changelog-logo {
-  width: auto;
-  height: 4rem;
-  margin: 0 auto 0.5rem;
-  display: block;
-
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-.changelog-container {
-  text-align: start;
-
-  display: flex;
-  flex-direction: column;
-}
-
-.changelog-container ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  text-align: start;
-}
-
-.changelog-container ul li {
-  font-size: var(--text-90);
-  color: var(--text-color-secondary);
-  padding-left: 16px;
-  position: relative;
-}
-
-.changelog-container ul li::before {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 0.45em;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--text-color-secondary);
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  align-self: center;
-
-  padding: 0.6rem 1rem;
-  margin: 0.5rem;
-
-  background-color: rgba(30, 30, 30, 0.08);
-  border-radius: 9999px;
-  text-decoration: none;
-  font-weight: 600;
-  color: #24292f;
-
-  box-shadow: var(--shadow);
-
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.hero-badge:hover {
-  transform: scale(1.1);
-  background-color: rgba(30, 30, 30, 0.15);
-}
-
-.hero-icon {
-  width: 1.4rem;
-  height: 1.4rem;
-  color: #24292f;
-}
-
-.hero-text {
-  font-size: var(--text-90);
-}
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .hero-badge {
-    background-color: rgba(255, 255, 255, 0.08);
-    color: #fff;
-  }
-
-  .hero-badge:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-  }
-
-  .hero-icon {
-    color: #fff;
-  }
 }
 
 .button-primary {

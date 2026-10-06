@@ -71,15 +71,15 @@ function getPopupTarget() {
   const naturalH = popupEl.scrollHeight;
   popupEl.style.height = ''; // snapGeometry (via morphGeometry) sets the final value right after
 
-  // Centred between the app header's bottom edge and the bottom, never under the
-  // header (its height includes the safe area, which varies per device).
+  // Centred on the screen, with the same clearance top and bottom: the app
+  // header's bottom edge, so it never goes under the header (its height includes
+  // the safe area, which varies per device).
   const header = document.querySelector('.header');
   const top = Math.max(60, header ? Math.ceil(header.getBoundingClientRect().bottom) + 12 : 0);
-  const bottom = 60;
-  const h = Math.min(naturalH, vh - top - bottom);
+  const h = Math.min(naturalH, vh - 2 * top);
   return {
     left: (vw - w) / 2,
-    top: top + (vh - top - bottom - h) / 2,
+    top: (vh - h) / 2,
     width: w,
     height: h,
     borderRadius: '22px',

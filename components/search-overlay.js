@@ -35,7 +35,8 @@ import { classroomsData as occupancyDays } from '../available-rooms-script.js';
 import { activateGroupTab } from './bottom-nav.js';
 import { goToBuilding } from './campus-buildings.js';
 import { morphInto, settleMorph, isSettled, fadeIn, ClockedSpring } from './search-motion.js';
-import { createBackButton, createSegmentedControl } from 'vitrium';
+import { createBackButton, createSegmentedControl, createToggle } from 'vitrium';
+import { seasonEntry, seasonShown, toggleSeason, decorate } from '../utils/season.js';
 
 const DEBOUNCE_MS = 200;
 const SECTION_CAP = 4;
@@ -279,6 +280,7 @@ function buildClassroomRow(item, ctx) {
     pill.textContent = t(statusKey);
     row.appendChild(pill);
   }
+  decorate('searchRow', row, item);
   return row;
 }
 
@@ -310,6 +312,7 @@ function buildBuildingRow(item, ctx) {
     activateGroupTab('search-classrooms-container');
     goToBuilding(campusId, name);
   });
+  decorate('searchRow', row, item);
   return row;
 }
 
@@ -523,12 +526,79 @@ function buildLessonRow(item, ctx) {
   return buildExpandableRow(row, item, ctx);
 }
 
+// The season's own logo (the usual one dressed up) on a hint of its colour;
+// its icon until it has one (graduation)
+function buildSeasonLead(season, large) {
+  const lead = document.createElement('div');
+  lead.className = 'search-row-lead search-row-lead--season' + (large ? ' search-row-lead--lg' : '');
+  lead.style.setProperty('--season-tint', season.tint);
+  lead.innerHTML = season.logo
+    ? `<img src="${escapeHtml(season.logo)}" alt="" draggable="false">`
+    : `<i class="hgi-stroke ${season.icon} search-row-lead-icon" aria-hidden="true"></i>`;
+  return lead;
+}
+
+// A season offered by its keyword (utils/season.js): tapping it dresses the
+// app up, or back down, and closes the search so the change shows. A Vitrium
+// toggle on the right shows the state and slides over first, whether the row
+// was tapped, Enter pressed on it (keyboard nav calls click()) or the toggle
+// itself flipped; the season changes once it has landed. The row is a div:
+// a <button> can't hold the toggle's own <button>.
+const SEASON_TOGGLE_SETTLE_MS = 380;
+
+function buildSeasonRow(item, ctx) {
+  const on = seasonShown(item.season);
+  const row = document.createElement('div');
+  row.setAttribute('role', 'button');
+  row.setAttribute('aria-pressed', String(on));
+  row.className = 'search-row search-row--season' + (ctx.large ? ' search-row--tophit' : '');
+  row.dataset.row = '';
+  row.tabIndex = -1;
+  row.appendChild(buildSeasonLead(seasonEntry(item.season), ctx.large));
+
+  const body = document.createElement('div');
+  body.className = 'search-row-body';
+  body.innerHTML = `
+    <div class="search-row-title"><span class="search-row-title-text">${escapeHtml(t(`season.${item.season}.name`))}</span></div>
+    <div class="search-row-subtitle">${escapeHtml(t(on ? 'season.searchOn' : 'season.searchOff'))}</div>
+  `;
+  row.appendChild(body);
+
+  let committed = false;
+  const commit = () => {
+    if (committed) return;
+    committed = true;
+    setTimeout(() => {
+      toggleSeason(item.season);
+      closeSearchOverlay();
+    }, SEASON_TOGGLE_SETTLE_MS);
+  };
+  // The row speaks for it (aria-pressed); the toggle is only for pointers
+  const toggle = createToggle({ value: on, onChange: commit });
+  toggle.el.tabIndex = -1;
+  toggle.el.setAttribute('aria-hidden', 'true');
+  const trailing = document.createElement('span');
+  trailing.className = 'search-row-trailing search-row-toggle';
+  trailing.appendChild(toggle.el);
+  row.appendChild(trailing);
+
+  row.addEventListener('click', (e) => {
+    // The toggle's own taps and drags flip it themselves (onChange above)
+    if (committed || toggle.el.contains(e.target)) return;
+    toggle.set(!toggle.on);
+    row.setAttribute('aria-pressed', String(toggle.on));
+    commit();
+  });
+  return row;
+}
+
 const TOP_HIT_BUILD = {
   classroom: buildClassroomRow,
   building: buildBuildingRow,
   professor: buildProfessorRow,
   exam: buildExamRow,
   lesson: buildLessonRow,
+  season: buildSeasonRow,
 };
 
 /* ── Professor view ──────────────────────────────────────────────────────
@@ -866,6 +936,7 @@ function animKeyFor(type, item) {
     case 'classroom': return `c:${item.room.id}`;
     case 'building': return `b:${item.campusId}:${item.name}`;
     case 'professor': return `p:${item.key}`;
+    case 'season': return `s:${item.season}`;
     default: return `${type}:${itemKey(item)}`;
   }
 }
@@ -1101,10 +1172,10 @@ function renderResults(query, { animate = true } = {}) {
     updateSelectionVisual();
     return;
   }
-  if (currentView === 'professor') {
-    if (animate) { exitProfessorView(); return; }
-    landSlide();
-  }
+  if (currentView === 'professor' && animate) { exitProfessorView(); return; }
+  // A slide still running (typing again while it heads back to the results)
+  // would otherwise land its own, older pane on top of this render.
+  landSlide();
   currentView = 'results';
   currentProfessorKey = null;
   setBackProgress(0);
@@ -1449,5 +1520,12 @@ export function initSearchOverlay() {
   onLanguageSwitch(() => {
     backBtn.setAttribute('aria-label', t('search.backToResults'));
     if (isOpen) refreshActiveView();
+  });
+
+  // New occupancy (the rest of the week on a first visit, or a refresh that
+  // changed something): redraw an open query in place, keeping its expanded
+  // rows and professor view, instead of leaving it on the old data.
+  document.addEventListener('occupancychange', () => {
+    if (isOpen && input.value.trim()) refreshActiveView();
   });
 }

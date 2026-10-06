@@ -73,7 +73,7 @@
 
 .kb-help-title {
   margin: 0 0 16px;
-  font-size: 1.1rem;
+  font-size: var(--text-110);
   font-weight: 700;
 }
 
@@ -94,7 +94,7 @@
 .kb-help-list dd {
   margin: 0;
   color: var(--text-color-secondary);
-  font-size: 0.9rem;
+  font-size: var(--text-90);
 }
 
 .kb-help-list kbd {
@@ -106,7 +106,7 @@
   border-bottom-width: 2px;
   background: var(--background-color);
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: var(--text-80);
   font-weight: 700;
   text-align: center;
   line-height: 1.4;

@@ -71,6 +71,11 @@ export function getCachedPhotoColor(url) {
   return photoColorCache.get(url) ?? null;
 }
 
+/** The photo's small copy made by extractPhotoColor (a 96px-wide canvas), or null before that. */
+export function getPhotoSmall(url) {
+  return photoSmallCache.get(url) ?? null;
+}
+
 /**
  * Dominant color of the photo's bottom edge, saturation-boosted so grey/beige
  * rooms don't average to mud. That edge is the one the hero fades out of, so

@@ -237,7 +237,7 @@
 }
 
 .tp-card__label {
-  font-size: var(--text-72);
+  font-size: var(--text-75);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -246,7 +246,7 @@
 
 .tp-card__time {
   font-family: 'DS-Digital', 'Courier New', monospace;
-  font-size: 1.35rem;
+  font-size: var(--text-150);
   font-weight: bold;
   color: var(--text-color-accent);
   letter-spacing: 0.04em;
@@ -298,7 +298,7 @@
 }
 
 .tp-popup__title {
-  font-size: var(--text-72);
+  font-size: var(--text-75);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;

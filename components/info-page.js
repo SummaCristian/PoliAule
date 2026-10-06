@@ -2,6 +2,8 @@ import { getLocale, onLanguageSwitch, t } from '../i18n.js';
 import { escapeHtml, safeUrl } from '../utils/html.js';
 import { getApiBase } from '../config.js';
 import { createSegmentedControl, createPopover } from 'vitrium';
+import { shownHero, decorate } from '../utils/season.js';
+import { APP_VERSION } from '../utils/env.js';
 
 const HASH = '#info';
 const GITHUB_REPO = 'SummaCristian/poliaule';
@@ -19,10 +21,26 @@ const SECRET_TAPS = 7;
 const SECRET_TAP_GAP = 600; // ms allowed between two taps
 const SECRET_TYPING_MS = 1500; // matches typing-indicator-once in info-page.css
 
-// Holding the hero icon this long swaps it for a photo kept in R2 (under
+// Tapping the hero icon this many times swaps it for a photo kept in R2 (under
 // eggs/icon, in both buckets), so it never enters the git history.
-const ICON_EGG_HOLD_MS = 10000;
-const ICON_EGG_SLOP = 10; // px a finger may drift before the hold counts as a scroll
+const ICON_EGG_TAPS = 10;
+
+// Calls onDone once `el` has been tapped `count` times, each within
+// SECRET_TAP_GAP of the one before. Returns a function that stops listening.
+function onQuickTaps(el, count, onDone) {
+  let taps = 0;
+  let lastTap = 0;
+  const onTap = () => {
+    const now = performance.now();
+    taps = now - lastTap < SECRET_TAP_GAP ? taps + 1 : 1;
+    lastTap = now;
+    if (taps < count) return;
+    taps = 0;
+    onDone();
+  };
+  el.addEventListener('click', onTap);
+  return () => el.removeEventListener('click', onTap);
+}
 
 const LANG_COLORS = {
   HTML: '#e34c26',
@@ -64,6 +82,8 @@ class InfoPage {
     this._titleEl = null;
     this._badgeEl = null;
     this._isOpen = false;
+    this._covered = false;
+    this._coveredScroll = 0;
     this._openedFromDetail = false;
     this._showBadge = false;
     this._cachedStats = null;
@@ -89,7 +109,7 @@ class InfoPage {
     // Use stopImmediatePropagation to prevent classroomDetail's listener (on the same button)
     // from also firing when info is open — that would trigger a second concurrent VT.
     this._backBtn?.addEventListener('click', (e) => {
-      if (!this._isOpen) return;
+      if (!this._isOpen || this._covered) return;
       e.stopImmediatePropagation();
       if (this._openedFromDetail) {
         // Go back to the classroom hash; hashchange will trigger _silentClose() here
@@ -130,6 +150,13 @@ class InfoPage {
           img.decode().catch(() => {});
         }
       }
+      // A season's logo stands in for the hero icon (see _renderContent)
+      const hero = shownHero();
+      if (hero) {
+        const img = new Image();
+        img.src = hero;
+        img.decode().catch(() => {});
+      }
     };
     if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 3000 });
     else setTimeout(warm, 1500);
@@ -152,6 +179,9 @@ class InfoPage {
   }
 
   _onHashChange() {
+    // The changelog opens over this page and hands it back (cover / uncover,
+    // called from components/changelog-page.js), so its hashes are its own
+    if (/^#changelog(\/|$)/.test(location.hash) || this._covered) return;
     if (location.hash === HASH) {
       if (!this._isOpen) this._doOpen();
     } else if (this._isOpen) {
@@ -164,6 +194,38 @@ class InfoPage {
         this._doClose();
       }
     }
+  }
+
+  get isOpen() {
+    return this._isOpen;
+  }
+
+  // The changelog page opening on top: this one hides where it is, keeping
+  // its content and scroll for when the changelog closes back to it
+  cover() {
+    if (!this._isOpen) return;
+    this._covered = true;
+    this._coveredScroll = window.scrollY;
+    this._overlay.setAttribute('hidden', '');
+    this._overlay.classList.remove('visible');
+  }
+
+  uncover() {
+    if (!this._covered) return;
+    this._covered = false;
+    this._overlay.removeAttribute('hidden');
+    this._overlay.classList.add('visible');
+    window.scrollTo(0, this._coveredScroll);
+  }
+
+  // The history left both pages at once (the changelog closes everything)
+  dismissCovered() {
+    if (!this._covered) return;
+    this._covered = false;
+    this._isOpen = false;
+    this._openedFromDetail = false;
+    this._teardown();
+    this._overlay.innerHTML = '';
   }
 
   // Apply the open state inside an already-running VT (called from dismissSplash).
@@ -382,6 +444,9 @@ class InfoPage {
     const variant = showBadge ? 'beta' : 'main';
     const platform = detectPlatform();
     const steps = (key, n) => Array.from({ length: n }, (_, i) => `<li>${t(`info.pwa.${key}.step${i + 1}`)}</li>`).join('');
+    // While a season is on, its logo (the usual one dressed up) is the hero,
+    // larger and out of the icon's frame
+    const seasonHero = shownHero();
 
     this._overlay.innerHTML = `
       <div class="info-page ${showBadge ? 'info-page--beta' : ''}">
@@ -389,13 +454,24 @@ class InfoPage {
 
         <!-- Hero section -->
         <div class="info-hero">
+          ${seasonHero ? `
+          <div class="info-hero-icon-wrap info-hero-icon-wrap--season">
+            <img src="${seasonHero}" class="info-hero-glow" aria-hidden="true" draggable="false" alt="">
+            <img src="${seasonHero}" class="info-hero-icon" fetchpriority="high" draggable="false" alt="">
+          </div>` : `
           <div class="info-hero-icon-wrap">
             ${iconImg(variant, 120, 'class="info-hero-glow" aria-hidden="true"')}
             ${iconImg(variant, 120, 'class="info-hero-icon" fetchpriority="high"')}
-          </div>
+          </div>`}
           <h1 class="info-hero-title">PoliAule</h1>
           <!-- 'Beta' or 'Local' badge if necessary -->
           ${showBadge ? `<h4 class="info-hero-badge secondary">${badgeText}</h4>` : ''}
+          ${APP_VERSION ? `
+          <a class="info-hero-version lg-glass liquid-glass" href="#changelog">
+            <span class="info-hero-version-number">${escapeHtml(APP_VERSION.version)}</span>
+            <span class="info-hero-version-cta">${t('changelog.title')}</span>
+            <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
+          </a>` : ''}
         </div>
 
         <!-- The two sites, as big glass badges -->
@@ -421,6 +497,7 @@ class InfoPage {
 
         <!-- Body: glass cards, a masonry of two columns on desktop -->
         <div class="info-content">
+         <div class="info-column">
           <section class="info-section info-intro">
             <h2 class="info-section-title">${t('info.about.title')}</h2>
             <div class="info-prose">
@@ -460,6 +537,8 @@ class InfoPage {
             </div>
           </section>
 
+         </div>
+         <div class="info-column">
           <section class="info-section about-me-section">
             <h2 class="info-section-title">${t('info.aboutMe.title')}</h2>
             <div class="about-me-container">
@@ -524,6 +603,7 @@ class InfoPage {
               <span>${t('info.github.createIssue')}</span>
             </a>
           </section>
+         </div>
         </div>
       </div>
     `;
@@ -605,20 +685,19 @@ class InfoPage {
 
     this._animateMasonry(this._overlay.querySelector('.info-content'));
     this._fetchGithubStats();
+    decorate('info', this._overlay.querySelector('.info-page'));
   }
 
-  // A very long press on the hero icon turns it into the egg photo, until the
+  // Ten quick taps on the hero icon turn it into the egg photo, until the
   // page is next opened (each open renders the icon afresh).
   _bindIconEgg() {
     const wrap = this._overlay.querySelector('.info-hero-icon-wrap');
     const imgs = wrap.querySelectorAll('img');
     let egg = null;
-    let timer = 0;
-    let start = null;
-    const cancel = () => { clearTimeout(timer); start = null; };
+    let stop = () => {};
     const reveal = async () => {
-      start = null;
       try { await egg.decode(); } catch { egg = null; return; } // not uploaded, or offline: nothing happens
+      stop();
       wrap.dataset.egg = '';
       const swap = () => imgs.forEach(img => {
         img.removeAttribute('srcset');
@@ -636,20 +715,11 @@ class InfoPage {
         { duration: 450, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
       out.cancel();
     };
-    wrap.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0 || 'egg' in wrap.dataset) return;
-      start = { x: e.clientX, y: e.clientY };
-      // Start loading now, so it's decoded by the time the hold ends
+    // Start loading on the first tap, so it's decoded by the time the tenth lands
+    wrap.addEventListener('pointerdown', () => {
       if (!egg) { egg = new Image(); egg.src = `${getApiBase()}/v1/eggs/icon`; }
-      clearTimeout(timer);
-      timer = setTimeout(reveal, ICON_EGG_HOLD_MS);
     });
-    wrap.addEventListener('pointermove', (e) => {
-      if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > ICON_EGG_SLOP) cancel();
-    });
-    for (const type of ['pointerup', 'pointercancel', 'pointerleave']) wrap.addEventListener(type, cancel);
-    // Android's long-press menu (and the right-click one) would end the hold
-    wrap.addEventListener('contextmenu', e => e.preventDefault());
+    stop = onQuickTaps(wrap, ICON_EGG_TAPS, reveal);
   }
 
   // Seven quick taps on the photo: the typing indicator comes back once more,
@@ -659,14 +729,9 @@ class InfoPage {
     if (!text) return;
     const photo = section.querySelector('.about-me-photo');
     const typing = section.querySelector('.typing-indicator');
-    let taps = 0;
-    let lastTap = 0;
-    const onTap = () => {
-      const now = performance.now();
-      taps = now - lastTap < SECRET_TAP_GAP ? taps + 1 : 1;
-      lastTap = now;
-      if (taps < SECRET_TAPS) return;
-      photo.removeEventListener('click', onTap);
+    let stop = () => {};
+    stop = onQuickTaps(photo, SECRET_TAPS, () => {
+      stop();
       typing.classList.add('is-typing');
       // Fetch the name's font while the indicator types, so it never swaps in
       document.fonts.load("italic 500 1em 'Cormorant Garamond'").catch(() => {});
@@ -686,8 +751,7 @@ class InfoPage {
         bubble.style.setProperty('--bubble-h', `${height}px`);
         typing.classList.add('is-done');
       }, SECRET_TYPING_MS);
-    };
-    photo.addEventListener('click', onTap);
+    });
   }
 
   // Drops everything the last render hooked up outside its own markup: the
@@ -712,7 +776,7 @@ class InfoPage {
    */
   _animateMasonry(container) {
     if (!container || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const items = [...container.querySelectorAll(':scope > .info-section')];
+    const items = [...container.querySelectorAll(':scope > .info-column > .info-section')];
     // Layout offsets, not screen rects: scrolling between two ticks, or a
     // card's rise-in `translate`, must not read as the card having moved.
     const measure = () => new Map(items.map(el => {

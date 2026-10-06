@@ -4,6 +4,7 @@ import { fetchThumbUrl, thumbUrlCache, markPhotoBroken, isPhotoBroken } from '..
 import { isFavourite, FILLED_STAR_SVG } from '../utils/favourites.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { getClassroomTimeline } from '../available-rooms-script.js';
+import { decorate } from '../utils/season.js';
 
 // ---------- PHOTO ----------
 
@@ -88,20 +89,26 @@ function _statusLabel(status, timeline) {
 // Sizes are remembered per element: a list hidden and shown again (the
 // building overview does that on every open and close) reports every card at
 // 0×0 and then at the size it already had, and neither needs a refit.
+// Only cards that are rendered right now are fitted. Reading layout inside a
+// card that content-visibility:auto is skipping makes Chrome lay that card out
+// on its own, one style+layout pass per card instead of one for the batch (a
+// date change rebuilds the whole list, most of it off-screen). A skipped card
+// is left pending, its size not remembered, and fitted, together with whatever
+// else came into view in the same frame, when its
+// contentvisibilityautostatechange says it's no longer skipped. That event
+// fires before the frame paints, so the label is right on its first frame.
 const _fitSizes = new WeakMap();
-const _fitObserver = new ResizeObserver((entries) => {
-  // A card re-rendered away reports in once more on leaving the page: let it go
-  for (const e of entries) if (!e.target.isConnected) _fitObserver.unobserve(e.target);
-  const changed = entries.filter((e) => {
-    if (!e.target.isConnected || !e.contentRect.width) return false;
-    const size = `${e.contentRect.width}x${e.contentRect.height}`;
-    if (_fitSizes.get(e.target) === size) return false;
-    _fitSizes.set(e.target, size);
-    return true;
-  });
-  const rowOf = (target) => target.closest('.classroom-card')?.querySelector('.classroom-card-title-row');
-  let rows = [...new Set(changed.map(e => rowOf(e.target)))]
-    .filter(r => r?.querySelector('.classroom-status-txt'));
+const _fitPending = new WeakSet();
+const _fitQueue = new Set();
+
+// Asked of the row inside the card: the card itself is never "skipped", it's
+// its contents that are
+const _isRendered = (card) => {
+  const row = _rowOf(card);
+  return !row || typeof row.checkVisibility !== 'function' || row.checkVisibility({ contentVisibilityAuto: true });
+};
+
+const _fitRows = (rows) => {
   const label = (row) => row.querySelector('.classroom-status-txt');
   const wraps = (row) =>
     label(row).getBoundingClientRect().top >= row.querySelector('.classroom-name').getBoundingClientRect().bottom - 1;
@@ -115,6 +122,51 @@ const _fitObserver = new ResizeObserver((entries) => {
   // as well say everything on its own line
   rows = rows.filter(wraps);
   rows.forEach(r => { const l = label(r); l.classList.remove('is-dot'); l.textContent = l.dataset.full; });
+};
+
+const _rowOf = (card) => card.querySelector('.classroom-card-title-row');
+
+// Cards coming out of the skipped state: fit the ones that were waiting, all
+// of this frame's at once
+function _flushFitQueue() {
+  const rows = [];
+  for (const card of _fitQueue) {
+    if (!card.isConnected || !_fitPending.has(card) || !_isRendered(card)) continue;
+    const row = _rowOf(card);
+    if (!row?.querySelector('.classroom-status-txt')) continue;
+    _fitPending.delete(card);
+    rows.push(row);
+  }
+  _fitQueue.clear();
+  if (rows.length) _fitRows(rows);
+}
+
+function _onCardSkipChange(e) {
+  if (e.skipped) return;
+  const card = e.currentTarget;
+  if (!_fitPending.has(card)) return;
+  if (!_fitQueue.size) queueMicrotask(_flushFitQueue);
+  _fitQueue.add(card);
+}
+
+const _fitObserver = new ResizeObserver((entries) => {
+  // A card re-rendered away reports in once more on leaving the page: let it go
+  for (const e of entries) if (!e.target.isConnected) _fitObserver.unobserve(e.target);
+  const cards = new Set();
+  for (const e of entries) {
+    if (!e.target.isConnected || !e.contentRect.width) continue;
+    const card = e.target.closest('.classroom-card');
+    if (!card) continue;
+    const size = `${e.contentRect.width}x${e.contentRect.height}`;
+    if (_fitSizes.get(e.target) === size) continue;
+    // Skipped (or inside a hidden list): leave it for when it renders
+    if (!_isRendered(card)) { _fitPending.add(card); continue; }
+    _fitSizes.set(e.target, size);
+    cards.add(card);
+  }
+  const rows = [...cards].map(_rowOf).filter(r => r?.querySelector('.classroom-status-txt'));
+  for (const card of cards) _fitPending.delete(card);
+  if (rows.length) _fitRows(rows);
 });
 
 // The small timeline under the status: the window as a track, booked time
@@ -246,7 +298,9 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
   if (statusLabel) {
     _fitObserver.observe(el);
     _fitObserver.observe(el.querySelector('.classroom-name'));
+    el.addEventListener('contentvisibilityautostatechange', _onCardSkipChange);
   }
 
+  decorate('card', el, classroom);
   return el;
 }

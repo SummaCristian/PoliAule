@@ -1,20 +1,40 @@
 import { classroomsData as occupancyData, SKIP_DAYS, getClassroomStatusNow, getBuildingOpening } from '../available-rooms-script.js';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
-import { escapeHtml } from '../utils/html.js';
+import { escapeHtml, decodeEntities } from '../utils/html.js';
+import { flipLayout } from '../utils/layout-flip.js';
 import { infoPage } from './info-page.js';
-import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance } from '../utils/photo.js';
+import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance, getPhotoSmall } from '../utils/photo.js';
+import { planHeaderText } from '../utils/text-contrast.js';
 import { isFavourite, toggleFavourite, syncStarButton } from '../utils/favourites.js';
 import { createPopover, createButton, createSegmentedControl } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
 import { startTrackedTransition, vtFlag } from '../utils/vt-debug.js';
+
+const IS_ANDROID = /Android/i.test(navigator.userAgent);
+
+// startViewTransition's shape without the transition: runs the update now.
+function startInstantTransition(_label, update) {
+  update();
+  const done = Promise.resolve();
+  return { ready: done, finished: done, updateCallbackDone: done, skipTransition() {} };
+}
 import { createPillSelector } from './pill-selector.js';
 import { DAY_START, DAY_END, dayBarHtml, timeToMinutes, minutesToTimeDisplay } from './day-bar.js';
 import { embedMap, parkMap, releaseMap, isMapTabShowing, getEmbedPov, setEmbedPov } from './campus-map.js';
 import { refreshHeaderBlur } from '../utils/header-blur.js';
+import { decorate } from '../utils/season.js';
+import { graduationOn, milanDay } from '../utils/graduation.js';
 
 // No zoom and no shared element when motion is unwelcome: the pair of them is
 // the whole animation, so what is left is the browser's own cross-fade.
 const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+
+// Reading document.fonts.ready brings the page's style up to date on the spot
+// (the browser has to know whether any font is still loading). Read in the
+// open's update callback, that was a whole extra style pass in the middle of
+// it, so it is read once here; faces that arrive later refit the title through
+// 'loadingdone' (see init), which forces nothing.
+const fontsReady = document.fonts?.ready ?? Promise.resolve();
 
 // ---------- CONSTANTS ----------
 
@@ -38,17 +58,17 @@ function buildOccupationPopoverHtml(slot) {
   const metaLines = [];
 
   if (slot.category === 'COURSE' || slot.category === 'EXAM') {
-    titleText = slot.course ?? slot.name ?? t('detail.occupied');
+    titleText = decodeEntities(slot.course ?? slot.name ?? t('detail.occupied'));
     if (slot.category === 'EXAM') {
       metaLines.push(`<span class="timeline-popover-badge">${t('detail.examLabel')}</span>`);
     }
     if (slot.code != null) metaLines.push(`<span>${escapeHtml(String(slot.code))}</span>`);
-    if (slot.section) metaLines.push(`<span>${escapeHtml(slot.section)}</span>`);
+    if (slot.section) metaLines.push(`<span>${escapeHtml(decodeEntities(slot.section))}</span>`);
     if (Array.isArray(slot.professors) && slot.professors.length) {
-      metaLines.push(`<span>${escapeHtml(slot.professors.join(', '))}</span>`);
+      metaLines.push(`<span>${escapeHtml(decodeEntities(slot.professors.join(', ')))}</span>`);
     }
   } else {
-    titleText = slot.raw ?? slot.name ?? t('detail.occupied');
+    titleText = decodeEntities(slot.raw ?? slot.name ?? t('detail.occupied'));
   }
 
   return `
@@ -105,6 +125,7 @@ class ClassroomDetail {
       if (!el || !url) return;
       this._applyPhotoDim(url, el);
       this._applyTitleTone(url, el);
+      this._applyTextContrast();
     });
 
     // Flags the overlay once the sticky title row reaches its stuck position
@@ -124,6 +145,10 @@ class ClassroomDetail {
         const rect = row.getBoundingClientRect();
         const scrolled = window.scrollY > 0 || this._overlay.scrollTop > 0 || document.body.scrollTop > 0;
         stuck = scrolled && rect.top <= top + 0.5;
+        // The stuck row keeps this height (see .title-stuck .detail-title-row).
+        if (!this._overlay.classList.contains('title-stuck')) {
+          this._overlay.style.setProperty('--title-row-h', `${rect.height}px`);
+        }
         const back = document.getElementById('detail-back-btn');
         if (back && !back.hidden) {
           const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
@@ -131,7 +156,10 @@ class ClassroomDetail {
           this._overlay.style.setProperty('--title-shift', `${Math.round(shift)}px`);
         }
       }
-      this._overlay.classList.toggle('title-stuck', stuck);
+      if (stuck !== this._overlay.classList.contains('title-stuck')) {
+        this._overlay.classList.toggle('title-stuck', stuck);
+        this._fitTitle(); // the stuck title has its own size and width
+      }
     };
     const queueTitleStuck = () => {
       if (stuckRaf) return;
@@ -147,6 +175,8 @@ class ClassroomDetail {
     };
     document.addEventListener('scroll', queueTitleStuck, { passive: true, capture: true });
     window.addEventListener('resize', queueTitleStuck);
+    // A face that arrives after the page opened changes the title's width
+    document.fonts?.addEventListener('loadingdone', () => this._fitTitle());
 
     this._favBtn?.addEventListener('click', () => {
       if (this._currentId === null) return;
@@ -157,6 +187,7 @@ class ClassroomDetail {
 
     this._backBtn?.addEventListener('click', () => {
       if (this._openedViaPushState) {
+        this._ownBack = true;
         history.back();
       } else {
         history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -164,11 +195,23 @@ class ClassroomDetail {
       }
     });
 
+    // popstate comes first and is the only place the browser says it already
+    // animated this back.
+    window.addEventListener('popstate', (e) => { this._uaAnimated = !!e.hasUAVisualTransition; });
     window.addEventListener('hashchange', () => this._onHashChange());
 
+    // Changed with the page open (settings over it): Sunday's row shrinks
+    // away or rises in, and what's under it slides to make room
     window.addEventListener('hidesundayschange', (e) => {
       const container = document.getElementById('detail-schedule-container');
-      if (container) container.classList.toggle('detail-schedule--hide-sundays', e.detail.hidden);
+      if (!container) return;
+      const apply = () => container.classList.toggle('detail-schedule--hide-sundays', e.detail.hidden);
+      const content = container.closest('.detail-content');
+      if (!content) { apply(); return; }
+      flipLayout(content,
+        '.detail-schedule-row, .detail-schedule-label-cell, .detail-schedule-day, .detail-section:has(#detail-schedule-container) ~ .detail-section',
+        apply,
+        { isLeaving: (el) => e.detail.hidden && /--sunday\b/.test(el.className) });
     });
 
     onLanguageSwitch(() => {
@@ -312,7 +355,19 @@ class ClassroomDetail {
       if (location.hash === '#info') {
         this._silentClose();
       } else {
-        this._doClose();
+        // Closed by the browser (Back key, swipe, toolbar), not by our own back
+        // button. Our transition is skipped where it does harm: Chrome for
+        // Android crashes the renderer (compositor SIGTRAP) on a view
+        // transition with a root snapshot there, and Safari has already played
+        // its own back animation (hasUAVisualTransition, or any browser back
+        // when it isn't reported). Desktop Chrome and Firefox keep the zoom.
+        const browserBack = !this._ownBack;
+        const uaAnimated = this._uaAnimated;
+        this._ownBack = false;
+        this._uaAnimated = false;
+        const instant = browserBack && (uaAnimated || IS_ANDROID
+          || !document.documentElement.classList.contains('no-safari'));
+        this._doClose(instant);
       }
     }
   }
@@ -484,6 +539,21 @@ class ClassroomDetail {
      So: refresh again when the photo is actually up. refreshHeaderBlur() does
      its own sweep from there, which covers the photo's 0.6s reveal and the
      page tint's transition behind it. */
+  /* The open's zoom only needs the page's shell: the photo, the title and the
+     lines under it are all it shows for most of its length. The sections below
+     are built with the shell but kept out of layout (.detail-content--deferred)
+     and come in here, once the zoom has landed, with the schedule: laying them
+     out inside the transition's update callback, and the schedule's day picker
+     measuring itself there, were most of what that callback still cost. */
+  _revealContent(id) {
+    const content = this._overlay.querySelector('.detail-content--deferred');
+    if (!content) return;
+    content.querySelectorAll(':scope > .detail-column > .detail-section')
+      .forEach((section, i) => section.style.setProperty('--section-i', i));
+    content.classList.replace('detail-content--deferred', 'detail-content--enter');
+    this._loadSchedule(id);
+  }
+
   _photoRevealed() {
     refreshHeaderBlur();
   }
@@ -667,13 +737,13 @@ class ClassroomDetail {
 
         // Everything this changes first, then everything it measures: a read of
         // layout after a change restyles and lays out the page again, and
-        // .detail-open and the tint restyle all of it. The schedule's day
-        // picker measures itself as it is built, so it comes last of the
-        // changes and pays for the one full pass the reads below then reuse.
+        // .detail-open and the tint restyle all of it. Only the page's shell
+        // goes in here; its sections, and the schedule with its self-measuring
+        // day picker, come in once the zoom has landed (_revealContent).
         document.body.classList.add('detail-open');
         this._presetHeaderHeight('detail');
         this._overlay.removeAttribute('hidden');
-        this._renderContent(entry);
+        this._renderContent(entry, { deferContent: true });
         this._overlay.classList.add('visible');
         if (this._backBtn) this._backBtn.removeAttribute('hidden');
         if (this._favBtn) { this._favBtn.removeAttribute('hidden'); this._syncFavBtn(); }
@@ -688,7 +758,6 @@ class ClassroomDetail {
             detailContainer?.classList.add('loaded');
           }
         }
-        this._loadSchedule(id);
 
         this._checkHeaderHeight('detail', headerEl);
         window.scrollTo(0, 0);
@@ -720,6 +789,9 @@ class ClassroomDetail {
         document.documentElement.classList.remove('header-ctl-vt', 'detail-vt-open', 'detail-vt-hero');
         clearZoomOrigin();
         if (fromInfo) infoPage._cleanupReturnVT();
+        // Before the settle: what waits for it (the masonry's observers) takes
+        // its first measurements of the sections, which have to be laid out.
+        if (this._currentId === id) this._revealContent(id);
         this._settleTransition();
         // Nothing scrolls while the snapshots are up, so a non-zero offset here
         // is one the page kept from before (Safari restoring one as the
@@ -769,7 +841,7 @@ class ClassroomDetail {
 
   // ---------- CLOSE ----------
 
-  _doClose() {
+  _doClose(instant = false) {
     if (!this._overlay || this._overlay.hidden) return;
 
     this._currentId = null;
@@ -833,7 +905,7 @@ class ClassroomDetail {
       // all of it in the frame the snapshot is taken in.
       this._freezeForTransition({ page: !document.documentElement.classList.contains('no-safari') });
 
-      const vt = startTrackedTransition('close', () => {
+      const vt = (instant ? startInstantTransition : startTrackedTransition)('close', () => {
         // -- DOM changes (defines NEW state) --
 
         // Fully hide the overlay and back button. Changes first, reads after,
@@ -953,7 +1025,7 @@ class ClassroomDetail {
 
   // ---------- RENDER: STATIC CONTENT ----------
 
-  _renderContent({ classroom, building, campus }) {
+  _renderContent({ classroom, building, campus }, { deferContent = false } = {}) {
     // Chips only stagger in when opening a classroom, not on re-renders
     // (occupancy refresh) of the one already showing.
     const enter = this._enteredId !== classroom.id;
@@ -1017,6 +1089,33 @@ class ClassroomDetail {
         </div>`;
     }
 
+    // Graduation days at this campus among the days the schedule shows (or
+    // the next week, before the occupancy is in): the ceremonies may take
+    // the room even where it shows as free
+    const today = milanDay();
+    const scheduleDays = occupancyData.length
+      ? occupancyData.map(d => `${d.date.slice(0, 4)}-${d.date.slice(4, 6)}-${d.date.slice(6, 8)}`)
+      : Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(`${today}T12:00:00`);
+        d.setDate(d.getDate() + i);
+        return d.toISOString().slice(0, 10);
+      });
+    const graduationDays = scheduleDays.filter(d => d >= today && graduationOn(d, campus.id));
+    let graduationHtml = '';
+    if (graduationDays.length) {
+      const fmt = new Intl.DateTimeFormat(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
+      const days = graduationDays.map(d => fmt.format(new Date(`${d}T12:00:00`))).join(', ');
+      const [one, many] = t('detail.graduationText').split('|');
+      graduationHtml = `
+          <div class="detail-events-only detail-graduation" role="note">
+            <i class="hgi-stroke hgi-laurel-wreath-01" aria-hidden="true"></i>
+            <div>
+              <strong>${escapeHtml(t('detail.graduationTitle').replace('{days}', days))}</strong>
+              <p>${graduationDays.length > 1 ? (many ?? one) : one}</p>
+            </div>
+          </div>`;
+    }
+
     this._overlay.removeAttribute('data-title-tone');
     // The shared campus Map() may be sitting inside the old card — step it
     // out before the markup is replaced, or it would be destroyed with it.
@@ -1059,8 +1158,9 @@ class ClassroomDetail {
             </div>
           </div>
         ` : ''}
+        ${graduationHtml}
       </div>
-      <div class="detail-content">
+      <div class="detail-content${deferContent ? ' detail-content--deferred' : ''}">
         <div class="detail-column">
         <section class="detail-section">
           <h2 class="detail-section-title">${t('detail.features')}</h2>
@@ -1104,6 +1204,22 @@ class ClassroomDetail {
         </div>
       </div>
     `;
+    // Refit whenever the row's width changes (the overlay being shown, a resize, the
+    // badge's text) and once the web font is in. Height changes are the fit itself.
+    decorate('detail', this._overlay, { classroom, building, campus });
+
+    this._titleRowObserver?.disconnect();
+    const titleRow = this._overlay.querySelector('.detail-title-row');
+    if (titleRow) {
+      let rowWidth = -1;
+      this._titleRowObserver = new ResizeObserver(([entry]) => {
+        if (entry.contentRect.width === rowWidth) return;
+        rowWidth = entry.contentRect.width;
+        this._fitTitle();
+      });
+      this._titleRowObserver.observe(titleRow);
+    }
+    fontsReady.then(() => this._fitTitle());
 
     // Title click -> manual refresh of photo and schedule
     this._overlay.querySelector('.detail-title')?.addEventListener('click', () => {
@@ -1264,7 +1380,157 @@ class ClassroomDetail {
       if (!cached) show();
       this._applyPhotoDim(url, el);
       this._applyTitleTone(url, el);
+      this._applyTextContrast();
     });
+  }
+
+  /**
+   * Shrinks the title (--title-fit, down to 60%) when its longest word is
+   * wider than the room it has, as with "AULA INFORMATIZZATA" beside the
+   * status badge: the name wraps between words, and a word that can't fit
+   * would otherwise break mid-word. Not hyphens: WebKit doesn't hyphenate
+   * capitalised words, and these names are all caps. Measured with
+   * overflow-wrap off, as the widest line the text then makes.
+   */
+  _fitTitle() {
+    const title = this._overlay.querySelector('.detail-title');
+    const row = title?.parentElement;
+    if (!title || this._overlay.hidden) return;
+    // The room the row leaves the title, not the title's own width: the title is
+    // fit-content, so once its text fits it is exactly as wide as the text.
+    const rs = getComputedStyle(row);
+    const ts = getComputedStyle(title);
+    const badge = row.querySelector('.detail-status-wrapper');
+    const room = row.clientWidth - parseFloat(rs.paddingLeft) - parseFloat(rs.paddingRight)
+      - (badge ? badge.offsetWidth + parseFloat(rs.columnGap || 0) : 0)
+      - parseFloat(ts.marginLeft) - parseFloat(ts.marginRight)
+      - parseFloat(ts.paddingLeft) - parseFloat(ts.paddingRight);
+    title.style.removeProperty('--title-fit');
+    title.style.overflowWrap = 'normal';
+    const range = document.createRange();
+    range.selectNodeContents(title);
+    const widest = () => Math.max(0, ...[...range.getClientRects()].map(r => r.width));
+    // A few rounds: the text doesn't shrink exactly in proportion to the font size
+    // (rounding, spacing), so one ratio can leave it a pixel or two over.
+    let fit = 1;
+    for (let i = 0; i < 4 && room > 0 && fit > 0.6; i++) {
+      const w = widest();
+      if (w <= room - 1) break; // a pixel spare: a word exactly as wide as its line still breaks
+      fit = Math.max(0.6, fit * ((room - 1) / w) * 0.99);
+      title.style.setProperty('--title-fit', fit.toFixed(3));
+    }
+    title.style.overflowWrap = '';
+    this._measurePin();
+    this._applyTextContrast(); // the text moved over the photo
+  }
+
+  /**
+   * Colours the title and subtitle for the photo behind them
+   * (utils/text-contrast.js). Refines
+   * _applyTitleTone's black or white, which stays as the first guess. It reads
+   * the page laid out at rest, so it waits for the transition to land and an
+   * idle moment, and skips a page already scrolled (the next call made at the
+   * top redoes it).
+   */
+  _applyTextContrast() {
+    if (this._textContrastQueued) return;
+    this._textContrastQueued = true;
+    this._afterTransition(() => {
+      const run = () => { this._textContrastQueued = false; this._planTextContrast(); };
+      if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 500 });
+      else setTimeout(run, 100);
+    });
+  }
+
+  _planTextContrast() {
+    if (this._currentId === null || this._overlay.hidden) return;
+    if ((document.scrollingElement?.scrollTop ?? 0) !== 0) return;
+    const title = this._overlay.querySelector('.detail-title');
+    const subtitle = this._overlay.querySelector('.detail-subtitle');
+    const photo = this._overlay.querySelector('.detail-photo-container');
+    const backdrop = this._overlay.querySelector('.detail-photo-backdrop');
+    const small = getPhotoSmall(thumbUrl(this._currentId));
+    if (!title || !subtitle || !photo || !small) return;
+
+    const plan = planHeaderText({
+      lines: [title, subtitle],
+      photoBox: photo.getBoundingClientRect(),
+      backdropBox: backdrop?.getBoundingClientRect() ?? null,
+      pageBg: getComputedStyle(this._overlay).backgroundColor,
+      dim: this._photoDim(thumbUrl(this._currentId)),
+      blur: backdrop ? parseFloat(getComputedStyle(backdrop, '::before').getPropertyValue('--bd-blur-px')) || 40 : 40,
+      tint: getComputedStyle(document.documentElement).getPropertyValue('--detail-tint').trim() || 'grey',
+      small,
+    });
+    if (!plan) return;
+
+    title.style.setProperty('--title-ink', plan.inks[0]);
+    subtitle.style.color = plan.inks[1];
+  }
+
+  /**
+   * Measures the title's pin (see "The pin" in classroom-detail.css): where its
+   * text sits at rest, where it goes in the pill beside the back button and at
+   * what size, the pill's box at both ends, and the scroll at which the row
+   * sticks. All in the row's own box, from layout offsets, so transforms and
+   * the current scroll don't affect it, except the stick point, which needs
+   * the page at rest and is kept from the last time it was.
+   */
+  _measurePin() {
+    const row = this._overlay.querySelector('.detail-title-row');
+    const title = row?.querySelector('.detail-title');
+    if (!title || this._overlay.hidden || !CSS.supports('animation-timeline: scroll()')) return;
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const rs = getComputedStyle(row);
+    const ts = getComputedStyle(title);
+    const rowRect = row.getBoundingClientRect();
+    const stickyTop = parseFloat(rs.top) || 0;
+    const padL = parseFloat(ts.paddingLeft), padT = parseFloat(ts.paddingTop);
+
+    // At rest: the title's box (its glass starts there) and its text inside it.
+    const x0 = title.offsetLeft, y0 = title.offsetTop, w0 = title.offsetWidth, h0 = title.offsetHeight;
+    const textW = w0 - 2 * padL, textH = h0 - 2 * padT;
+
+    // Pinned: a pill from 0.5rem past the back button to the badge, centred on
+    // the button; the text at most 2/3 of its size (1.875rem → 1.25rem), less
+    // if that is what fits.
+    const back = document.getElementById('detail-back-btn');
+    const backRect = back && !back.hidden ? back.getBoundingClientRect() : null;
+    const pillX = (backRect ? backRect.right - rowRect.left : 4.25 * rem) + 0.5 * rem;
+    const centreY = backRect ? backRect.top + backRect.height / 2 - stickyTop : 1.5 * rem;
+    const badge = row.querySelector('.detail-status-wrapper');
+    const limit = (badge ? badge.offsetLeft : row.clientWidth - parseFloat(rs.paddingRight)) - parseFloat(rs.columnGap || 0);
+    const k = Math.max(0.3, Math.min(2 / 3, (limit - pillX - 1.75 * rem) / textW));
+    const pillW = textW * k + 1.75 * rem;
+    const pillH = Math.max(3 * rem, textH * k + 0.75 * rem);
+    const pillY = centreY - pillH / 2;
+    const dx = pillX + 0.875 * rem - (x0 + padL);
+    const dy = pillY + (pillH - textH * k) / 2 - (y0 + padT);
+
+    // The glass sits at the pill and starts transformed onto the title's resting box.
+    const set = (name, v) => row.style.setProperty(name, `${v.toFixed(2)}px`);
+    set('--pill-x', pillX); set('--pill-y', pillY); set('--pill-w', pillW); set('--pill-h', pillH);
+    set('--pill-from-x', x0 - pillX); set('--pill-from-y', y0 - pillY);
+    row.style.setProperty('--pill-from-sx', (w0 / pillW).toFixed(4));
+    row.style.setProperty('--pill-from-sy', (h0 / pillH).toFixed(4));
+    set('--pin-dx', dx); set('--pin-dy', dy);
+    row.style.setProperty('--pin-k', k.toFixed(4));
+
+    // The scroll at which the row sticks: its distance to the sticky top, less
+    // what the photo's shrink (0 → 220px of scroll, in the flow above it) takes
+    // off on the way.
+    const scroll = document.scrollingElement?.scrollTop ?? 0;
+    if (scroll !== 0) return;
+    const distance = rowRect.top - stickyTop;
+    const photo = this._overlay.querySelector('.detail-photo-container');
+    let shrink = 0;
+    if (photo) {
+      const ph = photo.getBoundingClientRect();
+      const end = innerWidth < 600 ? Math.max(0.33 * innerHeight, 240) : ph.width * 8 / 21;
+      shrink = Math.max(0, ph.height - end);
+    }
+    const at = distance / (1 + shrink / 220) <= 220 ? distance / (1 + shrink / 220) : distance - shrink;
+    this._overlay.style.setProperty('--title-pin-at', `${Math.max(1, at).toFixed(1)}px`);
   }
 
   /**

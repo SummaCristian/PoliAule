@@ -7,6 +7,16 @@ import { availableTabRooms } from './utils/secondary.js';
 // one entry per day inside the array, starting with 0 = today.
 export let classroomsData = [];
 
+// When the backend last ran (/v1/occupations' generated_at). A day file's own
+// generated_at only moves when its contents change (scripts/fetch.py keeps it
+// otherwise, so its ETag holds), so it can't tell how fresh the data is.
+export let lastFetchedAt = null;
+
+// The dates /v1/occupations publishes, known as soon as the list arrives: on a
+// first visit the days themselves load one first, then the rest (see
+// fetchClassroomsDataOnce), so classroomsData can briefly hold fewer of them.
+export let publishedDates = [];
+
 // Day of the week to skip. If one of the next 7 days is a
 // day listed here, skip to the next day.
 // This mirrors what happens in the backend.
@@ -15,6 +25,11 @@ export const SKIP_DAYS = [0] // Sunday
 // Holiday closures from /v1/opening-hours. Kept apart from building.hours
 // because they apply to every building at once. Null until loaded.
 let holidayPeriods = null;
+
+// Common spaces with their own hours (opening-hours.json's common_areas, e.g.
+// building 11's Patio and Agorà), open even when the building's classrooms
+// aren't. Empty until loaded, or when an older file has none.
+let commonAreas = [];
 
 // ----------  FETCHING LOGIC ----------
 
@@ -101,6 +116,7 @@ const openingHoursUrl = apiBase => `${apiBase}/v1/opening-hours`;
 function applyClassroomsData(days, openingHours) {
   if (openingHours) {
     holidayPeriods = openingHours.holiday_periods ?? [];
+    commonAreas = openingHours.common_areas ?? [];
     for (const day of days) {
       for (const campus of day.campuses) {
         for (const building of campus.buildings) {
@@ -123,6 +139,8 @@ export async function loadCachedClassroomsData() {
   if (!list) return false;
   const today = formatDateYYYYMMDD(new Date());
   const dates = list.data.dates.filter(date => date >= today);
+  lastFetchedAt = list.data.generated_at ?? null;
+  publishedDates = dates;
 
   const [days, openingHours] = await Promise.all([
     Promise.all(dates.map(date => readCachedJson(cache, occupationUrl(apiBase, date))))
@@ -140,30 +158,62 @@ export async function loadCachedClassroomsData() {
 // and stores it in classroomsData. Returns whether it differs from the cached
 // copies, i.e. whether a UI drawn from loadCachedClassroomsData() is now stale.
 // Concurrent calls share one run.
+//
+// With `onFirstDay` (a first visit: nothing cached to draw from), the day
+// `getFirstDate()` names, or the first published one, is published on its own
+// as soon as it's in and `onFirstDay` called, so the UI can draw while the rest
+// of the week is still on its way; the whole week replaces it at the end. All
+// days are requested at once either way: only the publishing is staged.
 let inFlightFetch = null;
-export function fetchClassroomsData() {
-  inFlightFetch ??= fetchClassroomsDataOnce().finally(() => { inFlightFetch = null; });
+export function fetchClassroomsData(options = {}) {
+  inFlightFetch ??= fetchClassroomsDataOnce(options).finally(() => { inFlightFetch = null; });
   return inFlightFetch;
 }
 
-async function fetchClassroomsDataOnce() {
+// Whether `dateKey` (YYYYMMDD) is still to arrive from a fetch under way, and
+// so worth waiting for (whenClassroomsDataSettled) rather than shown as empty.
+export function isDayPending(dateKey) {
+  return !!inFlightFetch && !classroomsData.some(day => day.date === dateKey);
+}
+
+export function whenClassroomsDataSettled() {
+  return inFlightFetch ?? Promise.resolve();
+}
+
+async function fetchClassroomsDataOnce({ getFirstDate = null, onFirstDay = null } = {}) {
   try {
     const cache = await openDataCache();
     const apiBase = getApiBase();
     const list = await fetchJson(cache, occupationsListUrl(apiBase));
     const { dates } = list.data;
+    lastFetchedAt = list.data.generated_at ?? null;
+    publishedDates = dates;
 
-    const [days, openingHours] = await Promise.all([
-      Promise.allSettled(dates.map(date => fetchJson(cache, occupationUrl(apiBase, date))))
-        .then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value)),
-      fetchJson(cache, openingHoursUrl(apiBase))
-        .catch(error => {
-          // Non-fatal: fall through with openingHours = null so classroomsData
-          // still loads (and gets used) even if opening hours can't be fetched.
-          console.error('Error fetching opening hours data:', error);
-          return null;
-        }),
-    ]);
+    const dayRequests = dates.map(date => fetchJson(cache, occupationUrl(apiBase, date)));
+    // Handled right away, so a day failing while the first one is awaited isn't an unhandled rejection
+    const allDays = Promise.allSettled(dayRequests)
+      .then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value));
+    const openingHoursRequest = fetchJson(cache, openingHoursUrl(apiBase))
+      .catch(error => {
+        // Non-fatal: fall through with openingHours = null so classroomsData
+        // still loads (and gets used) even if opening hours can't be fetched.
+        console.error('Error fetching opening hours data:', error);
+        return null;
+      });
+
+    if (onFirstDay && dates.length) {
+      const preferred = getFirstDate?.()?.replace(/-/g, '');
+      const first = Math.max(0, dates.indexOf(preferred));
+      try {
+        const [day, openingHours] = await Promise.all([dayRequests[first], openingHoursRequest]);
+        applyClassroomsData([day.data], openingHours?.data ?? null);
+        onFirstDay();
+      } catch {
+        // That day failed: the UI waits for the rest instead
+      }
+    }
+
+    const [days, openingHours] = await Promise.all([allDays, openingHoursRequest]);
 
     applyClassroomsData(days.map(day => day.data), openingHours?.data ?? null);
     console.log('All data loaded:', classroomsData);
@@ -308,14 +358,55 @@ export function getBuildingOpening(building, dateKey) {
   const hours = building?.hours;
   if (!hours) return null;
 
-  const isoDate = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
-  if (holidayPeriods?.some(p => p.start <= isoDate && isoDate <= p.end)) return { closed: true };
+  if (isHoliday(dateKey)) return { closed: true };
 
+  const isoDate = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
   const dow = new Date(isoDate + 'T00:00').getDay(); // 0 = Sunday
   const range = hours[dow === 0 ? 'sun' : dow === 6 ? 'sat' : 'mon_fri'];
   if (!range) return { closed: true };
 
   return { opens: range[0], closes: range[1] };
+}
+
+// Whether dateKey ("YYYYMMDD") falls in one of polimi.it's holiday periods.
+function isHoliday(dateKey) {
+  const isoDate = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
+  return !!holidayPeriods?.some(p => p.start <= isoDate && isoDate <= p.end);
+}
+
+// Whether every building on campusId is closed all of date ("YYYY-MM-DD"):
+// a holiday, or a weekday none of them opens. False when the hours never
+// loaded, since getBuildingOpening() then treats buildings as open.
+export function isCampusClosedAllDay(campusId, date) {
+  const formattedDate = formatDateYYYYMMDD(new Date(date));
+  const dayData = classroomsData.find(day => day.date === formattedDate);
+  const buildings = dayData?.campuses.find(c => c.id === campusId)?.buildings;
+  if (!buildings?.length) return false;
+  return buildings.every(building => getBuildingOpening(building, formattedDate)?.closed);
+}
+
+// The common areas open on campusId on date ("YYYY-MM-DD"), grouped by building
+// and hours: [{ building: "11", names: ["Patio", "Agorà"], hours: ["00:00", "23:59"] }].
+// None on holidays, which close everything.
+export function getOpenCommonAreas(campusId, date) {
+  const formattedDate = formatDateYYYYMMDD(new Date(date));
+  if (isHoliday(formattedDate)) return [];
+  const dayData = classroomsData.find(day => day.date === formattedDate);
+  const buildings = dayData?.campuses.find(c => c.id === campusId)?.buildings ?? [];
+  const keys = new Set(buildings.map(buildingHoursKey));
+
+  const dow = new Date(date + 'T00:00').getDay(); // 0 = Sunday
+  const dayField = dow === 0 ? 'sun' : dow === 6 ? 'sat' : 'mon_fri';
+
+  const groups = new Map();
+  for (const area of commonAreas) {
+    const hours = area[dayField];
+    if (!hours || !keys.has(area.building)) continue;
+    const groupKey = `${area.building}|${hours.join('-')}`;
+    if (!groups.has(groupKey)) groups.set(groupKey, { building: area.building, names: [], hours });
+    groups.get(groupKey).names.push(area.name);
+  }
+  return [...groups.values()];
 }
 
 // Narrows [fromTime, toTime] to the part the building is open for on dateKey,

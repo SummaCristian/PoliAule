@@ -14,7 +14,7 @@ PoliAule pre-fetches classroom occupancy data from Politecnico di Milano every m
 
 All endpoints are under `https://api.poliaule.com` and require no authentication. A separate `https://api-beta.poliaule.com` serves the beta deployment with the same response shapes, though it may include in-progress changes.
 
-The JSON endpoints (`/v1/classrooms`, `/v1/occupations`, `/v1/occupations/:date`, `/v1/opening-hours`) send `Cache-Control: no-store` with an `ETag` (exposed to cross-origin `fetch()`). Keep your own copy and send its ETag back as `If-None-Match`: an unchanged file comes back as a bodiless `304 Not Modified`.
+The JSON endpoints (`/v1/classrooms`, `/v1/occupations`, `/v1/occupations/:date`, `/v1/opening-hours`, `/v1/graduation-sessions`) send `Cache-Control: no-store` with an `ETag` (exposed to cross-origin `fetch()`). Keep your own copy and send its ETag back as `If-None-Match`: an unchanged file comes back as a bodiless `304 Not Modified`.
 
 ### Static classroom metadata
 
@@ -30,7 +30,7 @@ Returns the full list of campuses, buildings, and classrooms with their static a
 GET /v1/occupations
 ```
 
-Returns the list of dates for which occupancy data currently exists. Fetch this first to know which dates are available before requesting individual dates. A `generated_at` timestamp is also included to indicate when the last fetch occurred and how fresh the data is.
+Returns the list of dates for which occupancy data currently exists. Fetch this first to know which dates are available before requesting individual dates. A `generated_at` timestamp is also included to indicate when the last fetch occurred and how fresh the data is. Use this one for freshness: each day's own `generated_at` (below) only moves when that day's data changes.
 
 ```json
 {
@@ -70,11 +70,57 @@ Returns per-building opening hours, campus-wide defaults, and holiday closure pe
   "campus_defaults": {
     "MIA01": { "mon_fri": ["07:00", "21:00"], "sat": ["07:00", "20:00"], "sun": null }
   },
+  "common_areas": [
+    { "building": "11", "name": "Patio", "mon_fri": ["00:00", "23:59"], "sat": ["00:00", "23:59"], "sun": ["00:00", "23:59"] }
+  ],
   "default_hours": { "mon_fri": ["07:15", "20:15"], "sat": null, "sun": null }
 }
 ```
 
 To resolve a given building's hours: look it up in `buildings` by its number/code (the leading alphanumeric token of its `name` in `classrooms.json`, e.g. `"32.1"` → `"32"`); if not found, look up its campus `id` in `campus_defaults`; if that's also missing, use `default_hours`. `null` for `sat`/`sun` means closed that day.
+
+`common_areas` lists a building's common spaces with their own hours (e.g. building 11's Patio and Agorà, open around the clock), keyed by the same building code. They're open even when the building's classrooms aren't, so they never change the building's own hours. `["00:00", "23:59"]` means open 24 hours (the page's "H24").
+
+### Graduation sessions
+
+```
+GET /v1/graduation-sessions
+```
+
+Returns the days of PoliMi's graduation sessions (sessioni di laurea) and the campuses each one is held at, scraped monthly from the "Periodi di lezione e sessioni di laurea" PDF linked on [polimi.it/studenti/calendari-e-scadenze](https://www.polimi.it/studenti/calendari-e-scadenze). Classrooms used for the ceremonies usually show as free in the occupancy data, so on these days a campus's rooms may be taken even when `/v1/occupations` says otherwise.
+
+```json
+{
+  "generated_at": "2026-10-11T06:31:02.512840",
+  "source_url": "https://www.polimi.it/studenti/calendari-e-scadenze",
+  "documents": [
+    { "academic_year": "2026/2027", "title": "Periodi di lezione e sessioni di laurea - 2026/2027", "url": "https://www.polimi.it/fileadmin/…/Calendario_a.a._2026-2027_-periodi_lezione-sessioni_laurea_v1.1.pdf" }
+  ],
+  "sessions": [
+    {
+      "date": "2026-09-30",
+      "academic_year": "2026/2027",
+      "session": "Settembre 2026",
+      "levels": ["triennale"],
+      "campuses": ["CRG02", "LCF04", "MIB01", "MIB02", "MNG01", "PCL01"],
+      "campus_parts": [
+        { "group": "poli_territoriali", "event": null, "campuses": ["CRG02", "LCF04", "MNG01", "PCL01"] },
+        { "group": "design", "event": "proclamazione", "campuses": ["MIB02", "MIB01"] }
+      ],
+      "level_text": "Laurea Triennale",
+      "campus_text": "Poli Territoriali + Proclamazione Design"
+    }
+  ]
+}
+```
+
+One entry per day, sorted by date; a session spanning several days has one entry for each. `campuses` holds the campus `id`s (as in `/v1/classrooms`) graduating that day, which is all you need to tell whether a campus has a graduation day. `campus_parts` says why: the PDF's campus cell split on `+`, each part with the campuses it covers:
+
+- `milano`: every primary campus in Milan (Leonardo, Colombo, Bovisa's Durando and La Masa)
+- `poli_territoriali`: every primary campus outside Milan (Cremona, Lecco, Mantova, Piacenza)
+- `design`: the Design School's days, held at Bovisa only; `event` is `"discussione"` (thesis defences) or `"proclamazione"` (the proclamation), or `null` if the PDF doesn't say
+
+Secondary campuses (offices, residences) are never included. `levels` is any of `"triennale"`, `"magistrale"`, `"ciclo_unico"` (LM C.U.) and `"dottorato"`. `level_text` and `campus_text` are the PDF's cells verbatim. The days of an academic year stay listed until they've passed, even after the page has replaced that year's PDF with the next one.
 
 ### Classroom photos
 
@@ -114,6 +160,7 @@ Returns `{ "mapboxToken": string }` — the URL-restricted Mapbox public token t
     group:     string | undefined   // group within the city, e.g. "Città Studi" or "Bovisa" - omitted for single-campus cities
     lat:       number
     long:      number
+    secondary: true | undefined     // nothing to book here (offices, residences, ...); omitted otherwise
     buildings: [
       {
         name:       string
@@ -122,6 +169,7 @@ Returns `{ "mapboxToken": string }` — the URL-restricted Mapbox public token t
         lat:        number
         long:       number
         idEdificio: number | null
+        secondary:  true | undefined   // no classrooms, or only events-only ones; omitted otherwise
         classrooms: [
           {
             id:                number   // stable room identifier
@@ -131,6 +179,8 @@ Returns `{ "mapboxToken": string }` — the URL-restricted Mapbox public token t
             accessible_seats:  number | null
             workstations:      number | null
             idfoto:            number | null   // photo reference
+            eventsOnly:        true | undefined   // generally closed outside official events; omitted otherwise
+            noSchedule:        true | undefined   // PoliMi publishes no schedule for it; omitted otherwise
             features: [
               {
                 id: number
@@ -152,7 +202,8 @@ Same structure as `/v1/classrooms`, with a top-level metadata wrapper and an `oc
 
 ```
 {
-  generated_at: string   // ISO 8601 timestamp of when the file was built
+  generated_at: string   // ISO 8601 timestamp (UTC) of when this day's data last changed; an hourly run that finds
+                         // nothing new keeps it, so the file and its ETag stay the same (a 304 for If-None-Match)
   date:         string   // "YYYYMMDD"
   campuses: [
     {
@@ -160,13 +211,14 @@ Same structure as `/v1/classrooms`, with a top-level metadata wrapper and an `oc
       name:      string  // short display name
       lat:       number
       long:      number
-      buildings: [       // same building/classroom fields as classrooms.json
+      secondary: true | undefined
+      buildings: [       // same building/classroom fields as classrooms.json, `secondary` included
         {
           ...
           classrooms: [
             {
-              ...             // includes `floor`, as in /v1/classrooms
-              occupancy: [   // list of BOOKED time slots (not free slots)
+              ...             // includes `floor`, `eventsOnly` and `noSchedule`, as in /v1/classrooms
+              occupancy: [   // list of BOOKED time slots (not free slots); null when the schedule is unknown that day (e.g. a `noSchedule` room)
                 {
                   inizio: string        // start time, "HH:MM"
                   fine:   string        // end time,   "HH:MM"

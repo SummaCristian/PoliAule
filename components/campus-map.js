@@ -4,6 +4,8 @@ import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { getSelectedCampusId, getSelectedBuildingId, clearSelectedBuildingSilently } from './campus-buildings.js';
 import { getSheetHeightPx, heightAfterBuildingSelect, isUserResizing } from './campus-sheet.js';
+import { decorate, decorateLive } from '../utils/season.js';
+import { attachSky, captureSkyLights, refreshSky } from './map-sky.js';
 
 // Fullscreen Mapbox map that fills the Campus tab. The app chrome (header,
 // footer, bottom-nav) floats above it — see components/campus-map.css, which
@@ -15,7 +17,7 @@ import { getSheetHeightPx, heightAfterBuildingSelect, isUserResizing } from './c
 // a threshold returns to the campus overview. Static for now — markers don't
 // reflect live occupancy yet.
 
-const MAPBOX_VERSION = '3.9.1';
+const MAPBOX_VERSION = '3.32.0';
 const CONTAINER_ID = 'search-classrooms-container';
 
 // Milano metro — 4 of 7 campuses and almost every classroom sit here; the
@@ -184,11 +186,18 @@ export function initCampusMap() {
   // flies there and shows its buildings, same motion as tapping that
   // campus's marker directly.
   campusContainer = container;
+  // TEMPORARY: the sky debug panel (components/sky-debug.js)
+  if (new URLSearchParams(location.search).has('skydebug')) {
+    import('./sky-debug.js').then((m) => m.mountSkyDebug());
+  }
   document.addEventListener('campuschange', (e) => {
     if (!map || !mapboxglLib || embed) return;
+    // The view a preview left waiting goes back first, or it would undo this
+    restoreCampusView();
     const campus = campuses().find(c => c.id === e.detail.id);
     if (!campus || typeof campus.lat !== 'number' || typeof campus.long !== 'number') return;
     flyToCampus(mapboxglLib, campus);
+    refreshSky();
   });
 
   // The sheet's own recenter button (shown once `shifted` above goes true) —
@@ -211,6 +220,7 @@ export function initCampusMap() {
   // map itself.
   document.addEventListener('buildingchange', (e) => {
     if (!map || !mapboxglLib || embed) return;
+    restoreCampusView();
     const campus = campuses().find(c => c.id === e.detail.campusId);
     if (!campus) return;
     syncSelectedMarker(e.detail.buildingId);
@@ -241,7 +251,8 @@ export function initCampusMap() {
       deferredBoot(container);
     } else if (map) {
       // Container may have resized (rotation, toolbar) while the tab was hidden.
-      map.resize();
+      resizeIfChanged();
+      restoreCampusView();
     }
   };
 
@@ -394,6 +405,11 @@ async function boot() {
     bearing: startEmbed ? POV[embedPov].bearing : 0,
     maxPitch: 70,
     pitchWithRotate: true,
+    // Sizing is ours (the ResizeObserver in boot(), which also follows window
+    // resizes): Mapbox's own resized the map in the hidden Campus tab every
+    // time the browser's toolbar came or went, down to a 300px-tall fallback
+    // for its 0px-tall box, ~300-450ms each, in the middle of a list scroll.
+    trackResize: false,
     touchPitch: true,
     logoPosition: 'bottom-left',
   });
@@ -514,10 +530,21 @@ async function boot() {
   // background and fills in tiles as they arrive, which is what it looked like
   // before any of this was deferred, only now it fades in instead of popping.
   map.on('style.load', () => {
+    captureSkyLights();
     applyLightPreset();
     el.classList.add('campus-map--ready');
+    // Seasonal decorations painted into the map itself (utils/season.js)
+    decorateLive('map', map, { campuses: classroomsData });
   });
   darkScheme.addEventListener('change', applyLightPreset);
+  // The real sun and weather over the map (components/map-sky.js)
+  attachSky(map, {
+    isShowing: () => isMapTabShowing() && !embed,
+    location: () => {
+      const campus = selectedCampus();
+      return campus ? [campus.long, campus.lat] : INITIAL_CENTER;
+    },
+  });
 
   map.on('load', () => {
     el.classList.add('campus-map--ready');  // belt: a style that loaded without firing style.load
@@ -554,6 +581,7 @@ async function boot() {
 
   // Soft geographic leash: after any move, if the centre has drifted outside
   // Lombardy, ease it back. Doesn't touch pitch, unlike constructor maxBounds.
+  map.on('move', queueCull);
   map.on('moveend', panBackInBounds);
 
   // Re-check "shifted" (see updateShifted() above) after every settle —
@@ -571,7 +599,7 @@ async function boot() {
   // last size; this fires again, with a real one, once it's shown.
   new ResizeObserver(([entry]) => {
     const { width, height } = entry.contentRect;
-    if (map && width && height) map.resize();
+    if (width && height) resizeIfChanged();
   }).observe(el);
 }
 
@@ -643,6 +671,7 @@ function applyLightPreset() {
   } catch {
     /* style not ready or not the Standard style — ignore */
   }
+  refreshSky();
 }
 
 function campuses() {
@@ -688,6 +717,34 @@ function selectedFocus() {
 function clearMarkers() {
   markers.forEach(m => m.remove());
   markers = [];
+}
+
+// Pins well outside the screen are hidden. Mapbox rewrites every marker's
+// transform on every frame of a move, wherever it is, and restyling a pin
+// (its glass plate, name and dot) cost ~0.4ms each on an older phone: 53 pins
+// were most of a pan's frame. A display:none pin costs next to nothing, and
+// nobody can see it. The margin is generous so a pin is back before it reaches
+// the edge, whatever the fling speed.
+const CULL_MARGIN = 200;
+let cullQueued = false;
+
+function cullMarkers() {
+  cullQueued = false;
+  if (!map || !markers.length) return;
+  const canvas = map.getCanvas();
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return; // the tab is hidden: nothing to measure against
+  for (const m of markers) {
+    const p = map.project(m.getLngLat());
+    m.getElement().classList.toggle('map-pin--culled',
+      p.x < -CULL_MARGIN || p.x > w + CULL_MARGIN || p.y < -CULL_MARGIN || p.y > h + CULL_MARGIN);
+  }
+}
+
+function queueCull() {
+  if (cullQueued) return;
+  cullQueued = true;
+  requestAnimationFrame(cullMarkers);
 }
 
 function flyOpts(extra, mobileHeightOverride) {
@@ -833,6 +890,7 @@ function showCampusMarkers(mapboxgl) {
         .addTo(map)
     );
   }
+  queueCull();
 }
 
 function showBuildingMarkers(mapboxgl, campus) {
@@ -846,6 +904,8 @@ function showBuildingMarkers(mapboxgl, campus) {
 
     const el = markerElement('button', { name: b.name, alt: (b.altName || '').trim(), cls: b.secondary ? 'map-pin--secondary' : '' });
     el.dataset.building = b.name;
+    el.dataset.campus = campus.id;
+    decorate('marker', el, { campus, building: b });
     // Selects the building in the sheet's own building page (components/
     // campus-buildings.js) and, via the 'buildingchange' listener above,
     // flies the camera in — same tap-to-drill-in as a building card there.
@@ -860,6 +920,7 @@ function showBuildingMarkers(mapboxgl, campus) {
     );
   }
   syncSelectedMarker();
+  queueCull();
 }
 
 function showError(container) {
@@ -922,6 +983,67 @@ function captureView() {
   };
 }
 
+// Resizes the map only when its canvas doesn't match its element. map.resize()
+// reallocates the canvas and redraws all of it (~300-480ms of an older phone's
+// main thread), and it ran on every switch to the Campus tab: the tab's
+// ResizeObserver reports the same size again whenever the tab is shown, and so
+// did tabvisible. Checked against the canvas itself, not a remembered size, so
+// it can't go stale whoever resized it last.
+function resizeIfChanged() {
+  if (!map || !mapEl) return;
+  const w = mapEl.clientWidth, h = mapEl.clientHeight;
+  if (!w || !h) return;
+  const canvas = map.getCanvas();
+  if (Math.abs(canvas.clientWidth - w) < 1 && Math.abs(canvas.clientHeight - h) < 1) return;
+  map.resize();
+}
+
+// The Campus tab's camera and markers, put back after a preview: right away
+// when the tab is on screen, otherwise left here until it is. Putting them
+// back in a hidden tab jumped the camera and loaded its tiles there, ~20
+// renders over a second that nobody saw, right as the page closed.
+let pendingRestore = null;  // { view } (view null: the tab's usual opening view)
+
+function restoreCampusView() {
+  const pending = pendingRestore;
+  if (!pending || !map) return;
+  pendingRestore = null;
+  const view = pending.view;
+  if (view) {
+    map.jumpTo(view.camera);
+    if (view.mode === 'buildings' && view.campus) showBuildingMarkers(mapboxglLib, view.campus);
+    else showCampusMarkers(mapboxglLib);
+    return;
+  }
+  // Built for the detail page: give the Campus tab its usual opening view.
+  const campus = selectedCampus();
+  if (campus) {
+    map.jumpTo({ ...campusCamera(campus), bearing: 0, padding: mapPadding() });
+    showBuildingMarkers(mapboxglLib, campus);
+  } else {
+    map.jumpTo({ center: INITIAL_CENTER, zoom: INITIAL_ZOOM, pitch: 0, bearing: 0, padding: mapPadding() });
+    showCampusMarkers(mapboxglLib);
+  }
+}
+
+// The preview's rise (below) waits for the map to be on screen: it's embedded
+// ahead of the reader's scroll, and the 1.2s ease played out, rendering every
+// frame of it, while the map was still below the fold.
+let riseObserver = null;
+function riseWhenSeen(fn) {
+  riseObserver?.disconnect();
+  riseObserver = null;
+  const host = embed?.host;
+  if (!host || typeof IntersectionObserver !== 'function') { fn(); return; }
+  riseObserver = new IntersectionObserver((entries) => {
+    if (!entries.some(e => e.isIntersecting)) return;
+    riseObserver.disconnect();
+    riseObserver = null;
+    if (embedActive) fn();
+  }, { threshold: 0.25 });
+  riseObserver.observe(host);
+}
+
 function applyEmbedView() {
   setInteractive(false);
   const key = `${embed.lat},${embed.long}`;
@@ -935,11 +1057,12 @@ function applyEmbedView() {
   showEmbedMarker(mapboxglLib);
   const camera = { ...embedCamera(embedPov), padding: { top: 0, right: 0, bottom: 0, left: 0 } };
   if (reduceMotion.matches || camera.pitch === 0) {
+    riseObserver?.disconnect();
     map.jumpTo(camera);
   } else {
     // Settle in from a flatter angle so the tilt reads as the map rising.
     map.jumpTo({ ...camera, pitch: 25 });
-    map.easeTo({ pitch: camera.pitch, duration: 1200 });
+    riseWhenSeen(() => map.easeTo({ pitch: camera.pitch, duration: 1200 }));
   }
 }
 
@@ -954,12 +1077,16 @@ export async function embedMap(host, { lat, long, building, siblings }) {
   if (token !== embedToken || !map || !embed) return false;
 
   if (!embedActive) {
-    // A map built by this very request has no campus view of its own yet.
-    savedView = createdForEmbed ? null : captureView();
+    // A map built by this very request has no campus view of its own yet, and
+    // one a previous preview left waiting (the tab not shown since) is the one
+    // to come back to: the camera is still on that preview's building.
+    if (pendingRestore) savedView = pendingRestore.view;
+    else savedView = createdForEmbed ? null : captureView();
+    pendingRestore = null;
     embedActive = true;
   }
   placeEl();
-  map.resize();
+  resizeIfChanged();
   applyEmbedView();
   return true;
 }
@@ -981,6 +1108,11 @@ export function releaseMap() {
   embedToken++;
   if (!embed) return;
   embed = null;
+  riseObserver?.disconnect();
+  riseObserver = null;
+  // Hidden, the tab gets its sky (and the camera, below) when it's shown
+  const showing = isMapTabShowing();
+  if (showing) requestAnimationFrame(refreshSky);
   if (!map) return;  // still booting: boot() sees `embed` gone and builds for the tab
   if (!embedActive && !createdForEmbed) return;  // preview never took over this map
 
@@ -988,28 +1120,14 @@ export function releaseMap() {
   embedShownKey = null;
   setInteractive(true);
   placeEl();
-  // Back in a tab that's hidden unless it's Campus: see the ResizeObserver in
-  // boot(), which sizes it once the tab shows.
-  if (mapEl.clientWidth && mapEl.clientHeight) map.resize();
-
-  const view = savedView;
+  pendingRestore = { view: savedView };
   savedView = null;
   createdForEmbed = false;
-  if (view) {
-    map.jumpTo(view.camera);
-    if (view.mode === 'buildings' && view.campus) showBuildingMarkers(mapboxglLib, view.campus);
-    else showCampusMarkers(mapboxglLib);
-    return;
-  }
-  // Built for the detail page: give the Campus tab its usual opening view.
-  const campus = selectedCampus();
-  if (campus) {
-    map.jumpTo({ ...campusCamera(campus), bearing: 0, padding: mapPadding() });
-    showBuildingMarkers(mapboxglLib, campus);
-  } else {
-    map.jumpTo({ center: INITIAL_CENTER, zoom: INITIAL_ZOOM, pitch: 0, bearing: 0, padding: mapPadding() });
-    showCampusMarkers(mapboxglLib);
-  }
+  if (!showing) return;
+  // Back in the Campus tab on screen: see the ResizeObserver in boot(), which
+  // sizes it otherwise once the tab shows.
+  resizeIfChanged();
+  restoreCampusView();
 }
 
 export const getEmbedPov = () => embedPov;

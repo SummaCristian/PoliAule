@@ -54,6 +54,26 @@ export function escapeHtml(str) {
   ));
 }
 
+/**
+ * Turns HTML entities in a string back into the characters they stand for
+ * ("dell&#39;atti" -> "dell'atti"). PoliMi's occupancy page ships some course
+ * names already entity-encoded, and the scrape stores them as-is; escapeHtml
+ * would then escape the `&` again and the entity would show up literally.
+ * Decode first, escape once on the way into innerHTML. Only entities are
+ * touched (numeric ones and the few named ones that turn up): parsing the
+ * whole string as HTML would also swallow a literal "<…>" in a name.
+ */
+const NAMED_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+export function decodeEntities(str) {
+  const s = String(str);
+  if (!s.includes('&')) return s;
+  return s.replace(/&(?:#(\d+)|#x([0-9a-f]+)|([a-z]+));/gi, (m, dec, hex, name) => {
+    if (name) return NAMED_ENTITIES[name.toLowerCase()] ?? m;
+    const code = dec ? Number(dec) : parseInt(hex, 16);
+    return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m;
+  });
+}
+
 // Splits a query into lowercase words, same rule as classroom-search-data.js's
 // tokenize(). Reimplemented locally (rather than imported) to avoid an import
 // cycle: that module pulls in components/classroom-list.js, which imports this

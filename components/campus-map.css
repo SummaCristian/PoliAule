@@ -17,9 +17,14 @@
    .tab-content` / `body.info-open .tab-content`), they don't remove the
    class. Without the `:not(:has(...))` guards below, this lock stayed
    active behind those overlays too, leaving their (normal, in-flow) pages
-   unscrollable. */
-html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)),
-html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)) body {
+   unscrollable.
+
+   `html.campus-tab` is set with that `.visible` (components/bottom-nav.js),
+   and the guards only look at <html>'s direct child: a :has() that can
+   match deeper makes Chrome re-check <html> after DOM changes anywhere in
+   the page, restyling all of it every time. */
+html.campus-tab:not(:has(> body.detail-open, > body.info-open)),
+html.campus-tab:not(:has(> body.detail-open, > body.info-open)) body {
   touch-action: none;
   overscroll-behavior: none;
 
@@ -32,8 +37,8 @@ html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:
   scrollbar-width: none;
 }
 
-html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open))::-webkit-scrollbar,
-html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:has(body.info-open)) body::-webkit-scrollbar {
+html.campus-tab:not(:has(> body.detail-open, > body.info-open))::-webkit-scrollbar,
+html.campus-tab:not(:has(> body.detail-open, > body.info-open)) body::-webkit-scrollbar {
   display: none;
 }
 
@@ -77,6 +82,16 @@ html:has(#search-classrooms-container.visible):not(:has(body.detail-open)):not(:
   --campus-map-overshoot: 80px;
 }
 
+/* No padding, shown or hidden. `.tab-content`'s 1rem applied while the tab
+   was hidden, and its padding-left transition eased it out over 0.5s as the
+   tab showed: the map widened 395 -> 411px across a few frames, and Mapbox
+   reallocated and redrew its canvas on each of them (~300-450ms apiece on an
+   older phone), on every switch to this tab. */
+#search-classrooms-container {
+  padding: 0;
+  transition: none;
+}
+
 #search-classrooms-container.visible {
   position: relative;
   flex: none;
@@ -118,13 +133,6 @@ body.info-open #search-classrooms-container.visible {
 
 @media (prefers-reduced-motion: reduce) {
   #search-classrooms-container.visible { animation: none; }
-}
-
-/* Keep the chrome painted above the fixed map. Header (z 1000) and bottom-nav
-   (z 20) already clear it; the footer is statically positioned, so lift it. */
-html:has(#search-classrooms-container.visible) .footer {
-  position: relative;
-  z-index: 5;
 }
 
 .campus-map {
@@ -380,7 +388,7 @@ html:has(#search-classrooms-container.visible) .footer {
    later in the file, which would otherwise win the tie and blow this tiny
    24px badge's icon up to the big controls' 1.375rem size. */
 .campus-map .mapboxgl-ctrl-attrib-button .mapboxgl-ctrl-icon .hgi-stroke {
-  font-size: 0.85rem;
+  font-size: var(--text-85);
   line-height: 1;
   color: var(--text-color-secondary);
 }
@@ -564,7 +572,7 @@ html:has(#search-classrooms-container.visible) .footer {
 }
 
 .campus-map .mapboxgl-ctrl-icon .hgi-stroke {
-  font-size: 1.375rem;
+  font-size: var(--text-150);
   /* Mapbox's own base CSS sets a fixed `line-height: 20px` on `.mapboxgl-map`
      (its default 12px/20px font shorthand), inherited all the way down here.
      Against a 1.375rem (22px) glyph that mismatched line-height pushed the
@@ -682,7 +690,7 @@ html:has(#search-classrooms-container.visible) .footer {
 }
 
 .map-pin__name {
-  font-size: 1.0625rem;
+  font-size: var(--text-110);
   font-weight: 850;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -693,7 +701,7 @@ html:has(#search-classrooms-container.visible) .footer {
   max-width: 100%;
   margin-top: 1px;
   overflow: hidden;
-  font-size: 0.71875rem;
+  font-size: var(--text-75);
   font-weight: 800;
   line-height: 1.15;
   color: var(--text-color-secondary);
@@ -719,7 +727,7 @@ html:has(#search-classrooms-container.visible) .footer {
 }
 
 .map-pin--campus .map-pin__name {
-  font-size: 0.9375rem;
+  font-size: var(--text-90);
   font-weight: 800;
   letter-spacing: 0;
 }
@@ -752,12 +760,12 @@ html:has(#search-classrooms-container.visible) .footer {
 }
 
 .map-pin--secondary .map-pin__name {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
   font-weight: 800;
 }
 
 .map-pin--secondary .map-pin__alt {
-  font-size: 0.5625rem;
+  font-size: var(--text-60);
 }
 
 .map-pin--secondary .map-pin__dot {
@@ -770,7 +778,7 @@ html:has(#search-classrooms-container.visible) .footer {
 }
 
 .map-pin--campus.map-pin--secondary .map-pin__name {
-  font-size: 0.75rem;
+  font-size: var(--text-75);
 }
 
 /* The building open in the sheet (or shown by the detail page): accent glass,
@@ -832,4 +840,10 @@ html:has(#search-classrooms-container.visible) .footer {
 .map-pin--dim .map-pin__dot {
   --pin-dot: var(--text-color-secondary);
   opacity: 0.8;
+}
+
+/* Off-screen pins (cullMarkers() in campus-map.js): hidden, so Mapbox's per-frame
+   transform writes to them restyle nothing. */
+.map-pin--culled {
+  display: none;
 }

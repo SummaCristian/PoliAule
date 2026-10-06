@@ -137,7 +137,7 @@ body {
   transition: none;
 }
 
-/* Hide tab contents and footer while the detail panel is open */
+/* Hide tab contents while the detail panel is open */
 body.detail-open .tab-content {
   visibility: hidden;
   position: absolute;
@@ -158,21 +158,20 @@ body.detail-open .tab-content {
   right: 0;
 }
 
-body.detail-open .footer {
-  visibility: hidden;
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
+/* Hold the hidden tab while the detail panel is open. Its contents are skipped
+   rather than restyled: content-visibility: hidden keeps the subtree's styles
+   and layout as they were and stops sampling the animations inside it.
 
-/* Hold background animations while the detail panel is open to save CPU/GPU.
-   Paused, not `animation: none`: lifting a `none` restarts every animation it
-   covered, so closing the page used to replay the tab's own entrance (`appear`,
-   an 8px blur and a scale over the whole list) underneath the closing zoom,
-   repainting the list's snapshot on every frame of it. Paused, they carry on
-   from where they were, which for all of them is long finished. */
-body.detail-open .tab-content,
-body.detail-open .tab-content * {
+   It used to be `.tab-content *` with paused animations and no transitions,
+   and a rule ending in `*` keyed on a class of <body> restyled every element
+   of the list (~1000) the moment the class went on, in the middle of the
+   open's update callback.
+
+   The tab itself is still paused, not `animation: none`: lifting a `none`
+   restarts the animation, so closing the page used to replay the tab's own
+   entrance (`appear`) underneath the closing zoom. */
+body.detail-open .tab-content {
+  content-visibility: hidden;
   animation-play-state: paused !important;
   transition: none !important;
 }
@@ -564,10 +563,12 @@ body.detail-open .tab-content * {
   padding: 0.375rem 0.875rem;
   border-radius: var(--radius-lg);
 
-  /* Clear glass container (Vitrium's .lg-glass--clear material). */
-  background: var(--lg-tint-clear);
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  /* Regular glass (Vitrium's .lg-glass material), not clear: its tint is
+     dense enough that the text only has to stand out against the glass, in
+     the theme's own colours, whatever photo is behind it. */
+  background: var(--lg-tint);
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+  backdrop-filter: blur(var(--lg-blur-md));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -596,7 +597,6 @@ body.detail-open .tab-content * {
   font-weight: 700;
   color: var(--text-color-secondary);
   transition: color 0.6s ease;
-  opacity: 0.65;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 0.1rem;
@@ -609,18 +609,14 @@ body.detail-open .tab-content * {
   letter-spacing: 0.05em;
 }
 
-/* The status colors are tuned for flat surfaces; over the colorful glass they
-   wash out (green worst). Push each toward black on a light backdrop and white
-   on a dark one so it keeps its hue but gains contrast. Full opacity, too.
-   Which one is decided by data-title-tone (see _applyTitleTone in
-   classroom-detail.js), the same computation as the title. It also picks which
-   theme's status tokens to start from (below). Without it (no photo, or not
-   read yet) it falls back to the system color scheme. */
+/* The status colors are tuned for flat surfaces and are too light to read on
+   the light glass (which can be as dark as luminance ~0.45 over a dark photo).
+   Light theme: the same hue held at OKLCH lightness 0.40 at most (4.5:1 down
+   to that), dark theme: mixed toward white. Browsers without relative color
+   syntax get a plain mix toward black. */
 .detail-status-wrapper .classroom-status-txt {
   --status-base: var(--text-color-primary);
-  --status-mix: black;
-  --status-keep: 82%;
-  color: color-mix(in srgb, var(--status-base) var(--status-keep), var(--status-mix));
+  color: color-mix(in srgb, var(--status-base) 50%, black);
 }
 
 .detail-status-wrapper .classroom-status-txt.free { --status-base: var(--color-status-free); }
@@ -628,47 +624,26 @@ body.detail-open .tab-content * {
 .detail-status-wrapper .classroom-status-txt.occupied-soon { --status-base: var(--color-status-partial); }
 .detail-status-wrapper .classroom-status-txt.occupied { --status-base: var(--color-status-busy); }
 
-@media (prefers-color-scheme: dark) {
+@supports (color: oklch(from red l c h)) {
   .detail-status-wrapper .classroom-status-txt {
-    --status-mix: white;
-    --status-keep: 85%;
+    color: oklch(from var(--status-base) min(l, 0.4) calc(c * 1.1) h);
   }
 }
 
-/* Light backdrop → the light theme's tokens (:root in style.css and
-   Vitrium's tokens.css), dark backdrop → the dark theme's. Scoped to the
-   wrapper so nothing else sees them. */
-#classroom-detail-overlay[data-title-tone="light"] .detail-status-wrapper {
-  --color-status-free: #2a9e47;
-  --color-status-free-soon: #5a7a10;
-  --color-status-partial: #f0b429;
-  --color-status-busy: #e53935;
-  --text-color-primary: #1A1A1A;
-}
-
-#classroom-detail-overlay[data-title-tone="light"] .detail-status-wrapper .classroom-status-txt {
-  --status-mix: black;
-  --status-keep: 82%;
-}
-
-#classroom-detail-overlay[data-title-tone="dark"] .detail-status-wrapper {
-  --color-status-free: #3ce065;
-  --color-status-free-soon: color-mix(in srgb, #3ce065 70%, #f5a623);
-  --color-status-partial: #f5a623;
-  --color-status-busy: #ff5252;
-  --text-color-primary: #EAEAEA;
-}
-
-#classroom-detail-overlay[data-title-tone="dark"] .detail-status-wrapper .classroom-status-txt {
-  --status-mix: white;
-  --status-keep: 85%;
-}
-
-/* Mixing toward black/white dulls the color; put the chroma back with a boost
-   in OKLCH. Browsers without relative color syntax keep the plain mix above. */
-@supports (color: oklch(from red l c h)) {
+@media (prefers-color-scheme: dark) {
   .detail-status-wrapper .classroom-status-txt {
-    color: oklch(from color-mix(in oklch, var(--status-base) var(--status-keep), var(--status-mix)) l calc(c * 1.3) h);
+    color: color-mix(in srgb, var(--status-base) 85%, white);
+  }
+
+  @supports (color: oklch(from red l c h)) {
+    .detail-status-wrapper .classroom-status-txt {
+      color: oklch(from color-mix(in oklch, var(--status-base) 85%, white) l calc(c * 1.3) h);
+    }
+  }
+
+  /* Muted, but not so far that a bright photo through the glass swallows it. */
+  .detail-status-label {
+    opacity: 0.85;
   }
 }
 
@@ -736,35 +711,32 @@ body.detail-open .tab-content * {
 }
 
 .detail-title {
-  font-size: 1.875rem;
+  font-size: calc(1.875rem * var(--title-fit, 1)); /* --title-fit: _fitTitle */
   font-weight: 700;
   margin: 0;
-  color: var(--text-color-primary);
+  /* --title-ink: the colour over the photo; the pin animation (below) hands
+     over to the theme's own once the title is in its glass. */
+  color: var(--title-ink, var(--text-color-primary));
   transition: color 0.6s ease;
   user-select: none;
 }
 
 /* Black or white per photo (see _applyTitleTone in classroom-detail.js). */
 #classroom-detail-overlay[data-title-tone="light"] .detail-title {
-  color: #111;
+  --title-ink: #111;
 }
 
 #classroom-detail-overlay[data-title-tone="dark"] .detail-title {
-  color: #fff;
+  --title-ink: #fff;
 }
 
-/* The subtitle and the status label follow the same choice, slightly softened
-   to stay secondary. */
-#classroom-detail-overlay[data-title-tone="light"] .detail-subtitle,
-#classroom-detail-overlay[data-title-tone="light"] .detail-status-label {
+/* The subtitle follows the same choice, slightly softened to stay secondary. */
+#classroom-detail-overlay[data-title-tone="light"] .detail-subtitle {
   color: rgba(17, 17, 17, 0.8);
-  opacity: 1; /* the label's own 0.65 would stack on the alpha above */
 }
 
-#classroom-detail-overlay[data-title-tone="dark"] .detail-subtitle,
-#classroom-detail-overlay[data-title-tone="dark"] .detail-status-label {
+#classroom-detail-overlay[data-title-tone="dark"] .detail-subtitle {
   color: rgba(255, 255, 255, 0.8);
-  opacity: 1;
 }
 
 .detail-stats {
@@ -948,7 +920,9 @@ body.detail-open .tab-content * {
 
 .detail-title-row {
   display: flex;
-  align-items: center;
+  /* Top, not centre: a wrapped title keeps the badge level with its first
+     line, and the stuck pill (one line in a taller row) beside the back button. */
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
   min-height: 3rem;
@@ -971,20 +945,28 @@ body.detail-open .tab-content * {
   pointer-events: auto;
 }
 
+/* The badge keeps its size; the title gives up the room instead. */
+.detail-title-row > .detail-status-wrapper {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .detail-title {
   position: relative;
   display: block;
   min-width: 0;
-  height: 3rem;
-  line-height: 3rem;
-  padding: 0 0.875rem;
+  /* A long name wraps, stuck or not. One line is still 3rem: the line plus
+     equal padding above and below, both following --title-fit (_fitTitle). */
+  line-height: calc(2.25rem * var(--title-fit, 1));
+  padding: calc((3rem - 2.25rem * var(--title-fit, 1)) / 2) 0.875rem;
   margin-left: -0.875rem; /* text stays on the page gutter until stuck */
-  border-radius: var(--radius-pill);
-  white-space: nowrap;
+  /* Round on one line, a rounded rectangle once wrapped (a full pill radius
+     would cut into the text's corners). */
+  border-radius: min(var(--radius-pill), 1.5rem);
+  overflow-wrap: break-word;
   overflow: hidden;
-  text-overflow: ellipsis;
   transition:
-    margin-left 0.35s var(--lg-ease-spring, ease),
+    translate 0.35s var(--lg-ease-spring, ease),
     background-color 0.25s ease,
     box-shadow 0.25s ease,
     color 0.6s ease;
@@ -1018,59 +1000,160 @@ body.detail-open .tab-content * {
   pointer-events: none;
 }
 
-#classroom-detail-overlay.title-stuck .detail-title {
-  /* Slide to just right of the back button; --title-shift is measured in
-     classroom-detail.js (syncTitleStuck). */
-  margin-left: var(--title-shift, 3.25rem);
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
+/* The pin: as the page scrolls, the title travels from its place over the
+   photo into a glass pill beside the back button, arriving as its row sticks.
+   Scrubbed by the scroll (no JS per frame), over 0 → --title-pin-at, the
+   scroll at which the row sticks. All of it is measured by _measurePin in
+   classroom-detail.js with the page at rest:
+   - The title only moves and scales (--pin-dx/-dy/-k, about its text's
+     top-left corner): its layout never changes, so its lines never re-wrap
+     mid-scroll, and pinned it reads as the same text, smaller.
+   - The glass is the row's ::before, not the title's: scaled with the title
+     it would shrink to ~2rem beside the 3rem back button. It sits at the
+     pill's box (--pill-*) and starts transformed onto the title's resting box
+     (--pill-from-*), fading in. A transform, not an animated left/top/width/
+     height: those run on the main thread and trailed the text, whose
+     transform the compositor moves with the scroll, by a frame.
+   - The text hands over from its photo colour to the theme's early, once the
+     glass behind it is dense enough to read it against. */
+@supports (animation-timeline: scroll()) {
+  .detail-title {
+    transform-origin: 0.875rem calc((3rem - 2.25rem * var(--title-fit, 1)) / 2);
+    animation: detail-title-pin linear both, detail-title-ink linear both;
+    animation-timeline: scroll(root block), scroll(root block);
+    animation-range: 0 var(--title-pin-at, 150px), 0 var(--title-pin-at, 150px);
+  }
+
+  .detail-title-row::before,
+  .detail-title-row::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: var(--pill-x, 0);
+    top: var(--pill-y, 0);
+    width: var(--pill-w, 0);
+    height: var(--pill-h, 0);
+    border-radius: 1.5rem;
+    transform-origin: 0 0;
+    pointer-events: none;
+    /* At rest the pill isn't there: without its animation (a scroll timeline
+       that has nothing to scroll is inactive) it stays hidden instead of
+       showing at its pinned spot. */
+    opacity: 0;
+    animation: detail-title-glass linear both, detail-title-glass-corners linear both;
+    animation-timeline: scroll(root block), scroll(root block);
+    animation-range: 0 var(--title-pin-at, 150px), 0 var(--title-pin-at, 150px);
+  }
+
+  .detail-title-row::before {
+    background: var(--lg-tint);
+    -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+    backdrop-filter: blur(var(--lg-blur-sm));
+    box-shadow:
+      0 0 0 0.1px var(--lg-outline),
+      var(--lg-highlight),
+      0 4px 40px 0 var(--lg-shadow-color);
+  }
+
+  /* Outside 0.5px gradient stroke, as on the other glass here. */
+  .detail-title-row::after {
+    margin: -0.5px;
+    padding: 0.5px;
+    background: var(--lg-stroke-gradient);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation-name: detail-title-stroke, detail-title-glass-corners;
+  }
 }
 
-/* The glass sits on a child layer: the title itself clips (overflow: hidden,
-   for the ellipsis), and a backdrop-filter on a clipping element can fail to
-   sample what is behind it. */
-#classroom-detail-overlay.title-stuck .detail-title::before {
-  background: var(--lg-tint);
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-  backdrop-filter: blur(var(--lg-blur-sm));
+@keyframes detail-title-pin {
+  to { transform: translate(var(--pin-dx, 0), var(--pin-dy, 0)) scale(var(--pin-k, 1)); }
 }
 
-#classroom-detail-overlay.title-stuck .detail-title::after {
-  opacity: var(--lg-stroke-opacity);
+/* The glass is dense by 30% of the way and the colour switches at once at
+   12% (no blend through grey): the photo's colour (often white) is wrong on
+   light glass and the theme's (dark, in light mode) is wrong on the photo, so
+   the stretch where neither reads well is kept short and early. */
+@keyframes detail-title-ink {
+  0%, 12% { color: var(--title-ink, var(--text-color-primary)); }
+  12.01%, 100% { color: var(--text-color-primary); }
 }
 
-/* The photo-tone colours are for text over the photo; the pill sits over
-   scrolled content, so back to the theme's own. */
-#classroom-detail-overlay.title-stuck[data-title-tone] .detail-title {
-  color: var(--text-color-primary);
+@keyframes detail-title-glass {
+  from {
+    transform: translate(var(--pill-from-x, 0), var(--pill-from-y, 0)) scale(var(--pill-from-sx, 1), var(--pill-from-sy, 1));
+    opacity: 0;
+  }
+  30% { opacity: 1; }
+  to { transform: none; opacity: 1; }
 }
 
-/* Same for the status badge: back to the system theme's tokens and label
-   colour instead of the photo-tone ones. */
-#classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-wrapper {
-  --color-status-free: unset;
-  --color-status-free-soon: unset;
-  --color-status-partial: unset;
-  --color-status-busy: unset;
-  --text-color-primary: unset;
+@keyframes detail-title-stroke {
+  from {
+    transform: translate(var(--pill-from-x, 0), var(--pill-from-y, 0)) scale(var(--pill-from-sx, 1), var(--pill-from-sy, 1));
+    opacity: 0;
+  }
+  30% { opacity: var(--lg-stroke-opacity); }
+  to { transform: none; opacity: var(--lg-stroke-opacity); }
 }
 
-#classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-wrapper .classroom-status-txt {
-  --status-mix: black;
-  --status-keep: 82%;
+/* The scale above stretches the corners as much as the box: start them
+   squeezed by the same factors, so they look round all the way. In an
+   animation of its own, so the one with the transform and opacity holds only
+   properties the compositor can run. */
+@keyframes detail-title-glass-corners {
+  from {
+    border-radius: calc(1.5rem / var(--pill-from-sx, 1)) / calc(1.5rem / var(--pill-from-sy, 1));
+  }
 }
 
-#classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-label {
-  color: var(--text-color-secondary);
-  opacity: 0.65;
-}
+/* Without scroll-driven animations: the title snaps into its pill once the
+   row sticks (.title-stuck, from classroom-detail.js), as before. */
+@supports not (animation-timeline: scroll()) {
+  /* Stuck, the title is narrower (it slides past the back button) and can wrap
+     onto more lines; the row keeps its unstuck height (--title-row-h, measured
+     in syncTitleStuck) and lets the pill overflow it, so the content below
+     doesn't jump. */
+  #classroom-detail-overlay.title-stuck .detail-title-row {
+    height: var(--title-row-h, 3rem);
+  }
 
-@media (prefers-color-scheme: dark) {
-  #classroom-detail-overlay.title-stuck[data-title-tone] .detail-status-wrapper .classroom-status-txt {
-    --status-mix: white;
-    --status-keep: 85%;
+  #classroom-detail-overlay.title-stuck .detail-title {
+    /* Smaller, so a long name wraps onto a line or two rather than breaking
+       mid-word; one line is still 3rem. */
+    font-size: calc(1.25rem * var(--title-fit, 1));
+    line-height: calc(1.5rem * var(--title-fit, 1));
+    padding-block: calc((3rem - 1.5rem * var(--title-fit, 1)) / 2);
+    /* Slide to just right of the back button; --title-shift is measured in
+       classroom-detail.js (syncTitleStuck). The width it gives up (margin-right)
+       applies at once and only the translate springs: springing a margin
+       re-wraps the text on every frame of the overshoot. */
+    margin-right: calc(var(--title-shift, 3.25rem) + 0.875rem);
+    translate: calc(var(--title-shift, 3.25rem) + 0.875rem) 0;
+    box-shadow:
+      0 0 0 0.1px var(--lg-outline),
+      var(--lg-highlight),
+      0 4px 40px 0 var(--lg-shadow-color);
+  }
+
+  /* The glass sits on a child layer: the title itself clips (overflow: hidden),
+     and a backdrop-filter on a clipping element can fail to
+     sample what is behind it. */
+  #classroom-detail-overlay.title-stuck .detail-title::before {
+    background: var(--lg-tint);
+    -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+    backdrop-filter: blur(var(--lg-blur-sm));
+  }
+
+  #classroom-detail-overlay.title-stuck .detail-title::after {
+    opacity: var(--lg-stroke-opacity);
+  }
+
+  /* The photo-tone colours are for text over the photo; the pill sits over
+     scrolled content, so back to the theme's own. */
+  #classroom-detail-overlay.title-stuck[data-title-tone] .detail-title {
+    color: var(--text-color-primary);
   }
 }
 
@@ -1080,6 +1163,51 @@ body.detail-open .tab-content * {
   max-width: 680px;
   margin: 0 auto;
   text-align: left;
+}
+
+/* Shell first (see _revealContent() in classroom-detail.js): the open's
+   zoom carries only the photo and the header, the sections are left out of
+   layout until it has landed, then rise into place one after the other.
+
+   Skipped, not display: none, and a screen tall: the page has to stay
+   scrollable meanwhile. The photo's shrink and the title's pin are driven by
+   the page's scroll, and a scroll timeline on a page that can't scroll is
+   inactive: with the browser's toolbar hidden the shell alone was exactly a
+   screen tall, and the zoom showed the photo at its unshrunk height (the
+   header lower than where it lands) and the title's pill glass at full
+   opacity. */
+.detail-content--deferred {
+  content-visibility: hidden;
+  contain-intrinsic-block-size: 100lvh;
+}
+
+/* A rise from well below, slow and soft: the cards come up from the bottom
+   of the screen, where they are, rather than popping in place. The fade is
+   quicker than the travel, so they are solid for most of the way up. */
+.detail-content--enter > .detail-column > .detail-section {
+  animation:
+    detail-section-rise 1s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+    detail-section-fade 0.45s ease-out backwards;
+  animation-delay: calc(var(--section-i, 0) * 60ms);
+}
+
+/* The chips wait for their card to be mostly up */
+.detail-content--enter .detail-feature-chip--enter {
+  animation-delay: calc(0.3s + var(--i, 0) * 45ms);
+}
+
+@keyframes detail-section-rise {
+  from { transform: translateY(min(40vh, 320px)) scale(0.94); }
+}
+
+@keyframes detail-section-fade {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-content--enter > .detail-column > .detail-section {
+    animation: none;
+  }
 }
 
 .detail-subtitle {
@@ -1363,7 +1491,7 @@ body.detail-open .tab-content * {
 
 .detail-events-only .hgi-stroke {
   flex: none;
-  font-size: 1.5rem;
+  font-size: var(--text-150);
   color: color-mix(in oklch, var(--color-status-partial) 75%, black);
 }
 
@@ -1385,6 +1513,24 @@ body.detail-open .tab-content * {
   .detail-events-only .hgi-stroke {
     color: var(--color-status-partial);
   }
+}
+
+/* Graduation days at the room's campus (see _renderContent): the same note in
+   graduation's navy, whatever the accent is that day */
+.detail-graduation {
+  --graduation-tint: #3d63b3;
+  background: color-mix(in srgb, var(--graduation-tint) 18%, var(--lg-tint-clear));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--graduation-tint) 40%, transparent),
+    var(--lg-highlight),
+    0 4px 24px 0 var(--lg-shadow-color);
+}
+
+.detail-graduation .hgi-stroke { color: var(--graduation-tint); }
+
+@media (prefers-color-scheme: dark) {
+  .detail-graduation { --graduation-tint: #8eabff; }
+  .detail-graduation .hgi-stroke { color: var(--graduation-tint); }
 }
 
 /* ── Weekly Schedule ─────────────────────────────────────────────── */
@@ -1489,7 +1635,7 @@ body.detail-open .tab-content * {
     color: white;
     border-radius: var(--radius-pill);
     padding: 3px 10px;
-    font-size: var(--text-72);
+    font-size: var(--text-75);
     font-weight: 800;
     white-space: nowrap;
     cursor: default;
@@ -1531,12 +1677,10 @@ body.detail-open .tab-content * {
   0% {
     opacity: 0;
     transform: translateX(-10px) scale(0.75);
-    filter: blur(4px);
   }
   100% {
     opacity: 1;
     transform: translateX(0) scale(1);
-    filter: blur(0);
   }
 }
 
@@ -1892,7 +2036,7 @@ body.detail-open .tab-content * {
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 18%, transparent);
   border-radius: var(--radius-sm);
   padding: 3px 8px;
-  font-size: var(--text-72);
+  font-size: var(--text-75);
   font-weight: bold;
   white-space: nowrap;
   box-shadow: var(--shadow);
@@ -1955,11 +2099,11 @@ body.detail-open .tab-content * {
 
 .detail-schedule-tick--quarter {
   opacity: 0.4;
-  font-size: 0.5rem;
+  font-size: var(--text-60);
 }
 
 .detail-schedule-tick span {
-  font-size: 0.6rem;
+  font-size: var(--text-60);
   color: var(--text-color-secondary);
   font-weight: 600;
 }
@@ -2022,7 +2166,7 @@ body.detail-open .tab-content * {
     color: white;
     border-radius: var(--radius-pill);
     padding: 2px 10px;
-    font-size: var(--text-72);
+    font-size: var(--text-75);
     font-weight: 800;
     white-space: nowrap;
     box-shadow: var(--glow-accent);
@@ -2145,24 +2289,20 @@ body.detail-open .tab-content * {
     0% {
       opacity: 0;
       transform: translateX(-40px) translateY(-50%) scale(0, 0);
-      filter: blur(16px);
       animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
     25% {
       opacity: 1;
       transform: translateX(0) translateY(-50%) scale(0.85, 0.25);
-      filter: blur(2px);
       animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     75% {
       transform: translateX(0) translateY(-50%) scale(1.06, 1.08);
-      filter: blur(0);
       animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
     100% {
       opacity: 1;
       transform: translateX(0) translateY(-50%) scale(1, 1);
-      filter: blur(0);
     }
   }
 
@@ -2217,12 +2357,10 @@ body.detail-open .tab-content * {
     from {
       opacity: 0;
       transform: scaleX(0.85) scaleY(0.85);
-      filter: blur(4px);
     }
     to {
       opacity: 1;
       transform: scaleX(1) scaleY(1);
-      filter: blur(0);
     }
   }
 
@@ -2434,14 +2572,15 @@ body.detail-open .tab-content * {
    frame of the zoom, and that repaint is what the slower engines can't keep
    up with. So, for those ~0.4s:
    - entrance animations are held at their first frame and let go when the
-     zoom lands (the photo's scroll-driven shrink is left alone: it sits at 0
-     anyway, and pausing a scroll timeline is asking for trouble);
+     zoom lands (the photo's scroll-driven shrink and the title's pin are left
+     alone: they sit at 0 anyway, and pausing a scroll timeline is asking for
+     trouble);
    - transitions snap, so the snapshot shows the settled state;
    - glass loses its backdrop-filter but keeps its tint. Over the page's
      near-flat background the blur shows almost nothing, and Safari composites
      backdrop-filter live even inside a snapshot, at the snapshot's original
      size, ignoring the zoom (the same bug as .header-ctl-vt above). */
-#classroom-detail-overlay.detail-vt-freeze *:not(.detail-photo-container.loaded) {
+#classroom-detail-overlay.detail-vt-freeze *:not(.detail-photo-container.loaded, .detail-title) {
   animation-play-state: paused !important;
 }
 

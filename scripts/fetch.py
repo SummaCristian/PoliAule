@@ -316,7 +316,7 @@ def build_output(
     result = []
     rest_calls = 0
     for campus in campuses:
-        campus_out = {**_pick(campus, "name", "id", "lat", "long"), "buildings": []}
+        campus_out = {**_pick(campus, "name", "id", "lat", "long", "secondary"), "buildings": []}
         resolved = _resolved_csic(campus)
         page = pages.get(resolved) if resolved else None
         page_failed = page is None
@@ -325,7 +325,7 @@ def build_output(
 
         for building in campus["buildings"]:
             building_out = {
-                **_pick(building, "name", "altName", "lat", "long", "idEdificio", "address"),
+                **_pick(building, "name", "altName", "lat", "long", "idEdificio", "address", "secondary"),
                 "classrooms": [],
             }
             for classroom in building["classrooms"]:
@@ -350,7 +350,8 @@ def build_output(
                 building_out["classrooms"].append(
                     {
                         **_pick(classroom, "name", "id", "floor", "features",
-                                "idfoto", "seats", "accessible_seats", "workstations"),
+                                "idfoto", "seats", "accessible_seats", "workstations",
+                                "eventsOnly", "noSchedule"),
                         "occupancy": occupancy,
                     }
                 )
@@ -479,6 +480,27 @@ def summarize(
     return ("failed" if anomaly else "ok"), "\n".join(lines)
 
 
+def keep_previous_timestamp(output: dict, path: Path) -> bool:
+    """Give `output` the previous file's generated_at if nothing else changed.
+
+    The workflow downloads the previous run's day files from R2 first. R2's ETag
+    is the MD5 of the bytes, so a day rewritten byte for byte keeps its ETag and
+    the frontend's If-None-Match revalidation gets a 304 instead of the whole
+    file every hour. Returns whether the previous timestamp was kept.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            previous = json.load(f)
+    except (OSError, ValueError):
+        return False
+    if not isinstance(previous, dict) or "generated_at" not in previous:
+        return False
+    if {**previous, "generated_at": None} != {**output, "generated_at": None}:
+        return False
+    output["generated_at"] = previous["generated_at"]
+    return True
+
+
 def cleanup_old_files():
     """Delete occupation files whose date is before today."""
     today = date.today()
@@ -585,6 +607,8 @@ def run(args, log: dict) -> None:
 
             # Create output file and write JSON
             out_path = OUTPUT_DIR / f"occupation_{d.strftime('%Y%m%d')}.json"
+            if keep_previous_timestamp(output, out_path):
+                print("  Unchanged since the previous run, keeping its generated_at.")
             with open(out_path, "w", encoding="utf-8") as f:
                 json.dump(output, f, ensure_ascii=False, indent=2)
             print(f"  Written to {out_path}")

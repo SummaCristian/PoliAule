@@ -12,14 +12,9 @@ try {
   localStorage.removeItem('poliAule_blurBenchmark');
 } catch { /* storage unavailable */ }
 
-const h = location.hostname;
-const envLabel = h === 'beta.poliaule.com' ? 'Beta'
-               : h === 'dev.poliaule.com'  ? 'Dev'
-               : h === 'poliaule.com'      ? null
-               :                             'Local';
-if (envLabel) {
+if (ENV_LABEL) {
   const badge = document.getElementById('env-badge');
-  badge.textContent = envLabel;
+  badge.textContent = ENV_LABEL;
   badge.removeAttribute('hidden');
 }
 
@@ -28,6 +23,11 @@ import {
   findAvailableClassrooms,
   fetchClassroomsData,
   loadCachedClassroomsData,
+  isCampusClosedAllDay,
+  getOpenCommonAreas,
+  lastFetchedAt,
+  isDayPending,
+  whenClassroomsDataSettled,
   SKIP_DAYS
 } from './available-rooms-script.js';
 
@@ -35,6 +35,9 @@ import { ensureClassroomDirectory, classroomsData as staticClassroomsData } from
 import { initSearchOverlay } from './components/search-overlay.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
+import { changelogPage } from './components/changelog-page.js';
+import { initUpdateBanner } from './components/update-banner.js';
+import { ENV_LABEL } from './utils/env.js';
 import { initInfoHint } from './components/info-hint.js';
 
 import { initTimePickers } from './components/time-picker.js';
@@ -54,7 +57,7 @@ import './components/data-fetch-card.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
 import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
-import { initLiquidGlass, createPopover, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
+import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 import { initCardDayPopover } from './components/card-day-popover.js';
 import { createBuildingStarButton } from './utils/favourites.js';
@@ -68,6 +71,9 @@ import { takeImportHash } from './utils/transfer.js';
 import { promptImport } from './components/transfer-dialog.js';
 import { initServiceWorker } from './utils/pwa.js';
 import { resumeState, initResumeSnapshot } from './utils/resume.js';
+import { initSeason, decorate } from './utils/season.js';
+import { graduationOn } from './utils/graduation.js';
+import { flipLayout, morphRender } from './utils/layout-flip.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
@@ -111,12 +117,14 @@ function dismissSplash() {
   if (_splashFailed) {
     overlay.remove();
     revealHeader();
+    changelogPage.checkHash();
     return;
   }
 
   const splashLogo = overlay.querySelector('.splash-logo');
   const realLogo = document.querySelector('.header-logo');
   const isInfo = location.hash === '#info';
+  const isChangelog = changelogPage.matchesHash;
 
   if (document.startViewTransition) {
     // --- View Transition path ---
@@ -149,6 +157,19 @@ function dismissSplash() {
       // anywhere, so it was surfacing as an unhandled rejection on every abort.
       vt.ready.catch(() => {});
       vt.finished.then(() => infoPage._clearVtNames()).catch(() => infoPage._clearVtNames());
+    } else if (isChangelog) {
+      // Same for the changelog: opened in this VT, the logo landing on its
+      // hero icon, so the app under it never flashes by first
+      const vt = document.startViewTransition(async () => {
+        splashLogo.style.viewTransitionName = '';
+        overlay.remove();
+        revealHeader();
+        await changelogPage.openInSplash('splash-icon');
+      });
+
+      vt.ready.catch(() => {});
+      const cleanup = () => changelogPage.clearSplashName();
+      vt.finished.then(cleanup).catch(cleanup);
     } else {
       const vt = document.startViewTransition(() => {
         splashLogo.style.viewTransitionName = '';
@@ -171,6 +192,8 @@ function dismissSplash() {
 
     realLogo.style.opacity = '0';
     overlay.style.pointerEvents = 'none';
+    // Under the fading splash already, rather than after it
+    if (isChangelog) changelogPage.checkHash();
 
     splashLogo.classList.add('splash-logo-flying');
     void splashLogo.offsetWidth;
@@ -263,7 +286,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const setHeaderHeight = () =>
     document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
   setHeaderHeight();
-  new ResizeObserver(setHeaderHeight).observe(header);
+  // The header's top padding is env(safe-area-inset-top), which a home-screen
+  // app often reports as 0 (or the other orientation's value) at first layout
+  // and corrects later. That moves only the padding, so the default
+  // content-box observation never fires and --header-height stays stale, with
+  // everything stuck below it landing under the header. Observe the border box,
+  // and re-measure when the app comes back or the window changes.
+  new ResizeObserver(setHeaderHeight).observe(header, { box: 'border-box' });
+  window.addEventListener('resize', setHeaderHeight);
+  window.addEventListener('orientationchange', setHeaderHeight);
+  window.addEventListener('pageshow', setHeaderHeight);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) setHeaderHeight();
+  });
 
   // Live height of the sticky picker bar (mobile), so the results' sticky
   // per-building headers can park directly beneath it instead of overlapping.
@@ -304,7 +339,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
 
   const headerEl = document.createElement('div');
   headerEl.className = 'building-section-header';
-  headerEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
+  headerEl.style.setProperty('--appear-delay', `${Math.min(cardIndex * 30, 300)}ms`);
   headerEl.innerHTML = `
     <button class="building-section-titles liquid-glass" type="button" aria-haspopup="dialog" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
       <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
@@ -319,6 +354,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   // Stars the whole building (utils/favourites.js), next to the jump button.
   headerEl.querySelector('.building-section-actions')
     .prepend(createBuildingStarButton(campusId, buildingName, 'header-button building-section-btn'));
+  decorate('buildingHeader', headerEl, { campusId, building });
   cardIndex++;
   section.appendChild(headerEl);
 
@@ -387,7 +423,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
     roomItem.className = 'classroom-list-item-container';
     roomItem.dataset.status = room.status;
     const cardEl = buildCardForClassroom(room, building, from, to, isToday, date, '', true, false);
-    cardEl.style.animationDelay = `${Math.min(cardIndex * 30, 300)}ms`;
+    cardEl.style.setProperty('--appear-delay', `${Math.min(cardIndex * 30, 300)}ms`);
     roomItem.appendChild(cardEl);
     section.appendChild(roomItem);
     cardIndex++;
@@ -430,11 +466,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initSettings();
 
+    // Holiday decorations, when today is in a season (utils/season.js)
+    initSeason();
+
+    // A week-long banner announcing the version this site runs
+    initUpdateBanner();
+
     // Desktop keyboard shortcuts (no-ops on touch / narrow viewports)
     initKeybindings();
 
     // Init info page overlay immediately — no data dependency
     infoPage.init();
+    changelogPage.init();
     initInfoHint();
 
     // Search overlay (bottom-nav FAB) — lazy-loads its data on first open
@@ -445,14 +488,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Delegated press / swipe-deform for every .liquid-glass control
     initLiquidGlass();
-
-    // Footer "version info" popover; its content is authored in index.html.
-    const versionTrigger = document.querySelector('.version-info-button');
-    const versionContent = document.getElementById('version-info-content');
-    if (versionTrigger && versionContent) {
-      versionContent.hidden = false;
-      createPopover({ trigger: versionTrigger, content: versionContent, placement: 'top-end' });
-    }
 
     // Favourites carousel on the Available page
     initFavourites(staticClassroomsData);
@@ -551,18 +586,27 @@ const shellReady = new Promise(resolve => { resolveShellReady = resolve; });
 // Fetches occupancy data in the background (independent of the splash
 // screen) and populates everything that depends on it once it's ready.
 // The last visit's cached copy, when there is one, draws the UI straight
-// away; the network then only confirms it (304s) or replaces it.
+// away; the network then only confirms it (304s) or replaces it. Without
+// one, the UI draws as soon as the start-up day is in, and the rest of the
+// week follows.
 async function initOccupancyData() {
   const hasCache = await loadCachedClassroomsData();
   let fetchSettled = false;
-  const fetched = fetchClassroomsData().finally(() => { fetchSettled = true; });
-  if (!hasCache) await fetched;
+  let firstDayIn;
+  const firstDay = new Promise(resolve => { firstDayIn = resolve; });
+  const fetched = fetchClassroomsData(hasCache ? {} : {
+    getFirstDate: () => preferInitialDate,
+    onFirstDay: firstDayIn,
+  }).finally(() => { fetchSettled = true; });
+  if (!hasCache) await Promise.race([firstDay, fetched]);
 
   await shellReady;
   // The network may have answered while the shell was still setting up
-  const drawnFromCache = hasCache && !fetchSettled;
+  const drawnEarly = !fetchSettled;
   populateOccupancyUi();
-  if (drawnFromCache && await fetched) refreshOccupancyUi();
+  const changed = await fetched;
+  // A partial first draw is always stale once the whole week is in
+  if (drawnEarly && (changed || !hasCache)) refreshOccupancyUi();
 }
 
 // Fills in everything that depends on the occupancy data, the first time it's there
@@ -607,6 +651,22 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   const data = new FormData(e.target);
   const campus = data.get('campus');
   const date = data.get('date'); // comes from the hidden select
+
+  // A day still on its way (first visit, see initOccupancyData): search once
+  // it's in, unless a search after the load (refreshOccupancyUi) got there
+  // first. It was requested with the first day, so the wait is short: the
+  // current results just stay up meanwhile.
+  delete e.target.dataset.waitingFor;
+  if (date && isDayPending(date.replace(/-/g, ''))) {
+    const form = e.target;
+    form.dataset.waitingFor = date;
+    whenClassroomsDataSettled().then(() => {
+      if (form.dataset.waitingFor !== date) return;
+      delete form.dataset.waitingFor;
+      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    });
+    return;
+  }
   const from = data.get('from');
   const to = data.get('to');
 
@@ -617,9 +677,46 @@ document.getElementById('available-classrooms-form').addEventListener('submit', 
   renderAvailableClassroomsResults(results, date, from, to, campus);
 });
 
-// Builds the UI to show the results of the 'Available Classrooms' form submission,
+// Graduation sessions that arrive (or change) after the results are drawn
+// add or drop the note above them; a campus change re-runs the search anyway
+document.addEventListener('graduationschange', () => {
+  const container = document.getElementById('available-classrooms-results');
+  if (!container?.dataset.searched || container.classList.contains('empty')) return;
+  const date = document.getElementById('date-picker')?.value;
+  const campusId = document.getElementById('campus-picker')?.value;
+  const old = container.querySelector(':scope > .graduation-note');
+  const note = date && graduationNote(date, campusId);
+  // Same note as before: nothing to redo
+  if (!old === !note) return;
+  // The note shrinks away (or rises in) and the list slides up or down to
+  // make room for it
+  flipLayout(container, ':scope > .graduation-note, .results-filter-row, .classroom-card, .building-section-header', () => {
+    old?.remove();
+    if (note) container.prepend(note);
+  }, { isLeaving: (el) => el === old });
+});
+
+// Builds the UI to show the results of the 'Available Classrooms' form submission.
+// A new date, time or campus rebuilds the whole list, so the rooms that are in
+// both glide from their old place to the new one, the ones gone fade out
+// where they were, and the new ones run their usual entrance
+// (utils/layout-flip.js).
 function renderAvailableClassroomsResults(results, date, from, to, campusId = null) {
   const container = document.getElementById('available-classrooms-results');
+  // Another campus has nothing in common with the list on screen: replace it whole
+  const swap = container.dataset.campus != null && container.dataset.campus !== String(campusId);
+  container.dataset.campus = campusId;
+  morphRender(container, '.classroom-card, .building-section-header', resultsKey,
+    () => buildAvailableClassroomsResults(container, results, date, from, to, campusId), { swap });
+}
+
+function resultsKey(el) {
+  if (el.dataset.openClassroom) return `room:${el.dataset.openClassroom}`;
+  const building = el.closest('.building-section')?.dataset.buildingName;
+  return building != null ? `building:${building}` : null;
+}
+
+function buildAvailableClassroomsResults(container, results, date, from, to, campusId) {
   buildingOverview.reset(); // tear down the zoom-out view if it's open
   cancelBuildingScrubber();
   container.dataset.searched = 'true';
@@ -630,11 +727,15 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   const dayData = classroomsData.find(day => day.date === dateKey) ?? classroomsData[0];
 
   if (results.length === 0) {
-    renderNoResultsClassroomsContainer(container);
+    if (campusId && isCampusClosedAllDay(campusId, date)) renderCampusClosedContainer(container, campusId, date);
+    else renderNoResultsClassroomsContainer(container);
     return;
   }
 
   container.classList.remove('empty');
+
+  const graduation = graduationNote(date, campusId);
+  if (graduation) container.appendChild(graduation);
 
   // Filter row (rendered only when partial-free filter is needed)
   const filterRow = document.createElement('div');
@@ -650,15 +751,26 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
       toggleBtn.classList.toggle('lg-glass--tinted', shown);
       toggleBtn.classList.toggle('lg-glass--clear', shown);
       toggleBtn.setAttribute('aria-pressed', String(shown));
-      container.classList.toggle('hide-partial', !shown);
     };
+    const applyShown = (shown) => container.classList.toggle('hide-partial', !shown);
     const toggleBtn = createButton({
       icon: '<i class="hgi-stroke hgi-filter" aria-hidden="true"></i>',
       text: t('results.filterPartial'),
       className: 'results-filter-btn',
-      onClick: () => setShown(toggleBtn.getAttribute('aria-pressed') !== 'true'),
+      onClick: () => {
+        const shown = toggleBtn.getAttribute('aria-pressed') !== 'true';
+        setShown(shown);
+        // The partly free cards shrink away (or rise in) and the rest glide
+        // into place; while the list is still running its entrance, just swap
+        const apply = () => applyShown(shown);
+        if (!list.classList.contains('appeared')) { apply(); return; }
+        flipLayout(list, '.classroom-card, .building-section-header', apply, {
+          isLeaving: (el) => !shown && !!el.closest('[data-status="partially-free"], [data-all-partial="true"]'),
+        });
+      },
     });
     setShown(showPartialDefault);
+    applyShown(showPartialDefault);
     filterRow.appendChild(toggleBtn);
     container.appendChild(filterRow);
   }
@@ -691,7 +803,7 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   requestAnimationFrame(() => {
     setTimeout(() => {
       list.classList.add('appeared');
-    }, 800);
+    }, 1100);
   });
 }
 
@@ -704,6 +816,50 @@ function renderNoResultsClassroomsContainer(container) {
     <p class="empty-container-title">${t('results.noResultsTitle')}</p>
     <p class="empty-container-subtitle">${t('results.noResultsSubtitle')}</p>
   `;
+}
+
+// The empty state when every building on the campus is closed that day (a
+// Sunday, a holiday): a tinted glass note saying so, instead of "no results",
+// plus the common areas that stay open anyway (building 11's Patio and Agorà).
+function renderCampusClosedContainer(container, campusId, date) {
+  container.classList.add('empty');
+
+  const commonAreaLines = getOpenCommonAreas(campusId, date).map(({ building, names, hours }) => {
+    const allDay = hours[0] === '00:00' && hours[1] === '23:59';
+    return `<p class="campus-closed-note__body">${t('results.campusClosedCommonAreas')
+      .replace('{building}', escapeHtml(building))
+      .replace('{areas}', names.map(escapeHtml).join(', '))
+      .replace('{hours}', allDay ? t('results.campusClosedAllDay') : `${escapeHtml(hours[0])}–${escapeHtml(hours[1])}`)}</p>`;
+  });
+
+  container.innerHTML = `
+    <div class="campus-closed-note lg-glass lg-glass--clear lg-glass--tinted liquid-glass" role="note">
+      <i class="hgi-stroke hgi-door-lock campus-closed-note__icon" aria-hidden="true"></i>
+      <div class="campus-closed-note__text">
+        <p class="campus-closed-note__title">${t('results.campusClosedTitle')}</p>
+        <p class="campus-closed-note__body">${t('results.campusClosedText')}</p>
+        ${commonAreaLines.join('')}
+      </div>
+    </div>
+  `;
+}
+
+// A graduation day at the campus (utils/graduation.js): a note above the
+// results that the ceremonies may take rooms the data shows as free. Styled
+// like the campus-closed note, laurel in place of the lock.
+function graduationNote(date, campusId) {
+  if (!graduationOn(date, campusId)) return null;
+  const note = document.createElement('div');
+  note.className = 'campus-closed-note graduation-note lg-glass lg-glass--clear lg-glass--tinted liquid-glass';
+  note.setAttribute('role', 'note');
+  note.innerHTML = `
+    <i class="hgi-stroke hgi-laurel-wreath-01 campus-closed-note__icon" aria-hidden="true"></i>
+    <div class="campus-closed-note__text">
+      <p class="campus-closed-note__title">${t('results.graduationTitle')}</p>
+      <p class="campus-closed-note__body">${t('results.graduationText')}</p>
+    </div>
+  `;
+  return note;
 }
 
 const TIME_MIN_MINS = 7 * 60 + 15;  // 07:15
@@ -826,7 +982,7 @@ function setupDataFetchIndicator() {
     String(today.getDate()).padStart(2, '0')
   ].join('');
 
-  const generationDate = new Date(classroomsData[0].generated_at + 'Z');
+  const generationDate = new Date((lastFetchedAt ?? classroomsData[0].generated_at) + 'Z');
   const generationKey = [
     generationDate.getFullYear(),
     String(generationDate.getMonth() + 1).padStart(2, '0'),
@@ -875,7 +1031,7 @@ function setupDataFetchIndicatorText(animate = false) {
 
   // Last fetch time
   const generationDate = classroomsData[0]
-    ? new Date(classroomsData[0].generated_at + 'Z')
+    ? new Date((lastFetchedAt ?? classroomsData[0].generated_at) + 'Z')
     : null;
 
   const dateLocale = getLocale() === 'it' ? 'it-IT' : 'en-GB';
@@ -927,6 +1083,8 @@ function refreshOccupancyUi() {
   refreshHourLensData();
   classroomDetail.refreshOccupancy();
   renderFavourites();
+  // The search overlay redraws an open query (components/search-overlay.js)
+  document.dispatchEvent(new CustomEvent('occupancychange'));
 
   const resultsContainer = document.getElementById('available-classrooms-results');
   if (resultsContainer && !resultsContainer.classList.contains('empty')) {

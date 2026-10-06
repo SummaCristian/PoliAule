@@ -140,13 +140,13 @@ select,
   --radius-2xl: 32px;
   --radius-pill: 999px;
 
-  /* Type scale — the 12 sizes actually used 5+ times across components,
+  /* Type scale — the sizes used across components,
      not an invented scale. Values used ≤4 times were snapped into the
      nearest step here only when within ~0.03–0.05rem (imperceptible);
      anything farther off (one-off hero sizes, icon-specific px values)
      was left as a literal rather than forced to fit. */
+  --text-60: 0.6rem;
   --text-70: 0.7rem;
-  --text-72: 0.72rem;
   --text-75: 0.75rem;
   --text-80: 0.8rem;
   --text-85: 0.85rem;
@@ -254,6 +254,12 @@ html {
 @media (pointer: fine) {
   html { scrollbar-gutter: stable; }
 }
+
+/* The app read too large at the browser's 100%: scale every rem (text,
+   spacing, most sizes) down to what 90% browser zoom looked like. px values
+   (icons, some radii and widths) are unaffected. Breakpoints use px of the
+   viewport, so they don't move. */
+html { font-size: 90%; }
 
 body {
   min-height: 100%;
@@ -782,7 +788,7 @@ body.detail-open #favourite-btn {
 /* hgi-star outline by default, filled yellow star when the current classroom
    is favourited (icon swapped in JS, see classroom-detail.js). */
 #favourite-btn .hgi-star {
-  font-size: 1.375rem;
+  font-size: var(--text-150);
 }
 
 #favourite-btn .star-icon {
@@ -799,7 +805,7 @@ body.detail-open #favourite-btn {
 /* Building star buttons (utils/favourites.js createBuildingStarButton): the
    host's own button recipe sizes the circle, this only the two icons. */
 .fav-star-btn .hgi-star {
-  font-size: 1.25rem;
+  font-size: var(--text-125);
   line-height: 1;
 }
 
@@ -813,8 +819,10 @@ body.detail-open #favourite-btn {
   --pulse-color: var(--text-color-secondary);
 }
 
+/* The status colours, not the accent: a seasonal accent mustn't turn a
+   fresh fetch red or orange */
 .pulse-indicator.green {
-  --pulse-color: var(--text-color-accent);
+  --pulse-color: var(--color-status-free);
 }
 
 .pulse-indicator.yellow {
@@ -942,49 +950,15 @@ body.info-open .header-nav-row {
 @keyframes slide-in-top {
   from {
     opacity: 0;
-    filter: blur(4px);
-    transform: translateY(-20px);
-    scale: 0.92;
+    transform: translateY(-24px);
+    scale: 0.9;
   }
 
   to {
     opacity: 1;
-    filter: blur(0px);
     transform: translateY(0);
     scale: 1;
   }
-}
-
-/* Footer */
-.footer {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 1rem;
-  /* --bottom-nav-height is only the pill bar's own rendered height; the bar
-     also floats 20px clear of the viewport edge (see the tab bar's
-     `bottom: 20px`), so that offset has to be added back in here. */
-  padding-bottom: calc(var(--bottom-nav-height, 88px) + 20px);
-  transition: padding-bottom var(--nav-shift);
-}
-
-@media (min-width: 600px) {
-  /* Rail moves to the top-left at this width, so the bottom clearance above
-     no longer applies (see the matching breakpoint in bottom-nav.css). */
-  .footer {
-    padding-bottom: 1rem;
-  }
-}
-
-.version-info-button>label {
-  text-decoration: underline;
-  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-.info-label {
-  text-align: end;
 }
 
 .slide-in-top {
@@ -996,7 +970,9 @@ body.info-open .header-nav-row {
   /* Clears the header blur/fade layer's -2rem overhang so the first section's
      title (e.g. Favourites) isn't blurred at the top. */
   padding-top: 1.5rem;
-  padding-bottom: var(--bottom-nav-height, 88px);
+  /* --bottom-nav-height is only the pill bar's own rendered height; the bar
+     also floats 20px clear of the viewport edge, so add that offset back. */
+  padding-bottom: calc(var(--bottom-nav-height, 88px) + 20px);
   transition: padding-bottom var(--nav-shift);
 
   flex: 1;
@@ -1037,58 +1013,49 @@ body.info-open .header-nav-row {
   display: flex;
   flex-direction: column;
 
-  /* No `forwards`: with it, the frozen final keyframe leaves `filter:
-     blur(0)` / `transform: scale(1,1)` permanently applied as live
-     properties (not `none`) once the animation ends. Safari treats even a
-     no-op filter like that as an active filter root and refuses to
-     composite a *nested* backdrop-filter underneath it (e.g. the date
-     picker's lifted indicator blurring inside its already-blurred
-     container) — Firefox doesn't have this quirk. Nothing else here sets
-     filter/transform at rest, so dropping `forwards` reverts them to
-     `none` after the 0.3s animation completes, which is visually identical
-     but stops blocking descendants' own backdrop-filter in Safari. */
+  /* No `forwards`: with it, the frozen final keyframe leaves `transform:
+     scale(1,1)` permanently applied as a live property (not `none`) once
+     the animation ends, and a transformed ancestor changes what its
+     descendants' fixed positioning and backdrop-filter are relative to.
+     Nothing else here sets a transform at rest, so dropping `forwards`
+     reverts it to `none` after the 0.3s animation completes. */
   animation: appear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* A fade with a slight horizontal stretch. No blur: a filter over the whole
+   tab is redone by the GPU on every frame at the screen's full resolution,
+   and on an older phone it took the switch from ~48 to ~20 fps. */
+@keyframes results-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes results-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes appear {
   from {
     opacity: 0;
-    filter: blur(8px);
     transform: scale(0.95, 1);
   }
 
   to {
     opacity: 1;
-    filter: blur(0);
     transform: scale(1, 1);
-  }
-}
-
-@keyframes disappear {
-  from {
-    opacity: 1;
-    filter: blur(0);
-    transform: scale(1);
-  }
-
-  to {
-    opacity: 0;
-    filter: blur(8px);
-    transform: scale(0.95);
   }
 }
 
 @keyframes i18n-pop {
   from {
     opacity: 0;
-    transform: translateY(4px) scale(0.96);
-    filter: blur(3px);
+    transform: translateY(6px) scale(0.94);
   }
 
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0);
   }
 }
 
@@ -1146,7 +1113,7 @@ body.info-open .header-nav-row {
 }
 
 .section-header-subtitle {
-  font-size: 1.35rem;
+  font-size: var(--text-150);
 }
 
 @media (max-width: 600px) {
@@ -1291,7 +1258,7 @@ ul li::marker {
 }
 
 .popover-title {
-  font-size: 1.65rem;
+  font-size: var(--text-175);
 
   margin: 0;
   align-self: center;
@@ -1335,104 +1302,6 @@ ul li::marker {
   font-size: var(--text-125);
 
   margin: 0 0 0.5rem 0;
-}
-
-.changelog-logo {
-  width: auto;
-  height: 4rem;
-  margin: 0 auto 0.5rem;
-  display: block;
-
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-.changelog-container {
-  text-align: start;
-
-  display: flex;
-  flex-direction: column;
-}
-
-.changelog-container ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  text-align: start;
-}
-
-.changelog-container ul li {
-  font-size: var(--text-90);
-  color: var(--text-color-secondary);
-  padding-left: 16px;
-  position: relative;
-}
-
-.changelog-container ul li::before {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 0.45em;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--text-color-secondary);
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  align-self: center;
-
-  padding: 0.6rem 1rem;
-  margin: 0.5rem;
-
-  background-color: rgba(30, 30, 30, 0.08);
-  border-radius: 9999px;
-  text-decoration: none;
-  font-weight: 600;
-  color: #24292f;
-
-  box-shadow: var(--shadow);
-
-  transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.hero-badge:hover {
-  transform: scale(1.1);
-  background-color: rgba(30, 30, 30, 0.15);
-}
-
-.hero-icon {
-  width: 1.4rem;
-  height: 1.4rem;
-  color: #24292f;
-}
-
-.hero-text {
-  font-size: var(--text-90);
-}
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .hero-badge {
-    background-color: rgba(255, 255, 255, 0.08);
-    color: #fff;
-  }
-
-  .hero-badge:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-  }
-
-  .hero-icon {
-    color: #fff;
-  }
 }
 
 .button-primary {
@@ -1589,6 +1458,11 @@ are rendered as solid colors
     font-size: var(--text-125);
   }
 
+  :root {
+    /* The header's top strip (.header-top-strip) + .body-container's padding-top */
+    --page-top-offset: calc(11px + 1.5rem);
+  }
+
   #available-classrooms-container.visible {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1673,7 +1547,9 @@ are rendered as solid colors
     position: sticky;
     top: calc(var(--header-height, 84px) + 1rem);
 
-    max-height: calc(100dvh - var(--header-height, 84px) - 2rem);
+    /* Everything above the panel (header strip + the body's top padding) is
+       taken off too, so the page itself never scrolls. */
+    max-height: calc(100dvh - var(--header-height, 84px) - 1rem - var(--page-top-offset));
     overflow-y: auto;
 
     /* A scroll container clips on BOTH axes, so the cards' 40px soft shadows
@@ -1685,7 +1561,7 @@ are rendered as solid colors
        it's gone, or its cut-off reads as a faint line; the 0.75rem overlap
        stays inside the picker panels' own padding, so nothing clickable is
        under it. */
-    margin: 1rem -2rem 1rem -2.25rem;
+    margin: 1rem -2rem 0 -2.25rem;
     padding-inline: 2.25rem 2rem;
   }
 
@@ -1695,7 +1571,82 @@ are rendered as solid colors
     max-height: none;
   }
 
-  /* ── Favourites expanded (components/favourites.js) ──
+  /* Scroll edge fade: the list dissolves into the page at the top and bottom
+     of the panel, each edge only once there is something scrolled past it.
+     Sticky pseudo-elements (net zero height thanks to the negative margin)
+     paint a background-coloured gradient over the cards. A gradient rather
+     than a mask-image: a mask on the scroller leaves the cards' backdrop
+     blur stale in Chrome. Needs scroll-driven animations; without them the
+     fades simply don't show. */
+  @supports (animation-timeline: scroll()) {
+    /* Named, because `scroll(self)` on a pseudo-element means the pseudo. */
+    #available-classrooms-results:not(.empty) {
+      scroll-timeline: --results-scroll block;
+    }
+
+    #available-classrooms-results:not(.empty)::before,
+    #available-classrooms-results:not(.empty)::after {
+      content: "";
+      position: sticky;
+      flex: none;
+      height: 3rem;
+      z-index: 5;
+      pointer-events: none;
+      /* Reach across the panel's side padding (the shadows' room) */
+      margin-inline: -2.25rem -2rem;
+      opacity: 0;
+      animation-fill-mode: both;
+      animation-timing-function: linear;
+      animation-timeline: --results-scroll;
+    }
+
+    #available-classrooms-results:not(.empty)::before {
+      /* Sticky offsets count from the content box, inside the panel's 8px
+         padding; pull out to the clip edge. */
+      top: -8px;
+      margin-bottom: -3rem;
+      background: linear-gradient(to bottom,
+        var(--background-color) 0%,
+        color-mix(in srgb, var(--background-color) 70%, transparent) 40%,
+        color-mix(in srgb, var(--background-color) 25%, transparent) 70%,
+        transparent 100%);
+      animation-name: results-fade-in;
+      animation-range: 0 2rem;
+    }
+
+    /* There the panel's left overhang lies over the favourites column, so the
+       fades stay within the cards' column on that side. */
+    #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results:not(.empty)::before,
+    #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results:not(.empty)::after {
+      margin-left: 0;
+    }
+
+    /* With the pickers docked on top, the panel's padding-top clears them; the
+       fade starts at the panel's edge instead, behind them (z), not below. */
+    #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results:not(.empty)::before {
+      --fade-lead: calc(var(--picker-bar-height, 0px) + 0.5rem);
+      top: calc(-1 * var(--fade-lead));
+      /* Tall enough to still fade the cards below the pickers' own height */
+      height: calc(var(--fade-lead) + 3rem);
+      margin-bottom: calc(-1 * (var(--fade-lead) + 3rem));
+    }
+
+    #available-classrooms-results:not(.empty)::after {
+      bottom: -8px;
+      margin-top: -3rem;
+      background: linear-gradient(to top,
+        var(--background-color) 0%,
+        color-mix(in srgb, var(--background-color) 70%, transparent) 40%,
+        color-mix(in srgb, var(--background-color) 25%, transparent) 70%,
+        transparent 100%);
+      animation-name: results-fade-out;
+      animation-range: calc(100% - 2rem) 100%;
+    }
+  }
+
+  /* ── Favourites expanded (components/favourites.js) / pickers sticky ──
+     Also used when the form column is too narrow for the docked panels
+     (`.pickers-sticky`, components/picker-dock.js).
      The favourites take the whole left column; the right column becomes the
      mobile layout: the "Available Classrooms" header, then the results panel
      with the pickers (all pills, see picker-dock.js) riding sticky on top of
@@ -1705,14 +1656,14 @@ are rendered as solid colors
      range is its own grid area, so one confined to row 1 couldn't stick.
      They stack by offset instead — the header on top, the panel and the
      pickers starting --available-header-height below it. */
-  #available-classrooms-container.favourites-expanded>.favourites-section {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>.favourites-section {
     grid-row: 1 / -1;
     margin-bottom: 1rem;
   }
 
-  #available-classrooms-container.favourites-expanded>.section-header,
-  #available-classrooms-container.favourites-expanded>#available-classrooms-form,
-  #available-classrooms-container.favourites-expanded>#available-classrooms-results {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>.section-header,
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-form,
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results {
     grid-column: 2;
     grid-row: 1 / -1;
     align-self: start;
@@ -1722,32 +1673,32 @@ are rendered as solid colors
   /* All pills here, so lay them out as on mobile: date + time back in the
      row's own flow instead of the docked panels' sub-box, which would wrap
      the time pill under the date one on its own. */
-  #available-classrooms-container.favourites-expanded .picker-row .picker-substack {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky) .picker-row .picker-substack {
     display: contents;
   }
 
-  #available-classrooms-container.favourites-expanded>.section-header {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>.section-header {
     top: var(--header-height, 84px);
     z-index: 11;
   }
 
-  #available-classrooms-container.favourites-expanded>#available-classrooms-form {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-form {
     top: calc(var(--header-height, 84px) + var(--available-header-height, 0px));
     margin-top: var(--available-header-height, 0px);
     z-index: 10;
     gap: 8px;
   }
 
-  #available-classrooms-container.favourites-expanded>#available-classrooms-results {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results {
     top: calc(var(--header-height, 84px) + var(--available-header-height, 0px));
     margin-top: var(--available-header-height, 0px);
-    max-height: calc(100dvh - var(--header-height, 84px) - var(--available-header-height, 0px) - 1rem);
+    max-height: calc(100dvh - var(--header-height, 84px) - var(--available-header-height, 0px) - var(--page-top-offset));
     /* The first building clears the pills; after that the cards scroll up
        behind them. */
     padding-top: calc(var(--picker-bar-height, 0px) + 0.5rem);
   }
 
-  #available-classrooms-container.favourites-expanded>#available-classrooms-results.empty {
+  #available-classrooms-container:is(.favourites-expanded, .pickers-sticky)>#available-classrooms-results.empty {
     position: static;
     max-height: none;
   }
@@ -1755,8 +1706,8 @@ are rendered as solid colors
   /* Stuck building headers / the overview's topbar park right under the
      pills: sticky offsets count from inside the panel's padding, which
      already clears them. */
-  .favourites-expanded .building-section-header,
-  .favourites-expanded .bo-topbar {
+  :is(.favourites-expanded, .pickers-sticky) .building-section-header,
+  :is(.favourites-expanded, .pickers-sticky) .bo-topbar {
     top: 0;
   }
 }
@@ -1774,17 +1725,1135 @@ are rendered as solid colors
   }
 }
 /* Vitrium bridge ------------------------------------------------------------
-   Vitrium's accent follows the app's own accent. Tripled
-   :root outranks Vitrium's dark-mode block regardless of load order. */
+   Vitrium's accent follows the app's own accent, and so does every toggle's
+   on-colour (Vitrium's default is iOS green): a season's or graduation's
+   accent recolours them all. Tripled :root outranks Vitrium's dark-mode block
+   regardless of load order. */
 :root:root:root {
   --lg-accent: var(--text-color-accent);
+  --lg-toggle-on: var(--lg-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .body-container,
-  .footer,
   .tab-content,
   .tab-content.visible {
     transition: none;
   }
+}
+
+/* ── Seasonal themes ─────────────────────────────────────────────────
+   `data-season` on <html> swaps the accent for a holiday. Only the accent
+   moves: the free / partial / busy status colours keep their meaning, and so
+   does the data-fetch status (its dot and its card's title). */
+:root[data-season="halloween"] {
+  --text-color-accent: #d9560b;
+  --accent-gradient: linear-gradient(135deg, #b3400a, #ff8c2e);
+  --color-accent-dark: #d9480f;
+  --color-accent-dark-hover: #bf3f0c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="halloween"] {
+    --text-color-accent: #ff7a2e;
+    --accent-gradient: linear-gradient(135deg, #e8590c, #ffb070);
+  }
+}
+
+:root[data-season="halloween"] .info-page {
+  --info-glow-1: #ff8c2e;
+  --info-glow-2: #b3400a;
+  --info-glow-3: #7b3fc4;
+}
+
+/* Halloween decorations (components/halloween.js). Everything below is
+   scoped to the season, and none of it takes taps except the hanging
+   spider. */
+
+/* The spider/web artwork */
+.hw-spider .hw-legs { fill: none; stroke: var(--hw-spider); stroke-width: 1.3; stroke-linecap: round; }
+.hw-spider .hw-body { fill: var(--hw-spider); stroke: var(--hw-spider-edge); stroke-width: 0.6; }
+.hw-eye { fill: var(--text-color-accent); }
+.hw-web-outline { fill: none; stroke: var(--hw-web-outline); stroke-width: 2; stroke-linecap: round; }
+.hw-web-thread { fill: none; stroke: currentColor; stroke-width: 0.8; stroke-linecap: round; }
+
+:root[data-season="halloween"] {
+  --hw-spider: #1d1a18;
+  --hw-spider-edge: transparent;
+  --hw-ink: rgba(60, 45, 30, 0.38);
+  --hw-thread: rgba(40, 30, 20, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="halloween"] {
+    --hw-spider: #0e0d0c;
+    --hw-spider-edge: rgba(255, 255, 255, 0.35);
+    --hw-ink: rgba(255, 255, 255, 0.3);
+    --hw-thread: rgba(255, 255, 255, 0.45);
+  }
+}
+
+/* Webs and hanging spiders: white with a soft dark outline over a photo,
+   plain ink on a card without one and on the chips */
+.hw-decor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+  color: var(--hw-ink);
+  --hw-web-outline: transparent;
+}
+
+.hw-decor svg { display: block; overflow: visible; }
+
+.hw-decor--right {
+  left: auto;
+  right: 0;
+  transform: scaleX(-1);
+}
+
+.classroom-card--photo:not(.photo-failed) .hw-decor--card {
+  color: rgba(255, 255, 255, 0.8);
+  --hw-web-outline: rgba(0, 0, 0, 0.38);
+}
+
+.hw-decor--photo {
+  color: rgba(255, 255, 255, 0.8);
+  --hw-web-outline: rgba(0, 0, 0, 0.38);
+}
+
+.hw-hang { width: 1px; }
+.hw-hang-thread { width: 1px; background: currentColor; }
+.classroom-card--photo:not(.photo-failed) .hw-hang-thread { box-shadow: 0 0 0 0.6px rgba(0, 0, 0, 0.38); }
+.hw-hang-bug { position: absolute; left: 50%; transform: translateX(-50%); }
+/* Head-down from the thread, like the data status button's spider */
+.hw-hang-bug svg { rotate: 180deg; }
+
+/* Hanging below a button (the building headers' jump button), and from the
+   top edge of the search's results box */
+.hw-hang--below { top: 100%; left: 50%; }
+.hw-hang--panel { top: 0; }
+
+/* The haunted room's ghost leans in from behind the card's right edge,
+   which clips it */
+.hw-ghost {
+  position: absolute;
+  top: 22%;
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+  animation: hw-peek 7s ease-in-out infinite;
+}
+
+.hw-ghost svg,
+.hw-map-ghost svg {
+  display: block;
+  animation: hw-bob 1.6s ease-in-out infinite alternate;
+}
+
+.hw-ghost-body { fill: #fbfbff; stroke: rgba(0, 0, 0, 0.28); stroke-width: 1; }
+.hw-ghost-face { fill: #1d1a18; }
+
+@keyframes hw-peek {
+  0%, 8% { transform: translateX(110%) rotate(0deg); }
+  20% { transform: translateX(30%) rotate(-12deg); }
+  45% { transform: translateX(34%) rotate(-4deg); }
+  58% { transform: translateX(30%) rotate(-10deg); }
+  70%, 100% { transform: translateX(110%) rotate(0deg); }
+}
+
+@keyframes hw-bob {
+  from { translate: 0 0; }
+  to { translate: 0 -2px; }
+}
+
+/* …leans into its classroom page's photo, bigger */
+.hw-ghost--photo { top: 46%; }
+.hw-ghost--photo svg { width: 48px; height: 54px; }
+
+/* …rises out of its building's folder, from among the papers and back down
+   behind the glass front (which starts 68px down the folder) */
+.hw-folder-ghost {
+  position: absolute;
+  top: 34px;
+  left: 62%;
+  animation: hw-rise 6s ease-in-out infinite;
+}
+
+@keyframes hw-rise {
+  0%, 10% { transform: translateY(38px) rotate(0deg); }
+  25% { transform: translateY(0) rotate(-7deg); }
+  50% { transform: translateY(3px) rotate(5deg); }
+  62% { transform: translateY(0) rotate(-3deg); }
+  75%, 100% { transform: translateY(38px) rotate(0deg); }
+}
+
+/* …and sits next to its name in the search */
+.hw-search-ghost {
+  display: inline-block;
+  margin-inline-start: 0.35rem;
+  vertical-align: -0.1em;
+}
+
+.hw-search-ghost svg { width: 14px; height: 16px; display: block; }
+
+/* …and floats over its building on the map */
+.hw-map-ghost {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -11px;
+  width: 22px;
+  pointer-events: none;
+}
+
+.hw-map-ghost svg { width: 22px; height: 25px; }
+
+/* Pumpkin on the "now" markers: the cards' timeline tick, the detail page's
+   schedule line (desktop) and today's bar (phone) */
+:root[data-season="halloween"] {
+  --hw-pumpkin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 12'%3E%3Cellipse cx='6.5' cy='7.4' rx='5.8' ry='4.2' fill='%23f07a1a'/%3E%3Cpath d='M6.5 3.4v7.9M3.7 4c-1.3 2.1-1.3 4.7 0 6.6M9.3 4c1.3 2.1 1.3 4.7 0 6.6' stroke='%23c4560c' stroke-width='.7' fill='none'/%3E%3Cpath d='M6.6 3.6c0-1.3.4-2.1 1.5-2.7' stroke='%233d7a2a' stroke-width='1.4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+}
+
+:root[data-season="halloween"] .classroom-card-timeline-now::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 12px;
+  height: 11px;
+  margin-bottom: -2px;
+  transform: translateX(-50%);
+  background: var(--hw-pumpkin) center / contain no-repeat;
+}
+
+:root[data-season="halloween"] .detail-schedule-now-line::before {
+  top: -10px;
+  width: 13px;
+  height: 12px;
+  border-radius: 0;
+  background: var(--hw-pumpkin) center / contain no-repeat;
+}
+
+:root[data-season="halloween"] .timeline-now-bar-line::before {
+  left: -12px;
+  width: 13px;
+  height: 12px;
+  border-radius: 0;
+  background: var(--hw-pumpkin) center / contain no-repeat;
+}
+
+/* The logo in its witch hat (components/halloween.js swaps the image). The
+   drawing is the usual logo scaled up with a hat above and a pumpkin below,
+   the chair's box at (72, 648) and 1426×1635 in its 1499×2313 frame: sized
+   so that box is the usual 2rem-tall logo, with negative margins giving back
+   the rest, so the header's layout doesn't move and the hat rises into the
+   space above it. */
+.header-logo.hw-logo {
+  --hw-chair: 2rem;
+  height: calc(var(--hw-chair) * 2313 / 1635);
+  aspect-ratio: 1499 / 2313;
+  margin: calc(var(--hw-chair) * -648 / 1635) calc(var(--hw-chair) * -1 / 1635) calc(var(--hw-chair) * -30 / 1635) calc(var(--hw-chair) * -72 / 1635);
+}
+
+/* …and in its Santa hat with a present (components/christmas.js), the same
+   way: the chair's box at (0, 220) and 1428×1636 in its 1484×1857 frame */
+.header-logo.xm-logo {
+  --xm-chair: 2rem;
+  height: calc(var(--xm-chair) * 1857 / 1636);
+  aspect-ratio: 1484 / 1857;
+  margin: calc(var(--xm-chair) * -220 / 1636) calc(var(--xm-chair) * -56 / 1636) calc(var(--xm-chair) * -1 / 1636) 0;
+}
+
+/* …and crowned with laurel, holding its diploma (components/graduation.js),
+   the same way: the chair's box at (38, 386) and 1428×1638 in its 1569×2024
+   frame */
+.header-logo.gr-logo {
+  --gr-chair: 2rem;
+  height: calc(var(--gr-chair) * 2024 / 1638);
+  aspect-ratio: 1569 / 2024;
+  margin: calc(var(--gr-chair) * -386 / 1638) calc(var(--gr-chair) * -103 / 1638) 0 calc(var(--gr-chair) * -38 / 1638);
+}
+
+/* The spider under the data status button: hangs on a thread from behind it,
+   swaying; climbs back up when tapped */
+:root[data-season="halloween"] #data-fetch-btn { z-index: 1; }
+
+.hw-dangler {
+  --hw-len: 58px;
+  --hw-dur: 1.6s;
+  --hw-ease: cubic-bezier(.3, 1.35, .5, 1);
+  position: absolute;
+  z-index: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.hw-dangler--up { --hw-len: 0px; }
+
+.hw-dangler--climbing {
+  --hw-dur: 0.45s;
+  --hw-ease: cubic-bezier(.5, 0, .75, .4);
+}
+
+.hw-dangler-sway {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  animation: hw-sway 3.2s ease-in-out infinite alternate;
+}
+
+.hw-dangler-line {
+  position: absolute;
+  left: -0.5px;
+  top: 0;
+  width: 1px;
+  height: var(--hw-len);
+  background: var(--hw-thread);
+  transition: height var(--hw-dur) var(--hw-ease);
+}
+
+/* The 6px padding widens the tap target. The spider hangs head-down, as
+   they do, from a thread on the tip of its abdomen: 4.6 of its 26 units
+   from the top once flipped, so the box is lifted by the padding plus that
+   to put the tip right on the thread's end. No margin: a negative one would
+   pull the spider off the thread's line. */
+.hw-dangler-bug {
+  position: absolute;
+  left: 0;
+  top: var(--hw-len);
+  padding: 6px;
+  border: 0;
+  background: none;
+  transform: translate(-50%, calc(-6px - 4.6px));
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  transition: top var(--hw-dur) var(--hw-ease);
+}
+
+.hw-dangler-bug svg { width: 26px; height: 26px; display: block; rotate: 180deg; }
+.hw-legs { transform-origin: 13px 13px; }
+.hw-dangler--climbing .hw-legs,
+.hw-walker .hw-legs { animation: hw-wiggle .1s linear infinite alternate; }
+
+body.detail-open .hw-dangler { display: none; }
+
+@keyframes hw-sway {
+  from { transform: rotate(-5deg); }
+  to { transform: rotate(5deg); }
+}
+
+@keyframes hw-wiggle {
+  from { transform: scaleY(.85); }
+  to { transform: scaleY(1.08); }
+}
+
+/* Bats and the spider walking on the tab bar fly in a layer over the app.
+   It, and the candy's canvas, stop short of the bottom safe area: iOS
+   Safari turns its bottom bar solid when a fixed element reaches down
+   there. */
+.hw-sky {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1001;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hw-bat,
+.hw-walker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.hw-bat svg { display: block; overflow: visible; }
+
+.hw-bat-wing {
+  transform-box: view-box;
+  transform-origin: 20px 9px;
+  animation: hw-flap var(--hw-flap, .17s) ease-in-out infinite alternate;
+}
+
+.hw-bat-shape { fill: var(--hw-spider); stroke: var(--hw-spider-edge); stroke-width: 0.7; stroke-linejoin: round; }
+
+@keyframes hw-flap {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(-0.35); }
+}
+
+.hw-candy {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1002;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-ghost { animation: none; transform: translateX(34%) rotate(-6deg); }
+  .hw-folder-ghost { animation: none; transform: translateY(14px) rotate(-5deg); }
+  .hw-ghost svg,
+  .hw-map-ghost svg,
+  .hw-dangler-sway { animation: none; }
+  .hw-dangler-line,
+  .hw-dangler-bug { transition: none; }
+}
+
+/* Christmas (Dec 1 – Jan 10): a Christmas red, against the garlands'
+   green. */
+:root[data-season="christmas"] {
+  --text-color-accent: #c8202e;
+  --accent-gradient: linear-gradient(135deg, #9e1220, #e8414b);
+  --color-accent-dark: #b81c2a;
+  --color-accent-dark-hover: #9e1220;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="christmas"] {
+    --text-color-accent: #ff5a62;
+    --accent-gradient: linear-gradient(135deg, #d92b35, #ff9a9f);
+  }
+}
+
+:root[data-season="christmas"] .info-page {
+  --info-glow-1: #e8414b;
+  --info-glow-2: #1f8a4c;
+  --info-glow-3: #e8b23a;
+}
+
+/* Christmas decorations (components/christmas.js, components/snowfall.js).
+   None of it takes taps except the mistletoe and the gift room's bow. */
+:root[data-season="christmas"] {
+  /* On light surfaces white snow disappears: a blue tint keeps it in view */
+  --xm-flake: #7a9fd0;
+  --xm-snow: #f2f7ff;
+  --xm-snow-edge: rgba(95, 140, 200, 0.7);
+  --xm-snow-shade: rgba(90, 130, 190, 0.35);
+  --xm-wire: rgba(30, 50, 35, 0.55);
+  --xm-thread: rgba(60, 50, 40, 0.45);
+  --xm-flyer-edge: rgba(40, 20, 10, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="christmas"] {
+    --xm-flake: #ffffff;
+    --xm-snow: #f4f8fd;
+    --xm-snow-edge: transparent;
+    --xm-snow-shade: rgba(0, 0, 0, 0.35);
+    --xm-wire: rgba(255, 255, 255, 0.3);
+    --xm-thread: rgba(255, 255, 255, 0.45);
+    --xm-flyer-edge: rgba(255, 255, 255, 0.45);
+  }
+}
+
+/* The falling snow: one canvas over everything. It stops short of the
+   bottom safe area (iOS Safari turns its bottom bar solid when a fixed
+   element reaches down there); the flakes fade out above that. */
+.xm-snow {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1400;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.xm-snow--held { opacity: 0; }
+
+/* Snow piled on an element's top edge, rising above it and hugging its
+   corners */
+.xm-pile {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.xm-pile svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.xm-pile-snow { fill: var(--xm-snow); }
+.xm-pile-edge { fill: none; stroke: var(--xm-snow-edge); stroke-width: 0.6px; stroke-linejoin: round; }
+.xm-pile-shade { fill: var(--xm-snow-shade); transform: translateY(1px); }
+
+/* A card's content-visibility clips what sticks out of it: off for the cards
+   with snow on them (which only land while on screen) */
+.classroom-card.xm-piled { content-visibility: visible; }
+
+/* Decorations sit in their element's top-left corner unless placed */
+.xm-decor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.xm-decor svg { display: block; overflow: visible; }
+.xm-garland { right: 0; }
+/* Over the tab bar's selection pill */
+.xm-garland--bar { z-index: 3; }
+
+/* The date chip's "Today" badge stays over the snow on the chip */
+:root[data-season="christmas"] .dcp-today-badge { z-index: 5; }
+
+.xm-needles { fill: none; stroke-width: 1.3px; stroke-linecap: round; }
+.xm-needle-a { stroke: #1f6b3a; }
+.xm-needle-b { stroke: #2f8a4f; }
+.xm-needle-c { stroke: #164a29; }
+.xm-wire { fill: none; stroke: var(--xm-wire); stroke-width: 0.8px; }
+.xm-glow { opacity: 0.32; }
+
+/* On light glass a bulb needs an edge, and more glow, to read as lit */
+@media (prefers-color-scheme: light) {
+  .xm-twinkle ellipse { stroke: rgba(60, 40, 20, 0.45); stroke-width: 0.5px; }
+  .xm-glow { opacity: 0.5; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .xm-needle-a { stroke: #2b7d46; }
+  .xm-needle-b { stroke: #3f9c5e; }
+  .xm-needle-c { stroke: #1d5a33; }
+  .xm-glow { opacity: 0.45; }
+}
+
+/* The lights twinkle in three groups, a step at a time rather than fading,
+   so each SVG repaints a few times a second at most */
+.xm-twinkle { animation: xm-twinkle 2.6s steps(2, jump-none) infinite; }
+.xm-twinkle--1 { animation-duration: 3.1s; animation-delay: -1s; }
+.xm-twinkle--2 { animation-duration: 3.7s; animation-delay: -2.2s; }
+
+@keyframes xm-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.xm-bow-loop { fill: #d92b35; stroke: #9c1a22; stroke-width: 0.8px; }
+.xm-bow-tail { fill: #b8202a; }
+.xm-bow-knot { fill: #b8202a; }
+
+.xm-holly-leaf { fill: #1d6b38; stroke: #0f4523; stroke-width: 0.5px; stroke-linejoin: round; }
+.xm-holly-berry { fill: #d92b35; stroke: rgba(0, 0, 0, 0.25); stroke-width: 0.4px; }
+.xm-mistle-leaf { fill: #8fb36a; stroke: #5e7d3f; stroke-width: 0.5px; }
+.xm-mistle-berry { fill: #f6f3e8; stroke: rgba(0, 0, 0, 0.25); stroke-width: 0.4px; }
+.xm-mistle-stem { stroke: #5e7d3f; stroke-width: 1.2px; fill: none; }
+
+.xm-icicle { fill: rgba(214, 235, 250, 0.85); stroke: rgba(130, 170, 205, 0.6); stroke-width: 0.5px; }
+.xm-icicle-shine { fill: none; stroke: rgba(255, 255, 255, 0.9); stroke-width: 0.7px; stroke-linecap: round; }
+
+@media (prefers-color-scheme: dark) {
+  .xm-icicle { fill: rgba(220, 240, 255, 0.72); stroke: rgba(255, 255, 255, 0.25); }
+}
+
+/* Icicles hang from their element's bottom edge */
+.xm-icicles { top: 100%; right: 0; margin-top: -1px; }
+
+/* Sprigs: tucked into a corner, half outside it */
+.xm-sprig { top: -2px; left: -2px; z-index: 3; }
+.xm-sprig--pill { top: -9px; left: auto; right: -6px; }
+.xm-sprig--thumb { top: -5px; left: -5px; }
+.xm-sprig--fab { z-index: 5; }
+.xm-sprig--chip { top: -8px; left: auto; right: 10px; z-index: 5; }
+.xm-sprig--badge { top: 2px; left: 2px; z-index: 3; }
+
+/* Baubles hanging from a card's top edge, swinging */
+.xm-hang {
+  width: 1px;
+  transform-origin: 0 0;
+  animation: xm-swing 3.4s ease-in-out var(--xm-swing-delay, 0s) infinite alternate;
+}
+
+.xm-hang-thread { width: 1px; background: var(--xm-thread); }
+.classroom-card--photo:not(.photo-failed) .xm-hang-thread { background: rgba(255, 255, 255, 0.75); box-shadow: 0 0 0 0.6px rgba(0, 0, 0, 0.3); }
+.xm-hang-bauble { position: absolute; left: 50%; transform: translateX(-50%); }
+.xm-bauble-cap { fill: #c9a24a; }
+.xm-bauble-rim { fill: none; stroke: rgba(0, 0, 0, 0.18); stroke-width: 0.6px; }
+
+@keyframes xm-swing {
+  from { transform: rotate(-5deg); }
+  to { transform: rotate(5deg); }
+}
+
+/* A wreath on a building folder's glass front */
+.xm-front-wreath { top: 6px; left: auto; right: 10px; z-index: 3; }
+.xm-wreath-base { fill: none; stroke: #164a29; stroke-width: 3.5px; }
+.xm-cone { fill: #8a5a2b; }
+.xm-cone-scale { fill: none; stroke: #5e3a18; stroke-width: 0.6px; }
+
+/* Gifts: the gift rooms' badge in the search, over their building on the
+   map and sticking up out of their building's folder */
+.xm-gift-box { fill: #d92b35; }
+.xm-gift-lid { fill: #e8414b; }
+.xm-gift-ribbon { fill: #f2c14e; }
+
+.xm-search-gift {
+  display: inline-block;
+  margin-inline-start: 0.35rem;
+  vertical-align: -0.12em;
+}
+
+.xm-search-gift svg { width: 15px; height: 15px; display: block; }
+
+.xm-map-gift {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -11px;
+  width: 22px;
+  pointer-events: none;
+  animation: xm-bob 1.8s ease-in-out infinite alternate;
+}
+
+.xm-map-gift svg { width: 22px; height: 22px; display: block; }
+
+.xm-folder-gift {
+  top: 22px;
+  left: 60%;
+  rotate: -8deg;
+}
+
+.xm-folder-gift svg { width: 30px; height: 30px; }
+
+@keyframes xm-bob {
+  from { translate: 0 0; }
+  to { translate: 0 -2px; }
+}
+
+/* The gift room's ribbon: a band each way, crossing up and to the right, a
+   bow where they cross. Under the card's text, over its photo. */
+.xm-ribbon {
+  --xm-band: 10px;
+  --xm-x: 74%;
+  --xm-y: 30%;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.xm-ribbon-band {
+  position: absolute;
+  background:
+    linear-gradient(var(--xm-dir), transparent 18%, rgba(255, 255, 255, 0.35) 22%, transparent 26%, transparent 74%, rgba(255, 255, 255, 0.35) 78%, transparent 82%),
+    linear-gradient(var(--xm-dir), #a8141f, #e0323d 50%, #a8141f);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.6s cubic-bezier(.5, 0, .75, .4), opacity 0.6s ease;
+}
+
+.xm-ribbon-band--v {
+  --xm-dir: 90deg;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--xm-x) - var(--xm-band) / 2);
+  width: var(--xm-band);
+}
+
+.xm-ribbon-band--h {
+  --xm-dir: 180deg;
+  left: 0;
+  right: 0;
+  top: calc(var(--xm-y) - var(--xm-band) / 2);
+  height: var(--xm-band);
+}
+
+.xm-ribbon-bow {
+  position: absolute;
+  left: var(--xm-x);
+  top: var(--xm-y);
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  transition: transform 0.5s cubic-bezier(.3, 1.4, .5, 1), opacity 0.5s ease;
+}
+
+.xm-ribbon-bow svg { display: block; }
+
+/* …and round the classroom page's photo, bigger: the bow unwraps it */
+.xm-ribbon--photo { --xm-band: 18px; --xm-x: 70%; --xm-y: 38%; z-index: 2; }
+.xm-ribbon--photo .xm-ribbon-bow { pointer-events: auto; padding: 8px; -webkit-tap-highlight-color: transparent; animation: xm-tempt 2.4s ease-in-out infinite; }
+.xm-ribbon--photo .xm-ribbon-bow svg { width: 72px; height: 72px; }
+
+@keyframes xm-tempt {
+  0%, 70%, 100% { rotate: 0deg; }
+  76% { rotate: -9deg; }
+  84% { rotate: 7deg; }
+  92% { rotate: -3deg; }
+}
+
+.xm-ribbon--open .xm-ribbon-band--v { transform: translateY(110%); opacity: 0; }
+.xm-ribbon--open .xm-ribbon-band--h { transform: translateX(110%); opacity: 0; }
+.xm-ribbon--open .xm-ribbon-bow { transform: translate(-50%, -160%) scale(1.3) rotate(20deg); opacity: 0; animation: none; }
+
+/* A Santa hat on the date chip's "Today" badge */
+.xm-hat {
+  top: -11px;
+  left: -8px;
+  z-index: 3;
+  rotate: -20deg;
+}
+
+.xm-hat-red { fill: #d92b35; }
+.xm-hat-fur { fill: #fbfbfb; stroke: rgba(0, 0, 0, 0.18); stroke-width: 0.5px; }
+
+/* Candy cane on the "now" markers: the cards' timeline tick, the detail
+   page's schedule line (desktop) and today's bar (phone) */
+:root[data-season="christmas"] {
+  --xm-cane: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M4 13V5a3 3 0 0 1 6 0v1' stroke='%23fff' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3Cpath d='M4 13V5a3 3 0 0 1 6 0v1' stroke='%23d92b35' stroke-width='2.6' fill='none' stroke-dasharray='1.6 1.6'/%3E%3Cpath d='M4 13V5a3 3 0 0 1 6 0v1' stroke='rgba(0,0,0,.25)' stroke-width='3.4' fill='none' stroke-linecap='round' opacity='.35'/%3E%3C/svg%3E");
+}
+
+:root[data-season="christmas"] .classroom-card-timeline-now::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 11px;
+  height: 13px;
+  margin-bottom: -2px;
+  transform: translateX(-50%);
+  background: var(--xm-cane) center / contain no-repeat;
+}
+
+:root[data-season="christmas"] .detail-schedule-now-line::before {
+  top: -11px;
+  width: 12px;
+  height: 14px;
+  border-radius: 0;
+  background: var(--xm-cane) center / contain no-repeat;
+}
+
+:root[data-season="christmas"] .timeline-now-bar-line::before {
+  left: -12px;
+  width: 12px;
+  height: 14px;
+  border-radius: 0;
+  background: var(--xm-cane) center / contain no-repeat;
+}
+
+/* Mistletoe under the data status button: hangs on a ribbon from behind it,
+   swaying; a tap swings it */
+:root[data-season="christmas"] #data-fetch-btn { z-index: 1; }
+
+.xm-mistletoe {
+  position: absolute;
+  z-index: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.xm-mistletoe-sway {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  animation: xm-swing 3.6s ease-in-out infinite alternate;
+}
+
+.xm-mistletoe-sway--swing { animation: xm-swing-hard 1.6s ease-out, xm-swing 3.6s ease-in-out 1.6s infinite alternate; }
+
+@keyframes xm-swing-hard {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(22deg); }
+  45% { transform: rotate(-14deg); }
+  70% { transform: rotate(7deg); }
+  100% { transform: rotate(-5deg); }
+}
+
+.xm-mistletoe-line {
+  position: absolute;
+  left: -0.75px;
+  top: 0;
+  width: 1.5px;
+  height: 40px;
+  background: #c8202e;
+}
+
+.xm-mistletoe-sprig {
+  position: absolute;
+  left: 0;
+  top: 40px;
+  padding: 4px;
+  border: 0;
+  background: none;
+  transform: translate(-50%, -4px);
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.xm-mistletoe-sprig svg { display: block; }
+
+body.detail-open .xm-mistletoe { display: none; }
+
+/* Santa's sleigh (or the Befana) flies in a layer over the app, above the
+   snow, leaving a trail of sparkles */
+.xm-sky {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1401;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.xm-flyer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.xm-flyer svg { display: block; overflow: visible; }
+.xm-flyer svg > *, .xm-deer > * { stroke: var(--xm-flyer-edge); stroke-width: 0.5px; stroke-linejoin: round; }
+.xm-f-coat, .xm-f-arm { fill: #d42a33; }
+.xm-f-arm { stroke: #d42a33 !important; stroke-width: 3px !important; stroke-linecap: round; fill: none; }
+.xm-f-white { fill: #fbfbfb; }
+.xm-f-skin { fill: #f2c4a2; }
+.xm-f-glove { fill: #2b2b2b; }
+.xm-f-sack { fill: #9a6834; }
+.xm-f-gift { fill: #1f8a4c; }
+.xm-f-gift2 { fill: #2f6fdc; }
+.xm-f-gold { fill: #e8b23a; }
+.xm-f-sleigh { fill: #b81c2a; }
+.xm-f-trim { fill: none; stroke: #f2c14e !important; stroke-width: 1.3px !important; stroke-linecap: round; }
+.xm-f-rein { fill: none; stroke: #6b3d1f !important; stroke-width: 0.9px !important; }
+.xm-f-deer { fill: #8b5a34; }
+.xm-f-antler { fill: none; stroke: #5a3a1e !important; stroke-width: 1.4px !important; stroke-linecap: round; }
+.xm-f-nose { fill: #1d1a18; }
+.xm-rudolph { fill: #ff3b3b; filter: drop-shadow(0 0 2px #ff5b5b); }
+.xm-f-stick { fill: #7a4a24; }
+.xm-f-straw { fill: #d9a441; }
+.xm-f-straw-line { fill: none; stroke: #a8772a !important; stroke-width: 0.6px !important; }
+.xm-f-shoe { fill: #2a2228; }
+.xm-f-skirt { fill: #5a3d78; }
+.xm-f-patch { fill: #c8902e; }
+.xm-f-shawl { fill: #2e6b4a; }
+.xm-f-nose-long { fill: #e2a98a; }
+.xm-f-scarf { fill: #b8202a; }
+
+.xm-deer { animation: xm-gallop 0.5s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 50%; }
+.xm-deer + .xm-deer { animation-delay: -0.25s; }
+
+@keyframes xm-gallop {
+  from { transform: translateY(-1px); }
+  to { transform: translateY(1.5px); }
+}
+
+.xm-sparkle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  background: #ffd36b;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: xm-sparkle 0.9s ease-out forwards;
+}
+
+@keyframes xm-sparkle {
+  from { opacity: 1; scale: 1; }
+  to { opacity: 0; scale: 0.2; translate: 0 10px; }
+}
+
+.xm-fx {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1402;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xm-twinkle,
+  .xm-hang,
+  .xm-map-gift,
+  .xm-mistletoe-sway,
+  .xm-deer,
+  .xm-ribbon--photo .xm-ribbon-bow { animation: none; }
+  .xm-ribbon-band,
+  .xm-ribbon-bow { transition: none; }
+}
+
+/* Graduation day (components/graduation.js): navy, like the suits on the
+   day. A layer over the season, so it comes after the seasons' accents and
+   wins over them at the same specificity. */
+:root[data-graduation] {
+  --text-color-accent: #24427f;
+  --accent-gradient: linear-gradient(135deg, #14264f, #3d63b3);
+  --color-accent-dark: #1d3768;
+  --color-accent-dark-hover: #14264f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-graduation] {
+    --text-color-accent: #8eabff;
+    --accent-gradient: linear-gradient(135deg, #3558b0, #a9bfff);
+  }
+}
+
+:root[data-graduation] .info-page {
+  --info-glow-1: #3d63b3;
+  --info-glow-2: #ffd23f;
+  --info-glow-3: #5f8f3e;
+}
+
+/* The laurel (corona d'alloro): green leaves, red ribbon */
+.gr-laurel-stem { fill: none; stroke: #4a6b2e; stroke-width: 1.1px; stroke-linecap: round; }
+.gr-laurel-leaf { stroke: rgba(30, 50, 20, 0.35); stroke-width: 0.4px; }
+.gr-laurel-leaf--0 { fill: #5f8f3e; }
+.gr-laurel-leaf--1 { fill: #4a7a30; }
+.gr-laurel-leaf--2 { fill: #7aa64f; }
+.gr-ribbon { fill: #c8202e; stroke: rgba(80, 10, 15, 0.35); stroke-width: 0.4px; }
+.gr-ribbon-knot { fill: #a3141f; }
+
+/* The confetti: one canvas over everything, just under the snow's, stopping
+   short of the bottom safe area for the same reason (see .xm-snow) */
+.gr-fx {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1399;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+/* The wreath hangs where the season's mistletoe or spider would, which make
+   way for it */
+:root[data-graduation] #data-fetch-btn { z-index: 1; }
+:root[data-graduation] .xm-mistletoe,
+:root[data-graduation] .hw-dangler { display: none; }
+
+.gr-wreath {
+  position: absolute;
+  z-index: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.gr-wreath-sway {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  animation: gr-swing 3.8s ease-in-out infinite alternate;
+}
+
+.gr-wreath-sway--swing { animation: gr-swing-hard 1.6s ease-out, gr-swing 3.8s ease-in-out 1.6s infinite alternate; }
+
+@keyframes gr-swing {
+  from { transform: rotate(-4deg); }
+  to { transform: rotate(4deg); }
+}
+
+@keyframes gr-swing-hard {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(22deg); }
+  45% { transform: rotate(-14deg); }
+  70% { transform: rotate(7deg); }
+  100% { transform: rotate(-4deg); }
+}
+
+.gr-wreath-line {
+  position: absolute;
+  left: -0.75px;
+  top: 0;
+  width: 1.5px;
+  height: 38px;
+  background: #c8202e;
+}
+
+.gr-wreath-crown {
+  position: absolute;
+  left: 0;
+  top: 38px;
+  padding: 2px;
+  border: 0;
+  background: none;
+  transform: translate(-50%, -4px);
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gr-wreath-crown svg { display: block; }
+
+body.detail-open .gr-wreath { display: none; }
+
+/* The campus chip's laurel, in the accent */
+.gr-chip-icon { color: var(--text-color-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-wreath-sway { animation: none; }
+}
+
+/* The season's banner (utils/season.js): a short message at the top of the
+   Favourites section, on clear glass with just a veil of the season's colour
+   (--season-tint). The text keeps the app's own colours, which a clear tint
+   leaves legible; only the icon is in the season's colour. */
+.season-banner {
+  /* Vitrium's clear tint at its own strength still reads as a coloured
+     panel; diluted, it stays a hint */
+  --lg-glass-tint: color-mix(in srgb, var(--season-tint) 40%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.5rem 0.65rem 0.9rem;
+  border-radius: var(--radius-xl);
+  color: var(--text-color-primary);
+  text-align: start;
+}
+
+.season-banner__icon {
+  flex: none;
+  font-size: var(--text-150);
+  color: var(--season-tint);
+}
+
+.season-banner__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.season-banner__title {
+  margin: 0;
+  font-size: var(--text-90);
+  font-weight: 700;
+}
+
+.season-banner__body {
+  margin: 0.1rem 0 0;
+  font-size: var(--text-80);
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text-color-primary) 70%, transparent);
+}
+
+/* Centred, not in the corner: what hangs from the data status button
+   (Halloween's spider, Christmas's mistletoe) comes down over the banner's
+   top edge near there, and would take its taps */
+.season-banner__close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  font-size: var(--text-100);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The update banner (components/update-banner.js): the same box, in the
+   release's channel colour, with the button to that version's changelog
+   page on a row of its own */
+.update-banner {
+  flex-wrap: wrap;
+  row-gap: 0.55rem;
+  padding-bottom: 0.8rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Stacked over the season's banner: closer together than to the cards */
+.update-banner:has(+ .season-banner) {
+  margin-bottom: 0.6rem;
+}
+
+/* The released app's own icon (stable or beta) in place of a glyph */
+.update-banner__icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 24%;
+  corner-shape: superellipse;
+  user-select: none;
+  -webkit-user-drag: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.update-banner__actions {
+  flex: 1 0 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* A pill in the release's colour. Not glass of its own: glass inside the
+   banner's tinted glass would inherit its rim */
+.update-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.25rem;
+  padding: 0 1rem 0 1.1rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--season-tint) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--season-tint) 28%, transparent);
+  color: color-mix(in srgb, var(--season-tint) 75%, var(--text-color-primary));
+  font: inherit;
+  font-size: var(--text-90);
+  font-weight: 700;
+  -webkit-tap-highlight-color: transparent;
+  transition: scale 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease;
+}
+
+.update-banner__cta .hgi-stroke {
+  font-size: var(--text-100);
+}
+
+.update-banner__cta:active {
+  scale: 0.96;
+  background: color-mix(in srgb, var(--season-tint) 26%, transparent);
+}
+
+.update-banner__cta:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-banner__cta { transition: none; }
+}
+
+/* Cracked glass (components/glass-crack.js): an SVG inside the element, each
+   crack drawn twice, a soft dark line under a bright one, so it reads as a
+   broken edge catching the light on light and dark glass alike */
+svg.glass-crack {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  transition: opacity 1s ease;
+}
+
+.glass-crack--healing { opacity: 0; }
+
+.glass-crack__shade {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.28);
+  stroke-width: 1.8px;
+  stroke-linejoin: miter;
+  stroke-linecap: round;
+}
+
+.glass-crack__light {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.8);
+  stroke-width: 0.8px;
+  stroke-linejoin: miter;
+  stroke-linecap: round;
+}
+
+.glass-crack__chip {
+  fill: rgba(255, 255, 255, 0.44);
+  stroke: rgba(0, 0, 0, 0.24);
+  stroke-width: 0.6px;
 }

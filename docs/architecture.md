@@ -22,12 +22,14 @@ graph TD
         PY["scripts/fetch.py<br/>(hourly)"]:::py
         PYOH["fetch_opening_hours.py<br/>(weekly)"]:::py
         PYPH["fetch_photos.py<br/>(monthly)"]:::py
+        PYGS["fetch_graduation_sessions.py<br/>(monthly)"]:::py
     end
 
     POLIMI_PAGE_OCC["onlineservices.polimi.it<br/>occupancy pages"]:::api
     POLIMI_API["PoliMi REST API<br/>(fallback only)"]:::api
     POLIMI_PAGE["polimi.it opening-hours page"]:::api
     POLIMI_PHOTO["PoliMi photo API"]:::api
+    POLIMI_PDF["polimi.it calendar page<br/>+ sessions PDF"]:::api
     R2[("R2: poliaule-data")]:::store
 
     subgraph Delivery ["Delivery"]
@@ -40,19 +42,22 @@ graph TD
     GHA -->|runs| PY
     GHA -->|runs| PYOH
     GHA -->|runs| PYPH
+    GHA -->|runs| PYGS
     PY -->|scrape per Sede/day| POLIMI_PAGE_OCC
     PY -.->|per room, on failure| POLIMI_API
     PYOH -->|scrape| POLIMI_PAGE
     PYPH -->|download| POLIMI_PHOTO
+    PYGS -->|scrape| POLIMI_PDF
     PY -->|wrangler r2 object put| R2
     PYOH -->|wrangler r2 object put| R2
     PYPH -->|wrangler r2 object put| R2
+    PYGS -->|wrangler r2 object put| R2
     R2 -->|binding| WORKER
     WORKER -->|"/v1/* (JSON, photos)"| BROWSER
     PAGES -->|static HTML/JS/CSS| BROWSER
 ```
 
-The occupancy job is triggered by the cron Worker via `workflow_dispatch`; the opening-hours and photos jobs run on their own GitHub Actions schedules. All three write local files, then upload them to the `poliaule-data` R2 bucket via `wrangler r2 object put`. The API Worker binds that bucket and serves it over HTTP; see [api.md](./api.md) for the exact routes.
+The occupancy job is triggered by the cron Worker via `workflow_dispatch`; the opening-hours, graduation-sessions and photos jobs run on their own GitHub Actions schedules. All four write local files, then upload them to the `poliaule-data` R2 bucket via `wrangler r2 object put`. The API Worker binds that bucket and serves it over HTTP; see [api.md](./api.md) for the exact routes.
 
 `fetch.py` reads the freshly-written `data/opening-hours.json` locally to decide which days to fetch. The browser gets it through `/v1/opening-hours` on the API Worker.
 
@@ -139,6 +144,14 @@ Runs weekly (Sunday 6 AM UTC), independent of `fetch.py`'s hourly schedule. Scra
 - `default_hours`: last-resort fallback for campuses the page doesn't cover at all (Cremona, Lecco, Mantova)
 
 The page has no JSON/PDF export and can change format without notice, so a parse that looks too small or missing key sections is rejected: the script exits non-zero and leaves the existing `data/opening-hours.json` untouched rather than uploading bad data. The workflow then uploads the resulting file to both `poliaule-data` and `poliaule-data-beta` directly, with no beta-specific gating.
+
+### fetch_graduation_sessions.py
+
+Runs monthly (1st at 6:30 AM UTC); the PDF changes once or twice a year. Finds the "Periodi di lezione e sessioni di laurea" PDF on polimi.it's calendars page, reads its "Sessioni di laurea" table and writes `data/graduation-sessions.json`: one entry per graduation day with the campuses it's held at (schema in [api.md](./api.md#graduation-sessions)).
+
+Both the page and the PDF change without notice (the PDF's file name changes with each revision), so nothing relies on file names, page numbers or column positions. The link is found by its title or text mentioning the sessions, and failing that by downloading every PDF on the page and keeping the ones with the table. Every PDF page mentioning "sessioni di laurea" is read. Each row's cells are classified by content (date, level, campus) from pdfplumber's table cells, with a text-line fallback for a table drawn without cell borders. The campus cell is resolved against `data/classrooms.json`'s primary campuses: "Milano" is every one in Milan, "Poli Territoriali" every one outside it, and the Design School's days are Bovisa's. A parse is rejected (exit non-zero, nothing uploaded) if a date's printed weekday doesn't match it, a date falls outside the academic year, a row has no known level, a campus part isn't recognised, or a document has fewer than 6 rows.
+
+When the page swaps a year's PDF for the next one, the old year's remaining days would disappear, so the workflow first restores the current file from R2 and the script carries over the upcoming days of academic years it no longer finds. Telegram is notified only when the scrape fails, or finds the PDF only by probing every link.
 
 Both `fetch.py` and the frontend resolve a building's hours the same way: an explicit match in `buildings`, else the building's campus in `campus_defaults`, else `default_hours`. `scripts/fetch.py`'s `resolve_building_hours()` and `available-rooms-script.js`'s `resolveBuildingHours()` implement this lookup independently, keyed off the same file, so there's no shared runtime dependency between the Python and JS sides.
 

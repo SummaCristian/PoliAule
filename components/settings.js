@@ -9,6 +9,7 @@ import { isSecondaryCampus } from '../utils/secondary.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
 import { openTransferDialog } from './transfer-dialog.js';
+import { seasonalEnabled, setSeasonalEnabled } from '../utils/season.js';
 import { createToggle, createSegmentedControl, getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState, snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from 'vitrium';
 
 const TRANSITION_DURATION = 420;
@@ -70,7 +71,12 @@ function getPopupTarget() {
   const naturalH = popupEl.scrollHeight;
   popupEl.style.height = ''; // snapGeometry (via morphGeometry) sets the final value right after
 
-  const h = Math.min(naturalH, vh - 120);
+  // Centred on the screen, with the same clearance top and bottom: the app
+  // header's bottom edge, so it never goes under the header (its height includes
+  // the safe area, which varies per device).
+  const header = document.querySelector('.header');
+  const top = Math.max(60, header ? Math.ceil(header.getBoundingClientRect().bottom) + 12 : 0);
+  const h = Math.min(naturalH, vh - 2 * top);
   return {
     left: (vw - w) / 2,
     top: (vh - h) / 2,
@@ -788,6 +794,17 @@ function buildPopup() {
               </button>
             </div>
           </div>
+          <div class="settings-row" data-seasonal-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon-badge" style="--badge-color: #FF7A2E">
+                <i class="hgi-stroke hgi-fireworks" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.seasonal">${t('settings.seasonal')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.seasonalDesc">${t('settings.seasonalDesc')}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -897,6 +914,14 @@ function buildPopup() {
     localStorage.setItem(BLOCK_PAST_HOURS_KEY, String(isOn));
     window.dispatchEvent(new CustomEvent('blockpasthourschange', { detail: { blocked: isOn } }));
   };
+
+  // Wire Seasonal Decorations toggle (default: true)
+  const seasonalRow = popup.querySelector('[data-seasonal-row]');
+  const seasonalToggle = buildToggle(seasonalEnabled());
+  seasonalRow.appendChild(seasonalToggle.el);
+  seasonalToggle.onChange = (isOn) => setSeasonalEnabled(isOn);
+  // A season turned on or off from the search moves the toggle too
+  window.addEventListener('seasonalchange', () => seasonalToggle.set(seasonalEnabled(), { animate: false }));
 
   // Wire Show Partially Free toggle (default: true)
   const showPartialRow = popup.querySelector('[data-show-partial-row]');

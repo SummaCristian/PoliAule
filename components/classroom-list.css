@@ -1,4 +1,7 @@
 .available-classrooms-container {
+  /* The containing block of the cards fading out after a rebuild
+     (utils/layout-flip.js morphRender) */
+  position: relative;
   margin: 0.5rem 0;
   padding: 0.5rem;
 
@@ -29,18 +32,17 @@
   font-weight: 700;
 }
 
-/* Clear tinted glass only veils the backdrop in the accent, so white text
-   would wash out: use a deeper shade of the accent instead (lighter in dark). */
+/* On: the same glass as the notes (.campus-closed-note below, the season's
+   banner): clear, with just a veil of the accent, the text in the app's own
+   colour and only the icon in the accent. Vitrium's clear tint at its own
+   strength reads as a coloured panel. */
 .results-filter-btn.lg-glass--tinted {
-  color: color-mix(in oklch, var(--lg-accent) 70%, black);
+  --lg-glass-tint: color-mix(in srgb, var(--lg-accent) 40%, transparent);
+  color: var(--text-color-primary);
 }
 
-@media (prefers-color-scheme: dark) {
-  /* Over the near-black page the clear tint's 40% reads as solid paint. */
-  .results-filter-btn.lg-glass--tinted {
-    --lg-tint-strength-clear: 22%;
-    color: color-mix(in oklch, var(--lg-accent) 55%, white);
-  }
+.results-filter-btn.lg-glass--tinted .hgi-stroke {
+  color: var(--lg-accent);
 }
 
 .results-filter-btn .hgi-stroke {
@@ -92,6 +94,62 @@
   opacity: 0.60;
 
   margin: 0 3rem;
+}
+
+/* Campus closed all day (renderCampusClosedContainer in script.js), in place
+   of the "no results" icon and text. Styled like the season's banner
+   (.season-banner in style.css): clear glass with just a veil of the accent,
+   the text in the app's own colours, only the icon in the accent. */
+.campus-closed-note {
+  --lg-glass-tint: color-mix(in srgb, var(--lg-accent) 40%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: calc(100% - 2.5rem);
+  max-width: 28rem;
+  box-sizing: border-box;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-xl);
+  color: var(--text-color-primary);
+  text-align: start;
+}
+
+.campus-closed-note__icon {
+  flex: none;
+  font-size: var(--text-150);
+  color: var(--lg-accent);
+}
+
+.campus-closed-note__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.campus-closed-note__title {
+  margin: 0;
+  font-size: var(--text-90);
+  font-weight: 700;
+}
+
+.campus-closed-note__body {
+  margin: 0.1rem 0 0;
+  font-size: var(--text-80);
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text-color-primary) 70%, transparent);
+}
+
+/* A graduation day at the campus (graduationNote in script.js): the same
+   note above the results, in graduation's navy whatever the accent is */
+.graduation-note {
+  --lg-glass-tint: color-mix(in srgb, var(--graduation-tint) 35%, transparent);
+  --graduation-tint: #3d63b3;
+  margin: 0 auto 1rem;
+}
+
+.graduation-note .campus-closed-note__icon { color: var(--graduation-tint); }
+
+@media (prefers-color-scheme: dark) {
+  .graduation-note { --graduation-tint: #8eabff; }
 }
 
 /* Results list — a vertical stack of per-building <li> sections (see
@@ -148,11 +206,12 @@
   padding: 0.25rem;
   text-align: start;
 
-  /* `backwards`, not `both`: the end keyframe is the natural resting state,
-     and letting `filter: blur(0)` linger as an applied filter breaks the
-     glass button's nested backdrop-filter in Safari (same reason
-     .tab-content.visible drops `forwards`). */
+  /* `backwards`, not `both`: the end keyframe is the natural resting state
+     (same reason .tab-content.visible drops `forwards`). */
   animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  /* The stagger (script.js), plus any wait for a card fading out of this
+     spot after a rebuild (utils/layout-flip.js) */
+  animation-delay: calc(var(--appear-delay, 0ms) + var(--lf-wait, 0ms));
 }
 
 @media (min-width: 1100px) {
@@ -227,7 +286,7 @@
 }
 
 .building-section-btn i {
-  font-size: 1.25rem;
+  font-size: var(--text-125);
   line-height: 1;
 }
 
@@ -263,6 +322,7 @@
 
 .classroom-list-item-container .classroom-card {
   animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--appear-delay, 0ms) + var(--lf-wait, 0ms));
 }
 
 /* Prevent re-triggering the staggered animation after the first load */
@@ -280,12 +340,10 @@
   from {
     opacity: 0;
     transform: translateY(12px);
-    filter: blur(4px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
@@ -744,4 +802,39 @@
 
 .classroom-card--fav .classroom-card-fav-star {
   display: block;
+}
+
+/* A card or header still there after the results were rebuilt glides from
+   its old place (morphRender in utils/layout-flip.js) instead of replaying
+   the entrance */
+.list-outer-container .classroom-card.lf-kept,
+.list-outer-container .building-section-header.lf-kept {
+  animation: none;
+}
+
+/* "No results" and the closed-campus note, when a search swaps them in, rise
+   in like the cards they replace (not the start-up placeholder, which shows
+   before any search) */
+.available-classrooms-container.empty[data-searched] > :not(.lf-ghosts) {
+  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: var(--lf-wait, 0ms);
+}
+
+/* Another campus: the new list rises in from further down, once the old one
+   has drifted away (morphRender's `swap`) */
+.lf-swapping .classroom-list-item-container .classroom-card,
+.lf-swapping .building-section-header,
+.lf-swapping.empty[data-searched] > :not(.lf-ghosts) {
+  animation-name: card-swap-in;
+}
+
+@keyframes card-swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(32px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

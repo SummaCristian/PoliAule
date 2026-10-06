@@ -111,10 +111,12 @@ function buildHourLens(fromInput, toInput, { datePicker, campusInput }) {
   const wrapper = document.createElement('div');
   wrapper.className = 'hl';
   wrapper.innerHTML = `
-    <div class="hl-head">
+    <div class="hl-title">
       <i class="hgi-stroke hgi-clock-01 hl-icon" aria-hidden="true"></i>
+      <span class="hl-label" data-i18n="timepicker.timeLabel">${t('timepicker.timeLabel')}</span>
+    </div>
+    <div class="hl-head">
       <div class="hl-readout">
-        <span class="hl-label" data-i18n="timepicker.timeLabel">${t('timepicker.timeLabel')}</span>
         <span class="hl-time"></span>
       </div>
       <div class="hl-dur"></div>

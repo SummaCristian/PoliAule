@@ -172,7 +172,7 @@ html.search-vt .lg-tabbar__prominent {
    the query, so the field visibly "holds" something once you type. */
 .search-bar-icon {
   flex-shrink: 0;
-  font-size: 1.2rem !important;
+  font-size: var(--text-125) !important;
   color: color-mix(in srgb, var(--text-color-primary) 42%, transparent);
   transition: color 0.2s ease;
 }
@@ -192,7 +192,7 @@ html.search-vt .lg-tabbar__prominent {
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
   /* 18px: a touch larger than the platform's own search field, and well over
      iOS Safari's 16px zoom-on-focus threshold. */
-  font-size: 1.125rem;
+  font-size: var(--text-125);
   font-weight: 600;
   letter-spacing: -0.005em;
   color: var(--text-color-primary);
@@ -272,7 +272,7 @@ html.search-vt .lg-tabbar__prominent {
 }
 
 .search-clear-btn .hgi-stroke {
-  font-size: 0.95rem !important;
+  font-size: var(--text-90) !important;
 }
 
 .search-input:not(:placeholder-shown) ~ .search-bar-trailing .search-clear-btn {
@@ -289,7 +289,7 @@ html.search-vt .lg-tabbar__prominent {
   border-radius: 0.4rem;
   border: 1px solid color-mix(in srgb, var(--text-color-primary) 14%, transparent);
   font-family: inherit;
-  font-size: var(--text-72);
+  font-size: var(--text-75);
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.2;
@@ -344,7 +344,7 @@ html.search-vt .lg-tabbar__prominent {
 }
 
 .search-overlay-close .hgi-stroke {
-  font-size: 1.2rem !important;
+  font-size: var(--text-125) !important;
 }
 
 /* Desktop: macOS Spotlight's proportions — one tall capsule with large,
@@ -361,11 +361,11 @@ html.search-vt .lg-tabbar__prominent {
   }
 
   .search-bar-icon {
-    font-size: 1.5rem !important;
+    font-size: var(--text-150) !important;
   }
 
   .search-input {
-    font-size: 1.5rem;
+    font-size: var(--text-150);
     font-weight: 500;
     letter-spacing: -0.015em;
   }
@@ -707,6 +707,33 @@ html.search-vt .lg-tabbar__prominent {
   border-radius: 50%;
 }
 
+/* A season's logo, on a hint of its colour */
+.search-row-lead--season {
+  background: color-mix(in srgb, var(--season-tint) 16%, transparent);
+}
+
+/* The icon (public/favicons/<season>/icon-192.png) keeps the chair at the
+   same size and spot in every season, so they line up */
+.search-row-lead--season img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  -webkit-user-drag: none;
+}
+
+/* A season without a logo of its own yet (graduation): its icon, in its
+   colour */
+.search-row-lead--season .search-row-lead-icon {
+  font-size: var(--text-150);
+  color: var(--season-tint);
+}
+
+@media (prefers-color-scheme: dark) {
+  .search-row-lead--season .search-row-lead-icon {
+    color: color-mix(in srgb, var(--season-tint) 45%, white);
+  }
+}
+
 .search-row-lead--tile.search-row-lead--accent {
   background: color-mix(in srgb, var(--color-status-busy) 18%, transparent);
   color: var(--color-status-busy);
@@ -894,6 +921,13 @@ html.search-vt .lg-tabbar__prominent {
   transform: rotate(180deg);
 }
 
+/* A season's row (buildSeasonRow): its Vitrium toggle on the right */
+.search-row-toggle {
+  display: flex;
+  align-items: center;
+  margin-inline-start: 0.5rem;
+}
+
 /* ── "Show all" expander row ─────────────────────────────────────────── */
 
 .search-show-all {
@@ -1007,7 +1041,7 @@ html.search-vt .lg-tabbar__prominent {
 }
 
 .search-session-where {
-  font-size: var(--text-72);
+  font-size: var(--text-75);
   color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1051,7 +1085,7 @@ html.search-vt .lg-tabbar__prominent {
   border-radius: var(--radius-pill);
   background: var(--text-color-accent);
   color: #fff;
-  font-size: 0.6rem;
+  font-size: var(--text-60);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -1359,7 +1393,7 @@ html.search-vt .lg-tabbar__prominent {
 
 .search-pv-course-chip {
   text-align: center;
-  font-size: var(--text-72);
+  font-size: var(--text-75);
   font-weight: 700;
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-pill);
@@ -1373,7 +1407,7 @@ html.search-vt .lg-tabbar__prominent {
 }
 
 .search-pv-range-note {
-  font-size: var(--text-72);
+  font-size: var(--text-75);
   color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
 }
 

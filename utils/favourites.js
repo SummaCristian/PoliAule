@@ -77,13 +77,15 @@ export function isFavouriteBuilding(campusId, buildingName) {
   return getFavouriteEntries().includes(buildingKey(campusId, buildingName));
 }
 
-function write(entries) {
+// `added` is the entry a toggle just starred, if any (the seasonal
+// decorations celebrate it); a removal or a whole-list import leaves it null.
+function write(entries, added = null) {
   try {
     localStorage.setItem(KEY, JSON.stringify(entries));
   } catch {
     /* storage full or unavailable — favourites just won't persist */
   }
-  window.dispatchEvent(new CustomEvent('favourites-changed'));
+  window.dispatchEvent(new CustomEvent('favourites-changed', { detail: { added } }));
 }
 
 // Replaces the whole list (used by the device transfer import).
@@ -97,7 +99,7 @@ function toggleEntry(entry) {
   const idx = entries.indexOf(entry);
   if (idx === -1) entries.push(entry);
   else entries.splice(idx, 1);
-  write(entries);
+  write(entries, idx === -1 ? entry : null);
   return idx === -1;
 }
 

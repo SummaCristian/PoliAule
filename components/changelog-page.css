@@ -1,0 +1,735 @@
+/* ── Changelog Page Overlay (components/changelog-page.js) ────────────── */
+
+/* Same footing as #info-page-overlay: a flex column in .body-container,
+   with body.info-open hiding the tabs around it. The page itself
+   reuses .info-page for the glow behind it. */
+#changelog-overlay:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: var(--background-color);
+}
+
+.cl-content {
+  width: 100%;
+  max-width: 680px;
+  padding: 0 1.25rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: start;
+  /* Set here, not inherited: only <p> has a global colour, so list items in
+     the long read came out black in dark mode */
+  color: var(--text-color-primary);
+}
+
+.cl-content[aria-busy="true"] {
+  min-height: 60vh;
+}
+
+/* ── List: header and the beta switch ──────────────────────────────── */
+
+.cl-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 0 1rem;
+}
+
+/* The two apps, fanned like the two channels the
+   list below follows */
+.cl-hero-icons {
+  position: relative;
+  width: 112px;
+  height: 76px;
+  margin-bottom: 0.9rem;
+}
+
+.cl-hero-icon {
+  position: absolute;
+  top: 6px;
+  width: 64px;
+  height: 64px;
+  border-radius: 24%;
+  corner-shape: superellipse;
+  user-select: none;
+  -webkit-user-drag: none;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 12px rgba(0, 0, 0, 0.08),
+    0 14px 24px rgba(0, 0, 0, 0.12);
+}
+
+.cl-hero-icon--beta {
+  left: 6px;
+  rotate: -10deg;
+}
+
+.cl-hero-icon--main {
+  right: 6px;
+  rotate: 8deg;
+}
+
+/* Off poliaule.com the app you're in is the beta: its icon comes forward
+   (and Info's icon, which morphs into it, lands on the front one) */
+.cl-hero-icons--beta-front .cl-hero-icon--beta {
+  z-index: 1;
+}
+
+.cl-hero-title {
+  margin: 0;
+  font-size: var(--text-200);
+  font-weight: 800;
+  line-height: 1.15;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cl-hero-subtitle {
+  margin: 0.4rem 0 0;
+  font-size: var(--text-100);
+  color: var(--text-color-secondary);
+  line-height: 1.4;
+}
+
+.cl-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-xl);
+  color: var(--text-color-primary);
+  margin-bottom: 0.5rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cl-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.cl-toggle-title {
+  font-size: var(--text-100);
+  font-weight: 700;
+}
+
+.cl-toggle-desc {
+  font-size: var(--text-85);
+  color: var(--text-color-secondary);
+  line-height: 1.35;
+}
+
+.cl-toggle-slot {
+  flex-shrink: 0;
+  display: flex;
+}
+
+/* ── List ──────────────────────────────────────────────────────────── */
+
+.cl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  /* Rows above the screen collapsing are compensated by hand (_setEntry);
+     Chrome's own scroll anchoring would compensate a second time */
+  overflow-anchor: none;
+}
+
+/* Betas hidden: the groups leave the layout (flipLayout animates it) */
+.cl-list--stable-only [data-cl-betas] {
+  display: none;
+}
+
+/* One version. Stable releases are full glass cards with the app icon;
+   betas are lighter rows with the beta icon, hung off a dashed track that
+   leads to the release they became. */
+.cl-entry {
+  border-radius: var(--radius-xl);
+  color: var(--text-color-primary);
+}
+
+.cl-entry-head {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  border-radius: inherit;
+  text-align: start;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cl-entry-head:focus-visible {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: 2px;
+}
+
+.cl-icon {
+  flex-shrink: 0;
+  border-radius: 24%;
+  corner-shape: superellipse;
+  user-select: none;
+  -webkit-user-drag: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.cl-entry-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.cl-entry-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.cl-entry-version {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.cl-entry--stable .cl-entry-version {
+  font-size: var(--text-150);
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cl-entry--beta .cl-entry-version {
+  font-size: var(--text-100);
+  color: var(--cl-beta);
+}
+
+.cl-entry-title {
+  font-size: var(--text-100);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.cl-entry--beta .cl-entry-title {
+  font-size: var(--text-90);
+}
+
+.cl-entry-date {
+  font-size: var(--text-80);
+  color: var(--text-color-secondary);
+}
+
+.cl-chevron {
+  flex-shrink: 0;
+  font-size: var(--text-125) !important;
+  color: var(--text-color-secondary);
+  transition: rotate 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cl-entry.is-open .cl-chevron {
+  rotate: 180deg;
+}
+
+/* The panel's height is what animates (to 0 when closing), so its padding
+   lives on the inner wrapper, inside what gets clipped */
+.cl-entry-panel-inner {
+  padding: 0 1rem 1rem;
+}
+
+/* Text aligned with the title, past the icon */
+.cl-entry--stable .cl-entry-panel-inner {
+  padding-left: calc(1rem + 44px + 0.85rem);
+}
+
+.cl-entry--beta .cl-entry-panel-inner {
+  padding-left: calc(1rem + 30px + 0.85rem);
+}
+
+.cl-more {
+  margin-top: 0.75rem;
+}
+
+/* Badges: green for stable, blue for beta, as the two apps' icons */
+.cl-page {
+  --cl-stable: #1f9d4a;
+  --cl-beta: #1a7fe0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .cl-page {
+    --cl-stable: #4cd07d;
+    --cl-beta: #5aaeff;
+  }
+}
+
+.cl-badge,
+.cl-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 1.3rem;
+  padding: 0 0.5rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-70);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cl-badge--stable {
+  color: var(--cl-stable);
+  background: color-mix(in srgb, var(--cl-stable) 14%, transparent);
+}
+
+.cl-badge--beta {
+  color: var(--cl-beta);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cl-beta) 45%, transparent);
+}
+
+.cl-tag {
+  color: var(--text-color-secondary);
+  background: color-mix(in srgb, var(--text-color-secondary) 12%, transparent);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* A run of betas: under the release they led to, on a dashed track */
+.cl-betas {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: -0.25rem 0 0.25rem 1.6rem;
+  padding-left: 0.9rem;
+}
+
+.cl-betas::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  bottom: 0.6rem;
+  border-left: 2px dashed color-mix(in srgb, var(--cl-beta) 40%, transparent);
+}
+
+.cl-betas-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0.1rem;
+  font-size: var(--text-70);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-color-secondary);
+}
+
+.cl-entry--beta {
+  background: color-mix(in srgb, var(--cl-beta) 5%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cl-beta) 14%, transparent);
+}
+
+.cl-entry--beta .cl-entry-head {
+  padding: 0.65rem 0.85rem;
+}
+
+/* The betas newer than any release: on top, with nothing to lead to yet */
+.cl-betas--dev {
+  margin: 0 0 0.5rem 0.4rem;
+}
+
+.cl-betas--dev .cl-betas-label {
+  color: var(--cl-beta);
+}
+
+.cl-betas--dev .cl-betas-label .hgi-stroke {
+  font-size: var(--text-90) !important;
+}
+
+/* ── One version's page ────────────────────────────────────────────── */
+
+.cl-version-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  padding: 0.5rem 0 1rem;
+}
+
+.cl-version-hero .cl-icon {
+  margin-bottom: 0.4rem;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 12px rgba(0, 0, 0, 0.08),
+    0 16px 28px rgba(0, 0, 0, 0.12);
+}
+
+.cl-version-line {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: var(--text-90);
+  font-weight: 700;
+  color: var(--text-color-secondary);
+}
+
+.cl-version-title {
+  margin: 0;
+  font-size: var(--text-200);
+  font-weight: 800;
+  line-height: 1.15;
+  text-wrap: balance;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cl-card {
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-xl);
+  color: var(--text-color-primary);
+}
+
+.cl-longform {
+  padding: 0.5rem 0.25rem 0;
+}
+
+.cl-github {
+  align-self: center;
+  margin-top: 1rem;
+}
+
+/* ── Prose (compiled Markdown) ─────────────────────────────────────── */
+
+.cl-prose {
+  font-size: var(--text-100);
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+
+.cl-prose > :first-child { margin-top: 0; }
+.cl-prose > :last-child { margin-bottom: 0; }
+
+.cl-prose p {
+  margin: 0 0 0.85rem;
+}
+
+.cl-prose h2 {
+  margin: 2rem 0 0.6rem;
+  font-size: var(--text-150);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.cl-prose h3 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: var(--text-110);
+  font-weight: 800;
+}
+
+.cl-prose ul,
+.cl-prose ol {
+  margin: 0 0 0.85rem;
+  padding-left: 1.25rem;
+}
+
+.cl-prose li {
+  margin: 0.3rem 0;
+}
+
+.cl-prose li::marker {
+  color: var(--text-color-secondary);
+}
+
+/* The highlights: compact bullets like the old popover's */
+.cl-highlights ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.cl-highlights li {
+  position: relative;
+  margin: 0;
+  padding-left: 1rem;
+  font-size: var(--text-90);
+  line-height: 1.45;
+}
+
+.cl-highlights li::before {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lg-accent);
+}
+
+.cl-highlights p {
+  font-size: var(--text-90);
+}
+
+.cl-prose a {
+  color: var(--text-color-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* .info-pill links keep their own look */
+.cl-prose a.info-pill {
+  text-decoration: none;
+}
+
+.cl-prose code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--text-color-secondary) 14%, transparent);
+}
+
+.cl-prose pre {
+  margin: 0 0 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  background: color-mix(in srgb, var(--text-color-secondary) 10%, transparent);
+}
+
+.cl-prose pre code {
+  padding: 0;
+  background: none;
+}
+
+.cl-prose blockquote {
+  margin: 0 0 0.85rem;
+  padding-left: 0.9rem;
+  border-left: 3px solid color-mix(in srgb, var(--text-color-secondary) 35%, transparent);
+  color: var(--text-color-secondary);
+}
+
+/* Callouts: > [!NOTE] / [!TIP] / [!WARNING], as tinted clear glass */
+.cl-callout {
+  --cl-callout: var(--cl-beta);
+  --lg-glass-tint: var(--cl-callout);
+  /* Lighter than Vitrium's clear tint: it sits behind running text */
+  --lg-tint-strength-clear: 16%;
+  margin: 0 0 0.85rem;
+  padding: 0.75rem 0.9rem 0.75rem 2.4rem;
+  border-radius: var(--radius-lg);
+  color: var(--text-color-primary);
+  font-size: var(--text-90);
+}
+
+.cl-callout > .hgi-stroke {
+  position: absolute;
+  left: 0.85rem;
+  top: 0.8rem;
+  font-size: var(--text-110) !important;
+  color: var(--cl-callout);
+}
+
+.cl-callout--tip { --cl-callout: var(--cl-stable); }
+.cl-callout--warning { --cl-callout: #d98e04; }
+
+.cl-callout p { margin: 0 0 0.5rem; }
+.cl-callout p:last-child { margin-bottom: 0; }
+
+/* Media */
+.cl-figure {
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cl-figure img,
+.cl-figure video {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 0 0 0.5px var(--lg-outline),
+    0 6px 24px var(--lg-shadow-color);
+  background: color-mix(in srgb, var(--text-color-secondary) 8%, transparent);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.cl-figure video {
+  width: 100%;
+}
+
+/* Images with transparency (scripts/vite-changelog.js reads it from the
+   file): no frame around them, their own shape casts the shadow. Usually
+   icons and logos, so kept to a sensible size. */
+.cl-figure--bare img {
+  max-height: 200px;
+  width: auto;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.14));
+}
+
+.cl-figure figcaption {
+  font-size: var(--text-80);
+  color: var(--text-color-secondary);
+  text-align: center;
+}
+
+/* A row of images side by side, wrapping when they don't fit. Not a
+   sideways scroller: that clips on both axes, and cut the images' shadows. */
+.cl-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+/* They shrink to share the row first (from 0, up to their own size), and
+   only wrap once they'd get narrower than 5.5rem */
+.cl-gallery .cl-figure {
+  margin: 0;
+  flex: 1 1 0;
+  min-width: 5.5rem;
+  max-width: max-content;
+}
+
+.cl-gallery .cl-figure img {
+  max-height: 240px;
+  width: auto;
+}
+
+/* ── Morphs: row -> version page (_navigate), Info <-> changelog hero ─ */
+
+@supports (view-transition-name: none) {
+  ::view-transition-group(cl-morph-card),
+  ::view-transition-group(cl-morph-icon),
+  ::view-transition-group(cl-morph-version),
+  ::view-transition-group(cl-morph-title),
+  ::view-transition-group(cl-info-icon),
+  ::view-transition-group(cl-info-title) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  /* The row and the highlights card differ in height: crop, don't stretch */
+  ::view-transition-group(cl-morph-card) {
+    overflow: clip;
+    border-radius: var(--radius-xl);
+  }
+
+  /* Text over text doesn't cross-fade well (it ghosts): what leaves fades
+     out first, quickly, and what arrives fades in after it */
+  ::view-transition-old(cl-morph-card),
+  ::view-transition-old(cl-morph-version),
+  ::view-transition-old(cl-morph-title),
+  ::view-transition-old(cl-info-title) {
+    animation: cl-morph-out 0.14s ease-out both;
+  }
+
+  ::view-transition-new(cl-morph-card),
+  ::view-transition-new(cl-morph-version),
+  ::view-transition-new(cl-morph-title),
+  ::view-transition-new(cl-info-title) {
+    animation: cl-morph-in 0.24s ease-in 0.1s both;
+  }
+
+  ::view-transition-old(cl-morph-card),
+  ::view-transition-new(cl-morph-card) {
+    height: auto;
+  }
+
+  ::view-transition-old(cl-morph-version),
+  ::view-transition-new(cl-morph-version),
+  ::view-transition-old(cl-morph-title),
+  ::view-transition-new(cl-morph-title),
+  ::view-transition-old(cl-info-title),
+  ::view-transition-new(cl-info-title) {
+    height: 100%;
+    width: auto;
+  }
+}
+
+@keyframes cl-morph-out { to { opacity: 0; } }
+@keyframes cl-morph-in { from { opacity: 0; } }
+
+/* ── Loading and errors ────────────────────────────────────────────── */
+
+.cl-skeleton {
+  height: 1rem;
+  margin: 0 0 0.6rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--text-color-secondary) 12%, transparent);
+  animation: cl-pulse 1.4s ease-in-out infinite;
+}
+
+.cl-skeleton--short {
+  width: 60%;
+}
+
+@keyframes cl-pulse {
+  50% { opacity: 0.5; }
+}
+
+.cl-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-color-secondary);
+}
+
+.cl-error .hgi-stroke {
+  font-size: var(--text-200) !important;
+}
+
+.cl-error p {
+  margin: 0;
+  max-width: 28rem;
+}
+
+.cl-error--inline {
+  padding: 1.5rem 0;
+}
+
+/* Desktop: a little more room */
+@media (min-width: 1000px) {
+  .cl-content {
+    max-width: 760px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-chevron,
+  .cl-skeleton {
+    transition: none;
+    animation: none;
+  }
+}

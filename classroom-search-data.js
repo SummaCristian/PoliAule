@@ -1,6 +1,8 @@
 import { getClassroomStatusNow, classroomsData as occupancyDays, openDataCache, readCachedJson, fetchJson } from './available-rooms-script.js';
 import { getApiBase } from './config.js';
 import { EASTER_EGGS } from './data/search-easter-eggs.js';
+import { seasonForQuery } from './utils/season.js';
+import { decodeEntities } from './utils/html.js';
 
 // Static classroom directory (campus → buildings → classrooms) plus the
 // unified Spotlight search that runs against it. The search UI itself lives
@@ -88,8 +90,8 @@ function buildOccupationIndex() {
         for (const room of building.classrooms ?? []) {
           for (const slot of room.occupancy ?? []) {
             if (!slot.inizio || !slot.fine) continue;
-            const professors = Array.isArray(slot.professors) ? slot.professors : [];
-            const title = slot.course ?? slot.raw ?? slot.name ?? '';
+            const professors = Array.isArray(slot.professors) ? slot.professors.map(decodeEntities) : [];
+            const title = decodeEntities(slot.course ?? slot.raw ?? slot.name ?? '');
             rows.push({
               date,
               inizio: slot.inizio,
@@ -114,8 +116,8 @@ function buildOccupationIndex() {
                 slot.code != null ? String(slot.code) : '',
                 slot.section ?? '',
                 professors.join(' '),
-                slot.raw ?? '',
-                slot.name ?? '',
+                decodeEntities(slot.raw ?? ''),
+                decodeEntities(slot.name ?? ''),
               ].join('  ').toLowerCase(),
             });
           }
@@ -700,7 +702,12 @@ export function runSearch(query) {
   const exams = toCappedResult(examItems, OCC_MAX_GROUPS);
   const lessons = toCappedResult(lessonItems, OCC_MAX_GROUPS);
 
-  const topHit = pickTopHit([classrooms.items[0], buildings.items[0], professors.items[0], exams.items[0], lessons.items[0]]);
+  // A season's keyword (utils/season.js) offers that season as the Top Hit,
+  // under the egg label; the ordinary matches stay below it
+  const season = seasonForQuery(query);
+  const topHit = season
+    ? { type: 'season', season, score: Number.MAX_SAFE_INTEGER, egg: {} }
+    : pickTopHit([classrooms.items[0], buildings.items[0], professors.items[0], exams.items[0], lessons.items[0]]);
 
   return { topHit, classrooms, buildings, professors, exams, lessons, corrections: correctedTerms(tokens) };
 }

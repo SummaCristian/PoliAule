@@ -57,6 +57,24 @@ jobs:
           npx --yes wrangler@4 r2 object get "poliaule-data/opening-hours.json" --file data/opening-hours.json --remote \
             || echo "No opening hours found in R2, will fall back to hardcoded hours."
 
+      # The previous run's day files, so scripts/fetch.py can keep a day's
+      # generated_at (and so its bytes and R2 ETag) when nothing in it changed:
+      # clients revalidating with If-None-Match then get a 304, not the whole file.
+      - name: Download previous occupancy (main)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p occupancy
+          if npx --yes wrangler@4 r2 object get "poliaule-data/occupancy/list.json" --file occupancy/list.json --remote; then
+            for d in $(jq -r '.dates[]' occupancy/list.json); do
+              npx --yes wrangler@4 r2 object get "poliaule-data/occupancy/occupation_$d.json" --file "occupancy/occupation_$d.json" --remote \
+                || echo "No previous file for $d."
+            done
+          else
+            echo "No previous occupancy found."
+          fi
+
       - name: Run fetch script (main)
         id: fetch_main
         env:
@@ -206,6 +224,26 @@ jobs:
           mkdir -p data
           npx --yes wrangler@4 r2 object get "poliaule-data-beta/opening-hours.json" --file data/opening-hours.json --remote \
             || echo "No opening hours found in R2, will fall back to hardcoded hours."
+
+      # The previous run's day files, so scripts/fetch.py can keep a day's
+      # generated_at (and so its bytes and R2 ETag) when nothing in it changed:
+      # clients revalidating with If-None-Match then get a 304, not the whole file.
+      - name: Download previous occupancy (beta)
+        if: steps.beta_flag.outputs.enabled == 'true'
+        working-directory: beta-checkout
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p occupancy
+          if npx --yes wrangler@4 r2 object get "poliaule-data-beta/occupancy/list.json" --file occupancy/list.json --remote; then
+            for d in $(jq -r '.dates[]' occupancy/list.json); do
+              npx --yes wrangler@4 r2 object get "poliaule-data-beta/occupancy/occupation_$d.json" --file "occupancy/occupation_$d.json" --remote \
+                || echo "No previous file for $d."
+            done
+          else
+            echo "No previous occupancy found."
+          fi
 
       - name: Run fetch script (beta)
         id: fetch_beta

@@ -2,6 +2,7 @@ import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { buildingOutlineSvg } from '../utils/building-outline.js';
 import { thumbUrl, thumbUrlCache, markPhotoBroken, isPhotoBroken } from '../utils/photo.js';
+import { decorate } from '../utils/season.js';
 
 // A building card drawn as a glass folder (styles: .bo-card in
 // building-overview.css), shared by the Available tab's building overview and
@@ -41,6 +42,7 @@ const REST_Y = 44;      // the cards' resting top edge, just under the back's ri
 // A compact folder (beside classroom cards, in Favourites) drops the headroom
 // above the tab, so its top lines up with theirs: everything moves up by this.
 const COMPACT_LIFT = BACK_TOP;
+const COMPACT_REF_W = 170; // the width a compact folder's front is set for (`--u` in building-overview.css)
 
 const FAN = {
   1: [[0.5, 0, -2]],
@@ -95,14 +97,18 @@ function layout(folder, width, height = FOLDER_H) {
   const scale = Math.min(baseScale * 1.44, Math.max(baseScale, (width / 346) * (baseScale / 0.5)));
   const papers = folder.querySelectorAll('.bo-paper');
   const fan = FAN[papers.length] ?? [];
-  const w = CARD_W * scale;
+  // A compact folder narrower than the ~170px its front is set for shrinks its
+  // front with it (--u in building-overview.css); the papers follow the same
+  // factor so they keep their place inside it.
+  const k = folder.classList.contains('bo-card--compact') ? Math.min(1, width / COMPACT_REF_W) : 1;
+  const w = CARD_W * scale * k;
   const free = width - w;
   papers.forEach((paper, i) => {
     const [fx, dy] = fan[i];
     paper.style.left = `${fx * free}px`;
-    paper.style.top = `${REST_Y - lift + dy}px`;
+    paper.style.top = `${(REST_Y - lift + dy) * k}px`;
     paper.style.width = `${w}px`;
-    paper.style.height = `${CARD_H * scale}px`;
+    paper.style.height = `${CARD_H * scale * k}px`;
   });
 }
 
@@ -167,6 +173,7 @@ export function buildBuildingFolder({ campusId, building, rooms, total, footerHt
   const folder = document.createElement('div');
   folder.className = compact ? 'bo-card bo-card--compact' : 'bo-card';
   folder.dataset.buildingName = building.name;
+  folder.dataset.campusId = campusId;
   folder.dataset.paperScale = paperScale;
 
   folder.innerHTML = `
@@ -211,5 +218,6 @@ export function buildBuildingFolder({ campusId, building, rooms, total, footerHt
 
   trackPointer(folder);
   resizer.observe(folder);
+  decorate('folder', folder, { campusId, building });
   return folder;
 }

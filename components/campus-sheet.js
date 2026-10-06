@@ -106,7 +106,16 @@ function detentAfterBuildingSelect() {
 // would bake the rail's numbers into the corners. They are refreshed once the
 // bar has settled (see initCampusSheet).
 const navMetrics = { tabbarHeight: 72, outerInset: 28 };
-const geometryKey = () => `${navMetrics.tabbarHeight}|${navMetrics.outerInset}`;
+// The lowest point of the app header, plus a little air: the highest the mobile
+// sheet may reach. Measured from the header itself (its height includes the
+// safe area, which a home-screen app reports late and differently per device).
+const HEADER_AIR = 8;
+const headerClearance = () => {
+  const header = document.querySelector('.header');
+  return header ? Math.ceil(header.getBoundingClientRect().bottom) + HEADER_AIR : 0;
+};
+
+const geometryKey = () => `${navMetrics.tabbarHeight}|${navMetrics.outerInset}|${headerClearance()}|${innerHeight}`;
 
 function readNavMetrics() {
   if (desktopMQ.matches) return;
@@ -143,10 +152,11 @@ function build(detent) {
     detents: [
       { id: 'collapsed', size: COLLAPSED },
       { id: 'half', size: 0.5 },
-      { id: 'full', size: desktop ? 'full' : 0.85 },
+      // Mobile stops short of the top so the map stays reachable, but never above the header.
+      { id: 'full', size: desktop ? 'full' : Math.round(0.85 * (innerHeight - 20)) },
     ],
     detent,
-    margin: { top: desktop ? headerHeightPx() + 32 + 20 : 0, bottom: 20, inline: desktop ? 20 : PLAIN_INSET },
+    margin: { top: desktop ? headerHeightPx() + 32 + 20 : headerClearance(), bottom: 20, inline: desktop ? 20 : PLAIN_INSET },
     ...(desktop ? { width: 420, side: 'end' } : { geometry: mobileGeometry() }),
     onResize(height) {
       // components/campus-map.js listens for this: any manual drag/wheel, the
@@ -193,6 +203,18 @@ export function initCampusSheet() {
     sheet.scrollTop = scroll;
   };
   desktopMQ.addEventListener('change', rebuild);
+  // The header's bottom edge (safe area, rotation) and the viewport settle after
+  // first paint in a home-screen app: rebuild once they have.
+  let viewSettle = 0;
+  const onViewChange = () => {
+    clearTimeout(viewSettle);
+    viewSettle = setTimeout(() => {
+      if (!desktopMQ.matches && geometryKey() !== builtGeometryKey) rebuild();
+    }, 250);
+  };
+  window.addEventListener('resize', onViewChange);
+  window.addEventListener('pageshow', onViewChange);
+  document.addEventListener('visibilitychange', onViewChange);
   // The bar animates to its new size when the layout changes, firing this on
   // every frame: wait until it has stopped before comparing.
   let navSettle = 0;

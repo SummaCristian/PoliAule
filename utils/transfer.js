@@ -17,6 +17,7 @@ import {
   HIDE_SUNDAYS_KEY, INTERVAL_HOURS_KEY, SHOW_PARTIAL_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY,
   DEFAULT_TAB_KEY, PREFERRED_CAMPUS_ENABLED_KEY, PREFERRED_CAMPUS_ID_KEY, REMEMBER_LAST_CAMPUS_KEY,
 } from '../components/settings.js';
+import { SEASONAL_KEY } from './season.js';
 
 const VERSION = 1;
 const HASH_PREFIX = '#import=';
@@ -44,6 +45,7 @@ function fields(campusIds) {
     pe: [PREFERRED_CAMPUS_ENABLED_KEY, bool],
     pc: [PREFERRED_CAMPUS_ID_KEY, campusIds ? oneOf(...campusIds) : { enc: v => v || undefined }],
     rl: [REMEMBER_LAST_CAMPUS_KEY, bool],
+    se: [SEASONAL_KEY, bool],
   };
 }
 

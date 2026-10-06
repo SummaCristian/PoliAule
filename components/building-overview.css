@@ -116,9 +116,11 @@
    scrolls it exactly as it scrolled the list it replaced. */
 .bo-grid {
   display: grid;
-  /* Folder-width columns: the folders read best around 10-12rem wide; wider
-     and the three cards inside spread thin across a mostly empty back. */
-  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  /* Folder-width columns: the folders read best around 168-190px wide; wider
+     and the three cards inside spread thin across a mostly empty back. In px,
+     not rem: the front's type and count pills are px, so a narrower folder
+     (rem shrinks with the root font size) clips them. */
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
   gap: 0.85rem;
   padding: 0.25rem 0.25rem 1rem;
 }
@@ -260,7 +262,7 @@
 }
 
 .bo-close .hgi-stroke {
-  font-size: 1.25rem;
+  font-size: var(--text-125);
 }
 
 /* ── Card: a glass folder ─────────────────────────────────────────────

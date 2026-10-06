@@ -12,6 +12,13 @@ copy() {
 }
 copy occupancy/list.json
 copy opening-hours.json
+# Written by the monthly graduation-sessions job, so absent until its first run
+if npx wrangler r2 object get "$SRC/graduation-sessions.json" --remote --file "$TMP/grad.json" >/dev/null 2>&1; then
+  npx wrangler r2 object put "$DST/graduation-sessions.json" --local --file "$TMP/grad.json" >/dev/null
+  echo "copied graduation-sessions.json"
+else
+  echo "skipped graduation-sessions.json (not in R2 yet)"
+fi
 copy classrooms.json
 npx wrangler r2 object get "$SRC/occupancy/list.json" --remote --file "$TMP/list.json" >/dev/null
 for d in $(node -e 'console.log(require(process.argv[1]).dates.join(" "))' "$TMP/list.json"); do

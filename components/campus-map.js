@@ -581,6 +581,7 @@ async function boot() {
 
   // Soft geographic leash: after any move, if the centre has drifted outside
   // Lombardy, ease it back. Doesn't touch pitch, unlike constructor maxBounds.
+  map.on('move', queueCull);
   map.on('moveend', panBackInBounds);
 
   // Re-check "shifted" (see updateShifted() above) after every settle —
@@ -716,6 +717,34 @@ function selectedFocus() {
 function clearMarkers() {
   markers.forEach(m => m.remove());
   markers = [];
+}
+
+// Pins well outside the screen are hidden. Mapbox rewrites every marker's
+// transform on every frame of a move, wherever it is, and restyling a pin
+// (its glass plate, name and dot) cost ~0.4ms each on an older phone: 53 pins
+// were most of a pan's frame. A display:none pin costs next to nothing, and
+// nobody can see it. The margin is generous so a pin is back before it reaches
+// the edge, whatever the fling speed.
+const CULL_MARGIN = 200;
+let cullQueued = false;
+
+function cullMarkers() {
+  cullQueued = false;
+  if (!map || !markers.length) return;
+  const canvas = map.getCanvas();
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return; // the tab is hidden: nothing to measure against
+  for (const m of markers) {
+    const p = map.project(m.getLngLat());
+    m.getElement().classList.toggle('map-pin--culled',
+      p.x < -CULL_MARGIN || p.x > w + CULL_MARGIN || p.y < -CULL_MARGIN || p.y > h + CULL_MARGIN);
+  }
+}
+
+function queueCull() {
+  if (cullQueued) return;
+  cullQueued = true;
+  requestAnimationFrame(cullMarkers);
 }
 
 function flyOpts(extra, mobileHeightOverride) {
@@ -861,6 +890,7 @@ function showCampusMarkers(mapboxgl) {
         .addTo(map)
     );
   }
+  queueCull();
 }
 
 function showBuildingMarkers(mapboxgl, campus) {
@@ -890,6 +920,7 @@ function showBuildingMarkers(mapboxgl, campus) {
     );
   }
   syncSelectedMarker();
+  queueCull();
 }
 
 function showError(container) {

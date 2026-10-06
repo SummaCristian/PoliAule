@@ -848,3 +848,9 @@ html.campus-tab .footer {
   --pin-dot: var(--text-color-secondary);
   opacity: 0.8;
 }
+
+/* Off-screen pins (cullMarkers() in campus-map.js): hidden, so Mapbox's per-frame
+   transform writes to them restyle nothing. */
+.map-pin--culled {
+  display: none;
+}

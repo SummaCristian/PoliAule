@@ -38,7 +38,7 @@ Qui c'è una piccola lista di quello che ho risolto:
 
 - Risolto un bug che causava un crash in Google Chrome su Android quando una specifica combinazione di navigazioni indietro, sia tramite il pulsante di PoliAule che tramite quello del browser/sistema operativo, era eseguita. Sto ancora cercando di capire quale sia il problema nello specifico, ma credo che sia colpa di Chrome (crasha l'intero renderer XO). Nel frattempo, niente animazione quando tornate indietro usando il tasto indietro di sistema o la gesture indietro di sistema
 - Il popup delle impostazioni e il pannello del tab Campus non vanno più a finire dietro la barra superiore quando eseguito in forma di PWA
-- Safare aveva di nuovo deciso che non gli piaceva come stavo posizionando lo sheet, troppo vicino alla safe-area inferiore. Adesso però sembra accettarla senza colorare la safe-area di un colore solido
+- Safari aveva di nuovo deciso che non gli piaceva come stavo posizionando lo sheet, troppo vicino alla safe-area inferiore. Adesso però sembra accettarla senza colorare la safe-area di un colore solido
 - L'algoritmo di debounce della ricerca ora non ignorerà più quello che scrivi se vai troppo veloce. Non c'è di che.
 - Le aule di cui non ho trovato dati non vengoo più riportate come libere. Ora sono mostrate come "Non Disponibile" e non vengono più conteggiate tra le aule libere.
 

@@ -42,6 +42,6 @@ Qui c'è una piccola lista di quello che ho risolto:
 - L'algoritmo di debounce della ricerca ora non ignorerà più quello che scrivi se vai troppo veloce. Non c'è di che.
 - Le aule di cui non ho trovato dati non vengono più riportate come libere. Ora sono mostrate come "Non Disponibile" e non vengono più conteggiate tra le aule libere.
 
-## Un ultima cosa
+## Un’ultima cosa
 
 Se sei arrivato fino a qui, ti meriti qualcosina. Ho aggiunto alcuni easter egg qua e là. Alcuni sono piccoli, altri sono un po' più grandi. non voglio spoilerare troppo, per cui dirò solamente due cose: TEMI STAGIONALI e MOLTO PRESTO. Capirai.

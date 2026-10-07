@@ -309,6 +309,7 @@ function buildBuildingRow(item, ctx) {
   row.addEventListener('click', () => {
     // No own close transition — the Campus tab teleport is the navigation.
     dismissInstant();
+    releaseHistoryEntry(); // nothing is pushed over it, so Back would hit it next
     activateGroupTab('search-classrooms-container');
     goToBuilding(campusId, name);
   });
@@ -1263,11 +1264,35 @@ function onViewportResize() {
   if (!vv) return;
   overlay.style.setProperty('--search-vv-top', vv.offsetTop + 'px');
   overlay.style.setProperty('--search-vv-height', vv.height + 'px');
+  trackKeyboard(vv);
+}
+
+// The keyboard going away (Android's Back closes it before any page sees the
+// press; iOS's Done/chevron) is read off the same viewport: it's up while the
+// visual viewport is well short of the layout one at 1x zoom (a pinch zoom
+// shrinks it too). With results there to browse the overlay stays, now with
+// the room the keyboard took; with none it closes rather than leaving a bare
+// search bar on screen.
+const KEYBOARD_MIN_PX = 150;
+let keyboardUp = false;
+
+function trackKeyboard(vv) {
+  if (Math.abs(vv.scale - 1) > 0.01) return;
+  const up = window.innerHeight - vv.height > KEYBOARD_MIN_PX;
+  if (up === keyboardUp) return;
+  keyboardUp = up;
+  overlay.classList.toggle('search-keyboard-up', up); // the box's bottom clearance
+  if (!up && isOpen && !hasResultsToBrowse()) closeSearchOverlay();
+}
+
+function hasResultsToBrowse() {
+  return !!input.value.trim() && !resultsEl.querySelector('.search-empty-state');
 }
 
 function startViewportTracking() {
   const vv = window.visualViewport;
   if (!vv) return;
+  keyboardUp = false;
   onViewportResize();
   vv.addEventListener('resize', onViewportResize);
   vv.addEventListener('scroll', onViewportResize);
@@ -1281,6 +1306,7 @@ function stopViewportTracking() {
   }
   overlay.style.removeProperty('--search-vv-top');
   overlay.style.removeProperty('--search-vv-height');
+  overlay.classList.remove('search-keyboard-up');
 }
 
 function conceal() {
@@ -1357,10 +1383,40 @@ function grabInput() {
   input.select();
 }
 
+// ── Back closes the search ───────────────────────────────────────────────
+// Opening pushes a history entry of its own (same URL), so the browser's Back
+// (Android's key or gesture, the toolbar, a swipe) pops it and closes the
+// overlay instead of leaving the page. Closing it any other way steps back off
+// it. A page opened out of the search (a classroom, Info, Settings) pushes its
+// hash over it, so Back from there lands on it with the overlay already gone:
+// it's stepped past.
+const IS_ANDROID = /Android/i.test(navigator.userAgent);
+const isOwnEntry = () => !!history.state?.searchOverlay;
+
+function pushHistoryEntry() {
+  if (!isOwnEntry()) history.pushState({ searchOverlay: true }, '');
+}
+
+function releaseHistoryEntry() {
+  if (isOwnEntry()) history.back();
+}
+
+function onPopState(e) {
+  if (isOwnEntry()) {
+    if (!isOpen) history.back();
+    return;
+  }
+  if (!isOpen) return;
+  // The browser already played its own back animation
+  if (e.hasUAVisualTransition) dismissInstant();
+  else closeSearchOverlay({ viaHistory: true });
+}
+
 export async function openSearchOverlay() {
   if (isOpen || !overlay) return;
   isOpen = true;
   savedScrollPos = window.scrollY;
+  pushHistoryEntry();
 
   // Unhide + focus synchronously (still inside the FAB-tap callstack, so iOS
   // opens the keyboard). The overlay is only opacity:0 here, not display:none,
@@ -1404,14 +1460,18 @@ export async function openSearchOverlay() {
   if (isOpen) renderResults(input.value, { animate: false });
 }
 
-export function closeSearchOverlay() {
+// `viaHistory`: closed by the browser's Back, which has already popped the
+// overlay's history entry. Chrome for Android crashes the renderer on a view
+// transition during a browser back (see classroom-detail.js), so it fades.
+export function closeSearchOverlay({ viaHistory = false } = {}) {
   if (!isOpen || !overlay) return;
   isOpen = false;
   clearTimeout(debounce);
   input.blur();
+  if (!viaHistory) releaseHistoryEntry();
 
   const fab = fabEl();
-  if (document.startViewTransition && fab) {
+  if (document.startViewTransition && fab && !(viaHistory && IS_ANDROID)) {
     const bar = barEl();
     if (bar) bar.style.viewTransitionName = MORPH_NAME;
     beginChromeVT();
@@ -1502,6 +1562,14 @@ export function initSearchOverlay() {
     if (isOpen && location.hash) dismissInstant();
   });
 
+  window.addEventListener('popstate', onPopState);
+  // Reloaded with the overlay's entry current: it no longer stands for
+  // anything open, and stepping back off it would reload the page again
+  if (isOwnEntry()) history.replaceState(null, '');
+
+  // Focus never leaves the field: on Android it would take the keyboard down
+  // for a moment, and an empty field with no keyboard closes the search
+  clearBtn.addEventListener('mousedown', (e) => e.preventDefault());
   clearBtn.addEventListener('click', () => {
     input.value = '';
     input.dispatchEvent(new Event('input'));

@@ -109,15 +109,22 @@ html.search-vt .lg-tabbar__prominent {
 
   width: min(100% - 2rem, 640px);
   margin-inline: auto;
-  /* Fit between the bar's top and the keyboard (or the screen bottom when
-     there is none), with ~16px clearance. --search-vv-height is
-     visualViewport's height, which already excludes the keyboard. */
-  max-height: calc(var(--search-vv-height, 100dvh) - var(--search-top-gap) - env(safe-area-inset-top, 0px) - 16px);
+  /* Fit between the bar's top and the keyboard, with ~16px clearance, or with
+     no keyboard, the screen bottom less the tab bar's own clearance, so the
+     box never reaches into Safari's bottom edge zone. --search-vv-height is
+     visualViewport's height, which already excludes the keyboard;
+     .search-keyboard-up is set by search-overlay.js. */
+  --search-bottom-gap: calc(env(safe-area-inset-bottom, 0px) + var(--lg-tabbar-bottom-offset, 28px));
+  max-height: calc(var(--search-vv-height, 100dvh) - var(--search-top-gap) - env(safe-area-inset-top, 0px) - var(--search-bottom-gap));
 
   display: flex;
   flex-direction: column; /* search bar on top, results grow downward */
   gap: 0.85rem;
   min-height: 0;
+}
+
+.search-keyboard-up .search-overlay-panel {
+  --search-bottom-gap: 16px;
 }
 
 /* ── Header row: search bar + close button ──────────────────────────────

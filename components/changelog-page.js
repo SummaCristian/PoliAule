@@ -8,7 +8,8 @@
 //
 // The content is compiled from changelog/<version>/{en,it}.md at build time
 // (scripts/vite-changelog.js) and fetched from /changelog/. Opened over the
-// Info page, it covers it and hands it back on close, scroll and all.
+// Info page, it covers it and hands it back on close, scroll and all; the
+// settings page does the same to it (cover / uncover).
 import { getLocale, onLanguageSwitch, t } from '../i18n.js';
 import { escapeHtml, safeUrl } from '../utils/html.js';
 import { springEasing } from '../utils/spring-easing.js';
@@ -66,6 +67,8 @@ class ChangelogPage {
     this._tabbar = null;
     this._backBtn = null;
     this._isOpen = false;
+    this._covered = false;   // the settings page is over it
+    this._coveredScroll = 0;
     this._overInfo = false;  // opened on top of the Info page, which it covers
     this._cameFromApp = false; // reached by navigating (so Back can history.back())
     this._stack = [];        // changelog hashes visited since it opened
@@ -114,6 +117,8 @@ class ChangelogPage {
 
   _onHashChange() {
     const hash = location.hash;
+    // The settings page covers this one and hands it back (cover / uncover)
+    if (this._covered || (hash === '#settings' && this._isOpen)) return;
     if (isChangelogHash(hash)) {
       if (!this._isOpen) {
         this._cameFromApp = true;
@@ -188,6 +193,37 @@ class ChangelogPage {
 
   get matchesHash() {
     return isChangelogHash(location.hash);
+  }
+
+  get isOpen() {
+    return this._isOpen;
+  }
+
+  // The settings page opening on top: this one hides where it is, keeping its
+  // content and scroll for when the settings close back to it
+  cover() {
+    if (!this._isOpen) return;
+    this._covered = true;
+    this._coveredScroll = window.scrollY;
+    this._overlay.setAttribute('hidden', '');
+    this._overlay.classList.remove('visible');
+  }
+
+  uncover() {
+    if (!this._covered) return;
+    this._covered = false;
+    this._overlay.removeAttribute('hidden');
+    this._overlay.classList.add('visible');
+    window.scrollTo(0, this._coveredScroll);
+  }
+
+  // The history left it while covered: it goes, and Info under it with it
+  dismissCovered() {
+    if (!this._covered) return;
+    this._covered = false;
+    this._isOpen = false;
+    this._teardown();
+    if (this._overInfo) infoPage.dismissCovered();
   }
 
   // State for opening, and the data fetches started; returns the index's

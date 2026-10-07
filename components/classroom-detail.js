@@ -352,6 +352,8 @@ class ClassroomDetail {
         history.replaceState(null, '', window.location.pathname + window.location.search);
       }
     } else if (this._currentId !== null) {
+      // The settings page closes this one inside its own view transition
+      if (location.hash === '#settings') return;
       if (location.hash === '#info') {
         this._silentClose();
       } else {

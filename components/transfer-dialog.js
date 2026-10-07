@@ -15,7 +15,7 @@ const QR_STYLE = {
   logo: '/favicons/main/favicon.svg',
 };
 
-const Z_ABOVE_SETTINGS = 1300; // the settings popup sits at 1200
+const Z_ABOVE_SETTINGS = 1300; // the settings page sits at 1200
 
 // Presents a one-off alert and tears it down once it has animated out.
 async function presentOnce(options, from) {

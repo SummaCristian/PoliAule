@@ -179,9 +179,10 @@ class InfoPage {
   }
 
   _onHashChange() {
-    // The changelog opens over this page and hands it back (cover / uncover,
-    // called from components/changelog-page.js), so its hashes are its own
-    if (/^#changelog(\/|$)/.test(location.hash) || this._covered) return;
+    // The changelog and the settings open over this page and hand it back
+    // (cover / uncover, called from components/changelog-page.js and
+    // components/settings-page.js), so their hashes are their own
+    if (/^#(changelog(\/|$)|settings$)/.test(location.hash) || this._covered) return;
     if (location.hash === HASH) {
       if (!this._isOpen) this._doOpen();
     } else if (this._isOpen) {
@@ -200,7 +201,7 @@ class InfoPage {
     return this._isOpen;
   }
 
-  // The changelog page opening on top: this one hides where it is, keeping
+  // The changelog or settings page opening on top: this one hides where it is, keeping
   // its content and scroll for when the changelog closes back to it
   cover() {
     if (!this._isOpen) return;

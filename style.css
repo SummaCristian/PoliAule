@@ -2038,7 +2038,7 @@ are rendered as solid colors
 .hw-dangler--climbing .hw-legs,
 .hw-walker .hw-legs { animation: hw-wiggle .1s linear infinite alternate; }
 
-body.detail-open .hw-dangler { display: none; }
+body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
 
 @keyframes hw-sway {
   from { transform: rotate(-5deg); }
@@ -2485,7 +2485,7 @@ body.detail-open .hw-dangler { display: none; }
 
 .xm-mistletoe-sprig svg { display: block; }
 
-body.detail-open .xm-mistletoe { display: none; }
+body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 
 /* Santa's sleigh (or the Befana) flies in a layer over the app, above the
    snow, leaving a trail of sparkles */
@@ -2679,7 +2679,7 @@ body.detail-open .xm-mistletoe { display: none; }
 
 .gr-wreath-crown svg { display: block; }
 
-body.detail-open .gr-wreath { display: none; }
+body:is(.detail-open, .settings-open) .gr-wreath { display: none; }
 
 /* The campus chip's laurel, in the accent */
 .gr-chip-icon { color: var(--text-color-accent); }

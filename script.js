@@ -36,6 +36,7 @@ import { initSearchOverlay } from './components/search-overlay.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
 import { changelogPage } from './components/changelog-page.js';
+import { settingsPage } from './components/settings-page.js';
 import { initUpdateBanner } from './components/update-banner.js';
 import { ENV_LABEL } from './utils/env.js';
 import { initInfoHint } from './components/info-hint.js';
@@ -65,7 +66,7 @@ import { createBuildingStarButton } from './utils/favourites.js';
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY } from './components/settings.js';
 import { initKeybindings } from './components/keybindings.js';
 import { takeImportHash } from './utils/transfer.js';
 import { promptImport } from './components/transfer-dialog.js';
@@ -118,6 +119,7 @@ function dismissSplash() {
     overlay.remove();
     revealHeader();
     changelogPage.checkHash();
+    settingsPage.checkHash();
     return;
   }
 
@@ -125,6 +127,7 @@ function dismissSplash() {
   const realLogo = document.querySelector('.header-logo');
   const isInfo = location.hash === '#info';
   const isChangelog = changelogPage.matchesHash;
+  const isSettings = settingsPage.matchesHash;
 
   if (document.startViewTransition) {
     // --- View Transition path ---
@@ -176,6 +179,9 @@ function dismissSplash() {
         overlay.remove();
         revealHeader();
         realLogo.style.viewTransitionName = 'splash-icon';
+        // A #settings link opens in this same transition, so the app under
+        // it never shows first
+        if (isSettings) settingsPage.openInSplash();
       });
 
       vt.ready.catch(() => {});
@@ -194,6 +200,7 @@ function dismissSplash() {
     overlay.style.pointerEvents = 'none';
     // Under the fading splash already, rather than after it
     if (isChangelog) changelogPage.checkHash();
+    if (isSettings) settingsPage.checkHash();
 
     splashLogo.classList.add('splash-logo-flying');
     void splashLogo.offsetWidth;
@@ -626,12 +633,11 @@ function populateOccupancyUi() {
   classroomDetail.refreshOccupancy();
   renderFavourites();
 
-  const autoSearchEnabled = localStorage.getItem(AUTO_SEARCH_KEY) !== 'false';
-  if (autoSearchEnabled) {
-    document.getElementById('available-classrooms-form').dispatchEvent(
-      new Event('submit', { cancelable: true, bubbles: true })
-    );
-  }
+  // There's no search button: the first search runs now, and live search
+  // (setupLiveSearch) keeps it current from then on
+  document.getElementById('available-classrooms-form').dispatchEvent(
+    new Event('submit', { cancelable: true, bubbles: true })
+  );
 }
 
 // ---------- FORM 1: AVAILABLE CLASSROOMS ----------
@@ -1100,18 +1106,13 @@ function setupLiveSearch() {
   const form = document.getElementById('available-classrooms-form');
   const results = document.getElementById('available-classrooms-results');
 
-  function isEnabled() {
-    return localStorage.getItem(LIVE_SEARCH_KEY) !== 'false';
-  }
-
   function trigger() {
-    if (!isEnabled() || !classroomsData.length || !results.dataset.searched) return;
+    if (!classroomsData.length || !results.dataset.searched) return;
     form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
   }
 
   let debounceTimer = null;
   function triggerDebounced() {
-    if (!isEnabled()) return;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(trigger, 320);
   }

@@ -25,6 +25,29 @@ import { refreshHeaderBlur } from '../utils/header-blur.js';
 import { decorate } from '../utils/season.js';
 import { graduationOn, milanDay } from '../utils/graduation.js';
 
+// Scroll input while a transition runs. The snapshots are live, so a scroll
+// moved the page under them: the photo's shrink and the title's pin (scroll
+// timelines) played inside the zoom, the open's _pinScroll dragged it back on
+// the next frame, and the close shrank the page into where the card used to
+// be. Swallowed instead, for as long as the transition lasts.
+const SCROLL_KEYS = new Set([' ', 'PageUp', 'PageDown', 'Home', 'End', 'ArrowUp', 'ArrowDown']);
+function blockScroll(e) {
+  if (e.type === 'keydown') {
+    if (!SCROLL_KEYS.has(e.key) || e.target?.closest?.('input, textarea, select, [contenteditable]')) return;
+  }
+  if (e.cancelable) e.preventDefault();
+}
+function lockScroll() {
+  window.addEventListener('wheel', blockScroll, { passive: false });
+  window.addEventListener('touchmove', blockScroll, { passive: false });
+  window.addEventListener('keydown', blockScroll);
+}
+function unlockScroll() {
+  window.removeEventListener('wheel', blockScroll);
+  window.removeEventListener('touchmove', blockScroll);
+  window.removeEventListener('keydown', blockScroll);
+}
+
 // No zoom and no shared element when motion is unwelcome: the pair of them is
 // the whole animation, so what is left is the browser's own cross-fade.
 const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -421,9 +444,11 @@ class ClassroomDetail {
   _beginTransition() {
     if (this._vtSettled) return;
     this._vtSettled = new Promise((resolve) => { this._vtResolve = resolve; });
+    lockScroll();
   }
 
   _settleTransition() {
+    unlockScroll();
     refreshHeaderBlur();
     const resolve = this._vtResolve;
     this._vtSettled = null;
@@ -1355,9 +1380,15 @@ class ClassroomDetail {
     // otherwise redoes the blur on every frame the page moves. That needs the
     // backdrop's box, measured once an earlier open has landed
     // (_measureBackdrop), and the photo's small copy, made by extractPhotoColor;
-    // until then, the live filter. ?vtdebug=liveblur keeps the live one, to compare.
+    // without them, the live filter. ?vtdebug=liveblur keeps the live one, to compare. The very first open has
+    // no earlier one to have measured the box, so it measures it here (a layout
+    // read, once per session): the live filter is not an option there, as
+    // Firefox draws ::after's 60x stretch under it barely blurred, the photo
+    // smeared down the page.
     const show = () => {
-      const pre = this._backdropBox && !vtFlag('liveblur') ? blurredBackdrop(url, this._backdropBox) : null;
+      const live = vtFlag('liveblur');
+      if (!this._backdropBox && !live) this._measureBackdrop();
+      const pre = this._backdropBox && !live ? blurredBackdrop(url, this._backdropBox) : null;
       el.style.setProperty('--backdrop-img', `url("${pre ?? url}")`);
       el.classList.toggle('prerendered', !!pre);
       el.classList.add('loaded');

@@ -40,7 +40,7 @@ Qui c'è una piccola lista di quello che ho risolto:
 - Il popup delle impostazioni e il pannello del tab Campus non vanno più a finire dietro la barra superiore quando eseguito in forma di PWA
 - Safari aveva di nuovo deciso che non gli piaceva come stavo posizionando lo sheet, troppo vicino alla safe-area inferiore. Adesso però sembra accettarla senza colorare la safe-area di un colore solido
 - L'algoritmo di debounce della ricerca ora non ignorerà più quello che scrivi se vai troppo veloce. Non c'è di che.
-- Le aule di cui non ho trovato dati non vengoo più riportate come libere. Ora sono mostrate come "Non Disponibile" e non vengono più conteggiate tra le aule libere.
+- Le aule di cui non ho trovato dati non vengono più riportate come libere. Ora sono mostrate come "Non Disponibile" e non vengono più conteggiate tra le aule libere.
 
 ## Un ultima cosa
 

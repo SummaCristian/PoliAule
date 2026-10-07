@@ -2,6 +2,7 @@
 // - openTransferDialog(): Settings' "show QR" dialog on the sending device.
 // - promptImport(): on the receiving device, after it was opened from the link.
 import { createAlert } from 'vitrium';
+import { presentWithBack } from '../utils/back-stack.js';
 import { t } from '../i18n.js';
 import { getFavouriteEntries } from '../utils/favourites.js';
 import { renderQrSvg } from '../utils/qr.js';
@@ -17,10 +18,11 @@ const QR_STYLE = {
 
 const Z_ABOVE_SETTINGS = 1300; // the settings page sits at 1200
 
-// Presents a one-off alert and tears it down once it has animated out.
+// Presents a one-off alert (Back cancels it) and tears it down once it has
+// animated out.
 async function presentOnce(options, from) {
   const alert = createAlert({ zIndex: Z_ABOVE_SETTINGS, ...options });
-  const result = await alert.present({ from });
+  const result = await presentWithBack(alert, { from });
   setTimeout(() => alert.destroy(), 600);
   return result;
 }

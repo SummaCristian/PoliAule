@@ -3,6 +3,7 @@ import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { createBuildingStarButton } from '../utils/favourites.js';
 import { appendClassroomsByFloor } from './campus-buildings.js';
+import { ownBack } from '../utils/back-stack.js';
 
 // A favourite building, opened: its folder in the Favourites strip grows into
 // a glass panel in the middle of the screen, holding every classroom card of
@@ -24,6 +25,9 @@ import { appendClassroomsByFloor } from './campus-buildings.js';
 // (body.detail-open, see building-popup.css) instead of closing it, so the
 // page's close zooms straight back into the card it came from, still in the
 // panel.
+//
+// Back closes it (utils/back-stack.js). From a classroom opened out of it,
+// Back closes the classroom page and leaves the panel up.
 
 const MORPH_MS = 420;   // --lg-morph-panel-dur (vitrium/styles/morph-popup.css)
 const EDGE = 12;        // px kept clear of the safe area, around the panel
@@ -51,6 +55,7 @@ let cleanupTimer = 0;
 let morphCleanup = null;
 let current = null;     // { key, findTrigger }
 let returnFocus = null;
+const back = ownBack(() => close());
 
 const detailOpen = () => document.body.classList.contains('detail-open');
 
@@ -291,6 +296,7 @@ export function openBuildingPopup({ campusId, building, folder, findTrigger }) {
   settled = false;
   current = { findTrigger };
   returnFocus = document.activeElement;
+  back.push();
 
   panel.classList.remove('lg-morph--open', 'lg-morph--closing');
   unhideInnerBox(inner);
@@ -340,6 +346,7 @@ function close() {
   const mySeq = beginOp();
   isOpen = false;
   settled = false;
+  back.release();
 
   const folder = visibleTrigger();
   const focusBack = panel.contains(document.activeElement) ? returnFocus : null;

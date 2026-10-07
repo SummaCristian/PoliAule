@@ -12,6 +12,7 @@ import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
 import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
 import { openTransferDialog } from './transfer-dialog.js';
 import { seasonalEnabled, setSeasonalEnabled, SEASONAL_KEY } from '../utils/season.js';
+import { presentWithBack } from '../utils/back-stack.js';
 import { createToggle, createSegmentedControl, createStepper, createAlert, createButton, getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState, BLUR_MODE_KEY } from 'vitrium';
 
 export const PREFERRED_CAMPUS_ENABLED_KEY = 'poliAule_preferredCampusEnabled';
@@ -65,7 +66,7 @@ async function confirmReset(from) {
       { id: 'reset', label: t('settings.resetButton'), role: 'destructive' },
     ],
   });
-  const choice = await alert.present({ from });
+  const choice = await presentWithBack(alert, { from }); // Back cancels it
   setTimeout(() => alert.destroy(), 600);
   if (choice !== 'reset') return;
   for (const key of RESET_KEYS) {

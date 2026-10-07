@@ -1,5 +1,6 @@
 import { createChipPicker, attachLiquidGlass } from 'vitrium';
 import { t } from '../i18n.js';
+import { ownBack } from '../utils/back-stack.js';
 
 // Shared shell of <date-chip-picker> and <time-range-chip-picker>: a Vitrium
 // chip that morphs into a panel holding `body`, or, on desktop, the same body
@@ -20,12 +21,15 @@ import { t } from '../i18n.js';
 //   deformFrom  selector of the press/drag handle inside a title-less panel
 //   onBuild(chip)   the chip was (re)built: fill in its value, add extras
 //   onShow()        the body just became visible (opened or docked): re-measure
+//
+// Back closes the open panel (utils/back-stack.js).
 export class ChipShell {
   constructor(host, { icon, labelKey, width, body, title = true, exclude, deformFrom, onBuild, onShow }) {
     Object.assign(this, { host, icon, labelKey, width, body, title, exclude, deformFrom, onBuild, onShow });
     this.chip = null;
     this.dock = null;
     this.docked = false;
+    this.back = ownBack(() => this.chip?.popup.close());
     this.#build();
   }
 
@@ -43,8 +47,9 @@ export class ChipShell {
       title: this.title ? undefined : false,
       width: this.width,
       content: this.body,
-      onOpen: () => this.onShow?.(),
+      onOpen: () => { this.back.push(); this.onShow?.(); },
       onAfterOpen: () => this.onShow?.(),
+      onClose: () => this.back.release(),
     });
     const { trigger, popup } = this.chip;
     trigger.querySelector('.lg-chip__label').dataset.i18n = this.labelKey;
@@ -77,7 +82,8 @@ export class ChipShell {
     if (on) {
       if (!this.dock) this.#buildDock();
       this.dock.appendChild(this.body);          // rescue the body before its popup goes
-      this.chip.destroy();
+      this.chip.destroy();                       // closes without onClose
+      this.back.release();
       this.chip = null;
       this.host.appendChild(this.dock);
     } else {

@@ -1,4 +1,5 @@
 import { createMorphPopup, attachLiquidGlass } from 'vitrium';
+import { ownBack } from '../utils/back-stack.js';
 
 // The header's data-fetch indicator button morphs into a glass card holding the
 // freshness status + reload button, and back: Vitrium's morph popup, with the
@@ -14,7 +15,13 @@ function init() {
   const container = document.getElementById('data-fetch-indicator-popover-container');
   if (!trigger || !container) return;
 
-  const popup = createMorphPopup({ trigger, role: 'dialog', label: trigger.getAttribute('aria-label') ?? '', width: 20 * 16 });
+  // Back closes the card (utils/back-stack.js)
+  const back = ownBack(() => popup.close());
+  const popup = createMorphPopup({
+    trigger, role: 'dialog', label: trigger.getAttribute('aria-label') ?? '', width: 20 * 16,
+    onOpen: () => back.push(),
+    onClose: () => back.release(),
+  });
   popup.inner.appendChild(container);
   attachLiquidGlass(popup.panel);
   trigger.addEventListener('click', () => popup.toggle());

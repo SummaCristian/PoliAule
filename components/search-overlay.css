@@ -30,8 +30,18 @@
   pointer-events: auto;
 }
 
-body.search-overlay-open {
+body.search-overlay-open:not(.detail-open, .info-open) {
   overflow: hidden;
+}
+
+/* A classroom opened from the results covers the search without closing it
+   (handOffToDetail in search-overlay.js), as do Info or Settings over that
+   page: hidden, so the page's close zooms back into the row it came from.
+   The rules hiding the header and the tab bar for the search stand down too
+   (:not(.detail-open, .info-open)): the page uses both. */
+body.detail-open .search-overlay-backdrop,
+body.info-open .search-overlay-backdrop {
+  visibility: hidden;
 }
 
 /* No scrim, and the page behind isn't dimmed either: the search surfaces
@@ -63,7 +73,7 @@ body.search-overlay-open {
 /* Mobile: the whole pill nav steps aside while the overlay is open — the
    search bar takes its spot at the bottom. (Desktop keeps the side rail —
    see the 600px block, where only the FAB is hidden.) */
-body.search-overlay-open .bn-wrapper {
+body.search-overlay-open:not(.detail-open, .info-open) .bn-wrapper {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.15s ease;
@@ -1119,8 +1129,8 @@ html.search-vt .lg-tabbar__prominent {
   /* The search bar now sits in the header's slot, so the header itself is
      always faded out while search is open on mobile (not just once results
      grow tall enough to reach it). */
-  body.search-overlay-open .header,
-  body.search-overlay-open .header-top-strip {
+  body.search-overlay-open:not(.detail-open, .info-open) .header,
+  body.search-overlay-open:not(.detail-open, .info-open) .header-top-strip {
     opacity: 0;
     /* opacity alone isn't enough: Safari still samples these top-edge sticky
        fills to tint the status-bar strip. visibility flips after the fade. */
@@ -1217,12 +1227,12 @@ html.search-vt .lg-tabbar__prominent {
 
   /* The side rail stays put; only the FAB (which morphs into the search bar)
      is taken out. */
-  body.search-overlay-open .bn-wrapper {
+  body.search-overlay-open:not(.detail-open, .info-open) .bn-wrapper {
     opacity: 1;
     pointer-events: auto;
   }
 
-  body.search-overlay-open .lg-tabbar__prominent {
+  body.search-overlay-open:not(.detail-open, .info-open) .lg-tabbar__prominent {
     opacity: 0;
     pointer-events: none;
   }

@@ -1,5 +1,6 @@
 import { createListPicker } from 'vitrium';
 import { t } from '../i18n.js';
+import { ownBackForTrigger } from '../utils/back-stack.js';
 
 // <campus-chip-picker> is a single-select listbox: a Vitrium list picker (the
 // pill that morphs into a list of campuses), plus what is PoliAule's: the
@@ -41,6 +42,8 @@ export class CampusChipPicker extends HTMLElement {
     });
     this.#picker.setLoading(this.hasAttribute('data-loading'));
     this.appendChild(this.#picker.el);
+    // Back closes the open list (the list picker has no open/close hooks)
+    ownBackForTrigger(this.#picker.el.querySelector('.lg-chip'), () => this.#picker.close());
   }
 
   attributeChangedCallback(name, _old, value) {

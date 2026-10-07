@@ -32,6 +32,8 @@ function writeVars(vars) {
 // change one and the other has to be re-derived from the same spring.
 const ARC_LEAD = 0.163;  // horizontal, ahead
 const ARC_DRAG = 0.148;  // vertical, behind
+const ARC_PEAK_AT = 0.49; // how far along the straight line the spring is at the lead's peak (25% of the time)
+const EDGE_MARGIN = 8;    // px kept clear of the viewport's edge at that point
 
 /**
  * Writes the zoom's starting geometry for the transition's pseudo-elements.
@@ -75,6 +77,29 @@ export function setZoomOrigin(rect, radius = 16) {
     '--arc-y': `${ARC_DRAG * rect.top}px`,
   });
   return true;
+}
+
+/**
+ * The same arc, for a box that just travels from one rect to another (the
+ * splash logo flying to the header's): the peaks scale with the straight
+ * distance exactly as in setZoomOrigin (x runs ahead of the spring, y drags
+ * behind), so detail-zoom-arc's keyframes work on it unchanged. Both rects
+ * are viewport rects; `gain` exaggerates the bow. Cleared by clearZoomOrigin().
+ */
+export function setArcBetween(from, to, gain = 1) {
+  const style = document.documentElement.style;
+  const dx = to.left - from.left;
+  let arcX = gain * ARC_LEAD * dx;
+  // The x lead peaks about when the spring is half way (ARC_PEAK_AT), so keep
+  // the box's left edge there, with the lead on top, inside the viewport: a
+  // long trip to a corner would otherwise swing out past the screen's edge.
+  const vw = document.documentElement.clientWidth;
+  const atPeak = from.left + ARC_PEAK_AT * dx;
+  const lo = EDGE_MARGIN, hi = vw - EDGE_MARGIN - from.width;
+  const clamped = Math.min(Math.max(atPeak + arcX, lo), Math.max(lo, hi));
+  arcX = clamped - atPeak;
+  style.setProperty('--arc-x', `${arcX}px`);
+  style.setProperty('--arc-y', `${-gain * ARC_DRAG * (to.top - from.top)}px`);
 }
 
 export function clearZoomOrigin() {

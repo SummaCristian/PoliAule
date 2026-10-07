@@ -33,6 +33,7 @@ import {
 
 import { ensureClassroomDirectory, classroomsData as staticClassroomsData } from './classroom-search-data.js';
 import { initSearchOverlay } from './components/search-overlay.js';
+import { setArcBetween, clearZoomOrigin } from './utils/vt-motion.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
 import { changelogPage } from './components/changelog-page.js';
@@ -174,6 +175,10 @@ function dismissSplash() {
       const cleanup = () => changelogPage.clearSplashName();
       vt.finished.then(cleanup).catch(cleanup);
     } else {
+      // The logo curves into the header the way a card's page grows out of its
+      // card (same spring, same arc), instead of sliding along a straight line
+      // (a bit more swing than a card's, kept on screen by setArcBetween)
+      setArcBetween(splashLogo.getBoundingClientRect(), realLogo.getBoundingClientRect(), 1.4);
       const vt = document.startViewTransition(() => {
         splashLogo.style.viewTransitionName = '';
         overlay.remove();
@@ -185,7 +190,7 @@ function dismissSplash() {
       });
 
       vt.ready.catch(() => {});
-      const cleanup = () => { realLogo.style.viewTransitionName = ''; };
+      const cleanup = () => { realLogo.style.viewTransitionName = ''; clearZoomOrigin(); };
       vt.finished.then(cleanup).catch(cleanup);
     }
   } else {

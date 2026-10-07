@@ -837,9 +837,10 @@ body.detail-open #favourite-btn {
   font-size: var(--text-150);
 }
 
+/* .hgi-stroke forces the outline to 22px, so the filled star matches it */
 #favourite-btn .star-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 22px;
+  height: 22px;
   display: block;
 }
 
@@ -856,8 +857,8 @@ body.detail-open #favourite-btn {
 }
 
 .fav-star-btn .star-icon {
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 22px;
+  height: 22px;
   display: block;
 }
 
@@ -2902,4 +2903,14 @@ svg.glass-crack {
   fill: rgba(255, 255, 255, 0.44);
   stroke: rgba(0, 0, 0, 0.24);
   stroke-width: 0.6px;
+}
+
+/* Star burst when something is starred (components/star-burst.js) */
+.star-burst {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1002;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
 }

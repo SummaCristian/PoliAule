@@ -55,7 +55,10 @@
    way native UI does. Individual components must not re-add cursor: pointer,
    nor grab/grabbing on custom drag controls (sliders, scrubbers, deform
    handles) — draggability is shown through motion, not a cursor swap. Only
-   col-resize / not-allowed / text, where they genuinely apply. */
+   col-resize / not-allowed / text, where they genuinely apply. Links dressed
+   as glass pills/cards (Info, changelog) act as buttons, not text links. */
+a.lg-glass,
+a.liquid-glass,
 button,
 [role="button"],
 [role="option"],
@@ -680,24 +683,59 @@ label {
 
   user-select: none;
   -webkit-user-drag: none;
-
-  transition: filter 0.35s ease;
 }
 
-/* The detail page tints the header with the classroom's colour, so the logo
-   loses contrast against it. A tight halo in the theme background colour
-   separates it without adding a container (which would show up in the
-   app-header view-transition snapshot). Filter is on the logo only: on the
-   title it would isolate its multiply blend. */
-body.detail-open .header-logo {
-  filter:
-    drop-shadow(0 0 0.5px color-mix(in srgb, var(--background-color) 90%, transparent))
-    drop-shadow(0 0 6px color-mix(in srgb, var(--background-color) 75%, transparent));
+/* The detail page puts the classroom's photo and tint behind the header, and
+   the logo's light green loses its edge against light photos. Its fill is
+   translucent, so a drop-shadow would show through it and shift its colours;
+   the SVG filter next to it in index.html draws a soft shadow strictly
+   outside its shape instead. No container, which would show up in the
+   app-header view-transition snapshot. Filter is on the logo only: on the
+   title it would isolate its multiply blend.
+   A url() filter can't interpolate, so it stays applied and the shadow fades
+   through its flood opacity (--logo-halo: 1 on the detail page, 0 elsewhere,
+   where the filter's output is the logo untouched). */
+@property --logo-halo {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
 }
 
-.header-ctl-vt .header-logo {
-  filter: none;
+.header-logo {
+  filter: url(#logo-halo);
+}
+
+.header-logo-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+
+  --logo-halo: 0;
+  transition: --logo-halo 0.35s ease;
+}
+
+body.detail-open .header-logo-filters {
+  --logo-halo: 1;
+}
+
+.logo-halo-flood {
+  flood-opacity: calc(var(--logo-halo) * 0.4);
+}
+
+/* Held for the open/close VT: the header is a frozen snapshot of its old
+   state, so a fade inside it would never show. Off through the open, then
+   fades in after the morph. On the close it is on for the old snapshot only
+   (.header-halo-held, set by classroom-detail.js and dropped in its update
+   callback); the logo's own VT group fades it out (::view-transition-old
+   (app-logo) in classroom-detail.css). */
+:root.header-ctl-vt .header-logo-filters {
+  --logo-halo: 0;
   transition: none;
+}
+
+:root.header-ctl-vt.header-halo-held .header-logo-filters {
+  --logo-halo: 1;
 }
 
 .header-buttons-container {

@@ -742,6 +742,7 @@ class ClassroomDetail {
       // Strip the glass blur off the scaling header controls for the transition
       // (see .header-ctl-vt in classroom-detail.css).
       document.documentElement.classList.add('header-ctl-vt');
+      document.documentElement.classList.remove('header-halo-held');
       this._freezeForTransition();
       // Direction of the zoom (see .detail-vt-open in classroom-detail.css).
       if (zooming) document.documentElement.classList.add('detail-vt-open');
@@ -877,6 +878,7 @@ class ClassroomDetail {
     const cardEl = this._openTrigger?.cardEl ?? null;
     const cardInDom = !!(cardEl && document.body.contains(cardEl));
     const headerEl = document.querySelector('.header');
+    const logoEl = headerEl?.querySelector('.header-logo');
 
     const cleanup = () => {
       releaseMap();
@@ -886,8 +888,9 @@ class ClassroomDetail {
       this._queryContext = null;
       this._highlight = null;
       if (headerEl) headerEl.style.viewTransitionName = '';
+      if (logoEl) logoEl.style.viewTransitionName = '';
       document.documentElement.classList.remove(
-        'header-vt-fixed', 'header-ctl-vt', 'detail-vt-close', 'detail-vt-hero');
+        'header-vt-fixed', 'header-ctl-vt', 'header-halo-held', 'detail-vt-close', 'detail-vt-hero');
       this._unfreeze();
       clearZoomOrigin();
       if (cardEl) {
@@ -914,6 +917,10 @@ class ClassroomDetail {
       // snapshot always shows the already-correct blur, instead of being
       // lumped into root and frozen mid-way through the wrong state.
       if (headerEl) headerEl.style.viewTransitionName = 'app-header';
+      // The logo too, so its shadow can fade out at the start (see
+      // ::view-transition-old(app-logo) in classroom-detail.css) instead of
+      // staying in the frozen header snapshot to the end.
+      if (logoEl) logoEl.style.viewTransitionName = 'app-logo';
 
       // The hero the page shrinks into the card around. Only worth pulling out
       // of the page when there is a card waiting for it on the other side.
@@ -923,8 +930,9 @@ class ClassroomDetail {
 
       this._beginTransition();
       // Strip the glass blur off the scaling header controls for the transition
-      // (see .header-ctl-vt in classroom-detail.css).
-      document.documentElement.classList.add('header-ctl-vt');
+      // (see .header-ctl-vt in classroom-detail.css). The logo keeps its
+      // shadow for the old snapshot (.header-halo-held in style.css).
+      document.documentElement.classList.add('header-ctl-vt', 'header-halo-held');
       // Set before the old state is captured, which is the page here. The page
       // itself only needs it in Safari, which keeps compositing a
       // backdrop-filter live even inside an old snapshot; elsewhere that
@@ -938,6 +946,7 @@ class ClassroomDetail {
         // Fully hide the overlay and back button. Changes first, reads after,
         // as in the open: the scrollTo below is the one full layout pass.
         document.body.classList.remove('detail-open');
+        document.documentElement.classList.remove('header-halo-held');
         this._presetHeaderHeight('list');
         this._overlay.setAttribute('hidden', '');
         this._overlay.classList.remove('visible');

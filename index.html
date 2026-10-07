@@ -507,6 +507,22 @@
       <div class="header-title-container">
         <button class="header-title-btn" id="info-trigger" aria-label="About PoliAule">
           <img src="/favicons/main/logo.webp" class="header-logo" width="436" height="500">
+          <!-- The logo's halo on the detail page (style.css). Its fill is
+               translucent, so a drop-shadow would show through it and shift
+               its colours: this keeps a soft shadow strictly outside its shape
+               (alpha thresholded into a solid silhouette, blurred, nudged
+               down, then cut out by it). Its strength is --logo-halo. -->
+          <svg class="header-logo-filters" width="0" height="0" aria-hidden="true" focusable="false">
+            <filter id="logo-halo" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+              <feComponentTransfer in="SourceAlpha" result="shape"><feFuncA type="linear" slope="4" intercept="-1"/></feComponentTransfer>
+              <feGaussianBlur in="shape" stdDeviation="1.6"/>
+              <feOffset dy="0.4" result="soft"/>
+              <feFlood class="logo-halo-flood" flood-color="#000"/>
+              <feComposite in2="soft" operator="in" result="halo"/>
+              <feComposite in="halo" in2="shape" operator="out" result="outside"/>
+              <feMerge><feMergeNode in="outside"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </svg>
           <script>window.__seasonLogo(document.currentScript.previousElementSibling);</script>
 
           <div class="header-title-beta-container splash-header-item">

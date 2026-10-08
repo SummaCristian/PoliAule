@@ -857,6 +857,12 @@ body.info-open .header-title-btn {
   box-shadow: var(--lg-shadow-rim);
 }
 
+/* The ring layer below belongs to the number disc, not the row: keep the
+   shared ring helper (style.css) from outlining each whole <li>. */
+.info-steps li:has(> .lg-ring-layer) {
+  box-shadow: none !important;
+}
+
 .info-steps li > .lg-ring-layer {
   inset: -0.05rem auto auto 0;
   width: 1.5rem;

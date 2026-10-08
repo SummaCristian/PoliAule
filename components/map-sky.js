@@ -40,7 +40,15 @@ export function attachSky(m, options) {
 
 // On the style's load, before anything overrides them
 export function captureSkyLights() {
-  styleLights = map?.getLights?.() ?? null;
+  // The stylesheet's own lights, not getLights(): those are the values as
+  // evaluated for the preset showing right now, and re-applying them after the
+  // theme flips would pin the old preset's light
+  const raw = map?.style?.stylesheet?.lights;
+  try {
+    styleLights = Array.isArray(raw) && raw.length ? structuredClone(raw) : (map?.getLights?.() ?? null);
+  } catch {
+    styleLights = map?.getLights?.() ?? null;
+  }
 }
 
 export async function refreshSky() {

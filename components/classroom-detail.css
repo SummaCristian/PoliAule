@@ -1052,7 +1052,7 @@ body.detail-open .tab-content {
     animation-range: 0 var(--title-pin-at, 150px), 0 var(--title-pin-at, 150px);
   }
 
-.detail-title-row::before {
+  .detail-title-row::before {
     background: var(--lg-tint);
     -webkit-backdrop-filter: blur(var(--lg-blur-sm));
     backdrop-filter: blur(var(--lg-blur-sm));

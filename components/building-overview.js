@@ -3,6 +3,7 @@ import { escapeHtml } from '../utils/html.js';
 import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
 import { getCampusBuildingsOverview } from '../available-rooms-script.js';
 import { scrollerFor, stickyTopOf } from '../utils/results-scroller.js';
+import { ownBack } from '../utils/back-stack.js';
 
 // The "zoom out" building overview.
 //
@@ -74,6 +75,8 @@ class BuildingOverview {
   #listTop0 = 0;       // the list's client top when we opened (what × restores)
   #anims = [];
   #onKey = null;
+  // Back zooms back in (utils/back-stack.js)
+  #back = ownBack(() => this.close());
 
   // ── Public ────────────────────────────────────────────────────────
 
@@ -237,6 +240,7 @@ class BuildingOverview {
 
     this.#onKey = (e) => { if (e.key === 'Escape') this.close(); };
     document.addEventListener('keydown', this.#onKey);
+    this.#back.push();
 
     // Decide which sections take part BEFORE measuring anything: forcing a
     // never-rendered section to render swaps its placeholder size for its
@@ -314,6 +318,7 @@ class BuildingOverview {
     if (this.#phase !== 'open') return;
     this.#phase = 'closing';
     this.#isOpen = false;
+    this.#back.release();
     clearTimeout(this.#prewarmTimer);
     cancelAnimationFrame(this.#prewarmRaf);
     document.removeEventListener('keydown', this.#onKey);
@@ -380,6 +385,7 @@ class BuildingOverview {
   // Instant teardown — used when the results are re-rendered underneath us.
   reset() {
     if (this.#phase === 'idle') return;
+    this.#back.release();
     this.#cancelAnims();
     if (this.#onKey) document.removeEventListener('keydown', this.#onKey);
     this.#onKey = null;
@@ -526,6 +532,7 @@ class BuildingOverview {
     if (!this.#anims.length) return;
     this.#phase = 'closing';
     this.#isOpen = false;
+    this.#back.release();
     document.removeEventListener('keydown', this.#onKey);
     this.#onKey = null;
 
@@ -749,8 +756,8 @@ class BuildingOverview {
     const bar = document.createElement('div');
     bar.className = 'bo-topbar';
     bar.innerHTML = `
-      <h3 class="bo-title">${escapeHtml(t('overview.title'))}</h3>
-      <button class="bo-close liquid-glass" type="button" aria-label="${escapeHtml(t('overview.close'))}">
+      <h3 class="bo-title lg-ring">${escapeHtml(t('overview.title'))}</h3>
+      <button class="bo-close lg-ring liquid-glass" type="button" aria-label="${escapeHtml(t('overview.close'))}">
         <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
       </button>
     `;

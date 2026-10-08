@@ -24,7 +24,7 @@
 // and dissolves back when the field is cleared (setResultsBox); the professor
 // view slides on a spring that can be turned around mid-flight (startSlide);
 // and a classroom result hands itself to the detail page's zoom as the card
-// it grows out of (handOffToDetail).
+// it grows out of, and back (handOffToDetail).
 
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { escapeHtml, highlight } from '../utils/html.js';
@@ -37,6 +37,7 @@ import { goToBuilding } from './campus-buildings.js';
 import { morphInto, settleMorph, isSettled, fadeIn, ClockedSpring } from './search-motion.js';
 import { createBackButton, createSegmentedControl, createToggle } from 'vitrium';
 import { seasonEntry, seasonShown, toggleSeason, decorate } from '../utils/season.js';
+import { ownBack, leaveStaleEntry, IS_ANDROID } from '../utils/back-stack.js';
 
 const DEBOUNCE_MS = 200;
 const SECTION_CAP = 4;
@@ -67,6 +68,9 @@ function endChromeVT() {
 
 let overlay, panel, input, clearBtn, closeBtn, resultsEl;
 let isOpen = false;
+// A classroom opened from the results covers the search (handOffToDetail):
+// still open, only hidden, until the page closes back into it.
+let handedOff = false;
 let debounce = null;
 let savedScrollPos = 0;
 
@@ -308,6 +312,7 @@ function buildBuildingRow(item, ctx) {
 
   row.addEventListener('click', () => {
     // No own close transition — the Campus tab teleport is the navigation.
+    searchBack.release(); // nothing is pushed over it, so Back would hit it next
     dismissInstant();
     activateGroupTab('search-classrooms-container');
     goToBuilding(campusId, name);
@@ -871,6 +876,7 @@ function openProfessorView(key) {
     if (slide.to === 0 && slide.profKey === key) {
       currentView = 'professor';
       currentProfessorKey = key;
+      professorBack.push();
       retargetSlide(1);
       return;
     }
@@ -883,6 +889,7 @@ function openProfessorView(key) {
   resultsScrollPos = resultsEl.scrollTop;
   currentView = 'professor';
   currentProfessorKey = key;
+  professorBack.push();
   startSlide({
     left: resultsPane, right: newProfessorPane(key),
     leftScroll: resultsScrollPos, rightScroll: 0,
@@ -895,6 +902,7 @@ function exitProfessorView() {
   const profKey = currentProfessorKey;
   currentView = 'results';
   currentProfessorKey = null;
+  professorBack.release();
   if (slide) {
     // Still sliding in: the results it left are intact on the track, so just
     // turn around — unless the query has changed since.
@@ -1166,6 +1174,7 @@ function renderResults(query, { animate = true } = {}) {
     landSlide();
     currentView = 'results';
     currentProfessorKey = null;
+    professorBack.release();
     setBackProgress(0);
     setResultsBox(false, animate);
     actionable = [];
@@ -1263,11 +1272,35 @@ function onViewportResize() {
   if (!vv) return;
   overlay.style.setProperty('--search-vv-top', vv.offsetTop + 'px');
   overlay.style.setProperty('--search-vv-height', vv.height + 'px');
+  trackKeyboard(vv);
+}
+
+// The keyboard going away (Android's Back closes it before any page sees the
+// press; iOS's Done/chevron) is read off the same viewport: it's up while the
+// visual viewport is well short of the layout one at 1x zoom (a pinch zoom
+// shrinks it too). With results there to browse the overlay stays, now with
+// the room the keyboard took; with none it closes rather than leaving a bare
+// search bar on screen.
+const KEYBOARD_MIN_PX = 150;
+let keyboardUp = false;
+
+function trackKeyboard(vv) {
+  if (Math.abs(vv.scale - 1) > 0.01) return;
+  const up = window.innerHeight - vv.height > KEYBOARD_MIN_PX;
+  if (up === keyboardUp) return;
+  keyboardUp = up;
+  overlay.classList.toggle('search-keyboard-up', up); // the box's bottom clearance
+  if (!up && isOpen && !handedOff && !hasResultsToBrowse()) closeSearchOverlay();
+}
+
+function hasResultsToBrowse() {
+  return !!input.value.trim() && !resultsEl.querySelector('.search-empty-state');
 }
 
 function startViewportTracking() {
   const vv = window.visualViewport;
   if (!vv) return;
+  keyboardUp = false;
   onViewportResize();
   vv.addEventListener('resize', onViewportResize);
   vv.addEventListener('scroll', onViewportResize);
@@ -1281,6 +1314,7 @@ function stopViewportTracking() {
   }
   overlay.style.removeProperty('--search-vv-top');
   overlay.style.removeProperty('--search-vv-height');
+  overlay.classList.remove('search-keyboard-up');
 }
 
 function conceal() {
@@ -1303,26 +1337,29 @@ function conceal() {
 }
 
 // Opening a classroom result: the detail page zooms out of the tapped row
-// (utils/vt-motion.js), the same way it does from a classroom card, so the
-// overlay has to still be on screen when that view transition snapshots the
-// "old" state — closing it with its own transition first would both hide the
-// row and be cut short by the detail page's. It's concealed from inside the
-// detail page's update callback instead (the classroomdetail:enter event), so
-// the overlay and the row fade into the growing page as part of that one
-// transition. The timeout covers an open that never happens (a stale id).
+// (utils/vt-motion.js), the same way it does from a classroom card. The
+// search isn't closed for it, only covered, like the building popup: the
+// page hides it (body.detail-open, and body.info-open for Info or Settings
+// over the page — see search-overlay.css) as part of its own open transition,
+// and uncovers it on close, zooming back into the row it came from. Its
+// history entries stay under the page's hash, so Back from the page lands
+// back in the results.
 function handOffToDetail() {
   if (!isOpen) return;
-  isOpen = false;
+  handedOff = true;
   clearTimeout(debounce);
   input.blur();
-  let timer = 0;
-  const done = () => {
-    clearTimeout(timer);
-    document.removeEventListener('classroomdetail:enter', done);
-    if (!isOpen) conceal();
-  };
-  document.addEventListener('classroomdetail:enter', done);
-  timer = setTimeout(done, 1500);
+  // No page opened after all (a stale id): the search is still on screen
+  setTimeout(() => {
+    if (handedOff && !location.hash) handedOff = false;
+  }, 1500);
+}
+
+// The page over the search closed (its hash is gone): the results are back.
+function onUncovered() {
+  handedOff = false;
+  // Desktop: straight back to the arrow keys (mobile leaves the keyboard down)
+  if (desktopMQ.matches) input.focus({ preventScroll: true });
 }
 
 // ── Scroll lock ──────────────────────────────────────────────────────────
@@ -1332,6 +1369,7 @@ function handOffToDetail() {
 // element allowed to consume the gesture (results and the in-place professor
 // view both reuse this same container), and only when it actually overflows.
 function preventScroll(e) {
+  if (handedOff) return; // the page over it scrolls the window
   // Let caret placement / text-selection drags in the search bar through untouched.
   if (e.target.closest('.search-overlay-header')) return;
   const scrollable = e.target.closest('.search-scrollable');
@@ -1357,10 +1395,25 @@ function grabInput() {
   input.select();
 }
 
+// ── Back closes the search ───────────────────────────────────────────────
+// Open, the search holds a history entry (utils/back-stack.js), and the
+// professor view one more over it: Back takes the professor view back to the
+// results first, then closes the search. A classroom opened from the results
+// pushes its hash over them and leaves the search open under it, so Back from
+// it comes back here. Info or Settings opened from the search's own header
+// close it instead and drop() its entry, which Back from there steps past.
+const searchBack = ownBack(({ uaAnimated }) => {
+  // The browser already played its own back animation
+  if (uaAnimated) dismissInstant();
+  else closeSearchOverlay({ viaHistory: true });
+});
+const professorBack = ownBack(() => exitProfessorView());
+
 export async function openSearchOverlay() {
   if (isOpen || !overlay) return;
   isOpen = true;
   savedScrollPos = window.scrollY;
+  searchBack.push();
 
   // Unhide + focus synchronously (still inside the FAB-tap callstack, so iOS
   // opens the keyboard). The overlay is only opacity:0 here, not display:none,
@@ -1404,14 +1457,19 @@ export async function openSearchOverlay() {
   if (isOpen) renderResults(input.value, { animate: false });
 }
 
-export function closeSearchOverlay() {
+// `viaHistory`: closed by the browser's Back. Chrome for Android crashes the
+// renderer on a view transition during a browser back (see
+// classroom-detail.js), so it fades there.
+export function closeSearchOverlay({ viaHistory = false } = {}) {
   if (!isOpen || !overlay) return;
   isOpen = false;
+  handedOff = false;
   clearTimeout(debounce);
   input.blur();
+  searchBack.release(); // and the professor view's entry with it
 
   const fab = fabEl();
-  if (document.startViewTransition && fab) {
+  if (document.startViewTransition && fab && !(viaHistory && IS_ANDROID)) {
     const bar = barEl();
     if (bar) bar.style.viewTransitionName = MORPH_NAME;
     beginChromeVT();
@@ -1439,12 +1497,16 @@ export function closeSearchOverlay() {
 function dismissInstant() {
   if (!isOpen) return;
   isOpen = false;
+  handedOff = false;
   clearTimeout(debounce);
   input.blur();
   const fab = fabEl();
   if (fab) fab.style.viewTransitionName = '';
   document.documentElement.classList.remove('search-vt');
   conceal();
+  // Whatever closed it pushes an entry of its own over ours
+  searchBack.drop();
+  professorBack.drop();
 }
 
 export function initSearchOverlay() {
@@ -1475,7 +1537,7 @@ export function initSearchOverlay() {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (!isOpen || e.key !== 'Escape') return;
+    if (!isOpen || handedOff || e.key !== 'Escape') return;
     // Esc backs out of the professor view first; only closes the overlay
     // from the results list.
     if (currentView === 'professor') exitProfessorView();
@@ -1483,7 +1545,7 @@ export function initSearchOverlay() {
   });
 
   // Opening a result navigates to the classroom detail page, which grows out
-  // of the tapped row — see handOffToDetail.
+  // of the tapped row and covers the search — see handOffToDetail.
   resultsEl.addEventListener('click', (e) => {
     if (e.target.closest('[data-open-classroom]')) handOffToDetail();
   });
@@ -1493,15 +1555,28 @@ export function initSearchOverlay() {
   // should take the overlay down first — the destination runs its own
   // transition. Capture phase so this beats the buttons' own handlers.
   document.querySelector('.header')?.addEventListener('click', () => {
-    if (isOpen) dismissInstant();
+    // Under a classroom page the header is that page's, and the search stays
+    if (!isOpen || handedOff) return;
+    dismissInstant();
+    // Not every header button navigates: once its own handler has run, step
+    // off the search's entry if nothing went over it
+    setTimeout(leaveStaleEntry);
   }, true);
 
   // Safety net: any other hash route opened while we're open takes it down too
   // (isOpen is already false by here for the result-card path above).
   window.addEventListener('hashchange', () => {
-    if (isOpen && location.hash) dismissInstant();
+    if (!isOpen) return;
+    if (handedOff) {
+      if (!location.hash) onUncovered();
+      return;
+    }
+    if (location.hash) dismissInstant();
   });
 
+  // Focus never leaves the field: on Android it would take the keyboard down
+  // for a moment, and an empty field with no keyboard closes the search
+  clearBtn.addEventListener('mousedown', (e) => e.preventDefault());
   clearBtn.addEventListener('click', () => {
     input.value = '';
     input.dispatchEvent(new Event('input'));

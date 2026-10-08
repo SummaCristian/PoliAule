@@ -274,6 +274,7 @@ body.info-open #search-classrooms-container.visible {
    correctly, so it's skipped there — the box-shadow outline alone already
    reads fine against any border-radius. */
 .campus-map .mapboxgl-ctrl-attrib {
+  position: relative;
   font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -327,6 +328,7 @@ body.info-open #search-classrooms-container.visible {
      the ::after ring below a positioning context to anchor to, same as
      `relative` would. */
   position: absolute;
+  overflow: visible !important;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-pill) !important;
@@ -467,6 +469,7 @@ body.info-open #search-classrooms-container.visible {
    plain CSS hover/press state below instead, mimicking the same lit look
    without capturing the pointer. */
 .campus-map .mapboxgl-ctrl-top-right .mapboxgl-ctrl-group {
+  overflow: visible !important;
   margin: 0 0 0.5rem !important;
   background: transparent;
   border-radius: 0;
@@ -479,6 +482,7 @@ body.info-open #search-classrooms-container.visible {
 
 .campus-map .mapboxgl-ctrl-group button {
   position: relative;
+  overflow: visible !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -653,6 +657,7 @@ body.info-open #search-classrooms-container.visible {
 }
 
 .map-pin__plate {
+  --lg-ring-strength: 0;
   display: flex;
   flex-direction: column;
   align-items: center;

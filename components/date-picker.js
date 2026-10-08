@@ -47,6 +47,7 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
 
   // --- Populate the date picker UI ---
   const container = document.querySelector('.date-picker-container');
+  container?.classList.add('lg-ring');
 
   // Derive single-letter day names from the current locale (Sun=0 … Sat=6).
   const dayFormatter = new Intl.DateTimeFormat(getLocale(), { weekday: 'narrow' });

@@ -807,6 +807,7 @@ body.info-open .header-title-btn {
 .info-steps li {
   counter-increment: info-step;
   position: relative;
+  isolation: isolate;
   padding-left: 2.15rem; /* the number disc sits in here */
   min-height: 1.5rem;
   font-size: var(--text-90);
@@ -828,10 +829,14 @@ body.info-open .header-title-btn {
   font-weight: 800;
   color: var(--text-color-accent);
   background: var(--lg-tint);
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 2px 10px 0 var(--lg-shadow-color);
+  box-shadow: var(--lg-shadow-rim);
+}
+
+.info-steps li > .lg-ring-layer {
+  inset: -0.05rem auto auto 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
 }
 
 .info-steps a {
@@ -918,7 +923,7 @@ body.info-open .header-title-btn {
   /* Pops in and expands */
   opacity: 0;
   max-height: 0;
-  overflow: hidden;
+  overflow: visible;
   transform: translateX(-20px) translateY(10px) scale(0.8);
   transform-origin: left bottom;
 }

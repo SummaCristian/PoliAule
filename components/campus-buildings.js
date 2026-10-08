@@ -95,7 +95,7 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
 
   backBtn = document.createElement('button');
   backBtn.type = 'button';
-  backBtn.className = 'campus-sheet-backbtn liquid-glass';
+  backBtn.className = 'campus-sheet-backbtn lg-ring liquid-glass';
   backBtn.hidden = true;
   backBtn.setAttribute('aria-label', t('campus.back'));
   backBtn.innerHTML = '<i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>';
@@ -128,7 +128,7 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
   // rest of the time.
   recenterBtn = document.createElement('button');
   recenterBtn.type = 'button';
-  recenterBtn.className = 'campus-sheet-recenter liquid-glass';
+  recenterBtn.className = 'campus-sheet-recenter lg-ring liquid-glass';
   recenterBtn.hidden = true;
   recenterBtn.setAttribute('aria-label', t('campus.recenter'));
   recenterBtn.innerHTML = '<i class="hgi-stroke hgi-gps-01" aria-hidden="true"></i>';

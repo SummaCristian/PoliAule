@@ -57,7 +57,7 @@ function buildSlider(fromInput, toInput) {
   // ── DOM structure ─────────────────────────────────────────────────────────
 
   const wrapper    = document.createElement('div');
-  wrapper.className = 'trs-wrapper';
+  wrapper.className = 'trs-wrapper lg-ring';
 
   // Title row — same icon + word treatment as the campus / date picker panels.
   const title = document.createElement('div');

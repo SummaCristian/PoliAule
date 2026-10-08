@@ -141,6 +141,15 @@ time-range-chip-picker[data-loading] .trc-value > :not(.chip-skeleton) {
   max-width: 100%;
 }
 
+/* Vitrium caps the morph panel to the viewport on narrow phones, while its
+   inner scroller keeps the requested 24rem width. Keep the date picker body
+   inside the panel so its centered day strip stays centered too. */
+@media (max-width: 399px) {
+  .lg-morph:has(.dcp-content) .lg-morph__inner {
+    width: min(var(--lg-morph-width, 208px), calc(100vw - 16px));
+  }
+}
+
 /* ── Docked (inline-expanded) mode ────────────────────────────────────────
    Desktop 2-column layout: the picker sits directly in the form column as a
    glass card instead of morphing out of a pill. Toggled by picker-dock.js. */

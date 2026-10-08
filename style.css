@@ -1,5 +1,13 @@
 @import "vitrium/styles";
 
+/* Hand-built glass surfaces opt into Vitrium's ring pseudo-element with
+   .lg-ring. Keep only the rim shadow on the surface itself; the soft ring
+   below it is drawn by Vitrium's glass stylesheet. */
+.lg-ring:not(.lg-glass),
+:where(*:has(> .lg-ring-layer)) {
+  box-shadow: var(--lg-shadow-rim) !important;
+}
+
 /* Theme and color schemes */
 :root {
   box-sizing: border-box;
@@ -55,7 +63,10 @@
    way native UI does. Individual components must not re-add cursor: pointer,
    nor grab/grabbing on custom drag controls (sliders, scrubbers, deform
    handles) — draggability is shown through motion, not a cursor swap. Only
-   col-resize / not-allowed / text, where they genuinely apply. */
+   col-resize / not-allowed / text, where they genuinely apply. Links dressed
+   as glass pills/cards (Info, changelog) act as buttons, not text links. */
+a.lg-glass,
+a.liquid-glass,
 button,
 [role="button"],
 [role="option"],
@@ -328,9 +339,17 @@ body {
     opacity: 0;
   }
 
+  /* The card zoom's spring and arc (classroom-detail.css): the group's
+     straight-line travel on the spring, the image pair's `translate` bowing
+     it into a curve. --arc-x / --arc-y are written by setArcBetween() before
+     the transition; with none (info, changelog, settings), the arc is flat. */
   ::view-transition-group(splash-icon) {
     animation-duration: 0.6s;
-    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-timing-function: var(--vt-spring);
+  }
+
+  ::view-transition-image-pair(splash-icon) {
+    animation: detail-zoom-arc 0.6s linear both;
   }
 }
 
@@ -680,24 +699,59 @@ label {
 
   user-select: none;
   -webkit-user-drag: none;
-
-  transition: filter 0.35s ease;
 }
 
-/* The detail page tints the header with the classroom's colour, so the logo
-   loses contrast against it. A tight halo in the theme background colour
-   separates it without adding a container (which would show up in the
-   app-header view-transition snapshot). Filter is on the logo only: on the
-   title it would isolate its multiply blend. */
-body.detail-open .header-logo {
-  filter:
-    drop-shadow(0 0 0.5px color-mix(in srgb, var(--background-color) 90%, transparent))
-    drop-shadow(0 0 6px color-mix(in srgb, var(--background-color) 75%, transparent));
+/* The detail page puts the classroom's photo and tint behind the header, and
+   the logo's light green loses its edge against light photos. Its fill is
+   translucent, so a drop-shadow would show through it and shift its colours;
+   the SVG filter next to it in index.html draws a soft shadow strictly
+   outside its shape instead. No container, which would show up in the
+   app-header view-transition snapshot. Filter is on the logo only: on the
+   title it would isolate its multiply blend.
+   A url() filter can't interpolate, so it stays applied and the shadow fades
+   through its flood opacity (--logo-halo: 1 on the detail page, 0 elsewhere,
+   where the filter's output is the logo untouched). */
+@property --logo-halo {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
 }
 
-.header-ctl-vt .header-logo {
-  filter: none;
+.header-logo {
+  filter: url(#logo-halo);
+}
+
+.header-logo-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+
+  --logo-halo: 0;
+  transition: --logo-halo 0.35s ease;
+}
+
+body.detail-open .header-logo-filters {
+  --logo-halo: 1;
+}
+
+.logo-halo-flood {
+  flood-opacity: calc(var(--logo-halo) * 0.4);
+}
+
+/* Held for the open/close VT: the header is a frozen snapshot of its old
+   state, so a fade inside it would never show. Off through the open, then
+   fades in after the morph. On the close it is on for the old snapshot only
+   (.header-halo-held, set by classroom-detail.js and dropped in its update
+   callback); the logo's own VT group fades it out (::view-transition-old
+   (app-logo) in classroom-detail.css). */
+:root.header-ctl-vt .header-logo-filters {
+  --logo-halo: 0;
   transition: none;
+}
+
+:root.header-ctl-vt.header-halo-held .header-logo-filters {
+  --logo-halo: 1;
 }
 
 .header-buttons-container {
@@ -791,9 +845,10 @@ body.detail-open #favourite-btn {
   font-size: var(--text-150);
 }
 
+/* .hgi-stroke forces the outline to 22px, so the filled star matches it */
 #favourite-btn .star-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 22px;
+  height: 22px;
   display: block;
 }
 
@@ -810,8 +865,8 @@ body.detail-open #favourite-btn {
 }
 
 .fav-star-btn .star-icon {
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 22px;
+  height: 22px;
   display: block;
 }
 
@@ -2038,7 +2093,7 @@ are rendered as solid colors
 .hw-dangler--climbing .hw-legs,
 .hw-walker .hw-legs { animation: hw-wiggle .1s linear infinite alternate; }
 
-body.detail-open .hw-dangler { display: none; }
+body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
 
 @keyframes hw-sway {
   from { transform: rotate(-5deg); }
@@ -2485,7 +2540,7 @@ body.detail-open .hw-dangler { display: none; }
 
 .xm-mistletoe-sprig svg { display: block; }
 
-body.detail-open .xm-mistletoe { display: none; }
+body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 
 /* Santa's sleigh (or the Befana) flies in a layer over the app, above the
    snow, leaving a trail of sparkles */
@@ -2679,7 +2734,7 @@ body.detail-open .xm-mistletoe { display: none; }
 
 .gr-wreath-crown svg { display: block; }
 
-body.detail-open .gr-wreath { display: none; }
+body:is(.detail-open, .settings-open) .gr-wreath { display: none; }
 
 /* The campus chip's laurel, in the accent */
 .gr-chip-icon { color: var(--text-color-accent); }
@@ -2856,4 +2911,14 @@ svg.glass-crack {
   fill: rgba(255, 255, 255, 0.44);
   stroke: rgba(0, 0, 0, 0.24);
   stroke-width: 0.6px;
+}
+
+/* Star burst when something is starred (components/star-burst.js) */
+.star-burst {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1002;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
 }

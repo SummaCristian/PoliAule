@@ -204,6 +204,7 @@
 /* Same glass pill as the building name it grew out of, so it reads cleanly
    over cards scrolling beneath it. */
 .bo-title {
+  position: relative;
   margin: 0;
   padding: 0.4rem 1.05rem;
   border-radius: var(--radius-pill);
@@ -401,6 +402,7 @@
 /* Front: Vitrium's regular glass (.lg-glass: tint, rim and the 0.5px
    gradient stroke), leaning toward you from its bottom edge. */
 .bo-card-front {
+  --lg-ring-strength: 0;
   position: absolute;
   inset: 68px 0 0; /* FRONT_TOP */
   box-sizing: border-box;

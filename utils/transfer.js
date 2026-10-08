@@ -14,7 +14,7 @@ import { getFavouriteEntries, setFavouriteEntries, buildingKey } from './favouri
 import { STORAGE_KEY as TIME_FORMAT_KEY } from './time-format.js';
 import { STORAGE_KEY as LOCALE_KEY } from '../i18n.js';
 import {
-  HIDE_SUNDAYS_KEY, INTERVAL_HOURS_KEY, SHOW_PARTIAL_KEY, AUTO_SEARCH_KEY, LIVE_SEARCH_KEY,
+  HIDE_SUNDAYS_KEY, INTERVAL_HOURS_KEY, SHOW_PARTIAL_KEY,
   DEFAULT_TAB_KEY, PREFERRED_CAMPUS_ENABLED_KEY, PREFERRED_CAMPUS_ID_KEY, REMEMBER_LAST_CAMPUS_KEY,
 } from '../components/settings.js';
 import { SEASONAL_KEY } from './season.js';
@@ -39,8 +39,6 @@ function fields(campusIds) {
     hs: [HIDE_SUNDAYS_KEY, bool],
     ih: [INTERVAL_HOURS_KEY, intIn(1, 12)],
     sp: [SHOW_PARTIAL_KEY, bool],
-    as: [AUTO_SEARCH_KEY, bool],
-    ls: [LIVE_SEARCH_KEY, bool],
     dt: [DEFAULT_TAB_KEY, oneOf('available', 'search', 'last')],
     pe: [PREFERRED_CAMPUS_ENABLED_KEY, bool],
     pc: [PREFERRED_CAMPUS_ID_KEY, campusIds ? oneOf(...campusIds) : { enc: v => v || undefined }],

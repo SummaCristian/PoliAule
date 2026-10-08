@@ -9,6 +9,7 @@
 import { registerSW } from 'virtual:pwa-register';
 import { createAlert } from 'vitrium';
 import { t } from '../i18n.js';
+import { presentWithBack } from './back-stack.js';
 
 // An app opened from the home screen can stay alive for days without a navigation
 const UPDATE_CHECK_MS = 60 * 60 * 1000;
@@ -36,7 +37,7 @@ async function promptUpdate(updateSW) {
       { id: 'reload', label: t('update.reload'), role: 'default' },
     ],
   });
-  const choice = await alert.present();
+  const choice = await presentWithBack(alert); // Back is "Later"
   setTimeout(() => alert.destroy(), 600);
   prompting = false;
   if (choice === 'reload') updateSW(true); // activates the waiting worker, then reloads

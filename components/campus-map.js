@@ -280,10 +280,6 @@ export function initCampusMap() {
   window.addEventListener('wheel', e => {
     if (!isScrollLocked()) return;
     if (container.contains(e.target)) return;
-    // The settings popup renders outside this container, in document.body,
-    // and manages its own scroll lock — leave its wheel events alone rather
-    // than blocking them as if they were page scroll.
-    if (e.target.closest?.('.settings-popup')) return;
     e.preventDefault();
   }, { passive: false });
 
@@ -468,6 +464,7 @@ async function boot() {
 
   const navControl = new mapboxgl.NavigationControl({ showZoom: false, showCompass: true });
   map.addControl(navControl, 'top-right');
+  navControl._container.querySelectorAll('button').forEach(button => button.classList.add('lg-ring'));
   const geolocateControl = new mapboxgl.GeolocateControl({
     positionOptions: { enableHighAccuracy: true },
     trackUserLocation: true,
@@ -503,7 +500,7 @@ async function boot() {
   new MutationObserver((_records, observer) => {
     const button = geolocateControl._container.querySelector('button');
     if (!button) return;
-    button.classList.add('liquid-glass');
+    button.classList.add('lg-ring', 'liquid-glass');
     button.querySelector('.mapboxgl-ctrl-icon')
       .innerHTML = '<i class="hgi-stroke hgi-gps-01" aria-hidden="true"></i>';
     observer.disconnect();
@@ -517,7 +514,8 @@ async function boot() {
   new MutationObserver((_records, observer) => {
     const button = map.getContainer().querySelector('.mapboxgl-ctrl-attrib-button');
     if (!button) return;
-    button.classList.add('liquid-glass');
+    button.classList.add('lg-ring', 'liquid-glass');
+    button.closest('.mapboxgl-ctrl-attrib')?.classList.add('lg-ring');
     button.querySelector('.mapboxgl-ctrl-icon')
       .innerHTML = '<i class="hgi-stroke hgi-information-circle" aria-hidden="true"></i>';
     observer.disconnect();

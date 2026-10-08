@@ -282,7 +282,7 @@ function showBanner() {
   const el = document.createElement('div');
   // liquid-glass: Vitrium's press / stretch physics, like the app's other
   // glass; a press on the close button is left to the button
-  el.className = 'season-banner lg-glass lg-glass--clear lg-glass--tinted liquid-glass';
+  el.className = 'season-banner lg-glass lg-glass--clear lg-glass--tinted lg-elevation-high liquid-glass';
   el.dataset.banner = id;
   el.style.setProperty('--season-tint', tint);
   el.innerHTML = `

@@ -19,7 +19,7 @@
 import { t, applyTranslations, onLanguageSwitch } from '../i18n.js';
 import { activateGroupTab } from './bottom-nav.js';
 import { openSearchOverlay } from './search-overlay.js';
-import { toggleSettings } from './settings.js';
+import { settingsPage } from './settings-page.js';
 
 const desktopMQ = matchMedia('(min-width: 600px)');
 
@@ -37,7 +37,7 @@ function isTypingContext(e) {
 // out of the way then (each overlay owns its own Escape handling).
 function anyOverlayOpen() {
   return document.body.classList.contains('search-overlay-open')
-    || !!document.querySelector('.settings-overlay--active')
+    || settingsPage.isOpen
     || !document.getElementById('classroom-detail-overlay')?.hidden
     || !document.getElementById('info-page-overlay')?.hidden
     || !document.getElementById('changelog-overlay')?.hidden
@@ -62,7 +62,7 @@ function buildHelp() {
   backdrop.hidden = true;
 
   const panel = document.createElement('div');
-  panel.className = 'kb-help-panel';
+  panel.className = 'kb-help-panel lg-ring';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
   panel.setAttribute('aria-label', t('shortcuts.title'));
@@ -130,7 +130,7 @@ function onKeyDown(e) {
   if ((e.ctrlKey || e.metaKey) && e.key === ',' && !e.altKey && !e.shiftKey) {
     if (isTypingContext(e)) return;
     e.preventDefault();
-    toggleSettings();
+    settingsPage.toggle();
     return;
   }
 

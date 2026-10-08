@@ -25,6 +25,29 @@ import { refreshHeaderBlur } from '../utils/header-blur.js';
 import { decorate } from '../utils/season.js';
 import { graduationOn, milanDay } from '../utils/graduation.js';
 
+// Scroll input while a transition runs. The snapshots are live, so a scroll
+// moved the page under them: the photo's shrink and the title's pin (scroll
+// timelines) played inside the zoom, the open's _pinScroll dragged it back on
+// the next frame, and the close shrank the page into where the card used to
+// be. Swallowed instead, for as long as the transition lasts.
+const SCROLL_KEYS = new Set([' ', 'PageUp', 'PageDown', 'Home', 'End', 'ArrowUp', 'ArrowDown']);
+function blockScroll(e) {
+  if (e.type === 'keydown') {
+    if (!SCROLL_KEYS.has(e.key) || e.target?.closest?.('input, textarea, select, [contenteditable]')) return;
+  }
+  if (e.cancelable) e.preventDefault();
+}
+function lockScroll() {
+  window.addEventListener('wheel', blockScroll, { passive: false });
+  window.addEventListener('touchmove', blockScroll, { passive: false });
+  window.addEventListener('keydown', blockScroll);
+}
+function unlockScroll() {
+  window.removeEventListener('wheel', blockScroll);
+  window.removeEventListener('touchmove', blockScroll);
+  window.removeEventListener('keydown', blockScroll);
+}
+
 // No zoom and no shared element when motion is unwelcome: the pair of them is
 // the whole animation, so what is left is the browser's own cross-fade.
 const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
@@ -352,6 +375,8 @@ class ClassroomDetail {
         history.replaceState(null, '', window.location.pathname + window.location.search);
       }
     } else if (this._currentId !== null) {
+      // The settings page closes this one inside its own view transition
+      if (location.hash === '#settings') return;
       if (location.hash === '#info') {
         this._silentClose();
       } else {
@@ -419,9 +444,11 @@ class ClassroomDetail {
   _beginTransition() {
     if (this._vtSettled) return;
     this._vtSettled = new Promise((resolve) => { this._vtResolve = resolve; });
+    lockScroll();
   }
 
   _settleTransition() {
+    unlockScroll();
     refreshHeaderBlur();
     const resolve = this._vtResolve;
     this._vtSettled = null;
@@ -715,6 +742,7 @@ class ClassroomDetail {
       // Strip the glass blur off the scaling header controls for the transition
       // (see .header-ctl-vt in classroom-detail.css).
       document.documentElement.classList.add('header-ctl-vt');
+      document.documentElement.classList.remove('header-halo-held');
       this._freezeForTransition();
       // Direction of the zoom (see .detail-vt-open in classroom-detail.css).
       if (zooming) document.documentElement.classList.add('detail-vt-open');
@@ -850,6 +878,7 @@ class ClassroomDetail {
     const cardEl = this._openTrigger?.cardEl ?? null;
     const cardInDom = !!(cardEl && document.body.contains(cardEl));
     const headerEl = document.querySelector('.header');
+    const logoEl = headerEl?.querySelector('.header-logo');
 
     const cleanup = () => {
       releaseMap();
@@ -859,8 +888,9 @@ class ClassroomDetail {
       this._queryContext = null;
       this._highlight = null;
       if (headerEl) headerEl.style.viewTransitionName = '';
+      if (logoEl) logoEl.style.viewTransitionName = '';
       document.documentElement.classList.remove(
-        'header-vt-fixed', 'header-ctl-vt', 'detail-vt-close', 'detail-vt-hero');
+        'header-vt-fixed', 'header-ctl-vt', 'header-halo-held', 'detail-vt-close', 'detail-vt-hero');
       this._unfreeze();
       clearZoomOrigin();
       if (cardEl) {
@@ -887,6 +917,10 @@ class ClassroomDetail {
       // snapshot always shows the already-correct blur, instead of being
       // lumped into root and frozen mid-way through the wrong state.
       if (headerEl) headerEl.style.viewTransitionName = 'app-header';
+      // The logo too, so its shadow can fade out at the start (see
+      // ::view-transition-old(app-logo) in classroom-detail.css) instead of
+      // staying in the frozen header snapshot to the end.
+      if (logoEl) logoEl.style.viewTransitionName = 'app-logo';
 
       // The hero the page shrinks into the card around. Only worth pulling out
       // of the page when there is a card waiting for it on the other side.
@@ -896,8 +930,9 @@ class ClassroomDetail {
 
       this._beginTransition();
       // Strip the glass blur off the scaling header controls for the transition
-      // (see .header-ctl-vt in classroom-detail.css).
-      document.documentElement.classList.add('header-ctl-vt');
+      // (see .header-ctl-vt in classroom-detail.css). The logo keeps its
+      // shadow for the old snapshot (.header-halo-held in style.css).
+      document.documentElement.classList.add('header-ctl-vt', 'header-halo-held');
       // Set before the old state is captured, which is the page here. The page
       // itself only needs it in Safari, which keeps compositing a
       // backdrop-filter live even inside an old snapshot; elsewhere that
@@ -911,6 +946,7 @@ class ClassroomDetail {
         // Fully hide the overlay and back button. Changes first, reads after,
         // as in the open: the scrollTo below is the one full layout pass.
         document.body.classList.remove('detail-open');
+        document.documentElement.classList.remove('header-halo-held');
         this._presetHeaderHeight('list');
         this._overlay.setAttribute('hidden', '');
         this._overlay.classList.remove('visible');
@@ -1035,7 +1071,7 @@ class ClassroomDetail {
       .map(({ id }, i) => {
         const { icon, key } = FEATURE_ICONS[id];
         return `
-          <div class="detail-feature-chip liquid-glass${enter ? ' detail-feature-chip--enter' : ''}" data-feature-id="${id}" style="--i:${i}">
+          <div class="detail-feature-chip lg-ring liquid-glass${enter ? ' detail-feature-chip--enter' : ''}" data-feature-id="${id}" style="--i:${i}">
             <i class="hgi-stroke ${icon}" aria-hidden="true"></i>
             <span>${t(key)}</span>
           </div>`;
@@ -1083,7 +1119,7 @@ class ClassroomDetail {
         'closed': 'status.closed'
       };
       statusHtml = `
-        <div class="detail-status-wrapper">
+        <div class="detail-status-wrapper lg-ring">
           <span class="detail-status-label">${t('detail.currentStatus')}</span>
           <h4 class="classroom-status-txt ${status}">${t(statusKeys[status])}</h4>
         </div>`;
@@ -1107,7 +1143,7 @@ class ClassroomDetail {
       const days = graduationDays.map(d => fmt.format(new Date(`${d}T12:00:00`))).join(', ');
       const [one, many] = t('detail.graduationText').split('|');
       graduationHtml = `
-          <div class="detail-events-only detail-graduation" role="note">
+          <div class="detail-events-only detail-graduation lg-ring" role="note">
             <i class="hgi-stroke hgi-laurel-wreath-01" aria-hidden="true"></i>
             <div>
               <strong>${escapeHtml(t('detail.graduationTitle').replace('{days}', days))}</strong>
@@ -1130,7 +1166,8 @@ class ClassroomDetail {
         </div>`
       : ''}
         <div class="detail-header">
-        <div class="detail-title-row">
+        <div class="detail-title-row lg-elevation-high">
+          <span class="detail-title-ring lg-ring-layer" aria-hidden="true"></span>
           <h1 class="detail-title" role="button" tabindex="0">${escapeHtml(classroom.name)}</h1>
           ${statusHtml}
         </div>
@@ -1138,19 +1175,19 @@ class ClassroomDetail {
           ${t('building.prefix')} ${building.altName ? `${escapeHtml(building.altName)} (${escapeHtml(building.name)})` : escapeHtml(building.name)} &middot; ${escapeHtml(campus.name)}
         </p>
         <div class="detail-stats">
-          <div class="detail-stat">
+          <div class="detail-stat lg-ring">
             <i class="hgi-stroke hgi-user-multiple" aria-hidden="true"></i>
             <span>${classroom.seats} ${t('detail.seats')}</span>
           </div>
           ${classroom.accessible_seats ? `
-            <div class="detail-stat">
+            <div class="detail-stat lg-ring">
               <i class="hgi-stroke hgi-wheelchair" aria-hidden="true"></i>
               <span>${classroom.accessible_seats} ${t('detail.disabledSeats')}</span>
             </div>
           ` : ''}
         </div>
         ${classroom.eventsOnly ? `
-          <div class="detail-events-only" role="note">
+          <div class="detail-events-only lg-ring" role="note">
             <i class="hgi-stroke hgi-alert-02" aria-hidden="true"></i>
             <div>
               <strong>${t('detail.eventsOnlyTitle')}</strong>
@@ -1162,7 +1199,7 @@ class ClassroomDetail {
       </div>
       <div class="detail-content${deferContent ? ' detail-content--deferred' : ''}">
         <div class="detail-column">
-        <section class="detail-section">
+        <section class="detail-section lg-ring">
           <h2 class="detail-section-title">${t('detail.features')}</h2>
           ${featuresHtml
         ? `<div class="detail-features">${featuresHtml}</div>`
@@ -1170,7 +1207,7 @@ class ClassroomDetail {
       }
         </section>
 
-        <section class="detail-section">
+        <section class="detail-section lg-ring">
           <div class="detail-section-header">
             <h2 class="detail-section-title">${t('detail.weeklySchedule')}</h2>
             <div class="detail-schedule-legend">
@@ -1190,13 +1227,13 @@ class ClassroomDetail {
 
         <div class="detail-column">
         ${hoursHtml ? `
-        <section class="detail-section">
+        <section class="detail-section lg-ring">
           <h2 class="detail-section-title">${t('detail.openingHours')}</h2>
           ${hoursHtml}
         </section>` : ''}
 
         ${hasMap ? `
-        <section class="detail-section detail-map-section">
+        <section class="detail-section detail-map-section lg-ring">
           <h2 class="detail-section-title">${t('detail.location')}</h2>
           <div class="detail-map"></div>
           <div class="detail-map-links"></div>
@@ -1353,9 +1390,15 @@ class ClassroomDetail {
     // otherwise redoes the blur on every frame the page moves. That needs the
     // backdrop's box, measured once an earlier open has landed
     // (_measureBackdrop), and the photo's small copy, made by extractPhotoColor;
-    // until then, the live filter. ?vtdebug=liveblur keeps the live one, to compare.
+    // without them, the live filter. ?vtdebug=liveblur keeps the live one, to compare. The very first open has
+    // no earlier one to have measured the box, so it measures it here (a layout
+    // read, once per session): the live filter is not an option there, as
+    // Firefox draws ::after's 60x stretch under it barely blurred, the photo
+    // smeared down the page.
     const show = () => {
-      const pre = this._backdropBox && !vtFlag('liveblur') ? blurredBackdrop(url, this._backdropBox) : null;
+      const live = vtFlag('liveblur');
+      if (!this._backdropBox && !live) this._measureBackdrop();
+      const pre = this._backdropBox && !live ? blurredBackdrop(url, this._backdropBox) : null;
       el.style.setProperty('--backdrop-img', `url("${pre ?? url}")`);
       el.classList.toggle('prerendered', !!pre);
       el.classList.add('loaded');
@@ -1892,16 +1935,16 @@ class ClassroomDetail {
       container.innerHTML = `
         <div class="detail-schedule-day-selector">
           <div class="detail-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
-          <div class="date-picker-container detail-schedule-picker">
+          <div class="date-picker-container detail-schedule-picker lg-ring">
             ${selectorItemsHtml}
           </div>
-          <div class="date-indicator"></div>
+          <div class="date-indicator lg-ring"></div>
         </div>
         <div class="detail-schedule-inner">
           <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}${queryTicksHtml}</div>
           <div class="detail-schedule-grid">
             <div class="detail-desktop-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
-            <div class="detail-schedule-labels-pill liquid-glass">${labelsHtml}</div>
+          <div class="detail-schedule-labels-pill lg-ring liquid-glass">${labelsHtml}</div>
             <div class="detail-schedule-bars">
               <div class="detail-schedule-grid-lines">${gridLinesHtml}</div>
               ${rowsHtml}

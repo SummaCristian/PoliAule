@@ -16,6 +16,7 @@ const icon = (name) => `<i class="hgi-stroke ${name}" aria-hidden="true"></i>`;
 
 // A tab's id is the id of the panel it shows.
 const TABS = [
+  // Settings' Default Tab picker shows these same icons (components/settings.js)
   { id: 'available-classrooms-container', labelKey: 'tabs.available', icon: icon('hgi-calendar-03') },
   { id: 'search-classrooms-container', labelKey: 'tabs.campus', icon: icon('hgi-university') },
 ];

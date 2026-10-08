@@ -10,6 +10,7 @@
 // they read the same list and simply skip the buildings.
 
 import { t, onLanguageSwitch } from '../i18n.js';
+import { initStarBurst } from '../components/star-burst.js';
 
 const KEY = 'poliAule_favourites';
 
@@ -131,7 +132,7 @@ export function syncStarButton(btn, on, kind = 'classroom') {
 export function createBuildingStarButton(campusId, buildingName, className = '') {
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = `fav-star-btn liquid-glass ${className}`.trim();
+  btn.className = `fav-star-btn lg-ring liquid-glass ${className}`.trim();
   setBuildingStarTarget(btn, campusId, buildingName);
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -156,6 +157,7 @@ let _markersReady = false;
 export function initFavouriteMarkers() {
   if (_markersReady) return;
   _markersReady = true;
+  initStarBurst();
   const syncAll = () => {
     const favs = new Set(getFavouriteEntries());
     document.querySelectorAll('.classroom-card[data-fav-star][data-open-classroom]').forEach(card => {

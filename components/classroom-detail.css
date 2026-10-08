@@ -548,11 +548,18 @@ body.detail-open .tab-content {
 }
 
 .detail-title-row {
+  position: relative;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   width: 100%;
   gap: 1rem;
+}
+
+/* The ring layer below tracks the title pill, not this full-width sticky row.
+   Keep the shared ring helper from outlining the entire container. */
+.detail-title-row:has(> .detail-title-ring) {
+  box-shadow: none !important;
 }
 
 .detail-status-wrapper {
@@ -1045,14 +1052,23 @@ body.detail-open .tab-content {
     animation-range: 0 var(--title-pin-at, 150px), 0 var(--title-pin-at, 150px);
   }
 
-  .detail-title-row::before {
+.detail-title-row::before {
     background: var(--lg-tint);
     -webkit-backdrop-filter: blur(var(--lg-blur-sm));
     backdrop-filter: blur(var(--lg-blur-sm));
-    box-shadow:
-      0 0 0 0.1px var(--lg-outline),
-      var(--lg-highlight),
-      0 4px 40px 0 var(--lg-shadow-color);
+    box-shadow: var(--lg-shadow-rim);
+  }
+
+  .detail-title-row > .detail-title-ring {
+    left: var(--pill-x, 0);
+    top: var(--pill-y, 0);
+    width: var(--pill-w, 0);
+    height: var(--pill-h, 0);
+    border-radius: 1.5rem;
+    opacity: 0;
+    animation: detail-title-glass linear both, detail-title-glass-corners linear both;
+    animation-timeline: scroll(root block), scroll(root block);
+    animation-range: 0 var(--title-pin-at, 150px), 0 var(--title-pin-at, 150px);
   }
 
   /* Outside 0.5px gradient stroke, as on the other glass here. */
@@ -1131,10 +1147,7 @@ body.detail-open .tab-content {
        re-wraps the text on every frame of the overshoot. */
     margin-right: calc(var(--title-shift, 3.25rem) + 0.875rem);
     translate: calc(var(--title-shift, 3.25rem) + 0.875rem) 0;
-    box-shadow:
-      0 0 0 0.1px var(--lg-outline),
-      var(--lg-highlight),
-      0 4px 40px 0 var(--lg-shadow-color);
+    box-shadow: var(--lg-shadow-rim);
   }
 
   /* The glass sits on a child layer: the title itself clips (overflow: hidden),
@@ -2967,6 +2980,37 @@ body.detail-open .tab-content {
     animation: header-ctl-scale-out 0.2s ease-in both;
     transform-origin: center;
   }
+
+  /* The logo, named on close only (classroom-detail.js _doClose): its old
+     snapshot still has the detail page's shadow (.header-halo-held in
+     style.css), the live new one has none. Both are the same logo in the same
+     place, so cross-fading them fades just the shadow, at the start of the
+     close rather than when the frozen header hands over. A true cross-fade
+     (the UA's plus-lighter blend, opacities summing to 1): the logo's fill is
+     translucent, so the old one fading over a fully opaque new one doubles it
+     up into a darker green. */
+  ::view-transition-group(app-logo) {
+    animation: none;
+    z-index: 3;
+  }
+
+  ::view-transition-old(app-logo) {
+    animation: app-logo-out 0.3s ease both;
+  }
+
+  ::view-transition-new(app-logo) {
+    animation: app-logo-in 0.3s ease both;
+  }
+
+  @keyframes app-logo-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @keyframes app-logo-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }
 
 /* The zoom's geometry, written onto <html> by utils/vt-motion.js right before a
@@ -3163,6 +3207,24 @@ body.detail-open .tab-content {
 .detail-hours-row--today .detail-hours-day {
   font-weight: 700;
   color: var(--text-color-accent);
+}
+
+/* The card's glass takes the photo's tint, often a mid tone in light mode,
+   where the accent alone doesn't read. Today's row gets a light, accent-tinted
+   pill to sit on, and a slightly deeper accent (both from the accent, so
+   seasons still recolour them). */
+@media (prefers-color-scheme: light) {
+  .detail-hours-row--today {
+    margin: 0 -0.6rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--text-color-accent) 18%, color-mix(in srgb, white 55%, transparent));
+  }
+
+  .detail-hours-row--today,
+  .detail-hours-row--today .detail-hours-day {
+    color: color-mix(in srgb, var(--text-color-accent) 75%, black);
+  }
 }
 
 .detail-hours-row--closed:not(.detail-hours-row--today) .detail-hours-time {

@@ -128,13 +128,26 @@
      pill — a CSS transition here would fight the per-frame inline
      transform instead of the spring easing it. */
   will-change: transform;
+
+  /* The ring is the lifted lens's shadow, as in .lg-pill (Vitrium's pill.css):
+     none at rest, growing with --lg-lift (0..1, written every frame by
+     createPillDragCore). .lg-ring only brings the ::before it is drawn on. */
+  --lg-lift: 0;
+  --lg-ring-strength: var(--lg-lift);
 }
 
-.date-indicator.date-indicator--lifted {
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
+.date-indicator::before {
+  inset: calc(var(--_ring-drop) * var(--lg-lift)) 0 calc(var(--_ring-offset) * var(--lg-lift) * -1);
+}
+
+/* Specificity beats style.css's `.lg-ring:not(.lg-glass)` rim, which would
+   outline the flat resting lens too. */
+.date-indicator.lg-ring:not(.lg-glass) {
+  box-shadow: none !important;
+}
+
+.date-indicator.lg-ring.date-indicator--lifted:not(.lg-glass) {
+  box-shadow: 0 0 0 0.1px var(--lg-outline), var(--lg-highlight) !important;
 }
 
 /* Outside 0.5px gradient stroke, only shown while lifted — same recipe as

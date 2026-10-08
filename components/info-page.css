@@ -540,7 +540,8 @@ body.info-open .header-title-btn {
   padding: 1.2rem 1.6rem;
   box-sizing: border-box;
   position: relative;
-  overflow: hidden;
+  /* No overflow clip: it would cut the ring (.lg-ring-layer) off at the edge.
+     The hover shine below stays inside the box on its own. */
   border-radius: var(--radius-xl);
   color: var(--lg-text);
   text-decoration: none;
@@ -566,6 +567,23 @@ body.info-open .header-title-btn {
   animation: badge-pop-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
 
+/* The ring in the badge's own colour, as Vitrium's tinted glass casts it
+   (glass.css, .lg-glass--tinted): a glow of the tint rather than a darkened
+   shadow, with a light fill inside it and a tighter inner half. */
+.info-badge {
+  --lg-glass-tint: var(--badge-tint);
+  --lg-shadow-color: oklch(
+    from color-mix(in oklch, var(--badge-tint) calc(var(--lg-shadow-tint) * 100%), black)
+    l c h / var(--lg-shadow-tint-alpha)
+  );
+  --lg-ring-color: oklch(from var(--lg-shadow-color) l c h / var(--lg-ring-tint-alpha));
+  --lg-ring-fill: color-mix(in srgb, var(--badge-tint) calc(var(--lg-ring-tint-fill) * 100%), transparent);
+}
+
+.info-badge > .lg-ring-layer {
+  --_ring-blur-in: min(var(--_ring-blur), var(--lg-ring-blur));
+}
+
 .info-badge:nth-child(1) { animation-delay: 0.15s; }
 .info-badge:nth-child(2) { animation-delay: 0.25s; }
 
@@ -576,23 +594,27 @@ body.info-open .header-title-btn {
   }
 }
 
-/* The light sweep across on hover. */
+/* The light sweep across on hover: a band of a wide background that slides
+   from one side to the other, so it never leaves the badge's rounded box. */
+.info-badge {
+  --badge-shine: 0.4;
+}
+
 .info-badge::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: -150%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  transform: skewX(-20deg);
-  transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, var(--badge-shine)) 50%, transparent 58%) no-repeat;
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  transition: background-position 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 
 @media (hover: hover) {
   .info-badge:hover::after {
-    left: 150%;
+    background-position: 0 0;
   }
 
   .info-badge:hover {
@@ -630,8 +652,11 @@ body.info-open .header-title-btn {
   pointer-events: none;
 }
 
+/* One full stripe period along x: the 24px period of the -45deg gradient is
+   24 / sin(45deg) = 24 * sqrt(2) wide horizontally, so the loop restarts on an
+   identical frame. */
 @keyframes hazard-crawl {
-  to { background-position: 48px 0; }
+  to { background-position: 33.941px 0; }
 }
 
 @media (hover: hover) {
@@ -706,8 +731,8 @@ body.info-open .header-title-btn {
       var(--lg-tint);
   }
 
-  .info-badge::after {
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  .info-badge {
+    --badge-shine: 0.15;
   }
 
   .info-badge img {

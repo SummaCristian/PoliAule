@@ -477,7 +477,7 @@ class InfoPage {
 
         <!-- The two sites, as big glass badges -->
         <div class="badge-container">
-          <a href="https://poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--stable liquid-glass">
+          <a href="https://poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--stable lg-ring--soft lg-elevation-high liquid-glass">
             <span class="lg-ring-layer" aria-hidden="true"></span>
             ${iconImg('main', 56)}
             <span class="badge-text">
@@ -486,7 +486,7 @@ class InfoPage {
               <span class="badge-description">${t('info.badge.stableDesc')}</span>
             </span>
           </a>
-          <a href="https://beta.poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--beta liquid-glass">
+          <a href="https://beta.poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--beta lg-ring--soft lg-elevation-high liquid-glass">
             <span class="lg-ring-layer" aria-hidden="true"></span>
             ${iconImg('beta', 56)}
             <span class="badge-text">

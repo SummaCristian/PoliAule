@@ -1,5 +1,13 @@
 @import "vitrium/styles";
 
+/* Hand-built glass surfaces opt into Vitrium's ring pseudo-element with
+   .lg-ring. Keep only the rim shadow on the surface itself; the soft ring
+   below it is drawn by Vitrium's glass stylesheet. */
+.lg-ring:not(.lg-glass),
+:where(*:has(> .lg-ring-layer)) {
+  box-shadow: var(--lg-shadow-rim) !important;
+}
+
 /* Theme and color schemes */
 :root {
   box-sizing: border-box;

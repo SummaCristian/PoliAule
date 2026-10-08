@@ -132,7 +132,7 @@ export function syncStarButton(btn, on, kind = 'classroom') {
 export function createBuildingStarButton(campusId, buildingName, className = '') {
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = `fav-star-btn liquid-glass ${className}`.trim();
+  btn.className = `fav-star-btn lg-ring liquid-glass ${className}`.trim();
   setBuildingStarTarget(btn, campusId, buildingName);
   btn.addEventListener('click', (e) => {
     e.stopPropagation();

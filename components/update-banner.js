@@ -38,7 +38,7 @@ function build(release) {
   // The button is the action; a tap anywhere else on the banner does the
   // same, so the glass (which leaves presses on controls inside it to them)
   // still reacts to one
-  el.className = 'season-banner update-banner lg-glass lg-glass--clear lg-glass--tinted liquid-glass';
+  el.className = 'season-banner update-banner lg-glass lg-glass--clear lg-glass--tinted lg-elevation-high liquid-glass';
   el.style.setProperty('--season-tint', TINT[release.channel] ?? TINT.stable);
   el.innerHTML = `
     <img class="update-banner__icon" src="/favicons/${release.channel === 'stable' ? 'main' : 'beta'}/icon-128.webp" width="34" height="34" alt="" draggable="false">

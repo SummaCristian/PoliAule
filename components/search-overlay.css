@@ -157,6 +157,7 @@ html.search-vt .lg-tabbar__prominent {
    just be a permanent coloured border — the accent caret marks it instead. */
 
 .search-bar-wrapper {
+  position: relative;
   flex: 1;
   min-width: 0;
   height: var(--search-field-h);
@@ -342,6 +343,7 @@ html.search-vt .lg-tabbar__prominent {
 }
 
 .search-overlay-close {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -425,7 +427,7 @@ html.search-vt .lg-tabbar__prominent {
   transform-origin: 50% 0;
 
   border-radius: var(--radius-xl);
-  overflow: clip;
+  overflow: visible;
   /* A thicker material than the field's: it's a large surface you read from,
      and with the page behind no longer dimmed, Vitrium's control tint (~80%)
      let the page's own text show through it. Mixed from that same tint, so
@@ -446,6 +448,7 @@ html.search-vt .lg-tabbar__prominent {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  border-radius: inherit;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain; /* don't chain into the page behind when the list ends */
 

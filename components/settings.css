@@ -178,8 +178,9 @@ body.settings-open #settings-btn {
 
 /* Same clear glass card as .info-section and .detail-section. */
 .settings-group {
+  position: relative;
   border-radius: var(--radius-xl);
-  overflow: hidden;
+  overflow: visible;
   background: var(--lg-tint-clear);
   -webkit-backdrop-filter: blur(var(--lg-blur-clear));
   backdrop-filter: blur(var(--lg-blur-clear));

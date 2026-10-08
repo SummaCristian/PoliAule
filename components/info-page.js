@@ -444,7 +444,7 @@ class InfoPage {
     const badgeText = this._badgeEl?.textContent ?? '';
     const variant = showBadge ? 'beta' : 'main';
     const platform = detectPlatform();
-    const steps = (key, n) => Array.from({ length: n }, (_, i) => `<li>${t(`info.pwa.${key}.step${i + 1}`)}</li>`).join('');
+    const steps = (key, n) => Array.from({ length: n }, (_, i) => `<li><span class="lg-ring-layer" aria-hidden="true"></span>${t(`info.pwa.${key}.step${i + 1}`)}</li>`).join('');
     // While a season is on, its logo (the usual one dressed up) is the hero,
     // larger and out of the icon's frame
     const seasonHero = shownHero();
@@ -478,6 +478,7 @@ class InfoPage {
         <!-- The two sites, as big glass badges -->
         <div class="badge-container">
           <a href="https://poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--stable liquid-glass">
+            <span class="lg-ring-layer" aria-hidden="true"></span>
             ${iconImg('main', 56)}
             <span class="badge-text">
               <span class="top-text">poliaule.com</span>
@@ -486,6 +487,7 @@ class InfoPage {
             </span>
           </a>
           <a href="https://beta.poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--beta liquid-glass">
+            <span class="lg-ring-layer" aria-hidden="true"></span>
             ${iconImg('beta', 56)}
             <span class="badge-text">
               <span class="top-text">beta.poliaule.com</span>
@@ -499,7 +501,7 @@ class InfoPage {
         <!-- Body: glass cards, a masonry of two columns on desktop -->
         <div class="info-content">
          <div class="info-column">
-          <section class="info-section info-intro">
+          <section class="info-section info-intro lg-ring">
             <h2 class="info-section-title">${t('info.about.title')}</h2>
             <div class="info-prose">
               <p>${t('info.body.intro')}</p>
@@ -514,7 +516,7 @@ class InfoPage {
             </div>
           </section>
 
-          <section class="info-section info-pwa">
+          <section class="info-section info-pwa lg-ring">
             <h2 class="info-section-title">${t('info.pwa.title')}</h2>
             <p class="info-section-subtitle">${t('info.pwa.subtitle')}</p>
             <div class="info-pwa-switch">
@@ -540,15 +542,15 @@ class InfoPage {
 
          </div>
          <div class="info-column">
-          <section class="info-section about-me-section">
+          <section class="info-section about-me-section lg-ring">
             <h2 class="info-section-title">${t('info.aboutMe.title')}</h2>
             <div class="about-me-container">
               <img src="/assets/profile.jpg" alt="Profile picture of Cristian Summa" class="about-me-photo" draggable="false">
               <div class="about-me-bubbles">
-                <p class="message-bubble">${t('info.aboutMe.parag1')}</p>
-                <p class="message-bubble">${t('info.aboutMe.parag2')}</p>
-                <p class="message-bubble">${t('info.aboutMe.parag3')}</p>
-                <div class="typing-indicator message-bubble">
+                <p class="message-bubble lg-ring">${t('info.aboutMe.parag1')}</p>
+                <p class="message-bubble lg-ring">${t('info.aboutMe.parag2')}</p>
+                <p class="message-bubble lg-ring">${t('info.aboutMe.parag3')}</p>
+                <div class="typing-indicator message-bubble lg-ring">
                   <span></span>
                   <span></span>
                   <span></span>
@@ -557,7 +559,7 @@ class InfoPage {
             </div>
           </section>
 
-          <section class="info-section github-stats-section">
+          <section class="info-section github-stats-section lg-ring">
             <div class="info-section-header">
               <h2 class="info-section-title">${t('info.github.title')}</h2>
               <a href="https://github.com/${GITHUB_REPO}" target="_blank" rel="noopener" class="info-pill lg-glass liquid-glass">
@@ -615,8 +617,8 @@ class InfoPage {
     const heroIcon = this._overlay.querySelector('.info-hero-icon');
     if (!heroIcon.complete) {
       const wrap = heroIcon.parentElement;
-      wrap.classList.add('is-loading');
-      const done = () => wrap.classList.remove('is-loading');
+      wrap.classList.add('is-loading', 'lg-ring');
+      const done = () => wrap.classList.remove('is-loading', 'lg-ring');
       heroIcon.addEventListener('load', done, { once: true });
       heroIcon.addEventListener('error', done, { once: true });
     }
@@ -738,7 +740,7 @@ class InfoPage {
       document.fonts.load("italic 500 1em 'Cormorant Garamond'").catch(() => {});
       setTimeout(() => {
         const bubble = document.createElement('p');
-        bubble.className = 'message-bubble message-bubble--secret';
+        bubble.className = 'message-bubble message-bubble--secret lg-ring';
         bubble.innerHTML = text; // our own build-time string, like the locale files: HTML allowed
         // Takes the indicator's place and grows from its size to its own real
         // height (not the pop-in's generic 500px cap), so the cards below

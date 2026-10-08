@@ -548,11 +548,18 @@ body.detail-open .tab-content {
 }
 
 .detail-title-row {
+  position: relative;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   width: 100%;
   gap: 1rem;
+}
+
+/* The ring layer below tracks the title pill, not this full-width sticky row.
+   Keep the shared ring helper from outlining the entire container. */
+.detail-title-row:has(> .detail-title-ring) {
+  box-shadow: none !important;
 }
 
 .detail-status-wrapper {
@@ -1045,14 +1052,23 @@ body.detail-open .tab-content {
     animation-range: 0 var(--title-pin-at, 150px), 0 var(--title-pin-at, 150px);
   }
 
-  .detail-title-row::before {
+.detail-title-row::before {
     background: var(--lg-tint);
     -webkit-backdrop-filter: blur(var(--lg-blur-sm));
     backdrop-filter: blur(var(--lg-blur-sm));
-    box-shadow:
-      0 0 0 0.1px var(--lg-outline),
-      var(--lg-highlight),
-      0 4px 40px 0 var(--lg-shadow-color);
+    box-shadow: var(--lg-shadow-rim);
+  }
+
+  .detail-title-row > .detail-title-ring {
+    left: var(--pill-x, 0);
+    top: var(--pill-y, 0);
+    width: var(--pill-w, 0);
+    height: var(--pill-h, 0);
+    border-radius: 1.5rem;
+    opacity: 0;
+    animation: detail-title-glass linear both, detail-title-glass-corners linear both;
+    animation-timeline: scroll(root block), scroll(root block);
+    animation-range: 0 var(--title-pin-at, 150px), 0 var(--title-pin-at, 150px);
   }
 
   /* Outside 0.5px gradient stroke, as on the other glass here. */
@@ -1131,10 +1147,7 @@ body.detail-open .tab-content {
        re-wraps the text on every frame of the overshoot. */
     margin-right: calc(var(--title-shift, 3.25rem) + 0.875rem);
     translate: calc(var(--title-shift, 3.25rem) + 0.875rem) 0;
-    box-shadow:
-      0 0 0 0.1px var(--lg-outline),
-      var(--lg-highlight),
-      0 4px 40px 0 var(--lg-shadow-color);
+    box-shadow: var(--lg-shadow-rim);
   }
 
   /* The glass sits on a child layer: the title itself clips (overflow: hidden),

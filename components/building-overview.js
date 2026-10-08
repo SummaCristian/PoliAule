@@ -756,8 +756,8 @@ class BuildingOverview {
     const bar = document.createElement('div');
     bar.className = 'bo-topbar';
     bar.innerHTML = `
-      <h3 class="bo-title">${escapeHtml(t('overview.title'))}</h3>
-      <button class="bo-close liquid-glass" type="button" aria-label="${escapeHtml(t('overview.close'))}">
+      <h3 class="bo-title lg-ring">${escapeHtml(t('overview.title'))}</h3>
+      <button class="bo-close lg-ring liquid-glass" type="button" aria-label="${escapeHtml(t('overview.close'))}">
         <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
       </button>
     `;

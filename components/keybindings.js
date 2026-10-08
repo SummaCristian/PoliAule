@@ -62,7 +62,7 @@ function buildHelp() {
   backdrop.hidden = true;
 
   const panel = document.createElement('div');
-  panel.className = 'kb-help-panel';
+  panel.className = 'kb-help-panel lg-ring';
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
   panel.setAttribute('aria-label', t('shortcuts.title'));

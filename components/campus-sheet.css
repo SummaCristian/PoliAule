@@ -15,6 +15,12 @@
   mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--lg-sheet-header-height, 4.75rem) - var(--lg-sheet-fade)), #fff var(--lg-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
 }
 
+/* Vitrium disables the elevated ring on bottom sheets. Restate that after its
+   generic .lg-glass::before rule so the Campus sheet cannot generate it. */
+.campus-sheet .lg-sheet__glass::before {
+  content: none !important;
+}
+
 /* ── Buildings page ───────────────────────────────────────────────────────
    The sheet's content: a campus picker (components/campus-buildings.js — a
    second instance of the Available tab's own morphing <campus-chip-picker>)

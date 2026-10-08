@@ -203,7 +203,7 @@ function render(campusId, building) {
         <span class="bpop-total secondary">${escapeHtml(t('overview.subtitle').replace('{n}', n))}</span>
       </div>
       <div class="bpop-actions">
-        <button class="header-button bpop-btn bpop-close liquid-glass" type="button" aria-label="${escapeHtml(t('favourites.closeBuilding'))}">
+        <button class="header-button lg-ring bpop-btn bpop-close liquid-glass" type="button" aria-label="${escapeHtml(t('favourites.closeBuilding'))}">
           <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
         </button>
       </div>
@@ -213,7 +213,7 @@ function render(campusId, building) {
     </div>
   `;
   inner.querySelector('.bpop-actions')
-    .prepend(createBuildingStarButton(campusId, building.name, 'header-button bpop-btn'));
+    .prepend(createBuildingStarButton(campusId, building.name, 'header-button lg-ring bpop-btn'));
   inner.querySelector('.bpop-close').addEventListener('click', () => close());
   inner.querySelector('.bpop-header').addEventListener('pointerdown', onDragPointerDown);
   appendClassroomsByFloor(inner.querySelector('.bpop-grid'), building);

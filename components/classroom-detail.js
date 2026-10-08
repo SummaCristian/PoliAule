@@ -1071,7 +1071,7 @@ class ClassroomDetail {
       .map(({ id }, i) => {
         const { icon, key } = FEATURE_ICONS[id];
         return `
-          <div class="detail-feature-chip liquid-glass${enter ? ' detail-feature-chip--enter' : ''}" data-feature-id="${id}" style="--i:${i}">
+          <div class="detail-feature-chip lg-ring liquid-glass${enter ? ' detail-feature-chip--enter' : ''}" data-feature-id="${id}" style="--i:${i}">
             <i class="hgi-stroke ${icon}" aria-hidden="true"></i>
             <span>${t(key)}</span>
           </div>`;
@@ -1119,7 +1119,7 @@ class ClassroomDetail {
         'closed': 'status.closed'
       };
       statusHtml = `
-        <div class="detail-status-wrapper">
+        <div class="detail-status-wrapper lg-ring">
           <span class="detail-status-label">${t('detail.currentStatus')}</span>
           <h4 class="classroom-status-txt ${status}">${t(statusKeys[status])}</h4>
         </div>`;
@@ -1143,7 +1143,7 @@ class ClassroomDetail {
       const days = graduationDays.map(d => fmt.format(new Date(`${d}T12:00:00`))).join(', ');
       const [one, many] = t('detail.graduationText').split('|');
       graduationHtml = `
-          <div class="detail-events-only detail-graduation" role="note">
+          <div class="detail-events-only detail-graduation lg-ring" role="note">
             <i class="hgi-stroke hgi-laurel-wreath-01" aria-hidden="true"></i>
             <div>
               <strong>${escapeHtml(t('detail.graduationTitle').replace('{days}', days))}</strong>
@@ -1166,7 +1166,8 @@ class ClassroomDetail {
         </div>`
       : ''}
         <div class="detail-header">
-        <div class="detail-title-row">
+        <div class="detail-title-row lg-elevation-high">
+          <span class="detail-title-ring lg-ring-layer" aria-hidden="true"></span>
           <h1 class="detail-title" role="button" tabindex="0">${escapeHtml(classroom.name)}</h1>
           ${statusHtml}
         </div>
@@ -1174,19 +1175,19 @@ class ClassroomDetail {
           ${t('building.prefix')} ${building.altName ? `${escapeHtml(building.altName)} (${escapeHtml(building.name)})` : escapeHtml(building.name)} &middot; ${escapeHtml(campus.name)}
         </p>
         <div class="detail-stats">
-          <div class="detail-stat">
+          <div class="detail-stat lg-ring">
             <i class="hgi-stroke hgi-user-multiple" aria-hidden="true"></i>
             <span>${classroom.seats} ${t('detail.seats')}</span>
           </div>
           ${classroom.accessible_seats ? `
-            <div class="detail-stat">
+            <div class="detail-stat lg-ring">
               <i class="hgi-stroke hgi-wheelchair" aria-hidden="true"></i>
               <span>${classroom.accessible_seats} ${t('detail.disabledSeats')}</span>
             </div>
           ` : ''}
         </div>
         ${classroom.eventsOnly ? `
-          <div class="detail-events-only" role="note">
+          <div class="detail-events-only lg-ring" role="note">
             <i class="hgi-stroke hgi-alert-02" aria-hidden="true"></i>
             <div>
               <strong>${t('detail.eventsOnlyTitle')}</strong>
@@ -1198,7 +1199,7 @@ class ClassroomDetail {
       </div>
       <div class="detail-content${deferContent ? ' detail-content--deferred' : ''}">
         <div class="detail-column">
-        <section class="detail-section">
+        <section class="detail-section lg-ring">
           <h2 class="detail-section-title">${t('detail.features')}</h2>
           ${featuresHtml
         ? `<div class="detail-features">${featuresHtml}</div>`
@@ -1206,7 +1207,7 @@ class ClassroomDetail {
       }
         </section>
 
-        <section class="detail-section">
+        <section class="detail-section lg-ring">
           <div class="detail-section-header">
             <h2 class="detail-section-title">${t('detail.weeklySchedule')}</h2>
             <div class="detail-schedule-legend">
@@ -1226,13 +1227,13 @@ class ClassroomDetail {
 
         <div class="detail-column">
         ${hoursHtml ? `
-        <section class="detail-section">
+        <section class="detail-section lg-ring">
           <h2 class="detail-section-title">${t('detail.openingHours')}</h2>
           ${hoursHtml}
         </section>` : ''}
 
         ${hasMap ? `
-        <section class="detail-section detail-map-section">
+        <section class="detail-section detail-map-section lg-ring">
           <h2 class="detail-section-title">${t('detail.location')}</h2>
           <div class="detail-map"></div>
           <div class="detail-map-links"></div>
@@ -1934,16 +1935,16 @@ class ClassroomDetail {
       container.innerHTML = `
         <div class="detail-schedule-day-selector">
           <div class="detail-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
-          <div class="date-picker-container detail-schedule-picker">
+          <div class="date-picker-container detail-schedule-picker lg-ring">
             ${selectorItemsHtml}
           </div>
-          <div class="date-indicator"></div>
+          <div class="date-indicator lg-ring"></div>
         </div>
         <div class="detail-schedule-inner">
           <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}${queryTicksHtml}</div>
           <div class="detail-schedule-grid">
             <div class="detail-desktop-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
-            <div class="detail-schedule-labels-pill liquid-glass">${labelsHtml}</div>
+          <div class="detail-schedule-labels-pill lg-ring liquid-glass">${labelsHtml}</div>
             <div class="detail-schedule-bars">
               <div class="detail-schedule-grid-lines">${gridLinesHtml}</div>
               ${rowsHtml}

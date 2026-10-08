@@ -353,19 +353,19 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   headerEl.className = 'building-section-header';
   headerEl.style.setProperty('--appear-delay', `${Math.min(cardIndex * 30, 300)}ms`);
   headerEl.innerHTML = `
-    <button class="building-section-titles liquid-glass" type="button" aria-haspopup="dialog" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
+    <button class="building-section-titles lg-ring liquid-glass" type="button" aria-haspopup="dialog" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
       <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
       ${building.altName ? `<span class="building-alt-name">${escapeHtml(building.altName)}</span>` : ''}
     </button>
     <div class="building-section-actions">
-      <button class="header-button building-section-btn building-section-jump liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
+      <button class="header-button lg-ring building-section-btn building-section-jump liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
         <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
       </button>
     </div>
   `;
   // Stars the whole building (utils/favourites.js), next to the jump button.
   headerEl.querySelector('.building-section-actions')
-    .prepend(createBuildingStarButton(campusId, buildingName, 'header-button building-section-btn'));
+    .prepend(createBuildingStarButton(campusId, buildingName, 'header-button lg-ring building-section-btn'));
   decorate('buildingHeader', headerEl, { campusId, building });
   cardIndex++;
   section.appendChild(headerEl);
@@ -1127,4 +1127,3 @@ function setupLiveSearch() {
   document.getElementById('from-time-picker').addEventListener('input', triggerDebounced);
   document.getElementById('to-time-picker').addEventListener('input', triggerDebounced);
 }
-

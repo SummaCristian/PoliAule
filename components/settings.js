@@ -140,7 +140,7 @@ function buildCampusSection() {
   const headerLabel = section.querySelector('[data-campus-label]');
 
   const group = document.createElement('div');
-  group.className = 'settings-group';
+  group.className = 'settings-group lg-ring';
   section.appendChild(group);
 
   // ── Row 1: Preferred Campus toggle
@@ -321,7 +321,7 @@ function buildContent() {
           </div>
           <span class="settings-section__header-label">${t('settings.language')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon">
@@ -353,7 +353,7 @@ function buildContent() {
           </div>
           <span class="settings-section__header-label" data-timefmt-section-header>${t('settings.sectionDateTime')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon">
@@ -419,7 +419,7 @@ function buildContent() {
           </div>
           <span class="settings-section__header-label" data-i18n="settings.sectionResults">${t('settings.sectionResults')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row" data-show-partial-row>
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon">
@@ -444,7 +444,7 @@ function buildContent() {
           </div>
           <span class="settings-section__header-label" data-defaulttab-section-header>${t('settings.sectionNavigation')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon">
@@ -482,7 +482,7 @@ function buildContent() {
           </div>
           <span class="settings-section__header-label" data-blurmode-section-header>${t('settings.sectionAppearance')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon">
@@ -526,7 +526,7 @@ function buildContent() {
           </div>
           <span class="settings-section__header-label" data-i18n="settings.sectionTransfer">${t('settings.sectionTransfer')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row" data-transfer-row>
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon">
@@ -550,7 +550,7 @@ function buildContent() {
           </div>
           <span class="settings-section__header-label" data-i18n="settings.sectionBackend">${t('settings.sectionBackend')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row" data-use-beta-backend-row>
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon">
@@ -573,7 +573,7 @@ function buildContent() {
           </div>
           <span class="settings-section__header-label" data-i18n="settings.sectionReset">${t('settings.sectionReset')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon">

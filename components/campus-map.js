@@ -17,6 +17,7 @@ import { attachSky, captureSkyLights, refreshSky } from './map-sky.js';
 // a threshold returns to the campus overview. Static for now — markers don't
 // reflect live occupancy yet.
 
+const MAP_STYLE = 'mapbox://styles/mapbox/standard';
 const MAPBOX_VERSION = '3.32.0';
 const CONTAINER_ID = 'search-classrooms-container';
 
@@ -392,7 +393,7 @@ async function boot() {
   mapboxgl.accessToken = token;
   map = new mapboxgl.Map({
     container: el,
-    style: 'mapbox://styles/mapbox/standard',
+    style: MAP_STYLE,
     center: startEmbed ? [startEmbed.long, startEmbed.lat] : startCampus ? [startCampus.long, startCampus.lat] : INITIAL_CENTER,
     zoom: startEmbed ? EMBED_ZOOM : startCampus ? CAMPUS_FLY_ZOOM : INITIAL_ZOOM,
     minZoom: 8.5,
@@ -534,7 +535,13 @@ async function boot() {
     // Seasonal decorations painted into the map itself (utils/season.js)
     decorateLive('map', map, { campuses: classroomsData });
   });
-  darkScheme.addEventListener('change', applyLightPreset);
+  // Flipping the preset on the live style relights the map but leaves
+  // Standard's colours on the old theme's, so the theme changing reloads the
+  // style instead: the same path a fresh load takes ('style.load' above redoes
+  // the preset, the lights and the seasonal layers; camera and markers stay)
+  darkScheme.addEventListener('change', () => {
+    try { map.setStyle(MAP_STYLE); } catch { applyLightPreset(); }
+  });
   // The real sun and weather over the map (components/map-sky.js)
   attachSky(map, {
     isShowing: () => isMapTabShowing() && !embed,

@@ -7,7 +7,8 @@
 // The data stays in the URL fragment, so it never reaches a server.
 //
 // Only the fields in fields() travel. Device-specific or throwaway state stays
-// put: lg:blur-mode (a per-device capability verdict), caches, last tab /
+// put: lg:blur-mode (a per-device capability verdict), refraction (browser-
+// dependent), caches, last tab /
 // last campus, the info hint, and the beta-backend dev flag. Anything else in
 // a payload is ignored, so a crafted link can't write arbitrary keys.
 import { getFavouriteEntries, setFavouriteEntries, buildingKey } from './favourites.js';
@@ -16,6 +17,7 @@ import { STORAGE_KEY as LOCALE_KEY } from '../i18n.js';
 import {
   HIDE_SUNDAYS_KEY, INTERVAL_HOURS_KEY, SHOW_PARTIAL_KEY,
   DEFAULT_TAB_KEY, PREFERRED_CAMPUS_ENABLED_KEY, PREFERRED_CAMPUS_ID_KEY, REMEMBER_LAST_CAMPUS_KEY,
+  GLASS_STYLE_KEY,
 } from '../components/settings.js';
 import { SEASONAL_KEY } from './season.js';
 
@@ -44,6 +46,7 @@ function fields(campusIds) {
     pc: [PREFERRED_CAMPUS_ID_KEY, campusIds ? oneOf(...campusIds) : { enc: v => v || undefined }],
     rl: [REMEMBER_LAST_CAMPUS_KEY, bool],
     se: [SEASONAL_KEY, bool],
+    gs: [GLASS_STYLE_KEY, oneOf('transparent', 'frost')],
   };
 }
 

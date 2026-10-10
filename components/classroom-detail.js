@@ -1199,7 +1199,7 @@ class ClassroomDetail {
       </div>
       <div class="detail-content${deferContent ? ' detail-content--deferred' : ''}">
         <div class="detail-column">
-        <section class="detail-section lg-ring">
+        <section class="detail-section lg-ring" data-glass-style="frost">
           <h2 class="detail-section-title">${t('detail.features')}</h2>
           ${featuresHtml
         ? `<div class="detail-features">${featuresHtml}</div>`
@@ -1207,7 +1207,7 @@ class ClassroomDetail {
       }
         </section>
 
-        <section class="detail-section lg-ring">
+        <section class="detail-section lg-ring" data-glass-style="frost">
           <div class="detail-section-header">
             <h2 class="detail-section-title">${t('detail.weeklySchedule')}</h2>
             <div class="detail-schedule-legend">
@@ -1227,13 +1227,13 @@ class ClassroomDetail {
 
         <div class="detail-column">
         ${hoursHtml ? `
-        <section class="detail-section lg-ring">
+        <section class="detail-section lg-ring" data-glass-style="frost">
           <h2 class="detail-section-title">${t('detail.openingHours')}</h2>
           ${hoursHtml}
         </section>` : ''}
 
         ${hasMap ? `
-        <section class="detail-section detail-map-section lg-ring">
+        <section class="detail-section detail-map-section lg-ring" data-glass-style="frost">
           <h2 class="detail-section-title">${t('detail.location')}</h2>
           <div class="detail-map"></div>
           <div class="detail-map-links"></div>

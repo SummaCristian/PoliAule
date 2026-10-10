@@ -318,6 +318,12 @@
       }
     } catch (e) {}
 
+    // Vitrium's glass style (Settings, poliAule_glassStyle): transparent unless
+    // frost was picked. Set here so the glass never flashes from one to the other.
+    try {
+      document.documentElement.dataset.glassStyle = localStorage.getItem('poliAule_glassStyle') === 'frost' ? 'frost' : 'transparent';
+    } catch (e) { document.documentElement.dataset.glassStyle = 'transparent'; }
+
     // Seasonal decorations (utils/season.js): today's season, by the Milan
     // calendar day, or null. Decided here, before first paint, so a seasonal
     // accent never flashes in over the normal one; season.js reads

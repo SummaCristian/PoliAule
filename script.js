@@ -59,7 +59,7 @@ import './components/data-fetch-card.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
 import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
-import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
+import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark, initRefraction } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 import { initCardDayPopover } from './components/card-day-popover.js';
 import { createBuildingStarButton } from './utils/favourites.js';
@@ -67,7 +67,7 @@ import { createBuildingStarButton } from './utils/favourites.js';
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, getRefractionPref } from './components/settings.js';
 import { initKeybindings } from './components/keybindings.js';
 import { takeImportHash } from './utils/transfer.js';
 import { promptImport } from './components/transfer-dialog.js';
@@ -556,6 +556,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // instantly — the actual benchmark never runs during load, see
     // Vitrium's core/blur-capability.js for why.
     applyBlurState(resolveBlurCapability());
+    // Rim refraction on glass (Chromium only, and only while blur is on);
+    // the glass style itself is set before first paint in index.html.
+    initRefraction({ enabled: getRefractionPref() });
 
     await document.fonts.ready;
     document.querySelector('.time-pickers-container').style.opacity = '1';

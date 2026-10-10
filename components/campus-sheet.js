@@ -149,6 +149,7 @@ function build(detent) {
     label: t('tabs.campus'),
     deform: 'handle',        // squash/stretch only for a drag on the grabber or header, not on the cards
     zIndex: 3,               // above the map (0) and its controls (5 is inside the map's own context)
+    glassStyle: 'frost',     // always frosted, whatever the glass style setting or the detent
     detents: [
       { id: 'collapsed', size: COLLAPSED },
       { id: 'half', size: 0.5 },

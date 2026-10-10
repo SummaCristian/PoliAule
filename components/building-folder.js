@@ -172,6 +172,9 @@ function trackPointer(folder) {
 export function buildBuildingFolder({ campusId, building, rooms, total, footerHtml = '', paperScale = 0.5, compact = false }) {
   const folder = document.createElement('div');
   folder.className = compact ? 'bo-card bo-card--compact' : 'bo-card';
+  // Always frosted, whatever the glass style setting: the front's tint and its
+  // .bo-card-frost twin both take their blur from the tokens this switches
+  folder.dataset.glassStyle = 'frost';
   folder.dataset.buildingName = building.name;
   folder.dataset.campusId = campusId;
   folder.dataset.paperScale = paperScale;

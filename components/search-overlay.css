@@ -433,8 +433,11 @@ html.search-vt .lg-tabbar__prominent {
      let the page's own text show through it. Mixed from that same tint, so
      it follows the theme and the no-blur fallback. */
   background: color-mix(in srgb, var(--lg-tint) 55%, var(--background-color-secondary));
-  backdrop-filter: var(--search-glass);
-  -webkit-backdrop-filter: var(--search-glass);
+  /* Always frosted, whatever the glass style setting (data-glass-style="frost"
+     on the frame): --search-glass is resolved on the panel, above the
+     attribute, so the blur is spelled out here to follow it. */
+  backdrop-filter: blur(var(--lg-blur-lg)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--lg-blur-lg)) saturate(1.6);
   box-shadow: var(--search-elevation);
 }
 

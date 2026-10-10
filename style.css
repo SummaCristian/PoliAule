@@ -2917,7 +2917,7 @@ svg.glass-crack {
 .star-burst {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1002;
+  z-index: 999;
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;

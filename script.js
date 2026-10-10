@@ -33,7 +33,7 @@ import {
 
 import { ensureClassroomDirectory, classroomsData as staticClassroomsData } from './classroom-search-data.js';
 import { initSearchOverlay } from './components/search-overlay.js';
-import { setArcBetween, clearZoomOrigin } from './utils/vt-motion.js';
+import { springFlight } from './utils/vt-motion.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
 import { changelogPage } from './components/changelog-page.js';
@@ -125,6 +125,16 @@ function dismissSplash() {
   }
 
   const splashLogo = overlay.querySelector('.splash-logo');
+  // Never take off mid-intro (a fast, cached start lands here while the logo is
+  // still fading and growing in): the transition's snapshot is a still image,
+  // so the logo would fly half-faded and pop to full opacity as it landed, and
+  // its growth would flip straight into the shrink.
+  const intro = splashLogo.getAnimations().filter(a => a.playState === 'running');
+  if (intro.length) {
+    Promise.all(intro.map(a => a.finished)).then(dismissSplash, dismissSplash);
+    return;
+  }
+
   const realLogo = document.querySelector('.header-logo');
   const isInfo = location.hash === '#info';
   const isChangelog = changelogPage.matchesHash;
@@ -175,10 +185,6 @@ function dismissSplash() {
       const cleanup = () => changelogPage.clearSplashName();
       vt.finished.then(cleanup).catch(cleanup);
     } else {
-      // The logo curves into the header the way a card's page grows out of its
-      // card (same spring, same arc), instead of sliding along a straight line
-      // (a bit more swing than a card's, kept on screen by setArcBetween)
-      setArcBetween(splashLogo.getBoundingClientRect(), realLogo.getBoundingClientRect(), 1.4);
       const vt = document.startViewTransition(() => {
         splashLogo.style.viewTransitionName = '';
         overlay.remove();
@@ -189,8 +195,10 @@ function dismissSplash() {
         if (isSettings) settingsPage.openInSplash();
       });
 
-      vt.ready.catch(() => {});
-      const cleanup = () => { realLogo.style.viewTransitionName = ''; clearZoomOrigin(); };
+      // The logo curves into the header on a spring per axis
+      // (utils/vt-motion.js), instead of sliding along a straight line
+      vt.ready.then(() => springFlight('splash-icon')).catch(() => {});
+      const cleanup = () => { realLogo.style.viewTransitionName = ''; };
       vt.finished.then(cleanup).catch(cleanup);
     }
   } else {

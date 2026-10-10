@@ -32,8 +32,6 @@ function writeVars(vars) {
 // change one and the other has to be re-derived from the same spring.
 const ARC_LEAD = 0.163;  // horizontal, ahead
 const ARC_DRAG = 0.148;  // vertical, behind
-const ARC_PEAK_AT = 0.49; // how far along the straight line the spring is at the lead's peak (25% of the time)
-const EDGE_MARGIN = 8;    // px kept clear of the viewport's edge at that point
 
 /**
  * Writes the zoom's starting geometry for the transition's pseudo-elements.
@@ -79,27 +77,62 @@ export function setZoomOrigin(rect, radius = 16) {
   return true;
 }
 
+// The splash logo's flight (splash-icon): each axis on its own spring, so the
+// path bows by itself (x quicker, running ahead; y slower, dragging behind)
+// and the logo never swings past its target the way an added arc offset can.
+// The size is a little less damped than the travel, so it lands with a small
+// settle into the header instead of a hard stop. [response s, damping ratio]
+const FLIGHT_X = [0.3, 0.95];
+const FLIGHT_Y = [0.46, 0.94];
+const FLIGHT_SIZE = [0.38, 0.8];
+const FLIGHT_STEP = 1 / 120;  // keyframe spacing, s (one per frame on a 120Hz screen)
+const FLIGHT_SETTLE = 0.6;    // px: the flight ends once every axis is this close (the rest is invisible creep)
+
+// A spring released from rest at 0 towards 1, as a function of time in s
+function spring([response, damping]) {
+  const w0 = 2 * Math.PI / response;
+  const wd = w0 * Math.sqrt(1 - damping * damping);
+  return t => 1 - Math.exp(-damping * w0 * t) * (Math.cos(wd * t) + (damping * w0 / wd) * Math.sin(wd * t));
+}
+
 /**
- * The same arc, for a box that just travels from one rect to another (the
- * splash logo flying to the header's): the peaks scale with the straight
- * distance exactly as in setZoomOrigin (x runs ahead of the spring, y drags
- * behind), so detail-zoom-arc's keyframes work on it unchanged. Both rects
- * are viewport rects; `gain` exaggerates the bow. Cleared by clearZoomOrigin().
+ * Replaces the UA's straight-line morph of a view-transition group with the
+ * splash flight above. Call once `vt.ready` has resolved: the group's own
+ * animation is read for its start and end boxes, then cancelled. Leaves the
+ * UA's (or the stylesheet's) morph in place if anything about it is unexpected.
  */
-export function setArcBetween(from, to, gain = 1) {
-  const style = document.documentElement.style;
-  const dx = to.left - from.left;
-  let arcX = gain * ARC_LEAD * dx;
-  // The x lead peaks about when the spring is half way (ARC_PEAK_AT), so keep
-  // the box's left edge there, with the lead on top, inside the viewport: a
-  // long trip to a corner would otherwise swing out past the screen's edge.
-  const vw = document.documentElement.clientWidth;
-  const atPeak = from.left + ARC_PEAK_AT * dx;
-  const lo = EDGE_MARGIN, hi = vw - EDGE_MARGIN - from.width;
-  const clamped = Math.min(Math.max(atPeak + arcX, lo), Math.max(lo, hi));
-  arcX = clamped - atPeak;
-  style.setProperty('--arc-x', `${arcX}px`);
-  style.setProperty('--arc-y', `${-gain * ARC_DRAG * (to.top - from.top)}px`);
+export function springFlight(name) {
+  const pseudo = `::view-transition-group(${name})`;
+  const ua = document.getAnimations().find(a => a.effect?.pseudoElement === pseudo);
+  const frames = ua?.effect.getKeyframes();
+  if (!frames || frames.length < 2) return;
+  const box = (f) => {
+    const m = new DOMMatrix(f.transform);
+    const w = parseFloat(f.width), h = parseFloat(f.height);
+    return { cx: m.e + w / 2, cy: m.f + h / 2, w, h };
+  };
+  const a = box(frames[0]), b = box(frames[frames.length - 1]);
+  if (![a.w, a.h, b.w, b.h].every(Number.isFinite)) return;
+
+  const X = spring(FLIGHT_X), Y = spring(FLIGHT_Y), S = spring(FLIGHT_SIZE);
+  const keyframes = [];
+  for (let t = 0; ; t += FLIGHT_STEP) {
+    const s = S(t);
+    const w = a.w + (b.w - a.w) * s, h = a.h + (b.h - a.h) * s;
+    const cx = a.cx + (b.cx - a.cx) * X(t), cy = a.cy + (b.cy - a.cy) * Y(t);
+    const settled = t > 0 && Math.max(Math.abs(cx - b.cx), Math.abs(cy - b.cy), Math.abs(w - b.w)) < FLIGHT_SETTLE;
+    keyframes.push(settled
+      ? { transform: frames[frames.length - 1].transform, width: `${b.w}px`, height: `${b.h}px` }
+      : { transform: `translate(${cx - w / 2}px, ${cy - h / 2}px)`, width: `${w}px`, height: `${h}px` });
+    if (settled || t > 2) break;
+  }
+  ua.cancel();
+  document.documentElement.animate(keyframes, {
+    duration: (keyframes.length - 1) * FLIGHT_STEP * 1000,
+    easing: 'linear',
+    fill: 'both',
+    pseudoElement: pseudo,
+  });
 }
 
 export function clearZoomOrigin() {

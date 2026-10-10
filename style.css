@@ -339,17 +339,12 @@ body {
     opacity: 0;
   }
 
-  /* The card zoom's spring and arc (classroom-detail.css): the group's
-     straight-line travel on the spring, the image pair's `translate` bowing
-     it into a curve. --arc-x / --arc-y are written by setArcBetween() before
-     the transition; with none (info, changelog, settings), the arc is flat. */
+  /* The card zoom's spring (classroom-detail.css). The flight to the header
+     replaces this with a spring per axis once the transition is ready
+     (springFlight() in utils/vt-motion.js); info and the changelog keep it. */
   ::view-transition-group(splash-icon) {
     animation-duration: 0.6s;
     animation-timing-function: var(--vt-spring);
-  }
-
-  ::view-transition-image-pair(splash-icon) {
-    animation: detail-zoom-arc 0.6s linear both;
   }
 }
 

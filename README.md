@@ -54,12 +54,12 @@ A picture of the classroom will also help you avoid unwanted surprises (coff cof
 
 ## How it works
 
-Twice a day, a scheduled job pulls fresh occupancy data from the Politecnico di Milano API and uploads it to Cloudflare R2. When you open PoliAule, the app fetches that data through a small REST API backed by R2, not from Politecnico directly.
+Every morning and then hourly during the day, a scheduled job scrapes fresh occupancy data from Politecnico di Milano's online services (falling back to its REST API for anything missing) and uploads it to Cloudflare R2. When you open PoliAule, the app fetches that data through a small REST API backed by R2, not from Politecnico directly.
 
 This keeps things fast for users and avoids hammering the upstream endpoint with every visit.
 
 ```
-GitHub Action → Politecnico API → Cloudflare R2 → API Worker → your browser
+GitHub Action → Politecnico online services → Cloudflare R2 → API Worker → your browser
 ```
 
 ## Features
@@ -68,6 +68,8 @@ GitHub Action → Politecnico API → Cloudflare R2 → API Worker → your brow
 - **7-day lookahead**: check today or plan ahead for the week
 - **Flexible time picker**: set a custom time window, not just fixed slots
 - **Room details**: seats, features, pictures, full week schedule and building info at a glance
+- **Campus map**: browse every campus and building on a live map, and star your favourite rooms and buildings
+- **Seasonal themes**: Halloween, Christmas and graduation days get their own touches
 - **No login required**: open and use, that's it
 - **PWA-ready**: installable on mobile and desktop for quick and easy access
 - **Dark mode** support

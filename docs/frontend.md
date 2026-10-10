@@ -6,7 +6,7 @@ The frontend is plain HTML + vanilla ES modules, no framework. Cloudflare Pages 
 
 ## Tab Navigation
 
-The main UI is divided into two tabs (Available and Campus) plus a Search overlay and a Settings panel. The tab bar is Vitrium's `createTabBar` (`components/bottom-nav.js`): a bottom row on mobile and a side rail from 600px up. Tab switching is CSS-driven: selecting a tab adds/removes a `visible` class on the corresponding `.tab-content` container. Search is a `prominent` + `press` tab: a floating circle that never becomes selected and opens the search overlay, which morphs out of it. No URL change happens: tab state is purely in-memory, with an optional preference stored in `localStorage` so the user's last-used tab (or a fixed default) survives page reloads.
+The main UI is divided into two tabs (Available and Campus), plus a Search overlay and in-app pages for Settings, Info and the Changelog. The tab bar is Vitrium's `createTabBar` (`components/bottom-nav.js`): a bottom row on mobile and a side rail from 600px up. Tab switching is CSS-driven: selecting a tab adds/removes a `visible` class on the corresponding `.tab-content` container. Search is a `prominent` + `press` tab: a floating circle that never becomes selected and opens the search overlay, which morphs out of it. No URL change happens: tab state is purely in-memory, with an optional preference stored in `localStorage` so the user's last-used tab (or a fixed default) survives page reloads.
 
 ```mermaid
 stateDiagram-v2
@@ -14,14 +14,19 @@ stateDiagram-v2
     classDef detail fill:#ede9fe,stroke:#8b5cf6,color:#2e1065
 
     [*] --> AvailableTab: default (or saved preference)
-    AvailableTab --> SearchTab: tab click
-    SearchTab --> AvailableTab: tab click
+    AvailableTab --> CampusTab: tab click
+    CampusTab --> AvailableTab: tab click
+    AvailableTab --> SearchOverlay: Search button
+    CampusTab --> SearchOverlay: Search button
+    SearchOverlay --> AvailableTab: close
     AvailableTab --> ClassroomDetail: open classroom
-    SearchTab --> ClassroomDetail: open classroom
+    CampusTab --> ClassroomDetail: open classroom
+    SearchOverlay --> ClassroomDetail: open classroom
     ClassroomDetail --> AvailableTab: back (if opened from Available)
-    ClassroomDetail --> SearchTab: back (if opened from Search)
+    ClassroomDetail --> CampusTab: back (if opened from Campus)
+    ClassroomDetail --> SearchOverlay: back (if opened from Search)
 
-    class AvailableTab,SearchTab tab
+    class AvailableTab,CampusTab,SearchOverlay tab
     class ClassroomDetail detail
 ```
 
@@ -31,7 +36,7 @@ The sliding selection pill, its drag behaviour and the row/rail layout change ar
 
 ## Classroom Detail - Hash Routing
 
-Opening a classroom pushes a URL hash (`#classroom/{id}`) and triggers a `hashchange` event. Closing restores the previous state. This means:
+Opening a classroom pushes a URL hash (`#classroom/<campus>/<name>`, e.g. `#classroom/leonardo/2.0.1`; the old `#classroom/<numericId>` form still resolves) and triggers a `hashchange` event. Closing restores the previous state. This means:
 
 - The browser's back button works as expected (closes the detail page).
 - Deep links and browser history are handled for free.
@@ -44,9 +49,9 @@ sequenceDiagram
     participant History
 
     User->>DOM: clicks classroom card
-    DOM->>History: location.hash = "classroom/1234"
+    DOM->>History: location.hash = "classroom/leonardo/2.0.1"
     History-->>DOM: hashchange event fires
-    DOM->>DOM: _doOpen(1234) - renders detail page
+    DOM->>DOM: _doOpen(id) - renders detail page
     User->>DOM: taps Back
     DOM->>History: history.back()
     History-->>DOM: hashchange event fires (hash cleared)
@@ -112,13 +117,13 @@ The photo reveal is deliberately delayed until `vt.finished` to avoid a flicker:
 
 ## Splash Screen
 
-At startup, a full-screen splash overlay shows the app logo centred on screen. Once data is loaded, the logo animates into its position in the header and the overlay fades out. The real header logo is hidden (`opacity: 0`) while this happens, so the two appear to be one continuous motion.
+At startup, a full-screen splash overlay shows the app logo centred on screen. Once data is loaded, the logo animates into its position in the header and the overlay fades out. The real header logo is hidden (`opacity: 0`) while this happens, so the two appear to be one continuous motion. When iOS relaunches a home-screen app shortly after it went to the background, the splash logo is hidden and the overlay fades out with no minimum time (see "Resuming the home-screen app" in [architecture.md](./architecture.md)).
 
 ---
 
 ## PWA Support
 
-PoliAule includes a [Web App Manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) (`/favicons/site.webmanifest`) and can be installed as a standalone app on any platform that supports PWAs.
+PoliAule includes a [Web App Manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) (`/favicons/main/site.webmanifest`) and can be installed as a standalone app on any platform that supports PWAs.
 
 Manifest highlights:
 
@@ -131,7 +136,7 @@ Manifest highlights:
 
 Dark mode is handled via CSS `prefers-color-scheme` media queries. The `theme-color` meta tag uses two separate `<meta>` elements, one per scheme, so the OS chrome color matches the current mode.
 
-There is no service worker, so the app does not work offline. All data is fetched fresh from Cloudflare Pages on every visit.
+A Workbox service worker (generated by `vite-plugin-pwa`, registered from `utils/pwa.js`) precaches the app shell, so the app opens offline, and API responses are kept in Cache Storage and revalidated by ETag (see "Caching and offline use" in [architecture.md](./architecture.md)). The service worker is off under `npm run dev`; test it with `npm run build && npm run preview`.
 
 ---
 
@@ -145,7 +150,7 @@ Locale resolution order:
 2. `navigator.language` (browser preference)
 3. `'en'` (fallback)
 
-Supported locales: `en`, `it` (`locales/en.json`, `locales/it.json`).
+Supported locales: `en`, `it` (`public/locales/en.json`, `public/locales/it.json`).
 
 Language switches at runtime trigger `onLanguageSwitch` callbacks registered by components, which re-render their translated strings in place.
 
@@ -153,7 +158,7 @@ Language switches at runtime trigger `onLanguageSwitch` callbacks registered by 
 
 ## User Preferences
 
-User preferences are managed by `components/settings.js` and stored in `localStorage`. This includes things like the preferred campus, the default or last-used tab, and whether to show partially available classrooms.
+User preferences are built by `components/settings.js` (storage keys, start-up restorers, the sections) and shown by `components/settings-page.js`, and stored in `localStorage`. This includes things like the preferred campus, the default or last-used tab, whether to show partially available classrooms, blocking past hours, the time format and the seasonal themes. Favourites live in `utils/favourites.js`. A device-to-device link (`utils/transfer.js`) can carry favourites and preferences to another browser.
 
 Because `localStorage` is scoped to the browser on a single device, preferences are not synced across devices. Switching from your laptop to your phone means starting from defaults again.
 
@@ -186,7 +191,7 @@ Things to know:
 
 ## Tooltip
 
-`components/tooltip.js` is imported as a pure side-effect (`import './components/tooltip.js'`). It registers global `mouseenter`/`mouseleave` listeners that show a floating label for any element with a `data-tooltip` attribute.
+`components/tooltip.js` is imported as a pure side-effect (`import './components/tooltip.js'`). It registers global `mouseenter`/`mouseleave` listeners that show a floating label for any element with a `data-tooltip` attribute. The classroom cards' hover preview of a room's whole day is a separate mechanism, a Vitrium popover in `components/card-day-popover.js`.
 
 ---
 
@@ -220,23 +225,33 @@ If a photo fails to load (a 404 for an `idfoto` whose image couldn't be fetched,
 
 ## Module Summary
 
+The most important files; `CLAUDE.md`'s "Key Files" list has the full set, with what each one does.
+
 | File | Role |
 |---|---|
 | `script.js` | App shell: splash, tab bar, form wiring, startup preferences |
-| `available-rooms-script.js` | Data fetch, `findAvailableClassrooms()` filtering |
-| `search-classrooms-script.js` | Full-text search index, hierarchy navigation |
+| `available-rooms-script.js` | Data fetch and cache, `findAvailableClassrooms()` filtering, opening hours |
+| `classroom-search-data.js` | Classroom directory (`/v1/classrooms`) and the search index data |
 | `i18n.js` | Locale loading, `t()`, language switch callbacks |
-| `components/campus-picker.js` | `<campus-chip-picker>`: Vitrium list picker, `campuschange` event, docked mode |
-| `components/chip-shell.js` | Shared shell of the date and time chip pickers (Vitrium chip, docked mode) |
-| `components/date-chip-picker.js`, `components/time-range-chip-picker.js` | Custom elements wrapping the date row and the time slider |
+| `config.js` | `getApiBase()` (stable or beta API by hostname) and the Mapbox token |
 | `components/bottom-nav.js` | Main navigation on Vitrium's tab bar |
-| `components/campus-sheet.js` | Campus map sheet on Vitrium's sheet |
-| `components/data-fetch-card.js` | Header status card on Vitrium's morph popup |
-| `components/classroom-detail.js` | Detail sheet with hash routing, VT animations, photo, schedule |
+| `components/search-overlay.js` | The Search overlay (classrooms, buildings, professors) |
+| `components/campus-picker.js` | `<campus-chip-picker>`: Vitrium list picker, `campuschange` event, docked mode |
+| `components/chip-shell.js`, `date-chip-picker.js`, `time-range-chip-picker.js` | Date and time chip pickers (Vitrium chip, docked mode) |
+| `components/picker-dock.js` | Docks the pickers open as inline cards on wide screens |
+| `components/hour-lens.js`, `time-picker.js` | Time range picker: a glass lens over the hourly slots, with a duration stepper |
 | `components/classroom-list.js` | Renders classroom cards in the Available tab |
-| `components/time-picker.js` | Morphing time input |
-| `components/hour-lens.js` | Time range picker: a glass lens over the hourly slots, with a duration stepper |
-| `components/settings.js` | User preferences panel + `localStorage` keys |
+| `components/classroom-detail.js` | Detail page with hash routing, VT animations, photo, schedule |
+| `components/campus-map.js`, `campus-sheet.js`, `campus-buildings.js` | Campus tab: Mapbox map, the sheet of buildings, building cards |
+| `components/building-overview.js`, `building-popup.js`, `building-folder.js` | Building views opened from the map and from favourites |
+| `components/favourites.js`, `utils/favourites.js` | Favourites strip and store |
+| `components/data-fetch-card.js` | Header status card on Vitrium's morph popup |
+| `components/settings.js`, `settings-page.js` | User preferences: controls and `localStorage` keys, and the in-app page |
+| `components/info-page.js`, `changelog-page.js` | In-app Info and Changelog pages |
 | `components/tooltip.js` | Side-effect: global `data-tooltip` handler |
+| `utils/back-stack.js` | Back closes what's open, for overlays without a URL of their own |
+| `utils/pwa.js`, `utils/resume.js` | Service worker registration; home-screen state restoration |
+| `utils/season.js`, `utils/graduation.js` | Seasonal and graduation themes |
+| `utils/photo.js` | Classroom photo and thumbnail URLs |
 | `utils/time-format.js` | `createTimeFormatter()`, locale-aware time display |
 | `utils/html.js` | `escapeHtml()` and `safeUrl()` - XSS sanitization helpers |

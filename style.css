@@ -274,6 +274,13 @@ html { font-size: 90%; }
 
 body {
   min-height: 100%;
+  /* Touch: always a pixel taller than the screen. A page exactly as tall as
+     the screen (a closed campus day: the empty results stretch to fill it)
+     can't scroll, and Safari then rubber-bands the whole viewport, fixed tab
+     bar and header included, instead of just the content. */
+  @media (pointer: coarse) {
+    min-height: calc(100% + 1px);
+  }
   margin: 0;
   padding: 0;
 

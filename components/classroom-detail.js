@@ -2205,11 +2205,24 @@ class ClassroomDetail {
           if (!primaryBlock) return;
           // Open the popover only once the page has settled: the close-on-scroll
           // handler would dismiss one opened mid-scroll.
-          const rect = primaryBlock.getBoundingClientRect();
-          const maxY = document.documentElement.scrollHeight - window.innerHeight;
-          const targetY = Math.min(Math.max(0, window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2), maxY);
+          // Aimed from layout, not the live rect: the cards are still rising in
+          // (detail-section-rise, a transform offsetTop ignores), and the photo
+          // above shrinks over the first 220px of scroll, pulling the block up
+          // by `shrink` on the way. Measuring the rect overshot by both, leaving
+          // the block under the header and its popover off the top of the screen.
+          let docY = 0;
+          for (let el = primaryBlock; el; el = el.offsetParent) docY += el.offsetTop;
+          const photo = this._overlay.querySelector('.detail-photo-container.loaded');
+          let shrink = 0;
+          if (photo && CSS.supports('animation-timeline: scroll()')) {
+            const ph = photo.getBoundingClientRect();
+            const end = innerWidth < 600 ? Math.max(0.33 * innerHeight, 240) : ph.width * 8 / 21;
+            shrink = Math.max(0, ph.height - end) * (1 - Math.min(1, window.scrollY / 220));
+          }
+          const centred = docY + primaryBlock.offsetHeight / 2 - innerHeight / 2;
+          const targetY = Math.max(0, centred - shrink >= 220 ? centred - shrink : centred / (1 + shrink / 220));
           if (reduceMotion?.matches || Math.abs(targetY - window.scrollY) < 1) {
-            primaryBlock.scrollIntoView({ block: 'center', behavior: 'auto' });
+            window.scrollTo({ top: targetY, behavior: 'instant' });
             showOccupationPopover(primaryBlock);
             return;
           }
@@ -2221,7 +2234,7 @@ class ClassroomDetail {
           };
           window.addEventListener('scrollend', show, { once: true });
           setTimeout(show, 800); // no scrollend in older Safari
-          primaryBlock.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          window.scrollTo({ top: targetY, behavior: 'smooth' });
         });
       }
 

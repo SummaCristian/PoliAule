@@ -76,6 +76,7 @@ import { resumeState, initResumeSnapshot } from './utils/resume.js';
 import { initSeason, decorate } from './utils/season.js';
 import { graduationOn } from './utils/graduation.js';
 import { flipLayout, morphRender } from './utils/layout-flip.js';
+import { announce } from './utils/announce.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
@@ -640,6 +641,7 @@ function populateOccupancyUi() {
   setupDatePicker(() => preferInitialDate);
   refreshHourLensData();
   document.getElementById('available-classrooms-form').removeAttribute('data-loading');
+  document.getElementById('available-classrooms-form').removeAttribute('aria-busy');
   document.querySelector('date-chip-picker')?.removeAttribute('data-loading');
 
   setupDataFetchIndicator();
@@ -731,6 +733,20 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   container.dataset.campus = campusId;
   morphRender(container, '.classroom-card, .building-section-header', resultsKey,
     () => buildAvailableClassroomsResults(container, results, date, from, to, campusId), { swap });
+  announceResults(results, `${campusId}|${date}|${from}|${to}`);
+}
+
+// Tells screen readers what a new search found. A redraw of the same search
+// (a data refresh) says nothing unless the count changed.
+let lastAnnounced = '';
+function announceResults(results, searchKey) {
+  const count = results.reduce((n, b) => n + b.rooms.length, 0);
+  const signature = `${searchKey}|${count}`;
+  if (signature === lastAnnounced) return;
+  lastAnnounced = signature;
+  announce(count === 0 ? t('results.noResultsTitle')
+    : count === 1 ? t('a11y.resultsOne')
+    : t('a11y.resultsMany').replace('{n}', count));
 }
 
 function resultsKey(el) {
@@ -995,6 +1011,7 @@ function setupDataFetchIndicator() {
 
   if (!classroomsData.length) {
     indicator.classList.add('red');
+    setDataStatusLabel('red');
     return;
   }
 
@@ -1028,6 +1045,12 @@ function setupDataFetchIndicator() {
   setupDataFetchIndicatorText();
 }
 
+// The header button's name carries the state too: its dot is only a colour
+function setDataStatusLabel(status) {
+  const key = { green: 'data.greenTitle', yellow: 'data.yellowTitle', red: 'data.redTitle' }[status];
+  document.getElementById('data-fetch-btn')?.setAttribute('aria-label', `${t('a11y.dataStatus')}: ${t(key)}`);
+}
+
 // Setups the text inside the popover shown in the Data Fetch Indicator
 function setupDataFetchIndicatorText(animate = false) {
   const container = document.getElementById('data-fetch-indicator-popover-container');
@@ -1051,6 +1074,7 @@ function setupDataFetchIndicatorText(animate = false) {
   const indicator = document.getElementById('data-fetch-indicator');
   const status = ['green', 'yellow', 'red'].find(s => indicator.classList.contains(s)) ?? 'red';
   const { title, description } = states[status];
+  setDataStatusLabel(status);
 
   // Last fetch time
   const generationDate = classroomsData[0]

@@ -498,6 +498,10 @@
     </div>
   </noscript>
 
+  <!-- Page heading and live region for screen readers (see utils/announce.js) -->
+  <h1 class="sr-only">PoliAule</h1>
+  <div id="a11y-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
   <!-- Header -->
   <div class="header-top-strip" aria-hidden="true"></div>
   <header class="header">
@@ -549,7 +553,7 @@
 
         <!-- Data Fetch Indicator — the button morphs into a glass card holding
              the freshness status + reload button (see components/data-fetch-card.js). -->
-        <button id="data-fetch-btn" class="header-button lg-ring liquid-glass" data-i18n-attr="aria-label:a11y.dataStatus" aria-label="Data status">
+        <button id="data-fetch-btn" class="header-button lg-ring liquid-glass" aria-label="Data status">
           <div id="data-fetch-indicator" class="pulse-indicator"></div>
         </button>
 
@@ -579,7 +583,7 @@
 
 
   <!-- Rest of the UI under the header -->
-  <div class="body-container">
+  <main class="body-container">
 
     <!-- Available Classrooms -->
     <div id="available-classrooms-container" class="tab-content visible">
@@ -612,7 +616,7 @@
             aria-hidden="true"></i><span data-i18n="available.title">Available Classrooms</span></h3>
       </div>
 
-      <form id="available-classrooms-form" class="form" data-loading>
+      <form id="available-classrooms-form" class="form" data-loading aria-busy="true">
 
         <!-- Campus + Date pills, side by side (wrap on narrow screens) -->
         <div class="picker-row">
@@ -684,7 +688,7 @@
     <!-- Settings Page Panel (components/settings-page.js), same footing as Info -->
     <div id="settings-overlay" hidden></div>
 
-  </div>
+  </main>
 
   <!-- Data-fetch status card. data-fetch-card.js relocates this container into a
        morphing card shell that grows from the header button. -->

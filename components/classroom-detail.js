@@ -1168,7 +1168,7 @@ class ClassroomDetail {
         <div class="detail-header">
         <div class="detail-title-row lg-elevation-high">
           <span class="detail-title-ring lg-ring-layer" aria-hidden="true"></span>
-          <h1 class="detail-title" role="button" tabindex="0">${escapeHtml(classroom.name)}</h1>
+          <h1 class="detail-title" tabindex="-1">${escapeHtml(classroom.name)}</h1>
           ${statusHtml}
         </div>
         <p class="detail-subtitle secondary">

@@ -43,19 +43,19 @@ Built by students, for students. Because finding a place to study shouldn't be h
 
 <table align="center">
   <tr>
-    <td align="center" width="200">
+    <td align="center" width="250">
       <a href="https://poliaule.com">
         <img src="./changelog/2.0.0/media/icon-main.webp" width="64"><br>
         <strong>PoliAule</strong>
       </a><br>
-      <sub>poliaule.com · for daily use</sub>
+      <sub>poliaule.com<br>for daily use</sub>
     </td>
     <td align="center" width="200">
       <a href="https://beta.poliaule.com">
         <img src="./changelog/2.0.0/media/icon-beta.webp" width="64"><br>
         <strong>PoliAule Beta</strong>
       </a><br>
-      <sub>beta.poliaule.com · upcoming features</sub>
+      <sub>beta.poliaule.com<br>upcoming features</sub>
     </td>
   </tr>
 </table>

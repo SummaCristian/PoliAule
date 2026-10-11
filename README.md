@@ -43,7 +43,7 @@ Built by students, for students. Because finding a place to study shouldn't be h
 
 <table align="center">
   <tr>
-    <td align="center" width="250">
+    <td align="center" width="200">
       <a href="https://poliaule.com">
         <img src="./changelog/2.0.0/media/icon-main.webp" width="64"><br>
         <strong>PoliAule</strong>

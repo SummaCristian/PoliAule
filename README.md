@@ -41,7 +41,7 @@ Built by students, for students. Because finding a place to study shouldn't be h
 
 ## Stable and Beta
 
-<table>
+<table align="center">
   <tr>
     <td align="center" width="200">
       <a href="https://poliaule.com">

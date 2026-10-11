@@ -511,7 +511,7 @@
       </div>
 
       <div class="header-title-container">
-        <button class="header-title-btn" id="info-trigger" aria-label="About PoliAule">
+        <button class="header-title-btn" id="info-trigger" data-i18n-attr="aria-label:info.about.title" aria-label="About PoliAule">
           <img src="/favicons/main/logo.webp" class="header-logo" width="436" height="500">
           <!-- The logo's halo on the detail page (style.css). Its fill is
                translucent, so a drop-shadow would show through it and shift
@@ -543,18 +543,18 @@
         <!-- Favourite toggle (only shown on the classroom detail page).
              Content is swapped between the hgi-star outline and a filled star
              by classroomDetail._syncFavBtn(). -->
-        <button id="favourite-btn" class="header-button lg-ring liquid-glass" hidden aria-label="Add to favourites">
+        <button id="favourite-btn" class="header-button lg-ring liquid-glass" hidden data-i18n-attr="aria-label:favourite.add" aria-label="Add to favourites">
           <i class="hgi-stroke hgi-star" aria-hidden="true"></i>
         </button>
 
         <!-- Data Fetch Indicator — the button morphs into a glass card holding
              the freshness status + reload button (see components/data-fetch-card.js). -->
-        <button id="data-fetch-btn" class="header-button lg-ring liquid-glass" aria-label="Data status">
+        <button id="data-fetch-btn" class="header-button lg-ring liquid-glass" data-i18n-attr="aria-label:a11y.dataStatus" aria-label="Data status">
           <div id="data-fetch-indicator" class="pulse-indicator"></div>
         </button>
 
         <!-- Settings button -->
-        <button id="settings-btn" class="header-button lg-ring liquid-glass" aria-label="Settings">
+        <button id="settings-btn" class="header-button lg-ring liquid-glass" data-i18n-attr="aria-label:settings.title" aria-label="Settings">
           <i class="hgi-stroke hgi-settings-01" aria-hidden="true"></i>
         </button>
 
@@ -573,7 +573,7 @@
 
   </header>
 
-  <button id="detail-back-btn" class="detail-back-btn lg-ring lg-elevation-high liquid-glass" hidden aria-label="Back">
+  <button id="detail-back-btn" class="detail-back-btn lg-ring lg-elevation-high liquid-glass" hidden data-i18n-attr="aria-label:campus.back" aria-label="Back">
     <i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>
   </button>
 
@@ -692,7 +692,7 @@
 
   <!-- Search overlay (opened by the bottom-nav search FAB; floats over the current tab) -->
   <div id="search-overlay" class="search-overlay-backdrop" hidden>
-    <div class="search-overlay-panel" role="dialog" aria-modal="true" aria-label="Search classrooms">
+    <div class="search-overlay-panel" role="dialog" aria-modal="true" data-i18n-attr="aria-label:a11y.searchDialog" aria-label="Search classrooms">
       <div class="search-overlay-header">
         <div class="search-bar-wrapper lg-ring lg-elevation-high liquid-glass">
           <i class="hgi-stroke hgi-search-01 search-bar-icon" aria-hidden="true"></i>
@@ -701,14 +701,14 @@
             autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
           <div class="search-bar-trailing">
             <button id="classroom-search-clear" class="search-clear-btn" type="button" tabindex="-1"
-              aria-label="Clear search">
+              data-i18n-attr="aria-label:a11y.searchClear" aria-label="Clear search">
               <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
             </button>
             <kbd class="search-kbd" aria-hidden="true">esc</kbd>
           </div>
         </div>
         <button id="search-overlay-close" class="search-overlay-close lg-ring liquid-glass" type="button"
-          aria-label="Close search">
+          data-i18n-attr="aria-label:a11y.searchClose" aria-label="Close search">
           <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
         </button>
       </div>

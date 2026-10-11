@@ -337,5 +337,12 @@
   "changelog.versionLabel": "Versione {version}",
   "changelog.loadError": "Impossibile caricare le novità. Controlla la connessione e riprova.",
   "changelog.retry": "Riprova",
-  "changelog.notFound": "La versione {version} non esiste."
+  "changelog.notFound": "La versione {version} non esiste.",
+  "a11y.dataStatus": "Stato dei dati",
+  "a11y.searchDialog": "Cerca aule",
+  "a11y.searchClear": "Cancella ricerca",
+  "a11y.searchClose": "Chiudi ricerca",
+  "a11y.editStartTime": "Modifica l'ora di inizio",
+  "a11y.editEndTime": "Modifica l'ora di fine",
+  "a11y.endTime": "Ora di fine"
 }

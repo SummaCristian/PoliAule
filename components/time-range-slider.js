@@ -73,14 +73,14 @@ function buildSlider(fromInput, toInput) {
   const fromBadge = document.createElement('button');
   fromBadge.type = 'button';
   fromBadge.className = 'trs-badge trs-badge--from';
-  fromBadge.setAttribute('aria-label', 'Edit start time');
+  fromBadge.setAttribute('aria-label', t('a11y.editStartTime'));
   const fromText = document.createElement('span');
   fromBadge.appendChild(fromText);
 
   const toBadge = document.createElement('button');
   toBadge.type = 'button';
   toBadge.className = 'trs-badge trs-badge--to';
-  toBadge.setAttribute('aria-label', 'Edit end time');
+  toBadge.setAttribute('aria-label', t('a11y.editEndTime'));
   const toText = document.createElement('span');
   toBadge.appendChild(toText);
 
@@ -98,7 +98,7 @@ function buildSlider(fromInput, toInput) {
   fromHandle.className = 'trs-handle trs-handle--from';
   fromHandle.tabIndex = 0;
   fromHandle.setAttribute('role', 'slider');
-  fromHandle.setAttribute('aria-label', 'Start time');
+  fromHandle.setAttribute('aria-label', t('timepicker.startTime'));
   fromHandle.setAttribute('aria-valuemin', String(MIN));
   fromHandle.setAttribute('aria-valuemax', String(MAX));
 
@@ -106,7 +106,7 @@ function buildSlider(fromInput, toInput) {
   toHandle.className = 'trs-handle trs-handle--to';
   toHandle.tabIndex = 0;
   toHandle.setAttribute('role', 'slider');
-  toHandle.setAttribute('aria-label', 'End time');
+  toHandle.setAttribute('aria-label', t('a11y.endTime'));
   toHandle.setAttribute('aria-valuemin', String(MIN));
   toHandle.setAttribute('aria-valuemax', String(MAX));
 

@@ -733,3 +733,34 @@
     animation: none;
   }
 }
+
+/* ── Image zoom (components/image-zoom.js) ───────────────────────────── */
+
+.img-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 1350;
+}
+
+.img-zoom-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.img-zoom-img {
+  position: absolute;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: transform;
+}
+
+.img-zoom-img--bare {
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.45));
+}

@@ -361,6 +361,13 @@ body {
   border: 0;
 }
 
+/* Pages move focus to their title when they open (utils/page-focus.js): that
+   is for assistive tech, so it shows no ring */
+:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay) [tabindex="-1"]:focus,
+:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay):focus {
+  outline: none;
+}
+
 /* Generic HTML Elements */
 h1 {
   font-size: 3rem;

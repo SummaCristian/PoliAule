@@ -101,6 +101,19 @@ function buildOccupationPopoverHtml(slot) {
   `;
 }
 
+// The same booking in words, as a block's accessible name
+function occupationLabel(slot) {
+  const isCourse = slot.category === 'COURSE' || slot.category === 'EXAM';
+  const title = decodeEntities((isCourse ? (slot.course ?? slot.name) : (slot.raw ?? slot.name)) ?? t('detail.occupied'));
+  const parts = [
+    title,
+    slot.category === 'EXAM' ? t('detail.examLabel') : null,
+    `${minutesToTimeDisplay(timeToMinutes(slot.inizio))} – ${minutesToTimeDisplay(timeToMinutes(slot.fine))}`,
+    isCourse && Array.isArray(slot.professors) && slot.professors.length ? decodeEntities(slot.professors.join(', ')) : null,
+  ];
+  return parts.filter(Boolean).join(', ');
+}
+
 const HASH_PATTERN    = /^#classroom\/([^\/]+)\/(.+)$/;
 const HASH_PATTERN_V1 = /^#classroom\/(\d+)$/;
 
@@ -1660,6 +1673,8 @@ class ClassroomDetail {
 
       const img = container?.querySelector('.detail-photo');
       if (!img) return;
+      const roomName = this._overlay.querySelector('.detail-title')?.textContent;
+      if (roomName) img.alt = t('a11y.photoAlt').replace('{name}', roomName);
 
       // Already revealed (by the ViewTransition, or an earlier call): at most the
       // thumbnail the zoom carried still has to make way for the full photo.
@@ -1853,7 +1868,7 @@ class ClassroomDetail {
           occupancy,
           opening: getBuildingOpening(roomBuilding, dayData.date),
           query: isQueryDay && this._queryContext ? this._queryContext : null,
-          blockAttrs: (slot) => ` data-slot-idx="${scheduleSlots.push(slot) - 1}" tabindex="0" role="button"`,
+          blockAttrs: (slot) => ` data-slot-idx="${scheduleSlots.push(slot) - 1}" tabindex="0" role="button" aria-label="${escapeHtml(occupationLabel(slot))}"`,
           isHighlighted: (slot) => highlightDateKey !== null
             && dayData.date === highlightDateKey
             && slot.inizio === this._highlight?.from
@@ -1926,7 +1941,7 @@ class ClassroomDetail {
         const dayName = raw.charAt(0).toUpperCase() + raw.slice(1);
         const dayNum = date.getDate();
         return `
-          <div class="date-element-container${isSunday ? ' detail-schedule-day--sunday date-skipped' : ''}" data-day-index="${i}">
+          <div class="date-element-container${isSunday ? ' detail-schedule-day--sunday date-skipped' : ''}" data-day-index="${i}" data-full-date="${escapeHtml(date.toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' }))}">
             <span class="date-day-of-week${isSunday ? ' date-sunday' : ''}">${dayName}</span>
             <span class="date-number">${dayNum}</span>
           </div>`;
@@ -1989,6 +2004,8 @@ class ClassroomDetail {
       let selectedDayIndex = 0;
 
       const daySelector = createPillSelector(pickerContainer, {
+        label: t('detail.weeklySchedule'),
+        describe: chip => chip.dataset.fullDate,
         onSelect(chip, { silent }) {
           const index = parseInt(chip.dataset.dayIndex);
           selectedDayIndex = index;

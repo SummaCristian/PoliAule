@@ -341,6 +341,7 @@
   "a11y.mainNav": "Navigazione principale",
   "a11y.resultsMany": "{n} aule disponibili",
   "a11y.resultsOne": "1 aula disponibile",
+  "a11y.photoAlt": "Foto di {name}",
   "a11y.dataStatus": "Stato dei dati",
   "a11y.searchDialog": "Cerca aule",
   "a11y.searchClear": "Cancella ricerca",

@@ -77,6 +77,7 @@ import { initSeason, decorate } from './utils/season.js';
 import { graduationOn } from './utils/graduation.js';
 import { flipLayout, morphRender } from './utils/layout-flip.js';
 import { announce } from './utils/announce.js';
+import { initPageFocus } from './utils/page-focus.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
@@ -490,6 +491,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Holiday decorations, when today is in a season (utils/season.js)
     initSeason();
+    initPageFocus();
 
     // A week-long banner announcing the version this site runs
     initUpdateBanner();

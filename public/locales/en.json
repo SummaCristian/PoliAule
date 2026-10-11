@@ -364,6 +364,7 @@
   "a11y.mainNav": "Main navigation",
   "a11y.resultsMany": "{n} rooms available",
   "a11y.resultsOne": "1 room available",
+  "a11y.photoAlt": "Photo of {name}",
   "a11y.dataStatus": "Data status",
   "a11y.searchDialog": "Search classrooms",
   "a11y.searchClear": "Clear search",

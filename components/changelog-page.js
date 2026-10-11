@@ -98,8 +98,9 @@ class ChangelogPage {
 
     window.addEventListener('hashchange', () => this._onHashChange());
 
+    // Covered, the scroll is the settings' (uncover() puts its own back)
     onLanguageSwitch(() => {
-      if (this._isOpen) this._render({ keepScroll: true });
+      if (this._isOpen) this._render({ keepScroll: !this._covered });
     });
 
     this._overlay.addEventListener('click', (e) => this._onClick(e));
@@ -156,8 +157,9 @@ class ChangelogPage {
     return Promise.race([promise.catch(() => {}), new Promise(r => setTimeout(r, ms))]);
   }
 
+  // While covered the URL is the settings', so the page's own last hash
   _route() {
-    const m = location.hash.match(HASH_RE);
+    const m = (this._covered ? this._stack.at(-1) : location.hash).match(HASH_RE);
     return m?.[1] ?? null;
   }
 

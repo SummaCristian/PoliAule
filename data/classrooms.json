@@ -11669,7 +11669,8 @@
             "features": [],
             "seats": 12,
             "idfoto": 48713,
-            "eventsOnly": true
+            "eventsOnly": true,
+            "noSchedule": true
           }
         ]
       },

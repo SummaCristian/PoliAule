@@ -40,7 +40,7 @@ The pickers have also been rebuilt from scratch: they're always at your fingerti
 ![The Available tab in PoliAule 1.1](media/available_v1.webp "Before") ![The Available tab in PoliAule 2.0](media/available_v2.webp "After")
 
 ## The all-new Campus tab
-What PoliAule needed was the ability to guide you around your campus not only in time, but also in space. Picture it like a T.A.R.D.I.S., just without the timey-wimey stuff.
+What PoliAule needed was the ability to guide you around your campus not only in time, but also in space. Picture it as a T.A.R.D.I.S., just without the timey-wimey stuff.
 
 The brand-new Campus tab lets you explore the campus on an interactive 3D map, to find out where exactly they managed to hide your class this time, how to get there, or a reason not to go (hey, that's valid too!).
 
@@ -63,9 +63,9 @@ The Details page's opening animation has been rebuilt from scratch too, to feel 
 ![The Details page in PoliAule 1.1](media/details_v1.webp "Before") ![The Details page in PoliAule 2.0](media/details_v2.webp "After") ![The Details page in PoliAule 2.0, scrolled down to its opening hours and map](media/details_v2_2.webp "After, scrolled down")
 
 ## Vitrium, PoliAule's design system
-PoliAule uses Vitrium, my own design system. Although, saying it like that is actually wrong, it's more like the opposite: while working on PoliAule 2.0, at some point I realised I was building something really nice, so I extracted it from this codebase and generalised it into a component library, which PoliAule now uses.
+PoliAule uses Vitrium, my own design system. Although saying it like that is actually wrong, it's more like the opposite: while working on PoliAule 2.0, at some point I realised I was building something really nice, so I extracted it from this codebase and generalised it into a component library, which PoliAule now uses.
 
-Vitrium is open source: you can find it at [vitrium.summacristian.com](https://vitrium.summacristian.com) or on [GitHub](https://github.com/SummaCristian/Vitrium). It's a Liquid Glass-inspired library that prides itself on two things: a faithful recreation of Liquid Glass, using complex hand-made techniques such as ring shadows and diffraction through glass, and rich, stunning components that make use of those materials.
+Vitrium is open source: you can find it at [vitrium.summacristian.com](https://vitrium.summacristian.com) or on [GitHub](https://github.com/SummaCristian/Vitrium). It's a Liquid Glass-inspired library that prides itself on two things: a faithful recreation of Liquid Glass, using complex hand-made techniques such as ring shadows and refraction through glass, and rich, stunning components that make use of those materials.
 
 All of PoliAule's core components are either native Vitrium components, like the new tab bar, or built on the foundations Vitrium provides. It's a good example of how versatile the design system can be: feel free to explore it, and use it in your own projects if you like it!
 

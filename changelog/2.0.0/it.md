@@ -22,7 +22,7 @@ Questo è uno degli sforzi più grandi che io abbia mai compiuto per un singolo 
 Doveva uscire in tempo per il nuovo anno accademico. Purtroppo non ce l'ho fatta, ma spero che non sia troppo tardi per apprezzare il lavoro che c'è stato dietro.
 
 Questa versione ridisegna ogni aspetto, ogni schermata e ogni componente di PoliAule. Tutto è stato messo in discussione, valutato e poi ritoccato, ridisegnato, oppure demolito e ricostruito da zero.
-È cambiato così tanto, in un modo o nell'altro, che potrei scrivere per ore di tutti i minimi dettagli su cui mi sono fissato per giornate intere, ma ti lascio il piacere di scoprirli da soli. Ecco invece un elenco dei cambiamenti più grandi di questa versione.
+È cambiato così tanto, in un modo o nell'altro, che potrei scrivere per ore di tutti i minimi dettagli su cui mi sono fissato per giornate intere, ma vi lascio il piacere di scoprirli da soli. Ecco invece un elenco dei cambiamenti più grandi di questa versione.
 
 ## Il tab Disponibili, ridisegnato
 Il tab Disponibili è la parte più importante di PoliAule: è il motivo stesso per cui esiste.
@@ -63,11 +63,11 @@ Anche l'animazione di apertura della pagina dei dettagli è stata ricostruita da
 ![La pagina dei dettagli in PoliAule 1.1](media/details_v1.webp "Prima") ![La pagina dei dettagli in PoliAule 2.0](media/details_v2.webp "Dopo") ![La pagina dei dettagli in PoliAule 2.0, scorsa fino agli orari di apertura e alla mappa](media/details_v2_2.webp "Dopo, più in basso")
 
 ## Vitrium, il design system di PoliAule
-PoliAule usa Vitrium, il mio nuovo design system. Anche se, detta così, è sbagliata: è più il contrario. Mentre lavoravo a PoliAule 2.0, ad un certo punto mi sono reso conto che stavo costruendo qualcosa di davvero carino, così l'ho estratto da questo codice e l'ho generalizzato in una libreria di componenti, che ora è usato anche da PoliAule.
+PoliAule usa Vitrium, il mio nuovo design system. Anche se, detta così, è sbagliata: è più il contrario. Mentre lavoravo a PoliAule 2.0, ad un certo punto mi sono reso conto che stavo costruendo qualcosa di davvero carino, così l'ho estratto da questo codice e l'ho generalizzato in una libreria di componenti, che ora è usata anche da PoliAule.
 
 Vitrium è open source: lo trovi su [vitrium.summacristian.com](https://vitrium.summacristian.com) o su [GitHub](https://github.com/SummaCristian/Vitrium). È una libreria ispirata al Liquid Glass che va fiera di due cose: una ricreazione fedele del Liquid Glass, con complesse tecniche realizzate a mano come le ombre ad anello o la diffrazione attraverso il vetro, e componenti curati e riutilizzabili che sfruttano questi materiali.
 
-Tutti i componenti principali di PoliAule sono componenti nativi di Vitrium, come la nuova TabBar, oppure sono costruiti sulle fondamenta che Vitrium fornisce. È un chiaro esempio di quanto sia versatile il design system: esploralo pure, e usalo nei tuoi progetti se ti piace!
+Tutti i componenti principali di PoliAule sono componenti nativi di Vitrium, come la nuova tab bar, oppure sono costruiti sulle fondamenta che Vitrium fornisce. È un chiaro esempio di quanto sia versatile il design system: esploralo pure, e usalo nei tuoi progetti se ti piace!
 
 ![La tab bar, un componente di Vitrium, in azione](media/tabbar_v2.mp4#loop "La nuova tab bar, costruita con Vitrium")
 

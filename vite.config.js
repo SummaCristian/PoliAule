@@ -1,4 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { readFile, writeFile, appendFile } from 'node:fs/promises';
 import { transform } from 'esbuild';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -93,6 +94,69 @@ function markShellCssReadyInDev() {
   };
 }
 
+// Content Security Policy for the deployed app, appended to dist/_headers.
+//
+// escapeHtml() (utils/html.js) is what keeps external data out of the markup;
+// this is the second wall, so a missed escape can't run script or send data
+// somewhere unexpected. The inline <script>s in index.html and its on*="" attributes
+// are allowed by hash, computed here from the built file, so editing one needs
+// no policy change and no 'unsafe-inline' for scripts. Styles keep
+// 'unsafe-inline': the app sets inline style="" everywhere.
+//
+// Report-Only for now: violations show in the console and nothing is blocked.
+// Switch CSP_HEADER to 'Content-Security-Policy' once a browse through the
+// beta deploy (every tab, the Campus map, Info, Settings, a classroom page)
+// is clean.
+const CSP_HEADER = 'Content-Security-Policy-Report-Only';
+
+// Both APIs are listed on every deployment: beta switches between them at runtime.
+const API_HOSTS = 'https://api.poliaule.com https://api-beta.poliaule.com';
+
+function sha256(text) {
+  return `'sha256-${createHash('sha256').update(text).digest('base64')}'`;
+}
+
+function contentSecurityPolicy(html) {
+  const inlineScripts = new Set([...html.matchAll(/<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m => sha256(m[1])));
+  const handlers = new Set([...html.matchAll(/\son[a-z]+="([^"]*)"/g)].map(m => sha256(m[1])));
+  return [
+    "default-src 'self'",
+    // api.mapbox.com: Mapbox GL JS, loaded on demand by the Campus map
+    `script-src 'self' https://api.mapbox.com ${[...inlineScripts].join(' ')}`,
+    `script-src-attr 'unsafe-hashes' ${[...handlers].join(' ')}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.mapbox.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    // Photos come from our API; avatars from GitHub; the map's tiles and sprites from Mapbox;
+    // polinetwork.org: the favicon on the Info page
+    `img-src 'self' data: blob: ${API_HOSTS} https://avatars.githubusercontent.com https://polinetwork.org https://*.mapbox.com`,
+    `connect-src 'self' ${API_HOSTS} https://api.github.com https://api.open-meteo.com https://*.mapbox.com`,
+    "media-src 'self' blob:",
+    // Mapbox GL runs its workers from blob: URLs
+    "worker-src 'self' blob:",
+    "child-src 'self' blob:",
+    "manifest-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; ');
+}
+
+function securityHeaders() {
+  let outDir;
+  return {
+    name: 'security-headers',
+    apply: 'build',
+    configResolved(config) {
+      outDir = config.build.outDir;
+    },
+    async closeBundle() {
+      const html = await readFile(`${outDir}/index.html`, 'utf8');
+      await appendFile(`${outDir}/_headers`, `\n/*\n  ${CSP_HEADER}: ${contentSecurityPolicy(html)}\n`);
+    },
+  };
+}
+
 export default defineConfig({
   build: {
     sourcemap: isDevBranch,
@@ -108,6 +172,7 @@ export default defineConfig({
     markShellCssReadyInDev(),
     // changelog/<version>/*.md -> /changelog/*.json + media (see the file)
     changelogPlugin(),
+    securityHeaders(),
     // Service worker for offline use (registered from utils/pwa.js). Precaches
     // what the app needs to open, about 2 MB; the big unused PNGs in
     // favicons/ stay out. Of favicons/beta only the info page's icon-*.webp

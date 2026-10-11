@@ -5,6 +5,10 @@ on:
     - cron: '30 6 1 * *'  # Once a month, 1st at 6:30am UTC (after the monthly photos job at 5am and, on a Sunday, the opening-hours job at 6am)
   workflow_dispatch:       # Allow manual runs from the GitHub Actions tab
 
+# Nothing here writes to the repo or calls the GitHub API: the checkout is read-only
+permissions:
+  contents: read
+
 jobs:
   fetch:
     runs-on: ubuntu-latest

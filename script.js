@@ -271,8 +271,9 @@ function showSplashError() {
     <i class="hgi-stroke hgi-wifi-off-01 splash-error-icon" aria-hidden="true"></i>
     <p class="splash-error-title">Unable to load</p>
     <p class="splash-error-subtitle">Check your connection and try again.</p>
-    <button class="button-primary splash-error-reload" onclick="location.reload()">Reload</button>
+    <button class="button-primary splash-error-reload">Reload</button>
   `;
+  overlay.querySelector('.splash-error-reload').addEventListener('click', () => location.reload());
 }
 
 // ---------- THEME COLOR META TAGS ----------

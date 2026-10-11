@@ -101,6 +101,19 @@ function buildOccupationPopoverHtml(slot) {
   `;
 }
 
+// The same booking in words, as a block's accessible name
+function occupationLabel(slot) {
+  const isCourse = slot.category === 'COURSE' || slot.category === 'EXAM';
+  const title = decodeEntities((isCourse ? (slot.course ?? slot.name) : (slot.raw ?? slot.name)) ?? t('detail.occupied'));
+  const parts = [
+    title,
+    slot.category === 'EXAM' ? t('detail.examLabel') : null,
+    `${minutesToTimeDisplay(timeToMinutes(slot.inizio))} – ${minutesToTimeDisplay(timeToMinutes(slot.fine))}`,
+    isCourse && Array.isArray(slot.professors) && slot.professors.length ? decodeEntities(slot.professors.join(', ')) : null,
+  ];
+  return parts.filter(Boolean).join(', ');
+}
+
 const HASH_PATTERN    = /^#classroom\/([^\/]+)\/(.+)$/;
 const HASH_PATTERN_V1 = /^#classroom\/(\d+)$/;
 
@@ -1168,7 +1181,7 @@ class ClassroomDetail {
         <div class="detail-header">
         <div class="detail-title-row lg-elevation-high">
           <span class="detail-title-ring lg-ring-layer" aria-hidden="true"></span>
-          <h1 class="detail-title" role="button" tabindex="0">${escapeHtml(classroom.name)}</h1>
+          <h1 class="detail-title" tabindex="-1">${escapeHtml(classroom.name)}</h1>
           ${statusHtml}
         </div>
         <p class="detail-subtitle secondary">
@@ -1199,7 +1212,7 @@ class ClassroomDetail {
       </div>
       <div class="detail-content${deferContent ? ' detail-content--deferred' : ''}">
         <div class="detail-column">
-        <section class="detail-section lg-ring">
+        <section class="detail-section lg-ring" data-glass-style="frost">
           <h2 class="detail-section-title">${t('detail.features')}</h2>
           ${featuresHtml
         ? `<div class="detail-features">${featuresHtml}</div>`
@@ -1207,7 +1220,7 @@ class ClassroomDetail {
       }
         </section>
 
-        <section class="detail-section lg-ring">
+        <section class="detail-section lg-ring" data-glass-style="frost">
           <div class="detail-section-header">
             <h2 class="detail-section-title">${t('detail.weeklySchedule')}</h2>
             <div class="detail-schedule-legend">
@@ -1227,13 +1240,13 @@ class ClassroomDetail {
 
         <div class="detail-column">
         ${hoursHtml ? `
-        <section class="detail-section lg-ring">
+        <section class="detail-section lg-ring" data-glass-style="frost">
           <h2 class="detail-section-title">${t('detail.openingHours')}</h2>
           ${hoursHtml}
         </section>` : ''}
 
         ${hasMap ? `
-        <section class="detail-section detail-map-section lg-ring">
+        <section class="detail-section detail-map-section lg-ring" data-glass-style="frost">
           <h2 class="detail-section-title">${t('detail.location')}</h2>
           <div class="detail-map"></div>
           <div class="detail-map-links"></div>
@@ -1660,6 +1673,8 @@ class ClassroomDetail {
 
       const img = container?.querySelector('.detail-photo');
       if (!img) return;
+      const roomName = this._overlay.querySelector('.detail-title')?.textContent;
+      if (roomName) img.alt = t('a11y.photoAlt').replace('{name}', roomName);
 
       // Already revealed (by the ViewTransition, or an earlier call): at most the
       // thumbnail the zoom carried still has to make way for the full photo.
@@ -1853,7 +1868,7 @@ class ClassroomDetail {
           occupancy,
           opening: getBuildingOpening(roomBuilding, dayData.date),
           query: isQueryDay && this._queryContext ? this._queryContext : null,
-          blockAttrs: (slot) => ` data-slot-idx="${scheduleSlots.push(slot) - 1}" tabindex="0" role="button"`,
+          blockAttrs: (slot) => ` data-slot-idx="${scheduleSlots.push(slot) - 1}" tabindex="0" role="button" aria-label="${escapeHtml(occupationLabel(slot))}"`,
           isHighlighted: (slot) => highlightDateKey !== null
             && dayData.date === highlightDateKey
             && slot.inizio === this._highlight?.from
@@ -1926,7 +1941,7 @@ class ClassroomDetail {
         const dayName = raw.charAt(0).toUpperCase() + raw.slice(1);
         const dayNum = date.getDate();
         return `
-          <div class="date-element-container${isSunday ? ' detail-schedule-day--sunday date-skipped' : ''}" data-day-index="${i}">
+          <div class="date-element-container${isSunday ? ' detail-schedule-day--sunday date-skipped' : ''}" data-day-index="${i}" data-full-date="${escapeHtml(date.toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' }))}">
             <span class="date-day-of-week${isSunday ? ' date-sunday' : ''}">${dayName}</span>
             <span class="date-number">${dayNum}</span>
           </div>`;
@@ -1989,6 +2004,8 @@ class ClassroomDetail {
       let selectedDayIndex = 0;
 
       const daySelector = createPillSelector(pickerContainer, {
+        label: t('detail.weeklySchedule'),
+        describe: chip => chip.dataset.fullDate,
         onSelect(chip, { silent }) {
           const index = parseInt(chip.dataset.dayIndex);
           selectedDayIndex = index;
@@ -2188,11 +2205,24 @@ class ClassroomDetail {
           if (!primaryBlock) return;
           // Open the popover only once the page has settled: the close-on-scroll
           // handler would dismiss one opened mid-scroll.
-          const rect = primaryBlock.getBoundingClientRect();
-          const maxY = document.documentElement.scrollHeight - window.innerHeight;
-          const targetY = Math.min(Math.max(0, window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2), maxY);
+          // Aimed from layout, not the live rect: the cards are still rising in
+          // (detail-section-rise, a transform offsetTop ignores), and the photo
+          // above shrinks over the first 220px of scroll, pulling the block up
+          // by `shrink` on the way. Measuring the rect overshot by both, leaving
+          // the block under the header and its popover off the top of the screen.
+          let docY = 0;
+          for (let el = primaryBlock; el; el = el.offsetParent) docY += el.offsetTop;
+          const photo = this._overlay.querySelector('.detail-photo-container.loaded');
+          let shrink = 0;
+          if (photo && CSS.supports('animation-timeline: scroll()')) {
+            const ph = photo.getBoundingClientRect();
+            const end = innerWidth < 600 ? Math.max(0.33 * innerHeight, 240) : ph.width * 8 / 21;
+            shrink = Math.max(0, ph.height - end) * (1 - Math.min(1, window.scrollY / 220));
+          }
+          const centred = docY + primaryBlock.offsetHeight / 2 - innerHeight / 2;
+          const targetY = Math.max(0, centred - shrink >= 220 ? centred - shrink : centred / (1 + shrink / 220));
           if (reduceMotion?.matches || Math.abs(targetY - window.scrollY) < 1) {
-            primaryBlock.scrollIntoView({ block: 'center', behavior: 'auto' });
+            window.scrollTo({ top: targetY, behavior: 'instant' });
             showOccupationPopover(primaryBlock);
             return;
           }
@@ -2204,7 +2234,7 @@ class ClassroomDetail {
           };
           window.addEventListener('scrollend', show, { once: true });
           setTimeout(show, 800); // no scrollend in older Safari
-          primaryBlock.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          window.scrollTo({ top: targetY, behavior: 'smooth' });
         });
       }
 

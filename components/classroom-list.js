@@ -227,7 +227,13 @@ export function buildCardForClassroom(classroom, building, fromTime = null, toTi
   if (date) el.dataset.queryDate = date;
   el.setAttribute('role', 'button');
   el.setAttribute('tabindex', '0');
-  el.setAttribute('aria-label', `View details for ${escapeHtml(classroom.name)}`);
+  // The card is one button, so its label has to carry what the (partly
+  // aria-hidden) content shows: name, building and availability.
+  el.setAttribute('aria-label', [
+    classroom.name,
+    showBuilding ? `${t('building.prefix')} ${building.name}` : null,
+    statusLabel?.full,
+  ].filter(Boolean).join(', '));
 
   if (showFavouriteStar) {
     el.dataset.favStar = '';

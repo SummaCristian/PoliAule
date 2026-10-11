@@ -109,6 +109,9 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
   const elements = container.querySelectorAll('.date-element-container');
 
   const pillSelector = createPillSelector(container, {
+    label: t('datepicker.label'),
+    describe: el => el.dataset.date && new Date(`${el.dataset.date}T12:00:00`)
+      .toLocaleDateString(getLocale() === 'it' ? 'it-IT' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' }),
     onSelect(el, { silent = false } = {}) {
       // Only fire `change` on a real date change — re-committing the current
       // day (e.g. the deferred re-anchor when the <date-chip-picker> popup

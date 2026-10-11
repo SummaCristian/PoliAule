@@ -156,7 +156,7 @@ Returns `{ "mapboxToken": string }` — the URL-restricted Mapbox public token t
     id:        string               // e.g. "MIA01"
     name:      string               // short display name, e.g. "Leonardo"
     slug:      string               // URL-safe identifier, e.g. "leonardo"
-    city:      string               // e.g. "Milan"
+    city:      string               // e.g. "Milano"
     group:     string | undefined   // group within the city, e.g. "Città Studi" or "Bovisa" - omitted for single-campus cities
     lat:       number
     long:      number
@@ -256,13 +256,16 @@ Each entry in `occupancy` represents a time slot in which the classroom is **not
 
 | ID | Name | Slug | City | Group |
 |---|---|---|---|---|
-| `MIA01` | Leonardo | `leonardo` | Milan | Città Studi |
-| `MIA06` | Colombo | `colombo` | Milan | Città Studi |
-| `MIB01` | La Masa | `la-masa` | Milan | Bovisa |
-| `MIB02` | Durando | `durando` | Milan | Bovisa |
+| `MIA01` | Leonardo | `leonardo` | Milano | Città Studi |
+| `MIA06` | Colombo | `colombo` | Milano | Città Studi |
+| `MIB01` | La Masa | `la-masa` | Milano | Bovisa |
+| `MIB02` | Durando | `durando` | Milano | Bovisa |
 | `CRG02` | Cremona | `cremona` | Cremona | — |
 | `LCF04` | Lecco | `lecco` | Lecco | — |
 | `MNG01` | Mantova | `mantova` | Mantova | — |
+| `PCL01` | Piacenza | `piacenza` | Piacenza | — |
+
+Secondary campuses (`secondary: true`: nothing to book there, so no classrooms) are also listed in `/v1/classrooms`: `MIA05` Mancinelli, `MIF01` Tortona, `MIC` Residenze, `MID01` Sesto Ulteriano, `COE04` Como and `GEM01` Genova.
 
 ---
 
@@ -272,10 +275,23 @@ Each entry in `occupancy` represents a time slot in which the classroom is **not
 |---|---|
 | `4` | Video projector |
 | `5` | Radio microphone |
-| `6` | Dimmable (blinds) |
-| `7` | Wired desk |
+| `6` | Dimmable |
+| `7` | Wired chair |
+| `9` | Overhead projector |
+| `10` | Slide projector |
+| `11` | Video projector with PC |
+| `12` | Plasma TV |
+| `104` | Microphone |
+| `105` | Video Presenter |
+| `106` | A4 B/W printer |
+| `107` | Possibility of sharing audio/video with lecture theatre(s) |
 | `142` | Seats with electric socket |
-| `223` | Videoconference / meeting |
+| `143` | Seats with network socket |
+| `182` | High graphics performance workstations |
+| `183` | Oculus Quest 2 VR headsets |
+| `202` | Innovative teaching |
+| `222` | Environmental microphone |
+| `223` | Videoconference - meeting |
 
 ---
 

@@ -33,7 +33,7 @@ import {
 
 import { ensureClassroomDirectory, classroomsData as staticClassroomsData } from './classroom-search-data.js';
 import { initSearchOverlay } from './components/search-overlay.js';
-import { setArcBetween, clearZoomOrigin } from './utils/vt-motion.js';
+import { springFlight } from './utils/vt-motion.js';
 import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
 import { changelogPage } from './components/changelog-page.js';
@@ -59,7 +59,7 @@ import './components/data-fetch-card.js';
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
 import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
-import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark } from 'vitrium';
+import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark, initRefraction } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 import { initCardDayPopover } from './components/card-day-popover.js';
 import { createBuildingStarButton } from './utils/favourites.js';
@@ -67,7 +67,7 @@ import { createBuildingStarButton } from './utils/favourites.js';
 import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
 import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
-import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY } from './components/settings.js';
+import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, getRefractionPref } from './components/settings.js';
 import { initKeybindings } from './components/keybindings.js';
 import { takeImportHash } from './utils/transfer.js';
 import { promptImport } from './components/transfer-dialog.js';
@@ -76,6 +76,8 @@ import { resumeState, initResumeSnapshot } from './utils/resume.js';
 import { initSeason, decorate } from './utils/season.js';
 import { graduationOn } from './utils/graduation.js';
 import { flipLayout, morphRender } from './utils/layout-flip.js';
+import { announce } from './utils/announce.js';
+import { initPageFocus } from './utils/page-focus.js';
 
 // Opened from a device-transfer QR/link (see utils/transfer.js)? Take the
 // payload out of the URL now, before the hash routers (info page, classroom
@@ -125,6 +127,16 @@ function dismissSplash() {
   }
 
   const splashLogo = overlay.querySelector('.splash-logo');
+  // Never take off mid-intro (a fast, cached start lands here while the logo is
+  // still fading and growing in): the transition's snapshot is a still image,
+  // so the logo would fly half-faded and pop to full opacity as it landed, and
+  // its growth would flip straight into the shrink.
+  const intro = splashLogo.getAnimations().filter(a => a.playState === 'running');
+  if (intro.length) {
+    Promise.all(intro.map(a => a.finished)).then(dismissSplash, dismissSplash);
+    return;
+  }
+
   const realLogo = document.querySelector('.header-logo');
   const isInfo = location.hash === '#info';
   const isChangelog = changelogPage.matchesHash;
@@ -175,10 +187,6 @@ function dismissSplash() {
       const cleanup = () => changelogPage.clearSplashName();
       vt.finished.then(cleanup).catch(cleanup);
     } else {
-      // The logo curves into the header the way a card's page grows out of its
-      // card (same spring, same arc), instead of sliding along a straight line
-      // (a bit more swing than a card's, kept on screen by setArcBetween)
-      setArcBetween(splashLogo.getBoundingClientRect(), realLogo.getBoundingClientRect(), 1.4);
       const vt = document.startViewTransition(() => {
         splashLogo.style.viewTransitionName = '';
         overlay.remove();
@@ -189,8 +197,10 @@ function dismissSplash() {
         if (isSettings) settingsPage.openInSplash();
       });
 
-      vt.ready.catch(() => {});
-      const cleanup = () => { realLogo.style.viewTransitionName = ''; clearZoomOrigin(); };
+      // The logo curves into the header on a spring per axis
+      // (utils/vt-motion.js), instead of sliding along a straight line
+      vt.ready.then(() => springFlight('splash-icon')).catch(() => {});
+      const cleanup = () => { realLogo.style.viewTransitionName = ''; };
       vt.finished.then(cleanup).catch(cleanup);
     }
   } else {
@@ -263,8 +273,9 @@ function showSplashError() {
     <i class="hgi-stroke hgi-wifi-off-01 splash-error-icon" aria-hidden="true"></i>
     <p class="splash-error-title">Unable to load</p>
     <p class="splash-error-subtitle">Check your connection and try again.</p>
-    <button class="button-primary splash-error-reload" onclick="location.reload()">Reload</button>
+    <button class="button-primary splash-error-reload">Reload</button>
   `;
+  overlay.querySelector('.splash-error-reload').addEventListener('click', () => location.reload());
 }
 
 // ---------- THEME COLOR META TAGS ----------
@@ -480,6 +491,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Holiday decorations, when today is in a season (utils/season.js)
     initSeason();
+    initPageFocus();
 
     // A week-long banner announcing the version this site runs
     initUpdateBanner();
@@ -556,6 +568,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // instantly — the actual benchmark never runs during load, see
     // Vitrium's core/blur-capability.js for why.
     applyBlurState(resolveBlurCapability());
+    // Rim refraction on glass (Chromium only, and only while blur is on);
+    // the glass style itself is set before first paint in index.html.
+    initRefraction({ enabled: getRefractionPref() });
 
     await document.fonts.ready;
     document.querySelector('.time-pickers-container').style.opacity = '1';
@@ -628,6 +643,7 @@ function populateOccupancyUi() {
   setupDatePicker(() => preferInitialDate);
   refreshHourLensData();
   document.getElementById('available-classrooms-form').removeAttribute('data-loading');
+  document.getElementById('available-classrooms-form').removeAttribute('aria-busy');
   document.querySelector('date-chip-picker')?.removeAttribute('data-loading');
 
   setupDataFetchIndicator();
@@ -719,6 +735,20 @@ function renderAvailableClassroomsResults(results, date, from, to, campusId = nu
   container.dataset.campus = campusId;
   morphRender(container, '.classroom-card, .building-section-header', resultsKey,
     () => buildAvailableClassroomsResults(container, results, date, from, to, campusId), { swap });
+  announceResults(results, `${campusId}|${date}|${from}|${to}`);
+}
+
+// Tells screen readers what a new search found. A redraw of the same search
+// (a data refresh) says nothing unless the count changed.
+let lastAnnounced = '';
+function announceResults(results, searchKey) {
+  const count = results.reduce((n, b) => n + b.rooms.length, 0);
+  const signature = `${searchKey}|${count}`;
+  if (signature === lastAnnounced) return;
+  lastAnnounced = signature;
+  announce(count === 0 ? t('results.noResultsTitle')
+    : count === 1 ? t('a11y.resultsOne')
+    : t('a11y.resultsMany').replace('{n}', count));
 }
 
 function resultsKey(el) {
@@ -983,6 +1013,7 @@ function setupDataFetchIndicator() {
 
   if (!classroomsData.length) {
     indicator.classList.add('red');
+    setDataStatusLabel('red');
     return;
   }
 
@@ -1016,6 +1047,12 @@ function setupDataFetchIndicator() {
   setupDataFetchIndicatorText();
 }
 
+// The header button's name carries the state too: its dot is only a colour
+function setDataStatusLabel(status) {
+  const key = { green: 'data.greenTitle', yellow: 'data.yellowTitle', red: 'data.redTitle' }[status];
+  document.getElementById('data-fetch-btn')?.setAttribute('aria-label', `${t('a11y.dataStatus')}: ${t(key)}`);
+}
+
 // Setups the text inside the popover shown in the Data Fetch Indicator
 function setupDataFetchIndicatorText(animate = false) {
   const container = document.getElementById('data-fetch-indicator-popover-container');
@@ -1039,6 +1076,7 @@ function setupDataFetchIndicatorText(animate = false) {
   const indicator = document.getElementById('data-fetch-indicator');
   const status = ['green', 'yellow', 'red'].find(s => indicator.classList.contains(s)) ?? 'red';
   const { title, description } = states[status];
+  setDataStatusLabel(status);
 
   // Last fetch time
   const generationDate = classroomsData[0]

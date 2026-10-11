@@ -318,6 +318,12 @@
       }
     } catch (e) {}
 
+    // Vitrium's glass style (Settings, poliAule_glassStyle): transparent unless
+    // frost was picked. Set here so the glass never flashes from one to the other.
+    try {
+      document.documentElement.dataset.glassStyle = localStorage.getItem('poliAule_glassStyle') === 'frost' ? 'frost' : 'transparent';
+    } catch (e) { document.documentElement.dataset.glassStyle = 'transparent'; }
+
     // Seasonal decorations (utils/season.js): today's season, by the Milan
     // calendar day, or null. Decided here, before first paint, so a seasonal
     // accent never flashes in over the normal one; season.js reads
@@ -492,6 +498,10 @@
     </div>
   </noscript>
 
+  <!-- Page heading and live region for screen readers (see utils/announce.js) -->
+  <h1 class="sr-only">PoliAule</h1>
+  <div id="a11y-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
   <!-- Header -->
   <div class="header-top-strip" aria-hidden="true"></div>
   <header class="header">
@@ -505,8 +515,8 @@
       </div>
 
       <div class="header-title-container">
-        <button class="header-title-btn" id="info-trigger" aria-label="About PoliAule">
-          <img src="/favicons/main/logo.webp" class="header-logo" width="436" height="500">
+        <button class="header-title-btn" id="info-trigger" data-i18n-attr="aria-label:info.about.title" aria-label="About PoliAule">
+          <img src="/favicons/main/logo.webp" class="header-logo" width="436" height="500" alt="">
           <!-- The logo's halo on the detail page (style.css). Its fill is
                translucent, so a drop-shadow would show through it and shift
                its colours: this keeps a soft shadow strictly outside its shape
@@ -537,7 +547,7 @@
         <!-- Favourite toggle (only shown on the classroom detail page).
              Content is swapped between the hgi-star outline and a filled star
              by classroomDetail._syncFavBtn(). -->
-        <button id="favourite-btn" class="header-button lg-ring liquid-glass" hidden aria-label="Add to favourites">
+        <button id="favourite-btn" class="header-button lg-ring liquid-glass" hidden data-i18n-attr="aria-label:favourite.add" aria-label="Add to favourites">
           <i class="hgi-stroke hgi-star" aria-hidden="true"></i>
         </button>
 
@@ -548,7 +558,7 @@
         </button>
 
         <!-- Settings button -->
-        <button id="settings-btn" class="header-button lg-ring liquid-glass" aria-label="Settings">
+        <button id="settings-btn" class="header-button lg-ring liquid-glass" data-i18n-attr="aria-label:settings.title" aria-label="Settings">
           <i class="hgi-stroke hgi-settings-01" aria-hidden="true"></i>
         </button>
 
@@ -567,13 +577,13 @@
 
   </header>
 
-  <button id="detail-back-btn" class="detail-back-btn lg-ring lg-elevation-high liquid-glass" hidden aria-label="Back">
+  <button id="detail-back-btn" class="detail-back-btn lg-ring lg-elevation-high liquid-glass" hidden data-i18n-attr="aria-label:campus.back" aria-label="Back">
     <i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>
   </button>
 
 
   <!-- Rest of the UI under the header -->
-  <div class="body-container">
+  <main class="body-container">
 
     <!-- Available Classrooms -->
     <div id="available-classrooms-container" class="tab-content visible">
@@ -606,7 +616,7 @@
             aria-hidden="true"></i><span data-i18n="available.title">Available Classrooms</span></h3>
       </div>
 
-      <form id="available-classrooms-form" class="form" data-loading>
+      <form id="available-classrooms-form" class="form" data-loading aria-busy="true">
 
         <!-- Campus + Date pills, side by side (wrap on narrow screens) -->
         <div class="picker-row">
@@ -678,7 +688,7 @@
     <!-- Settings Page Panel (components/settings-page.js), same footing as Info -->
     <div id="settings-overlay" hidden></div>
 
-  </div>
+  </main>
 
   <!-- Data-fetch status card. data-fetch-card.js relocates this container into a
        morphing card shell that grows from the header button. -->
@@ -686,7 +696,7 @@
 
   <!-- Search overlay (opened by the bottom-nav search FAB; floats over the current tab) -->
   <div id="search-overlay" class="search-overlay-backdrop" hidden>
-    <div class="search-overlay-panel" role="dialog" aria-modal="true" aria-label="Search classrooms">
+    <div class="search-overlay-panel" role="dialog" aria-modal="true" data-i18n-attr="aria-label:a11y.searchDialog" aria-label="Search classrooms">
       <div class="search-overlay-header">
         <div class="search-bar-wrapper lg-ring lg-elevation-high liquid-glass">
           <i class="hgi-stroke hgi-search-01 search-bar-icon" aria-hidden="true"></i>
@@ -695,20 +705,20 @@
             autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
           <div class="search-bar-trailing">
             <button id="classroom-search-clear" class="search-clear-btn" type="button" tabindex="-1"
-              aria-label="Clear search">
+              data-i18n-attr="aria-label:a11y.searchClear" aria-label="Clear search">
               <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
             </button>
             <kbd class="search-kbd" aria-hidden="true">esc</kbd>
           </div>
         </div>
         <button id="search-overlay-close" class="search-overlay-close lg-ring liquid-glass" type="button"
-          aria-label="Close search">
+          data-i18n-attr="aria-label:a11y.searchClose" aria-label="Close search">
           <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
         </button>
       </div>
       <!-- Positioning frame for what floats over the results box (the
            professor view's back button, search-overlay.js) -->
-      <div class="search-results-frame lg-ring lg-elevation-high">
+      <div class="search-results-frame lg-ring lg-elevation-high" data-glass-style="frost">
         <div id="search-overlay-results" class="search-overlay-results search-scrollable"></div>
       </div>
     </div>

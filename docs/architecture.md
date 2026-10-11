@@ -79,7 +79,7 @@ For each of the next 7 days it:
 
 1. Reads `data/classrooms.json` to get room IDs.
 2. Reads `data/opening-hours.json` to decide which days to fetch: a day is skipped only if every building is closed that weekday, or it falls in a holiday period.
-3. For each remaining day, scrapes onlineservices.polimi.it's per-day occupancy page once per Sede (`scripts/fetch_occupation_names.py`, see below). Several campuses share a page: Leonardo and Colombo are both on `MIA`, La Masa and Durando on `MIB`. Each scraped cell becomes a slot with start/end plus course name/code/professors. 3 retries per page.
+3. For each remaining day, scrapes onlineservices.polimi.it's per-day occupancy page once per Sede (`scripts/fetch_occupation_names.py`, see below). Several campuses share a page: Leonardo and Colombo are both on `MIA`, La Masa and Durando on `MIB`; every other campus with classrooms (Cremona `CRG`, Lecco `LCF`, Mantova `MNI`, Piacenza `PCL`) has its own. Each scraped cell becomes a slot with start/end plus course name/code/professors. 3 retries per page.
 4. Falls back to the REST occupancy endpoint (one GET per room) only for the classrooms of a page that failed to scrape after retries, and for classrooms with no row on a healthy page. Classrooms marked `noSchedule` in `classrooms.json` (on neither the page nor the REST API) are never REST-fetched: they keep a page row if one ever appears, and otherwise get `"occupancy": null`, which the frontend shows as unknown rather than free; so does a REST call that fails. Campuses without classrooms aren't scraped at all. In the normal case zero REST calls are made and the whole run takes seconds.
 5. Writes one `occupancy/occupation_YYYYMMDD.json` per day locally, mirroring the classrooms structure plus an `occupancy` array of hourly slots, plus `occupancy/list.json`.
 6. Deletes stale local files (dates before today).
@@ -90,14 +90,14 @@ sequenceDiagram
     participant GHA as GitHub Actions
     participant PY as fetch.py
     participant NAMES as onlineservices.polimi.it
-    participant API as PoliMaps API
+    participant API as PoliMi REST API
     participant FS as local occupancy/
     participant R2 as R2 (poliaule-data)
 
     GHA->>PY: run
     PY->>PY: fetch_days() - next 7 days (skip days every building is closed, and holidays)
     loop each day
-        loop each Sede page (MIA, MIB, CRG, LCF, MNI)
+        loop each Sede page (MIA, MIB, CRG, LCF, MNI, PCL, ...)
             PY->>NAMES: GET occupancy page
             NAMES-->>PY: HTML (start/end + course name per room)
             PY-->>PY: wait 0.5s (skipped with --no-delay)
@@ -159,13 +159,13 @@ Both `fetch.py` and the frontend resolve a building's hours the same way: an exp
 
 ```
 occupation_YYYYMMDD.json
-└── date: "YYYY-MM-DD"
+└── generated_at, date: "YYYYMMDD"
 └── campuses[]
-    └── id, name
+    └── id, name, lat, long, secondary?
     └── buildings[]
-        └── id, name
+        └── name, altName, address, lat, long, idEdificio, secondary?
         └── classrooms[]
-            └── id, name, features[]
+            └── id, name, floor, seats, accessible_seats, workstations, idfoto, eventsOnly?, noSchedule?, features[]
             └── occupancy[]          ← added by fetch.py; each entry is a BOOKED slot
                 └── { inizio: "HH:MM", fine: "HH:MM" }
                 └── + { category: "COURSE" | "EXAM", course, code, professors[], section? }
@@ -198,9 +198,10 @@ graph TD
     IH["index.html"]:::entry
     SC["script.js"]:::shell
     ARS["available-rooms-script.js"]:::data
-    SCS["search-classrooms-script.js"]:::data
+    SCS["classroom-search-data.js"]:::data
     I18N["i18n.js"]:::i18n
 
+    SO["search-overlay.js"]:::component
     CP["campus-picker.js"]:::component
     CD["classroom-detail.js"]:::component
     CL["classroom-list.js"]:::component
@@ -212,6 +213,7 @@ graph TD
     IH -->|loads| SC
     SC -->|imports| ARS
     SC -->|imports| SCS
+    SC -->|imports| SO
     SC -->|imports| I18N
     SC -->|imports| CP
     SC -->|imports| CD
@@ -220,8 +222,6 @@ graph TD
     SC -->|imports| HL
     SC -->|imports| SET
     SC -->|registers| TT
-    SCS -->|imports| ARS
-    SCS -->|imports| I18N
     ARS -->|fetches via config.js API_BASE| API["api.poliaule.com"]:::cf
     SCS -->|fetches via config.js API_BASE| API
 ```
@@ -232,7 +232,8 @@ graph TD
 |---|---|
 | `script.js` | App shell: splash screen, tab routing, form wiring, campus picker init |
 | `available-rooms-script.js` | Fetches occupancy JSON and opening hours, exposes `findAvailableClassrooms()` |
-| `search-classrooms-script.js` | Search tab: full-text index, hierarchy navigation, classroom status |
+| `classroom-search-data.js` | Loads and caches the classroom directory (`/v1/classrooms`) the search and map read |
+| `components/search-overlay.js` | The Search overlay (morphs out of the tab bar's Search button): full-text search, hierarchy navigation, classroom status |
 | `i18n.js` | Locale detection (browser / localStorage), `t()` translation helper |
 | `components/campus-picker.js` | Campus selector (Vitrium list picker) |
 | `components/bottom-nav.js` | Main navigation (Vitrium tab bar) |
@@ -262,7 +263,7 @@ iOS kills a suspended home-screen web app soon after it goes to the background, 
 
 ### Localization
 
-`i18n.js` detects locale from `localStorage` → `navigator.language` → `'en'` fallback. Supported: `en`, `it`. Translation files live in `locales/en.json` and `locales/it.json`. The `t(key)` helper is called by virtually every component.
+`i18n.js` detects locale from `localStorage` → `navigator.language` → `'en'` fallback. Supported: `en`, `it`. Translation files live in `public/locales/en.json` and `public/locales/it.json`. The `t(key)` helper is called by virtually every component.
 
 ---
 
@@ -300,7 +301,7 @@ graph LR
 
 Two R2 buckets hold the fetched data: `poliaule-data` (prod) and `poliaule-data-beta` (beta). `workers/api` (a Hono app) binds one bucket per environment and serves it as the versioned REST API described in [api.md](./api.md), deployed as `poliaule-api` / `poliaule-api-beta`, on custom domains `api.poliaule.com` / `api-beta.poliaule.com`. It also caches responses at Cloudflare's edge (`caches.default`) so repeat requests for the same URL don't hit R2 at all.
 
-`config.js` holds the `API_BASE` the frontend fetches from; `scripts/build-beta.sh` overwrites it to point at `api-beta.poliaule.com` for the beta Pages build.
+`config.js` picks the API base at runtime from `location.hostname` (`getApiBase()`): `api.poliaule.com` on poliaule.com, and on every other origin (beta, localhost) `api-beta.poliaule.com` unless the "Use Beta Backend" setting (`poliAule_useBetaBackend`) is turned off. It also fetches the Mapbox token from `GET /v1/config`. `scripts/build-beta.sh` doesn't touch it: for the beta Pages build it only swaps in the beta favicons and points the `index.html` API preconnect at `api-beta.poliaule.com`.
 
 Each Pages build runs Vite (`npm run build` for main/dev, `npm run build:beta` for beta, output directory `dist`), which bundles and minifies `index.html`'s JS/CSS into hashed files and copies `public/` (favicons, fonts, locales, the About-page profile photo) through untouched, since those are referenced by absolute runtime path rather than imported. Source maps ship only when `CF_PAGES_BRANCH` is unset or `dev`.
 

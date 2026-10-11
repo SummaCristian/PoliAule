@@ -95,14 +95,16 @@ function createRenderer(version, dir, file) {
     return path;
   };
 
-  const figure = ({ href, title, text }) => {
+  const figure = ({ href: rawHref, title, text }) => {
+    // `media/x.mp4#loop` plays silently on a loop, with no controls
+    const [href, flag] = rawHref.split('#');
     const path = checkMedia(href);
     const ext = extname(href).toLowerCase();
     const caption = title ? `<figcaption>${esc(title)}</figcaption>` : '';
     if (VIDEO_EXT.has(ext)) {
       const poster = href.replace(/\.\w+$/, '.poster.webp');
       const posterAttr = existsSync(join(dir, poster)) ? ` poster="${mediaUrl(poster)}"` : '';
-      return `<figure class="cl-figure cl-figure--video"><video src="${mediaUrl(href)}"${posterAttr} controls playsinline preload="none" aria-label="${esc(text)}"></video>${caption}</figure>`;
+      return `<figure class="cl-figure cl-figure--video"><video src="${mediaUrl(href)}"${posterAttr} ${flag === 'loop' ? 'autoplay loop muted playsinline preload="auto"' : 'controls playsinline preload="none"'} aria-label="${esc(text)}"></video>${caption}</figure>`;
     }
     if (!IMAGE_EXT.has(ext)) throw new Error(`${file}: unsupported media type ${href}`);
     const buf = readFileSync(path);

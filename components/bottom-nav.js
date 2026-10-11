@@ -68,7 +68,7 @@ const startupId = resumeState?.tab ?? getStartupTabId();
 const startup = TABS.find(tab => tab.id === startupId) ?? TABS[0];
 
 const bar = createTabBar(root, {
-  label: 'Main navigation',
+  label: t('a11y.mainNav'),
   value: startup.id,
   tabs: [
     ...TABS.map(({ id, labelKey, icon }) => ({ id, label: t(labelKey), icon, panel: id })),
@@ -88,6 +88,7 @@ showContent(startup.id);
 // (setLabel also updates the tab definitions, so a later layout change keeps them.)
 export function retranslateNav() {
   for (const { id, labelKey } of [...TABS, SEARCH]) bar.setLabel(id, t(labelKey));
+  root.querySelector('[role="tablist"]')?.setAttribute('aria-label', t('a11y.mainNav'));
 }
 onLanguageSwitch(retranslateNav);
 

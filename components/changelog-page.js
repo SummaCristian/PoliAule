@@ -17,6 +17,7 @@ import { flipLayout } from '../utils/layout-flip.js';
 import { IS_PROD, APP_VERSION } from '../utils/env.js';
 import { createToggle } from 'vitrium';
 import { infoPage } from './info-page.js';
+import { zoomImage } from './image-zoom.js';
 import { markUpdateSeen } from './update-banner.js';
 
 const HASH_RE = /^#changelog(?:\/([\w.-]+))?$/;
@@ -609,6 +610,12 @@ class ChangelogPage {
   _onClick(e) {
     if (e.target.closest('[data-cl-retry]')) {
       this._render({ keepScroll: true });
+      return;
+    }
+    // Figures open larger
+    const zoomable = e.target.closest('.cl-figure img');
+    if (zoomable) {
+      zoomImage(zoomable);
       return;
     }
     const head = e.target.closest('.cl-entry-head');

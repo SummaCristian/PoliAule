@@ -1270,7 +1270,8 @@ body.detail-open .tab-content {
 
   /* Clear glass card (Vitrium's .lg-glass--clear material): keeps the
      section's text readable over the colorful photo backdrop while
-     letting the colors through. */
+     letting the colors through. Always frosted, whatever the glass style
+     setting: each section carries data-glass-style="frost". */
   background: var(--lg-tint-clear);
   -webkit-backdrop-filter: blur(var(--lg-blur-clear));
   backdrop-filter: blur(var(--lg-blur-clear));

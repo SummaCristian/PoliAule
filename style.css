@@ -274,6 +274,15 @@ html { font-size: 90%; }
 
 body {
   min-height: 100%;
+  /* Touch: always a pixel taller than the whole screen. A page that isn't
+     (a closed campus day: the empty results only stretch to fill it) has iOS
+     Safari place the fixed tab bar against the page's short bottom at rest,
+     higher than its spot, and only bring it down while scrolling. `100%` of
+     <html> can fall short of the screen in the home-screen app; `100lvh` is
+     all of it, as the Campus tab's map (campus-map.css) is sized. */
+  @media (pointer: coarse) {
+    min-height: calc(100lvh + 1px);
+  }
   margin: 0;
   padding: 0;
 
@@ -290,6 +299,14 @@ body {
   -webkit-tap-highlight-color: transparent;
 
   user-select: none;
+}
+
+/* Home-screen app on iOS: a document no taller than the screen (a closed
+   campus day's short note) rubber-bands as a whole, fixed tab bar and header
+   included, where a scrollable one bounces only its content. 1px more than
+   the screen keeps it scrollable whatever the tab shows. */
+@media (display-mode: standalone) and (pointer: coarse) {
+  body { min-height: calc(100% + 1px); }
 }
 
 .noscript-overlay {
@@ -339,18 +356,33 @@ body {
     opacity: 0;
   }
 
-  /* The card zoom's spring and arc (classroom-detail.css): the group's
-     straight-line travel on the spring, the image pair's `translate` bowing
-     it into a curve. --arc-x / --arc-y are written by setArcBetween() before
-     the transition; with none (info, changelog, settings), the arc is flat. */
+  /* The card zoom's spring (classroom-detail.css). The flight to the header
+     replaces this with a spring per axis once the transition is ready
+     (springFlight() in utils/vt-motion.js); info and the changelog keep it. */
   ::view-transition-group(splash-icon) {
     animation-duration: 0.6s;
     animation-timing-function: var(--vt-spring);
   }
+}
 
-  ::view-transition-image-pair(splash-icon) {
-    animation: detail-zoom-arc 0.6s linear both;
-  }
+/* Visually hidden, still read by screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Pages move focus to their title when they open (utils/page-focus.js): that
+   is for assistive tech, so it shows no ring */
+:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay) [tabindex="-1"]:focus,
+:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay):focus {
+  outline: none;
 }
 
 /* Generic HTML Elements */
@@ -2917,7 +2949,7 @@ svg.glass-crack {
 .star-burst {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1002;
+  z-index: 999;
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;

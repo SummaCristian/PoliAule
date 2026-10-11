@@ -13,7 +13,7 @@ import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
 import { openTransferDialog } from './transfer-dialog.js';
 import { seasonalEnabled, setSeasonalEnabled, SEASONAL_KEY } from '../utils/season.js';
 import { presentWithBack } from '../utils/back-stack.js';
-import { createToggle, createSegmentedControl, createStepper, createAlert, createButton, getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState, BLUR_MODE_KEY } from 'vitrium';
+import { createToggle, createSegmentedControl, createStepper, createAlert, createButton, getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState, BLUR_MODE_KEY, setGlassStyle, setRefraction, supportsRefraction } from 'vitrium';
 
 export const PREFERRED_CAMPUS_ENABLED_KEY = 'poliAule_preferredCampusEnabled';
 export const PREFERRED_CAMPUS_ID_KEY      = 'poliAule_preferredCampusId';
@@ -25,6 +25,19 @@ export const INTERVAL_HOURS_KEY    = 'poliAule_intervalHours';
 export const BLOCK_PAST_HOURS_KEY  = 'poliAule_blockPastHours';
 export const DEFAULT_TAB_KEY       = 'poliAule_defaultTab';
 export const LAST_TAB_KEY          = 'poliAule_lastTab';
+// Read before first paint by the inline script in index.html too (data-glass-style)
+export const GLASS_STYLE_KEY       = 'poliAule_glassStyle';
+export const REFRACTION_KEY        = 'poliAule_refraction';
+
+// Vitrium's glass style: 'transparent' (the default) or 'frost'
+export function getGlassStylePref() {
+  return localStorage.getItem(GLASS_STYLE_KEY) === 'frost' ? 'frost' : 'transparent';
+}
+
+// Refraction on or off (default: on); only ever applied where Vitrium can draw it
+export function getRefractionPref() {
+  return localStorage.getItem(REFRACTION_KEY) !== 'false';
+}
 
 // Returns the tab container ID to show on startup
 export function getStartupTabId() {
@@ -50,7 +63,7 @@ let refreshCampusSelectFn = null; // set by buildCampusSection, called on every 
 const RESET_KEYS = [
   LOCALE_KEY, TIME_FORMAT_KEY, HIDE_SUNDAYS_KEY, INTERVAL_HOURS_KEY, BLOCK_PAST_HOURS_KEY,
   SHOW_PARTIAL_KEY, PREFERRED_CAMPUS_ENABLED_KEY, PREFERRED_CAMPUS_ID_KEY, REMEMBER_LAST_CAMPUS_KEY,
-  DEFAULT_TAB_KEY, BLUR_MODE_KEY, SEASONAL_KEY, USE_BETA_BACKEND_KEY,
+  DEFAULT_TAB_KEY, BLUR_MODE_KEY, GLASS_STYLE_KEY, REFRACTION_KEY, SEASONAL_KEY, USE_BETA_BACKEND_KEY,
   'poliAule_autoSearch', 'poliAule_liveSearch',
 ];
 
@@ -505,6 +518,37 @@ function buildContent() {
               </button>
             </div>
           </div>
+          <div class="settings-row">
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-transparency" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.glassStyle">${t('settings.glassStyle')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.glassStyleDesc">${t('settings.glassStyleDesc')}</span>
+              </div>
+            </div>
+            <div data-glassstyle-toggle>
+              <button class="lg-seg__item" data-value="transparent">
+                <span class="settings-lang-btn__name" data-i18n="settings.glassStyle.transparent">${t('settings.glassStyle.transparent')}</span>
+              </button>
+              <button class="lg-seg__item" data-value="frost">
+                <span class="settings-lang-btn__name" data-i18n="settings.glassStyle.frost">${t('settings.glassStyle.frost')}</span>
+              </button>
+            </div>
+          </div>
+          ${supportsRefraction() ? `
+          <div class="settings-row" data-refraction-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-prism" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.refraction">${t('settings.refraction')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.refractionDesc">${t('settings.refractionDesc')}</span>
+              </div>
+            </div>
+          </div>` : ''}
           <div class="settings-row" data-seasonal-row>
             <div class="settings-row__icon-title-container">
               <div class="settings-row__icon">
@@ -693,8 +737,28 @@ function buildContent() {
     },
   });
 
+  const glassStyleSeg = createSegmentedControl(content.querySelector('[data-glassstyle-toggle]'), {
+    value: getGlassStylePref(),
+    onSelect(style, { silent }) {
+      if (silent) return;
+      localStorage.setItem(GLASS_STYLE_KEY, style);
+      setGlassStyle(style);
+    },
+  });
+
+  // Wire Refraction toggle (default: true), only where the browser can draw it
+  const refractionRow = content.querySelector('[data-refraction-row]');
+  if (refractionRow) {
+    const refractionToggle = buildToggle(getRefractionPref());
+    refractionRow.appendChild(refractionToggle.el);
+    refractionToggle.onChange = (isOn) => {
+      localStorage.setItem(REFRACTION_KEY, String(isOn));
+      setRefraction(isOn);
+    };
+  }
+
   langSegControl = langSeg;
-  segControls.push(langSeg, timeFmtSeg, defaultTabSeg, blurModeSeg);
+  segControls.push(langSeg, timeFmtSeg, defaultTabSeg, blurModeSeg, glassStyleSeg);
 
   // Transfer to another device: QR dialog grows out of the button
   const transferBtn = buildRowButton({

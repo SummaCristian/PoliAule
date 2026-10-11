@@ -21,7 +21,11 @@ import { createPillDragCore } from 'vitrium';
 // `silent` is true only for a caller-initiated selectElement(el, { silent: true })
 // (e.g. an initial auto-select) — callers use it to skip side effects
 // that shouldn't fire on page load.
-export function createPillSelector(container, { isSkipped = el => el.classList.contains('date-skipped'), onSelect } = {}) {
+//
+// Accessibility: the cells are a radio group (arrow keys come from the core;
+// the focus stop roves with the selection). `label` names the group and
+// `describe(el)` may give a cell a fuller spoken name than its text.
+export function createPillSelector(container, { isSkipped = el => el.classList.contains('date-skipped'), onSelect, label = null, describe = null } = {}) {
   // container's own parent — .date-picker / .detail-schedule-day-selector,
   // both already position:relative. The indicator (+ hit overlay) live here
   // as container's siblings, not its children — same relationship as
@@ -73,6 +77,10 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     indicator.addEventListener('animationend', () => indicator.classList.remove('shake'), { once: true });
   }
 
+  // The committed cell, tracked here too because the core only lists cells
+  // that have a layout (the picker sits in a closed chip most of the time)
+  let chosen = null;
+
   const core = createPillDragCore({
     root: wrapper, items, pill: indicator, hit, activeRow,
     cellSelector: '.date-element-container',
@@ -86,7 +94,36 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     // The shake keyframes (date-indicator-shake in date-picker.css) rotate
     // around the pill's current x.
     onRender: ({ pos }) => indicator.style.setProperty('--indicator-x', `${pos}px`),
-    onChange: (i, { silent }) => onSelect?.(core.cells[i], { silent }),
+    onChange: (i, { silent }) => { chosen = core.cells[i]; syncAria(); onSelect?.(core.cells[i], { silent }); },
+  });
+
+  // Radio semantics on the cells, with one tab stop (the selected cell, else
+  // the first selectable one). Redone whenever the cells or selection change.
+  function syncAria() {
+    items.setAttribute('role', 'radiogroup');
+    if (label) items.setAttribute('aria-label', label);
+    const cells = Array.from(items.querySelectorAll('.date-element-container'));
+    const current = chosen && cells.includes(chosen) ? chosen : null;
+    const stop = current ?? cells.find(c => !isSkipped(c));
+    cells.forEach(cell => {
+      cell.setAttribute('role', 'radio');
+      cell.setAttribute('aria-checked', String(cell === current));
+      if (isSkipped(cell)) cell.setAttribute('aria-disabled', 'true');
+      else cell.removeAttribute('aria-disabled');
+      const spoken = describe?.(cell);
+      if (spoken) cell.setAttribute('aria-label', spoken);
+      cell.tabIndex = cell === stop ? 0 : -1;
+    });
+  }
+
+  // Enter / Space pick the focused cell (the core's arrows move and pick)
+  items.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const cell = e.target.closest?.('.date-element-container');
+    if (!cell) return;
+    e.preventDefault();
+    if (isSkipped(cell)) shake();
+    else selectElement(cell);
   });
 
   // Recompute anchors from the current `.date-element-container` children.
@@ -97,11 +134,14 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     // as direct children of `container` again — keep them inside `items`.
     adoptCells();
     core.refresh({ snap: true });
+    syncAria();
   }
 
   function selectElement(el, { silent = false, animate = true } = {}) {
     const index = core.indexOf(el);
+    chosen = el;
     if (index === -1) {
+      syncAria();
       // el isn't part of the currently laid-out set — most commonly because
       // the whole container is display:none (e.g. the mobile-only day
       // selector while on desktop). onSelect still needs to fire so callers
@@ -116,6 +156,7 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     // (re-)commit and dedupe themselves.
     if (index === core.index) onSelect?.(el, { silent });
     core.select(index, { animate, silent });
+    syncAria();
   }
 
   return {

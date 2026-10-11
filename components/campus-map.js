@@ -366,6 +366,9 @@ function placeEl() {
   const parent = embed?.host ?? campusContainer;
   if (parent && mapEl.parentNode !== parent) parent.appendChild(mapEl);
   mapEl.classList.toggle('campus-map--embedded', !!embed?.host);
+  // The detail page's preview is view-only and says nothing the page doesn't
+  // already (name, campus, map links): out of the tab order and the a11y tree
+  mapEl.inert = !!embed?.host;
 }
 
 async function boot() {
@@ -380,7 +383,9 @@ async function boot() {
 
   const el = document.createElement('div');
   el.className = 'campus-map';
-  el.setAttribute('role', 'application');
+  // A labelled region, not role="application": that would switch screen
+  // readers' browse mode off, and the markers are plain buttons to reach
+  el.setAttribute('role', 'region');
   el.setAttribute('aria-label', t('tabs.campus'));
   mapEl = el;
   placeEl();
@@ -910,6 +915,8 @@ function showBuildingMarkers(mapboxgl, campus) {
     const el = markerElement('button', { name: b.name, alt: (b.altName || '').trim(), cls: b.secondary ? 'map-pin--secondary' : '' });
     el.dataset.building = b.name;
     el.dataset.campus = campus.id;
+    // A bare "2" says little: name it as everywhere else does
+    el.setAttribute('aria-label', [`${t('building.prefix')} ${b.name}`, (b.altName || '').trim()].filter(Boolean).join(', '));
     decorate('marker', el, { campus, building: b });
     // Selects the building in the sheet's own building page (components/
     // campus-buildings.js) and, via the 'buildingchange' listener above,

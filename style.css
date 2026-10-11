@@ -292,6 +292,14 @@ body {
   user-select: none;
 }
 
+/* Home-screen app on iOS: a document no taller than the screen (a closed
+   campus day's short note) rubber-bands as a whole, fixed tab bar and header
+   included, where a scrollable one bounces only its content. 1px more than
+   the screen keeps it scrollable whatever the tab shows. */
+@media (display-mode: standalone) and (pointer: coarse) {
+  body { min-height: calc(100% + 1px); }
+}
+
 .noscript-overlay {
   position: fixed;
   inset: 0;

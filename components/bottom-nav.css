@@ -1,0 +1,31 @@
+/* ============================================================
+   MAIN NAVIGATION
+   The bar itself (glass, sliding pill, rail layout) is Vitrium's tab bar; see
+   components/bottom-nav.js. This holds what is PoliAule's.
+   ============================================================ */
+
+:root {
+  /* The rail sits below the header. +2rem clears the header blur/fade layer's
+     overhang (.header-blur-layers is inset:0 with bottom:-2rem), which would
+     otherwise blur the rail's top. */
+  --lg-tabbar-top-offset: calc(var(--header-height, 84px) + 2rem + 20px);
+}
+
+/* HugeIcons glyphs where Vitrium expects SVGs. */
+.lg-tabbar__icon > i {
+  font-size: var(--text-110);
+  line-height: 1;
+  -webkit-text-stroke: 0.4px currentColor;
+}
+
+.lg-tabbar__prominent > i {
+  font-size: var(--text-110);
+  -webkit-text-stroke: 0.4px currentColor;
+}
+
+@media (min-width: 600px) {
+  .lg-tabbar__icon > i,
+  .lg-tabbar__prominent > i {
+    font-size: var(--text-125);
+  }
+}

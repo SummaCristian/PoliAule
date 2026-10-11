@@ -1,0 +1,91 @@
+/* Card hover preview (card-day-popover.js): Vitrium's popover around one day
+   of the detail page's schedule. The bar, its blocks, closed hours, query
+   region and now line are the detail page's own classes (classroom-detail.css);
+   only the frame around them is here. */
+
+/* Display only, and it opens over neighbouring cards: never let it take the
+   pointer, or it would steal the hover from the card underneath */
+.lg-popover.cdp-popover {
+  pointer-events: none;
+  /* Cards also live inside Vitrium's morph popup (a favourite building opened,
+     --lg-z-popup 1200), above popovers' default 1000. This one is display
+     only and closes on any press, so it can sit over everything */
+  z-index: calc(var(--lg-z-popup, 1200) + 10);
+  /* Vitrium caps popovers at 22rem including its padding; the day needs the
+     room to read */
+  --lg-popover-max-width: min(26rem, calc(100vw - 16px));
+}
+
+.cdp {
+  width: 24rem;
+  max-width: 100%;
+  padding: 0.25rem 0 0.375rem;
+}
+
+.cdp-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.625rem;
+}
+
+.cdp-name {
+  font-size: var(--text-110);
+  font-weight: 800;
+  color: var(--text-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cdp-date {
+  flex: 0 0 auto;
+  font-size: var(--text-80);
+  font-weight: 600;
+  color: var(--text-color-secondary);
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.cdp-ticks {
+  position: relative;
+  height: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.cdp-tick {
+  position: absolute;
+  left: var(--pos);
+  translate: -50% 0;
+  font-size: var(--text-70);
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+}
+
+/* Grid lines behind the (translucent) bar, the now line over it */
+.cdp-bar-wrap {
+  position: relative;
+}
+
+.cdp-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cdp-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--pos);
+  width: 1px;
+  background: color-mix(in srgb, var(--text-color-primary) 8%, transparent);
+}
+
+.cdp-bar {
+  z-index: 1;
+}

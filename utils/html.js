@@ -55,6 +55,42 @@ export function escapeHtml(str) {
 }
 
 /**
+ * Turns HTML entities in a string back into the characters they stand for
+ * ("dell&#39;atti" -> "dell'atti"). PoliMi's occupancy page ships some course
+ * names already entity-encoded, and the scrape stores them as-is; escapeHtml
+ * would then escape the `&` again and the entity would show up literally.
+ * Decode first, escape once on the way into innerHTML. Only entities are
+ * touched (numeric ones and the few named ones that turn up): parsing the
+ * whole string as HTML would also swallow a literal "<…>" in a name.
+ */
+const NAMED_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+export function decodeEntities(str) {
+  const s = String(str);
+  if (!s.includes('&')) return s;
+  return s.replace(/&(?:#(\d+)|#x([0-9a-f]+)|([a-z]+));/gi, (m, dec, hex, name) => {
+    if (name) return NAMED_ENTITIES[name.toLowerCase()] ?? m;
+    const code = dec ? Number(dec) : parseInt(hex, 16);
+    return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m;
+  });
+}
+
+// Splits a query into lowercase words, same rule as classroom-search-data.js's
+// tokenize(). Reimplemented locally (rather than imported) to avoid an import
+// cycle: that module pulls in components/classroom-list.js, which imports this
+// file for escapeHtml/highlight.
+function tokenizeQuery(query) {
+  return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+}
+
+// Same separators classroom-search-data.js ignores in room names ("T11" ->
+// "T.1.1"); duplicated for the same import-cycle reason as tokenizeQuery.
+const ROOM_NAME_SEPARATORS = /[\s._\-/]+/g;
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Validates that a URL uses the https: scheme before it is placed in a
  * security-sensitive attribute such as `href` or `action`.
  *
@@ -78,6 +114,39 @@ export function escapeHtml(str) {
  * or `<`, so a bare safeUrl() call is acceptable there, but the belt-and-suspenders
  * form is always correct.
  */
+/**
+ * Escapes `text` and wraps every case-insensitive occurrence of `query` in it
+ * with <mark> — either the full phrase or any of its individual tokens (so a
+ * multi-word query like "space engineering" highlights both words separately
+ * even when they don't appear adjacent in the matched text). Returns plain
+ * escaped HTML when query is empty.
+ *
+ * Used to highlight the part of a classroom/building/campus name (or search
+ * overlay result) that matched a user's search query.
+ */
+export function highlight(text, query, extraTerms = []) {
+  const safe = escapeHtml(text);
+  if (!query) return safe;
+  // Escape special regex chars, then allow spaces to also match dots (for x.y.z names queried as "x y z")
+  const fullPattern = escapeRegExp(escapeHtml(query)).replace(/ /g, '[\\s.]');
+  const tokenPatterns = tokenizeQuery(query).map(tok => escapeRegExp(escapeHtml(tok)));
+  // "T11" should also mark "T.1.1": the separator-less query with optional
+  // separators between its characters.
+  const compactPattern = [...query.toLowerCase().replace(ROOM_NAME_SEPARATORS, '')]
+    .map(ch => escapeRegExp(escapeHtml(ch)))
+    .join(`(?:${ROOM_NAME_SEPARATORS.source})?`);
+  // Words the search matched through a typo correction (runSearch's
+  // `corrections`), which the literal query can't find on its own.
+  const extraPatterns = extraTerms.map(term => escapeRegExp(escapeHtml(term)));
+  // Longest alternatives first so the full-phrase match (when it exists) wins
+  // over its own individual tokens in the regex alternation.
+  const pattern = [fullPattern, ...tokenPatterns, compactPattern, ...extraPatterns]
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+    .join('|');
+  return safe.replace(new RegExp(`(${pattern})`, 'gi'), '<mark>$1</mark>');
+}
+
 export function safeUrl(url) {
   try {
     return new URL(url).protocol === 'https:' ? url : '#';

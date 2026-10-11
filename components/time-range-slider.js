@@ -2,13 +2,7 @@
 // Horizontal drag-based time range selector. Replaces the two-card picker UI
 // as the primary input; tapping a badge opens the morph popup for typed entry.
 
-import { haptics, defaultPatterns } from './haptics.js';
 
-// Defer haptic out of the pointer event to avoid mobile browser suppression
-// of navigator.vibrate() during active touch handling.
-function triggerHaptic() {
-  setTimeout(() => haptics.trigger(defaultPatterns.light), 0);
-}
 import { openPicker, getPickerCards } from './time-picker.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { t } from '../i18n.js';
@@ -63,7 +57,15 @@ function buildSlider(fromInput, toInput) {
   // ── DOM structure ─────────────────────────────────────────────────────────
 
   const wrapper    = document.createElement('div');
-  wrapper.className = 'trs-wrapper';
+  wrapper.className = 'trs-wrapper lg-ring';
+
+  // Title row — same icon + word treatment as the campus / date picker panels.
+  const title = document.createElement('div');
+  title.className = 'trs-title';
+  title.setAttribute('aria-hidden', 'true');
+  title.innerHTML =
+    `<i class="hgi-stroke hgi-clock-01 trs-title-icon"></i>` +
+    `<span class="trs-title-text" data-i18n="timepicker.timeLabel">${t('timepicker.timeLabel')}</span>`;
 
   const barWrapper = document.createElement('div');
   barWrapper.className = 'trs-bar-wrapper';
@@ -71,14 +73,14 @@ function buildSlider(fromInput, toInput) {
   const fromBadge = document.createElement('button');
   fromBadge.type = 'button';
   fromBadge.className = 'trs-badge trs-badge--from';
-  fromBadge.setAttribute('aria-label', 'Edit start time');
+  fromBadge.setAttribute('aria-label', t('a11y.editStartTime'));
   const fromText = document.createElement('span');
   fromBadge.appendChild(fromText);
 
   const toBadge = document.createElement('button');
   toBadge.type = 'button';
   toBadge.className = 'trs-badge trs-badge--to';
-  toBadge.setAttribute('aria-label', 'Edit end time');
+  toBadge.setAttribute('aria-label', t('a11y.editEndTime'));
   const toText = document.createElement('span');
   toBadge.appendChild(toText);
 
@@ -96,7 +98,7 @@ function buildSlider(fromInput, toInput) {
   fromHandle.className = 'trs-handle trs-handle--from';
   fromHandle.tabIndex = 0;
   fromHandle.setAttribute('role', 'slider');
-  fromHandle.setAttribute('aria-label', 'Start time');
+  fromHandle.setAttribute('aria-label', t('timepicker.startTime'));
   fromHandle.setAttribute('aria-valuemin', String(MIN));
   fromHandle.setAttribute('aria-valuemax', String(MAX));
 
@@ -104,7 +106,7 @@ function buildSlider(fromInput, toInput) {
   toHandle.className = 'trs-handle trs-handle--to';
   toHandle.tabIndex = 0;
   toHandle.setAttribute('role', 'slider');
-  toHandle.setAttribute('aria-label', 'End time');
+  toHandle.setAttribute('aria-label', t('a11y.endTime'));
   toHandle.setAttribute('aria-valuemin', String(MIN));
   toHandle.setAttribute('aria-valuemax', String(MAX));
 
@@ -113,7 +115,7 @@ function buildSlider(fromInput, toInput) {
 
   bar.append(range, fromHandle, toHandle);
   barWrapper.append(fromBadge, toBadge, bar, ticks);
-  wrapper.append(barWrapper);
+  wrapper.append(title, barWrapper);
 
   // ── Geometry helpers ──────────────────────────────────────────────────────
 
@@ -245,7 +247,6 @@ function buildSlider(fromInput, toInput) {
     bar.classList.add('trs-bar--snapping');
     render();
     setTimeout(() => bar.classList.remove('trs-bar--snapping'), 300);
-    triggerHaptic();
   });
 
   // ── Input sync ────────────────────────────────────────────────────────────
@@ -288,8 +289,6 @@ function buildSlider(fromInput, toInput) {
   let panAnchorTo   = 0;
   let pointerDownX  = 0;
   let didDrag       = false;
-  let lastSnapFrom  = null; // track last snapped position to fire haptics only on change
-  let lastSnapTo    = null;
 
   function onPointerDown(e) {
     if (e.button !== 0 && e.pointerType !== 'touch') return;
@@ -309,12 +308,10 @@ function buildSlider(fromInput, toInput) {
 
     if (dFrom <= hitPx && dFrom <= dTo) {
       dragMode = 'from';
-      lastSnapFrom = fromMin;
       fromHandle.classList.add('trs-handle--dragging');
       fromBadge.classList.add('trs-badge--dragging');
     } else if (dTo <= hitPx) {
       dragMode = 'to';
-      lastSnapTo = toMin;
       toHandle.classList.add('trs-handle--dragging');
       toBadge.classList.add('trs-badge--dragging');
     } else if (rawM >= fromMin - SNAP * 0.5 && rawM <= toMin + SNAP * 0.5) {
@@ -322,15 +319,12 @@ function buildSlider(fromInput, toInput) {
       panAnchorX    = e.clientX;
       panAnchorFrom = fromMin;
       panAnchorTo   = toMin;
-      lastSnapFrom  = fromMin;
-      lastSnapTo    = toMin;
       fromBadge.classList.add('trs-badge--dragging');
       toBadge.classList.add('trs-badge--dragging');
     } else {
       return;
     }
 
-    triggerHaptic();
     bar.setPointerCapture(e.pointerId);
   }
 
@@ -348,7 +342,6 @@ function buildSlider(fromInput, toInput) {
       const snapped = snapTo(vFrom);
       if (snapped !== fromMin) {
         fromMin = snapped;
-        triggerHaptic();
         syncInputs();
       }
     } else if (dragMode === 'to') {
@@ -356,7 +349,6 @@ function buildSlider(fromInput, toInput) {
       const snapped = snapTo(vTo);
       if (snapped !== toMin) {
         toMin = snapped;
-        triggerHaptic();
         syncInputs();
       }
     } else {
@@ -375,7 +367,6 @@ function buildSlider(fromInput, toInput) {
       if (snappedF !== fromMin && snappedT <= MAX && snappedF >= MIN) {
         fromMin = snappedF;
         toMin   = snappedT;
-        triggerHaptic();
         syncInputs();
       }
     }
@@ -403,7 +394,6 @@ function buildSlider(fromInput, toInput) {
     }, 300);
 
     if (wasDrag) {
-      triggerHaptic();
       // Reflect any corrections applied by setupTimePickers' input listeners
       const cFrom = timeToMinutes(fromInput.value);
       const cTo   = timeToMinutes(toInput.value);
@@ -412,7 +402,6 @@ function buildSlider(fromInput, toInput) {
       }
     } else {
       // Tap (no significant movement) — open popup for the tapped handle
-      triggerHaptic();
       if (endedDragMode === 'from') openFrom();
       else if (endedDragMode === 'to')   openTo();
     }
@@ -439,8 +428,8 @@ function buildSlider(fromInput, toInput) {
     openPicker(toCard, toCard._sourceRect);
   }
 
-  fromBadge.addEventListener('click', () => { triggerHaptic(); openFrom(); });
-  toBadge.addEventListener('click',   () => { triggerHaptic(); openTo(); });
+  fromBadge.addEventListener('click', () => { openFrom(); });
+  toBadge.addEventListener('click',   () => { openTo(); });
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
 
@@ -448,11 +437,11 @@ function buildSlider(fromInput, toInput) {
     const step = e.shiftKey ? 60 : SNAP;
     if (e.key === 'ArrowLeft') {
       fromMin = Math.max(MIN, fromMin - step);
-      render(); syncInputs(); triggerHaptic();
+      render(); syncInputs();
       e.preventDefault();
     } else if (e.key === 'ArrowRight') {
       fromMin = Math.min(toMin - SNAP, fromMin + step);
-      render(); syncInputs(); triggerHaptic();
+      render(); syncInputs();
       e.preventDefault();
     } else if (e.key === 'Enter' || e.key === ' ') {
       openFrom(); e.preventDefault();
@@ -463,11 +452,11 @@ function buildSlider(fromInput, toInput) {
     const step = e.shiftKey ? 60 : SNAP;
     if (e.key === 'ArrowLeft') {
       toMin = Math.max(fromMin + SNAP, toMin - step);
-      render(); syncInputs(); triggerHaptic();
+      render(); syncInputs();
       e.preventDefault();
     } else if (e.key === 'ArrowRight') {
       toMin = Math.min(MAX, toMin + step);
-      render(); syncInputs(); triggerHaptic();
+      render(); syncInputs();
       e.preventDefault();
     } else if (e.key === 'Enter' || e.key === ' ') {
       openTo(); e.preventDefault();
@@ -505,7 +494,13 @@ export function initTimeRangeSlider() {
   if (!container) return;
 
   const slider = buildSlider(fromInput, toInput);
-  container.appendChild(slider);
+
+  // When wrapped in <time-range-chip-picker>, the slider lives inside that
+  // component's morph popup; otherwise it renders inline in the container.
+  const chip = document.querySelector('time-range-chip-picker');
+  const mount = chip?.getMountPoint?.() ?? container;
+  mount.appendChild(slider);
+  chip?.setSlider?.(slider);
 
   // Pre-register source rects so switchPicker has valid positions for both
   // cards even before the user taps either badge.

@@ -2,7 +2,7 @@ name: Fetch Classroom Photos
 
 on:
   schedule:
-    - cron: '0 5 1 * *'  # Once a month, 1st at 5am UTC (clear of daily occupancy 3am/10am and weekly opening-hours Sunday 6am)
+    - cron: '0 5 1 * *'  # Once a month, 1st at 5am UTC (shares the hourly occupancy run's 5am slot, which is harmless: they write different R2 keys; weekly opening-hours runs Sunday 6am)
   workflow_dispatch:      # Allow manual runs from the GitHub Actions tab
     inputs:
       no_delay:
@@ -13,6 +13,10 @@ on:
         description: 'Also (re)write thumbnails for unchanged photos'
         type: boolean
         default: false
+
+# Nothing here writes to the repo or calls the GitHub API: the checkout is read-only
+permissions:
+  contents: read
 
 jobs:
   fetch:

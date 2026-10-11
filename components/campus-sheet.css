@@ -1,0 +1,332 @@
+/* ============================================================
+   CAMPUS SHEET
+   The panel itself (glass, detents, drag, handle, header) is Vitrium's sheet;
+   see components/campus-sheet.js. This file holds the content it carries: the
+   campus picker row and the buildings grid.
+   ============================================================ */
+
+/* The content is scrolled under the header and above the floating tab bar, so
+   it needs more bottom clearance (and a longer bottom fade) than the default:
+   at least 5.5rem, or the tab bar's height plus 1.5rem on mobile. */
+.campus-sheet-content {
+  --csheet-fade-bottom: 5.5rem;
+  padding-bottom: max(var(--csheet-fade-bottom), calc(var(--bn-tabbar-height, 76px) + 1.5rem));
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--lg-sheet-header-height, 4.75rem) - var(--lg-sheet-fade)), #fff var(--lg-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--lg-sheet-header-height, 4.75rem) - var(--lg-sheet-fade)), #fff var(--lg-sheet-header-height, 4.75rem), #fff calc(100% - var(--csheet-fade-bottom)), transparent 100%);
+}
+
+/* Vitrium disables the elevated ring on bottom sheets. Restate that after its
+   generic .lg-glass::before rule so the Campus sheet cannot generate it. */
+.campus-sheet .lg-sheet__glass::before {
+  content: none !important;
+}
+
+/* ── Buildings page ───────────────────────────────────────────────────────
+   The sheet's content: a campus picker (components/campus-buildings.js — a
+   second instance of the Available tab's own morphing <campus-chip-picker>)
+   fixed in .campus-sheet-header above, a scrolling grid of that campus's
+   buildings in .campus-sheet-content below it. The cards reuse the
+   Available tab's building folders (.bo-card, building-overview.css) with
+   the address in place of their occupancy counts — browsing here isn't tied
+   to a date/time. */
+
+/* Title              [Center btn] Picker
+   A bit more inset than the grid below (which already gets .campus-sheet-
+   content's own 1.25rem): the sheet's top corners are noticeably rounder
+   than its sides, so the same inset reads as tighter up here. */
+.campus-sheet-toprow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0 0.5rem;
+}
+
+/* Groups the back button (building page only) with the title/subtitle, so
+   the two move as one unit at the left of .campus-sheet-toprow while
+   .campus-sheet-actions stays pinned right (the row's own space-between). */
+.campus-sheet-leftgroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.campus-sheet-titlebox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  /* body sets a global `text-align: center` — override back to left. */
+  text-align: start;
+}
+
+.campus-sheet-title {
+  margin: 0;
+  font-size: var(--text-150);
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--text-color-primary);
+}
+
+.campus-sheet-subtitle {
+  font-size: var(--text-80);
+}
+
+.campus-sheet-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Recenters the map (components/campus-map.js) on the picker's campus — same
+   glass icon-button recipe as .bo-close (building-overview.css). Hidden by
+   default; campus-buildings.js shows it only once the map reports itself
+   'campusmapshifted' away from that campus.
+
+   .campus-sheet-backbtn (the building page's back button) shares this exact
+   recipe — same glass circle, same pop in/out — swapping only its icon and
+   what toggles its [hidden]: the current page (campus vs. building) instead
+   of the map's shifted state. So does .campus-sheet-star (stars the open
+   building), shown on the building page only. */
+.campus-sheet-recenter,
+.campus-sheet-backbtn,
+.campus-sheet-star {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  color: var(--text-color-secondary);
+
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
+}
+
+/* `.liquid-glass` (Vitrium's liquid-glass.css) sets its own
+   `transition` shorthand on the same single-class specificity — whichever
+   rule is later in the cascade wins the WHOLE property, silently dropping
+   the other's. `.campus-sheet-recenter.liquid-glass` outranks both and
+   merges the two lists. Pop in/out on appear/disappear uses the same overshoot
+   ease + durations as the header's own controls (header-ctl-scale-in/-out,
+   classroom-detail.css). `display` is part of the transition
+   (`allow-discrete`) so toggling the `hidden` attribute animates instead of
+   cutting instantly; `@starting-style` below seeds the "just appeared" frame
+   the way a keyframe `from` would. */
+.campus-sheet-recenter.liquid-glass,
+.campus-sheet-backbtn.liquid-glass,
+.campus-sheet-star.liquid-glass {
+  transition:
+    opacity 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+    display 0.32s allow-discrete,
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
+    filter 0.2s ease;
+}
+
+.campus-sheet-recenter::after,
+.campus-sheet-backbtn::after,
+.campus-sheet-star::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
+}
+
+.campus-sheet-recenter .hgi-stroke,
+.campus-sheet-backbtn .hgi-stroke,
+.campus-sheet-star .hgi-stroke {
+  font-size: var(--text-125);
+}
+
+/* This class's own `display: inline-flex` above outranks the UA `[hidden]`
+   rule (an author style always beats a UA one, regardless of specificity) —
+   re-assert it, the same fix any class that sets `display` needs.
+   Shrinks/fades out first (header-ctl-scale-out's own ease-in, quicker than
+   the pop-in), `display` only flipping to `none` once that's done. */
+.campus-sheet-recenter.liquid-glass[hidden],
+.campus-sheet-backbtn.liquid-glass[hidden],
+.campus-sheet-star.liquid-glass[hidden] {
+  display: none;
+  opacity: 0;
+  transform: scale(0.3);
+  transition:
+    opacity 0.2s ease-in,
+    transform 0.2s ease-in,
+    display 0.2s allow-discrete;
+}
+
+@starting-style {
+  .campus-sheet-recenter:not([hidden]),
+  .campus-sheet-backbtn:not([hidden]),
+  .campus-sheet-star:not([hidden]) {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-sheet-recenter.liquid-glass,
+  .campus-sheet-recenter.liquid-glass[hidden],
+  .campus-sheet-backbtn.liquid-glass,
+  .campus-sheet-star.liquid-glass,
+  .campus-sheet-backbtn.liquid-glass[hidden],
+  .campus-sheet-star.liquid-glass[hidden] {
+    transition: none;
+  }
+}
+
+/* Mobile only: hidden at the 'full' detent (desktop's fixed-width panel shows
+   it at all 3 — see campus-sheet.js's snapToDetent(), which sets this).
+   Only the recenter button — the back button stays available at every
+   detent, it's primary navigation rather than an extra. */
+@media (max-width: 599.98px) {
+  .campus-sheet[data-detent="full"] .campus-sheet-recenter {
+    display: none;
+  }
+}
+
+/* Wraps whichever page (campus grid or building grid, components/
+   campus-buildings.js) is on screen. `position: relative` at rest too, so
+   the absolutely-positioned pages a transition temporarily stacks inside it
+   anchor to its own box rather than drifting up to the next positioned
+   ancestor. `overflow` only clips while `.csp-animating` — the rest of the
+   time nothing needs clipping, and clipping unconditionally would cut a
+   card's own drop shadow/hover scale right at the panel's padding edge. */
+.campus-sheet-pageswap {
+  position: relative;
+}
+
+.campus-sheet-pageswap.csp-animating {
+  overflow: hidden;
+}
+
+/* Plain in-place cross-fade (components/campus-buildings.js's
+   crossfadePage()) — switching straight from one building's page to
+   another's via a map marker tap, or re-rendering the current page after a
+   language switch. A declarative `animation`, not a JS-driven `transition`:
+   it starts the moment the class lands on a rendered element, no separate
+   "set the start state, force a reflow, flip to the end state next frame"
+   choreography for something else (the map's own camera fly, competing for
+   the same rendering pipeline) to throw off. Duration/easing intentionally
+   match .campus-sheet-page (forward/back)'s own slide, above. */
+.campus-sheet-page.csp-fade-out {
+  animation: csp-fade-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.campus-sheet-page.csp-fade-in {
+  animation: csp-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes csp-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes csp-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-sheet-page.csp-fade-out,
+  .campus-sheet-page.csp-fade-in {
+    animation: none;
+  }
+}
+
+.campus-sheet-grid {
+  padding: 0;
+  /* A flat 2-way split, not `auto-fill`/`auto-fit`: the sheet's own width
+     actually changes with its drag detent on mobile (campus-sheet.js narrows
+     it at the collapsed detent to stay concentric with the tabbar pill — see
+     sheetGeometry()), and a width-driven column count would count out one of
+     the two columns right at that narrowest point. Cards just get a little
+     narrower there instead — same fixed-2-up approach as building-overview.css's
+     own mobile grid. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Another campus picked: the new folders rise in, staggered, once the old
+   ones have drifted away (utils/layout-flip.js morphRender's `swap`, the
+   same entrance as the Available tab's cards) */
+.lf-swapping .campus-sheet-grid > .campus-sheet-card {
+  animation: card-swap-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--appear-delay, 0ms) + var(--lf-wait, 0ms));
+}
+
+/* The folder's footer here is the building's address instead of the
+   Available tab's status counts: browsing isn't tied to a date/time. */
+.campus-sheet-card-address {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--text-70);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--folder-text-secondary);
+}
+
+/* "Other buildings" toggle above the campus grid (the Available tab's
+   .results-filter-row / .results-filter-btn, classroom-list.css). */
+.campus-sheet-filter-row {
+  padding: 0 0 0.75rem;
+}
+
+/* A secondary campus, or a building with no classrooms: the Available tab's
+   "No results" block (.empty-container-*, classroom-list.css). */
+.campus-sheet-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 0 2rem;
+  text-align: center;
+}
+
+.campus-sheet-empty .empty-container-icon {
+  font-size: 5rem !important;
+}
+
+.campus-sheet-empty .empty-container-subtitle {
+  margin: 0 1.5rem;
+}
+
+/* The building page's grid holds actual classroom cards (.classroom-card,
+   reused straight from the Available tab), not the wider .bo-card building
+   tiles above — so it drops .campus-sheet-grid's fixed 2-up split for the
+   same auto-fill/8.5rem-floor sizing the Available tab's own results grid
+   uses (.building-section, classroom-list.css), keeping card size consistent
+   between the two places the same card shows up. */
+.campus-sheet-classroom-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr));
+  gap: 0.75rem;
+}
+
+@media (min-width: 600px) {
+  .campus-sheet-content {
+    /* Desktop's bottom-nav is a side rail, not a floating overlay, so no tabbar
+       clearance, but still keep at least --csheet-fade-bottom so the last card
+       can scroll fully clear of the fade. */
+    padding-bottom: var(--csheet-fade-bottom);
+  }
+}

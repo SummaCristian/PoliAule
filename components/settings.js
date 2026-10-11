@@ -1,26 +1,43 @@
 // components/settings.js
-// Settings button that morphs into a centered popup.
-// Contains the language switcher and any future settings.
+// The settings themselves: their storage keys, the start-up restorers, and the
+// sections of controls, built once and handed to the settings page
+// (components/settings-page.js), which owns the #settings route.
 
-import { haptics, defaultPatterns } from './haptics.js';
-import { t, getLocale, setLocale, onLanguageSwitch, animateI18nElement } from '../i18n.js';
+import { t, getLocale, setLocale, onLanguageSwitch, animateI18nElement, STORAGE_KEY as LOCALE_KEY } from '../i18n.js';
+import { settingsPage } from './settings-page.js';
 import { classroomsData } from '../available-rooms-script.js';
 import { selectCampusById } from './campus-picker.js';
+import { isSecondaryCampus } from '../utils/secondary.js';
 import { STORAGE_KEY as TIME_FORMAT_KEY } from '../utils/time-format.js';
+import { IS_STABLE_BUILD, USE_BETA_BACKEND_KEY } from '../config.js';
+import { openTransferDialog } from './transfer-dialog.js';
+import { seasonalEnabled, setSeasonalEnabled, SEASONAL_KEY } from '../utils/season.js';
+import { presentWithBack } from '../utils/back-stack.js';
+import { createToggle, createSegmentedControl, createStepper, createAlert, createButton, getBlurMode, setBlurMode, reevaluateBlurCapability, applyBlurState, BLUR_MODE_KEY, setGlassStyle, setRefraction, supportsRefraction } from 'vitrium';
 
-const TRANSITION_DURATION = 420;
-
-const PREFERRED_CAMPUS_ENABLED_KEY = 'poliAule_preferredCampusEnabled';
-const PREFERRED_CAMPUS_ID_KEY      = 'poliAule_preferredCampusId';
-const REMEMBER_LAST_CAMPUS_KEY     = 'poliAule_rememberLastCampus';
+export const PREFERRED_CAMPUS_ENABLED_KEY = 'poliAule_preferredCampusEnabled';
+export const PREFERRED_CAMPUS_ID_KEY      = 'poliAule_preferredCampusId';
+export const REMEMBER_LAST_CAMPUS_KEY     = 'poliAule_rememberLastCampus';
 const LAST_CAMPUS_ID_KEY           = 'poliAule_lastCampusId';
-const HIDE_SUNDAYS_KEY             = 'poliAule_hideSundays';
+export const HIDE_SUNDAYS_KEY             = 'poliAule_hideSundays';
 export const SHOW_PARTIAL_KEY      = 'poliAule_showPartial';
 export const INTERVAL_HOURS_KEY    = 'poliAule_intervalHours';
+export const BLOCK_PAST_HOURS_KEY  = 'poliAule_blockPastHours';
 export const DEFAULT_TAB_KEY       = 'poliAule_defaultTab';
 export const LAST_TAB_KEY          = 'poliAule_lastTab';
-export const AUTO_SEARCH_KEY       = 'poliAule_autoSearch';
-export const LIVE_SEARCH_KEY       = 'poliAule_liveSearch';
+// Read before first paint by the inline script in index.html too (data-glass-style)
+export const GLASS_STYLE_KEY       = 'poliAule_glassStyle';
+export const REFRACTION_KEY        = 'poliAule_refraction';
+
+// Vitrium's glass style: 'transparent' (the default) or 'frost'
+export function getGlassStylePref() {
+  return localStorage.getItem(GLASS_STYLE_KEY) === 'frost' ? 'frost' : 'transparent';
+}
+
+// Refraction on or off (default: on); only ever applied where Vitrium can draw it
+export function getRefractionPref() {
+  return localStorage.getItem(REFRACTION_KEY) !== 'false';
+}
 
 // Returns the tab container ID to show on startup
 export function getStartupTabId() {
@@ -34,194 +51,41 @@ export function getStartupTabId() {
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-let isAnimating = false;
-let isOpen = false;
-let overlay = null;
-
-// Module-level refs set by initSettings()
-let triggerEl = null;
-let popupEl = null;
-let positionIndicatorFn = null;
-let positionTimeFmtIndicatorFn = null;
-let positionDefaultTabIndicatorFn = null;
+let langSegControl = null; // the language picker, re-synced when the locale changes elsewhere
+let segControls = []; // segmented controls + toggles, re-measured whenever the page is shown
 let refreshCampusSelectFn = null; // set by buildCampusSection, called on every open
 
-// ── Geometry helpers ──────────────────────────────────────────────────────────
+// ── Reset ─────────────────────────────────────────────────────────────────────
 
-function getPopupTarget() {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const w = Math.min(400, vw - 32);
+// Every setting on the page, plus two left behind by the removed Auto-Search
+// and Live Search toggles. Favourites, caches, the last tab / campus and the
+// device's glass benchmark verdict are not settings, and stay.
+const RESET_KEYS = [
+  LOCALE_KEY, TIME_FORMAT_KEY, HIDE_SUNDAYS_KEY, INTERVAL_HOURS_KEY, BLOCK_PAST_HOURS_KEY,
+  SHOW_PARTIAL_KEY, PREFERRED_CAMPUS_ENABLED_KEY, PREFERRED_CAMPUS_ID_KEY, REMEMBER_LAST_CAMPUS_KEY,
+  DEFAULT_TAB_KEY, BLUR_MODE_KEY, GLASS_STYLE_KEY, REFRACTION_KEY, SEASONAL_KEY, USE_BETA_BACKEND_KEY,
+  'poliAule_autoSearch', 'poliAule_liveSearch',
+];
 
-  // Measure natural content height at the target width
-  popupEl.style.width = w + 'px';
-  popupEl.style.height = 'auto';
-  const naturalH = popupEl.scrollHeight;
-  popupEl.style.height = ''; // applyGeometry sets the final value immediately after
-
-  const h = Math.min(naturalH, vh - 120);
-  return {
-    left: (vw - w) / 2,
-    top: (vh - h) / 2,
-    width: w,
-    height: h,
-    borderRadius: '22px',
-  };
-}
-
-function applyGeometry(el, { left, top, width, height, borderRadius }) {
-  el.style.left = left + 'px';
-  el.style.top = top + 'px';
-  el.style.width = width + 'px';
-  el.style.height = height + 'px';
-  el.style.borderRadius = borderRadius;
-}
-
-function onTransitionEnd(el, cb) {
-  const fallback = setTimeout(cb, TRANSITION_DURATION + 50);
-  const handler = e => {
-    if (e.propertyName !== 'transform') return;
-    clearTimeout(fallback);
-    el.removeEventListener('transitionend', handler);
-    cb();
-  };
-  el.addEventListener('transitionend', handler);
-}
-
-// ── Scroll lock ───────────────────────────────────────────────────────────────
-
-function preventScroll(e) {
-  const inner = e.target.closest('.settings-popup__inner');
-  // Only hand off to native scroll when the inner actually overflows —
-  // otherwise overscroll-behavior: contain has no scroll context to contain
-  // and the event would fall through to the page behind.
-  if (inner && inner.scrollHeight > inner.clientHeight) return;
-  e.preventDefault();
-}
-
-function lockScroll() {
-  window.addEventListener('wheel', preventScroll, { passive: false });
-  window.addEventListener('touchmove', preventScroll, { passive: false });
-}
-
-function unlockScroll() {
-  window.removeEventListener('wheel', preventScroll);
-  window.removeEventListener('touchmove', preventScroll);
-}
-
-// ── Overlay ───────────────────────────────────────────────────────────────────
-
-function getOverlay() {
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.className = 'settings-overlay';
-    overlay.addEventListener('click', closeSettings);
-    overlay.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-    overlay.addEventListener('wheel', e => e.preventDefault(), { passive: false });
-    document.body.appendChild(overlay);
+// Clears them and reloads, like an import (components/transfer-dialog.js):
+// most settings are only read at start-up. The page reopens on #settings.
+async function confirmReset(from) {
+  const alert = createAlert({
+    title: t('settings.resetTitle'),
+    message: t('settings.resetMessage'),
+    transition: 'morph',
+    actions: [
+      { id: 'cancel', label: t('import.cancel'), role: 'cancel' },
+      { id: 'reset', label: t('settings.resetButton'), role: 'destructive' },
+    ],
+  });
+  const choice = await presentWithBack(alert, { from }); // Back cancels it
+  setTimeout(() => alert.destroy(), 600);
+  if (choice !== 'reset') return;
+  for (const key of RESET_KEYS) {
+    try { localStorage.removeItem(key); } catch { /* storage unavailable */ }
   }
-  return overlay;
-}
-
-function removeOverlay() {
-  if (!overlay) return;
-  overlay.addEventListener('transitionend', () => {
-    overlay?.remove();
-    overlay = null;
-  }, { once: true });
-}
-
-// ── Open / close ──────────────────────────────────────────────────────────────
-
-function openSettings() {
-  if (isAnimating || isOpen) return;
-  isAnimating = true;
-
-  lockScroll();
-
-  const rect = triggerEl.getBoundingClientRect();
-
-  popupEl.style.transition = 'none';
-  popupEl.style.display = 'flex'; // must be visible before getPopupTarget() measures scrollHeight
-
-  const target = getPopupTarget(); // measures scrollHeight — needs display:flex
-
-  // Place popup at its final position/size instantly — only transform animates
-  applyGeometry(popupEl, target);
-  popupEl.style.boxShadow = 'var(--shadow)';
-
-  // Start with the popup visually sitting on the button:
-  // translate its center to the button's center, then scale each axis independently
-  // so the popup exactly matches the button's dimensions (preserving its circle shape).
-  const scaleX = rect.width  / target.width;
-  const scaleY = rect.height / target.height;
-  const tx = (rect.left + rect.width  / 2) - (target.left + target.width  / 2);
-  const ty = (rect.top  + rect.height / 2) - (target.top  + target.height / 2);
-  popupEl.style.transformOrigin = '50% 50%';
-  popupEl.style.transform       = `translate(${tx}px, ${ty}px) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`;
-  popupEl.style.borderRadius    = '50%';
-
-  triggerEl.classList.add('settings-btn--morphing');
-
-  popupEl.getBoundingClientRect(); // force reflow
-  positionIndicatorFn?.(false);            // snap lang indicator before morph animation starts
-  positionTimeFmtIndicatorFn?.(false);     // snap time format indicator before morph animation starts
-  positionDefaultTabIndicatorFn?.(false);  // snap default tab indicator before morph animation starts
-  refreshCampusSelectFn?.();            // re-populate campus select now that data may be loaded
-  popupEl.style.transition = '';
-
-  requestAnimationFrame(() => {
-    popupEl.style.transform    = 'translate(0px, 0px) scale(1)';
-    popupEl.style.borderRadius = '22px';
-    popupEl.style.boxShadow    = 'var(--tp-shadow-lg)';
-    popupEl.classList.add('settings-popup--open');
-    getOverlay().classList.add('settings-overlay--active');
-  });
-
-  onTransitionEnd(popupEl, () => {
-    popupEl.style.transform       = '';
-    popupEl.style.transformOrigin = '';
-    isAnimating = false;
-    isOpen = true;
-  });
-}
-
-function closeSettings() {
-  if (isAnimating || !isOpen) return;
-  isAnimating = true;
-
-  const rect      = triggerEl.getBoundingClientRect();
-  const popupRect = popupEl.getBoundingClientRect();
-
-  // Translate the popup's center to the button's center, then scale each axis
-  // independently so the popup's final visual size exactly matches the button's
-  // dimensions — ensuring a circle, not a vertical oval on tall popups.
-  const scaleX = rect.width  / popupRect.width;
-  const scaleY = rect.height / popupRect.height;
-  const tx = (rect.left + rect.width  / 2) - (popupRect.left + popupRect.width  / 2);
-  const ty = (rect.top  + rect.height / 2) - (popupRect.top  + popupRect.height / 2);
-
-  popupEl.classList.remove('settings-popup--open');
-  getOverlay().classList.remove('settings-overlay--active');
-  removeOverlay();
-
-  requestAnimationFrame(() => {
-    popupEl.style.transformOrigin = '50% 50%';
-    popupEl.style.transform    = `translate(${tx}px, ${ty}px) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`;
-    popupEl.style.borderRadius = '50%';
-    popupEl.style.boxShadow    = 'var(--shadow)';
-  });
-
-  onTransitionEnd(popupEl, () => {
-    popupEl.style.display         = 'none';
-    popupEl.style.transform       = '';
-    popupEl.style.transformOrigin = '';
-    popupEl.style.borderRadius    = '';
-    triggerEl.classList.remove('settings-btn--morphing');
-    isOpen = false;
-    isAnimating = false;
-    unlockScroll();
-  });
+  location.reload();
 }
 
 // ── Startup campus restorers ──────────────────────────────────────────────────
@@ -242,68 +106,24 @@ export function applyRememberLastCampusIfEnabled() {
 
 // ── Toggle helpers ────────────────────────────────────────────────────────────
 
-function buildStepper(value, min, max, format, onChange) {
-  let current = Math.max(min, Math.min(max, value));
-
-  const el = document.createElement('div');
-  el.className = 'settings-stepper';
-
-  const minusBtn = document.createElement('button');
-  minusBtn.type = 'button';
-  minusBtn.className = 'settings-stepper__btn';
-  minusBtn.innerHTML = '<span class="material-symbols-outlined">remove</span>';
-
-  const valueEl = document.createElement('span');
-  valueEl.className = 'settings-stepper__value';
-
-  const plusBtn = document.createElement('button');
-  plusBtn.type = 'button';
-  plusBtn.className = 'settings-stepper__btn';
-  plusBtn.innerHTML = '<span class="material-symbols-outlined">add</span>';
-
-  function refresh() {
-    valueEl.textContent = format(current);
-    minusBtn.disabled = current <= min;
-    plusBtn.disabled = current >= max;
-  }
-
-  minusBtn.addEventListener('click', () => {
-    if (current <= min) return;
-    current--;
-    refresh();
-    haptics.trigger(defaultPatterns.light);
-    onChange(current);
-  });
-
-  plusBtn.addEventListener('click', () => {
-    if (current >= max) return;
-    current++;
-    refresh();
-    haptics.trigger(defaultPatterns.light);
-    onChange(current);
-  });
-
-  refresh();
-  el.appendChild(minusBtn);
-  el.appendChild(valueEl);
-  el.appendChild(plusBtn);
-  return el;
-}
-
-function buildToggle(isOn) {
-  const btn = document.createElement('button');
-  btn.className = 'settings-toggle' + (isOn ? ' on' : '');
-  btn.setAttribute('role', 'switch');
-  btn.setAttribute('aria-checked', String(isOn));
-  const thumb = document.createElement('span');
-  thumb.className = 'settings-toggle__thumb';
-  btn.appendChild(thumb);
+// A row's action: Vitrium's glass pill in clear glass, sized for the row
+// (settings.css). Its label follows the language through `data-i18n`.
+function buildRowButton({ icon, textKey, className = '', onClick }) {
+  const btn = createButton({ icon, text: t(textKey), className: `settings-row-btn lg-glass--clear ${className}`, onClick });
+  btn.querySelector('.lg-button-label').dataset.i18n = textKey;
   return btn;
 }
 
-function setToggleState(btn, isOn) {
-  btn.classList.toggle('on', isOn);
-  btn.setAttribute('aria-checked', String(isOn));
+// Returns a createToggle() handle; assign `.onChange = isOn => ...` afterwards
+// (Vitrium takes onChange at creation, but the handlers here are wired up after
+// the rows exist, so the handle forwards to whatever was assigned last).
+// Registered so the page can snap its thumb into place before it's shown.
+function buildToggle(isOn) {
+  let handler = null;
+  const toggle = createToggle({ value: isOn, onChange: (v) => handler?.(v) });
+  Object.defineProperty(toggle, 'onChange', { get: () => handler, set: (fn) => { handler = fn; } });
+  segControls.push(toggle);
+  return toggle;
 }
 
 // ── Campus section ────────────────────────────────────────────────────────────
@@ -325,7 +145,7 @@ function buildCampusSection() {
   section.innerHTML = `
     <div class="settings-section__header">
       <div class="settings-section__icon-badge">
-        <span class="material-symbols-outlined">location_on</span>
+        <i class="hgi-stroke hgi-location-01" aria-hidden="true"></i>
       </div>
       <span class="settings-section__header-label" data-campus-label></span>
     </div>
@@ -333,7 +153,7 @@ function buildCampusSection() {
   const headerLabel = section.querySelector('[data-campus-label]');
 
   const group = document.createElement('div');
-  group.className = 'settings-group';
+  group.className = 'settings-group lg-ring';
   section.appendChild(group);
 
   // ── Row 1: Preferred Campus toggle
@@ -343,8 +163,8 @@ function buildCampusSection() {
   const preferredIconTitle = document.createElement('div');
   preferredIconTitle.className = 'settings-row__icon-title-container';
   preferredIconTitle.innerHTML = `
-    <div class="settings-row__icon-badge" style="--badge-color: #FF9500">
-      <span class="material-symbols-outlined">school</span>
+    <div class="settings-row__icon">
+      <i class="hgi-stroke hgi-school-01" aria-hidden="true"></i>
     </div>
     <div class="settings-row__label-group">
       <span class="settings-row__label" data-preferred-label></span>
@@ -357,7 +177,7 @@ function buildCampusSection() {
   let preferredEnabled = localStorage.getItem(PREFERRED_CAMPUS_ENABLED_KEY) === 'true';
   const preferredToggle = buildToggle(preferredEnabled);
   preferredRow.appendChild(preferredIconTitle);
-  preferredRow.appendChild(preferredToggle);
+  preferredRow.appendChild(preferredToggle.el);
   group.appendChild(preferredRow);
 
   // ── Row 2: Campus select (conditionally shown)
@@ -406,21 +226,19 @@ function buildCampusSection() {
     localStorage.setItem(PREFERRED_CAMPUS_ID_KEY, campusSelect.value);
   });
 
-  preferredToggle.addEventListener('click', () => {
-    preferredEnabled = !preferredEnabled;
+  preferredToggle.onChange = (isOn) => {
+    preferredEnabled = isOn;
     localStorage.setItem(PREFERRED_CAMPUS_ENABLED_KEY, String(preferredEnabled));
-    setToggleState(preferredToggle, preferredEnabled);
     if (preferredEnabled) {
       if (rememberLastEnabled) {
         rememberLastEnabled = false;
         localStorage.setItem(REMEMBER_LAST_CAMPUS_KEY, 'false');
-        setToggleState(rememberLastToggle, false);
+        rememberLastToggle.set(false);
       }
       populateCampusSelect();
     }
     showPickerRow(preferredEnabled);
-    haptics.trigger(defaultPatterns.light);
-  });
+  };
 
   // ── Row 3: Remember Last Used toggle
   const rememberLastRow = document.createElement('div');
@@ -429,8 +247,8 @@ function buildCampusSection() {
   const rememberLastIconTitle = document.createElement('div');
   rememberLastIconTitle.className = 'settings-row__icon-title-container';
   rememberLastIconTitle.innerHTML = `
-    <div class="settings-row__icon-badge" style="--badge-color: #34C759">
-      <span class="material-symbols-outlined">history</span>
+    <div class="settings-row__icon">
+      <i class="hgi-stroke hgi-history" aria-hidden="true"></i>
     </div>
     <div class="settings-row__label-group">
       <span class="settings-row__label" data-rememberlast-label></span>
@@ -444,25 +262,25 @@ function buildCampusSection() {
   const rememberLastToggle = buildToggle(rememberLastEnabled);
 
   rememberLastRow.appendChild(rememberLastIconTitle);
-  rememberLastRow.appendChild(rememberLastToggle);
+  rememberLastRow.appendChild(rememberLastToggle.el);
   group.appendChild(rememberLastRow);
 
-  rememberLastToggle.addEventListener('click', () => {
-    rememberLastEnabled = !rememberLastEnabled;
+  rememberLastToggle.onChange = (isOn) => {
+    rememberLastEnabled = isOn;
     localStorage.setItem(REMEMBER_LAST_CAMPUS_KEY, String(rememberLastEnabled));
-    setToggleState(rememberLastToggle, rememberLastEnabled);
     if (rememberLastEnabled && preferredEnabled) {
       preferredEnabled = false;
       localStorage.setItem(PREFERRED_CAMPUS_ENABLED_KEY, 'false');
-      setToggleState(preferredToggle, false);
+      preferredToggle.set(false);
       showPickerRow(false);
     }
-    haptics.trigger(defaultPatterns.light);
-  });
+  };
 
   // Save last used campus whenever the campus selection changes
+  // Not a secondary campus: only the Campus tab lists those, and the Available
+  // tab's picker couldn't restore one.
   document.addEventListener('campuschange', (e) => {
-    if (rememberLastEnabled) {
+    if (rememberLastEnabled && !isSecondaryCampus(e.detail.id)) {
       localStorage.setItem(LAST_CAMPUS_ID_KEY, e.detail.id);
     }
   });
@@ -492,7 +310,7 @@ function buildCampusSection() {
 
   retranslate();
 
-  // Called each time the popup opens so the select is populated with live data
+  // Called each time the page opens so the select is populated with live data
   function refreshIfNeeded() {
     if (preferredEnabled) populateCampusSelect();
   }
@@ -500,46 +318,39 @@ function buildCampusSection() {
   return { sectionEl: section, retranslate, refreshIfNeeded };
 }
 
-// ── Popup content ─────────────────────────────────────────────────────────────
+// ── Page content ──────────────────────────────────────────────────────────────
 
-function buildPopup() {
-  const popup = document.createElement('div');
-  popup.className = 'settings-popup';
-  popup.style.display = 'none';
-  popup.innerHTML = `
-    <div class="settings-popup__inner">
-      <div class="settings-popup__title-row">
-        <h2 class="settings-popup__title">${t('settings.title')}</h2>
-        <button class="settings-close-btn" aria-label="Close settings">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-
+// Two columns on wide screens (see .settings-column in settings.css): what
+// shapes the search on the left, the app itself on the right.
+function buildContent() {
+  const content = document.createElement('div');
+  content.className = 'settings-body';
+  content.innerHTML = `
+     <div class="settings-column" data-settings-column-search>
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">translate</span>
+            <i class="hgi-stroke hgi-translate" aria-hidden="true"></i>
           </div>
           <span class="settings-section__header-label">${t('settings.language')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
-              <div class="settings-row__icon-badge" style="--badge-color: #007AFF">
-                <span class="material-symbols-outlined">language</span>
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-languages" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.language">${t('settings.language')}</span>
                 <span class="settings-row__sublabel" data-i18n="settings.languageDesc">${t('settings.languageDesc')}</span>
               </div>
             </div>
-            <div class="settings-lang-toggle">
-              <div class="settings-lang-indicator"></div>
-              <button class="settings-lang-btn${getLocale() === 'en' ? ' active' : ''}" data-lang="en">
+            <div data-lang-toggle>
+              <button class="lg-seg__item" data-value="en">
                 <span class="settings-lang-btn__flag">🇬🇧</span>
                 <span class="settings-lang-btn__name">English</span>
               </button>
-              <button class="settings-lang-btn${getLocale() === 'it' ? ' active' : ''}" data-lang="it">
+              <button class="lg-seg__item" data-value="it">
                 <span class="settings-lang-btn__flag">🇮🇹</span>
                 <span class="settings-lang-btn__name">Italiano</span>
               </button>
@@ -551,38 +362,37 @@ function buildPopup() {
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">calendar_today</span>
+            <i class="hgi-stroke hgi-calendar-03" aria-hidden="true"></i>
           </div>
           <span class="settings-section__header-label" data-timefmt-section-header>${t('settings.sectionDateTime')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row">
             <div class="settings-row__icon-title-container">
-              <div class="settings-row__icon-badge" style="--badge-color: #FF9500">
-                <span class="material-symbols-outlined">schedule</span>
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-clock-01" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.timeFormat">${t('settings.timeFormat')}</span>
                 <span class="settings-row__sublabel" data-i18n="settings.timeFormatDesc">${t('settings.timeFormatDesc')}</span>
               </div>
             </div>
-            <div class="settings-lang-toggle" data-timefmt-toggle>
-              <div class="settings-lang-indicator"></div>
-              <button class="settings-lang-btn" data-timefmt="system">
+            <div data-timefmt-toggle>
+              <button class="lg-seg__item" data-value="system">
                 <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.system">${t('settings.timeFormat.system')}</span>
               </button>
-              <button class="settings-lang-btn" data-timefmt="12">
+              <button class="lg-seg__item" data-value="12">
                 <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.12h">${t('settings.timeFormat.12h')}</span>
               </button>
-              <button class="settings-lang-btn" data-timefmt="24">
+              <button class="lg-seg__item" data-value="24">
                 <span class="settings-lang-btn__name" data-i18n="settings.timeFormat.24h">${t('settings.timeFormat.24h')}</span>
               </button>
             </div>
           </div>
           <div class="settings-row" data-hide-sundays-row>
             <div class="settings-row__icon-title-container">
-              <div class="settings-row__icon-badge" style="--badge-color: #FF3B30">
-                <span class="material-symbols-outlined">event_busy</span>
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-calendar-remove-01" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.hideSundays">${t('settings.hideSundays')}</span>
@@ -592,8 +402,8 @@ function buildPopup() {
           </div>
           <div class="settings-row" data-interval-hours-row>
             <div class="settings-row__icon-title-container">
-              <div class="settings-row__icon-badge" style="--badge-color: #007AFF">
-                <span class="material-symbols-outlined">timelapse</span>
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-hourglass" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.intervalHours">${t('settings.intervalHours')}</span>
@@ -601,21 +411,32 @@ function buildPopup() {
               </div>
             </div>
           </div>
+          <div class="settings-row" data-block-past-hours-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-time-quarter-pass" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.blockPastHours">${t('settings.blockPastHours')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.blockPastHoursDesc">${t('settings.blockPastHoursDesc')}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">search</span>
+            <i class="hgi-stroke hgi-search-01" aria-hidden="true"></i>
           </div>
           <span class="settings-section__header-label" data-i18n="settings.sectionResults">${t('settings.sectionResults')}</span>
         </div>
-        <div class="settings-group">
+        <div class="settings-group lg-ring">
           <div class="settings-row" data-show-partial-row>
             <div class="settings-row__icon-title-container">
-              <div class="settings-row__icon-badge" style="--badge-color: #34C759">
-                <span class="material-symbols-outlined">filter_alt</span>
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-filter" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
                 <span class="settings-row__label" data-i18n="settings.showPartial">${t('settings.showPartial')}</span>
@@ -623,25 +444,119 @@ function buildPopup() {
               </div>
             </div>
           </div>
-          <div class="settings-row" data-auto-search-row>
+        </div>
+      </div>
+
+     </div>
+     <div class="settings-column">
+
+      <div class="settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__icon-badge">
+            <i class="hgi-stroke hgi-browser" aria-hidden="true"></i>
+          </div>
+          <span class="settings-section__header-label" data-defaulttab-section-header>${t('settings.sectionNavigation')}</span>
+        </div>
+        <div class="settings-group lg-ring">
+          <div class="settings-row">
             <div class="settings-row__icon-title-container">
-              <div class="settings-row__icon-badge" style="--badge-color: #007AFF">
-                <span class="material-symbols-outlined">bolt</span>
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-browser" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
-                <span class="settings-row__label" data-i18n="settings.autoSearch">${t('settings.autoSearch')}</span>
-                <span class="settings-row__sublabel" data-i18n="settings.autoSearchDesc">${t('settings.autoSearchDesc')}</span>
+                <span class="settings-row__label" data-i18n="settings.defaultTab">${t('settings.defaultTab')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.defaultTab.desc">${t('settings.defaultTab.desc')}</span>
               </div>
             </div>
+            <!-- The tab bar's own icons (TABS in components/bottom-nav.js) -->
+            <div data-defaulttab-toggle>
+              <button class="lg-seg__item" data-value="available">
+                <i class="hgi-stroke hgi-calendar-03 settings-seg-icon" aria-hidden="true"></i>
+                <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.available">${t('settings.defaultTab.available')}</span>
+              </button>
+              <button class="lg-seg__item" data-value="search">
+                <i class="hgi-stroke hgi-university settings-seg-icon" aria-hidden="true"></i>
+                <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.search">${t('settings.defaultTab.search')}</span>
+              </button>
+              <div class="lg-seg__separator"></div>
+              <button class="lg-seg__item" data-value="last">
+                <i class="hgi-stroke hgi-history settings-seg-icon" aria-hidden="true"></i>
+                <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.last">${t('settings.defaultTab.last')}</span>
+              </button>
+            </div>
           </div>
-          <div class="settings-row" data-live-search-row>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__icon-badge">
+            <i class="hgi-stroke hgi-blur" aria-hidden="true"></i>
+          </div>
+          <span class="settings-section__header-label" data-blurmode-section-header>${t('settings.sectionAppearance')}</span>
+        </div>
+        <div class="settings-group lg-ring">
+          <div class="settings-row">
             <div class="settings-row__icon-title-container">
-              <div class="settings-row__icon-badge" style="--badge-color: #FF2D55">
-                <span class="material-symbols-outlined">sync</span>
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-layers-01" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
-                <span class="settings-row__label" data-i18n="settings.liveSearch">${t('settings.liveSearch')}</span>
-                <span class="settings-row__sublabel" data-i18n="settings.liveSearchDesc">${t('settings.liveSearchDesc')}</span>
+                <span class="settings-row__label" data-i18n="settings.glassEffect">${t('settings.glassEffect')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.glassEffectDesc">${t('settings.glassEffectDesc')}</span>
+              </div>
+            </div>
+            <div data-blurmode-toggle>
+              <button class="lg-seg__item" data-value="auto">
+                <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.auto">${t('settings.glassEffect.auto')}</span>
+              </button>
+              <button class="lg-seg__item" data-value="on">
+                <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.on">${t('settings.glassEffect.on')}</span>
+              </button>
+              <button class="lg-seg__item" data-value="off">
+                <span class="settings-lang-btn__name" data-i18n="settings.glassEffect.off">${t('settings.glassEffect.off')}</span>
+              </button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-transparency" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.glassStyle">${t('settings.glassStyle')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.glassStyleDesc">${t('settings.glassStyleDesc')}</span>
+              </div>
+            </div>
+            <div data-glassstyle-toggle>
+              <button class="lg-seg__item" data-value="transparent">
+                <span class="settings-lang-btn__name" data-i18n="settings.glassStyle.transparent">${t('settings.glassStyle.transparent')}</span>
+              </button>
+              <button class="lg-seg__item" data-value="frost">
+                <span class="settings-lang-btn__name" data-i18n="settings.glassStyle.frost">${t('settings.glassStyle.frost')}</span>
+              </button>
+            </div>
+          </div>
+          ${supportsRefraction() ? `
+          <div class="settings-row" data-refraction-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-prism" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.refraction">${t('settings.refraction')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.refractionDesc">${t('settings.refractionDesc')}</span>
+              </div>
+            </div>
+          </div>` : ''}
+          <div class="settings-row" data-seasonal-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-fireworks" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.seasonal">${t('settings.seasonal')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.seasonalDesc">${t('settings.seasonalDesc')}</span>
               </div>
             </div>
           </div>
@@ -651,261 +566,250 @@ function buildPopup() {
       <div class="settings-section">
         <div class="settings-section__header">
           <div class="settings-section__icon-badge">
-            <span class="material-symbols-outlined">tab</span>
+            <i class="hgi-stroke hgi-arrow-data-transfer-horizontal" aria-hidden="true"></i>
           </div>
-          <span class="settings-section__header-label" data-defaulttab-section-header>${t('settings.sectionNavigation')}</span>
+          <span class="settings-section__header-label" data-i18n="settings.sectionTransfer">${t('settings.sectionTransfer')}</span>
         </div>
-        <div class="settings-group">
-          <div class="settings-row">
+        <div class="settings-group lg-ring">
+          <div class="settings-row" data-transfer-row>
             <div class="settings-row__icon-title-container">
-              <div class="settings-row__icon-badge" style="--badge-color: #5856D6">
-                <span class="material-symbols-outlined">tab</span>
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-smart-phone-01" aria-hidden="true"></i>
               </div>
               <div class="settings-row__label-group">
-                <span class="settings-row__label" data-i18n="settings.defaultTab">${t('settings.defaultTab')}</span>
-                <span class="settings-row__sublabel" data-i18n="settings.defaultTab.desc">${t('settings.defaultTab.desc')}</span>
+                <span class="settings-row__label" data-i18n="settings.transfer">${t('settings.transfer')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.transferDesc">${t('settings.transferDesc')}</span>
               </div>
             </div>
-            <div class="settings-lang-toggle" data-defaulttab-toggle>
-              <div class="settings-lang-indicator"></div>
-              <button class="settings-lang-btn" data-defaulttab="available">
-                <span class="settings-seg-icon material-symbols-outlined">event_available</span>
-                <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.available">${t('settings.defaultTab.available')}</span>
-              </button>
-              <button class="settings-lang-btn" data-defaulttab="search">
-                <span class="settings-seg-icon material-symbols-outlined">search</span>
-                <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.search">${t('settings.defaultTab.search')}</span>
-              </button>
-              <div class="settings-seg-separator"></div>
-              <button class="settings-lang-btn" data-defaulttab="last">
-                <span class="settings-seg-icon material-symbols-outlined">history</span>
-                <span class="settings-lang-btn__name" data-i18n="settings.defaultTab.last">${t('settings.defaultTab.last')}</span>
-              </button>
-            </div>
+            <span class="settings-row__action" data-transfer-slot></span>
           </div>
         </div>
       </div>
 
-    </div>
+      ${IS_STABLE_BUILD ? '' : `
+      <div class="settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__icon-badge">
+            <i class="hgi-stroke hgi-server" aria-hidden="true"></i>
+          </div>
+          <span class="settings-section__header-label" data-i18n="settings.sectionBackend">${t('settings.sectionBackend')}</span>
+        </div>
+        <div class="settings-group lg-ring">
+          <div class="settings-row" data-use-beta-backend-row>
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-test-tube-01" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.useBetaBackend">${t('settings.useBetaBackend')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.useBetaBackendDesc">${t('settings.useBetaBackendDesc')}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      `}
+
+      <div class="settings-section">
+        <div class="settings-section__header">
+          <div class="settings-section__icon-badge">
+            <i class="hgi-stroke hgi-arrow-turn-backward" aria-hidden="true"></i>
+          </div>
+          <span class="settings-section__header-label" data-i18n="settings.sectionReset">${t('settings.sectionReset')}</span>
+        </div>
+        <div class="settings-group lg-ring">
+          <div class="settings-row">
+            <div class="settings-row__icon-title-container">
+              <div class="settings-row__icon">
+                <i class="hgi-stroke hgi-settings-error-01" aria-hidden="true"></i>
+              </div>
+              <div class="settings-row__label-group">
+                <span class="settings-row__label" data-i18n="settings.reset">${t('settings.reset')}</span>
+                <span class="settings-row__sublabel" data-i18n="settings.resetDesc">${t('settings.resetDesc')}</span>
+              </div>
+            </div>
+            <span class="settings-row__action" data-reset-slot></span>
+          </div>
+        </div>
+      </div>
+     </div>
   `;
 
-  popup.querySelector('.settings-close-btn').addEventListener('click', () => closeSettings());
-
-  // Append campus section
-  const inner = popup.querySelector('.settings-popup__inner');
+  // The campus section, right after the language
   const { sectionEl: campusSectionEl, retranslate: retranslateCampus, refreshIfNeeded } = buildCampusSection();
   refreshCampusSelectFn = refreshIfNeeded;
-  inner.appendChild(campusSectionEl);
+  content.querySelector('[data-settings-column-search] > .settings-section').after(campusSectionEl);
 
-  // Wire language buttons and sliding indicator
-  const toggle = popup.querySelector('.settings-lang-toggle');
-  const indicator = toggle.querySelector('.settings-lang-indicator');
-
-  function positionIndicator(animate) {
-    const activeBtn = toggle.querySelector('.settings-lang-btn.active');
-    if (!activeBtn) return;
-    if (!animate) indicator.style.transition = 'none';
-    indicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
-    indicator.style.width = `${activeBtn.offsetWidth}px`;
-    indicator.style.height = `${activeBtn.offsetHeight}px`;
-    if (!animate) {
-      indicator.getBoundingClientRect(); // force reflow
-      indicator.style.transition = '';
-    }
-  }
-
-  popup.querySelectorAll('.settings-lang-btn[data-lang]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const lang = btn.dataset.lang;
+  // Segmented controls (glass pill w/ tabbar tap + drag, see segmented-control.js)
+  const langSeg = createSegmentedControl(content.querySelector('[data-lang-toggle]'), {
+    value: getLocale(),
+    async onSelect(lang) {
       if (lang === getLocale()) return;
       await setLocale(lang);
-      haptics.trigger(defaultPatterns.light);
-      updateLangButtons(popup, positionIndicator);
-    });
+    },
   });
 
-  // Expose so openSettings() can snap after first display
-  positionIndicatorFn = positionIndicator;
-
-  // Wire time format buttons and sliding indicator
-  const timeFmtToggle = popup.querySelector('[data-timefmt-toggle]');
-  const timeFmtIndicator = timeFmtToggle.querySelector('.settings-lang-indicator');
-  const savedTimeFmt = localStorage.getItem(TIME_FORMAT_KEY) ?? 'system';
-  timeFmtToggle.querySelector(`[data-timefmt="${savedTimeFmt}"]`)?.classList.add('active');
-
-  function positionTimeFmtIndicator(animate) {
-    const activeBtn = timeFmtToggle.querySelector('.settings-lang-btn.active');
-    if (!activeBtn) return;
-    if (!animate) timeFmtIndicator.style.transition = 'none';
-    timeFmtIndicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
-    timeFmtIndicator.style.width = `${activeBtn.offsetWidth}px`;
-    timeFmtIndicator.style.height = `${activeBtn.offsetHeight}px`;
-    if (!animate) {
-      timeFmtIndicator.getBoundingClientRect(); // force reflow
-      timeFmtIndicator.style.transition = '';
-    }
-  }
-
-  timeFmtToggle.querySelectorAll('.settings-lang-btn[data-timefmt]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const fmt = btn.dataset.timefmt;
-      if (timeFmtToggle.querySelector('.settings-lang-btn.active') === btn) return;
+  const timeFmtSeg = createSegmentedControl(content.querySelector('[data-timefmt-toggle]'), {
+    value: localStorage.getItem(TIME_FORMAT_KEY) ?? 'system',
+    onSelect(fmt, { silent }) {
+      if (silent) return;
       localStorage.setItem(TIME_FORMAT_KEY, fmt);
-      timeFmtToggle.querySelectorAll('.settings-lang-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      positionTimeFmtIndicator(true);
-      haptics.trigger(defaultPatterns.light);
       window.dispatchEvent(new CustomEvent('timeformatchange'));
-    });
+    },
   });
-
-  positionTimeFmtIndicatorFn = positionTimeFmtIndicator;
 
   // Wire Hide Sundays toggle
-  const hideSundaysRow = popup.querySelector('[data-hide-sundays-row]');
+  const hideSundaysRow = content.querySelector('[data-hide-sundays-row]');
   const hideSundaysToggle = buildToggle(localStorage.getItem(HIDE_SUNDAYS_KEY) === 'true');
-  hideSundaysRow.appendChild(hideSundaysToggle);
-  hideSundaysToggle.addEventListener('click', () => {
-    const isOn = !hideSundaysToggle.classList.contains('on');
-    setToggleState(hideSundaysToggle, isOn);
+  hideSundaysRow.appendChild(hideSundaysToggle.el);
+  hideSundaysToggle.onChange = (isOn) => {
     localStorage.setItem(HIDE_SUNDAYS_KEY, String(isOn));
-    haptics.trigger(defaultPatterns.light);
     window.dispatchEvent(new CustomEvent('hidesundayschange', { detail: { hidden: isOn } }));
-  });
+  };
 
   // Wire Interval Hours stepper
-  const intervalHoursRow = popup.querySelector('[data-interval-hours-row]');
+  const intervalHoursRow = content.querySelector('[data-interval-hours-row]');
+  // Vitrium's stepper, with the value in place of its separator, like the
+  // time lens's duration (components/hour-lens.js)
   const savedHours = parseInt(localStorage.getItem(INTERVAL_HOURS_KEY), 10) || 2;
-  const intervalStepper = buildStepper(savedHours, 1, 12, v => `${v}h`, v => {
-    localStorage.setItem(INTERVAL_HOURS_KEY, String(v));
+  const intervalLabel = document.createElement('span');
+  intervalLabel.className = 'settings-stepper-value';
+  const showHours = (v) => { intervalLabel.textContent = `${v}h`; };
+  showHours(savedHours);
+  const intervalStepper = createStepper({
+    value: savedHours, min: 1, max: 12, step: 1,
+    label: t('settings.intervalHours'),
+    labels: [t('timepicker.shorter'), t('timepicker.longer')],
+    format: (v) => `${v}h`,
+    onChange: (v) => {
+      showHours(v);
+      localStorage.setItem(INTERVAL_HOURS_KEY, String(v));
+    },
   });
-  intervalHoursRow.appendChild(intervalStepper);
+  intervalStepper.el.querySelector('.lg-stepper__separator').replaceWith(intervalLabel);
+  intervalHoursRow.appendChild(intervalStepper.el);
+
+  // Wire Block Past Hours toggle (default: true)
+  const blockPastRow = content.querySelector('[data-block-past-hours-row]');
+  const blockPastToggle = buildToggle(localStorage.getItem(BLOCK_PAST_HOURS_KEY) !== 'false');
+  blockPastRow.appendChild(blockPastToggle.el);
+  blockPastToggle.onChange = (isOn) => {
+    localStorage.setItem(BLOCK_PAST_HOURS_KEY, String(isOn));
+    window.dispatchEvent(new CustomEvent('blockpasthourschange', { detail: { blocked: isOn } }));
+  };
+
+  // Wire Seasonal Decorations toggle (default: true)
+  const seasonalRow = content.querySelector('[data-seasonal-row]');
+  const seasonalToggle = buildToggle(seasonalEnabled());
+  seasonalRow.appendChild(seasonalToggle.el);
+  seasonalToggle.onChange = (isOn) => setSeasonalEnabled(isOn);
+  // A season turned on or off from the search moves the toggle too
+  window.addEventListener('seasonalchange', () => seasonalToggle.set(seasonalEnabled(), { animate: false }));
 
   // Wire Show Partially Free toggle (default: true)
-  const showPartialRow = popup.querySelector('[data-show-partial-row]');
+  const showPartialRow = content.querySelector('[data-show-partial-row]');
   const showPartialSaved = localStorage.getItem(SHOW_PARTIAL_KEY);
   const showPartialToggle = buildToggle(showPartialSaved === null ? true : showPartialSaved === 'true');
-  showPartialRow.appendChild(showPartialToggle);
-  showPartialToggle.addEventListener('click', () => {
-    const isOn = !showPartialToggle.classList.contains('on');
-    setToggleState(showPartialToggle, isOn);
+  showPartialRow.appendChild(showPartialToggle.el);
+  showPartialToggle.onChange = (isOn) => {
     localStorage.setItem(SHOW_PARTIAL_KEY, String(isOn));
-    haptics.trigger(defaultPatterns.light);
+  };
+
+  const defaultTabSeg = createSegmentedControl(content.querySelector('[data-defaulttab-toggle]'), {
+    value: localStorage.getItem(DEFAULT_TAB_KEY) ?? 'available',
+    onSelect(val, { silent }) {
+      if (silent) return;
+      localStorage.setItem(DEFAULT_TAB_KEY, val);
+    },
   });
 
-  // Wire Auto-Search on Load toggle (default: true)
-  const autoSearchRow = popup.querySelector('[data-auto-search-row]');
-  const autoSearchSaved = localStorage.getItem(AUTO_SEARCH_KEY);
-  const autoSearchOn = autoSearchSaved === null ? true : autoSearchSaved === 'true';
-  const autoSearchToggle = buildToggle(autoSearchOn);
-  autoSearchRow.appendChild(autoSearchToggle);
-
-  const autoSearchWarning = document.createElement('div');
-  autoSearchWarning.className = 'settings-warning' + (autoSearchOn ? '' : ' settings-warning--hidden');
-  autoSearchWarning.innerHTML = `
-    <span class="material-symbols-outlined settings-warning__icon">warning</span>
-    <span class="settings-warning__text" data-i18n="settings.autoSearchWarning">${t('settings.autoSearchWarning')}</span>
-  `;
-  autoSearchRow.insertAdjacentElement('afterend', autoSearchWarning);
-
-  autoSearchToggle.addEventListener('click', () => {
-    const isOn = !autoSearchToggle.classList.contains('on');
-    setToggleState(autoSearchToggle, isOn);
-    localStorage.setItem(AUTO_SEARCH_KEY, String(isOn));
-    autoSearchWarning.classList.toggle('settings-warning--hidden', !isOn);
-    haptics.trigger(defaultPatterns.light);
+  const blurModeSeg = createSegmentedControl(content.querySelector('[data-blurmode-toggle]'), {
+    value: getBlurMode(),
+    onSelect(mode, { silent }) {
+      if (silent) return;
+      setBlurMode(mode);
+      // Apply right away instead of waiting for the next splash screen: "on"/"off"
+      // are immediate, "auto" re-runs the benchmark since the cached verdict may
+      // now be stale (e.g. the mode was forced off, then set back to auto).
+      if (mode === 'off') applyBlurState(false);
+      else if (mode === 'on') applyBlurState(true);
+      else reevaluateBlurCapability();
+    },
   });
 
-  // Wire Live Search toggle (default: true)
-  const liveSearchRow = popup.querySelector('[data-live-search-row]');
-  const liveSearchSaved = localStorage.getItem(LIVE_SEARCH_KEY);
-  const liveSearchOn = liveSearchSaved === null ? true : liveSearchSaved === 'true';
-  const liveSearchToggle = buildToggle(liveSearchOn);
-  liveSearchRow.appendChild(liveSearchToggle);
-
-  const liveSearchWarning = document.createElement('div');
-  liveSearchWarning.className = 'settings-warning' + (liveSearchOn ? '' : ' settings-warning--hidden');
-  liveSearchWarning.innerHTML = `
-    <span class="material-symbols-outlined settings-warning__icon">warning</span>
-    <span class="settings-warning__text" data-i18n="settings.liveSearchWarning">${t('settings.liveSearchWarning')}</span>
-  `;
-  liveSearchRow.insertAdjacentElement('afterend', liveSearchWarning);
-
-  liveSearchToggle.addEventListener('click', () => {
-    const isOn = !liveSearchToggle.classList.contains('on');
-    setToggleState(liveSearchToggle, isOn);
-    localStorage.setItem(LIVE_SEARCH_KEY, String(isOn));
-    liveSearchWarning.classList.toggle('settings-warning--hidden', !isOn);
-    haptics.trigger(defaultPatterns.light);
+  const glassStyleSeg = createSegmentedControl(content.querySelector('[data-glassstyle-toggle]'), {
+    value: getGlassStylePref(),
+    onSelect(style, { silent }) {
+      if (silent) return;
+      localStorage.setItem(GLASS_STYLE_KEY, style);
+      setGlassStyle(style);
+    },
   });
 
-  // Wire Default Tab 3-way toggle
-  const defaultTabToggle = popup.querySelector('[data-defaulttab-toggle]');
-  const defaultTabIndicator = defaultTabToggle.querySelector('.settings-lang-indicator');
-  const savedDefaultTab = localStorage.getItem(DEFAULT_TAB_KEY) ?? 'available';
-  defaultTabToggle.querySelector(`[data-defaulttab="${savedDefaultTab}"]`)?.classList.add('active');
-
-  function positionDefaultTabIndicator(animate) {
-    const activeBtn = defaultTabToggle.querySelector('.settings-lang-btn.active');
-    if (!activeBtn) return;
-    if (!animate) defaultTabIndicator.style.transition = 'none';
-    defaultTabIndicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
-    defaultTabIndicator.style.width = `${activeBtn.offsetWidth}px`;
-    defaultTabIndicator.style.height = `${activeBtn.offsetHeight}px`;
-    if (!animate) {
-      defaultTabIndicator.getBoundingClientRect();
-      defaultTabIndicator.style.transition = '';
-    }
+  // Wire Refraction toggle (default: true), only where the browser can draw it
+  const refractionRow = content.querySelector('[data-refraction-row]');
+  if (refractionRow) {
+    const refractionToggle = buildToggle(getRefractionPref());
+    refractionRow.appendChild(refractionToggle.el);
+    refractionToggle.onChange = (isOn) => {
+      localStorage.setItem(REFRACTION_KEY, String(isOn));
+      setRefraction(isOn);
+    };
   }
 
-  defaultTabToggle.querySelectorAll('.settings-lang-btn[data-defaulttab]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const val = btn.dataset.defaulttab;
-      if (defaultTabToggle.querySelector('.settings-lang-btn.active') === btn) return;
-      localStorage.setItem(DEFAULT_TAB_KEY, val);
-      defaultTabToggle.querySelectorAll('.settings-lang-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      positionDefaultTabIndicator(true);
-      haptics.trigger(defaultPatterns.light);
-    });
+  langSegControl = langSeg;
+  segControls.push(langSeg, timeFmtSeg, defaultTabSeg, blurModeSeg, glassStyleSeg);
+
+  // Transfer to another device: QR dialog grows out of the button
+  const transferBtn = buildRowButton({
+    icon: '<i class="hgi-stroke hgi-qr-code" aria-hidden="true"></i>',
+    textKey: 'settings.transferShow',
+    onClick: () => openTransferDialog(transferBtn),
   });
+  content.querySelector('[data-transfer-slot]').replaceWith(transferBtn);
 
-  positionDefaultTabIndicatorFn = positionDefaultTabIndicator;
-
-  return { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, retranslateCampus };
-}
-
-function updateLangButtons(popup, positionIndicator) {
-  popup.querySelectorAll('.settings-lang-btn[data-lang]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.lang === getLocale());
+  // Reset: asks first (the alert grows out of the button)
+  const resetBtn = buildRowButton({
+    textKey: 'settings.resetButton',
+    className: 'lg-glass--tinted settings-row-btn--destructive',
+    onClick: () => confirmReset(resetBtn),
   });
-  positionIndicator?.(true);
+  content.querySelector('[data-reset-slot]').replaceWith(resetBtn);
+
+  // Wire Use Beta Backend toggle (non-stable builds only, default: true)
+  const useBetaBackendRow = content.querySelector('[data-use-beta-backend-row]');
+  if (useBetaBackendRow) {
+    const useBetaBackendSaved = localStorage.getItem(USE_BETA_BACKEND_KEY);
+    const useBetaBackendOn = useBetaBackendSaved === null ? true : useBetaBackendSaved === 'true';
+    const useBetaBackendToggle = buildToggle(useBetaBackendOn);
+    useBetaBackendRow.appendChild(useBetaBackendToggle.el);
+    useBetaBackendToggle.onChange = (isOn) => {
+      localStorage.setItem(USE_BETA_BACKEND_KEY, String(isOn));
+    };
+  }
+
+  return { content, retranslateCampus };
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 export function initSettings() {
-  triggerEl = document.getElementById('settings-btn');
-  if (!triggerEl) return;
+  const { content, retranslateCampus } = buildContent();
 
-  const { popup, positionIndicator, positionTimeFmtIndicator, positionDefaultTabIndicator, retranslateCampus } = buildPopup();
-  popupEl = popup;
-  document.body.appendChild(popupEl);
-
-  triggerEl.addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
-    openSettings();
+  settingsPage.init(content, {
+    onShow() {
+      segControls.forEach(c => c.refresh({ snap: true })); // place pills, now that they're laid out
+      refreshCampusSelectFn?.();            // re-populate campus select now that data may be loaded
+    },
   });
 
-  // Keep title and section headers in sync when the language changes
-  const titleEl = popupEl.querySelector('.settings-popup__title');
-  const sectionHeaderLabelEl = popupEl.querySelector('.settings-section__header-label');
-  const timeFmtHeaderLabelEl = popupEl.querySelector('[data-timefmt-section-header]');
-  const defaultTabHeaderLabelEl = popupEl.querySelector('[data-defaulttab-section-header]');
+  // Keep the section headers in sync when the language changes
+  const sectionHeaderLabelEl = content.querySelector('.settings-section__header-label');
+  const timeFmtHeaderLabelEl = content.querySelector('[data-timefmt-section-header]');
+  const defaultTabHeaderLabelEl = content.querySelector('[data-defaulttab-section-header]');
+  const blurModeHeaderLabelEl = content.querySelector('[data-blurmode-section-header]');
 
   onLanguageSwitch(() => {
-    titleEl.textContent = t('settings.title');
-    animateI18nElement(titleEl);
     sectionHeaderLabelEl.textContent = t('settings.language');
     animateI18nElement(sectionHeaderLabelEl);
     if (timeFmtHeaderLabelEl) {
@@ -916,26 +820,16 @@ export function initSettings() {
       defaultTabHeaderLabelEl.textContent = t('settings.sectionNavigation');
       animateI18nElement(defaultTabHeaderLabelEl);
     }
-    popupEl.querySelectorAll('[data-i18n]').forEach(el => {
+    if (blurModeHeaderLabelEl) {
+      blurModeHeaderLabelEl.textContent = t('settings.sectionAppearance');
+      animateI18nElement(blurModeHeaderLabelEl);
+    }
+    content.querySelectorAll('[data-i18n]').forEach(el => {
       el.textContent = t(el.dataset.i18n);
     });
-    updateLangButtons(popupEl, positionIndicator);
-    positionTimeFmtIndicator?.(false);
-    positionDefaultTabIndicator?.(false);
+    // Labels just changed width; re-measure without animating.
+    segControls.forEach(c => c.refresh({ snap: true }));
+    langSegControl?.select(getLocale());   // language control, in case the switch came from elsewhere
     retranslateCampus();
-  });
-
-  // Escape closes the popup
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeSettings();
-  });
-
-  // Keep popup centred on resize while open
-  window.addEventListener('resize', () => {
-    if (!isOpen || isAnimating) return;
-    popupEl.style.transition = 'none';
-    applyGeometry(popupEl, getPopupTarget());
-    popupEl.getBoundingClientRect();
-    popupEl.style.transition = '';
   });
 }

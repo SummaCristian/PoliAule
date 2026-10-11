@@ -34,10 +34,12 @@ RETRY_DELAY = 2  # seconds between retries
 NEXT_DAYS_WINDOW = 7  # Number of days to fetch starting from today
 DELAY_BETWEEN_CALLS = 0.5  # seconds to wait between API calls
 
-# The scraped page is known to omit a couple of classrooms that classrooms.json
-# lists (as of writing: G.1 and G.2 in Leonardo building 11). Those fall back to
-# the REST API silently; more than this many missing rows on a single page is
-# instead reported as an anomaly, since it likely means the page changed shape.
+# A classroom missing from its scraped page falls back to the REST API; more than
+# this many missing rows on a single page is reported as an anomaly, since it
+# likely means the page changed shape. Classrooms known to be on neither the page
+# nor the REST API are marked `noSchedule` in classrooms.json instead: they get
+# their page row if one ever appears, and otherwise `"occupancy": null` with no
+# REST call and no alert.
 MAX_EXPECTED_MISSING_ROWS = 5
 
 # A page that parses fine but suddenly returns far fewer slots than the previous
@@ -255,6 +257,10 @@ def scrape_day(
         resolved = _resolved_csic(campus)
         if not csic or resolved is None or resolved in pages or resolved in errors:
             continue
+        # Nothing to look up on a campus without classrooms (classrooms.json's
+        # secondary ones: residences, offices, ...).
+        if not any(b["classrooms"] for b in campus["buildings"]):
+            continue
         last_error = "unknown error"
         for attempt in range(1, MAX_RETRIES + 1):
             try:
@@ -303,21 +309,23 @@ def build_output(
 
     Occupancy comes from the scraped page for the classroom's Sede. The REST API
     is only called for classrooms whose page failed to scrape (see scrape_day)
-    or that have no row on an otherwise healthy page.
+    or that have no row on an otherwise healthy page, never for `noSchedule`
+    ones. Occupancy is None (null in the JSON) when no source had it: the
+    frontend shows that as unknown, not as free.
     """
     result = []
     rest_calls = 0
     for campus in campuses:
-        campus_out = {**_pick(campus, "name", "id", "lat", "long"), "buildings": []}
+        campus_out = {**_pick(campus, "name", "id", "lat", "long", "secondary"), "buildings": []}
         resolved = _resolved_csic(campus)
         page = pages.get(resolved) if resolved else None
         page_failed = page is None
-        if page_failed:
+        if page_failed and any(b["classrooms"] for b in campus["buildings"]):
             print(f"  Campus {campus.get('name')} ({resolved}): page unavailable, using REST API for every room.")
 
         for building in campus["buildings"]:
             building_out = {
-                **_pick(building, "name", "altName", "lat", "long", "idEdificio", "address"),
+                **_pick(building, "name", "altName", "lat", "long", "idEdificio", "address", "secondary"),
                 "classrooms": [],
             }
             for classroom in building["classrooms"]:
@@ -326,6 +334,8 @@ def build_output(
 
                 if scraped is not None:
                     occupancy = scraped_to_slots(scraped)
+                elif classroom.get("noSchedule"):
+                    occupancy = None
                 else:
                     if not page_failed:
                         missing_rows.append({
@@ -333,14 +343,15 @@ def build_output(
                         })
                     print(f"  Fetching room {room_name} (id={room_id}) via REST API...")
                     rest_calls += 1
-                    occupancy = fetch_occupancy(client, room_id, room_name, d, failures) or []
+                    occupancy = fetch_occupancy(client, room_id, room_name, d, failures)
                     if not no_delay:
                         time.sleep(DELAY_BETWEEN_CALLS)
 
                 building_out["classrooms"].append(
                     {
                         **_pick(classroom, "name", "id", "floor", "features",
-                                "idfoto", "seats", "accessible_seats", "workstations"),
+                                "idfoto", "seats", "accessible_seats", "workstations",
+                                "eventsOnly", "noSchedule"),
                         "occupancy": occupancy,
                     }
                 )
@@ -469,6 +480,27 @@ def summarize(
     return ("failed" if anomaly else "ok"), "\n".join(lines)
 
 
+def keep_previous_timestamp(output: dict, path: Path) -> bool:
+    """Give `output` the previous file's generated_at if nothing else changed.
+
+    The workflow downloads the previous run's day files from R2 first. R2's ETag
+    is the MD5 of the bytes, so a day rewritten byte for byte keeps its ETag and
+    the frontend's If-None-Match revalidation gets a 304 instead of the whole
+    file every hour. Returns whether the previous timestamp was kept.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            previous = json.load(f)
+    except (OSError, ValueError):
+        return False
+    if not isinstance(previous, dict) or "generated_at" not in previous:
+        return False
+    if {**previous, "generated_at": None} != {**output, "generated_at": None}:
+        return False
+    output["generated_at"] = previous["generated_at"]
+    return True
+
+
 def cleanup_old_files():
     """Delete occupation files whose date is before today."""
     today = date.today()
@@ -575,6 +607,8 @@ def run(args, log: dict) -> None:
 
             # Create output file and write JSON
             out_path = OUTPUT_DIR / f"occupation_{d.strftime('%Y%m%d')}.json"
+            if keep_previous_timestamp(output, out_path):
+                print("  Unchanged since the previous run, keeping its generated_at.")
             with open(out_path, "w", encoding="utf-8") as f:
                 json.dump(output, f, ensure_ascii=False, indent=2)
             print(f"  Written to {out_path}")

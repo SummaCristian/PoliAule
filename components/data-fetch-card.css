@@ -1,0 +1,15 @@
+/* ── Data-fetch card ──────────────────────────────────────────────────────
+   The header's data-fetch button morphs into a glass card (see
+   data-fetch-card.js). The card is Vitrium's morph popup; this holds the
+   button's own fade and the status container's spacing. */
+
+/* The button's indicator fades back in as the card hands the frame back. */
+#data-fetch-btn .pulse-indicator {
+  transition: opacity 0.24s ease;
+}
+
+/* The status container's title spans the accent gradient (.popover-title); at
+   card width it can breathe on its own line. */
+.lg-morph .data-fetch-popover-container {
+  gap: 0;
+}

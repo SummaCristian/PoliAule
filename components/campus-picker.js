@@ -1,217 +1,181 @@
-import { haptics, defaultPatterns } from './haptics.js';
+import { createListPicker } from 'vitrium';
 import { t } from '../i18n.js';
+import { ownBackForTrigger } from '../utils/back-stack.js';
 
-// Programmatically selects a campus chip by campus ID.
-// Works for both plain chips and subchips inside group chips.
-export function selectCampusById(id, animate = true) {
-  const container = document.getElementById('campus-chips');
-  if (!container) return;
+// <campus-chip-picker> is a single-select listbox: a Vitrium list picker (the
+// pill that morphs into a list of campuses), plus what is PoliAule's: the
+// campuses grouped by city, the `campuschange` event, a hidden
+// <input name="campus"> mirroring the value for the form, and the docked
+// desktop mode (picker-dock.js).
+//
+// The submittable field stays a hidden <input> in the light DOM (declared in
+// index.html) so it is part of the <form>.
+export class CampusChipPicker extends HTMLElement {
+  // Overridable by a subclass (see components/campus-buildings.js) so a
+  // second instance can reuse this whole class without its `change` also
+  // triggering the Available tab's own `campuschange` listener.
+  changeEventName = 'campuschange';
+  // Whether secondary campuses (no classrooms, utils/secondary.js) are listed,
+  // in their own "Other" section. Only the Campus sheet's picker lists them:
+  // the Available tab has nothing to show for them.
+  includeSecondary = false;
 
-  // Try plain chip first
-  const plainChip = container.querySelector(`.campus-chip[data-value="${id}"]`);
-  if (plainChip) {
-    plainChip.click();
-    return;
+  static observedAttributes = ['data-loading'];
+
+  #picker = null;
+  #hiddenInput = null;
+  #staticData = null;
+  #ids = new Set();
+  #docked = false;
+  #dockTimer = 0;
+  #panelHome = null;      // the morph host the panel returns to when undocked
+
+  connectedCallback() {
+    if (this.#picker) return; // already initialized (re-parenting, etc.)
+
+    this.#hiddenInput = this.querySelector('input[type="hidden"]');
+    this.#picker = createListPicker({
+      label: t('tabs.campus'),
+      icon: '<i class="hgi-stroke hgi-university" aria-hidden="true"></i>',
+      options: [],
+      onChange: (id) => this.#changed(id),
+    });
+    this.#picker.setLoading(this.hasAttribute('data-loading'));
+    this.appendChild(this.#picker.el);
+    // Back closes the open list (the list picker has no open/close hooks)
+    ownBackForTrigger(this.#picker.el.querySelector('.lg-chip'), () => this.#picker.close());
   }
 
-  // Try subchip inside a group
-  const subChip = container.querySelector(`.campus-subchip[data-value="${id}"]`);
-  if (subChip) {
-    const groupEl = subChip.closest('.campus-chip-group');
-    // Activate the group first if not already active
-    if (groupEl && !groupEl.classList.contains('active')) {
-      groupEl.querySelector('.campus-chip-group-trigger')?.click();
+  attributeChangedCallback(name, _old, value) {
+    if (name === 'data-loading') this.#picker?.setLoading(value !== null);
+  }
+
+  // The morph panel is a body-level element the picker doesn't hand out, but
+  // its trigger points at it.
+  #panel() {
+    const trigger = this.#picker?.el.querySelector('.lg-chip');
+    return trigger ? document.getElementById(trigger.getAttribute('aria-controls')) : null;
+  }
+
+  #changed(id) {
+    if (this.#hiddenInput) this.#hiddenInput.value = id;
+    document.dispatchEvent(new CustomEvent(this.changeEventName, { detail: { id } }));
+  }
+
+  // Programmatically selects a campus by ID. No-op if the ID isn't available.
+  selectCampusById(id, _animate = true) {
+    if (!this.#picker || !this.#ids.has(id) || this.#picker.value === id) return;
+    this.#picker.setValue(id);
+    this.#changed(id);
+  }
+
+  // Re-applies translations: the "CAMPUS" label, the panel's title and the
+  // "Other cities" / "Other" section headers. Called on language switch from script.js.
+  retranslate() {
+    if (!this.#picker) return;
+    this.#picker.setLabel(t('tabs.campus'));
+    const title = this.#panel()?.querySelector('.lg-morph__title-text');
+    if (title) title.textContent = t('tabs.campus');
+    if (this.#staticData) this.#picker.setOptions({ sections: this.#sections() });
+  }
+
+  // Group by city, then split: cities that contain a grouped campus (Milano:
+  // Città Studi / Bovisa) get their own section; standalone single-campus
+  // cities are collected under "Other cities". Secondary campuses go last,
+  // under "Other", when this picker lists them at all.
+  #sections() {
+    const withBuildings = this.#staticData.filter(c => c.buildings.length > 0);
+    const byCity = new Map();
+    for (const campus of withBuildings.filter(c => !c.secondary)) {
+      if (!byCity.has(campus.city)) byCity.set(campus.city, []);
+      byCity.get(campus.city).push(campus);
     }
-    subChip.click();
+
+    const toOption = c => ({ value: c.id, label: c.name, description: c.group });
+    const sections = [];
+    const others = [];
+    for (const [city, list] of byCity) {
+      if (list.some(c => c.group)) sections.push({ label: city, options: list.map(toOption) });
+      else others.push(...list);
+    }
+    if (others.length) sections.push({ label: t('campus.otherLabel'), options: others.map(toOption) });
+    const secondary = this.includeSecondary ? withBuildings.filter(c => c.secondary) : [];
+    if (secondary.length) sections.push({ label: t('campus.secondaryLabel'), options: secondary.map(toOption) });
+    return sections;
+  }
+
+  // Builds the option list from the static campus data, keeping only campuses
+  // that actually have buildings.
+  setup(staticData) {
+    if (!this.#picker) return;
+    this.#staticData = staticData;
+
+    // Set here rather than in connectedCallback: i18n isn't loaded that early.
+    this.#picker.setLabel(t('tabs.campus'));
+    const title = this.#panel()?.querySelector('.lg-morph__title-text');
+    if (title) title.textContent = t('tabs.campus');
+
+    const sections = this.#sections();
+    this.#ids = new Set(sections.flatMap(s => s.options.map(o => o.value)));
+    this.#picker.setOptions({ sections });
+
+    // Silent auto-select of the first campus (setOptions falls back to it): no
+    // `campuschange` event on initial population.
+    if (this.#hiddenInput) this.#hiddenInput.value = this.#picker.value;
+  }
+
+  // ── Docked (inline-expanded) mode ───────────────────────────────────
+  // Desktop: the listbox panel sits directly in the form column instead of
+  // morphing out of the pill. picker-dock.js toggles this. The panel is the
+  // morph popup's own element (so its keyboard and hover handling keep
+  // working): docking moves it next to this element and shows it open.
+  setDocked(on) {
+    on = !!on;
+    if (on === this.#docked || !this.#picker) return;
+    this.#docked = on;
+    clearTimeout(this.#dockTimer);
+
+    const panel = this.#panel();
+    if (!panel) return;
+
+    if (on) {
+      // A panel still open (or closing) owns its own cleanup, which would hide
+      // the docked one: let it finish first.
+      const busy = this.#picker.el.querySelector('.lg-chip')?.getAttribute('aria-expanded') === 'true';
+      if (busy) this.#picker.close();
+      this.#dockTimer = setTimeout(() => this.#dock(panel), busy ? 800 : 0);
+    } else {
+      this.#undock(panel);
+    }
+  }
+
+  #dock(panel) {
+    if (!this.#docked) return;
+    this.#panelHome = panel.parentElement;
+    panel.classList.add('lg-morph--open', 'campus-dock');
+    panel.style.display = 'flex';
+    this.parentElement?.insertBefore(panel, this.nextSibling);
+    this.style.display = 'none';
+  }
+
+  #undock(panel) {
+    if (panel.classList.contains('campus-dock')) {
+      panel.classList.remove('lg-morph--open', 'campus-dock');
+      panel.style.display = '';
+      this.#panelHome?.appendChild(panel);
+    }
+    this.style.display = '';
   }
 }
 
-// Initializes the Campus picker, allowing to select only the options actually available
+customElements.define('campus-chip-picker', CampusChipPicker);
+
+// Called once from script.js after the static classroom data has loaded.
 export function setupCampusPicker(staticData) {
-  const campuses = staticData;
-  const hiddenInput = document.getElementById('campus-picker');
-  const container = document.getElementById('campus-chips');
+  document.querySelector('campus-chip-picker')?.setup(staticData);
+}
 
-  function setSelectedCampus(id) {
-    hiddenInput.value = id;
-    document.dispatchEvent(new CustomEvent('campuschange', { detail: { id } }));
-  }
-
-  const available = campuses.filter(c => c.buildings.length > 0);
-
-  // Group by city, then by group within each city
-  const cityMap = new Map(); // city → Map<group|null, campus[]>
-  for (const campus of available) {
-    if (!cityMap.has(campus.city)) cityMap.set(campus.city, new Map());
-    const groupKey = campus.group ?? null;
-    const cityGroups = cityMap.get(campus.city);
-    if (!cityGroups.has(groupKey)) cityGroups.set(groupKey, []);
-    cityGroups.get(groupKey).push(campus);
-  }
-
-  // Cities with at least one group chip get their own section; the rest go into "Other cities"
-  const mainCities = [];
-  const otherCampuses = [];
-  for (const [city, groups] of cityMap) {
-    const hasGroups = [...groups.keys()].some(k => k !== null);
-    if (hasGroups) {
-      mainCities.push({ city, groups });
-    } else {
-      for (const campusList of groups.values()) otherCampuses.push(...campusList);
-    }
-  }
-
-  function deactivateAll() {
-    container.querySelectorAll('.campus-chip').forEach(c => c.classList.remove('active'));
-  }
-
-  function positionIndicator(subOptions, activeSubChip, animate) {
-    const indicator = subOptions.querySelector('.campus-subchip-indicator');
-    if (!indicator) return;
-    if (!animate) {
-      indicator.style.transition = 'none';
-    }
-    indicator.style.transform = `translateX(${activeSubChip.offsetLeft}px)`;
-    indicator.style.width     = activeSubChip.offsetWidth + 'px';
-    if (!animate) {
-      indicator.getBoundingClientRect(); // force reflow to apply snap
-      indicator.style.transition = '';
-    }
-  }
-
-  function activateGroupChip(groupEl) {
-    deactivateAll();
-    groupEl.classList.add('active');
-    const activeSub = groupEl.querySelector('.campus-subchip.active')
-      ?? groupEl.querySelector('.campus-subchip');
-    if (activeSub) {
-      activeSub.classList.add('active');
-      hiddenInput.value = activeSub.dataset.value;
-      const subOptions = groupEl.querySelector('.campus-chip-suboptions');
-      positionIndicator(subOptions, activeSub, false);
-    }
-  }
-
-  function buildGroupChip(label, subCampuses) {
-    const groupEl = document.createElement('div');
-    groupEl.className = 'campus-chip campus-chip-group';
-
-    const trigger = document.createElement('button');
-    trigger.type = 'button';
-    trigger.className = 'campus-chip-group-trigger';
-    trigger.textContent = label;
-    trigger.addEventListener('click', () => {
-      activateGroupChip(groupEl);
-      setSelectedCampus(hiddenInput.value);
-      haptics.trigger(defaultPatterns.light);
-    });
-
-    const subOptionsWrapper = document.createElement('div');
-    subOptionsWrapper.className = 'campus-chip-suboptions-wrapper';
-
-    const subOptions = document.createElement('div');
-    subOptions.className = 'campus-chip-suboptions';
-
-    const indicator = document.createElement('div');
-    indicator.className = 'campus-subchip-indicator';
-    subOptions.appendChild(indicator);
-
-    subCampuses.forEach(campus => {
-      const subChip = document.createElement('button');
-      subChip.type = 'button';
-      subChip.className = 'campus-subchip';
-      subChip.dataset.value = campus.id;
-      subChip.textContent = campus.name;
-
-      subChip.addEventListener('click', () => {
-        groupEl.querySelectorAll('.campus-subchip').forEach(s => s.classList.remove('active'));
-        subChip.classList.add('active');
-        setSelectedCampus(campus.id);
-        positionIndicator(subOptions, subChip, true);
-        haptics.trigger(defaultPatterns.light);
-      });
-
-      subOptions.appendChild(subChip);
-    });
-
-    subOptionsWrapper.appendChild(subOptions);
-    groupEl.appendChild(trigger);
-    groupEl.appendChild(subOptionsWrapper);
-    return groupEl;
-  }
-
-  function buildPlainChip(campus) {
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = 'campus-chip';
-    chip.dataset.value = campus.id;
-    chip.textContent = campus.name;
-    chip.addEventListener('click', () => {
-      deactivateAll();
-      chip.classList.add('active');
-      setSelectedCampus(campus.id);
-      haptics.trigger(defaultPatterns.light);
-    });
-    return chip;
-  }
-
-  let firstChipInfo = null;
-
-  for (const { city, groups } of mainCities) {
-    const row = document.createElement('div');
-    row.className = 'campus-chips-row';
-
-    const section = document.createElement('div');
-    section.className = 'campus-chips-section';
-    const label = document.createElement('label');
-    label.textContent = city;
-    section.appendChild(label);
-    section.appendChild(row);
-    container.appendChild(section);
-
-    for (const [groupName, groupCampuses] of groups) {
-      if (groupName !== null) {
-        const groupEl = buildGroupChip(groupName, groupCampuses);
-        row.appendChild(groupEl);
-        if (!firstChipInfo) firstChipInfo = { el: groupEl, isGroup: true };
-      } else {
-        for (const campus of groupCampuses) {
-          const chip = buildPlainChip(campus);
-          row.appendChild(chip);
-          if (!firstChipInfo) firstChipInfo = { el: chip, isGroup: false };
-        }
-      }
-    }
-  }
-
-  if (otherCampuses.length > 0) {
-    const otherRow = document.createElement('div');
-    otherRow.className = 'campus-chips-row';
-
-    const otherSection = document.createElement('div');
-    otherSection.className = 'campus-chips-section';
-    const otherLabel = document.createElement('label');
-    otherLabel.textContent = t('campus.otherLabel');
-    otherLabel.dataset.i18n = 'campus.otherLabel';
-    otherSection.appendChild(otherLabel);
-    otherSection.appendChild(otherRow);
-
-    for (const campus of otherCampuses) {
-      const chip = buildPlainChip(campus);
-      otherRow.appendChild(chip);
-      if (!firstChipInfo) firstChipInfo = { el: chip, isGroup: false };
-    }
-
-    container.appendChild(otherSection);
-  }
-
-  // Auto-select first chip
-  if (firstChipInfo) {
-    if (firstChipInfo.isGroup) {
-      activateGroupChip(firstChipInfo.el);
-    } else {
-      firstChipInfo.el.classList.add('active');
-      hiddenInput.value = firstChipInfo.el.dataset.value;
-    }
-  }
+// Programmatically select a campus in the main picker.
+export function selectCampusById(id, animate = true) {
+  document.querySelector('campus-chip-picker')?.selectCampusById(id, animate);
 }

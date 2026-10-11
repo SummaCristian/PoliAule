@@ -1,0 +1,600 @@
+/* ── Building overview ("zoom out") ────────────────────────────────────
+   Tapping a building's name pill in the Available results zooms the results
+   container out, in place, into a grid of glass building cards — one per
+   building in the selected campus. One shared camera zoom of the two layers
+   (list ⇄ grid), driven with the Web Animations API in
+   components/building-overview.js (no View Transitions). */
+
+/* The whole interaction runs inside `.bo-stage` — a positioned, clipped frame
+   that takes the list's place (see building-overview.js). The results container
+   itself keeps ALL its own layout (sticky, grid-placed, self-scrolling): the
+   only thing we change on it is pinning its flex content to the top (it's a
+   flex column with `justify-content: space-evenly`). Whatever scrolled the
+   list (the page, or the panel on desktop) scrolls the grid the same way. */
+#available-classrooms-results.bo-active {
+  justify-content: flex-start;
+}
+
+/* Unclipped at rest, so the cards' soft shadows aren't cut off at the frame's
+   edges. Clipping is only needed while a morph runs (the incoming layer starts
+   blown up ~2× around the anchor). It's `overflow: clip`, NOT:
+   - `overflow: hidden` — that makes the stage a scroll container, which would
+     become the new reference for the list's sticky building headers, snapping
+     every stuck one back to its natural spot the instant the list moved in.
+     `overflow: clip` clips paint without being a scroll container.
+   - `clip-path` — Safari doesn't reliably clip composited (will-change /
+     transform) descendants against an ancestor's clip-path, so the blown-up
+     grid escaped the frame and rode over the list.
+   `overflow-clip-margin` keeps a little sideways room for the shadows where
+   it's supported; a tight clip is the harmless fallback. building-overview.js
+   narrows it to the stage's distance from the screen's edges. */
+.bo-stage {
+  position: relative;
+  width: 100%;
+  /* The results panel is a column flexbox with a max-height on desktop. A
+     flex item whose overflow isn't `visible` gets an automatic minimum size
+     of 0, so without this the stage would shrink to the panel's height and
+     clip the grid instead of overflowing it — and the panel couldn't scroll. */
+  flex: none;
+}
+
+#available-classrooms-results.bo-animating .bo-stage {
+  overflow: clip;
+  overflow-clip-margin: 3rem;
+}
+
+/* backdrop-filter is far too expensive to animate — drop it on every glass
+   surface involved for the duration of the morph. It's restored the moment
+   the .bo-animating class comes off (ramped back in by #blurIn in
+   building-overview.js, not snapped). The grid prebuilt during the press
+   (.bo-pregrid, see building-overview.js) goes without it from the start. */
+#available-classrooms-results.bo-animating :is(.bo-card-frost, .classroom-card, .building-section-titles, .bo-close, .bo-title),
+.bo-pregrid :is(.bo-card-frost, .bo-close, .bo-title) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* The topbar (Edifici pill + ×) is `position: sticky`, which promotes it to its
+   own compositor layer — and that layer doesn't pick up the grid's animated
+   opacity, so it stays fully opaque through the whole morph. You only notice it
+   where it sits over the near-stationary anchor card (the pill over the first
+   card); the × rides the grid outward and its stuck-ness isn't obvious. Drop
+   the sticky layer for the morph — nothing scrolls during it anyway — and it
+   fades with the rest of the grid. z-index still keeps it above the cards. */
+#available-classrooms-results.bo-animating .bo-topbar {
+  position: relative;
+  top: auto;
+}
+
+/* The zoom drags a lot of off-screen list through the frame (the whole list
+   shrinks by ~2×). building-overview.js tags the sections that can actually
+   pass through it `.bo-onstage` — their cards get content-visibility forced
+   on so they don't pop in blank a frame late — and hides the rest, which is
+   most of the list and most of the raster work. */
+/* Not gated on .bo-animating: the classes are applied (and their layout
+   effect must land) before the morph measures anything, and they are removed
+   again the moment it settles. */
+.building-section.bo-offstage {
+  visibility: hidden;
+}
+
+.building-section.bo-onstage .classroom-card {
+  content-visibility: visible;
+  /* A tighter shadow while the list is being rasterised for the morph: the
+     40px blur on every card is the bulk of that raster time (profiled), and
+     at 10 % alpha the swap is invisible under the cross-fade. */
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    0 2px 8px 0 var(--lg-shadow-color);
+}
+
+/* The card keeps its photo and label through the morph — that's what makes it
+   read as a card. What comes off is only the two edge treatments that don't
+   survive a 2× scale anyway: the inset highlight (::before) and, the one that
+   actually costs, the 0.5px mask-composite gradient stroke (::after) — one
+   extra compositing pass per card, ~40 of them on the first frame. They snap
+   back on teardown; at that size nobody sees the transition. */
+#available-classrooms-results.bo-animating .classroom-card::before,
+#available-classrooms-results.bo-animating .classroom-card::after {
+  display: none;
+}
+
+/* On teardown the tight morph shadow gives way to the resting 40px one — ease
+   it back instead of snapping. Set only for that window (see #teardown), so
+   the cards carry no permanent box-shadow transition. */
+#available-classrooms-results.bo-restore .classroom-card {
+  transition: transform 0.15s ease, box-shadow 0.35s ease;
+}
+
+/* `.results-filter-row` sets `display:flex`, which outranks `[hidden]`. */
+.results-filter-row[hidden] {
+  display: none;
+}
+
+/* ── Grid ─────────────────────────────────────────────────────────────
+   A plain grid in normal flow; the page (or the desktop results panel)
+   scrolls it exactly as it scrolled the list it replaced. */
+.bo-grid {
+  display: grid;
+  /* Folder-width columns: the folders read best around 168-190px wide; wider
+     and the three cards inside spread thin across a mostly empty back. In px,
+     not rem: the front's type and count pills are px, so a narrower folder
+     (rem shrinks with the root font size) clips them. */
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 0.85rem;
+  padding: 0.25rem 0.25rem 1rem;
+}
+
+/* Always two-up on phones. A single full-width column would make each card
+   as wide as the section it grows from, so the "zoom out" would be no zoom at
+   all — just a slide. Two columns keep the ~2× scale that sells the motion. */
+@media (max-width: 600px) {
+  .bo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+}
+
+/* Floor section headers inside a building page's grid — full-width so they
+   break the two-up flow into groups. Same black/white-at-half-opacity, bold
+   treatment as .building-name (classroom-list.css). */
+.bo-floor-label {
+  grid-column: 1 / -1;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  font-size: var(--text-125);
+  font-weight: 700;
+  line-height: 1.2;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: start;
+  margin: 0;
+  padding: 0.75rem 0.25rem;
+}
+
+.bo-floor-label i {
+  font-size: 1.1em;
+  line-height: 1.1em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bo-floor-label {
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.bo-floor-label:not(:first-child) {
+  margin-top: 0.5rem;
+}
+
+/* Parks where a building's sticky header would, so × stays within reach
+   while the grid scrolls. */
+.bo-topbar {
+  grid-column: 1 / -1;
+  position: sticky;
+  top: calc(var(--header-height, 84px) + 2.25rem + var(--picker-bar-height, 0px) + 0.5rem);
+  z-index: 3;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0.25rem 0.35rem;
+  pointer-events: none;
+}
+
+.bo-topbar > * {
+  pointer-events: auto;
+}
+
+@media (min-width: 600px) {
+  .bo-topbar {
+    top: calc(var(--header-height, 84px) + 1.25rem);
+  }
+}
+
+@media (min-width: 1100px) {
+  .bo-topbar {
+    top: 1rem;
+  }
+}
+
+/* Same glass pill as the building name it grew out of, so it reads cleanly
+   over cards scrolling beneath it. */
+.bo-title {
+  position: relative;
+  margin: 0;
+  padding: 0.4rem 1.05rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-125);
+  font-weight: 800;
+  color: var(--text-color-primary);
+
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
+}
+
+/* Same glass pill as .header-button (press / hover come from `.liquid-glass`). */
+.bo-close {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-color: transparent;
+  border-radius: var(--radius-pill);
+  color: var(--text-color-secondary);
+
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-sm));
+  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
+}
+
+/* Outside 0.5px gradient stroke — radial-gradient mask, same as
+   .header-button::after in style.css (a true circle has a seam with the
+   box-corner mask trick). */
+.bo-close::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
+
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
+
+  pointer-events: none;
+}
+
+.bo-close .hgi-stroke {
+  font-size: var(--text-125);
+}
+
+/* ── Card: a glass folder ─────────────────────────────────────────────
+   Built by components/building-folder.js, used here and in the Campus sheet.
+   Three layers, back to front: .bo-card-back (an SVG panel with a tab, a
+   little taller than the front), .bo-card-papers (up to three classroom
+   photos, card-shaped) and .bo-card-front (Vitrium glass).
+   --open drives the whole "opening" motion: 0 at rest, 1 on hover, 1.4
+   while pressed. */
+.bo-card {
+  --open: 0;
+  --tilt: 4deg;
+  /* Softer than the app's text colours: this sits on glass, over photos. */
+  --folder-text: #2d2d31;
+  --folder-text-secondary: #6c6c72;
+  --folder-back: rgba(255, 255, 255, 0.55);
+  --folder-back-edge: rgba(0, 0, 0, 0.08);
+  --folder-back-shadow: rgba(0, 0, 0, 0.07);
+  --folder-card-contact: rgba(0, 0, 0, 0.22);
+  --folder-tuck: rgba(0, 0, 0, 0.24);
+  --folder-outline-fill: rgba(26, 26, 26, 0.025);
+  --folder-outline-stroke: rgba(26, 26, 26, 0.16);
+
+  position: relative;
+  display: block;
+  height: 204px; /* FOLDER_H in building-folder.js */
+  /* No `perspective` here: that would put the tilted layers in one 3D
+     context, and Firefox then depth-sorts the flat cards in front of the
+     tilted glass. Each tilted layer carries its own perspective() instead,
+     so all three stack in plain DOM order everywhere. */
+  text-align: start;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bo-card {
+    --folder-text: #d9d9de;
+    --folder-text-secondary: #9c9ca3;
+    --folder-back: rgba(255, 255, 255, 0.055);
+    --folder-back-edge: rgba(255, 255, 255, 0.12);
+    --folder-back-shadow: rgba(0, 0, 0, 0.45);
+    --folder-card-contact: rgba(0, 0, 0, 0.6);
+    --folder-tuck: rgba(0, 0, 0, 0.7);
+    --folder-outline-fill: rgba(234, 234, 234, 0.025);
+    --folder-outline-stroke: rgba(234, 234, 234, 0.17);
+  }
+}
+
+.bo-card:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--text-color-accent) 72%, white);
+  outline-offset: 3px;
+  border-radius: 18px;
+}
+
+/* Hover is .bo-card--hover, set by building-folder.js from any pointer but a
+   finger: an iPad with a trackpad, mouse or Pencil still reports
+   (hover: none), so a :hover inside that media query never fired there.
+   Press is .bo-card--pressed, not :active: a finger sets :active on landing,
+   so a scroll starting on a folder opened it (see trackPointer). */
+.bo-card[role="button"].bo-card--hover { --open: 1; }
+.bo-card[role="button"].bo-card--pressed { --open: 1.4; }
+
+.bo-card--inactive {
+  opacity: 0.5;
+}
+
+/* Back: its path is sized to the folder's width by building-folder.js. */
+.bo-card-back {
+  position: absolute;
+  left: 0;
+  top: 30px; /* BACK_TOP */
+  overflow: visible;
+  filter: drop-shadow(0 2px 6px var(--folder-back-shadow));
+  transform-origin: 50% 100%;
+  transform: perspective(700px) rotateX(calc(var(--open) * 4deg));
+  transition: transform 0.4s cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+
+.bo-card-back path {
+  fill: var(--folder-back);
+  stroke: var(--folder-back-edge);
+  stroke-width: 1;
+}
+
+/* Papers: card-shaped classroom photos, sized and placed by
+   building-folder.js. A blank paper stands in when a room has no photo. */
+.bo-card-papers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bo-paper {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--background-color-secondary);
+  box-shadow:
+    0 0 0 0.5px var(--lg-outline),
+    0 2px 6px 0 var(--folder-card-contact);
+  transform:
+    translate(calc(var(--dx, 0px) * var(--open)), calc(-26px * var(--open)))
+    rotate(calc(var(--rot, 0deg) * (1 + 0.25 * var(--open))));
+  transition: transform 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.bo-paper:nth-child(2) { transition-delay: 0.025s; }
+.bo-paper:nth-child(3) { transition-delay: 0.05s; }
+
+.bo-paper img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The front's blur. Chrome drops backdrop-filter on any element with a 3D
+   transform, so it can't live on the tilted front: this untilted twin sits
+   right behind it and only stretches vertically, by how much taller the
+   front looks once tilted toward you (cos a * p / (p - h sin a), with the
+   700px perspective and the front's 136px height). The top corners of the
+   front widen slightly past it when fully open — a few px, under 70% tint. */
+.bo-card-frost {
+  --a: calc(var(--tilt) + var(--open) * 9deg);
+  position: absolute;
+  inset: 68px 0 0;
+  border-radius: 18px;
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+  backdrop-filter: blur(var(--lg-blur-md));
+  transform-origin: 50% 100%;
+  transform: scaleY(calc(cos(var(--a)) * 700 / (700 - 136 * sin(var(--a)))));
+  transition: transform 0.4s cubic-bezier(0.3, 1.35, 0.5, 1);
+  pointer-events: none;
+}
+
+/* Front: Vitrium's regular glass (.lg-glass: tint, rim and the 0.5px
+   gradient stroke), leaning toward you from its bottom edge. */
+.bo-card-front {
+  --lg-ring-strength: 0;
+  position: absolute;
+  inset: 68px 0 0; /* FRONT_TOP */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 13px 11px;
+  border-radius: 18px;
+  overflow: hidden;
+  color: var(--folder-text);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--lg-shadow), 0 -6px 14px -6px var(--folder-tuck);
+  transform-origin: 50% 100%;
+  transform: perspective(700px) rotateX(calc(-1 * (var(--tilt) + var(--open) * 9deg)));
+  transition: transform 0.4s cubic-bezier(0.3, 1.35, 0.5, 1);
+}
+
+/* Compact (building-folder.js COMPACT_LIFT): no headroom above the tab, so
+   the folder's top lines up with the classroom cards beside it, and the front
+   gets that height back. A container, for the narrow case below. */
+.bo-card--compact {
+  container-type: inline-size;
+}
+
+.bo-card--compact .bo-card-back {
+  top: 0;
+}
+
+/* Its size follows the classroom cards beside it, which can get narrower
+   than the ~170px folder the front's type is set for. So below that the
+   whole front scales with the width: --u is 1px at 170px and wider,
+   proportionally less under it (cqi: the folder is the container). Its top
+   too: the folder's height follows its width (favourites.css), and a fixed
+   inset would leave the front too short for its own text. */
+.bo-card--compact :is(.bo-card-front, .bo-card-frost) {
+  --u: min(1px, 100cqi / 170);
+  inset: calc(38 * var(--u)) 0 0;
+}
+
+.bo-card--compact .bo-card-front {
+  padding: calc(10 * var(--u)) calc(13 * var(--u)) calc(11 * var(--u));
+}
+
+.bo-card--compact .bo-card-kicker { font-size: calc(10 * var(--u)); }
+.bo-card--compact .bo-card-name { font-size: calc(50 * var(--u)); margin-top: calc(2 * var(--u)); }
+.bo-card--compact .bo-card-alt { font-size: calc(15 * var(--u)); margin-top: calc(3 * var(--u)); }
+.bo-card--compact .bo-card-total { font-size: calc(12 * var(--u)); margin-top: calc(4 * var(--u)); }
+.bo-card--compact .bo-card-alt + .bo-card-total { margin-top: calc(1 * var(--u)); }
+.bo-card--compact .bo-card-counts { gap: calc(5 * var(--u)); }
+
+.bo-card--compact .bo-count {
+  gap: calc(4 * var(--u));
+  padding: calc(3 * var(--u)) calc(7 * var(--u)) calc(3 * var(--u)) calc(6 * var(--u));
+  font-size: calc(12 * var(--u));
+}
+
+/* Too narrow for the outline beside the footer (the expanded Favourites
+   grid): the footer gets the whole row. */
+@container (max-width: 155px) {
+  .bo-card--compact .bo-card-outline {
+    display: none;
+  }
+
+  .bo-card--compact .bo-card-footer {
+    max-width: 100%;
+  }
+}
+
+/* The building's footprint (utils/building-outline.js), small and whole in
+   the bottom-right corner. */
+.bo-card-outline {
+  position: absolute;
+  right: 11px;
+  bottom: 10px;
+  width: 44px;
+  height: 44px;
+  overflow: visible;
+  pointer-events: none;
+  fill: var(--folder-outline-fill);
+  stroke: var(--folder-outline-stroke);
+  stroke-width: 1.1px;
+  stroke-linejoin: round;
+}
+
+.bo-card-outline path {
+  vector-effect: non-scaling-stroke;
+}
+
+.bo-card-kicker,
+.bo-card-name,
+.bo-card-alt,
+.bo-card-total,
+.bo-card-footer {
+  position: relative;
+}
+
+.bo-card-kicker {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--folder-text-secondary);
+}
+
+.bo-card-name {
+  margin-top: 2px;
+  font-size: 50px;
+  font-weight: 850;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+}
+
+/* flex-shrink: 0 because overflow: hidden drops its min-height to 0, which
+   made it the one row to give way when the front ran short (the overview's
+   136px front with the count pills): the descenders got clipped. */
+.bo-card-alt {
+  flex-shrink: 0;
+  max-width: 100%;
+  margin-top: 3px;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bo-card-total {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--folder-text-secondary);
+}
+
+.bo-card-alt + .bo-card-total {
+  margin-top: 1px;
+}
+
+.bo-card-footer {
+  margin-top: auto;
+  max-width: calc(100% - 50px); /* clear of the outline */
+}
+
+.bo-card-counts {
+  display: flex;
+  gap: 5px;
+}
+
+.bo-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px 3px 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, currentColor 13%, transparent);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.bo-count i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* The status word is for screen readers; the dot's colour carries it on screen. */
+.bo-count-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.bo-count.is-zero {
+  opacity: 0.35;
+}
+
+.bo-count.free           { color: var(--color-status-free); }
+.bo-count.partially-free { color: var(--color-status-partial); }
+.bo-count.occupied       { color: var(--color-status-busy); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bo-card-back,
+  .bo-paper,
+  .bo-card-frost,
+  .bo-card-front {
+    transition: none;
+  }
+}

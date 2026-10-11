@@ -10,7 +10,7 @@ const CACHE_CONTROL = "public, max-age=2592000, immutable"; // 30 days
 const FALLBACK_CACHE_CONTROL = "public, max-age=3600"; // 1 hour
 
 /**
- * Serves an R2 object as a JPEG image, 404s if missing. With `fallbackKey`, a
+ * Serves an R2 object as an image, 404s if missing. With `fallbackKey`, a
  * missing object is answered with that one instead (a thumbnail not generated
  * yet, say, gets the full photo), briefly cached.
  */
@@ -31,7 +31,8 @@ export async function serveR2Image(c: Context, bucket: R2Bucket, key: string, fa
 
   const response = new Response(await obj.arrayBuffer(), {
     headers: {
-      "Content-Type": "image/jpeg",
+      // What the object was uploaded as (photos are all JPEGs; eggs may not be)
+      "Content-Type": obj.httpMetadata?.contentType ?? "image/jpeg",
       "Cache-Control": cacheControl,
       "ETag": obj.httpEtag,
       "Last-Modified": obj.uploaded.toUTCString(),

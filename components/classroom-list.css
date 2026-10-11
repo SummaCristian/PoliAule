@@ -1,11 +1,14 @@
 .available-classrooms-container {
+  /* The containing block of the cards fading out after a rebuild
+     (utils/layout-flip.js morphRender) */
+  position: relative;
   margin: 0.5rem 0;
   padding: 0.5rem;
 
-  background-color: var(--background-color-secondary);
-  border: 4px solid var(--background-color-secondary);
+  background-color: transparent;
+  border: 4px solid transparent;
 
-  border-radius: 1.5rem;
+  border-radius: var(--radius-xl);
 
   display: flex;
   flex-direction: column;
@@ -21,48 +24,41 @@
   gap: 1rem;
 }
 
-.results-filter-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  border: 1.5px solid color-mix(in srgb, var(--text-color-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--text-color-accent) 15%, transparent);
-  color: var(--text-color-accent);
-
-  font-family: "Nunito", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 0.8rem;
+.results-filter-btn.lg-button {
+  height: 2.25rem;
+  gap: 0.375rem;
+  padding: 0 0.875rem 0 0.75rem;
+  font-size: var(--text-80);
   font-weight: 700;
-  cursor: pointer;
-
-  transition: background 0.2s ease, opacity 0.2s ease;
 }
 
-.results-filter-btn:not(.active) {
-  background: transparent;
-  opacity: 0.45;
+/* On: the same glass as the notes (.campus-closed-note below, the season's
+   banner): clear, with just a veil of the accent, the text in the app's own
+   colour and only the icon in the accent. Vitrium's clear tint at its own
+   strength reads as a coloured panel. */
+.results-filter-btn.lg-glass--tinted {
+  --lg-glass-tint: color-mix(in srgb, var(--lg-accent) 40%, transparent);
+  color: var(--text-color-primary);
 }
 
-.results-filter-btn .material-symbols-outlined {
-  font-size: 1rem !important;
+.results-filter-btn.lg-glass--tinted .hgi-stroke {
+  color: var(--lg-accent);
+}
+
+.results-filter-btn .hgi-stroke {
+  font-size: var(--text-100) !important;
+  pointer-events: none;
 }
 
 .available-classrooms-container.hide-partial [data-status="partially-free"] {
   display: none;
 }
 
-.building-all-partial-hidden {
+/* Hide a building's header too when every one of its rooms is partially-free
+   (and therefore already hidden above) — otherwise an empty header would be
+   left dangling with no cards under it. */
+.available-classrooms-container.hide-partial [data-all-partial="true"] {
   display: none;
-  padding: 0.75rem 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-secondary, #888);
-  text-align: center;
-}
-
-.available-classrooms-container.hide-partial .building-all-partial-hidden {
-  display: block;
 }
 
 .available-classrooms-container.empty {
@@ -81,7 +77,7 @@
 }
 
 .empty-container-title {
-  font-size: 1.5rem;
+  font-size: var(--text-150);
   font-weight: 700;
 
   color: var(--text-color-secondary);
@@ -91,7 +87,7 @@
 }
 
 .empty-container-subtitle {
-  font-size: 0.9rem;
+  font-size: var(--text-90);
   font-weight: 630;
 
   color: var(--text-color-secondary);
@@ -100,6 +96,90 @@
   margin: 0 3rem;
 }
 
+/* Campus closed all day (renderCampusClosedContainer in script.js), in place
+   of the "no results" icon and text. Styled like the season's banner
+   (.season-banner in style.css): clear glass with just a veil of the accent,
+   the text in the app's own colours, only the icon in the accent. */
+.campus-closed-note {
+  --lg-glass-tint: color-mix(in srgb, var(--lg-accent) 40%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: calc(100% - 2.5rem);
+  max-width: 28rem;
+  box-sizing: border-box;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-xl);
+  color: var(--text-color-primary);
+  text-align: start;
+}
+
+/* Pressed, Vitrium lifts liquid glass to z-index 9999 over its neighbours,
+   which put the note over the tab bar (z-index 20) when it reaches it */
+.campus-closed-note:is(.lg-pressing, .lg-dragging, .lg-settling) {
+  z-index: 1;
+}
+
+.campus-closed-note__icon {
+  flex: none;
+  font-size: var(--text-150);
+  color: var(--lg-accent);
+}
+
+.campus-closed-note__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.campus-closed-note__title {
+  margin: 0;
+  font-size: var(--text-90);
+  font-weight: 700;
+}
+
+.campus-closed-note__body {
+  margin: 0.1rem 0 0;
+  font-size: var(--text-80);
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text-color-primary) 70%, transparent);
+}
+
+/* In the results it is a large card, icon on top, tall enough (a share of
+   the screen) to make the page taller than the screen: a page that isn't has
+   iOS Safari place the fixed tab bar too high at rest. */
+.available-classrooms-container.empty > .campus-closed-note {
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 40lvh;
+  padding: 2rem 1.5rem;
+  text-align: center;
+
+  .campus-closed-note__icon { font-size: 4rem !important; }
+  .campus-closed-note__text { flex: none; }
+  .campus-closed-note__title { font-size: var(--text-125); }
+  .campus-closed-note__body { margin-top: 0.4rem; font-size: var(--text-90); }
+}
+
+/* A graduation day at the campus (graduationNote in script.js): the same
+   note above the results, in graduation's navy whatever the accent is */
+.graduation-note {
+  --lg-glass-tint: color-mix(in srgb, var(--graduation-tint) 35%, transparent);
+  --graduation-tint: #3d63b3;
+  margin: 0 auto 1rem;
+}
+
+.graduation-note .campus-closed-note__icon { color: var(--graduation-tint); }
+
+@media (prefers-color-scheme: dark) {
+  .graduation-note { --graduation-tint: #8eabff; }
+}
+
+/* Results list — a vertical stack of per-building <li> sections (see
+   buildBuildingSection in script.js). Each section is its own card grid, so
+   its sticky header is confined to that section's box: a new building's
+   header pushes the previous one out of the sticky slot (list-style)
+   instead of every header piling up at the top. */
 .list-outer-container {
   list-style: none;
   margin: 0;
@@ -107,145 +187,170 @@
 
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
-.list-inner-container {
-  list-style: none;
-  margin: 0;
-  padding: 0.75rem 0.5rem;
-
-  display: flex;
-  flex-direction: column;
+.building-section {
+  display: grid;
+  /* Fit as many columns as fit at an 8.5rem card floor, and fall back to a
+     single column when even one 8.5rem card won't fit (very small window /
+     split screen). Two parts matter:
+       - 8.5rem, not the old 9.5rem: the results box at a 360px viewport is
+         only ~296px wide (tab + list + container padding), and two 9.5rem
+         tracks + the gap need ~316px — that 20px is why a stock 360px Android
+         phone dropped to one giant column.
+       - min(100%, 8.5rem): when the row itself is narrower than 8.5rem the
+         floor collapses to 100% instead of overflowing, so the fallback is a
+         clean single column rather than a clipped card. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.5rem), 1fr));
   gap: 0.75rem;
 }
 
-.building-card {
-  background-color: var(--background-color);
-  border-radius: 1.5rem;
-  padding: 0.75rem;
-  box-shadow: var(--shadow);
+.building-section-header {
+  grid-column: 1 / -1;
 
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  
-  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
+  /* Parks directly beneath the sticky picker bar — its live height comes
+     from --picker-bar-height (script.js); the + 1.5rem matches the picker
+     bar's own offset below the app header. This holds all the way up to the
+     1100px breakpoint below: the side nav rail appears at 600px, but the
+     picker form itself doesn't go static (non-sticky, --picker-bar-height
+     legitimately 0) until the 1100px two-column layout, so this rule can't
+     drop the offset any earlier without the header sliding in behind the
+     still-sticky pickers. */
+  position: sticky;
+  top: calc(var(--header-height, 84px) + 2.25rem + var(--picker-bar-height, 0px) + 0.5rem);
+  z-index: 2;
 
-.building-card-header {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.25rem 0.5rem 0.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
-  cursor: pointer;
-  user-select: none;
+  gap: 0.75rem;
+  padding: 0.25rem;
+  text-align: start;
+
+  /* `backwards`, not `both`: the end keyframe is the natural resting state
+     (same reason .tab-content.visible drops `forwards`). */
+  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  /* The stagger (script.js), plus any wait for a card fading out of this
+     spot after a rebuild (utils/layout-flip.js) */
+  animation-delay: calc(var(--appear-delay, 0ms) + var(--lf-wait, 0ms));
 }
 
-.building-card.collapsed .building-card-header {
-  border-bottom-color: transparent;
-  padding-bottom: 0.25rem;
+@media (min-width: 1100px) {
+  /* No mask on the scroll panel here: a `mask` on an ancestor disables
+     `backdrop-filter` on descendants in Chromium, which kills the glass
+     title pill's blur. The app header's fade overlay already covers the
+     panel's top, so the hard overflow edge isn't visible anyway. */
+  .building-section-header {
+    top: 1rem;
+  }
 }
 
-.building-card.collapsed {
-  gap: 0;
-  cursor: pointer;
-}
+/* Glass pill around the name + altName group, so the sticky label reads
+   cleanly over the cards scrolling beneath it. Same --lg-* material as
+   .header-button / the classroom cards. */
+.building-section-titles {
+  position: relative;
 
-.building-card-header-text {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  align-items: flex-start;
+  gap: 0;
+
+  /* It's a <button> now (opens the building overview) — strip the UA chrome. */
+  appearance: none;
+  border: none;
+  font: inherit;
   text-align: start;
+  cursor: default;
+
+  padding: 0.5rem 1.05rem;
+  border-radius: var(--radius-pill);
+
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    var(--lg-highlight),
+    0 4px 40px 0 var(--lg-shadow-color);
+}
+
+/* Outside 0.5px gradient stroke — same recipe as .classroom-card::after. */
+.building-section-titles::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
+}
+
+/* The building's star and the jump-to-Campus arrow, side by side. */
+.building-section-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.building-section-btn {
+  flex: none;
+}
+
+.building-section-btn i {
+  font-size: var(--text-125);
+  line-height: 1;
 }
 
 .building-name {
-  font-size: 1.75rem;
+  font-size: var(--text-110);
   font-weight: 700;
+  line-height: 1.2;
+  color: rgba(0, 0, 0, 0.5);
   margin: 0;
 }
 
 .building-alt-name {
-  font-size: 0.75em;
+  font-size: var(--text-75);
   font-weight: 600;
-  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
-  margin-left: 0.15rem;
+  line-height: 1.1;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0;
 }
 
-.building-counts {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.building-count {
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.building-count.free          { color: var(--color-status-free); }
-.building-count.partially-free { color: var(--color-status-partial); }
-.building-count.not-free       { color: var(--color-status-busy); }
-
-.building-count-sep {
-  font-size: 0.65rem;
-  color: color-mix(in srgb, var(--text-color-primary) 25%, transparent);
-}
-
-.building-chevron {
-  color: color-mix(in srgb, var(--text-color-primary) 45%, transparent);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  flex-shrink: 0;
-  transform: rotate(-180deg);
-}
-
-.building-card.collapsed .building-chevron {
-  transform: rotate(0deg);
-}
-
-.building-card-body {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
-  overflow: hidden;
-  min-height: 0;
-}
-
-.building-card.collapsed .building-card-body {
-  grid-template-rows: 0fr;
-  opacity: 0;
-}
-
-.building-card-body > .list-inner-container {
-  overflow: hidden;
-  min-height: 0;
-}
-
-.classroom-list-item-container {
-  padding: 1rem;
-
-  border-radius: 1rem;
-
-  background-color: var(--background-color-secondary);
-
-  box-shadow: var(--shadow);
-
-  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  transition: scale 0.15s ease;
-
-  &:hover {
-    scale: 1.025;
+@media (prefers-color-scheme: dark) {
+  .building-name,
+  .building-alt-name {
+    color: rgba(255, 255, 255, 0.5);
   }
 }
 
+/* Each card is a grid item directly — no extra wrapper box (the old
+   .classroom-list-item-container padding/shadow chrome moved onto the card
+   itself, since the card is no longer full-width and needs its own bounds). */
+.classroom-list-item-container {
+  display: contents;
+}
+
+.classroom-list-item-container .classroom-card {
+  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--appear-delay, 0ms) + var(--lf-wait, 0ms));
+}
+
 /* Prevent re-triggering the staggered animation after the first load */
-.list-outer-container.appeared .classroom-list-item-container,
-.list-outer-container.appeared > li,
-.list-outer-container.appeared .building-card {
+.list-outer-container.appeared .classroom-card,
+.list-outer-container.appeared .building-section-header {
   animation: none !important;
 }
 
@@ -258,448 +363,223 @@
   from {
     opacity: 0;
     transform: translateY(12px);
-    filter: blur(4px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   CLASSROOM CARD
+   Ported from the Figma "Classroom Card / Portrait" component: a photo with
+   a gradient fade to a solid, readable footer instead of the old design's
+   second blurred copy of the photo and mix-blend-mode overlay. The card's
+   chrome reuses the project's existing --lg-* tokens instead of one-off
+   shadow values, per the Figma spec's own Glass effect names.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Outer box: carries the box-shadow (highlight + drop shadow) and the
+   gradient stroke ring. Deliberately NOT overflow:hidden — box-shadow is
+   clipped by overflow on the element that declares it, not just its
+   children, so the shadow has to live on an unclipped box. The photo is
+   clipped to the rounded corners by the inner .classroom-card-clip instead. */
 .classroom-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  position: relative;
+  aspect-ratio: 154 / 196;
+  /* Belt-and-braces cap: if a card ever ends up in a very wide single track
+     (some fallback layout, an unexpected container width), the portrait
+     aspect-ratio won't blow it up to a full-screen tile. */
+  max-width: 24rem;
   text-align: start;
 
-  cursor: pointer;
-  padding: 1rem;
-  margin: -1rem; /* Offset the container padding to fill it completely */
-  border-radius: 1rem;
-  transition: background-color 0.2s ease;
+  padding: 0;
+  border-radius: var(--radius-lg);
+
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 
-  contain: layout paint style;
+  background-color: var(--background-color-secondary);
+  /* Only the two non-inset parts here — outline hairline and drop shadow,
+     both painted outside the box, so they're unaffected by whatever's
+     inside. The inset highlight moved to ::before (see below): inset
+     shadows paint behind child content by default, and .classroom-card-clip
+     (the photo) is fully opaque, so an inset shadow declared here would be
+     invisible on any photo card. */
+  box-shadow:
+    0 0 0 0.1px var(--lg-outline),
+    0 4px 40px 0 var(--lg-shadow-color);
+
+  transition: transform 0.15s ease;
+
+  content-visibility: auto;
+  /* "auto" keyword: this card also carries aspect-ratio, so a fixed guess
+     that doesn't match the grid's actual column width caused a real bug —
+     a size mismatch between the guessed and rendered box could make a
+     card's very first IntersectionObserver callback (photo lazy-load) get
+     silently dropped. Earlier profiling showed no measurable perf cost
+     either way, so "auto" (remember the real size after first layout) is
+     the safe choice here.
+     Explicit width AND height (not one value reused for both) matching the
+     card's actual 154:196 proportions — a square-ish single-value guess was
+     visibly wrong on width, and while the card is transitioning between
+     skipped/relevant (e.g. mid-scroll on Safari), the photo can briefly
+     render against that wrong placeholder size, showing as a squeezed
+     sliver via object-fit: cover. */
+  contain-intrinsic-size: auto 155px auto 197px;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  /* Held down (see classroom-detail.js press handler). Snappier transition in
+     than the shared 0.15s so the feedback feels immediate; the release hands
+     off to the View Transition mid-scale. Doubled specificity to win over
+     :hover on desktop. */
+  &.classroom-card--pressed {
+    transform: scale(0.96);
+    transition: transform 0.1s ease;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--text-color-accent) 72%, white);
+    outline-offset: 3px;
+  }
 }
 
-/* ── Photo card variant ─────────────────────────────────────── */
-
-.classroom-card--with-photo {
-  padding: 0;
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--text-color-primary) 12%, var(--background-color-secondary));
-  border: 1px solid color-mix(in srgb, white 14%, transparent);
-  box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+.classroom-card-clip {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
   overflow: hidden;
   isolation: isolate;
-  mask-image: radial-gradient(white, black);
-  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
-/* Blurred color wash — spans the full card, fades in once the photo loads.
-   This is the backdrop visible behind and below the real photo. */
-.classroom-card--with-photo::before {
-  content: '';
+/* Inset highlight, repainted here (on top of .classroom-card-clip's photo)
+   instead of as part of .classroom-card's own box-shadow — see the note
+   there. This pseudo has no content of its own, so it never blocks clicks
+   or covers the photo underneath it visually beyond its shadow. */
+.classroom-card::before {
+  content: "";
   position: absolute;
-  inset: -36px;
-  background: var(--card-photo-url) center / cover no-repeat;
-  filter: blur(34px) saturate(1.55) brightness(0.48);
-  z-index: 0;
-  opacity: 0;
-  transition: opacity 0.5s ease;
+  inset: 0;
   border-radius: inherit;
+  box-shadow: var(--lg-highlight);
+  pointer-events: none;
+  z-index: 1;
 }
 
-.classroom-card--with-photo:has(.classroom-card-photo.loaded)::before {
-  opacity: 1;
+/* Outside 0.5px gradient stroke — same recipe as .header-button::after /
+   .lg-tabbar__bar::after in Vitrium's tabbar.css. */
+.classroom-card::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  padding: 0.5px;
+
+  background: var(--lg-stroke-gradient);
+  opacity: var(--lg-stroke-opacity);
+
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+
+  pointer-events: none;
 }
 
-/* The actual photo — fills the card but fades out toward the middle,
-   letting the blurred wash beneath carry the image feel downward. */
 .classroom-card-photo {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center center;
-  border-radius: inherit;
-  -webkit-mask-image: linear-gradient(to bottom, black 34%, transparent 68%);
-  mask-image: linear-gradient(to bottom, black 34%, transparent 68%);
   opacity: 0;
-  transform: scale(1.03);
-  transition: opacity 0.5s ease, transform 0.45s ease;
-  z-index: 1;
+  transition: opacity 0.4s ease;
 }
 
 .classroom-card-photo.loaded {
   opacity: 1;
-  transform: scale(1);
 }
 
-/* Failed photo — show a muted placeholder icon */
-.classroom-card--with-photo.photo-failed::after {
-  content: 'hide_image';
-  font-family: 'Material Symbols Outlined';
-  font-size: 2rem;
+/* Failed photo — hide the broken <img> and show a muted placeholder icon instead */
+.classroom-card--photo.photo-failed .classroom-card-photo {
+  display: none;
+}
+
+.classroom-card--photo.photo-failed::before {
+  content: '\f1e97';
+  font-family: 'hugeicons-stroke-rounded';
+  font-size: var(--text-200);
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.25);
+  color: color-mix(in srgb, var(--text-color-primary) 20%, transparent);
   z-index: 0;
   pointer-events: none;
 }
 
-/* Gradient scrim: light at top for the photo, deeper toward the bottom
-   where the blurred wash needs extra darkening for the timeline to read. */
-.classroom-card-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.16) 0%,
-    rgba(0, 0, 0, 0.06) 20%,
-    rgba(0, 0, 0, 0) 36%,
-    rgba(0, 0, 0, 0) 64%,
-    rgba(0, 0, 0, 0.36) 84%,
-    rgba(0, 0, 0, 0.68) 100%
-  );
-  transition: background 0.2s ease;
-}
-
-.classroom-card-overlay::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(130% 70% at 50% 0%, rgba(0, 0, 0, 0.54) 0%, rgba(0, 0, 0, 0.22) 34%, rgba(0, 0, 0, 0) 60%),
-    radial-gradient(120% 62% at 50% 0%, rgba(0, 0, 0, 0.52) 0%, rgba(0, 0, 0, 0.22) 44%, rgba(0, 0, 0, 0) 92%),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0) 52%);
-  mix-blend-mode: multiply;
-  opacity: 0.74;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.classroom-card-overlay::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.16) 0%,
-    rgba(255, 255, 255, 0.06) 24%,
-    rgba(255, 255, 255, 0) 52%
-  );
-  mix-blend-mode: soft-light;
-  opacity: 0.36;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* All card content — header, timeline, features — stacked on top.
-   padding-top pushes it down, leaving a clear image band at the top. */
-.classroom-card-content {
+/* The fade from the photo to a solid, readable footer. Hung off the text
+   block (.classroom-card-text) instead of laid across the card at fixed
+   stops, so it rises with whatever the text needs: an alt name line, or a
+   label wrapped under a long name. It starts --scrim-lead above the text and
+   turns 80% opaque right where the text begins, solid soon after. Extends
+   past the text by the content padding (+1px bleed: guards against a
+   sub-pixel gap at the card's rounded bottom edge on some DPR/zoom combos,
+   clipped precisely by .classroom-card-clip's overflow:hidden). Photo cards
+   only: plain ones already sit on a solid background. */
+.classroom-card--photo .classroom-card-text {
+  --scrim-rgb: 217 217 217;
+  --scrim-lead: 2.75rem;
+  --scrim-bleed: calc(0.85rem + 1px);
   position: relative;
-  z-index: 3;
-  padding: 6.85rem 1rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.56rem;
-}
+  isolation: isolate;
 
-.classroom-card--with-photo .classroom-card-content {
-  padding-top: 12rem;
-}
-
-/* ── White text overrides for photo variant ─────────────────── */
-
-.classroom-card--with-photo .classroom-name {
-  color: #fff;
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.72),
-    0 6px 16px rgba(0, 0, 0, 0.58),
-    0 0 1px rgba(0, 0, 0, 0.7);
-  letter-spacing: 0.01em;
-  line-height: 1.05;
-  max-width: 95%;
-}
-
-.classroom-card--with-photo .classroom-status-txt {
-  text-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.72),
-    0 4px 10px rgba(0, 0, 0, 0.42);
-  filter: none;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: 0;
-}
-
-.classroom-card--with-photo .classroom-detail-btn {
-  color: rgba(255, 255, 255, 0.86);
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.classroom-card--with-photo .classroom-feature-icon {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.classroom-card--with-photo .classroom-status-txt.free {
-  color: #79f2a1;
-}
-
-.classroom-card--with-photo .classroom-status-txt.free-soon {
-  color: #b9ff85;
-}
-
-.classroom-card--with-photo .classroom-status-txt.partially-free,
-.classroom-card--with-photo .classroom-status-txt.occupied-soon {
-  color: #ffd76b;
-}
-
-.classroom-card--with-photo .classroom-status-txt.not-free,
-.classroom-card--with-photo .classroom-status-txt.occupied {
-  color: #ff9b8f;
-}
-
-/* ── Timeline overrides for dark photo background ───────────── */
-
-.classroom-card--with-photo .classroom-timeline {
-  padding: 0.5rem 0 0;
-}
-
-.classroom-card--with-photo .timeline-bar {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: none;
-}
-
-.classroom-card--with-photo .timeline-query-region {
-  background: color-mix(in srgb, var(--text-color-accent) 28%, transparent);
-  border-color: color-mix(in srgb, var(--text-color-accent) 76%, transparent);
-}
-
-.classroom-card--with-photo .timeline-tick-label span {
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.classroom-card--with-photo .timeline-tick-label::before {
-  background: rgba(255, 255, 255, 0.44);
-}
-
-.classroom-card:not(.classroom-card--with-photo):hover {
-  background-color: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
-}
-
-.classroom-card--with-photo:hover .classroom-card-overlay {
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.2) 0%,
-    rgba(0, 0, 0, 0.08) 22%,
-    rgba(0, 0, 0, 0) 38%,
-    rgba(0, 0, 0, 0) 62%,
-    rgba(0, 0, 0, 0.44) 84%,
-    rgba(0, 0, 0, 0.78) 100%
-  );
-}
-
-.classroom-card:hover .classroom-detail-btn {
-  color: var(--text-color-accent);
-  transform: translateX(4px);
-}
-
-.classroom-card--with-photo:hover .classroom-detail-btn {
-  color: rgba(255, 255, 255, 0.95);
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.34);
-}
-
-.classroom-card--with-photo:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--text-color-accent) 72%, white);
-  outline-offset: 3px;
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: calc(-1 * var(--scrim-lead));
+    left: calc(-1 * var(--scrim-bleed));
+    right: calc(-1 * var(--scrim-bleed));
+    bottom: calc(-1 * var(--scrim-bleed));
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgb(var(--scrim-rgb) / 0) 0,
+      rgb(var(--scrim-rgb) / 0.8) var(--scrim-lead),
+      rgb(var(--scrim-rgb) / 1) calc(var(--scrim-lead) + 1.25rem)
+    );
+  }
 }
 
 @media (prefers-color-scheme: dark) {
-  .classroom-card--with-photo::before {
-    filter: blur(34px) saturate(1.45) brightness(0.58);
-  }
-
-  .classroom-card-overlay {
-    background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.14) 0%,
-      rgba(0, 0, 0, 0.05) 20%,
-      rgba(0, 0, 0, 0) 36%,
-      rgba(0, 0, 0, 0) 64%,
-      rgba(0, 0, 0, 0.34) 84%,
-      rgba(0, 0, 0, 0.66) 100%
-    );
-  }
-
-  .classroom-card-overlay::before {
-    opacity: 0.64;
-  }
-
-  .classroom-card-overlay::after {
-    opacity: 0.18;
+  .classroom-card--photo .classroom-card-text {
+    --scrim-rgb: 26 26 26;
   }
 }
 
-@media (prefers-color-scheme: light) {
-  .classroom-card--with-photo {
-    border: 1px solid color-mix(in srgb, black 7%, transparent);
-    box-shadow:
-      0 8px 22px rgba(18, 24, 40, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.34);
-  }
-
-  .classroom-card--with-photo::before {
-    filter: blur(30px) saturate(1.32) brightness(0.8);
-  }
-
-  .classroom-card-overlay {
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.09) 0%,
-      rgba(0, 0, 0, 0.06) 18%,
-      rgba(0, 0, 0, 0) 36%,
-      rgba(0, 0, 0, 0) 64%,
-      rgba(0, 0, 0, 0.24) 84%,
-      rgba(0, 0, 0, 0.54) 100%
-    );
-  }
-
-  .classroom-card-overlay::before {
-    opacity: 0.72;
-  }
-
-  .classroom-card--with-photo:hover .classroom-card-overlay {
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.11) 0%,
-      rgba(0, 0, 0, 0.08) 20%,
-      rgba(0, 0, 0, 0) 38%,
-      rgba(0, 0, 0, 0) 62%,
-      rgba(0, 0, 0, 0.28) 84%,
-      rgba(0, 0, 0, 0.58) 100%
-    );
-  }
-
-  .classroom-card-overlay::after {
-    opacity: 0.42;
-  }
-
-}
-
-.classroom-card-header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.classroom-card--with-photo .classroom-card-header {
-  position: absolute;
-  top: 1rem;
-  left: 1.15rem;
-  right: 1.15rem;
-  z-index: 4;
-  align-items: center;
-}
-
-.classroom-card-header-left {
+.classroom-card-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  min-width: 0;
-  position: relative;
-}
-
-.classroom-detail-btn {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  color: var(--text-color-secondary);
-  transition: color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.classroom-detail-btn .material-symbols-outlined {
-  font-size: 1.5rem !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1em;
-  line-height: 1;
-  transform: translateX(0.02em);
-}
-
-.classroom-features {
-  display: flex;
-  flex-direction: row;
-  gap: 0.1rem;
-  flex-shrink: 0;
   justify-content: flex-end;
 }
 
-.classroom-card-meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-height: 1.2rem;
-}
-
-.classroom-feature-icon {
-  font-size: 1.1rem !important;
-  color: color-mix(in srgb, var(--text-color-primary) 40%, transparent);
-}
-
-.classroom-name {
-  font-size: 1.4rem;
-  font-weight: 700;
-  text-align: start;
-  margin: 0;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: normal;
-  line-height: 1.12;
-  max-width: 100%;
-}
-
 .classroom-status-txt {
-  font-size: 0.8rem;
+  flex: 0 0 auto;
+  font-size: var(--text-80);
   font-weight: 800;
   margin: 0;
-  flex: 1 1 auto;
-  min-width: 0;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   line-height: 1.15;
-  text-wrap: balance;
+  white-space: nowrap;
 }
 
 .classroom-status-txt.free {
@@ -720,256 +600,264 @@
   color: var(--color-status-busy);
 }
 
-.classroom-timeline {
-  padding: 1rem;
-  
-  contain: layout paint;
+/* The building is closed: not a booking, so no status color */
+.classroom-status-txt.closed {
+  color: var(--text-color-secondary);
 }
 
-.timeline-bar-wrapper {
-  position: relative;
-  padding-top: 1.8rem;
-}
-
-.timeline-time-indicator {
-  position: absolute;
-  top: 0.1rem;
-  transform: translateX(-50%);
-
-  background: var(--text-color-accent);
-  color: white;
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 0.7rem;
+.classroom-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: var(--text-150);
   font-weight: 800;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
-
-  user-select: none;
-  z-index: 10;
-}
-
-@media (prefers-color-scheme: dark) {
-  .timeline-time-indicator:not(.timeline-time-indicator--now) {
-    /* Use a slightly darker/more saturated green for better white text contrast on dark background */
-    background: #28a745;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
-  }
-}
-
-.timeline-time-indicator::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 4px solid transparent;
-  border-top-color: var(--text-color-accent);
-}
-
-.timeline-time-indicator--edge-left {
-  transform: translateX(0);
-}
-
-.timeline-time-indicator--edge-left::after {
-  left: 12px;
-  transform: none;
-}
-
-.timeline-time-indicator--edge-right {
-  transform: translateX(-100%);
-}
-
-.timeline-time-indicator--edge-right::after {
-  left: calc(100% - 12px);
-  transform: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  .timeline-time-indicator:not(.timeline-time-indicator--now)::after {
-    border-top-color: #28a745;
-  }
-}
-
-.timeline-time-indicator--now {
-  background: #2196F3;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
-
-  opacity: 0;
-  transform-origin: bottom center;
-  animation: today-indicator-appear 0.65s ease-out 0.35s forwards;
-}
-
-.timeline-time-indicator--now::after {
-  border-top-color: #2196F3;
-}
-
-.timeline-bar {
-  position: relative;
-  height: 2.2rem;
-  border-radius: 1.1rem;
-  background: color-mix(in srgb, var(--text-color-primary) 6%, transparent);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--text-color-primary) 8%, transparent);
-}
-
-.timeline-query-region {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  background: color-mix(in srgb, var(--text-color-accent) 4%, transparent);
-  border-left: 1.5px dashed color-mix(in srgb, var(--text-color-accent) 40%, transparent);
-  border-right: 1.5px dashed color-mix(in srgb, var(--text-color-accent) 40%, transparent);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.timeline-block {
-  position: absolute;
-  top: 2px;
-  bottom: 2px;
-  border-radius: 6px;
-  z-index: 2;
-  transition: opacity 0.2s ease;
-}
-
-.timeline-block--busy.timeline-block--query {
-  background: var(--busy-gradient);
-  border: 1px solid color-mix(in srgb, var(--color-status-busy) 20%, black);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.timeline-block--busy.timeline-block--context {
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 4px,
-    color-mix(in srgb, var(--color-status-busy) 25%, transparent) 4px,
-    color-mix(in srgb, var(--color-status-busy) 25%, transparent) 8px
-  );
-  border: 1px solid color-mix(in srgb, var(--color-status-busy) 15%, transparent);
-  opacity: 0.8;
-}
-
-.timeline-block--seamless-left {
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
-  border-left: none !important;
-}
-
-.timeline-block--seamless-right {
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-  border-right: none !important;
-}
-
-.timeline-bar-wrapper .timeline-hover-cursor {
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-
-  background: var(--background-color);
+  /* Tight, so the building line sits right under the name */
+  line-height: 1.1;
+  margin: 0;
   color: var(--text-color-primary);
-  border: 1px solid color-mix(in srgb, var(--text-color-primary) 18%, transparent);
-  border-radius: 0.5rem;
-  padding: 3px 8px;
-  font-size: 0.72rem;
-  font-weight: bold;
-  white-space: nowrap;
-  box-shadow: var(--shadow);
-
-  pointer-events: none;
-  user-select: none;
-  z-index: 10;
-}
-
-/* Border triangle (1px larger, in border color, sits behind the fill triangle) */
-.timeline-bar-wrapper .timeline-hover-cursor::before {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: color-mix(in srgb, var(--text-color-primary) 18%, transparent);
-}
-
-/* Fill triangle (covers the border triangle except the bottom tip) */
-.timeline-bar-wrapper .timeline-hover-cursor::after {
-  content: '';
-  position: absolute;
-  top: calc(100% - 1px);
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: var(--background-color);
-}
-
-.timeline-bar .timeline-hover-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  transform: translateX(-50%);
-  background: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
-  pointer-events: none;
-  z-index: 5;
-}
-
-.timeline-ticks {
-  position: relative;
-  height: 1.2rem;
-  margin-top: 0.2rem;
-}
-
-.timeline-tick-label {
-  position: absolute;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  user-select: none;
-}
-
-.timeline-tick-label::before {
-  content: '';
-  display: block;
-  width: 1px;
-  height: 3px;
-  background: color-mix(in srgb, var(--text-color-primary) 35%, transparent);
-}
-
-.timeline-tick-label span {
-  font-size: 0.62rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--text-color-primary) 50%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.classroom-slots {
+/* Light mode: the status colours are tuned for the app's light surfaces, and
+   are too pale for a label on the card's grey footer (yellow was 1.3:1).
+   Darker shades of each, ~4.7:1 or better on it, for the label and its dot
+   only; the timeline keeps the bright ones. */
+@media (prefers-color-scheme: light) {
+  .classroom-card-title-row {
+    --color-status-free: #17692f;
+    --color-status-free-soon: #45600a;
+    --color-status-partial: #7c5000;
+    --color-status-busy: #b71c1c;
+  }
+}
+
+/* Name with the status label at its right, on the same baseline. A name too
+   long to share the row pushes the label onto its own line (flex-wrap works
+   off the name's full width, before any shrinking), still right-aligned. */
+.classroom-card-title-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  align-items: baseline;
+  column-gap: 0.375rem;
+
+  & > .classroom-status-txt {
+    margin-left: auto;
+  }
+
+  /* Last resort when not even the short label fits (see _fitObserver in
+     classroom-list.js): a dot in the label's own colour, sat on the name's
+     x-height */
+  & > .classroom-status-txt.is-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+    align-self: center;
+  }
 }
 
-.classroom-slot-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-color-accent);
-
-  background: color-mix(in srgb, var(--text-color-accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--text-color-accent) 30%, transparent);
+/* Building (and its alt name on a second line) with the timeline at its
+   right, the timeline level with the last line. */
+.classroom-card-meta-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.375rem;
 }
 
-.classroom-slot-icon {
-  font-size: 0.95rem !important;
+/* Doesn't shrink: the timeline gives up its width first (see below), and
+   only past the timeline's minimum is the building cut */
+.classroom-card-building {
+  flex: 0 0 auto;
+  max-width: calc(100% - 2.25rem - 0.375rem);
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-80);
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--text-color-primary) 55%, transparent);
+  margin: 0;
+
+  & > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* 3.5rem, down to 2.25rem on the narrowest cards (360px phones) so
+   "Building 11" still fits whole next to it */
+.classroom-card-timeline {
+  --tl-height: 8px;
+  flex: 0 1 3.5rem;
+  min-width: 2.25rem;
+  position: relative;
+  height: var(--tl-height);
+  /* Room for the now tick sticking out, and centred on the text line */
+  margin-block: 3px;
+}
+
+/* No building line (cards under their building's header): the timeline
+   takes the whole row, more room for short bookings */
+.classroom-card--no-building .classroom-card-timeline {
+  flex: 1 1 auto;
+  margin-top: 0.4rem;
+}
+
+/* Vitrium's material, at bar scale: the track is a groove sunk into the
+   card (the slider / progress track recipe: a faint fill, a hairline ring,
+   plus a top inner shade for depth), booked time is lit glass sitting in it
+   (--lg-highlight's logic, specular rim on top, shade at the bottom), and now
+   is the slider's resting thumb, a frosted white capsule. All plain
+   box-shadows and gradients, no backdrop-filter, so hundreds of cards cost
+   nothing extra to paint. */
+.classroom-card-timeline-track {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--lg-radius-pill);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-color-primary) 14%, transparent);
+  box-shadow:
+    inset 0 0 0 0.5px color-mix(in srgb, var(--text-color-primary) 12%, transparent),
+    inset 0 1px 1.5px color-mix(in srgb, black 22%, transparent);
+}
+
+.classroom-card-timeline-seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+
+  &.is-busy {
+    border-radius: var(--lg-radius-pill);
+    background:
+      linear-gradient(to bottom,
+        color-mix(in srgb, var(--lg-specular) 28%, transparent),
+        transparent 55%),
+      var(--color-status-busy);
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in srgb, var(--lg-specular) 55%, transparent),
+      inset 0 -1px 0 0 color-mix(in srgb, black 18%, transparent);
+  }
+
+  /* Closed hours: a darker fill under bold stripes, so they read on the
+     8px groove. A third of partially free results are partial only because
+     the building opens late or closes early in the window, with no booking
+     at all, and the old faint hatch left their bar looking empty. */
+  &.is-closed {
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        color-mix(in srgb, var(--text-color-primary) 55%, transparent) 0 1.5px,
+        transparent 1.5px 4px
+      ),
+      color-mix(in srgb, var(--text-color-primary) 18%, transparent);
+  }
+}
+
+.classroom-card-timeline-now {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 4px;
+  margin-left: -2px;
+  border-radius: var(--lg-radius-pill);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 0 0 0.5px rgba(0, 0, 0, 0.12),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Favourite marker — only rendered when buildCardForClassroom is called with
+   showFavouriteStar, and only visible once the card carries .classroom-card--fav
+   (kept in sync by utils/favourites.js). Hidden in the Favourites carousel,
+   where the arg is omitted. */
+.classroom-card-fav-star {
+  display: none;
+  position: absolute;
+  /* Match the .classroom-card-content inset so the star lines up with the
+     name / building text below it. */
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 3;
+  line-height: 0;
+  color: #f0b429;
+  pointer-events: none;
+  /* Stronger drop shadow so the star reads over bright photos, on top of the
+     contrast stroke on the glyph itself. */
+  filter:
+    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 6px rgba(0, 0, 0, 0.4));
+}
+
+.classroom-card-fav-star .star-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  overflow: visible; /* don't clip the contrast stroke at the viewBox edge */
+}
+
+/* Thin contrasting outline painted behind the yellow fill via
+   paint-order: stroke — keeps the star readable over photos. Fallback is a
+   manual black-on-light / white-on-dark swap; where contrast-color() is
+   supported it derives the same choice from the card surface automatically. */
+.classroom-card-fav-star .star-icon path {
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 2.5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .classroom-card-fav-star .star-icon path {
+    stroke: rgba(255, 255, 255, 0.65);
+  }
+}
+
+@supports (color: contrast-color(white)) {
+  .classroom-card-fav-star .star-icon path {
+    stroke: color-mix(
+      in srgb,
+      contrast-color(var(--background-color-secondary)) 60%,
+      transparent
+    );
+  }
+}
+
+.classroom-card--fav .classroom-card-fav-star {
+  display: block;
+}
+
+/* A card or header still there after the results were rebuilt glides from
+   its old place (morphRender in utils/layout-flip.js) instead of replaying
+   the entrance */
+.list-outer-container .classroom-card.lf-kept,
+.list-outer-container .building-section-header.lf-kept {
+  animation: none;
+}
+
+/* "No results" and the closed-campus note, when a search swaps them in, rise
+   in like the cards they replace (not the start-up placeholder, which shows
+   before any search) */
+.available-classrooms-container.empty[data-searched] > :not(.lf-ghosts) {
+  animation: card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: var(--lf-wait, 0ms);
+}
+
+/* Another campus: the new list rises in from further down, once the old one
+   has drifted away (morphRender's `swap`) */
+.lf-swapping .classroom-list-item-container .classroom-card,
+.lf-swapping .building-section-header,
+.lf-swapping.empty[data-searched] > :not(.lf-ghosts) {
+  animation-name: card-swap-in;
+}
+
+@keyframes card-swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(32px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }

@@ -2,9 +2,9 @@
 // Morph-card time picker component.
 // Replaces each .time-picker wrapper with a card that morphs into a popup.
 
-import { haptics, defaultPatterns } from './haptics.js';
 import { t, onLanguageSwitch, animateI18nElement } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
+import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox } from 'vitrium';
 
 const TRANSITION_DURATION = 420; // ms — must match CSS
 
@@ -31,14 +31,6 @@ function getPopupTarget() {
     height: h,
     borderRadius: '22px',
   };
-}
-
-function applyGeometry(el, { left, top, width, height, borderRadius }) {
-  el.style.left = left + 'px';
-  el.style.top = top + 'px';
-  el.style.width = width + 'px';
-  el.style.height = height + 'px';
-  el.style.borderRadius = borderRadius;
 }
 
 // ── Time display formatter ────────────────────────────────────────────────────
@@ -95,7 +87,7 @@ function getOverlay() {
   if (!overlay) {
     overlay = document.createElement('div');
     overlay.className = 'tp-overlay';
-    overlay.addEventListener('click', () => { haptics.trigger(defaultPatterns.light); closePicker(); });
+    overlay.addEventListener('click', () => { closePicker(); });
     overlay.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
     overlay.addEventListener('wheel', e => e.preventDefault(), { passive: false });
     document.body.appendChild(overlay);
@@ -146,7 +138,6 @@ function switchPicker(nextCard) {
   const nextPopup = nextCard._popup;
   activeCard = nextCard;
 
-  haptics.trigger(defaultPatterns.light);
   nextCard._updateQuickLabel?.();
 
   // ── Close outgoing: morph back to its card ───────────────────────────────
@@ -155,45 +146,45 @@ function switchPicker(nextCard) {
   prevCard.classList.remove('tp-card--morphing'); // card re-appears as the morph target
 
   const prevRect = prevCard._sourceRect ?? prevCard.getBoundingClientRect();
+  const prevVisualRect = prevPopup.getBoundingClientRect();
+  const prevInner = prevPopup.querySelector('.tp-popup__inner');
+  // Cut the content's fade-out short (instant, not the usual ~180ms) before
+  // the shell's real size jumps to the (small) card box: the shell's
+  // `transform` composes onto every descendant, so any content still visible
+  // mid-fade would get doubly scaled as the shell fakes its "still large"
+  // look, visibly stretching it.
+  hideInnerBoxInstantly(prevInner);
   requestAnimationFrame(() => {
-    applyGeometry(prevPopup, {
-      left: prevRect.left,
-      top: prevRect.top,
-      width: prevRect.width,
-      height: prevRect.height,
-      borderRadius: '18px',
+    morphGeometry(prevPopup, prevVisualRect, prevRect, {
+      toRadius: '18px',
+      onSettle: () => { prevPopup.style.boxShadow = 'var(--shadow)'; },
     });
-    prevPopup.style.boxShadow = 'var(--shadow)';
   });
 
   onTransitionEnd(prevPopup, () => {
     prevPopup.style.display = 'none';
+    unhideInnerBox(prevInner);
   });
 
   // ── Open incoming: morph from its card — simultaneously ──────────────────
   const nextRect = nextCard._sourceRect ?? nextCard.getBoundingClientRect();
   nextCard._sourceRect = nextRect;
 
-  nextPopup.style.transition = 'none';
-  applyGeometry(nextPopup, {
-    left: nextRect.left,
-    top: nextRect.top,
-    width: nextRect.width,
-    height: nextRect.height,
-    borderRadius: '18px',
-  });
+  snapGeometry(nextPopup, nextRect, '18px');
   nextPopup.style.boxShadow = 'var(--shadow)';
   nextPopup.style.zIndex = '1201'; // stay on top of the shrinking popup
   nextPopup.style.display = 'flex';
   nextCard.classList.add('tp-card--morphing');
 
-  nextPopup.getBoundingClientRect(); // force reflow
-  nextPopup.style.transition = '';
-
   requestAnimationFrame(() => {
-    applyGeometry(nextPopup, getPopupTarget());
-    nextPopup.style.boxShadow = 'var(--tp-shadow-lg)';
-    nextPopup.classList.add('tp-popup--open');
+    morphGeometry(nextPopup, nextRect, getPopupTarget(), {
+      fromRadius: '18px',
+      toRadius: '22px',
+      onSettle: () => {
+        nextPopup.style.boxShadow = 'var(--tp-shadow-lg)';
+        nextPopup.classList.add('tp-popup--open');
+      },
+    });
   });
 
   onTransitionEnd(nextPopup, () => {
@@ -216,28 +207,22 @@ export function openPicker(cardEl, sourceRect = null) {
 
   // Snap popup over the source (no transition); use pill radius when opening from a badge
   const initialRadius = sourceRect ? '999px' : '18px';
-  popup.style.transition = 'none';
-  applyGeometry(popup, {
-    left: rect.left,
-    top: rect.top,
-    width: rect.width,
-    height: rect.height,
-    borderRadius: initialRadius,
-  });
+  snapGeometry(popup, rect, initialRadius);
   popup.style.boxShadow = 'var(--shadow)';
   popup.style.display = 'flex';
 
   cardEl.classList.add('tp-card--morphing');
 
-  // Force reflow, then animate to centre
-  popup.getBoundingClientRect();
-  popup.style.transition = '';
-
   requestAnimationFrame(() => {
-    applyGeometry(popup, getPopupTarget());
-    popup.style.boxShadow = 'var(--tp-shadow-lg)';
-    popup.classList.add('tp-popup--open');
-    getOverlay().classList.add('tp-overlay--active');
+    morphGeometry(popup, rect, getPopupTarget(), {
+      fromRadius: initialRadius,
+      toRadius: '22px',
+      onSettle: () => {
+        popup.style.boxShadow = 'var(--tp-shadow-lg)';
+        popup.classList.add('tp-popup--open');
+        getOverlay().classList.add('tp-overlay--active');
+      },
+    });
   });
 
   onTransitionEnd(popup, () => {
@@ -260,19 +245,19 @@ function closePicker() {
   getOverlay().classList.remove('tp-overlay--active');
   removeOverlay();
 
+  const visualRect = popup.getBoundingClientRect();
+  const closingInner = popup.querySelector('.tp-popup__inner');
+  hideInnerBoxInstantly(closingInner);
   requestAnimationFrame(() => {
-    applyGeometry(popup, {
-      left: rect.left,
-      top: rect.top,
-      width: rect.width,
-      height: rect.height,
-      borderRadius: '18px',
+    morphGeometry(popup, visualRect, rect, {
+      toRadius: '18px',
+      onSettle: () => { popup.style.boxShadow = 'var(--shadow)'; },
     });
-    popup.style.boxShadow = 'var(--shadow)';
   });
 
   onTransitionEnd(popup, () => {
     popup.style.display = 'none';
+    unhideInnerBox(closingInner);
     cardEl.classList.remove('tp-card--morphing');
     activeCard = null;
     isAnimating = false;
@@ -304,13 +289,13 @@ function buildTimePicker(wrapperEl) {
   card.className = 'tp-card';
   card.innerHTML = `
     <div class="tp-card__icon-wrap">
-      <span class="material-symbols-outlined">schedule</span>
+      <i class="hgi-stroke hgi-clock-01" aria-hidden="true"></i>
     </div>
     <div class="tp-card__info">
       <span class="tp-card__label">${t(labelKey)}</span>
       <span class="tp-card__time">${formatTimeDisplay(inputEl.value)}</span>
     </div>
-    <span class="material-symbols-outlined tp-card__chevron">chevron_right</span>
+    <i class="hgi-stroke hgi-chevron-right tp-card__chevron" aria-hidden="true"></i>
   `;
 
   wrapperEl.appendChild(card);
@@ -329,38 +314,38 @@ function buildTimePicker(wrapperEl) {
         </div>
         <button type="button" class="tp-popup__switch">
           ${isFrom
-            ? `<span class="tp-switch__label">${t('form.toTitle')}</span><span class="material-symbols-outlined">arrow_forward</span>`
-            : `<span class="material-symbols-outlined">arrow_back</span><span class="tp-switch__label">${t('form.fromTitle')}</span>`}
+            ? `<span class="tp-switch__label">${t('form.toTitle')}</span><i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>`
+            : `<i class="hgi-stroke hgi-arrow-left-01" aria-hidden="true"></i><span class="tp-switch__label">${t('form.fromTitle')}</span>`}
         </button>
       </div>
 
       <div class="tp-popup__input-wrap">
-        <span class="material-symbols-outlined tp-popup__clock">schedule</span>
+        <i class="hgi-stroke hgi-clock-01 tp-popup__clock" aria-hidden="true"></i>
       </div>
 
       <div class="tp-popup__step-btns">
         <button type="button" class="tp-popup__step button-primary button-secondary tp-step-minus">
-          <span class="material-symbols-outlined">remove</span>
+          <i class="hgi-stroke hgi-remove-01" aria-hidden="true"></i>
         </button>
         <button type="button" class="tp-popup__step button-primary button-secondary tp-step-plus">
-          <span class="material-symbols-outlined">add</span>
+          <i class="hgi-stroke hgi-add-01" aria-hidden="true"></i>
         </button>
       </div>
 
       <div class="tp-popup__quick-btns">
         ${isFrom ? `
         <button type="button" class="tp-popup__quick button-primary tp-quick-now">
-          <span class="material-symbols-outlined">near_me</span>
+          <i class="hgi-stroke hgi-navigation-03" aria-hidden="true"></i>
           <span class="tp-text-node">${t('timepicker.now')}</span>
         </button>` : ''}
         <button type="button" class="tp-popup__quick button-primary tp-quick-preset">
-          <span class="material-symbols-outlined">schedule</span>
+          <i class="hgi-stroke hgi-clock-01" aria-hidden="true"></i>
           <span class="tp-quick-label">${isFrom ? t('timepicker.currentSlot') : t('timepicker.fromPlusOne')}</span>
         </button>
       </div>
 
       <button type="button" class="tp-popup__done button-primary">
-        <span class="material-symbols-outlined">check</span>
+        <i class="hgi-stroke hgi-tick-02" aria-hidden="true"></i>
         <span class="tp-text-node">${t('timepicker.done')}</span>
       </button>
     </div>
@@ -460,7 +445,6 @@ function buildTimePicker(wrapperEl) {
     const val = `${String(ch).padStart(2, '0')}:${String(cm).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
-    haptics.trigger(defaultPatterns.light);
   }
 
   popup.querySelector('.tp-quick-now')?.addEventListener('click', () => {
@@ -503,7 +487,6 @@ function buildTimePicker(wrapperEl) {
     const val = `${String(ch).padStart(2, '0')}:${String(cm).padStart(2, '0')}`;
     popupInput.value = val;
     syncValue(val);
-    haptics.trigger(defaultPatterns.light);
   }
 
   popup.querySelector('.tp-step-minus').addEventListener('click', () => stepHour(-1));
@@ -555,7 +538,6 @@ function buildTimePicker(wrapperEl) {
   // ── Done button ───────────────────────────────────────────────────────────
 
   popup.querySelector('.tp-popup__done').addEventListener('click', () => {
-    haptics.trigger(defaultPatterns.light);
     closePicker();
   });
 
@@ -590,7 +572,6 @@ function buildTimePicker(wrapperEl) {
 
   card.addEventListener('click', () => {
     if (DESKTOP_MQ.matches) return; // inline on desktop — card is not a trigger
-    haptics.trigger(defaultPatterns.light);
     updateQuickLabel();
     openPicker(card);
   });
@@ -602,10 +583,7 @@ function buildTimePicker(wrapperEl) {
 window.addEventListener('resize', () => {
   if (!activeCard || isAnimating) return;
   const popup = activeCard._popup;
-  popup.style.transition = 'none';
-  applyGeometry(popup, getPopupTarget());
-  popup.getBoundingClientRect();
-  popup.style.transition = '';
+  snapGeometry(popup, getPopupTarget(), '22px');
 });
 
 // ── Escape → close ───────────────────────────────────────────────────────────

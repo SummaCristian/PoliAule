@@ -13,11 +13,8 @@ cp public/favicons/beta/site.webmanifest public/favicons/main/site.webmanifest
 
 echo "Beta icons in place."
 
-echo "Beta build: pointing config.js at the beta API..."
+echo "Beta build: swapping API preconnect..."
 
-cat > config.js << 'EOF'
-// API base URL. Overwritten for the beta build by scripts/build-beta.sh.
-export const API_BASE = 'https://api-beta.poliaule.com';
-EOF
+sed -i 's#https://api\.poliaule\.com#https://api-beta.poliaule.com#' index.html
 
-echo "Beta API base in place."
+echo "Beta API preconnect in place."

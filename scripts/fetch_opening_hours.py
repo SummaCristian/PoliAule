@@ -49,16 +49,37 @@ PAGE_CAMPUS_LABEL_TO_IDS = {
 
 # Descriptor substrings that mark a row as not representing regular
 # classroom/building opening hours (libraries, sports facilities, generic
-# vehicle/pedestrian access, special-purpose common spaces).
+# vehicle/pedestrian access).
 IGNORED_DESCRIPTOR_SUBSTRINGS = [
     "biblioteca",
     "archivi storici",
     "campo giuriati",
     "accesso carrario",
     "accesso pedonale",
+]
+
+# Descriptor substrings that mark a building's common space with its own
+# hours, open even when the building's classrooms aren't ("Edificio 11
+# (Patio)", "Edificio 11 Agorà e spazi adiacenti", both H24). Kept apart in
+# common_areas so they never stand in for the building's classroom hours.
+COMMON_AREA_SUBSTRINGS = [
     "patio",
     "agor",  # matches "Agorà"/"Agora"
 ]
+
+# The common space's name: the first word after the building id, without
+# brackets ("Edificio 11 (Patio)" -> "Patio", "Edificio 11 Agorà e spazi
+# adiacenti" -> "Agorà").
+# Common spaces the page doesn't list, added to common_areas by hand. A
+# scraped row with the same building and name takes their place, so one the
+# page starts listing can be dropped from here.
+EXTRA_COMMON_AREAS = [
+    # Leonardo's "2A Sala Lettura" study hall, building 2A
+    {"building": "2A", "name": "Acquario",
+     "mon_fri": ["07:00", "21:00"], "sat": ["07:00", "19:00"], "sun": None},
+]
+
+COMMON_AREA_NAME_RE = re.compile(r"edificio\s+[a-z0-9]+\s*\(?\s*([^\s()]+)", re.IGNORECASE)
 
 # Matches "Edificio 21", "Edificio B2, spazi studio, ...": the word right
 # after "Edificio" is the building id, so no need to anchor the whole cell.
@@ -137,13 +158,21 @@ def is_ignored_descriptor(descriptor: str) -> bool:
     return any(s in lowered for s in IGNORED_DESCRIPTOR_SUBSTRINGS)
 
 
-def parse_hours_table(table, buildings: dict, campus_defaults: dict) -> None:
-    """Parse one campus hours table, filling `buildings` and `campus_defaults` in place.
+def is_common_area_descriptor(descriptor: str) -> bool:
+    """True if a row describes a building's common space (Patio, Agorà) rather than its classrooms."""
+    lowered = descriptor.lower()
+    return any(s in lowered for s in COMMON_AREA_SUBSTRINGS)
+
+
+def parse_hours_table(table, buildings: dict, campus_defaults: dict, common_areas: list) -> None:
+    """Parse one campus hours table, filling `buildings`, `campus_defaults` and `common_areas` in place.
 
     Each table row is either:
     - a "Tutti"/"Tutti gli altri spazi" catch-all row, which becomes a
       campus-wide default (used by scripts/fetch.py and the frontend for any
-      building the page doesn't mention by number), or
+      building the page doesn't mention by number),
+    - a common space of an "Edificio N" (Patio, Agorà), which goes to
+      `common_areas` and leaves the building's own hours alone, or
     - a row naming a specific "Edificio N", which becomes an explicit
       per-building entry that takes priority over the campus default.
     """
@@ -170,6 +199,21 @@ def parse_hours_table(table, buildings: dict, campus_defaults: dict) -> None:
 
         match = BUILDING_ID_RE.search(descriptor)
         if not match:
+            continue
+
+        if is_common_area_descriptor(descriptor):
+            name_match = COMMON_AREA_NAME_RE.search(descriptor)
+            hours = {
+                "mon_fri": parse_hours_cell(mon_fri_raw),
+                "sat": parse_hours_cell(sat_raw),
+                "sun": parse_hours_cell(sun_raw),
+            }
+            if name_match and any(hours.values()):
+                common_areas.append({
+                    "building": match.group(1).upper(),
+                    "name": name_match.group(1),
+                    **hours,
+                })
             continue
 
         mon_fri = parse_hours_cell(mon_fri_raw)
@@ -227,7 +271,7 @@ def parse_closure_sentence(sentence: str) -> list[dict]:
 
 
 def parse_page(html: str) -> dict:
-    """Parse the full page into {buildings, campus_defaults, holiday_periods}.
+    """Parse the full page into {buildings, campus_defaults, common_areas, holiday_periods}.
 
     The page also has separate "portineria" (reception-desk) tables that
     aren't classroom hours, so tables are picked by their header row
@@ -238,12 +282,19 @@ def parse_page(html: str) -> dict:
 
     buildings: dict = {}
     campus_defaults_by_label: dict = {}
+    common_areas: list = []
 
     tables = soup.find_all("table")
     for table in tables:
         header_cells = [c.get_text(" ", strip=True) for c in table.find_all("tr")[0].find_all(["td", "th"])]
         if header_cells[:2] == ["Campus", "Edifici / spazi"] or header_cells[:2] == ["Campus", "Edifici/spazi"]:
-            parse_hours_table(table, buildings, campus_defaults_by_label)
+            parse_hours_table(table, buildings, campus_defaults_by_label, common_areas)
+
+    scraped = {(a["building"], a["name"].lower()) for a in common_areas}
+    common_areas += [
+        area for area in EXTRA_COMMON_AREAS
+        if (area["building"], area["name"].lower()) not in scraped
+    ]
 
     # The page's campus_defaults are keyed by the label shown in the table
     # (e.g. "Leonardo", "Bovisa"), which doesn't match data/classrooms.json's
@@ -268,6 +319,7 @@ def parse_page(html: str) -> dict:
     return {
         "buildings": buildings,
         "campus_defaults": campus_defaults,
+        "common_areas": common_areas,
         "holiday_periods": holiday_periods,
     }
 
@@ -323,6 +375,7 @@ def main() -> int:
         "holiday_periods": parsed["holiday_periods"],
         "buildings": parsed["buildings"],
         "campus_defaults": parsed["campus_defaults"],
+        "common_areas": parsed["common_areas"],
         "default_hours": DEFAULT_HOURS,
     }
 
@@ -333,6 +386,7 @@ def main() -> int:
     message = (
         f"Written {len(parsed['buildings'])} buildings, "
         f"{len(parsed['campus_defaults'])} campus defaults, "
+        f"{len(parsed['common_areas'])} common areas, "
         f"{len(parsed['holiday_periods'])} holiday periods to {OUTPUT_FILE}"
     )
     print(message)

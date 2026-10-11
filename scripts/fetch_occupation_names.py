@@ -61,6 +61,13 @@ CSIC_OVERRIDES = {
     "CRG02": "CRG",   # Cremona -> Cremona (umbrella)
     "LCF04": "LCF",   # Lecco -> Lecco (umbrella)
     "MNG01": "MNI",   # Mantova -> Mantova (umbrella)
+    "MIA05": "MIA",   # Mancinelli -> Milano Città Studi (umbrella)
+    "MIF01": "MIF",   # Tortona -> Milano Tortona (umbrella)
+    "MID01": "MID",   # Sesto Ulteriano -> Sesto Ulteriano (umbrella)
+    "PCL01": "PCL",   # Piacenza -> Piacenza (umbrella; the padiglioni are only under it)
+    "COE04": "COE",   # Como -> Como (umbrella)
+    "GEM01": "GEM",   # Genova -> Genova (umbrella)
+    # "MIC" (Residenze) is already the umbrella value ("Servizi").
 }
 
 # Multiple campus ids now resolve to the same umbrella csic (e.g. Leonardo and

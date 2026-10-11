@@ -1,11 +1,46 @@
-import { onLanguageSwitch, t } from '../i18n.js';
-import { haptics, defaultPatterns } from './haptics.js';
+import { getLocale, onLanguageSwitch, t } from '../i18n.js';
 import { escapeHtml, safeUrl } from '../utils/html.js';
+import { getApiBase } from '../config.js';
+import { createSegmentedControl } from 'vitrium';
+import { shownHero, decorate } from '../utils/season.js';
+import { APP_VERSION } from '../utils/env.js';
 
 const HASH = '#info';
 const GITHUB_REPO = 'SummaCristian/poliaule';
 const STATS_CACHE_KEY = 'poliaule_github_stats';
 const STATS_CACHE_TTL =  60 * 60 * 1000; // 1 hour
+
+// Secret message: set at build time (VITE_SECRET_MESSAGE_IT / _EN, e.g. in
+// .env.local or the Cloudflare Pages settings), never committed. Without
+// either, the photo does nothing.
+const SECRET_MESSAGE = {
+  it: import.meta.env.VITE_SECRET_MESSAGE_IT,
+  en: import.meta.env.VITE_SECRET_MESSAGE_EN,
+};
+const SECRET_TAPS = 7;
+const SECRET_TAP_GAP = 600; // ms allowed between two taps
+const SECRET_TYPING_MS = 1500; // matches typing-indicator-once in info-page.css
+
+// Tapping the hero icon this many times swaps it for a photo kept in R2 (under
+// eggs/icon, in both buckets), so it never enters the git history.
+const ICON_EGG_TAPS = 10;
+
+// Calls onDone once `el` has been tapped `count` times, each within
+// SECRET_TAP_GAP of the one before. Returns a function that stops listening.
+function onQuickTaps(el, count, onDone) {
+  let taps = 0;
+  let lastTap = 0;
+  const onTap = () => {
+    const now = performance.now();
+    taps = now - lastTap < SECRET_TAP_GAP ? taps + 1 : 1;
+    lastTap = now;
+    if (taps < count) return;
+    taps = 0;
+    onDone();
+  };
+  el.addEventListener('click', onTap);
+  return () => el.removeEventListener('click', onTap);
+}
 
 const LANG_COLORS = {
   HTML: '#e34c26',
@@ -19,6 +54,25 @@ const LANG_COLORS = {
   Dockerfile: '#384d54',
 };
 
+const APPLE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" class="info-platform-icon"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>';
+const ANDROID_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" class="info-platform-icon"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zm-2.5-10C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84 1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48A6.934 6.934 0 0 0 12 1c-1.1 0-2.15.23-3.09.63L7.43.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.3 1.3C6.01 3.07 4.86 5.19 4.86 7.5h14.29c0-2.31-1.15-4.43-3.12-5.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/></svg>';
+const GITHUB_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>';
+
+// The app icon, right-sized: the 2048px icon.png masters are megabytes, and
+// the page never shows the icon above 120 CSS px. `size` is the CSS width.
+const ICON_WIDTHS = [128, 256, 384];
+const iconSrcset = (variant) => ICON_WIDTHS.map(w => `/favicons/${variant}/icon-${w}.webp ${w}w`).join(', ');
+const iconImg = (variant, size, attrs = '') =>
+  `<img src="/favicons/${variant}/icon-256.webp" srcset="${iconSrcset(variant)}" sizes="${size}px" width="${size}" height="${size}" draggable="false" alt="" ${attrs}>`;
+
+// Which install instructions to open on: the device's own platform.
+function detectPlatform() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return 'desktop';
+}
+
 class InfoPage {
   constructor() {
     this._overlay = null;
@@ -28,38 +82,34 @@ class InfoPage {
     this._titleEl = null;
     this._badgeEl = null;
     this._isOpen = false;
+    this._covered = false;
+    this._coveredScroll = 0;
     this._openedFromDetail = false;
     this._showBadge = false;
     this._cachedStats = null;
     this._savedScrollPos = 0;
+    this._pwaControl = null;
+    this._revealObserver = null;
+    this._reflowObserver = null;
   }
 
   init() {
     this._overlay = document.getElementById('info-page-overlay');
-    this._tabbar = document.querySelector('.tabbar');
+    this._tabbar = document.querySelector('.bn-wrapper');
     this._backBtn = document.getElementById('detail-back-btn');
     this._logoEl = document.querySelector('.header-logo');
     this._titleEl = document.querySelector('.header-title');
     this._badgeEl = document.getElementById('env-badge');
 
-    // Haptics for interactive GitHub elements
-    this._overlay?.addEventListener('click', (e) => {
-      if (e.target.closest('.github-stat-card') || e.target.closest('.contributor-item') || e.target.closest('.github-repo-chip') || e.target.closest('.create-issue-btn')) {
-        haptics.trigger(defaultPatterns.light);
-      }
-    });
-
     document.getElementById('info-trigger')?.addEventListener('click', () => {
-      haptics.trigger(defaultPatterns.light);
       location.hash = HASH;
     });
 
     // Use stopImmediatePropagation to prevent classroomDetail's listener (on the same button)
     // from also firing when info is open — that would trigger a second concurrent VT.
     this._backBtn?.addEventListener('click', (e) => {
-      if (!this._isOpen) return;
+      if (!this._isOpen || this._covered) return;
       e.stopImmediatePropagation();
-      haptics.trigger(defaultPatterns.light);
       if (this._openedFromDetail) {
         // Go back to the classroom hash; hashchange will trigger _silentClose() here
         // and classroomDetail._onHashChange() will run its own VT to reopen the detail.
@@ -76,11 +126,49 @@ class InfoPage {
       if (this._isOpen) this._renderContent(this._showBadge);
     });
 
+    this._warmIcons();
+
     // If the splash is still present, dismissSplash() will call checkHash() after
     // the VT completes. Only open immediately if splash is already gone.
     if (!document.getElementById('splash-overlay')) {
       this.checkHash();
     }
+  }
+
+  // Fetches and decodes the icons in idle time after start-up, so opening the
+  // page (usually well after) finds them in the image cache, ready to paint.
+  _warmIcons() {
+    // Both variants (hero and badges) at both sizes: the browser picks the
+    // same srcset candidate here as it will on the page.
+    const warm = () => {
+      for (const variant of ['main', 'beta']) {
+        for (const size of [120, 56]) {
+          const img = new Image();
+          img.sizes = `${size}px`;
+          img.srcset = iconSrcset(variant);
+          img.decode().catch(() => {});
+        }
+      }
+      // A season's logo stands in for the hero icon (see _renderContent)
+      const hero = shownHero();
+      if (hero) {
+        const img = new Image();
+        img.src = hero;
+        img.decode().catch(() => {});
+      }
+    };
+    if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 3000 });
+    else setTimeout(warm, 1500);
+  }
+
+  // Resolves when the hero icon can paint, or after `cap` ms at most so a slow
+  // network never holds the transition up.
+  _heroReady(img, cap = 200) {
+    if (!img || (img.complete && img.naturalWidth)) return Promise.resolve();
+    return Promise.race([
+      img.decode().catch(() => {}),
+      new Promise(resolve => setTimeout(resolve, cap)),
+    ]);
   }
 
   // Called by dismissSplash() after the splash VT finishes (normal case),
@@ -90,6 +178,10 @@ class InfoPage {
   }
 
   _onHashChange() {
+    // The changelog and the settings open over this page and hand it back
+    // (cover / uncover, called from components/changelog-page.js and
+    // components/settings-page.js), so their hashes are their own
+    if (/^#(changelog(\/|$)|settings$)/.test(location.hash) || this._covered) return;
     if (location.hash === HASH) {
       if (!this._isOpen) this._doOpen();
     } else if (this._isOpen) {
@@ -102,6 +194,38 @@ class InfoPage {
         this._doClose();
       }
     }
+  }
+
+  get isOpen() {
+    return this._isOpen;
+  }
+
+  // The changelog or settings page opening on top: this one hides where it is, keeping
+  // its content and scroll for when the changelog closes back to it
+  cover() {
+    if (!this._isOpen) return;
+    this._covered = true;
+    this._coveredScroll = window.scrollY;
+    this._overlay.setAttribute('hidden', '');
+    this._overlay.classList.remove('visible');
+  }
+
+  uncover() {
+    if (!this._covered) return;
+    this._covered = false;
+    this._overlay.removeAttribute('hidden');
+    this._overlay.classList.add('visible');
+    window.scrollTo(0, this._coveredScroll);
+  }
+
+  // The history left both pages at once (the changelog closes everything)
+  dismissCovered() {
+    if (!this._covered) return;
+    this._covered = false;
+    this._isOpen = false;
+    this._openedFromDetail = false;
+    this._teardown();
+    this._overlay.innerHTML = '';
   }
 
   // Apply the open state inside an already-running VT (called from dismissSplash).
@@ -117,10 +241,7 @@ class InfoPage {
     this._overlay.removeAttribute('hidden');
     this._renderContent(showBadge);
     this._overlay.classList.add('visible');
-    if (this._backBtn) {
-      this._backBtn.removeAttribute('hidden');
-      this._backBtn.style.viewTransitionName = 'classroom-nav';
-    }
+    if (this._backBtn) this._backBtn.removeAttribute('hidden');
 
     const heroIcon  = this._overlay.querySelector('.info-hero-icon');
     const heroTitle = this._overlay.querySelector('.info-hero-title');
@@ -141,13 +262,12 @@ class InfoPage {
     const titleEl = this._titleEl;
     const badgeEl = this._badgeEl?.hidden === false ? this._badgeEl : null;
     const showBadge = !!badgeEl;
-    // When navigating from the detail page, the back button is already visible and
-    // the tabbar is already hidden — skip the classroom-nav morph to avoid conflicting VTs.
+    // When navigating from the detail page, the back button is already visible —
+    // info's own hero elements still need to morph in, but the tabbar stays untouched.
     const fromDetail = this._backBtn != null && !this._backBtn.hidden;
     this._openedFromDetail = fromDetail;
 
-    if (document.startViewTransition && this._tabbar) {
-      if (!fromDetail) this._tabbar.style.viewTransitionName = 'classroom-nav';
+    if (document.startViewTransition) {
       if (logoEl) logoEl.style.viewTransitionName = 'info-logo';
       if (titleEl) titleEl.style.viewTransitionName = 'info-title';
       if (badgeEl) {
@@ -156,7 +276,6 @@ class InfoPage {
       }
 
       const vt = document.startViewTransition(() => {
-        if (!fromDetail) this._tabbar.style.viewTransitionName = '';
         if (logoEl) logoEl.style.viewTransitionName = '';
         if (titleEl) titleEl.style.viewTransitionName = '';
         if (badgeEl) {
@@ -164,15 +283,12 @@ class InfoPage {
           badgeEl.style.viewTransitionName = '';
         }
 
-        this._tabbar.classList.add('detail-open');
+        this._tabbar?.classList.add('detail-open');
         document.body.classList.add('info-open');
         this._overlay.removeAttribute('hidden');
         this._renderContent(showBadge);
         this._overlay.classList.add('visible');
-        if (this._backBtn) {
-          this._backBtn.removeAttribute('hidden');
-          if (!fromDetail) this._backBtn.style.viewTransitionName = 'classroom-nav';
-        }
+        if (this._backBtn) this._backBtn.removeAttribute('hidden');
 
         // Reset scroll for the new view
         window.scrollTo(0, 0);
@@ -183,8 +299,17 @@ class InfoPage {
         if (heroIcon) heroIcon.style.viewTransitionName = 'info-logo';
         if (heroTitle) heroTitle.style.viewTransitionName = 'info-title';
         if (heroBadge) heroBadge.style.viewTransitionName = 'info-badge';
+
+        // The new state is snapshotted once this resolves: give the icon a
+        // moment to decode, so the logo morphs into it rather than into an
+        // empty box.
+        return this._heroReady(heroIcon);
       });
 
+      // A second VT firing before this one settles rejects .ready/.finished with
+      // InvalidStateError; .finished is handled below, but .ready isn't awaited
+      // anywhere, so it was surfacing as an unhandled rejection on every abort.
+      vt.ready.catch(() => {});
       vt.finished.then(() => this._clearVtNames()).catch(() => this._clearVtNames());
     } else {
       this._tabbar?.classList.add('detail-open');
@@ -211,6 +336,7 @@ class InfoPage {
     const heroBadge = this._overlay.querySelector('.info-hero-badge');
 
     const cleanup = () => {
+      this._teardown();
       this._overlay.innerHTML = '';
       this._clearVtNames();
       if (logoEl) logoEl.style.viewTransitionName = '';
@@ -221,14 +347,12 @@ class InfoPage {
       }
     };
 
-    if (document.startViewTransition && this._tabbar) {
-      if (this._backBtn) this._backBtn.style.viewTransitionName = 'classroom-nav';
+    if (document.startViewTransition) {
       if (heroIcon) heroIcon.style.viewTransitionName = 'info-logo';
       if (heroTitle) heroTitle.style.viewTransitionName = 'info-title';
       if (heroBadge) heroBadge.style.viewTransitionName = 'info-badge';
 
       const vt = document.startViewTransition(() => {
-        if (this._backBtn) this._backBtn.style.viewTransitionName = '';
         if (heroIcon) heroIcon.style.viewTransitionName = '';
         if (heroTitle) heroTitle.style.viewTransitionName = '';
         if (heroBadge) heroBadge.style.viewTransitionName = '';
@@ -238,8 +362,7 @@ class InfoPage {
         this._overlay.classList.remove('visible');
         if (this._backBtn) this._backBtn.setAttribute('hidden', '');
 
-        this._tabbar.classList.remove('detail-open');
-        this._tabbar.style.viewTransitionName = 'classroom-nav';
+        this._tabbar?.classList.remove('detail-open');
 
         if (logoEl) logoEl.style.viewTransitionName = 'info-logo';
         if (titleEl) titleEl.style.viewTransitionName = 'info-title';
@@ -252,6 +375,7 @@ class InfoPage {
         window.scrollTo(0, this._savedScrollPos);
       });
 
+      vt.ready.catch(() => {});
       vt.finished.then(cleanup).catch(cleanup);
     } else {
       this._overlay.classList.remove('visible');
@@ -285,6 +409,7 @@ class InfoPage {
     if (this._overlay) {
       this._overlay.setAttribute('hidden', '');
       this._overlay.classList.remove('visible');
+      this._teardown();
       this._overlay.innerHTML = '';
     }
     if (this._logoEl)  this._logoEl.style.viewTransitionName  = 'info-logo';
@@ -310,285 +435,356 @@ class InfoPage {
     if (heroIcon) heroIcon.style.viewTransitionName = '';
     if (heroTitle) heroTitle.style.viewTransitionName = '';
     if (heroBadge) heroBadge.style.viewTransitionName = '';
-    if (this._tabbar) this._tabbar.style.viewTransitionName = '';
-    if (this._backBtn) this._backBtn.style.viewTransitionName = '';
   }
 
   _renderContent(showBadge) {
     this._showBadge = showBadge;
+    this._teardown();
     const badgeText = this._badgeEl?.textContent ?? '';
+    const variant = showBadge ? 'beta' : 'main';
+    const platform = detectPlatform();
+    const steps = (key, n) => Array.from({ length: n }, (_, i) => `<li><span class="lg-ring-layer" aria-hidden="true"></span>${t(`info.pwa.${key}.step${i + 1}`)}</li>`).join('');
+    // While a season is on, its logo (the usual one dressed up) is the hero,
+    // larger and out of the icon's frame
+    const seasonHero = shownHero();
+
     this._overlay.innerHTML = `
-      <div class="info-page">
+      <div class="info-page ${showBadge ? 'info-page--beta' : ''}">
+        <div class="info-backdrop" aria-hidden="true"></div>
+
         <!-- Hero section -->
         <div class="info-hero">
-          <!-- Logo -->
-          <img src="/favicons/${showBadge ? 'beta' : 'main'}/icon.png" class="info-hero-icon" draggable="false" alt="">
-          <!-- Title -->
+          ${seasonHero ? `
+          <div class="info-hero-icon-wrap info-hero-icon-wrap--season">
+            <img src="${seasonHero}" class="info-hero-glow" aria-hidden="true" draggable="false" alt="">
+            <img src="${seasonHero}" class="info-hero-icon" fetchpriority="high" draggable="false" alt="">
+          </div>` : `
+          <div class="info-hero-icon-wrap">
+            ${iconImg(variant, 120, 'class="info-hero-glow" aria-hidden="true"')}
+            ${iconImg(variant, 120, 'class="info-hero-icon" fetchpriority="high"')}
+          </div>`}
           <h1 class="info-hero-title">PoliAule</h1>
           <!-- 'Beta' or 'Local' badge if necessary -->
           ${showBadge ? `<h4 class="info-hero-badge secondary">${badgeText}</h4>` : ''}
+          ${APP_VERSION ? `
+          <a class="info-hero-version lg-glass liquid-glass" href="#changelog">
+            <span class="info-hero-version-number">${escapeHtml(APP_VERSION.version)}</span>
+            <span class="info-hero-version-cta">${t('changelog.title')}</span>
+            <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
+          </a>` : ''}
         </div>
 
-        <!-- Body content -->
-        <div class="info-body">
-          <div class="info-intro">
-            <div class="info-section-text">
+        <!-- The two sites, as big glass badges -->
+        <div class="badge-container">
+          <a href="https://poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--stable lg-ring--soft lg-elevation-high liquid-glass">
+            <span class="lg-ring-layer" aria-hidden="true"></span>
+            ${iconImg('main', 56)}
+            <span class="badge-text">
+              <span class="top-text">poliaule.com</span>
+              <span class="bottom-text">${t('info.aboutMe.website')}</span>
+              <span class="badge-description">${t('info.badge.stableDesc')}</span>
+            </span>
+          </a>
+          <a href="https://beta.poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--beta lg-ring--soft lg-elevation-high liquid-glass">
+            <span class="lg-ring-layer" aria-hidden="true"></span>
+            ${iconImg('beta', 56)}
+            <span class="badge-text">
+              <span class="top-text">beta.poliaule.com</span>
+              <span class="bottom-text">${t('info.aboutMe.beta')}</span>
+              <span class="badge-description">${t('info.badge.betaDesc')}</span>
+            </span>
+            <span class="badge-label">BETA</span>
+          </a>
+        </div>
+
+        <!-- Body: glass cards, a masonry of two columns on desktop -->
+        <div class="info-content">
+         <div class="info-column">
+          <section class="info-section info-intro lg-ring">
+            <h2 class="info-section-title">${t('info.about.title')}</h2>
+            <div class="info-prose">
               <p>${t('info.body.intro')}</p>
               <p>${t('info.body.parag1')}</p>
             </div>
-
             <div class="info-meta">
-              <a href="https://polinetwork.org/it/projects/" target="_blank" rel="noopener" class="polinetwork-chip">
-                <img src="https://polinetwork.org/favicon.ico" alt="PoliNetwork" draggable="false">
+              <a href="https://polinetwork.org/it/projects/" target="_blank" rel="noopener" class="info-pill info-pill--polinetwork lg-glass liquid-glass">
+                <img src="https://polinetwork.org/favicon.ico" alt="" draggable="false">
                 <span>${t('info.polinetwork')}</span>
               </a>
               <p class="info-disclaimer">${t('footer.disclaimer5')}</p>
             </div>
+          </section>
 
-            <div class="badge-container">
-            <a href="https://poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--stable">
-              <img src="/favicons/main/icon.png" alt="" draggable="false">
-              <div class="badge-text">
-                <span class="top-text">poliaule.com</span>
-                <span class="bottom-text">${t('info.aboutMe.website')}</span>
-                <span class="badge-description">${t('info.badge.stableDesc') || 'The production version of PoliAule'}</span>
-              </div>
-            </a>
-
-            <a href="https://beta.poliaule.com" target="_blank" rel="noopener" class="info-badge info-badge--beta">
-              <img src="/favicons/beta/icon.png" alt="" draggable="false">
-              <div class="badge-text">
-                <span class="top-text">beta.poliaule.com</span>
-                <span class="bottom-text">${t('info.aboutMe.beta')}</span>
-                <span class="badge-description">${t('info.badge.betaDesc') || 'The beta version of PoliAule'}</span>
-                <span class="badge-label">BETA</span>
-              </div>
-            </a>
-
-          </div>
-          </div>
-
-          <!-- PWA Install Section -->
-          <div class="info-pwa-section">
-            <div class="info-pwa-header">
-              <div class="info-pwa-title-row">
-                <span class="material-symbols-outlined">install_mobile</span>
-                <h2>${t('info.pwa.title')}</h2>
-              </div>
-              <p class="info-pwa-subtitle">${t('info.pwa.subtitle')}</p>
+          <section class="info-section info-pwa lg-ring">
+            <h2 class="info-section-title">${t('info.pwa.title')}</h2>
+            <p class="info-section-subtitle">${t('info.pwa.subtitle')}</p>
+            <div class="info-pwa-switch">
+              <button type="button" class="lg-seg__item" data-value="ios">${APPLE_SVG}<span>iPhone</span></button>
+              <button type="button" class="lg-seg__item" data-value="android">${ANDROID_SVG}<span>Android</span></button>
+              <button type="button" class="lg-seg__item" data-value="desktop"><i class="hgi-stroke hgi-computer" aria-hidden="true"></i><span>Desktop</span></button>
             </div>
-
-            <!-- Tab switcher: visible only on mobile -->
-            <div class="pwa-tabbar" style="--tabs:3" role="tablist">
-              <div class="pwa-tab-indicator"></div>
-              <button class="pwa-tab active" data-pwa-tab="ios" role="tab" aria-selected="true">
-                <svg viewBox="0 0 24 24" aria-hidden="true" class="info-pwa-platform-icon"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-                <span>iPhone</span>
-              </button>
-              <button class="pwa-tab" data-pwa-tab="android" role="tab" aria-selected="false">
-                <svg viewBox="0 0 24 24" aria-hidden="true" class="info-pwa-platform-icon"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zm-2.5-10C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84 1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48A6.934 6.934 0 0 0 12 1c-1.1 0-2.15.23-3.09.63L7.43.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.3 1.3C6.01 3.07 4.86 5.19 4.86 7.5h14.29c0-2.31-1.15-4.43-3.12-5.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/></svg>
-                <span>Android</span>
-              </button>
-              <button class="pwa-tab" data-pwa-tab="desktop" role="tab" aria-selected="false">
-                <span class="material-symbols-outlined">desktop_windows</span>
-                <span>Desktop</span>
-              </button>
-            </div>
-
-            <div class="info-pwa-cards">
-              <div class="info-pwa-card active" data-pwa-platform="ios">
-                <div class="info-pwa-card-title">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" class="info-pwa-platform-icon"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-                  <span>${t('info.pwa.ios.title')}</span>
-                </div>
-                <ol class="info-pwa-steps">
-                  <li>${t('info.pwa.ios.step1')}</li>
-                  <li>${t('info.pwa.ios.step2')}</li>
-                  <li>${t('info.pwa.ios.step3')}</li>
-                  <li>${t('info.pwa.ios.step4')}</li>
-                </ol>
+            <div class="info-pwa-panels">
+              <div class="info-pwa-panel" data-pwa-platform="ios">
+                <p class="info-pwa-panel-title">${t('info.pwa.ios.title')}</p>
+                <ol class="info-steps">${steps('ios', 4)}</ol>
               </div>
-              <div class="info-pwa-card" data-pwa-platform="android">
-                <div class="info-pwa-card-title">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" class="info-pwa-platform-icon"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zm-2.5-10C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84 1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48A6.934 6.934 0 0 0 12 1c-1.1 0-2.15.23-3.09.63L7.43.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.3 1.3C6.01 3.07 4.86 5.19 4.86 7.5h14.29c0-2.31-1.15-4.43-3.12-5.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/></svg>
-                  <span>${t('info.pwa.android.title')}</span>
-                </div>
-                <ol class="info-pwa-steps">
-                  <li>${t('info.pwa.android.step1')}</li>
-                  <li>${t('info.pwa.android.step2')}</li>
-                  <li>${t('info.pwa.android.step3')}</li>
-                  <li>${t('info.pwa.android.step4')}</li>
-                </ol>
+              <div class="info-pwa-panel" data-pwa-platform="android">
+                <p class="info-pwa-panel-title">${t('info.pwa.android.title')}</p>
+                <ol class="info-steps">${steps('android', 4)}</ol>
               </div>
-              <div class="info-pwa-card" data-pwa-platform="desktop">
-                <div class="info-pwa-card-title">
-                  <span class="material-symbols-outlined">desktop_windows</span>
-                  <span>${t('info.pwa.desktop.title')}</span>
-                </div>
-                <ol class="info-pwa-steps">
-                  <li>${t('info.pwa.desktop.step1')}</li>
-                  <li>${t('info.pwa.desktop.step2')}</li>
-                  <li>${t('info.pwa.desktop.step3')}</li>
-                </ol>
+              <div class="info-pwa-panel" data-pwa-platform="desktop">
+                <p class="info-pwa-panel-title">${t('info.pwa.desktop.title')}</p>
+                <ol class="info-steps">${steps('desktop', 3)}</ol>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div class="info-two-col">
-            <div class="about-me-section">
-              <h2>${t('info.aboutMe.title')}</h2>
-              <div class="about-me-container">
-                <img src="/assets/profile.jpg" alt="Profile picture of Cristian Summa" class="about-me-photo" draggable="false">
-                <div class="about-me-bubbles">
-                  <p class="message-bubble">${t('info.aboutMe.parag1')}</p>
-                  <p class="message-bubble">${t('info.aboutMe.parag2')}</p>
-                  <p class="message-bubble">${t('info.aboutMe.parag3')}</p>
-                  <div class="typing-indicator message-bubble">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
+         </div>
+         <div class="info-column">
+          <section class="info-section about-me-section lg-ring">
+            <h2 class="info-section-title">${t('info.aboutMe.title')}</h2>
+            <div class="about-me-container">
+              <img src="/assets/profile.jpg" alt="Profile picture of Cristian Summa" class="about-me-photo" draggable="false">
+              <div class="about-me-bubbles">
+                <p class="message-bubble lg-ring">${t('info.aboutMe.parag1')}</p>
+                <p class="message-bubble lg-ring">${t('info.aboutMe.parag2')}</p>
+                <p class="message-bubble lg-ring">${t('info.aboutMe.parag3')}</p>
+                <div class="typing-indicator message-bubble lg-ring">
+                  <span></span>
+                  <span></span>
+                  <span></span>
                 </div>
               </div>
             </div>
+          </section>
 
-            <div class="github-stats-section">
-              <div class="github-section-head">
-                <h2>${t('info.github.title')}</h2>
-                <a href="https://github.com/SummaCristian/poliaule" target="_blank" rel="noopener" class="github-repo-chip">
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
-                  <span>GitHub</span>
-                </a>
-              </div>
-              <div class="github-stats-grid">
-                <a href="https://github.com/SummaCristian/poliaule/stargazers" target="_blank" rel="noopener" class="github-stat-card">
-                  <div class="star-avatars" data-github="stargazers">
-                    <span class="material-symbols-outlined github-stat-icon">star</span>
-                  </div>
-                  <span class="github-stat-number" data-stat="stars">—</span>
-                  <span class="github-stat-label">${t('info.github.stars')}</span>
-                </a>
-                <a href="https://github.com/SummaCristian/poliaule/commits/main" target="_blank" rel="noopener" class="github-stat-card">
-                  <span class="material-symbols-outlined github-stat-icon">commit</span>
-                  <span class="github-stat-number" data-stat="commits">—</span>
-                  <span class="github-stat-label">${t('info.github.commits')}</span>
-                </a>
-                <a href="https://github.com/SummaCristian/poliaule/issues" target="_blank" rel="noopener" class="github-stat-card">
-                  <span class="material-symbols-outlined github-stat-icon">bug_report</span>
-                  <span class="github-stat-number" data-stat="issues">—</span>
-                  <span class="github-stat-label">${t('info.github.issues')}</span>
-                </a>
-                <a href="https://github.com/SummaCristian/poliaule/blob/main/LICENSE" target="_blank" rel="noopener" class="github-stat-card">
-                  <span class="material-symbols-outlined github-stat-icon">balance</span>
-                  <span class="github-stat-number" data-stat="license">—</span>
-                  <span class="github-stat-label">${t('info.github.license')}</span>
-                </a>
-              </div>
-
-              <a href="https://github.com/SummaCristian/poliaule/issues/new" target="_blank" rel="noopener" class="create-issue-btn">
-                <span class="material-symbols-outlined">bug_report</span>
-                <span>${t('info.github.createIssue')}</span>
+          <section class="info-section github-stats-section lg-ring">
+            <div class="info-section-header">
+              <h2 class="info-section-title">${t('info.github.title')}</h2>
+              <a href="https://github.com/${GITHUB_REPO}" target="_blank" rel="noopener" class="info-pill lg-glass liquid-glass">
+                ${GITHUB_SVG}
+                <span>GitHub</span>
               </a>
-              <div class="github-extended">
-                <div class="github-subsection">
-                  <div class="github-subsection-header">
-                    <span class="material-symbols-outlined">code</span>
-                    <span>${t('info.github.languages')}</span>
-                  </div>
-                  <div data-github="lang-bar"><div class="github-skeleton" style="height:2rem"></div></div>
-                </div>
-                <div class="github-subsection">
-                  <div class="github-subsection-header">
-                    <span class="material-symbols-outlined">group</span>
-                    <span>${t('info.github.contributors')}</span>
-                  </div>
-                  <div data-github="contributors"><div class="github-skeleton" style="height:3rem"></div></div>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
+            <div class="github-stats-grid">
+              <a href="https://github.com/${GITHUB_REPO}/stargazers" target="_blank" rel="noopener" class="github-stat-card lg-glass liquid-glass">
+                <i class="hgi-stroke hgi-star github-stat-icon" aria-hidden="true"></i>
+                <span class="github-stat-number" data-stat="stars">—</span>
+                <span class="github-stat-label">${t('info.github.stars')}</span>
+              </a>
+              <a href="https://github.com/${GITHUB_REPO}/commits/main" target="_blank" rel="noopener" class="github-stat-card lg-glass liquid-glass">
+                <i class="hgi-stroke hgi-git-commit github-stat-icon" aria-hidden="true"></i>
+                <span class="github-stat-number" data-stat="commits">—</span>
+                <span class="github-stat-label">${t('info.github.commits')}</span>
+              </a>
+              <a href="https://github.com/${GITHUB_REPO}/issues" target="_blank" rel="noopener" class="github-stat-card lg-glass liquid-glass">
+                <i class="hgi-stroke hgi-bug-01 github-stat-icon" aria-hidden="true"></i>
+                <span class="github-stat-number" data-stat="issues">—</span>
+                <span class="github-stat-label">${t('info.github.issues')}</span>
+              </a>
+              <a href="https://github.com/${GITHUB_REPO}/blob/main/LICENSE" target="_blank" rel="noopener" class="github-stat-card lg-glass liquid-glass">
+                <i class="hgi-stroke hgi-balance-scale github-stat-icon" aria-hidden="true"></i>
+                <span class="github-stat-number" data-stat="license">—</span>
+                <span class="github-stat-label">${t('info.github.license')}</span>
+              </a>
+            </div>
 
+            <div class="github-subsection">
+              <h3 class="github-subsection-title">${t('info.github.languages')}</h3>
+              <div data-github="lang-bar"><div class="github-skeleton" style="height:2rem"></div></div>
+            </div>
+            <div class="github-subsection">
+              <h3 class="github-subsection-title">${t('info.github.contributors')}</h3>
+              <div data-github="contributors"><div class="github-skeleton" style="height:2.75rem"></div></div>
+            </div>
+
+            <a href="https://github.com/${GITHUB_REPO}/issues/new" target="_blank" rel="noopener" class="info-pill info-pill--issue lg-glass liquid-glass">
+              <i class="hgi-stroke hgi-bug-01" aria-hidden="true"></i>
+              <span>${t('info.github.createIssue')}</span>
+            </a>
+          </section>
+         </div>
+        </div>
       </div>
     `;
 
-    // Trigger animations when the about-me section becomes visible
-    const aboutMeSection = this._overlay.querySelector('.about-me-section');
-    const bubblesContainer = this._overlay.querySelector('.about-me-container');
-    
-    if (aboutMeSection && bubblesContainer) {
-      // 1. Measure final height to reserve space
-      // We temporarily "force" the final state to measure it
-      const bubbles = bubblesContainer.querySelector('.about-me-bubbles');
-      const allBubbles = bubbles.querySelectorAll('.message-bubble');
-      
-      // Save current styles
-      const originalSectionStyle = aboutMeSection.style.cssText;
-      
-      // Apply final state styles for measurement
-      allBubbles.forEach(b => {
-        b.style.maxHeight = '500px';
-        b.style.paddingTop = '0.8rem';
-        b.style.paddingBottom = '0.8rem';
-        b.style.opacity = '1';
-      });
-      
-      const finalHeight = aboutMeSection.offsetHeight;
-      
-      // Restore initial state and set the reserved height
-      allBubbles.forEach(b => b.style.cssText = '');
-      aboutMeSection.style.minHeight = `${finalHeight}px`;
-
-      // 2. Setup observer
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.1 });
-      observer.observe(aboutMeSection);
+    // Normally the icon is already decoded (see _warmIcons / _heroReady). If it
+    // isn't — a cold cache on a slow network — it fades in over its
+    // placeholder instead of popping in.
+    const heroIcon = this._overlay.querySelector('.info-hero-icon');
+    if (!heroIcon.complete) {
+      const wrap = heroIcon.parentElement;
+      wrap.classList.add('is-loading', 'lg-ring');
+      const done = () => wrap.classList.remove('is-loading', 'lg-ring');
+      heroIcon.addEventListener('load', done, { once: true });
+      heroIcon.addEventListener('error', done, { once: true });
     }
 
-    const observe = (selector, threshold = 0.1) => {
-      const el = this._overlay.querySelector(selector);
-      if (!el) return;
-      const obs = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) { entry.target.classList.add('is-visible'); obs.unobserve(entry.target); }
-        });
-      }, { threshold });
-      obs.observe(el);
+    // Install instructions: a Vitrium segmented control picks the platform,
+    // starting on the one this device is. The panels share one grid cell, so
+    // the card is always as tall as the longest and never jumps on a switch.
+    const pwaSwitch = this._overlay.querySelector('.info-pwa-switch');
+    const showPanel = (value) => {
+      this._overlay.querySelectorAll('.info-pwa-panel').forEach(panel => {
+        const active = panel.dataset.pwaPlatform === value;
+        panel.classList.toggle('active', active);
+        panel.inert = !active;
+      });
     };
+    this._pwaControl = createSegmentedControl(pwaSwitch, {
+      value: platform,
+      selectedColor: 'accent',
+      onSelect: showPanel,
+    });
+    showPanel(platform);
 
-    observe('.info-pwa-section', 0.05);
+    // The chat bubbles grow into place one at a time, so reserve their final
+    // height up front — otherwise every card below would shift as they arrive.
+    const aboutMeSection = this._overlay.querySelector('.about-me-section');
+    const allBubbles = aboutMeSection.querySelectorAll('.message-bubble:not(.typing-indicator)');
+    allBubbles.forEach(b => {
+      b.style.maxHeight = '500px';
+      b.style.paddingTop = '0.7rem';
+      b.style.paddingBottom = '0.7rem';
+    });
+    aboutMeSection.style.minHeight = `${aboutMeSection.offsetHeight}px`;
+    allBubbles.forEach(b => { b.style.cssText = ''; });
 
-    // PWA tab switching (mobile only — CSS hides the tabbar on wider screens)
-    const pwaTabbar = this._overlay.querySelector('.pwa-tabbar');
-    const pwaIndicator = this._overlay.querySelector('.pwa-tab-indicator');
-    if (pwaTabbar && pwaIndicator) {
-      const tabs = [...pwaTabbar.querySelectorAll('.pwa-tab')];
-      pwaTabbar.addEventListener('click', (e) => {
-        const btn = e.target.closest('.pwa-tab');
-        if (!btn || btn.classList.contains('active')) return;
-        haptics.trigger(defaultPatterns.light);
-        const idx = tabs.indexOf(btn);
-        tabs.forEach((t, i) => {
-          t.classList.toggle('active', i === idx);
-          t.setAttribute('aria-selected', i === idx ? 'true' : 'false');
-        });
-        pwaIndicator.style.transform = `translateX(${idx * 100}%)`;
-        const platform = btn.dataset.pwaTab;
-        this._overlay.querySelectorAll('.info-pwa-card').forEach(card => {
-          card.classList.toggle('active', card.dataset.pwaPlatform === platform);
-        });
+    this._bindSecretMessage(aboutMeSection);
+    this._bindIconEgg();
+
+    // Each card rises in as it scrolls into view (the ones already on screen
+    // right away, in order); the about-me card's chat plays from the same class.
+    const sections = [...this._overlay.querySelectorAll('.info-section')];
+    this._revealObserver = new IntersectionObserver((entries) => {
+      let order = 0;
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.style.setProperty('--reveal-i', order++);
+        entry.target.classList.add('is-visible');
+        this._revealObserver.unobserve(entry.target);
       });
-    }
+    }, { threshold: 0.05 });
+    sections.forEach(s => this._revealObserver.observe(s));
 
-    observe('.github-stats-section');
-    observe('.github-extended', 0.05);
+    this._animateMasonry(this._overlay.querySelector('.info-content'));
     this._fetchGithubStats();
+    decorate('info', this._overlay.querySelector('.info-page'));
+  }
+
+  // Ten quick taps on the hero icon turn it into the egg photo, until the
+  // page is next opened (each open renders the icon afresh).
+  _bindIconEgg() {
+    const wrap = this._overlay.querySelector('.info-hero-icon-wrap');
+    const imgs = wrap.querySelectorAll('img');
+    let egg = null;
+    let stop = () => {};
+    const reveal = async () => {
+      try { await egg.decode(); } catch { egg = null; return; } // not uploaded, or offline: nothing happens
+      stop();
+      wrap.dataset.egg = '';
+      const swap = () => imgs.forEach(img => {
+        img.removeAttribute('srcset');
+        img.removeAttribute('sizes');
+        img.src = egg.src;
+      });
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return swap();
+      const out = wrap.animate(
+        [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(0.8)', opacity: 0 }],
+        { duration: 180, easing: 'ease-in', fill: 'forwards' });
+      await out.finished;
+      swap();
+      wrap.animate(
+        [{ transform: 'scale(0.8)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }],
+        { duration: 450, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+      out.cancel();
+    };
+    // Start loading on the first tap, so it's decoded by the time the tenth lands
+    wrap.addEventListener('pointerdown', () => {
+      if (!egg) { egg = new Image(); egg.src = `${getApiBase()}/v1/eggs/icon`; }
+    });
+    stop = onQuickTaps(wrap, ICON_EGG_TAPS, reveal);
+  }
+
+  // Seven quick taps on the photo: the typing indicator comes back once more,
+  // then one last message lands below the others.
+  _bindSecretMessage(section) {
+    const text = SECRET_MESSAGE[getLocale()] || SECRET_MESSAGE.it || SECRET_MESSAGE.en;
+    if (!text) return;
+    const photo = section.querySelector('.about-me-photo');
+    const typing = section.querySelector('.typing-indicator');
+    let stop = () => {};
+    stop = onQuickTaps(photo, SECRET_TAPS, () => {
+      stop();
+      typing.classList.add('is-typing');
+      // Fetch the name's font while the indicator types, so it never swaps in
+      document.fonts.load("italic 500 1em 'Cormorant Garamond'").catch(() => {});
+      setTimeout(() => {
+        const bubble = document.createElement('p');
+        bubble.className = 'message-bubble message-bubble--secret lg-ring';
+        bubble.innerHTML = text; // our own build-time string, like the locale files: HTML allowed
+        // Takes the indicator's place and grows from its size to its own real
+        // height (not the pop-in's generic 500px cap), so the cards below
+        // slide down with it instead of jumping
+        bubble.style.cssText = 'animation: none; max-height: none; padding-block: 0.7rem; visibility: hidden';
+        typing.before(bubble);
+        const height = bubble.offsetHeight;
+        const from = typing.offsetHeight + parseFloat(getComputedStyle(typing).marginBottom);
+        bubble.style.cssText = '';
+        bubble.style.setProperty('--bubble-from', `${from}px`);
+        bubble.style.setProperty('--bubble-h', `${height}px`);
+        typing.classList.add('is-done');
+      }, SECRET_TYPING_MS);
+    });
+  }
+
+  // Drops everything the last render hooked up outside its own markup: the
+  // observers would otherwise keep the old cards alive.
+  _teardown() {
+    this._pwaControl?.destroy();
+    this._pwaControl = null;
+    this._revealObserver?.disconnect();
+    this._revealObserver = null;
+    this._reflowObserver?.disconnect();
+    this._reflowObserver = null;
+  }
+
+  /**
+   * FLIP-animates the masonry cards when a resize moves them to the other
+   * column (same technique as classroom-detail.js _animateReflow): each
+   * ResizeObserver tick slides every card from where it visually was to its
+   * new spot.
+   */
+  _animateMasonry(container) {
+    if (!container || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const items = [...container.querySelectorAll(':scope > .info-column > .info-section')];
+    // Layout offsets, not screen rects: scrolling between two ticks, or a
+    // card's rise-in `translate`, must not read as the card having moved.
+    const measure = () => new Map(items.map(el => {
+      const m = new DOMMatrix(getComputedStyle(el).transform);
+      return [el, { x: el.offsetLeft, y: el.offsetTop, tx: m.e, ty: m.f }];
+    }));
+
+    let prev = null;
+    this._reflowObserver = new ResizeObserver(() => {
+      const cur = measure();
+      if (prev) {
+        for (const el of items) {
+          const a = prev.get(el), b = cur.get(el);
+          const dx = a.x + b.tx - b.x;
+          const dy = a.y + b.ty - b.y;
+          if (Math.abs(dx - b.tx) < 1 && Math.abs(dy - b.ty) < 1) continue;
+          el.getAnimations().filter(an => an.id === 'reflow').forEach(an => an.cancel());
+          const anim = el.animate(
+            [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }],
+            { duration: 350, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+          );
+          anim.id = 'reflow';
+        }
+      }
+      prev = measure();
+    });
+    this._reflowObserver.observe(container);
   }
 
   async _fetchGithubStats() {
@@ -614,12 +810,11 @@ class InfoPage {
       const base = `https://api.github.com/repos/${GITHUB_REPO}`;
       const hdrs = { headers: { Accept: 'application/vnd.github+json' } };
 
-      const [repoRes, commitsRes, langsRes, contribRes, stargazersRes] = await Promise.all([
+      const [repoRes, commitsRes, langsRes, contribRes] = await Promise.all([
         fetch(base, hdrs),
         fetch(`${base}/commits?per_page=1`, hdrs),
         fetch(`${base}/languages`, hdrs),
         fetch(`${base}/contributors?per_page=10`, hdrs),
-        fetch(`${base}/stargazers?per_page=3`, hdrs),
       ]);
 
       if (!repoRes.ok) throw new Error(`GitHub API ${repoRes.status}`);
@@ -634,14 +829,12 @@ class InfoPage {
 
       const langs = langsRes.ok ? await langsRes.json() : null;
       const contributors = contribRes.ok ? await contribRes.json() : null;
-      const stargazers = stargazersRes.ok ? await stargazersRes.json() : null;
 
       if (!this._cachedStats) this._cachedStats = {};
       this._cachedStats.repo = repo;
       this._cachedStats.commits = commits;
       if (langs) this._cachedStats.langs = langs;
       if (contributors?.length) this._cachedStats.contributors = contributors;
-      if (stargazers?.length) this._cachedStats.stargazers = stargazers;
 
       this._applyGithubStats(this._cachedStats);
       this._persistStatsCache();
@@ -656,7 +849,7 @@ class InfoPage {
     } catch { /* storage quota exceeded — not critical */ }
   }
 
-  _applyGithubStats({ repo, commits, langs, contributors, stargazers }) {
+  _applyGithubStats({ repo, commits, langs, contributors }) {
     if (!this._overlay) return;
 
     const grid = this._overlay.querySelector('.github-stats-grid');
@@ -673,7 +866,6 @@ class InfoPage {
 
     if (langs) this._renderLanguageBar(langs);
     if (contributors?.length) this._renderContributors(contributors);
-    if (stargazers?.length) this._renderStargazers(stargazers);
   }
 
   _renderLanguageBar(langs) {
@@ -702,31 +894,16 @@ class InfoPage {
     `;
   }
 
-  _renderStargazers(stargazers) {
-    const el = this._overlay?.querySelector('[data-github="stargazers"]');
-    if (!el) return;
-
-    const items = stargazers.slice(0, 3).map((u, i) => {
-      const login = escapeHtml(u.login);
-      const avatar = safeUrl(u.avatar_url);
-      return `<span class="star-avatar" data-login="${login}" style="z-index:${3 - i}">
-        <img src="${avatar}&s=48" alt="${login}" loading="lazy">
-      </span>`;
-    }).join('');
-
-    el.innerHTML = `<div class="star-avatar-stack">${items}</div>`;
-  }
-
   _renderContributors(contributors) {
     const el = this._overlay?.querySelector('[data-github="contributors"]');
     if (!el) return;
 
     const items = contributors.slice(0, 8).map(c => {
       const login = escapeHtml(c.login);
-      const href = safeUrl(c.html_url);
-      const avatar = safeUrl(c.avatar_url);
+      const href = escapeHtml(safeUrl(c.html_url));
+      const avatar = escapeHtml(safeUrl(c.avatar_url));
       return `
-        <a href="${href}" target="_blank" rel="noopener" class="contributor-item" title="${login}">
+        <a href="${href}" target="_blank" rel="noopener" class="contributor-item lg-glass liquid-glass" title="${login}">
           <img src="${avatar}&s=64" alt="${login}" class="contributor-avatar" loading="lazy">
           <span class="contributor-info">
             <span class="contributor-login">${login}</span>

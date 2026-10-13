@@ -263,6 +263,9 @@
   top: 0;
   left: 0;
   height: 100%;
+  /* The core undoes the indicator's scale on the row composed about the row's
+     own corner (Vitrium 0.8, .lg-pill-active-row). */
+  transform-origin: 0 0;
   pointer-events: none;
 }
 

@@ -92,6 +92,9 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     activeCellClass: 'date-indicator-cell',
     liftedClass: 'date-indicator--lifted',
     tapScale: 1.6,
+    // Vitrium 0.8 keeps the copies at their own size and grows them by this
+    // (default 1.2); before, they rode the lens's scale.
+    copyScale: 1.6,
     // Wide row → the whole thing trails a bit more than the compact tabbar.
     trail: { follow: 0.12, give: 8, giveCross: 5 },
     canSelect: i => !isSkipped(core.cells[i]),

@@ -14,7 +14,7 @@
 // Lives inside #search-classrooms-container, alongside the map (see
 // components/campus-map.js) and above it, below the header / footer /
 // bottom-nav chrome.
-import { createSheet } from 'vitrium';
+import { createSheet, DEFAULT_SHEET_DETENTS } from 'vitrium';
 import { t } from '../i18n.js';
 import { initCampusBuildingsPage } from './campus-buildings.js';
 
@@ -96,7 +96,7 @@ export function isUserResizing() {
 
 function detentAfterBuildingSelect() {
   const current = sheet.detent;
-  return current === 'collapsed' ? (desktopMQ.matches ? 'full' : 'half') : current;
+  return current === 'peek' ? (desktopMQ.matches ? 'full' : 'half') : current;
 }
 
 // Mobile: two independent quantities, both easing linearly back to the plain
@@ -153,7 +153,7 @@ const collapsedLift = () => desktopMQ.matches
 // spring), and is gone from half up.
 function applyLift(height) {
   if (!sheet) return;
-  const collapsed = sheet.detentHeight('collapsed');
+  const collapsed = sheet.detentHeight('peek');
   const half = sheet.detentHeight('half');
   const t = half > collapsed ? Math.min(Math.max((half - height) / (half - collapsed), 0), 1) : 0;
   sheet.el.style.setProperty('--campus-sheet-lift', `${(collapsedLift() * t).toFixed(2)}px`);
@@ -175,13 +175,13 @@ function build(detent) {
     label: t('tabs.campus'),
     deform: 'handle',        // squash/stretch only for a drag on the grabber or header, not on the cards
     zIndex: 3,               // above the map (0) and its controls (5 is inside the map's own context)
-    glassStyle: 'frost',     // always frosted, whatever the glass style setting or the detent
-    detents: [
-      { id: 'collapsed', size: COLLAPSED },
-      { id: 'half', size: 0.5 },
+    // Vitrium's own detents and their glass; only the sizes are ours.
+    detents: DEFAULT_SHEET_DETENTS.map(d => ({
+      ...d,
+      ...(d.id === 'peek' && { size: COLLAPSED }),
       // Mobile stops short of the top so the map stays reachable, but never above the header.
-      { id: 'full', size: desktop ? 'full' : Math.round(0.85 * (innerHeight - 20)) },
-    ],
+      ...(d.id === 'full' && { size: desktop ? 'full' : Math.round(0.85 * (innerHeight - 20)) }),
+    })),
     detent,
     margin: { top: desktop ? headerHeightPx() + 32 + 20 : headerClearance(), bottom: SHEET_BOTTOM, inline: desktop ? 20 : PLAIN_INSET },
     ...(desktop ? { width: 420, side: 'end' } : { geometry: mobileGeometry() }),
@@ -214,7 +214,7 @@ export function initCampusSheet() {
   header = document.createElement('div');
   content = document.createElement('div');
   readNavMetrics();
-  build('collapsed');
+  build('peek');
 
   // Only now is `header`/`content` connected to the document: the picker custom
   // element inside the header needs that before .setup().
@@ -260,6 +260,6 @@ export function initCampusSheet() {
   // currently just a collapsed peek. A no-op at 'half'/'full': there's no reason
   // to shrink an already-open sheet just because a different building was picked.
   document.addEventListener('buildingpageopen', () => {
-    if (sheet.detent === 'collapsed') sheet.setDetent(detentAfterBuildingSelect());
+    if (sheet.detent === 'peek') sheet.setDetent(detentAfterBuildingSelect());
   });
 }

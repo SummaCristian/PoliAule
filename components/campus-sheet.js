@@ -179,6 +179,8 @@ function build(detent) {
     detents: DEFAULT_SHEET_DETENTS.map(d => ({
       ...d,
       ...(d.id === 'peek' && { size: COLLAPSED }),
+      // The medium detent is frost too, like the full one (Vitrium's default follows the page).
+      ...(d.id === 'half' && { glassStyle: 'frost' }),
       // Mobile stops short of the top so the map stays reachable, but never above the header.
       ...(d.id === 'full' && { size: desktop ? 'full' : Math.round(0.85 * (innerHeight - 20)) }),
     })),

@@ -569,8 +569,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Vitrium's core/blur-capability.js for why.
     applyBlurState(resolveBlurCapability());
     // Rim refraction on glass (Chromium only, and only while blur is on);
-    // the glass style itself is set before first paint in index.html.
-    initRefraction({ enabled: getRefractionPref() });
+    // the glass style itself is set before first paint in index.html. The
+    // date picker's lens is a copy of Vitrium's pill, not one, so it's named here.
+    initRefraction({ enabled: getRefractionPref(), selector: '.date-indicator-inner' });
 
     await document.fonts.ready;
     document.querySelector('.time-pickers-container').style.opacity = '1';

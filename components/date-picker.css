@@ -174,10 +174,10 @@
   opacity: var(--lg-stroke-opacity);
 }
 
-/* Inner layer: clips the active-row filmstrip to the indicator's own box,
-   and — literally as in .lg-pill-inner — carries the pill's actual color at
-   all times (not just while lifted), plus the extra blur/highlight/border
-   once lifted. */
+/* Inner layer: literally as in .lg-pill-inner, carries the pill's actual
+   color at all times (not just while lifted), plus the extra
+   blur/highlight/border once lifted. The active row sits beside it, in
+   .date-indicator-lens. */
 .date-indicator-inner {
   /* Literal copy of the tab bar's --lg-pill-* tokens in Vitrium's tabbar.css
      (that pill's own material is deliberately subtler/more transparent
@@ -196,7 +196,15 @@
   pointer-events: none;
 
   background: var(--dp-pill-bg);
-  transition: backdrop-filter 0.15s ease, -webkit-backdrop-filter 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.15s ease, backdrop-filter 0.15s ease, -webkit-backdrop-filter 0.15s ease, box-shadow 0.15s ease;
+
+  /* Refraction while lifted (script.js adds this element to initRefraction's
+     surfaces): the same thin, prismatic rim as Vitrium's .lg-pill-inner
+     (its refraction.css), which this layer copies. */
+  --lg-refraction-blur: 0px;
+  --lg-refraction-bezel: 14px;
+  --lg-refraction-depth: 75%;
+  --lg-refraction-dispersion: 0.15;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -214,6 +222,34 @@
   box-shadow:
     inset 0 1px 0 var(--dp-pill-highlight),
     inset 0 0 0 1px var(--dp-pill-border);
+}
+
+/* Clips the active-row filmstrip to the indicator's own box, beside the fill
+   and painted over it. Same role as .lg-pill-lens. */
+.date-indicator-lens {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Refracting, as Vitrium's refraction.css does for .lg-pill: lifted, the
+   duplicates slide under the fill (z-index -1 stays inside the indicator,
+   which will-change makes a stacking context) so its backdrop filter bends
+   them together with the cells, and the fill goes clear; at rest the fill
+   is flat, with no backdrop. */
+:root[data-refraction="on"] .date-indicator--lifted:has(> .date-indicator-inner.lg-refracting) > .date-indicator-lens {
+  z-index: -1;
+}
+
+:root[data-refraction="on"] .date-indicator--lifted .date-indicator-inner.lg-refracting {
+  background: transparent;
+}
+
+:root[data-refraction="on"] .date-indicator:not(.date-indicator--lifted) .date-indicator-inner.lg-refracting {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* One accent-colored duplicate of every cell, pinned to that cell's own

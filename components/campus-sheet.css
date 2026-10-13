@@ -330,3 +330,11 @@
     padding-bottom: var(--csheet-fade-bottom);
   }
 }
+
+/* The collapsed detent sits above the open ones' bottom edge, to stay
+   concentric with the tab bar (--campus-sheet-lift, campus-sheet.js). Its top
+   edge doesn't move: the height shrinks by what the bottom rises. */
+.lg-sheet.campus-sheet {
+  bottom: var(--campus-sheet-lift, 0px);
+  height: calc(var(--lg-sheet-size, 192px) - var(--campus-sheet-lift, 0px));
+}

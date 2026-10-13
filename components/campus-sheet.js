@@ -33,6 +33,12 @@ const COLLAPSED = 192;
 const PLAIN_INSET = 8;
 const PLAIN_RADIUS = 28;
 const GAP = 8;
+// The sheet's bottom margin when it is open (Vitrium's default 20, kept explicit
+// because the collapsed detent's lift below is measured against it).
+const SHEET_BOTTOM = 20;
+// Vitrium's default clearance of the tab bar above the screen edge, used when
+// nothing sets --lg-tabbar-bottom-offset.
+const TABBAR_BOTTOM_DEFAULT = 40;
 // A superellipse ("squircle") reads as less round than a circular arc at the
 // same radius. Where it's supported, scale the radius up so the corner still
 // reads as concentric with the tabbar's true circular pill ends. Elsewhere
@@ -133,6 +139,26 @@ function mobileGeometry() {
   };
 }
 
+// Concentric with the tab bar, the sheet's bottom edge sits GAP below the bar's.
+// The bar floats --lg-tabbar-bottom-offset above the screen edge and the open
+// sheet SHEET_BOTTOM, so a bar higher than the default leaves a wider gap than
+// GAP at the collapsed detent. The difference is how far the sheet is lifted
+// there; its top stays where it was (the height is trimmed by the same amount).
+const collapsedLift = () => desktopMQ.matches
+  ? 0
+  : Math.max(0, rootPx('--lg-tabbar-bottom-offset', TABBAR_BOTTOM_DEFAULT) - GAP - SHEET_BOTTOM);
+
+// The lift eases away as the sheet grows from the collapsed to the half detent
+// (following the live height, so it also moves during a drag or the settle
+// spring), and is gone from half up.
+function applyLift(height) {
+  if (!sheet) return;
+  const collapsed = sheet.detentHeight('collapsed');
+  const half = sheet.detentHeight('half');
+  const t = half > collapsed ? Math.min(Math.max((half - height) / (half - collapsed), 0), 1) : 0;
+  sheet.el.style.setProperty('--campus-sheet-lift', `${(collapsedLift() * t).toFixed(2)}px`);
+}
+
 function headerHeightPx() {
   return rootPx('--header-height', 84);
 }
@@ -157,9 +183,10 @@ function build(detent) {
       { id: 'full', size: desktop ? 'full' : Math.round(0.85 * (innerHeight - 20)) },
     ],
     detent,
-    margin: { top: desktop ? headerHeightPx() + 32 + 20 : headerClearance(), bottom: 20, inline: desktop ? 20 : PLAIN_INSET },
+    margin: { top: desktop ? headerHeightPx() + 32 + 20 : headerClearance(), bottom: SHEET_BOTTOM, inline: desktop ? 20 : PLAIN_INSET },
     ...(desktop ? { width: 420, side: 'end' } : { geometry: mobileGeometry() }),
     onResize(height) {
+      applyLift(height);
       // components/campus-map.js listens for this: any manual drag/wheel, the
       // settle spring that follows one, or the auto-expand a building
       // selection triggers, alike.
@@ -172,6 +199,7 @@ function build(detent) {
   sheet.el.classList.add('campus-sheet');
   sheet.el.dataset.detent = sheet.detent;
   sheet.contentEl.classList.add('campus-sheet-content');
+  applyLift(sheet.height);
 }
 
 export function initCampusSheet() {

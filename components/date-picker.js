@@ -3,28 +3,48 @@ import { classroomsData, publishedDates } from '../available-rooms-script.js';
 import { createPillSelector } from './pill-selector.js';
 import { graduationOn, graduationCampus } from '../utils/graduation.js';
 
-// Graduation days at the picked campus (utils/graduation.js) get a small laurel
-// under their date: the ceremonies may take rooms that day. Redone
-// when the campus or the sessions change.
+// Graduation days at the picked campus (utils/graduation.js) show a laurel in
+// place of the weekday letter: the ceremonies may take rooms that day, and the
+// neighbouring cells give the weekday away. Redone when the campus or the
+// sessions change.
 function markGraduationDays() {
   const campusId = graduationCampus() ?? document.getElementById('campus-picker')?.value;
   document.querySelectorAll('.date-picker-container .date-element-container').forEach(el => {
     const on = !!graduationOn(el.dataset.date, campusId);
-    let mark = el.querySelector(':scope > .date-graduation-mark');
-    if (on && !mark) {
-      mark = document.createElement('i');
-      mark.className = 'hgi-stroke hgi-laurel-wreath-01 date-graduation-mark';
-      mark.setAttribute('aria-hidden', 'true');
-      el.appendChild(mark);
-    } else if (!on) {
-      mark?.remove();
+    const dow = el.querySelector(':scope > .date-day-of-week');
+    if (dow) {
+      dow.dataset.letter ??= dow.textContent;
+      const mark = dow.querySelector('.date-graduation-mark');
+      if (on && !mark) {
+        dow.textContent = '';
+        const icon = document.createElement('i');
+        icon.className = 'hgi-stroke hgi-laurel-wreath-01 date-graduation-mark';
+        icon.setAttribute('aria-hidden', 'true');
+        dow.appendChild(icon);
+      } else if (!on && mark) {
+        dow.textContent = dow.dataset.letter;
+      }
     }
     el.classList.toggle('date-graduation', on);
     if (on) el.title = t('date.graduationDay');
     else el.removeAttribute('title');
   });
 }
-document.addEventListener('graduationschange', markGraduationDays);
+// The selected-day overlay holds one copy of every cell, in order; refresh
+// their content in place (a full pill refresh while the tab is hidden would
+// measure an unlaid-out subtree and bake in wrong positions)
+function syncLensCopies() {
+  document.querySelectorAll('.date-picker-container').forEach(container => {
+    const cells = container.querySelectorAll('.date-element-container');
+    const copies = container.parentElement?.querySelectorAll('.date-indicator-cell');
+    if (!copies || copies.length !== cells.length) return;
+    cells.forEach((cell, i) => { copies[i].innerHTML = cell.innerHTML; });
+  });
+}
+document.addEventListener('graduationschange', () => {
+  markGraduationDays();
+  syncLensCopies();
+});
 
 // Sets the allowed dates into the date picker,
 // and populates the custom UI and the hidden select with the available dates.

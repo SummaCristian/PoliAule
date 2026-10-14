@@ -141,6 +141,14 @@ time-range-chip-picker[data-loading] .trc-value > :not(.chip-skeleton) {
   max-width: 100%;
 }
 
+/* The day strip never needs to scroll, but the lifted lens (scaled up mid
+   drag) reaches past the bottom of the panel's scroller. With overflow-y
+   auto that toggled a scrollbar on desktop Chrome, which narrowed the picker,
+   and its ResizeObserver re-anchored the lens onto the committed day mid drag. */
+.lg-morph--open:has(.dcp-content) .lg-morph__inner {
+  overflow-y: hidden;
+}
+
 /* Vitrium caps the morph panel to the viewport on narrow phones, while its
    inner scroller keeps the requested 24rem width. Keep the date picker body
    inside the panel so its centered day strip stays centered too. */

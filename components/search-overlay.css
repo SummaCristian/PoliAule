@@ -110,7 +110,7 @@ html.search-vt .lg-tabbar__prominent {
   /* Mirrors the tab bar's clearance from the bottom safe area, which is sized
      to keep clear of Safari's fixed-element edge handling (see Vitrium's
      tabbar.css). */
-  --search-top-gap: var(--lg-tabbar-bottom-offset, 28px);
+  --search-top-gap: var(--lg-tabbar-bottom-offset, 40px);
   /* --search-vv-top is visualViewport's offsetTop (search-overlay.js) — iOS
      Safari can pan the visual viewport when the keyboard opens, which would
      otherwise push a top-anchored fixed element off screen; 0px when
@@ -124,7 +124,7 @@ html.search-vt .lg-tabbar__prominent {
      box never reaches into Safari's bottom edge zone. --search-vv-height is
      visualViewport's height, which already excludes the keyboard;
      .search-keyboard-up is set by search-overlay.js. */
-  --search-bottom-gap: calc(env(safe-area-inset-bottom, 0px) + var(--lg-tabbar-bottom-offset, 28px));
+  --search-bottom-gap: calc(env(safe-area-inset-bottom, 0px) + var(--lg-tabbar-bottom-offset, 40px));
   max-height: calc(var(--search-vv-height, 100dvh) - var(--search-top-gap) - env(safe-area-inset-top, 0px) - var(--search-bottom-gap));
 
   display: flex;
@@ -1153,7 +1153,7 @@ html.search-vt .lg-tabbar__prominent {
     top: var(--search-vv-top, 0px);
     left: 0;
     right: 0;
-    height: calc(env(safe-area-inset-top, 0px) + var(--lg-tabbar-bottom-offset, 28px));
+    height: calc(env(safe-area-inset-top, 0px) + var(--lg-tabbar-bottom-offset, 40px));
     background: linear-gradient(to bottom,
       var(--background-color) env(safe-area-inset-top, 0px),
       transparent 100%);

@@ -174,10 +174,10 @@
   opacity: var(--lg-stroke-opacity);
 }
 
-/* Inner layer: clips the active-row filmstrip to the indicator's own box,
-   and — literally as in .lg-pill-inner — carries the pill's actual color at
-   all times (not just while lifted), plus the extra blur/highlight/border
-   once lifted. */
+/* Inner layer: literally as in .lg-pill-inner, carries the pill's actual
+   color at all times (not just while lifted), plus the extra
+   blur/highlight/border once lifted. The active row sits beside it, in
+   .date-indicator-lens. */
 .date-indicator-inner {
   /* Literal copy of the tab bar's --lg-pill-* tokens in Vitrium's tabbar.css
      (that pill's own material is deliberately subtler/more transparent
@@ -196,7 +196,15 @@
   pointer-events: none;
 
   background: var(--dp-pill-bg);
-  transition: backdrop-filter 0.15s ease, -webkit-backdrop-filter 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.15s ease, backdrop-filter 0.15s ease, -webkit-backdrop-filter 0.15s ease, box-shadow 0.15s ease;
+
+  /* Refraction while lifted (script.js adds this element to initRefraction's
+     surfaces): the same thin, prismatic rim as Vitrium's .lg-pill-inner
+     (its refraction.css), which this layer copies. */
+  --lg-refraction-blur: 0px;
+  --lg-refraction-bezel: 14px;
+  --lg-refraction-depth: 75%;
+  --lg-refraction-dispersion: 0.15;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -216,6 +224,34 @@
     inset 0 0 0 1px var(--dp-pill-border);
 }
 
+/* Clips the active-row filmstrip to the indicator's own box, beside the fill
+   and painted over it. Same role as .lg-pill-lens. */
+.date-indicator-lens {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Refracting, as Vitrium's refraction.css does for .lg-pill: lifted, the
+   duplicates slide under the fill (z-index -1 stays inside the indicator,
+   which will-change makes a stacking context) so its backdrop filter bends
+   them together with the cells, and the fill goes clear; at rest the fill
+   is flat, with no backdrop. */
+:root[data-refraction="on"] .date-indicator--lifted:has(> .date-indicator-inner.lg-refracting) > .date-indicator-lens {
+  z-index: -1;
+}
+
+:root[data-refraction="on"] .date-indicator--lifted .date-indicator-inner.lg-refracting {
+  background: transparent;
+}
+
+:root[data-refraction="on"] .date-indicator:not(.date-indicator--lifted) .date-indicator-inner.lg-refracting {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 /* One accent-colored duplicate of every cell, pinned to that cell's own
    anchor (not flex-laid-out, so it can't drift a sub-pixel from the real
    space-between layout it's shadowing) — see rebuildActiveRow() in
@@ -227,6 +263,9 @@
   top: 0;
   left: 0;
   height: 100%;
+  /* The core undoes the indicator's scale on the row composed about the row's
+     own corner (Vitrium 0.8, .lg-pill-active-row). */
+  transform-origin: 0 0;
   pointer-events: none;
 }
 
@@ -407,18 +446,19 @@
 }
 
 /* A graduation day at the picked campus (markGraduationDays in
-   date-picker.js): a small laurel under the number, in graduation's navy */
-.date-element-container.date-graduation { position: relative; }
-
+   date-picker.js): a laurel in place of the weekday letter, in graduation's navy */
 .date-graduation-mark {
-  position: absolute;
-  bottom: -0.5rem;
-  left: 50%;
-  translate: -50% 0;
-  font-size: var(--text-60);
+  /* .hgi-stroke forces 22px; here it stands in for a letter, so it must keep
+     the letter's box or the cell (and the lens copies) shift */
+  font-size: 1em !important;
+  line-height: inherit;
+  display: block;
   color: #3d63b3;
   pointer-events: none;
 }
+
+/* Under the lens the copies are in the accent, like the rest of the cell */
+.date-indicator-cell .date-graduation-mark { color: inherit; }
 
 @media (prefers-color-scheme: dark) {
   .date-graduation-mark { color: #8eabff; }

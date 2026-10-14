@@ -1497,10 +1497,9 @@ body.detail-open .tab-content {
   background: color-mix(in srgb, var(--color-status-partial) 22%, var(--lg-tint-clear));
   -webkit-backdrop-filter: blur(var(--lg-blur-clear));
   backdrop-filter: blur(var(--lg-blur-clear));
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--color-status-partial) 45%, transparent),
-    var(--lg-highlight),
-    0 4px 24px 0 var(--lg-shadow-color);
+  /* style.css forces `.lg-ring` to the rim shadow alone (!important), so the
+     yellow comes through the ring Vitrium draws, not a box-shadow here */
+  --lg-ring-color: color-mix(in srgb, var(--color-status-partial) 22%, transparent);
 }
 
 .detail-events-only .hgi-stroke {
@@ -1534,10 +1533,7 @@ body.detail-open .tab-content {
 .detail-graduation {
   --graduation-tint: #3d63b3;
   background: color-mix(in srgb, var(--graduation-tint) 18%, var(--lg-tint-clear));
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--graduation-tint) 40%, transparent),
-    var(--lg-highlight),
-    0 4px 24px 0 var(--lg-shadow-color);
+  --lg-ring-color: color-mix(in srgb, var(--graduation-tint) 22%, transparent);
 }
 
 .detail-graduation .hgi-stroke { color: var(--graduation-tint); }

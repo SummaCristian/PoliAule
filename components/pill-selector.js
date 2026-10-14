@@ -55,15 +55,20 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     Array.from(container.querySelectorAll(':scope > .date-element-container')).forEach(el => items.appendChild(el));
   adoptCells();
 
-  // Accent-colored cell duplicates (the tab bar's active row equivalent) live in an
-  // overflow:hidden inner layer that blurs while lifted (the tab bar's pill inner).
-  indicator.querySelector(':scope > .date-indicator-inner')?.remove();
+  // The fill that blurs and refracts while lifted (the tab bar's pill inner),
+  // and beside it, not inside it, the accent-colored cell duplicates in their
+  // own clipping layer (the pill's lens): a backdrop filter only bends what's
+  // behind its element, so the duplicates slide under the fill while lifted
+  // (date-picker.css) to be bent along with the cells.
+  indicator.querySelectorAll(':scope > .date-indicator-inner, :scope > .date-indicator-lens').forEach(el => el.remove());
   const inner = document.createElement('div');
   inner.className = 'date-indicator-inner';
+  const lens = document.createElement('div');
+  lens.className = 'date-indicator-lens';
   const activeRow = document.createElement('div');
   activeRow.className = 'date-indicator-active-row';
-  inner.appendChild(activeRow);
-  indicator.appendChild(inner);
+  lens.appendChild(activeRow);
+  indicator.append(inner, lens);
 
   wrapper.querySelector(':scope > .date-indicator-hit')?.remove();
   const hit = document.createElement('div');
@@ -87,6 +92,9 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
     activeCellClass: 'date-indicator-cell',
     liftedClass: 'date-indicator--lifted',
     tapScale: 1.6,
+    // Vitrium 0.8 keeps the copies at their own size and grows them by this
+    // (default 1.2); before, they rode the lens's scale.
+    copyScale: 1.6,
     // Wide row → the whole thing trails a bit more than the compact tabbar.
     trail: { follow: 0.12, give: 8, giveCross: 5 },
     canSelect: i => !isSkipped(core.cells[i]),

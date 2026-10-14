@@ -478,6 +478,31 @@ async function boot() {
   });
   map.addControl(geolocateControl, 'top-right');
 
+  // Once the user has granted location, show their position as soon as the map
+  // opens, without the camera following it (the control's own trigger() would
+  // recentre). The dot reuses Mapbox's user-location styling, and hands over to
+  // the control's own dot when the button is pressed.
+  if (navigator.geolocation && navigator.permissions?.query) {
+    navigator.permissions.query({ name: 'geolocation' }).then(status => {
+      if (status.state !== 'granted') return;
+      const dot = document.createElement('div');
+      dot.className = 'mapboxgl-user-location-dot';
+      const marker = new mapboxgl.Marker({ element: dot });
+      let watchId = null;
+      const stop = () => {
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        marker.remove();
+      };
+      watchId = navigator.geolocation.watchPosition(
+        pos => marker.setLngLat([pos.coords.longitude, pos.coords.latitude]).addTo(map),
+        stop,
+        { enableHighAccuracy: true },
+      );
+      geolocateControl.once('trackuserlocationstart', stop);
+    }).catch(() => {});
+  }
+
   // `liquid-glass` (components/liquid-glass.js) must go on the actual
   // <button>, not the wrapping .mapboxgl-ctrl-group div: its delegated
   // pointerdown handler treats any `<button>` under the pressed element as

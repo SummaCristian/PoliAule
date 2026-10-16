@@ -595,10 +595,15 @@
           <i class="hgi-stroke hgi-star" aria-hidden="true"></i>
         </button>
 
-        <!-- Data Fetch Indicator — the button morphs into a glass card holding
-             the freshness status + reload button (see components/data-fetch-card.js). -->
+        <!-- Data Fetch Indicator — a freshness dot, a spinner while fetching, or an
+             offline mark (data-glyph); the button morphs into a glass card with the
+             status + reload button (see components/data-fetch-card.js). -->
         <button id="data-fetch-btn" class="header-button lg-ring liquid-glass" aria-label="Data status">
-          <div id="data-fetch-indicator" class="pulse-indicator"></div>
+          <span id="data-fetch-indicator" class="data-status-glyph" data-glyph="spinner" aria-hidden="true">
+            <span class="pulse-indicator"></span>
+            <span class="ds-spinner"></span>
+            <i class="hgi-stroke hgi-wifi-off-01 data-status-offline"></i>
+          </span>
         </button>
 
         <!-- Settings button -->

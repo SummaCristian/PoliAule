@@ -17,6 +17,47 @@ export let lastFetchedAt = null;
 // fetchClassroomsDataOnce), so classroomsData can briefly hold fewer of them.
 export let publishedDates = [];
 
+// What fetching is up to, for the data status button and its card
+// (components/data-fetch-card.js), told of every change by a
+// 'datafetchstatus' event on document. `issue` is why the last check didn't go
+// through: 'offline', 'unreachable' (no answer) or 'server' (a bad one); with a
+// partial check, `failedDays` of `requestedDays` stood in from the cache.
+// `lastCheck` is when the server last answered, kept across visits.
+const LAST_CHECK_KEY = 'poliAule_lastDataCheck';
+
+export const fetchStatus = {
+  fetching: false,
+  issue: null,
+  failedDays: 0,
+  requestedDays: 0,
+  lastCheck: readLastCheck(),
+};
+
+function readLastCheck() {
+  try {
+    const saved = Number(localStorage.getItem(LAST_CHECK_KEY));
+    return saved ? new Date(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setFetchStatus(changes) {
+  Object.assign(fetchStatus, changes);
+  if (changes.lastCheck) {
+    try { localStorage.setItem(LAST_CHECK_KEY, String(changes.lastCheck.getTime())); } catch { /* not kept */ }
+  }
+  document.dispatchEvent(new CustomEvent('datafetchstatus'));
+}
+
+// Whose fault a failed request was. A fetch that rejects never reached the
+// server; one that answers with an error status (or garbage) did.
+function issueOf(error) {
+  if (navigator.onLine === false) return 'offline';
+  if (error?.status || error instanceof SyntaxError) return 'server';
+  return 'unreachable';
+}
+
 // Day of the week to skip. If one of the next 7 days is a
 // day listed here, skip to the next day.
 // This mirrors what happens in the backend.
@@ -78,7 +119,7 @@ export async function readCachedJson(cache, url) {
 
 // Fetches one endpoint, conditionally when there's a cached copy. `changed` is
 // false when the cached copy was confirmed (304) or had to stand in because the
-// request failed; without a cached copy a failure throws.
+// request failed (then `error` says why); without a cached copy a failure throws.
 export async function fetchJson(cache, url) {
   const cached = await readCachedJson(cache, url);
   try {
@@ -90,7 +131,7 @@ export async function fetchJson(cache, url) {
       await res.arrayBuffer(); // drain the empty body, or Chromium logs the request as canceled
       return { data: cached.data, changed: false };
     }
-    if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
+    if (!res.ok) throw Object.assign(new Error(`Failed to load ${url}: ${res.status}`), { status: res.status });
 
     const body = await res.text();
     const data = JSON.parse(body);
@@ -103,7 +144,7 @@ export async function fetchJson(cache, url) {
   } catch (error) {
     if (!cached) throw error;
     console.warn(`Using cached ${url}:`, error);
-    return { data: cached.data, changed: false };
+    return { data: cached.data, changed: false, error };
   }
 }
 
@@ -181,6 +222,8 @@ export function whenClassroomsDataSettled() {
 }
 
 async function fetchClassroomsDataOnce({ getFirstDate = null, onFirstDay = null } = {}) {
+  setFetchStatus({ fetching: true });
+  const outcome = { issue: null, failedDays: 0, requestedDays: 0 };
   try {
     const cache = await openDataCache();
     const apiBase = getApiBase();
@@ -188,11 +231,19 @@ async function fetchClassroomsDataOnce({ getFirstDate = null, onFirstDay = null 
     const { dates } = list.data;
     lastFetchedAt = list.data.generated_at ?? null;
     publishedDates = dates;
+    if (list.error) outcome.issue = issueOf(list.error);
+    else outcome.lastCheck = new Date();
 
     const dayRequests = dates.map(date => fetchJson(cache, occupationUrl(apiBase, date)));
     // Handled right away, so a day failing while the first one is awaited isn't an unhandled rejection
-    const allDays = Promise.allSettled(dayRequests)
-      .then(settled => settled.filter(r => r.status === 'fulfilled').map(r => r.value));
+    const allDays = Promise.allSettled(dayRequests).then(settled => {
+      // A day the cache stood in for, or that had none, didn't get checked
+      const failed = settled.filter(r => r.status === 'rejected' || r.value.error);
+      outcome.requestedDays = settled.length;
+      outcome.failedDays = failed.length;
+      if (failed.length) outcome.issue ??= issueOf(failed[0].reason ?? failed[0].value.error);
+      return settled.filter(r => r.status === 'fulfilled').map(r => r.value);
+    });
     const openingHoursRequest = fetchJson(cache, openingHoursUrl(apiBase))
       .catch(error => {
         // Non-fatal: fall through with openingHours = null so classroomsData
@@ -224,7 +275,10 @@ async function fetchClassroomsDataOnce({ getFirstDate = null, onFirstDay = null 
     return list.changed || !!openingHours?.changed || days.some(day => day.changed);
   } catch (error) {
     console.error('Error fetching classrooms data:', error);
+    outcome.issue = issueOf(error);
     return false;
+  } finally {
+    setFetchStatus({ fetching: false, ...outcome });
   }
 }
 
@@ -342,7 +396,7 @@ export function getFreeShareBySlot(campusId, date, windows) {
 // ---------- HELPERS ----------
 
 // Formats Date objects in the format used by the API (YYYYMMDD)
-function formatDateYYYYMMDD(date) {
+export function formatDateYYYYMMDD(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');

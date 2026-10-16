@@ -25,7 +25,6 @@ import {
   loadCachedClassroomsData,
   isCampusClosedAllDay,
   getOpenCommonAreas,
-  lastFetchedAt,
   isDayPending,
   whenClassroomsDataSettled,
   SKIP_DAYS
@@ -55,7 +54,7 @@ import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
 import { initPickerDock } from './components/picker-dock.js';
 import { initPickerRowFlip } from './components/picker-row-flip.js';
-import './components/data-fetch-card.js';
+import { renderDataStatus, setDataReload } from './components/data-fetch-card.js';
 
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
@@ -65,7 +64,7 @@ import { initFavourites, renderFavourites } from './components/favourites.js';
 import { initCardDayPopover } from './components/card-day-popover.js';
 import { createBuildingStarButton } from './utils/favourites.js';
 
-import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
+import { initI18n, t, applyTranslations, onLanguageSwitch } from './i18n.js';
 import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, getRefractionPref } from './components/settings.js';
@@ -488,6 +487,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     applyTranslations();
     retranslateNav();
+    // The data status button's name and card, before the data is in
+    setDataReload(reloadOccupancyData);
+    renderDataStatus();
     // <date-chip-picker> renders its date label via Intl at module-eval time,
     // before initI18n() resolves — re-render it now that the locale is known.
     document.querySelector('date-chip-picker')?.retranslate();
@@ -558,7 +560,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup the language switch handler immediately — doesn't depend on
     // fonts and shouldn't wait for the splash to dismiss
     onLanguageSwitch(() => {
-      setupDataFetchIndicatorText(true);
+      renderDataStatus({ animate: true });
       setupDatePicker(() => preferInitialDate);
       document.querySelector('campus-chip-picker')?.retranslate();
       retranslateCampusBuildingsPage();
@@ -654,7 +656,7 @@ function populateOccupancyUi() {
   document.getElementById('available-classrooms-form').removeAttribute('aria-busy');
   document.querySelector('date-chip-picker')?.removeAttribute('data-loading');
 
-  setupDataFetchIndicator();
+  renderDataStatus();
   setupLiveSearch();
 
   // If a classroom detail page was opened before occupancy data arrived
@@ -1016,124 +1018,15 @@ function restoreQuery({ date, from, to }) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(date)) preferInitialDate = date;
 }
 
-function setupDataFetchIndicator() {
-  const indicator = document.getElementById('data-fetch-indicator');
-
-  if (!classroomsData.length) {
-    indicator.classList.add('red');
-    setDataStatusLabel('red');
-    return;
-  }
-
-  const today = new Date();
-  const todayKey = [
-    today.getFullYear(),
-    String(today.getMonth() + 1).padStart(2, '0'),
-    String(today.getDate()).padStart(2, '0')
-  ].join('');
-
-  const generationDate = new Date((lastFetchedAt ?? classroomsData[0].generated_at) + 'Z');
-  const generationKey = [
-    generationDate.getFullYear(),
-    String(generationDate.getMonth() + 1).padStart(2, '0'),
-    String(generationDate.getDate()).padStart(2, '0')
-  ].join('');
-
-  const hasFutureData = classroomsData.some(entry => entry.date > todayKey);
-
-  if (generationKey === todayKey) {
-    // Generated today — fresh
-    indicator.classList.add('green');
-  } else if (hasFutureData) {
-    // Not generated today but still has upcoming days — tolerable
-    indicator.classList.add('yellow');
-  } else {
-    // No future data at all — outdated
-    indicator.classList.add('red');
-  }
-
-  setupDataFetchIndicatorText();
-}
-
-// The header button's name carries the state too: its dot is only a colour
-function setDataStatusLabel(status) {
-  const key = { green: 'data.greenTitle', yellow: 'data.yellowTitle', red: 'data.redTitle' }[status];
-  document.getElementById('data-fetch-btn')?.setAttribute('aria-label', `${t('a11y.dataStatus')}: ${t(key)}`);
-}
-
-// Setups the text inside the popover shown in the Data Fetch Indicator
-function setupDataFetchIndicatorText(animate = false) {
-  const container = document.getElementById('data-fetch-indicator-popover-container');
-
-  const states = {
-    green: {
-      title: t('data.greenTitle'),
-      description: t('data.greenDesc'),
-    },
-    yellow: {
-      title: t('data.yellowTitle'),
-      description: t('data.yellowDesc'),
-    },
-    red: {
-      title: t('data.redTitle'),
-      description: t('data.redDesc'),
-    },
-  };
-
-  // Derive current status from the indicator's classes
-  const indicator = document.getElementById('data-fetch-indicator');
-  const status = ['green', 'yellow', 'red'].find(s => indicator.classList.contains(s)) ?? 'red';
-  const { title, description } = states[status];
-  setDataStatusLabel(status);
-
-  // Last fetch time
-  const generationDate = classroomsData[0]
-    ? new Date((lastFetchedAt ?? classroomsData[0].generated_at) + 'Z')
-    : null;
-
-  const dateLocale = getLocale() === 'it' ? 'it-IT' : 'en-GB';
-  const formattedTime = generationDate
-    ? generationDate.toLocaleString(dateLocale, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'Europe/Rome',
-    })
-    : '—';
-
-  container.innerHTML = `
-    <h1 class="popover-title ${status}">${title}</h1>
-    <p class="data-status-description secondary">${description}</p>
-    <label class="data-status-time secondary">${t('data.lastFetched')}: ${formattedTime}</label>
-    <button id="reload-data-btn" class="button-primary button-secondary data-reload-btn">
-      <i class="hgi-stroke hgi-refresh data-reload-icon" aria-hidden="true"></i>
-      <span class="data-reload-label">${t('data.reload')}</span>
-    </button>
-  `;
-  document.getElementById('reload-data-btn').addEventListener('click', reloadOccupancyData);
-  if (animate) animateI18nElement(container);
-}
-
+// The data status card's "Check for updates" (components/data-fetch-card.js)
 async function reloadOccupancyData() {
-  const btn = document.getElementById('reload-data-btn');
-  if (!btn || btn.disabled) return;
-
-  btn.disabled = true;
-  btn.querySelector('.data-reload-icon').classList.add('spinning');
-  btn.querySelector('.data-reload-label').textContent = t('data.reloading');
-
   await fetchClassroomsData();
   refreshOccupancyUi();
 }
 
 // Redraws what depends on the occupancy data after it was replaced
 function refreshOccupancyUi() {
-  const indicator = document.getElementById('data-fetch-indicator');
-  indicator.classList.remove('green', 'yellow', 'red');
-  setupDataFetchIndicator();
+  renderDataStatus();
   // Keep the day the user is on, if it's still published
   const selectedDate = document.getElementById('date-picker').value;
   setupDatePicker(() => selectedDate || preferInitialDate);

@@ -985,34 +985,6 @@ body.detail-open #favourite-btn {
   }
 }
 
-.data-fetch-popover-container {
-  display: flex;
-  flex-direction: column;
-
-  gap: 0;
-}
-
-.data-reload-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.75rem;
-  font-size: var(--text-85);
-}
-
-.data-reload-icon {
-  font-size: var(--text-100);
-  transition: transform 0.3s ease;
-}
-
-.data-reload-icon.spinning {
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 .header-nav-row {
   position: relative;
   z-index: 1;
@@ -1350,47 +1322,6 @@ ul li::marker {
   color: var(--text-color-accent);
 }
 
-.popover-title {
-  font-size: var(--text-175);
-
-  margin: 0;
-  align-self: center;
-
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-
-  mix-blend-mode: multiply;
-}
-
-@media (prefers-color-scheme: dark) {
-  .popover-title {
-    mix-blend-mode: normal;
-  }
-}
-
-.popover-title.green {
-  background: linear-gradient(135deg, #0d7a30, #2ecc5a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.popover-title.yellow {
-  background: linear-gradient(135deg, #b07d00, #f0b429);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.popover-title.red {
-  background: linear-gradient(135deg, #a01010, #e53935);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 .popover-subtitle {
   font-size: var(--text-125);
 
@@ -1510,8 +1441,7 @@ are rendered as solid colors
   background: var(--background-color-secondary);
 }
 
-.samsung .header-title,
-.samsung .popover-title {
+.samsung .header-title {
   mix-blend-mode: normal;
   -webkit-text-fill-color: unset;
   /* fallback to plain color */

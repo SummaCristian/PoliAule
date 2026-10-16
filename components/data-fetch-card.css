@@ -1,15 +1,291 @@
-/* ── Data-fetch card ──────────────────────────────────────────────────────
-   The header's data-fetch button morphs into a glass card (see
-   data-fetch-card.js). The card is Vitrium's morph popup; this holds the
-   button's own fade and the status container's spacing. */
+/* ── Data status ─────────────────────────────────────────────────────────────
+   The header's data status button and the glass card it morphs into (see
+   data-fetch-card.js; the card is Vitrium's morph popup). Its colours are the
+   status ones, never the accent: a season mustn't turn fresh data orange. */
 
-/* The button's indicator fades back in as the card hands the frame back. */
-#data-fetch-btn .pulse-indicator {
+/* ── Button glyph: the freshness dot, a spinner, or the offline mark ───────── */
+
+/* Fades back in as the card hands the frame back */
+#data-fetch-btn > .data-status-glyph {
   transition: opacity 0.24s ease;
 }
 
-/* The status container's title spans the accent gradient (.popover-title); at
-   card width it can breathe on its own line. */
-.lg-morph .data-fetch-popover-container {
-  gap: 0;
+.data-status-glyph {
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Stacked on the box's centre, whatever their own size (the icon's line box
+   is taller than the dot) */
+.data-status-glyph > * {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  line-height: 1;
+  transition:
+    opacity 0.22s ease,
+    scale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.data-status-glyph:not([data-glyph="dot"]) > .pulse-indicator,
+.data-status-glyph:not([data-glyph="spinner"]) > .ds-spinner,
+.data-status-glyph:not([data-glyph="offline"]) > .data-status-offline {
+  opacity: 0;
+  scale: 0.5;
+  transition:
+    opacity 0.16s ease,
+    scale 0.2s ease-in;
+}
+
+/* A hidden dot needn't keep pulsing */
+.data-status-glyph:not([data-glyph="dot"]) > .pulse-indicator::before,
+.data-status-glyph:not([data-glyph="dot"]) > .pulse-indicator::after {
+  animation-play-state: paused;
+}
+
+.data-status-offline {
+  font-size: 1.15rem;
+  color: var(--text-color-secondary);
+}
+
+/* An arc that fades into its tail, turning */
+.ds-spinner {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  color: var(--text-color-secondary);
+  background: conic-gradient(from 0deg, transparent 10%, currentColor);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  animation: ds-spin 0.8s linear infinite;
+}
+
+.data-status-glyph:not([data-glyph="spinner"]) > .ds-spinner {
+  animation-play-state: paused;
+}
+
+@keyframes ds-spin {
+  to { rotate: 360deg; }
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────────── */
+
+.data-fetch-popover-container {
+  --ds-color: var(--text-color-secondary);
+  --ds-gradient: linear-gradient(135deg, #7d838c, #b3b8c0);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.data-fetch-popover-container[data-tone="green"] {
+  --ds-color: var(--color-status-free);
+  --ds-gradient: linear-gradient(135deg, #0d7a30, #2ecc5a);
+}
+
+.data-fetch-popover-container[data-tone="yellow"] {
+  --ds-color: #d39a00;
+  --ds-gradient: linear-gradient(135deg, #b07d00, #f0b429);
+}
+
+.data-fetch-popover-container[data-tone="red"] {
+  --ds-color: #e53935;
+  --ds-gradient: linear-gradient(135deg, #a01010, #e53935);
+}
+
+/* Header: the status as an app-icon tile, like the Settings and Info heroes,
+   in Vitrium's tinted glass (.lg-glass.lg-glass--tinted) of the status colour.
+   This file loads after Vitrium, so the shape here wins over .lg-glass's pill. */
+.ds-head {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.ds-tile {
+  --lg-glass-tint: var(--ds-color);
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 28%;
+  corner-shape: superellipse;
+  display: grid;
+  place-items: center;
+}
+
+.ds-tile .hgi-stroke {
+  font-size: 28px;
+}
+
+.ds-spinner--tile {
+  width: 26px;
+  height: 26px;
+  color: #fff;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+}
+
+.ds-head-text {
+  min-width: 0;
+}
+
+.ds-title {
+  margin: 0;
+  font-size: var(--text-125);
+  font-weight: 800;
+  line-height: 1.2;
+  background: var(--ds-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.samsung .ds-title {
+  background: none;
+  -webkit-text-fill-color: unset;
+  color: var(--ds-color);
+}
+
+.ds-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: var(--text-85);
+  color: var(--text-color-secondary);
+}
+
+.ds-desc {
+  margin: 0;
+  font-size: var(--text-85);
+  line-height: 1.45;
+  color: var(--text-color-primary);
+  opacity: 0.85;
+}
+
+/* The days the data covers: glass chips, today's tinted in the status colour,
+   missing days only a dashed outline */
+.ds-week {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.ds-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.35rem 0 0.4rem;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  color: var(--text-color-primary);
+}
+
+/* The compact shadow suits a small chip */
+.ds-day.lg-glass {
+  box-shadow: var(--lg-shadow-compact);
+}
+
+.ds-day-name {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-color-secondary);
+}
+
+.ds-day-num {
+  font-size: var(--text-100);
+  font-weight: 800;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.ds-day.lg-glass--tinted {
+  --lg-glass-tint: var(--ds-color);
+  color: var(--lg-glass-tint-text, #fff);
+}
+
+.ds-day.lg-glass--tinted .ds-day-name {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.ds-day.is-missing {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--text-color-secondary) 45%, transparent);
+  color: var(--text-color-secondary);
+}
+
+.ds-day.is-today.is-missing {
+  border-color: color-mix(in srgb, var(--ds-color) 70%, transparent);
+  color: var(--ds-color);
+}
+
+.ds-day.is-today.is-missing .ds-day-name {
+  color: inherit;
+}
+
+/* What's happening now */
+.ds-activity {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  /* One line tall whichever icon it has, so the card keeps its height */
+  min-height: 1.2rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--text-color-primary) 5%, transparent);
+  font-size: var(--text-85);
+  line-height: 1.35;
+  color: var(--text-color-secondary);
+}
+
+.ds-activity > .hgi-stroke {
+  flex: none;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.ds-activity > .ds-spinner {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.ds-activity[data-kind="idle"] > .hgi-stroke {
+  color: var(--color-status-free);
+}
+
+.ds-activity[data-kind="issue"] {
+  background: color-mix(in srgb, #f0b429 14%, transparent);
+  color: var(--text-color-primary);
+}
+
+.ds-activity[data-kind="issue"] > .hgi-stroke {
+  color: #d39a00;
+}
+
+/* Vitrium's glass button (createButton), full width, tinted in the accent */
+.ds-reload {
+  width: 100%;
+  height: 46px;
+  margin-top: 0.1rem;
+  font-size: var(--text-100);
+  font-weight: 700;
+}
+
+.ds-reload:disabled {
+  opacity: 0.65;
+}
+
+.ds-reload-icon {
+  font-size: 1.2rem;
+}
+
+.ds-reload-icon.spinning {
+  animation: ds-spin 0.8s linear infinite;
 }

@@ -105,20 +105,23 @@ export function activateGroupTab(target) {
 const barEl = root.querySelector('.lg-tabbar__bar');
 function setNavSizeVars() {
   const style = document.documentElement.style;
+  // Everything is measured before anything is published: a variable set
+  // between two reads makes the second one lay the page out again, and this
+  // runs on every frame the bar changes size.
   // Each of the two is published only while the bar is in the layout it
   // belongs to. While it moves between layouts the wrapper briefly measures as
   // the other one (a full-width row, or a tall rail); publishing that would
   // send the page's padding, which animates, towards a value it then abandons.
-  if (root.classList.contains('lg-tabbar--vertical')) {
-    style.setProperty('--side-nav-width', `${root.offsetWidth}px`);
-  } else {
-    style.setProperty('--bottom-nav-height', `${root.offsetHeight}px`);
-  }
+  const vertical = root.classList.contains('lg-tabbar--vertical');
+  const navSize = vertical ? root.offsetWidth : root.offsetHeight;
   // offsetHeight, not getBoundingClientRect (which includes the squash-and-
   // stretch transform while the bar changes layout). Vitrium publishes the same
   // measurement as --lg-tabbar-height.
-  if (barEl) style.setProperty('--bn-tabbar-height', `${barEl.offsetHeight}px`);
+  const barHeight = barEl?.offsetHeight;
   const padLeft = parseFloat(getComputedStyle(root).paddingLeft);
+
+  style.setProperty(vertical ? '--side-nav-width' : '--bottom-nav-height', `${navSize}px`);
+  if (barEl) style.setProperty('--bn-tabbar-height', `${barHeight}px`);
   style.setProperty('--bn-tabbar-outer-inset', `${Number.isFinite(padLeft) ? padLeft : 28}px`);
   // campus-sheet.js builds its corners around these, so it needs to know.
   document.dispatchEvent(new Event('navsizechange'));

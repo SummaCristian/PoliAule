@@ -311,8 +311,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const header = document.querySelector('.header');
-  const setHeaderHeight = () =>
-    document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
+  // Live height of the sticky picker bar (mobile), so the results' sticky
+  // per-building headers can park directly beneath it instead of overlapping.
+  const pickerBar = document.getElementById('available-classrooms-form');
+  // Both measured, then both published: setting one between the two reads
+  // would lay the page out again for the second.
+  const setHeaderHeight = () => {
+    const headerH = header.offsetHeight;
+    const pickerH = pickerBar?.offsetHeight;
+    const style = document.documentElement.style;
+    style.setProperty('--header-height', `${headerH}px`);
+    if (pickerBar) style.setProperty('--picker-bar-height', `${pickerH}px`);
+  };
   setHeaderHeight();
   // The header's top padding is env(safe-area-inset-top), which a home-screen
   // app often reports as 0 (or the other orientation's value) at first layout
@@ -327,16 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) setHeaderHeight();
   });
-
-  // Live height of the sticky picker bar (mobile), so the results' sticky
-  // per-building headers can park directly beneath it instead of overlapping.
-  const pickerBar = document.getElementById('available-classrooms-form');
-  if (pickerBar) {
-    const setPickerBarHeight = () =>
-      document.documentElement.style.setProperty('--picker-bar-height', `${pickerBar.offsetHeight}px`);
-    setPickerBarHeight();
-    new ResizeObserver(setPickerBarHeight).observe(pickerBar);
-  }
+  if (pickerBar) new ResizeObserver(setHeaderHeight).observe(pickerBar);
 })
 
 document.querySelectorAll('.button-primary').forEach(btn => {

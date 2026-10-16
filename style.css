@@ -380,8 +380,8 @@ body {
 
 /* Pages move focus to their title when they open (utils/page-focus.js): that
    is for assistive tech, so it shows no ring */
-:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay) [tabindex="-1"]:focus,
-:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay):focus {
+:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay, #not-found-overlay) [tabindex="-1"]:focus,
+:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay, #not-found-overlay):focus {
   outline: none;
 }
 

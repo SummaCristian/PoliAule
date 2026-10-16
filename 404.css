@@ -1,0 +1,34 @@
+/* The static 404 page's own footing: the app's design system plus the few
+   tokens of style.css that the shared not-found view reads. */
+@import 'vitrium/styles';
+
+:root {
+  --background-color: #F2F2F2;
+  --text-color-primary: #1A1A1A;
+  --text-color-secondary: #333333;
+  --text-color-accent: #2a9e47;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #1E1E1E;
+    --text-color-primary: #EAEAEA;
+    --text-color-secondary: #CCCCCC;
+    --text-color-accent: #3ce065;
+  }
+}
+
+/* As in style.css: Vitrium's accent follows the app's */
+:root { --lg-accent: var(--text-color-accent); }
+
+html, body { margin: 0; min-height: 100%; }
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  background: var(--background-color);
+  font-family: 'Nunito', system-ui, sans-serif;
+}
+
+#not-found-root { flex: 1; display: flex; }

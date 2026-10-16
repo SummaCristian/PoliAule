@@ -384,8 +384,9 @@ class ClassroomDetail {
         this._pendingTrigger = null;
         this._doOpen(id, pending);
       } else {
+        // Names no room: the not-found page (components/not-found-page.js)
+        // shows for it, and it needs the hash to still be there
         this._pendingTrigger = null;
-        history.replaceState(null, '', window.location.pathname + window.location.search);
       }
     } else if (this._currentId !== null) {
       // The settings page closes this one inside its own view transition
@@ -1052,6 +1053,14 @@ class ClassroomDetail {
         }
       }
     }
+  }
+
+  // A #classroom/ hash that names no room. False while the directory is still
+  // loading: there's no telling yet.
+  isUnknownHash(hash) {
+    if (!this._staticData?.length) return false;
+    this._buildFlatIndex();
+    return this._resolveHashToId(hash) === null;
   }
 
   _resolveHashToId(hash) {

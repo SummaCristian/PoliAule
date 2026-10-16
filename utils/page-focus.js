@@ -7,7 +7,7 @@
 
 import { t } from '../i18n.js';
 
-const PAGE_IDS = ['classroom-detail-overlay', 'info-page-overlay', 'changelog-overlay', 'settings-overlay'];
+const PAGE_IDS = ['classroom-detail-overlay', 'info-page-overlay', 'changelog-overlay', 'settings-overlay', 'not-found-overlay'];
 
 const origins = new Map(); // overlay -> the element that had focus before it opened
 
@@ -42,6 +42,7 @@ function updateTitle() {
     name = version ? `${t('changelog.title')} ${version}` : t('changelog.title');
   }
   else if (open('info-page-overlay')) name = t('info.about.title');
+  else if (open('not-found-overlay')) name = t('notFound.title');
   else if (open('classroom-detail-overlay')) name = document.querySelector('#classroom-detail-overlay .detail-title')?.textContent?.trim();
   document.title = name ? `${name} · ${BASE_TITLE}` : BASE_TITLE;
 }

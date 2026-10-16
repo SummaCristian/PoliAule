@@ -38,6 +38,7 @@ import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
 import { changelogPage } from './components/changelog-page.js';
 import { settingsPage } from './components/settings-page.js';
+import { notFoundPage } from './components/not-found-page.js';
 import { initUpdateBanner } from './components/update-banner.js';
 import { ENV_LABEL } from './utils/env.js';
 import { initInfoHint } from './components/info-hint.js';
@@ -123,6 +124,7 @@ function dismissSplash() {
     revealHeader();
     changelogPage.checkHash();
     settingsPage.checkHash();
+    notFoundPage.checkHash();
     return;
   }
 
@@ -141,6 +143,7 @@ function dismissSplash() {
   const isInfo = location.hash === '#info';
   const isChangelog = changelogPage.matchesHash;
   const isSettings = settingsPage.matchesHash;
+  const isNotFound = notFoundPage.matchesHash;
 
   if (document.startViewTransition) {
     // --- View Transition path ---
@@ -195,6 +198,7 @@ function dismissSplash() {
         // A #settings link opens in this same transition, so the app under
         // it never shows first
         if (isSettings) settingsPage.openInSplash();
+        if (isNotFound) notFoundPage.openInSplash();
       });
 
       // The logo curves into the header on a spring per axis
@@ -216,6 +220,7 @@ function dismissSplash() {
     // Under the fading splash already, rather than after it
     if (isChangelog) changelogPage.checkHash();
     if (isSettings) settingsPage.checkHash();
+    if (isNotFound) notFoundPage.checkHash();
 
     splashLogo.classList.add('splash-logo-flying');
     void splashLogo.offsetWidth;
@@ -502,6 +507,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Init info page overlay immediately — no data dependency
     infoPage.init();
     changelogPage.init();
+    notFoundPage.init();
     initInfoHint();
 
     // Search overlay (bottom-nav FAB) — lazy-loads its data on first open

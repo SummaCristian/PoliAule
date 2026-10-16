@@ -159,6 +159,11 @@
   "data.reload": "Reload data",
   "data.reloading": "Reloading…",
 
+  "notFound.title": "Page not found",
+  "notFound.text": "This page doesn't exist. The link may be wrong or out of date.",
+  "notFound.textLink": "This link doesn't lead anywhere. It may be wrong or out of date.",
+  "notFound.textClassroom": "This classroom doesn't exist. The link may be wrong, or the room may have been removed.",
+  "notFound.home": "Back to PoliAule",
   "settings.title": "Settings",
 
   "settings.subtitle": "Make PoliAule work the way you do.",

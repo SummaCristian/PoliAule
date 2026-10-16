@@ -5,12 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>PoliAule</title>
-  <meta name="description" content="A website to find available classrooms around Politecnico di Milano" />
+  <meta name="description" content="Find free classrooms at Politecnico di Milano, by campus, building and time." />
+
+  <link rel="canonical" href="https://poliaule.com/" />
 
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="PoliAule" />
-  <meta property="og:title" content="PoliAule" />
-  <meta property="og:description" content="A website to find available classrooms around Politecnico di Milano" />
+  <meta property="og:title" content="PoliAule – Free classrooms at Politecnico di Milano" />
+  <meta property="og:description" content="Find free classrooms at Politecnico di Milano, by campus, building and time." />
   <meta property="og:url" content="https://poliaule.com/" />
   <meta property="og:image" content="https://poliaule.com/assets/cover-light.jpg" />
   <meta property="og:image:type" content="image/jpeg" />
@@ -18,6 +20,34 @@
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content="https://poliaule.com/assets/cover-light.jpg" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://poliaule.com/#website",
+        "url": "https://poliaule.com/",
+        "name": "PoliAule",
+        "inLanguage": ["en", "it"]
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://poliaule.com/#app",
+        "url": "https://poliaule.com/",
+        "name": "PoliAule",
+        "description": "Find free classrooms at Politecnico di Milano, by campus, building and time.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires a modern browser",
+        "inLanguage": ["en", "it"],
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+      }
+    ]
+  }
+  </script>
 
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 

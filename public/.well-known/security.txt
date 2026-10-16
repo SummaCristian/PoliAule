@@ -1,0 +1,4 @@
+Contact: mailto:cristian.summa@mail.polimi.it
+Expires: 2027-09-30T23:59:59.000Z
+Preferred-Languages: en, it
+Canonical: https://poliaule.com/.well-known/security.txt

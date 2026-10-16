@@ -692,10 +692,14 @@ label {
   font: inherit;
 }
 
-.header-title-beta-container>h4 {
+/* A badge, not a heading (a lone <h4> broke the heading order): the type it had
+   as one is set here */
+.header-title-beta-container>#env-badge {
   margin: 0;
   padding: 0;
 
+  font-size: 1em;
+  font-weight: bold;
   line-height: 0;
 }
 
@@ -1182,7 +1186,9 @@ body.info-open .header-nav-row {
      from blur/view-transitions), so the icon rendered at full opacity while
      the text was at 50%. opacity dims both identically. */
   color: #000;
-  opacity: 0.5;
+  /* 0.55, not 0.5: at 0.5 the title on the page background is 3.9:1, under
+     the 4.5:1 AA asks of text this size */
+  opacity: 0.55;
 }
 
 .section-header-title-icon {

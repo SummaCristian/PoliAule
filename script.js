@@ -369,7 +369,7 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   headerEl.className = 'building-section-header';
   headerEl.style.setProperty('--appear-delay', `${Math.min(cardIndex * 30, 300)}ms`);
   headerEl.innerHTML = `
-    <button class="building-section-titles lg-ring liquid-glass" type="button" aria-haspopup="dialog" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
+    <button class="building-section-titles lg-ring liquid-glass" type="button" aria-haspopup="dialog" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}${building.altName ? ` ${escapeHtml(building.altName)}` : ''}">
       <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
       ${building.altName ? `<span class="building-alt-name">${escapeHtml(building.altName)}</span>` : ''}
     </button>

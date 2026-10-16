@@ -577,6 +577,28 @@ function decorateInfo(page) {
   });
 }
 
+// ── Not found ─────────────────────────────────────────────────────────────
+// Snow on Aula 404's door frame (knocking shakes it off), a sprig of holly on
+// the ghost card, and a garland and snow on the glass cards, like Info's.
+
+function decorateNotFound(page) {
+  const h = hash(`notfound:${dayKey()}`);
+  // .nf-room's top corners, not the button's (square)
+  pile(page.querySelector('.nf-scene'), { key: 'notfound:door', radius: 20, maxHeight: 8 });
+  const front = page.querySelector('.nfc-front');
+  if (front && !front.querySelector(':scope > .xm-decor')) {
+    front.appendChild(decor('xm-sprig xm-sprig--ghost', sprigSvg(26, h)));
+  }
+  page.querySelectorAll('.nf-room-card, .nfc-did').forEach((card, i) => {
+    pile(card, { key: `notfound:${i}` });
+    whenSized(card, (width) => {
+      if (card.querySelector(':scope > .xm-garland')) return;
+      // Along the rim, like the banner's: a swag would hang over the titles
+      card.appendChild(decor('xm-garland', garlandSvg(width, radiusOf(card), h + i, { mode: 'rim', inset: 1 })));
+    });
+  });
+}
+
 // ── Search ────────────────────────────────────────────────────────────────
 // A gift by the gift rooms' names, a sprig of holly on a third of the
 // thumbnails, a string of lights across the results box.
@@ -1234,6 +1256,7 @@ export function start() {
   setDecorator('banner', decorateBanner);
   setDecorator('buildingHeader', decorateBuildingHeader);
   setDecorator('info', decorateInfo);
+  setDecorator('notFound', decorateNotFound);
   mapActive = true;
   setDecorator('map', decorateMap);
   darkScheme.addEventListener('change', updateGlow, { signal });

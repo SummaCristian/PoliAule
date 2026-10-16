@@ -23,6 +23,9 @@
 //   'map'        the Campus map, once its style has loaded (components/campus-map.js);
 //                kept, so a season started later still gets it
 //   'info'       the Info page, each time it renders (components/info-page.js)
+//   'notFound'   the in-app not-found page, each time it renders, generic or
+//                classroom (components/not-found-page.js; not the static 404.html);
+//                kept, as it can draw before the season's module has loaded
 //
 // A season's `logo` (192px) is its search row's icon and its `hero` (512px)
 // the Info page's: both frame the drawing the same way, so the chair is the

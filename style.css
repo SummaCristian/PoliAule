@@ -1847,7 +1847,7 @@ are rendered as solid colors
   }
 }
 
-:root[data-season="halloween"] .info-page {
+:root[data-season="halloween"] :is(.info-page, .not-found) {
   --info-glow-1: #ff8c2e;
   --info-glow-2: #b3400a;
   --info-glow-3: #7b3fc4;
@@ -2207,7 +2207,7 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
   }
 }
 
-:root[data-season="christmas"] .info-page {
+:root[data-season="christmas"] :is(.info-page, .not-found) {
   --info-glow-1: #e8414b;
   --info-glow-2: #1f8a4c;
   --info-glow-3: #e8b23a;
@@ -2347,6 +2347,8 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
 .xm-sprig--fab { z-index: 5; }
 .xm-sprig--chip { top: -8px; left: auto; right: 10px; z-index: 5; }
 .xm-sprig--badge { top: 2px; left: 2px; z-index: 3; }
+/* Inside the not-found ghost card's dashed edge */
+.xm-sprig--ghost { top: 8px; left: 8px; }
 
 /* Baubles hanging from a card's top edge, swinging */
 .xm-hang {
@@ -2681,7 +2683,7 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
   }
 }
 
-:root[data-graduation] .info-page {
+:root[data-graduation] :is(.info-page, .not-found) {
   --info-glow-1: #3d63b3;
   --info-glow-2: #ffd23f;
   --info-glow-3: #5f8f3e;

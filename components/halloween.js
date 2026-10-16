@@ -386,6 +386,41 @@ function decorateInfo(page) {
   });
 }
 
+// ── Not found ─────────────────────────────────────────────────────────────
+// Aula 404's door frame has a web in its corner with a spider coming down
+// from it in front of the door, the ghost card a web in its free corner, and
+// the glass cards a web each and crack when tapped quickly, like Info's.
+
+const NF_FRAME_RADIUS = 20; // .nf-room's top corners
+
+function decorateNotFound(page) {
+  const h = hash(`notfound:${dayKey()}`);
+  const scene = page.querySelector('.nf-scene');
+  if (scene && !scene.querySelector(':scope > .hw-decor')) {
+    addWeb(scene, { size: 40, radius: NF_FRAME_RADIUS, seed: h, right: true });
+    const len = 44 + (h >>> 5) % 20;
+    const hang = document.createElement('div');
+    hang.className = 'hw-decor hw-hang hw-hang--panel';
+    hang.style.left = `${76 + (h >>> 9) % 8}%`;
+    hang.innerHTML = `<div class="hw-hang-thread" style="height:${len}px"></div>` +
+      `<div class="hw-hang-bug" style="top:${len - 3}px">${spiderSvg(16)}</div>`;
+    scene.appendChild(hang);
+  }
+  // Top-left: the "?" badge has the other corner
+  const front = page.querySelector('.nfc-front');
+  if (front && !front.querySelector(':scope > .hw-decor')) {
+    addWeb(front, { size: 38, radius: radiusOf(front), seed: h + 1 });
+  }
+  page.querySelectorAll('.nf-room-card, .nfc-did').forEach((card, i) => {
+    whenSized(card, () => {
+      if (card.querySelector(':scope > .hw-decor')) return;
+      addWeb(card, { size: 46 + ((h >>> (i * 3)) % 14), radius: radiusOf(card), seed: h + 2 + i, right: true });
+    });
+    // Taps on the suggestions' rows don't count
+    attachTapCrack(card, { seed: h + 2 + i, signal: listeners.signal });
+  });
+}
+
 // ── Search ────────────────────────────────────────────────────────────────
 // A small web on a third of the rows' thumbnails, and a ghost by the haunted
 // rooms' names.
@@ -925,6 +960,7 @@ export function start() {
   setDecorator('banner', decorateBanner);
   setDecorator('buildingHeader', decorateBuildingHeader);
   setDecorator('info', decorateInfo);
+  setDecorator('notFound', decorateNotFound);
   mapActive = true;
   setDecorator('map', decorateMap);
   darkScheme.addEventListener('change', updateGlow, { signal: listeners.signal });

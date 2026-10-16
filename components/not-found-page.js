@@ -6,7 +6,10 @@
 // A #changelog/ version that doesn't exist stays with the changelog page.
 import { t, onLanguageSwitch } from '../i18n.js';
 import { createNotFound } from './not-found.js';
+import { createClassroomNotFound } from './not-found-classroom.js';
 import { classroomDetail } from './classroom-detail.js';
+import { openSearchOverlay } from './search-overlay.js';
+import { decorateLive } from '../utils/season.js';
 
 // Every hash that belongs to something: the pages, a transfer link, no hash.
 // #classroom/ is known only if it names a room (classroomDetail.isUnknownHash).
@@ -96,17 +99,51 @@ class NotFoundPage {
   }
 
   _render() {
-    this._overlay.replaceChildren(createNotFound({
-      icon: '<i class="hgi-stroke hgi-unlink-01" aria-hidden="true"></i>',
-      title: t('notFound.title'),
-      text: t(CLASSROOM_HASH_RE.test(location.hash) ? 'notFound.textClassroom' : 'notFound.textLink'),
-      onAction: () => this._goHome(),
-    }));
+    const onHome = () => this._goHome();
+    const onSearch = () => { this._goHome(); openSearchOverlay(); };
+    const page = CLASSROOM_HASH_RE.test(location.hash)
+      ? createClassroomNotFound({
+        ...this._classroomHashParts(),
+        classrooms: classroomDetail._staticData ?? [],
+        onHome,
+        onSearch,
+      })
+      : createNotFound({
+        text: t('notFound.textLink'),
+        onAction: onHome,
+        onSearch,
+      });
+    this._overlay.replaceChildren(page);
+    // Live: opened from a link, it draws before the season's module has loaded
+    decorateLive('notFound', page);
+  }
+
+  // What the #classroom/ hash asked for: `campus` is the campus object its
+  // slug names (null for an unknown slug or an old numeric #classroom/<id>),
+  // `name` the room name as typed (null if there's none or it won't decode)
+  _classroomHashParts() {
+    const match = location.hash.match(/^#classroom\/([^/]+)\/(.+)$/);
+    if (!match) return { campus: null, name: null };
+    let name = null;
+    try { name = decodeURIComponent(match[2]); } catch { /* malformed: no name */ }
+    const slug = match[1].toLowerCase();
+    const campus = (classroomDetail._staticData ?? []).find(c => c.slug === slug) ?? null;
+    return { campus, name };
   }
 
   _onHashChange() {
-    if (this.matchesHash) this.show();
-    else if (this._isOpen) this._hide(location.hash === '');
+    if (!this.matchesHash) {
+      if (this._isOpen) this._hide(location.hash === '');
+      return;
+    }
+    // Already open on another broken link: show() would do nothing, so draw
+    // this one (it may not even be the same kind, classroom vs generic)
+    if (this._isOpen) {
+      this._render();
+      window.scrollTo(0, 0);
+    } else {
+      this.show();
+    }
   }
 
   // `toTab`: the hash left for the app itself. For another page's hash that

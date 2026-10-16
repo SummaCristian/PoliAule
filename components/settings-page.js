@@ -9,6 +9,8 @@
 //   - a classroom page: closed silently; Back goes to its hash, and the
 //     classroom page reopens itself (taking this one down in its own view
 //     transition, through `classroomdetail:enter`)
+//   - the not-found page: its broken link is dropped from the history first,
+//     so Back lands on the app rather than on the link again
 //
 // The controls themselves are built once by components/settings.js and live
 // in the page for good: opening and closing only shows and hides it.
@@ -17,6 +19,7 @@ import { IS_PROD } from '../utils/env.js';
 import { infoPage } from './info-page.js';
 import { changelogPage } from './changelog-page.js';
 import { classroomDetail } from './classroom-detail.js';
+import { notFoundPage } from './not-found-page.js';
 
 const HASH = '#settings';
 const CLASSROOM_HASH_RE = /^#classroom\//;
@@ -128,6 +131,9 @@ class SettingsPage {
 
   open() {
     if (this._isOpen) return;
+    // A broken link isn't somewhere to come back to (no hashchange: the
+    // not-found page goes when #settings comes in)
+    if (notFoundPage.isOpen) history.replaceState(null, '', location.pathname + location.search);
     location.hash = HASH;
   }
 

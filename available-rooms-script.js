@@ -22,7 +22,8 @@ export let publishedDates = [];
 // 'datafetchstatus' event on document. `issue` is why the last check didn't go
 // through: 'offline', 'unreachable' (no answer) or 'server' (a bad one); with a
 // partial check, `failedDays` of `requestedDays` stood in from the cache.
-// `lastCheck` is when the server last answered, kept across visits.
+// `lastCheck` is when the server last answered, kept across visits;
+// `lastAttempt` when this page last asked, answered or not.
 const LAST_CHECK_KEY = 'poliAule_lastDataCheck';
 
 export const fetchStatus = {
@@ -31,6 +32,7 @@ export const fetchStatus = {
   failedDays: 0,
   requestedDays: 0,
   lastCheck: readLastCheck(),
+  lastAttempt: null,
 };
 
 function readLastCheck() {
@@ -222,7 +224,7 @@ export function whenClassroomsDataSettled() {
 }
 
 async function fetchClassroomsDataOnce({ getFirstDate = null, onFirstDay = null } = {}) {
-  setFetchStatus({ fetching: true });
+  setFetchStatus({ fetching: true, lastAttempt: new Date() });
   const outcome = { issue: null, failedDays: 0, requestedDays: 0 };
   try {
     const cache = await openDataCache();

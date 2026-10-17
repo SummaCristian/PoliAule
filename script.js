@@ -27,6 +27,7 @@ import {
   getOpenCommonAreas,
   isDayPending,
   whenClassroomsDataSettled,
+  fetchStatus,
   SKIP_DAYS
 } from './available-rooms-script.js';
 
@@ -475,6 +476,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // it resolves — so there's no reason to make it wait its turn behind the
   // rest of init.
   initOccupancyData();
+  initAutoRefresh();
 
   try {
     // The locale JSON and the static classroom directory are independent
@@ -1030,6 +1032,30 @@ function restoreQuery({ date, from, to }) {
 async function reloadOccupancyData() {
   await fetchClassroomsData();
   refreshOccupancyUi();
+}
+
+// A page left open (a tab overnight, the home-screen app in the background)
+// checks for new data on its own once its last check is an hour old: as soon as
+// it's back in view, since a background page's timers are held back or frozen,
+// and on a timer while it stays in view, since a tab left on screen never
+// changes visibility. Counted from the last attempt, so a server that's down
+// isn't asked every tick; going back online re-checks at once
+// (components/data-fetch-card.js).
+const AUTO_REFRESH_AFTER_MS = 60 * 60 * 1000;
+const AUTO_REFRESH_TICK_MS = 60 * 1000;
+
+function initAutoRefresh() {
+  const check = async () => {
+    if (document.visibilityState !== 'visible' || navigator.onLine === false || fetchStatus.fetching) return;
+    const last = fetchStatus.lastAttempt ?? fetchStatus.lastCheck;
+    if (last && Date.now() - last.getTime() < AUTO_REFRESH_AFTER_MS) return;
+    // Nothing new (304s): the results stay as they are
+    if (await fetchClassroomsData()) refreshOccupancyUi();
+  };
+  document.addEventListener('visibilitychange', check);
+  // Back from the back/forward cache, which fires no visibilitychange
+  window.addEventListener('pageshow', (e) => { if (e.persisted) check(); });
+  setInterval(check, AUTO_REFRESH_TICK_MS);
 }
 
 // Redraws what depends on the occupancy data after it was replaced

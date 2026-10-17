@@ -646,8 +646,16 @@ async function initOccupancyData() {
   if (drawnEarly && (changed || !hasCache)) refreshOccupancyUi();
 }
 
-// Fills in everything that depends on the occupancy data, the first time it's there
+// Fills in everything that depends on the occupancy data, the first time it's there.
+// A first visit that got nothing (no saved copy, no answer) leaves the UI loading
+// until a later check brings some (refreshOccupancyUi).
+let occupancyPopulated = false;
 function populateOccupancyUi() {
+  if (!classroomsData.length) {
+    renderDataStatus();
+    return;
+  }
+  occupancyPopulated = true;
 
   // Use the fetched data to set the only valid dates into the date picker
   setupDatePicker(() => preferInitialDate);
@@ -1026,6 +1034,10 @@ async function reloadOccupancyData() {
 
 // Redraws what depends on the occupancy data after it was replaced
 function refreshOccupancyUi() {
+  if (!occupancyPopulated) {
+    populateOccupancyUi();
+    return;
+  }
   renderDataStatus();
   // Keep the day the user is on, if it's still published
   const selectedDate = document.getElementById('date-picker').value;

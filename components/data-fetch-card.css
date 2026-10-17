@@ -45,6 +45,29 @@
   animation-play-state: paused;
 }
 
+/* The last check failed, with saved data still shown: an orange badge on the
+   dot's shoulder, ringed in the header's background so it reads as its own */
+.data-status-glyph > .ds-issue-badge {
+  top: -2px;
+  left: auto;
+  right: -3px;
+  translate: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  /* Deeper than the yellow dot's amber, so it still reads on that one */
+  background: #ef6c00;
+  box-shadow: 0 0 0 1.5px var(--background-color-secondary);
+}
+
+.data-status-glyph:not([data-glyph="dot"][data-issue]) > .ds-issue-badge {
+  opacity: 0;
+  scale: 0.5;
+  transition:
+    opacity 0.16s ease,
+    scale 0.2s ease-in;
+}
+
 .data-status-offline {
   font-size: 1.15rem;
   color: var(--text-color-secondary);

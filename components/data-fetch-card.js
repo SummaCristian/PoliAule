@@ -45,15 +45,23 @@ export function setDataReload(fn) {
   reload = fn;
 }
 
-// How fresh the data is: generated today, or covering today but generated
-// before, or not covering today at all. Null with no data.
+// How fresh the data is: generated today, or generated before, or not
+// covering today at all. Null with no data.
 function freshness() {
   if (!classroomsData.length) return null;
   const today = formatDateYYYYMMDD(new Date());
+  if (todayExpected() && !classroomsData.some(day => day.date === today)) return 'red';
   const generated = new Date((lastFetchedAt ?? classroomsData[0].generated_at) + 'Z');
-  if (formatDateYYYYMMDD(generated) === today) return 'green';
-  if (classroomsData.some(day => day.date > today)) return 'yellow';
-  return 'red';
+  return formatDateYYYYMMDD(generated) === today ? 'green' : 'yellow';
+}
+
+// Whether today should be in the data. The backend publishes a week from the
+// day it runs, leaving out the days every building is closed: today is one of
+// those when it's missing from a week that runs past it.
+function todayExpected() {
+  const today = formatDateYYYYMMDD(new Date());
+  if (publishedDates.includes(today)) return true;
+  return !classroomsData.some(day => day.date > today);
 }
 
 function isOffline() {
@@ -121,6 +129,9 @@ function renderGlyph(s) {
   const glyph = document.getElementById('data-fetch-indicator');
   if (!glyph) return;
   glyph.dataset.glyph = s.glyph;
+  // Saved data, but the last check failed: an orange badge by the freshness dot
+  // (offline has its own glyph)
+  glyph.toggleAttribute('data-issue', !!(s.hasData && s.issue && !s.fetching));
   const dot = glyph.querySelector('.pulse-indicator');
   dot.classList.remove('green', 'yellow', 'red');
   if (s.hasData || s.issue) dot.classList.add(s.hasData ? s.tone : 'red');
@@ -128,7 +139,9 @@ function renderGlyph(s) {
 
 // The button's name carries the state too: its glyph is only a colour or a shape
 function renderLabel(s) {
-  const label = s.fetching ? t('data.checking') : s.title;
+  const label = s.fetching ? t('data.checking')
+    : s.hasData && s.issue ? `${s.title}, ${t(`data.${s.issue}Title`).toLowerCase()}`
+    : s.title;
   const btn = document.getElementById('data-fetch-btn');
   btn?.setAttribute('aria-label', `${t('a11y.dataStatus')}: ${label}`);
   popup?.panel.setAttribute('aria-label', btn?.getAttribute('aria-label') ?? '');
@@ -137,15 +150,15 @@ function renderLabel(s) {
 // ---------- Card ----------
 
 // The days the data covers, from today on: today first even when it's missing
-// (that's what makes the data outdated), then every published day, dashed when
-// it couldn't be loaded.
+// (that's what makes the data outdated) unless every building is closed, then
+// every published day, dashed when it couldn't be loaded.
 function weekHtml(s) {
   const today = formatDateYYYYMMDD(new Date());
   const loaded = new Set(classroomsData.map(day => day.date));
   const hideSundays = localStorage.getItem(HIDE_SUNDAYS_KEY) === 'true';
   const toDate = key => new Date(+key.slice(0, 4), +key.slice(4, 6) - 1, +key.slice(6, 8));
   // Sundays out when the date picker hides them too (Settings), unless it's today
-  const dates = [...new Set([today, ...publishedDates.filter(date => date >= today)])]
+  const dates = [...new Set([...(todayExpected() ? [today] : []), ...publishedDates.filter(date => date >= today)])]
     .filter(date => date === today || !hideSundays || toDate(date).getDay() !== 0)
     .slice(0, 7);
   const locale = getLocale() === 'it' ? 'it-IT' : 'en-GB';

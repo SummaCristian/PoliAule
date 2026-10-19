@@ -241,7 +241,8 @@ def _resolved_csic(campus: dict) -> str | None:
 
 
 def scrape_day(
-    campuses: list[dict], client: httpx.Client, d: date, no_delay: bool
+    campuses: list[dict], client: httpx.Client, d: date, no_delay: bool,
+    dead_pages: dict[str, str],
 ) -> tuple[dict[str, dict[int, list[dict]]], dict[str, str]]:
     """Scrape onlineservices.polimi.it's per-day occupancy page once per Sede.
 
@@ -249,6 +250,11 @@ def scrape_day(
     A page that fails after MAX_RETRIES attempts (network error, HTTP error,
     unrecognized layout) is recorded in the second dict so the caller can fall
     back to the REST API for every classroom on that page.
+
+    `dead_pages` is shared by every day of the run: a page that exhausts its
+    attempts is added to it and not scraped again on the following days (each
+    attempt can take a minute), so an outage costs one page's attempts per run
+    instead of one per day. Its classrooms go straight to the REST API.
     """
     pages: dict[str, dict[int, list[dict]]] = {}
     errors: dict[str, str] = {}
@@ -260,6 +266,11 @@ def scrape_day(
         # Nothing to look up on a campus without classrooms (classrooms.json's
         # secondary ones: residences, offices, ...).
         if not any(b["classrooms"] for b in campus["buildings"]):
+            continue
+        if resolved in dead_pages:
+            print(f"    Page {resolved} on {d}: skipped, it already failed this run; "
+                  f"its classrooms will use the REST API.")
+            errors[resolved] = dead_pages[resolved]
             continue
         last_error = "unknown error"
         for attempt in range(1, MAX_RETRIES + 1):
@@ -281,6 +292,7 @@ def scrape_day(
             print(f"    Page {resolved} on {d} failed after {MAX_RETRIES} attempts; "
                   f"its classrooms will use the REST API.")
             errors[resolved] = last_error
+            dead_pages[resolved] = last_error
         if not no_delay:
             time.sleep(DELAY_BETWEEN_CALLS)
     return pages, errors
@@ -299,10 +311,54 @@ def scraped_to_slots(occupations: list[dict]) -> list[dict]:
     return slots
 
 
+def load_cached_occupancy(path: Path) -> dict[int, list[dict] | None]:
+    """The occupancy per classroom id in the day file the previous run left at `path` (empty if none).
+
+    Read before the day is rebuilt and overwritten, so a REST fallback can be
+    checked against what a healthy scrape already labelled.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return {
+            room["id"]: room.get("occupancy")
+            for campus in data["campuses"]
+            for building in campus["buildings"]
+            for room in building["classrooms"]
+        }
+    except (OSError, ValueError, KeyError, TypeError):
+        return {}
+
+
+def merge_rest(cached: list[dict] | None, rest: list[dict] | None) -> list[dict] | None:
+    """Combine a classroom's REST occupancy with what the previous run had for it.
+
+    The REST API only has the start and end of each slot, the scraped page also
+    names the course, so REST decides which slots exist now and the cache gives
+    back the names: a REST slot with the same (inizio, fine) as a cached one
+    keeps the cached slot, any other REST slot goes in bare, and a cached slot
+    REST no longer lists is dropped (cancelled or moved). If REST failed, the
+    cache is kept as it is rather than replaced by nothing.
+    """
+    if rest is None:
+        return cached
+    if not cached:
+        return rest
+    by_time: dict[tuple, list[dict]] = {}
+    for slot in cached:
+        by_time.setdefault((slot.get("inizio"), slot.get("fine")), []).append(slot)
+    merged = []
+    for slot in rest:
+        same = by_time.get((slot.get("inizio"), slot.get("fine")))
+        merged.append(same.pop(0) if same else slot)
+    return merged
+
+
 def build_output(
     campuses: list[dict], client: httpx.Client, d: date, no_delay: bool,
     pages: dict[str, dict[int, list[dict]]], page_errors: dict[str, str],
     failures: list[dict], missing_rows: list[dict],
+    cached: dict[int, list[dict] | None],
 ) -> tuple[dict, int]:
     """Build the output JSON file, mirroring the classrooms structure, plus occupancy in each classroom.
     Returns (output, number of REST API calls made).
@@ -310,8 +366,10 @@ def build_output(
     Occupancy comes from the scraped page for the classroom's Sede. The REST API
     is only called for classrooms whose page failed to scrape (see scrape_day)
     or that have no row on an otherwise healthy page, never for `noSchedule`
-    ones. Occupancy is None (null in the JSON) when no source had it: the
-    frontend shows that as unknown, not as free.
+    ones. REST is merged with `cached` (the previous run's occupancy per
+    classroom, see merge_rest) so it never erases labelled slots. Occupancy is
+    None (null in the JSON) when no source had it: the frontend shows that as
+    unknown, not as free.
     """
     result = []
     rest_calls = 0
@@ -343,7 +401,9 @@ def build_output(
                         })
                     print(f"  Fetching room {room_name} (id={room_id}) via REST API...")
                     rest_calls += 1
-                    occupancy = fetch_occupancy(client, room_id, room_name, d, failures)
+                    occupancy = merge_rest(
+                        cached.get(room_id), fetch_occupancy(client, room_id, room_name, d, failures)
+                    )
                     if not no_delay:
                         time.sleep(DELAY_BETWEEN_CALLS)
 
@@ -582,6 +642,7 @@ def run(args, log: dict) -> None:
 
     failures: list[dict] = []
     page_errors: list[dict] = []
+    dead_pages: dict[str, str] = {}
     missing_rows: list[dict] = []
     slot_drops: list[dict] = []
     with httpx.Client(headers=REQUEST_HEADERS) as client:
@@ -590,14 +651,16 @@ def run(args, log: dict) -> None:
 
             # Scrape the day's occupancy, one page per Sede (a few seconds in total)
             print("  Scraping occupancy pages...")
-            pages, errors = scrape_day(campuses, client, d, args.no_delay)
+            pages, errors = scrape_day(campuses, client, d, args.no_delay, dead_pages)
             page_errors.extend({"page": p, "date": d.isoformat(), "error": e} for p, e in errors.items())
             stats = page_stats(pages, errors)
             slot_drops.extend(detect_slot_drops(d, stats, previous))
 
             # Build output for this day, falling back to the REST API where the scrape can't help
+            out_path = OUTPUT_DIR / f"occupation_{d.strftime('%Y%m%d')}.json"
             output, rest_calls = build_output(
-                campuses, client, d, args.no_delay, pages, errors, failures, missing_rows
+                campuses, client, d, args.no_delay, pages, errors, failures, missing_rows,
+                load_cached_occupancy(out_path),
             )
             log["days"][d.isoformat()] = {
                 "pages": stats,
@@ -606,7 +669,6 @@ def run(args, log: dict) -> None:
             }
 
             # Create output file and write JSON
-            out_path = OUTPUT_DIR / f"occupation_{d.strftime('%Y%m%d')}.json"
             if keep_previous_timestamp(output, out_path):
                 print("  Unchanged since the previous run, keeping its generated_at.")
             with open(out_path, "w", encoding="utf-8") as f:

@@ -75,7 +75,9 @@ CSIC_OVERRIDES = {
 # fetching the same page twice in one run.
 _page_cache: dict[tuple[str, date], dict[int, list[dict]]] = {}
 
-REQUEST_TIMEOUT = 20  # seconds
+# The page has answered in 31s on a bad day, so a read gets a minute; a
+# connection that isn't up in 10s won't be.
+REQUEST_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
 
 MINUTES_PER_UNIT = 15
 GRID_START_MINUTES = 8 * 60  # 08:00, verified against the REST API (see module docstring)

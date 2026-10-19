@@ -241,7 +241,8 @@ def _resolved_csic(campus: dict) -> str | None:
 
 
 def scrape_day(
-    campuses: list[dict], client: httpx.Client, d: date, no_delay: bool
+    campuses: list[dict], client: httpx.Client, d: date, no_delay: bool,
+    dead_pages: dict[str, str],
 ) -> tuple[dict[str, dict[int, list[dict]]], dict[str, str]]:
     """Scrape onlineservices.polimi.it's per-day occupancy page once per Sede.
 
@@ -249,6 +250,11 @@ def scrape_day(
     A page that fails after MAX_RETRIES attempts (network error, HTTP error,
     unrecognized layout) is recorded in the second dict so the caller can fall
     back to the REST API for every classroom on that page.
+
+    `dead_pages` is shared by every day of the run: a page that exhausts its
+    attempts is added to it and not scraped again on the following days (each
+    attempt can take a minute), so an outage costs one page's attempts per run
+    instead of one per day. Its classrooms go straight to the REST API.
     """
     pages: dict[str, dict[int, list[dict]]] = {}
     errors: dict[str, str] = {}
@@ -260,6 +266,11 @@ def scrape_day(
         # Nothing to look up on a campus without classrooms (classrooms.json's
         # secondary ones: residences, offices, ...).
         if not any(b["classrooms"] for b in campus["buildings"]):
+            continue
+        if resolved in dead_pages:
+            print(f"    Page {resolved} on {d}: skipped, it already failed this run; "
+                  f"its classrooms will use the REST API.")
+            errors[resolved] = dead_pages[resolved]
             continue
         last_error = "unknown error"
         for attempt in range(1, MAX_RETRIES + 1):
@@ -281,6 +292,7 @@ def scrape_day(
             print(f"    Page {resolved} on {d} failed after {MAX_RETRIES} attempts; "
                   f"its classrooms will use the REST API.")
             errors[resolved] = last_error
+            dead_pages[resolved] = last_error
         if not no_delay:
             time.sleep(DELAY_BETWEEN_CALLS)
     return pages, errors
@@ -582,6 +594,7 @@ def run(args, log: dict) -> None:
 
     failures: list[dict] = []
     page_errors: list[dict] = []
+    dead_pages: dict[str, str] = {}
     missing_rows: list[dict] = []
     slot_drops: list[dict] = []
     with httpx.Client(headers=REQUEST_HEADERS) as client:
@@ -590,7 +603,7 @@ def run(args, log: dict) -> None:
 
             # Scrape the day's occupancy, one page per Sede (a few seconds in total)
             print("  Scraping occupancy pages...")
-            pages, errors = scrape_day(campuses, client, d, args.no_delay)
+            pages, errors = scrape_day(campuses, client, d, args.no_delay, dead_pages)
             page_errors.extend({"page": p, "date": d.isoformat(), "error": e} for p, e in errors.items())
             stats = page_stats(pages, errors)
             slot_drops.extend(detect_slot_drops(d, stats, previous))

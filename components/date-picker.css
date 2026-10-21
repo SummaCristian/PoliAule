@@ -37,8 +37,9 @@
      clipping and the outer box-shadow/::after stroke below can live
      directly on this element. */
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  /* A rail (pill-selector.js sets the role), the small blur like the tab bar's bar. */
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
   border-radius: var(--radius-pill);
   padding: 0.5rem 0.75rem;
 
@@ -216,8 +217,11 @@
 }
 
 .date-indicator--lifted .date-indicator-inner {
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  /* The lens role's blur and fill (set on .date-indicator, see pill-selector.js):
+     what the tab bar's lifted pill takes, so the glass style reaches it. */
+  backdrop-filter: blur(var(--lg-material-blur, 2px));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur, 2px));
+  background: var(--lg-material-fill, var(--dp-pill-bg));
 
   box-shadow:
     inset 0 1px 0 var(--dp-pill-highlight),

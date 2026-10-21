@@ -238,6 +238,7 @@
   "settings.glassEffect.off": "Disattivo",
   "settings.glassStyle": "Stile Vetro",
   "settings.glassStyleDesc": "Quanto sono trasparenti i controlli in vetro. Pannelli e finestre di dialogo restano opachi per una lettura più facile.",
+  "settings.glassStyle.curated": "Selezionato",
   "settings.glassStyle.transparent": "Trasparente",
   "settings.glassStyle.frost": "Opaco",
   "settings.refraction": "Rifrazione",

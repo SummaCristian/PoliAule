@@ -46,7 +46,7 @@ function fields(campusIds) {
     pc: [PREFERRED_CAMPUS_ID_KEY, campusIds ? oneOf(...campusIds) : { enc: v => v || undefined }],
     rl: [REMEMBER_LAST_CAMPUS_KEY, bool],
     se: [SEASONAL_KEY, bool],
-    gs: [GLASS_STYLE_KEY, oneOf('transparent', 'frost')],
+    gs: [GLASS_STYLE_KEY, oneOf('curated', 'transparent', 'frost')],
   };
 }
 

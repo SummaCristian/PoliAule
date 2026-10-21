@@ -3,6 +3,7 @@
 import { initLiquidGlass } from 'vitrium';
 import { initI18n, t } from './i18n.js';
 import { createNotFound } from './components/not-found.js';
+import './utils/glass-roles.js';
 
 initI18n().then(() => {
   document.title = `${t('notFound.title')} · PoliAule`;

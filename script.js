@@ -10,7 +10,20 @@ try {
     localStorage.removeItem('poliAule_blurMode');
   }
   localStorage.removeItem('poliAule_blurBenchmark');
+
+  // Same for the glass style: Vitrium remembers it under lg:glass-style now.
+  const oldStyle = localStorage.getItem('poliAule_glassStyle');
+  if (oldStyle !== null) {
+    if (localStorage.getItem('lg:glass-style') === null && ['frost', 'transparent'].includes(oldStyle)) {
+      localStorage.setItem('lg:glass-style', oldStyle);
+    }
+    localStorage.removeItem('poliAule_glassStyle');
+  }
 } catch { /* storage unavailable */ }
+
+// The page's glass style: the visitor's pick, or curated. index.html already set
+// it before first paint; this makes Vitrium's own state agree with it.
+restoreGlassStyle('curated');
 
 if (ENV_LABEL) {
   const badge = document.getElementById('env-badge');
@@ -61,7 +74,8 @@ import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
 import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
 import { lazySticky } from './utils/lazy-sticky.js';
-import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark, initRefraction } from 'vitrium';
+import './utils/glass-roles.js';
+import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark, initRefraction, restoreGlassStyle } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 import { initCardDayPopover } from './components/card-day-popover.js';
 import { createBuildingStarButton } from './utils/favourites.js';

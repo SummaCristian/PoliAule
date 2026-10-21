@@ -281,8 +281,8 @@ body.info-open #search-classrooms-container.visible {
 .campus-map .mapboxgl-ctrl-attrib:not(.mapboxgl-compact),
 .campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show {
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -334,8 +334,8 @@ body.info-open #search-classrooms-container.visible {
   border-radius: var(--radius-pill) !important;
   background: var(--lg-tint) !important;
   background-image: none !important;
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -500,8 +500,8 @@ body.info-open #search-classrooms-container.visible {
   border-radius: var(--radius-pill) !important;
 
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -672,8 +672,8 @@ body.info-open #search-classrooms-container.visible {
 
   color: inherit;
   /* A touch of saturation keeps the map's colours alive through the frost. */
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear)) saturate(1.6);
-  backdrop-filter: blur(var(--lg-blur-clear)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear))) saturate(1.6);
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear))) saturate(1.6);
   /* Tighter than the glass default's 40px glow, which on a map smears over
      the neighbouring buildings. */
   box-shadow:

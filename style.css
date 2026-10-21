@@ -807,8 +807,8 @@ body.detail-open .header-logo-filters {
 
   /* Same glass material as the tabbar/back button. */
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
 
   color: var(--text-color-secondary);
 

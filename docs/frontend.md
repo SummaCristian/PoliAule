@@ -170,7 +170,7 @@ The glass design system and most interactive components come from the `vitrium` 
 
 | Area | Built on |
 |---|---|
-| Tokens, glass, blur, springs, press/drag deform | `vitrium/styles`, `initLiquidGlass`, the blur-capability helpers and `initRefraction`, set up in `script.js` (the glass style is set before first paint in `index.html`; both are switched from Settings) |
+| Tokens, glass, blur, springs, press/drag deform | `vitrium/styles`, `initLiquidGlass`, the blur-capability helpers and `initRefraction`, set up in `script.js` (the glass style, `curated` by default and remembered by Vitrium under `lg:glass-style`, is set before first paint in `index.html` and restored in `script.js`; both are switched from Settings) |
 | Settings toggles and segmented controls | `createToggle`, `createSegmentedControl` |
 | Footer version popover, classroom timeline popover | `createPopover` |
 | Date and time-range chips | `createChipPicker` via `components/chip-shell.js` |

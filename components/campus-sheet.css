@@ -104,8 +104,8 @@
   color: var(--text-color-secondary);
 
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),

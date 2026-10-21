@@ -182,8 +182,8 @@ body.settings-open #settings-btn {
   border-radius: var(--radius-xl);
   overflow: visible;
   background: var(--lg-tint-clear);
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -199,6 +199,19 @@ body.settings-open #settings-btn {
   gap: 0.75rem;
   min-height: 44px;        /* Apple minimum touch target */
   padding: 0.6rem 0.875rem;
+}
+
+/* A row whose control is too wide to sit beside its text on a phone (the glass
+   style's three options): the control drops under the text, end-aligned. */
+@media (max-width: 599px) {
+  .settings-row--stack-narrow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .settings-row--stack-narrow > :last-child {
+    align-self: flex-end;
+  }
 }
 
 /* Separator between rows in the same group */

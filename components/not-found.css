@@ -309,8 +309,8 @@
   font-weight: 700;
   color: var(--text-color-secondary);
   background: var(--lg-tint-clear);
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   box-shadow: 0 0 0 0.1px var(--lg-outline), var(--lg-highlight), 0 4px 40px 0 var(--lg-shadow-color);
 }
 
@@ -345,8 +345,8 @@
   border-radius: 24px;
   text-align: left;
   background: var(--lg-tint-clear);
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   box-shadow: 0 0 0 0.1px var(--lg-outline), var(--lg-highlight), 0 4px 40px 0 var(--lg-shadow-color);
 }
 

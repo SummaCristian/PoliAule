@@ -253,6 +253,7 @@
   "settings.glassEffect.off": "Off",
   "settings.glassStyle": "Glass Style",
   "settings.glassStyleDesc": "How see-through the glass controls are. Sheets and dialogs stay frosted so their text is easy to read.",
+  "settings.glassStyle.curated": "Curated",
   "settings.glassStyle.transparent": "Transparent",
   "settings.glassStyle.frost": "Frosted",
   "settings.refraction": "Refraction",

@@ -574,8 +574,8 @@ body.detail-open .tab-content {
      dense enough that the text only has to stand out against the glass, in
      the theme's own colours, whatever photo is behind it. */
   background: var(--lg-tint);
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
-  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
+  backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -766,8 +766,8 @@ body.detail-open .tab-content {
 
   /* Small clear-glass capsule (Vitrium's .lg-glass--clear material). */
   background: var(--lg-tint-clear);
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -813,8 +813,8 @@ body.detail-open .tab-content {
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
     0 4px 40px 0 var(--lg-shadow-color);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
 
   color: var(--text-color-secondary);
 
@@ -1054,8 +1054,8 @@ body.detail-open .tab-content {
 
   .detail-title-row::before {
     background: var(--lg-tint);
-    -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-    backdrop-filter: blur(var(--lg-blur-sm));
+    -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+    backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
     box-shadow: var(--lg-shadow-rim);
   }
 
@@ -1155,8 +1155,8 @@ body.detail-open .tab-content {
      sample what is behind it. */
   #classroom-detail-overlay.title-stuck .detail-title::before {
     background: var(--lg-tint);
-    -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-    backdrop-filter: blur(var(--lg-blur-sm));
+    -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+    backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
   }
 
   #classroom-detail-overlay.title-stuck .detail-title::after {
@@ -1273,8 +1273,8 @@ body.detail-open .tab-content {
      letting the colors through. Always frosted, whatever the glass style
      setting: each section carries data-glass-style="frost". */
   background: var(--lg-tint-clear);
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -1360,8 +1360,8 @@ body.detail-open .tab-content {
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
     0 4px 40px 0 var(--lg-shadow-color);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .detail-back-btn::after
@@ -1495,8 +1495,8 @@ body.detail-open .tab-content {
   color: var(--text-color-primary);
 
   background: color-mix(in srgb, var(--color-status-partial) 22%, var(--lg-tint-clear));
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   /* style.css forces `.lg-ring` to the rim shadow alone (!important), so the
      yellow comes through the ring Vitrium draws, not a box-shadow here */
   --lg-ring-color: color-mix(in srgb, var(--color-status-partial) 22%, transparent);
@@ -1574,8 +1574,8 @@ body.detail-open .tab-content {
   gap: 0.75rem;
 
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-md));
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+  backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
   border-radius: var(--radius-pill);
   padding: 0.75rem 0.5rem;
 

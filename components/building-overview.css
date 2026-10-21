@@ -213,8 +213,8 @@
   color: var(--text-color-primary);
 
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-md));
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+  backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -236,8 +236,8 @@
   color: var(--text-color-secondary);
 
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -391,8 +391,8 @@
   position: absolute;
   inset: 68px 0 0;
   border-radius: 18px;
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
-  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
+  backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
   transform-origin: 50% 100%;
   transform: scaleY(calc(cos(var(--a)) * 700 / (700 - 136 * sin(var(--a)))));
   transition: transform 0.4s cubic-bezier(0.3, 1.35, 0.5, 1);

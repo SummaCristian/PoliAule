@@ -295,8 +295,8 @@
   border-radius: var(--radius-xl);
   text-align: start;
   background: var(--lg-tint-clear);
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),

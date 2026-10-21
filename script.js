@@ -60,6 +60,7 @@ import { renderDataStatus, setDataReload } from './components/data-fetch-card.js
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
 import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
+import { lazySticky } from './utils/lazy-sticky.js';
 import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark, initRefraction } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 import { initCardDayPopover } from './components/card-day-popover.js';
@@ -314,6 +315,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Live height of the sticky picker bar (mobile), so the results' sticky
   // per-building headers can park directly beneath it instead of overlapping.
   const pickerBar = document.getElementById('available-classrooms-form');
+  // Sticky only once it's up where it sticks (utils/lazy-sticky.js)
+  lazySticky(pickerBar);
   // Both measured, then both published: setting one between the two reads
   // would lay the page out again for the second.
   const setHeaderHeight = () => {
@@ -386,6 +389,8 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   decorate('buildingHeader', headerEl, { campusId, building });
   cardIndex++;
   section.appendChild(headerEl);
+  // Sticky only once its section has come up the screen (utils/lazy-sticky.js)
+  lazySticky(headerEl);
 
   // Tapping the name pill "zooms out" into the building overview grid.
   const titlesBtn = headerEl.querySelector('.building-section-titles');

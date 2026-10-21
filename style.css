@@ -1274,6 +1274,25 @@ body.info-open .header-nav-row {
   gap: 8px;
 }
 
+/* In the flow until it can stick (utils/lazy-sticky.js): iOS Safari paints
+   its bottom bar solid over a sticky element near the bottom edge. The
+   picker bar stays positioned, `top: auto`, so its z-index still lifts the
+   panels its chips open over the results; a building header is just static
+   (its `top` is still read, by utils/results-scroller.js). The picker bar is
+   in the flow while the favourites morph too: the morph slides it through
+   the bottom of the screen. */
+@media (max-width: 1099.98px) {
+  .building-section-header.lazy-sticky:not(.is-sticky) {
+    position: static;
+  }
+
+  #available-classrooms-form.lazy-sticky:not(.is-sticky),
+  #available-classrooms-container.favourites-morphing > #available-classrooms-form {
+    position: relative;
+    top: auto;
+  }
+}
+
 /* ── Skeleton loading states ──────────────────────────────────── */
 
 @keyframes skeleton-shimmer {

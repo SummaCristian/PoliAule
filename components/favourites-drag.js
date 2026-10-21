@@ -21,31 +21,35 @@ import { springEasing } from '../utils/spring-easing.js';
 //
 // A mouse or pen starts after a few pixels. A finger has to rest on a card for a
 // moment first: a quicker move is the page scrolling, and is left alone.
+//
+// What the springs, the geometry and the hit-test are made of is exported for
+// components/favourites-drop.js, which drags a card of the results in with the
+// same feel.
 
-const MOUSE_SLOP = 5;        // px a mouse moves before the card is picked up
+export const MOUSE_SLOP = 5;   // px a mouse moves before the card is picked up
 const HOLD_MS = 180;         // a finger rests this long to pick a card up
 const TOUCH_SLOP = 8;        // px it may drift meanwhile; more is a scroll
-const LIFT = 0.05;           // how much bigger the card gets in the hand
-const TILT_MAX = 6;          // deg
-const TILT_PER_SPEED = 0.004;   // deg per px/s of sideways speed
-const VELOCITY_WINDOW = 80;  // ms of pointer samples the velocity is read from
-const MAX_RELEASE_SPEED = 2400;   // px/s
+export const LIFT = 0.05;           // how much bigger the card gets in the hand
+export const TILT_MAX = 6;          // deg
+export const TILT_PER_SPEED = 0.004;   // deg per px/s of sideways speed
+export const VELOCITY_WINDOW = 80;  // ms of pointer samples the velocity is read from
+export const MAX_RELEASE_SPEED = 2400;   // px/s
 const ZONE = 0.25;           // how far from a card's middle the dragged one swaps places
-const EDGE = 64;             // px inside the visible band where the page scrolls
-const EDGE_SPEED = 900;      // px/s of scroll at the very edge
+export const EDGE = 64;             // px inside the visible band where the page scrolls
+export const EDGE_SPEED = 900;      // px/s of scroll at the very edge
 const OUT_MARGIN = 48;       // px past the section before the card counts as taken out
 const IN_MARGIN = 12;        // and back inside it
 
 // Stiff, but not rigid: the lag is what makes it feel carried.
-const FOLLOW = { stiffness: 1200, damping: 54, mass: 0.6 };
-const TILT = { stiffness: 260, damping: 20, mass: 1 };
-const LIFT_IN = { stiffness: 500, damping: 25, mass: 0.5 };
+export const FOLLOW = { stiffness: 1200, damping: 54, mass: 0.6 };
+export const TILT = { stiffness: 260, damping: 20, mass: 1 };
+export const LIFT_IN = { stiffness: 500, damping: 25, mass: 0.5 };
 // Softer than following, so a flick overshoots its slot a little.
-const DROP = { stiffness: 420, damping: 32, mass: 1 };
-const DROP_TILT = { stiffness: 300, damping: 18, mass: 1 };
-const LIFT_OUT = { stiffness: 350, damping: 30, mass: 0.8 };
+export const DROP = { stiffness: 420, damping: 32, mass: 1 };
+export const DROP_TILT = { stiffness: 300, damping: 18, mass: 1 };
+export const LIFT_OUT = { stiffness: 350, damping: 30, mass: 0.8 };
 
-const MOVE = springEasing({ stiffness: 240, damping: 30, mass: 1 });
+export const MOVE = springEasing({ stiffness: 240, damping: 30, mass: 1 });
 const LEAVE = { duration: 220, easing: 'cubic-bezier(0.4, 0, 1, 1)' };
 
 const _reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -56,6 +60,7 @@ let _enabled = false;
 let _press = null;     // a pointer is down on a card, not yet a drag
 let _s = null;         // the drag, from the pick-up until the card has landed
 let _swallowClickUntil = 0;
+let _locked = false;   // another drag (favourites-drop.js) has the pointer
 
 // carousel     the strip
 // items()      its cards, in order (the one being dragged included)
@@ -68,6 +73,16 @@ export function initFavouritesDrag(options) {
 }
 
 export const isFavouritesDragging = () => !!_s;
+
+// One drag at a time: while the drop from the results is under way, no card
+// of the strip is picked up.
+export function setFavouritesDragLocked(on) {
+  _locked = on;
+  if (on) _cancelPress();
+}
+
+// The click that ends a drag is not a tap on whatever is under it.
+export const swallowClicksFor = (ms) => { _swallowClickUntil = performance.now() + ms; };
 
 // Drags are only picked up while editing. The touchmove listener must exist
 // before a touch starts (one added mid-gesture can't cancel the scroll).
@@ -100,7 +115,7 @@ export function cancelFavouritesDrag() {
 // ── Pick-up ───────────────────────────────────────────────────────────────
 
 function _onDown(e) {
-  if (_s || _press || !_o.canDrag()) return;
+  if (_s || _press || _locked || !_o.canDrag()) return;
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   if (e.target.closest?.('.fav-remove')) return;
   const el = e.target.closest?.('[data-fav-key]');
@@ -216,6 +231,8 @@ const _glidesOf = (el) => el.getAnimations().filter(a =>
 // getAnimations() restyle again.
 const _cancelGlides = (els) => els.flatMap(_glidesOf).forEach(a => a.cancel());
 
+export { _centre as centreOf, _layoutCentre as layoutCentreOf, _cancelGlides as cancelGlides };
+
 // The cards' places in the grid, in order, taken without any glide on them.
 function _measureSlots(s) {
   s.slots = s.list.filter(el => !el.classList.contains('fav-out')).map(el => {
@@ -244,7 +261,7 @@ function _measureZone(s) {
 
 // The part of the screen where a card can be put down: under the fixed header
 // (and the pickers riding under it), above the tab bar when it is a row.
-function _measureBand(s) {
+export function measureBand() {
   const header = document.querySelector('.header');
   let top = header ? header.getBoundingClientRect().bottom : 0;
   const form = document.getElementById('available-classrooms-form');
@@ -259,8 +276,10 @@ function _measureBand(s) {
     const barTop = bar.getBoundingClientRect().top;
     if (barTop > top) bottom = Math.min(bottom, barTop);
   }
-  s.band = { top, bottom };
+  return { top, bottom };
 }
+
+const _measureBand = (s) => { s.band = measureBand(); };
 
 // ── The drag ──────────────────────────────────────────────────────────────
 
@@ -366,9 +385,9 @@ function _track(s, e) {
 }
 
 // Pointer speed (px/s) over the last stretch of samples; none if it has rested.
-function _velocity(s) {
+export function pointerVelocity(samples) {
   const now = performance.now();
-  const recent = s.samples.filter(m => now - m.t <= VELOCITY_WINDOW);
+  const recent = samples.filter(m => now - m.t <= VELOCITY_WINDOW);
   if (recent.length < 2) return { x: 0, y: 0 };
   const a = recent[0], b = recent.at(-1);
   const dt = (b.t - a.t) / 1000;
@@ -395,6 +414,7 @@ const _chase = (spring, target, config) => {
   if (spring.resting && spring.target === target) return;
   spring.to(target, config);
 };
+export { _chase as chase };
 
 function _tick(s, now) {
   if (_s !== s || s.phase !== 'drag') return;
@@ -411,14 +431,14 @@ function _follow(s) {
   _chase(s.sx, s.px - sc * s.gx - o.x, FOLLOW);
   _chase(s.sy, s.py - sc * s.gy - o.y, FOLLOW);
   if (!_reduceMotion.matches) {
-    const tilt = Math.max(-TILT_MAX, Math.min(TILT_MAX, _velocity(s).x * TILT_PER_SPEED));
+    const tilt = Math.max(-TILT_MAX, Math.min(TILT_MAX, pointerVelocity(s.samples).x * TILT_PER_SPEED));
     _chase(s.sr, tilt, TILT);
   }
 
   if (s.canOut && _checkOut(s)) return;
   if (s.out) return;
   // Where the card's middle is held, not where the spring has got to
-  const to = _hit(s, { x: s.px - sc * s.gx, y: s.py - sc * s.gy });
+  const to = hitSlot(s, { x: s.px - sc * s.gx, y: s.py - sc * s.gy });
   if (to !== s.slots.findIndex(sl => sl.el === s.el)) _moveTo(s, to);
 }
 
@@ -428,7 +448,7 @@ function _follow(s) {
 // it has come into, or the ends when it is past them. Its own slot otherwise,
 // so there is a dead band between two cards and a card never flickers at the
 // boundary.
-function _hit(s, mid) {
+export function hitSlot(s, mid) {
   const slots = s.slots, shift = s.scrollNow - s.slotsAt;
   const own = slots.findIndex(sl => sl.el === s.el);
   for (let i = 0; i < slots.length; i++) {
@@ -617,7 +637,7 @@ function _release(s) {
 
   if (s.out) { _drop(s); return; }
 
-  _settle(s, _velocity(s));
+  _settle(s, pointerVelocity(s.samples));
 }
 
 // A pointer that is cancelled (a scroll took the touch, the window lost focus)

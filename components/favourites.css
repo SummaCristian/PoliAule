@@ -447,6 +447,60 @@
   }
 }
 
+/* ── Dragging a result card in (components/favourites-drop.js) ───────────
+   The card it was picked up from stays in the results, dimmed. A copy of it
+   floats in a layer of its own that stops short of the safe areas (iOS Safari
+   turns its bars solid under a fixed element that reaches them), above the
+   page and under the header and the tab bar. */
+
+.fav-drop-layer {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: 0;
+  right: 0;
+  overflow: clip;
+  z-index: 900;
+  pointer-events: none;
+}
+
+/* Sized and moved from script, about its middle; the two looks it shows are
+   boxes of their own inside it (and the lift, which is the same shadow as a
+   card dragged inside the strip). */
+.fav-token {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.fav-drop-source {
+  opacity: 0.5;
+  transition: transform 0.15s ease, opacity 160ms ease-out;
+}
+
+/* The strip's place for the card being dragged in: laid out like a card, but
+   not seen, until the token is swapped for it. */
+.fav-placeholder {
+  visibility: hidden;
+}
+
+/* Nothing in the cards answers to the pointer meanwhile: no hover, no preview,
+   no text selection under it. Folders' transition-property is `all`, and with
+   reduced motion every duration is 0.01ms (style.css): changing their `order`
+   would start a transition. */
+.fav-dropping {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fav-dropping :is(.classroom-card, .bo-card) {
+  pointer-events: none;
+}
+
+.fav-dropping .favourites-carousel > .bo-card {
+  transition-property: none;
+}
+
 /* ── Expanded grid ───────────────────────────────────────────────────────
    The toggle only shows in the two-column layout while the carousel
    overflows (components/favourites.js). Expanded, the section fills the whole

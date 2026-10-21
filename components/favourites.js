@@ -1,6 +1,6 @@
 import { buildCardForClassroom } from './classroom-list.js';
 import { getClassroomStatusNow } from '../available-rooms-script.js';
-import { getFavouriteEntries, setFavouriteEntries, initFavouriteMarkers, buildingKey } from '../utils/favourites.js';
+import { getFavouriteEntries, setFavouriteEntries, addFavouriteAt, initFavouriteMarkers, buildingKey } from '../utils/favourites.js';
 import { buildBuildingFolder, pickFolderRooms } from './building-folder.js';
 import { openBuildingPopup } from './building-popup.js';
 import { t } from '../i18n.js';
@@ -9,6 +9,7 @@ import { springEasing } from '../utils/spring-easing.js';
 import { ownBack } from '../utils/back-stack.js';
 import { announce } from '../utils/announce.js';
 import { initFavouritesDrag, setFavouritesDragEnabled, isFavouritesDragging, cancelFavouritesDrag } from './favourites-drag.js';
+import { initFavouritesDrop, isFavouritesDropping, cancelFavouritesDrop } from './favourites-drop.js';
 
 let _index = null;   // Map<classroomId(number), { classroom, building }>
 let _buildings = null;   // Map<buildingKey, { campusId, building }>
@@ -194,7 +195,7 @@ function _setEmpty(empty) {
 export function renderFavourites() {
   if (!_carousel || !_index) return;
   // A rebuild would pull the card out of the hand: after it has landed
-  if (isFavouritesDragging()) { _refreshAfterDrag = true; return; }
+  if (isFavouritesDragging() || isFavouritesDropping()) { _refreshAfterDrag = true; return; }
   _finishListAnimation();
 
   // A rebuild takes the focus with it
@@ -221,6 +222,7 @@ const LEAVE = { duration: 220, easing: 'cubic-bezier(0.4, 0, 1, 1)' };
 let _listAnims = [];
 let _listDone = null;
 let _refreshAfterDrag = false;   // a refresh asked for while a card was being dragged
+let _dropInPlace = false;        // a drop from the results is writing the card that is already in the strip
 
 // Snaps whatever the last add/remove was still doing to its end state.
 function _finishListAnimation() {
@@ -234,6 +236,14 @@ function _finishListAnimation() {
 function _onFavouritesChanged() {
   if (!_carousel || !_index) return;
   cancelFavouritesDrag();
+  cancelFavouritesDrop();
+  // A card dropped from the results is in its place already
+  if (_dropInPlace) {
+    _count = _entries().length;
+    _setEmpty(_count === 0);
+    _sync();
+    return;
+  }
   if (_edit) {
     // The session's own commit: the strip already shows it.
     if (_edit.committing) return;
@@ -891,6 +901,27 @@ function _moveItem(el, key) {
   announce(t('favourites.moved').replace('{n}', to + 1).replace('{total}', keys.length));
 }
 
+// A card dragged in from the results has landed, in the place it was dropped
+// at: `keys` is the strip's order, and `index` the card's place in it. While
+// editing, that is the next step of the session; else the favourite is
+// starred (or moved) for real, and the strip, which shows it already, is left
+// alone.
+function _commitDrop({ key, keys, index }) {
+  if (_edit) {
+    setFavouritesEditList(keys, { animate: false });
+    return;
+  }
+  const value = _valueOf(key);
+  // The strip leaves out what is no longer in the directory, which the stored
+  // list may still hold: the place is counted in that one, before the card
+  // that follows it.
+  const stored = getFavouriteEntries().filter(e => e !== value);
+  const next = keys[index + 1];
+  const at = next === undefined ? -1 : stored.indexOf(_valueOf(next));
+  _dropInPlace = true;
+  try { addFavouriteAt(value, at < 0 ? stored.length : at); } finally { _dropInPlace = false; }
+}
+
 function _initEdit() {
   _editBtn = document.getElementById('favourites-edit-btn');
   const bind = (id, fn) => {
@@ -906,6 +937,28 @@ function _initEdit() {
     canDrag: () => _editing,
     settled: () => !_container.classList.contains('favourites-morphing'),
     commit: (keys) => setFavouritesEditList(keys, { animate: false }),
+    onEnd: () => {
+      if (!_refreshAfterDrag) return;
+      _refreshAfterDrag = false;
+      renderFavourites();
+    },
+  });
+  // Dragging a card of the results in, to star it (components/favourites-drop.js)
+  initFavouritesDrop({
+    results: document.getElementById('available-classrooms-results'),
+    carousel: _carousel,
+    items: _items,
+    existing: _itemByKey,
+    build: (key) => {
+      const entry = _entriesOf([key])[0];
+      return entry ? _buildEntry(entry) : null;
+    },
+    settled: () => !_container.classList.contains('favourites-morphing'),
+    isGrid: _gridLayout,
+    isEmpty: () => _carousel.hidden,
+    setEmpty: _setEmpty,
+    resizeSection: _resizeSection,
+    commit: _commitDrop,
     onEnd: () => {
       if (!_refreshAfterDrag) return;
       _refreshAfterDrag = false;

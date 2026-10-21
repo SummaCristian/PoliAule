@@ -113,6 +113,9 @@ function hide() {
   current = null;
 }
 
+// For a drag that picks a card up (components/favourites-drop.js)
+export const hideCardDayPopover = hide;
+
 function enter(trigger) {
   // A favourite being edited: wiggling, and its taps do nothing
   if (trigger.closest('.favourites-editing .favourites-carousel')) return;

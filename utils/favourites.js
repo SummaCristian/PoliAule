@@ -80,18 +80,50 @@ export function isFavouriteBuilding(campusId, buildingName) {
 
 // `added` is the entry a toggle just starred, if any (the seasonal
 // decorations celebrate it); a removal or a whole-list import leaves it null.
-function write(entries, added = null) {
+// `reason` says why the list changed, for whoever animates it:
+//   'reorder'  an entry moved within the list (moveFavourite)
+//   'drop'     an entry was dropped at a position (addFavouriteAt)
+//   'edit'     the Favourites edit session committed its working list
+//   undefined  a star toggled, or a whole-list import
+function write(entries, added = null, reason) {
   try {
     localStorage.setItem(KEY, JSON.stringify(entries));
   } catch {
     /* storage full or unavailable — favourites just won't persist */
   }
-  window.dispatchEvent(new CustomEvent('favourites-changed', { detail: { added } }));
+  window.dispatchEvent(new CustomEvent('favourites-changed', { detail: { added, reason } }));
 }
 
-// Replaces the whole list (used by the device transfer import).
-export function setFavouriteEntries(entries) {
-  write(dedupe(entries));
+// Replaces the whole list (used by the device transfer import, and by the
+// Favourites edit session when it commits: components/favourites.js).
+export function setFavouriteEntries(entries, reason) {
+  write(dedupe(entries), null, reason);
+}
+
+// Moves a favourite so it ends up at `toIndex` (its place in the list after
+// the move, clamped to its ends). False if it isn't a favourite or doesn't move.
+export function moveFavourite(entry, toIndex) {
+  const entries = getFavouriteEntries();
+  const from = entries.indexOf(normalise(entry));
+  if (from === -1) return false;
+  const to = Math.max(0, Math.min(entries.length - 1, toIndex));
+  if (to === from) return false;
+  entries.splice(to, 0, ...entries.splice(from, 1));
+  write(entries, null, 'reorder');
+  return true;
+}
+
+// Stars the entry at `index`. One that is a favourite already is moved there
+// instead (and isn't "added": nothing is celebrated).
+export function addFavouriteAt(entry, index) {
+  const entries = getFavouriteEntries();
+  const value = normalise(entry);
+  if (value === null) return false;
+  const from = entries.indexOf(value);
+  if (from !== -1) return moveFavourite(value, index);
+  entries.splice(Math.max(0, Math.min(entries.length, index)), 0, value);
+  write(entries, value, 'drop');
+  return true;
 }
 
 // Adds the entry at the end, or removes it. Returns the new state (boolean).

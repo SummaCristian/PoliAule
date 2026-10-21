@@ -114,6 +114,8 @@ function hide() {
 }
 
 function enter(trigger) {
+  // A favourite being edited: wiggling, and its taps do nothing
+  if (trigger.closest('.favourites-editing .favourites-carousel')) return;
   clearTimeout(closeTimer);
   if (trigger === current) return;
   clearTimeout(openTimer);

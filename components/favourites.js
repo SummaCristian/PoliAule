@@ -8,6 +8,7 @@ import { escapeHtml } from '../utils/html.js';
 import { springEasing } from '../utils/spring-easing.js';
 import { ownBack } from '../utils/back-stack.js';
 import { announce } from '../utils/announce.js';
+import { initFavouritesDrag, setFavouritesDragEnabled, isFavouritesDragging, cancelFavouritesDrag } from './favourites-drag.js';
 
 let _index = null;   // Map<classroomId(number), { classroom, building }>
 let _buildings = null;   // Map<buildingKey, { campusId, building }>
@@ -192,6 +193,8 @@ function _setEmpty(empty) {
 // every card shows fresh status (called again once occupancy data lands).
 export function renderFavourites() {
   if (!_carousel || !_index) return;
+  // A rebuild would pull the card out of the hand: after it has landed
+  if (isFavouritesDragging()) { _refreshAfterDrag = true; return; }
   _finishListAnimation();
 
   // A rebuild takes the focus with it
@@ -217,6 +220,7 @@ const LEAVE = { duration: 220, easing: 'cubic-bezier(0.4, 0, 1, 1)' };
 
 let _listAnims = [];
 let _listDone = null;
+let _refreshAfterDrag = false;   // a refresh asked for while a card was being dragged
 
 // Snaps whatever the last add/remove was still doing to its end state.
 function _finishListAnimation() {
@@ -229,6 +233,7 @@ function _finishListAnimation() {
 
 function _onFavouritesChanged() {
   if (!_carousel || !_index) return;
+  cancelFavouritesDrag();
   if (_edit) {
     // The session's own commit: the strip already shows it.
     if (_edit.committing) return;
@@ -661,6 +666,7 @@ export function setFavouritesEditList(keys, { animate = true } = {}) {
 function _step(delta, messageKey) {
   const s = _edit;
   if (!s) return;
+  cancelFavouritesDrag();
   const to = s.cursor + delta;
   if (to < 0 || to >= s.history.length) return;
   s.cursor = to;
@@ -790,6 +796,7 @@ export function enterFavouritesEdit() {
 
   const apply = () => {
     _editing = true;
+    setFavouritesDragEnabled(true);
     _container.classList.add('favourites-editing');
     _items().forEach(_addEditChrome);
     _sync();
@@ -810,6 +817,7 @@ export function enterFavouritesEdit() {
 function _exitEdit({ commit, animate = true, how = 'release' } = {}) {
   const s = _edit;
   if (!s) return;
+  cancelFavouritesDrag();
   const working = s.history[s.cursor];
   const target = commit ? working : s.base;
   const entries = _entriesOf(target);
@@ -821,6 +829,7 @@ function _exitEdit({ commit, animate = true, how = 'release' } = {}) {
 
   const finish = () => {
     _editing = false;
+    setFavouritesDragEnabled(false);
     _container.classList.remove('favourites-editing');
     _removeEditChrome(animate);
     _sync();
@@ -865,6 +874,7 @@ export const exitFavouritesEdit = ({ commit = true } = {}) => _exitEdit({ commit
 
 // Alt+arrow on an item: one place along the list, or one row in the grid.
 function _moveItem(el, key) {
+  cancelFavouritesDrag();
   const keys = getFavouritesEditList();
   const from = keys.indexOf(el.dataset.favKey);
   if (from === -1) return;
@@ -889,6 +899,19 @@ function _initEdit() {
   };
   _editBtn?.addEventListener('click', enterFavouritesEdit);
 
+  // Dragging a card to a new place (components/favourites-drag.js)
+  initFavouritesDrag({
+    carousel: _carousel,
+    items: _items,
+    canDrag: () => _editing,
+    settled: () => !_container.classList.contains('favourites-morphing'),
+    commit: (keys) => setFavouritesEditList(keys, { animate: false }),
+    onEnd: () => {
+      if (!_refreshAfterDrag) return;
+      _refreshAfterDrag = false;
+      renderFavourites();
+    },
+  });
   bind('favourites-undo-btn', undoFavouritesEdit);
   bind('favourites-redo-btn', redoFavouritesEdit);
   bind('favourites-cancel-btn', cancelFavouritesEdit);

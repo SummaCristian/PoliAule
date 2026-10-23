@@ -6,6 +6,7 @@ import {
   setFavouritesDragLocked, isFavouritesDragging,
 } from './favourites-drag.js';
 import { hideCardDayPopover } from './card-day-popover.js';
+import { isBuildingScrubbing } from './building-scrubber.js';
 
 // Starring a classroom by dragging its card from the results into the
 // Favourites, at the place it is let go (desktop, mouse or pen; components/
@@ -27,6 +28,17 @@ import { hideCardDayPopover } from './card-day-popover.js';
 // and the DOM follows once the card has landed. A card that is a favourite
 // already is its own place: it is the invisible one, and the drop moves it.
 //
+// A building's name pill stars the building the same way, but it is glass that
+// already stretches toward the pointer when dragged (Vitrium's liquid glass).
+// So it isn't picked up at once: it stretches, and only once it has been pulled
+// TEAR px does a copy of it tear off. The pill springs back home, dimmed, and the
+// copy wobbles off the stretch it was torn with. Over the Favourites it turns
+// into the building's folder, a shape far from its own: rather than the token's
+// box growing (which would squash the pill's text), the two looks are scaled
+// inside it, each as a whole, as wide as one another, one fading into the other.
+// A tap still opens the building overview, and a hold still starts the
+// scrubber (components/building-scrubber.js, whose hold any move undoes first).
+//
 // The layer is only as big as the screen minus its safe areas, and sits under
 // the header and the tab bar. The token is moved, scaled and turned from script
 // with compositor properties alone, and nothing is read from the layout while
@@ -38,9 +50,15 @@ const OUT_MARGIN = 40;       // and where it is let go of again
 const STRIP_EDGE = 48;       // px inside the strip's ends where it scrolls sideways
 const HOLD = 0.12;           // how far (in cards) past the middle a card is held before it moves on
 const FADE_OUT = 180;        // ms the token takes to fade into the card it returned to
+const TEAR = 28;             // px a name pill is pulled before a copy of it tears off
 
 // The look and the size of the token, between the results card and the favourite
 const MORPH = { stiffness: 260, damping: 26, mass: 1 };
+// The stretch a torn-off pill's copy shakes off
+const WOBBLE = { stiffness: 420, damping: 13, mass: 0.6 };
+
+const CARD = '.classroom-card[data-open-classroom]';
+const PILL = '.building-section-titles[data-fav-drag]';
 
 const _reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const _desktop = window.matchMedia('(min-width: 1100px)');
@@ -86,10 +104,12 @@ export function cancelFavouritesDrop() {
 function _onDown(e) {
   if (_s || _press || !_desktop.matches || e.pointerType === 'touch') return;
   if (e.pointerType === 'mouse' && e.button !== 0) return;
-  const card = e.target.closest?.('.classroom-card[data-open-classroom]');
+  const card = e.target.closest?.(`${CARD}, ${PILL}`);
   if (!card || !_o.results.contains(card)) return;
+  const pill = card.matches(PILL);
+  const key = pill ? card.dataset.favDrag : String(Number(card.dataset.openClassroom));
 
-  _press = { card, key: String(Number(card.dataset.openClassroom)), id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY };
+  _press = { card, pill, key, id: e.pointerId, type: e.pointerType, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY };
   window.addEventListener('pointermove', _onMove);
   window.addEventListener('pointerup', _onUp);
   window.addEventListener('pointercancel', _onCancel);
@@ -125,7 +145,9 @@ function _onMove(e) {
   p.x = e.clientX;
   p.y = e.clientY;
   if (_s) { _track(_s, e); return; }
-  if (Math.hypot(p.x - p.x0, p.y - p.y0) > MOUSE_SLOP) _begin();
+  // Held long enough to scrub through the buildings: the pill is the scrubber's
+  if (p.pill && isBuildingScrubbing()) { _cancelPress(); return; }
+  if (Math.hypot(p.x - p.x0, p.y - p.y0) > (p.pill ? TEAR : MOUSE_SLOP)) _begin();
 }
 
 function _onUp(e) {
@@ -163,7 +185,8 @@ function _copyOf(card) {
   const c = card.cloneNode(true);
   for (const a of ['data-open-classroom', 'data-fav-star', 'data-fav-key', 'tabindex', 'role', 'aria-label']) c.removeAttribute(a);
   for (const p of ['view-transition-name', 'translate', 'scale', 'rotate', 'order', 'opacity', 'animation']) c.style.removeProperty(p);
-  c.classList.remove('classroom-card--pressed', 'fav-placeholder');
+  // A pill's press, stretch and spring-back are its own, not its copy's
+  c.classList.remove('classroom-card--pressed', 'fav-placeholder', 'liquid-glass', 'lg-pressing', 'lg-dragging', 'lg-settling', 'bscrub-source');
   c.inert = true;
   c.querySelector(':scope > .fav-remove')?.style.setProperty('animation', 'none');
   Object.assign(c.style, { position: 'absolute', margin: '0', transition: 'none', contentVisibility: 'visible' });
@@ -194,10 +217,18 @@ function _addFavouriteFace(s) {
     left: '50%', top: '50%', width: `${s.fw * s.W}px`, height: `${s.fh * s.H}px`,
     translate: '-50% -50%', scale: `${1 / s.fw} ${1 / s.fh}`, opacity: '0',
   });
-  s.token.insertBefore(face, s.lift);
+  // A pill's token is not the folder's size: the folder's shadow goes with its look
+  if (s.pill) face.appendChild(s.liftTo = _liftEl());
+  s.token.insertBefore(face, s.pill ? null : s.lift);
   _syncLabel(ph, face);
   _render(s);
 }
+
+const _liftEl = () => {
+  const lift = document.createElement('span');
+  lift.className = 'fav-lift';
+  return lift;
+};
 
 // ── The drag ──────────────────────────────────────────────────────────────
 
@@ -212,9 +243,18 @@ function _begin() {
   const rect = card.getBoundingClientRect();
   const { w: W, h: H } = _sizeOf(card);
   // The card is a little smaller while it is held down, or bigger under the
-  // pointer: the token starts out the size it is seen at
-  const ratio = rect.width / W || 1;
+  // pointer, and a pill is stretched toward it: the token starts out the size
+  // it is seen at, and shakes off the stretch (the difference between the two
+  // sides) on its own spring
+  const rx = rect.width / W || 1, ry = rect.height / H || 1;
+  const ratio = Math.sqrt(rx * ry);
   const vis = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+
+  // Vitrium's liquid-glass press holds the pill, and the pointer, until the
+  // button comes up. A pointercancel ends it now, and the pill springs home.
+  // Not bubbling: it is the pill's alone (script.js drops the overview it
+  // prewarmed for a tap; this module's own listeners are on the window).
+  if (p.pill) card.dispatchEvent(new PointerEvent('pointercancel', { pointerId: p.id, pointerType: p.type }));
 
   const layer = document.createElement('div');
   layer.className = 'fav-drop-layer';
@@ -225,23 +265,23 @@ function _begin() {
   const from = _copyOf(card);
   Object.assign(from.style, { left: '0', top: '0', width: '100%', height: '100%' });
   from.classList.add('fav-token-from');
-  const lift = document.createElement('span');
-  lift.className = 'fav-lift';
-  token.append(from, lift);
+  // A card's shadow is the token's; a pill's goes with the pill's look
+  const lift = _liftEl();
+  if (p.pill) { from.appendChild(lift); token.append(from); } else token.append(from, lift);
   layer.appendChild(token);
   document.body.appendChild(layer);
   const origin = layer.getBoundingClientRect();
 
   const base = _o.items();
   const s = _s = {
-    source: card, key: p.key, phase: 'drag', target: null, native: false, snapped: false,
-    layer, token, from, lift, faceTo: null, ox: origin.left, oy: origin.top,
-    W, H, fw: 1, fh: 1,
+    source: card, pill: p.pill, key: p.key, phase: 'drag', target: null, native: false, snapped: false,
+    layer, token, from, lift, liftTo: null, faceTo: null, ox: origin.left, oy: origin.top,
+    W, H, fw: 1, fh: 1, ax: rx / ratio - 1, ay: ry / ratio - 1,
     px: p.x, py: p.y,
     // Where the pointer holds it, from its middle, in the card's own size
-    gx: (p.x - vis.x) / ratio, gy: (p.y - vis.y) / ratio,
+    gx: (p.x - vis.x) / rx, gy: (p.y - vis.y) / ry,
     samples: [{ t: performance.now(), x: p.x, y: p.y }],
-    sx: new Spring(vis.x), sy: new Spring(vis.y), sr: new Spring(0), sk: new Spring(ratio), sm: new Spring(0),
+    sx: new Spring(vis.x), sy: new Spring(vis.y), sr: new Spring(0), sk: new Spring(ratio), sm: new Spring(0), sa: new Spring(1),
     // The strip's cards as they are, and in the order the drag has them in. Only
     // their `order` changes meanwhile, and the DOM follows once the token has
     // landed.
@@ -253,7 +293,7 @@ function _begin() {
     armedL: false, armedR: false, armedTop: false, armedBottom: false,
     lastT: 0, raf: 0, offFrame: null, el: null, slots: [], slotsAt: window.scrollY, snap: '',
   };
-  s.sm.eps = s.sk.eps = 0.002;
+  s.sm.eps = s.sk.eps = s.sa.eps = 0.002;
   s.band = measureBand();
   s.strip = _o.carousel.parentElement.getBoundingClientRect();
   s.stripLeft = _o.carousel.getBoundingClientRect().left;
@@ -276,6 +316,7 @@ function _begin() {
   // Next frame, so the shadow fades in from nothing
   requestAnimationFrame(() => { if (_s === s && s.phase === 'drag') token.classList.add('fav-dragging'); });
   s.sk.to(1 + LIFT, LIFT_IN);
+  s.sa.to(0, WOBBLE);
 
   window.addEventListener('keydown', _onKey, true);
   window.addEventListener('resize', _onResize);
@@ -300,9 +341,14 @@ function _track(s, e) {
   if (e.pointerType === 'mouse' && !(e.buttons & 1)) _release(s);
 }
 
-// How big the token is now: the hand's lift, and the growth into the favourite card's size.
-const _scaleX = (s) => s.sk.value * (1 + (s.fw - 1) * s.sm.value);
-const _scaleY = (s) => s.sk.value * (1 + (s.fh - 1) * s.sm.value);
+// The token's box: the hand's lift, and what is left of a pill's stretch.
+const _boxX = (s) => s.sk.value * (1 + s.ax * s.sa.value);
+const _boxY = (s) => s.sk.value * (1 + s.ay * s.sa.value);
+
+// How big the token is seen now: its box, grown into the favourite card's size
+// (a pill's box isn't, but its looks are: see _render).
+const _scaleX = (s) => _boxX(s) * (1 + (s.fw - 1) * s.sm.value);
+const _scaleY = (s) => _boxY(s) * (1 + (s.fh - 1) * s.sm.value);
 
 // Where the token's middle is held, not where its spring has got to.
 const _held = (s) => ({ x: s.px - _scaleX(s) * s.gx, y: s.py - _scaleY(s) * s.gy });
@@ -310,19 +356,31 @@ const _held = (s) => ({ x: s.px - _scaleX(s) * s.gx, y: s.py - _scaleY(s) * s.gy
 const _ramp = (n) => Math.min(1, Math.max(0, n)) ** 2;
 
 function _render(s) {
+  // Laid out like the card for its last frame (the frame loop is shared, and
+  // may still run for some other spring)
+  if (s.native) return;
   const k = s.token.style;
   k.translate = `${(s.sx.value - s.W / 2 - s.ox).toFixed(2)}px ${(s.sy.value - s.H / 2 - s.oy).toFixed(2)}px`;
-  k.scale = `${_scaleX(s).toFixed(4)} ${_scaleY(s).toFixed(4)}`;
   k.rotate = `${s.sr.value.toFixed(3)}deg`;
+  const m = s.sm.value;
+  if (s.pill) {
+    // The box stays the pill's size, and each look is scaled as a whole: the
+    // pill grows to the folder's width as the folder grows from the pill's
+    k.scale = `${_boxX(s).toFixed(4)} ${_boxY(s).toFixed(4)}`;
+    const w = 1 + (s.fw - 1) * m;
+    s.from.style.scale = w.toFixed(4);
+    if (s.faceTo) s.faceTo.style.scale = (w / s.fw).toFixed(4);
+  } else {
+    k.scale = `${_scaleX(s).toFixed(4)} ${_scaleY(s).toFixed(4)}`;
+  }
   // Neither look is ever see-through for long: one fades in over the other, which
   // goes later, and only the favourite card's is left at the end
-  const m = s.sm.value;
   if (s.faceTo) s.faceTo.style.opacity = Math.min(1, Math.max(0, m / 0.65)).toFixed(3);
   s.from.style.opacity = (1 - Math.min(1, Math.max(0, (m - 0.35) / 0.65))).toFixed(3);
   if ((s.phase === 'landing' || s.phase === 'returning') && !s.native && _atRest(s)) _arrived(s);
 }
 
-const _atRest = (s) => s.sx.resting && s.sy.resting && s.sr.resting && s.sk.resting && s.sm.resting;
+const _atRest = (s) => s.sx.resting && s.sy.resting && s.sr.resting && s.sk.resting && s.sm.resting && s.sa.resting;
 
 function _tick(s, now) {
   if (_s !== s || s.phase !== 'drag') return;
@@ -649,7 +707,9 @@ function _cancel(s) {
 // fades where it is.
 function _return(s, v) {
   if (!s.source.isConnected) {
-    const again = _o.results.querySelector(`.classroom-card[data-open-classroom="${CSS.escape(s.key)}"]`);
+    const again = _o.results.querySelector(s.pill
+      ? `.building-section-titles[data-fav-drag="${CSS.escape(s.key)}"]`
+      : `.classroom-card[data-open-classroom="${CSS.escape(s.key)}"]`);
     if (again) s.target = again;
   }
   const home = s.target ?? s.source;
@@ -700,6 +760,7 @@ function _arrived(s) {
   if (face) Object.assign(face.style, { left: '0', top: '0', width: '100%', height: '100%', translate: 'none', scale: 'none', opacity: '1' });
   (s.phase === 'landing' ? s.from : s.faceTo)?.style.setProperty('visibility', 'hidden');
   s.lift.style.display = 'none';
+  s.liftTo?.style.setProperty('display', 'none');
   // The next frame, once this one has been drawn
   requestAnimationFrame(() => (s.phase === 'landing' ? _land(s) : _returned(s)));
 }
@@ -767,7 +828,7 @@ function _end(s) {
   cancelAnimationFrame(s.raf);
   s.offFrame?.();
   s.offFrame = null;
-  for (const sp of [s.sx, s.sy, s.sr, s.sk, s.sm]) sp.dispose();
+  for (const sp of [s.sx, s.sy, s.sr, s.sk, s.sm, s.sa]) sp.dispose();
   window.removeEventListener('resize', _onResize);
   window.removeEventListener('keydown', _onKey, true);
   window.removeEventListener('scroll', s.onScroll);

@@ -78,7 +78,7 @@ import './utils/glass-roles.js';
 import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark, initRefraction, restoreGlassStyle } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 import { initCardDayPopover } from './components/card-day-popover.js';
-import { createBuildingStarButton } from './utils/favourites.js';
+import { createBuildingStarButton, buildingKey } from './utils/favourites.js';
 
 import { initI18n, t, applyTranslations, onLanguageSwitch } from './i18n.js';
 import { escapeHtml } from './utils/html.js';
@@ -408,6 +408,9 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
 
   // Tapping the name pill "zooms out" into the building overview grid.
   const titlesBtn = headerEl.querySelector('.building-section-titles');
+  // Pulled off and dropped in the Favourites, it stars the building
+  // (components/favourites-drop.js, desktop only).
+  if (campusId != null) titlesBtn.dataset.favDrag = buildingKey(campusId, buildingName);
   const openOverview = () => buildingOverview.open({
     campusId,
     date,

@@ -58,6 +58,9 @@ export function cancelBuildingScrubber() {
   active?.destroy();
 }
 
+// A scrub has the gesture (components/favourites-drop.js won't tear the pill off).
+export const isBuildingScrubbing = () => !!active;
+
 // Wires the scrubber to one building's name pill. `consumed` is true while a
 // scrub runs and briefly after it ends: the pill's own tap handlers check it,
 // so the release doesn't also open the building overview.

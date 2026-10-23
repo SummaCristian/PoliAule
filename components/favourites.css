@@ -478,6 +478,26 @@
   transition: transform 0.15s ease, opacity 160ms ease-out;
 }
 
+/* A name pill springs back from the stretch it was torn off with: its liquid
+   glass's own spring (Vitrium's liquid-glass.css), which the rule above would
+   replace. */
+.building-section-titles.fav-drop-source {
+  transition:
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
+    opacity 160ms ease-out;
+}
+
+/* A pill's token is the pill's size, while the look it turns into is the
+   folder's: each look carries its own shadow. */
+.fav-token.fav-dragging .fav-lift {
+  opacity: 1;
+}
+
+.building-section-titles > .fav-lift {
+  border-radius: inherit;
+}
+
 /* The strip's place for the card being dragged in: laid out like a card, but
    not seen, until the token is swapped for it. */
 .fav-placeholder {
@@ -493,7 +513,7 @@
   -webkit-user-select: none;
 }
 
-.fav-dropping :is(.classroom-card, .bo-card) {
+.fav-dropping :is(.classroom-card, .bo-card, .building-section-titles) {
   pointer-events: none;
 }
 

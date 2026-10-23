@@ -182,8 +182,9 @@ function _buildEntry(entry) {
   return el;
 }
 
-// The strip's items, minus any still animating out.
-const _items = () => [..._carousel.children].filter(el => !el.classList.contains('fav-leaving'));
+// The strip's items, minus any still animating out (and the glass plate a drag
+// lays behind a favourite, components/favourites-drop.js).
+const _items = () => [..._carousel.children].filter(el => !el.classList.contains('fav-leaving') && !el.classList.contains('fav-known-plate'));
 
 function _setEmpty(empty) {
   _carousel.hidden = empty;

@@ -498,6 +498,130 @@
   border-radius: inherit;
 }
 
+/* Something that is a favourite already. Its card in the strip owns up to it
+   for as long as it is held, on a plate of clear tinted glass laid behind it
+   (components/favourites-drop.js sizes and moves it), and over the
+   Favourites it is the ghost: dimmed where it is while a place opens
+   elsewhere, lit (and lifted a little, plate and all) while the token is held
+   at its own place. `fav-ghost-host` carries the transitions until the drag
+   is over: the folders' are off meanwhile (below), and with the classes gone
+   the card would snap back. */
+/* Hollow under the card (its padding is the band left showing, set from
+   script): a dimmed ghost, or a folder's own glass, shows the page through
+   it, not the plate. The corners the card's own rounding leaves are the
+   plate's, so its inner edge follows the card's. Same cut as the glass's
+   stroke (Vitrium's .lg-glass::after). */
+.fav-known-plate {
+  /* A hint of the accent, not a fill */
+  --lg-tint-strength-clear: 18%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  position: absolute;
+  pointer-events: none;
+  transition: scale 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+  animation: fav-plate-in 260ms cubic-bezier(0.3, 0.7, 0.4, 1) backwards;
+}
+
+.fav-known-plate.is-stay {
+  scale: 1.03;
+}
+
+@keyframes fav-plate-in {
+  from { opacity: 0; scale: 0.94; }
+}
+
+.fav-dropping .favourites-carousel > :is(.classroom-card, .bo-card).fav-ghost-host {
+  transition:
+    opacity 160ms ease-out,
+    scale 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.favourites-carousel > .fav-ghost {
+  opacity: 0.5;
+}
+
+.favourites-carousel > .fav-ghost.fav-ghost-stay {
+  opacity: 1;
+  scale: 1.03;
+}
+
+/* The token's star, a bubble of tinted glass: on a corner of what it is a
+   copy of, faded in and out with its lift. */
+.fav-token-star {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+  pointer-events: none;
+}
+
+.fav-token-star > .star-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.fav-token.fav-dragging .fav-token-star {
+  opacity: 1;
+}
+
+/* It says what the card's own star says: that one is away meanwhile, and back
+   by the time the token is on its card again. */
+.fav-token-from .classroom-card-fav-star {
+  transition: opacity 180ms ease-out;
+}
+
+.fav-token.fav-dragging:has(> .fav-token-star) .fav-token-from .classroom-card-fav-star {
+  opacity: 0;
+}
+
+/* The strip's edge on the side the card is on, while it is scrolled out of
+   sight. Above the strip's own edge fades. */
+.fav-edge-hint {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 3rem;
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+  pointer-events: none;
+}
+
+.fav-edge-hint[data-side="start"] {
+  left: 0;
+  background: radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--text-color-accent) 45%, transparent), transparent);
+}
+
+.fav-edge-hint[data-side="end"] {
+  right: 0;
+  background: radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--text-color-accent) 45%, transparent), transparent);
+}
+
+.fav-edge-hint.is-on {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fav-dropping .favourites-carousel > :is(.classroom-card, .bo-card).fav-ghost-host,
+  .fav-token-star,
+  .fav-edge-hint,
+  .fav-known-plate {
+    transition: none;
+  }
+
+  .fav-known-plate {
+    animation: none;
+  }
+}
+
 /* The strip's place for the card being dragged in: laid out like a card, but
    not seen, until the token is swapped for it. */
 .fav-placeholder {

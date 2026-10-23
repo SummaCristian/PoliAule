@@ -7,6 +7,7 @@ import {
 } from './favourites-drag.js';
 import { hideCardDayPopover } from './card-day-popover.js';
 import { isBuildingScrubbing } from './building-scrubber.js';
+import { FILLED_STAR_SVG } from '../utils/favourites.js';
 
 // Starring a classroom by dragging its card from the results into the
 // Favourites, at the place it is let go (desktop, mouse or pen; components/
@@ -25,8 +26,17 @@ import { isBuildingScrubbing } from './building-scrubber.js';
 // card it came from and fades into it.
 //
 // Like the reorder, the strip's cards are moved around with their `order` only
-// and the DOM follows once the card has landed. A card that is a favourite
-// already is its own place: it is the invisible one, and the drop moves it.
+// and the DOM follows once the card has landed.
+//
+// Something that is a favourite already is moved by the drop, and says so from
+// the start: its card in the strip lifts for a moment on a plate of tinted
+// glass (with the strip's edge glowing on its side when it is scrolled out of
+// sight), and the token carries a glass star. Over the Favourites that card stays
+// where it is, dimmed (the ghost), while a place opens where the token is held.
+// Held next to the ghost, which is where it would land anyway, no place opens:
+// the ghost lights up instead, and let go there the token lands on it and
+// nothing moves. Let go anywhere else, the ghost's place closes as the token
+// lands in the new one.
 //
 // A building's name pill stars the building the same way, but it is glass that
 // already stretches toward the pointer when dragged (Vitrium's liquid glass).
@@ -51,6 +61,9 @@ const STRIP_EDGE = 48;       // px inside the strip's ends where it scrolls side
 const HOLD = 0.12;           // how far (in cards) past the middle a card is held before it moves on
 const FADE_OUT = 180;        // ms the token takes to fade into the card it returned to
 const TEAR = 28;             // px a name pill is pulled before a copy of it tears off
+const OUT_OF_SIGHT = 24;     // px of a strip card left in view before its edge glows for it
+const GHOST_FADE = 200;      // ms the ghost takes to go once its place closes
+const PLATE_PAD = 6;         // px of the glass plate showing around a card that is a favourite already
 
 // The look and the size of the token, between the results card and the favourite
 const MORPH = { stiffness: 260, damping: 26, mass: 1 };
@@ -186,7 +199,8 @@ function _copyOf(card) {
   for (const a of ['data-open-classroom', 'data-fav-star', 'data-fav-key', 'tabindex', 'role', 'aria-label']) c.removeAttribute(a);
   for (const p of ['view-transition-name', 'translate', 'scale', 'rotate', 'order', 'opacity', 'animation']) c.style.removeProperty(p);
   // A pill's press, stretch and spring-back are its own, not its copy's
-  c.classList.remove('classroom-card--pressed', 'fav-placeholder', 'liquid-glass', 'lg-pressing', 'lg-dragging', 'lg-settling', 'bscrub-source');
+  c.classList.remove('classroom-card--pressed', 'fav-placeholder', 'liquid-glass', 'lg-pressing', 'lg-dragging', 'lg-settling', 'bscrub-source',
+    'fav-known', 'fav-ghost', 'fav-ghost-stay', 'fav-ghost-host');
   c.inert = true;
   c.querySelector(':scope > .fav-remove')?.style.setProperty('animation', 'none');
   Object.assign(c.style, { position: 'absolute', margin: '0', transition: 'none', contentVisibility: 'visible' });
@@ -208,9 +222,10 @@ function _syncLabel(from, to) {
 }
 
 // The copy of the favourite card, laid over the results card's: its look fades
-// in as the token turns into it. Made once the card has been laid out and fitted.
+// in as the token turns into it. Made once the card has been laid out and fitted
+// (a favourite already is copied from its ghost, which always has been).
 function _addFavouriteFace(s) {
-  const ph = s.placeholder;
+  const ph = s.existing ?? s.placeholder;
   if (s.faceTo || !ph?.isConnected) return;
   const face = s.faceTo = _copyOf(ph);
   Object.assign(face.style, {
@@ -228,6 +243,14 @@ const _liftEl = () => {
   const lift = document.createElement('span');
   lift.className = 'fav-lift';
   return lift;
+};
+
+// The star a token carries when what it is a copy of is a favourite already.
+const _starEl = () => {
+  const star = document.createElement('span');
+  star.className = 'fav-token-star lg-glass lg-glass--clear lg-glass--tinted lg-glass--circle';
+  star.innerHTML = FILLED_STAR_SVG;
+  return star;
 };
 
 // ── The drag ──────────────────────────────────────────────────────────────
@@ -268,11 +291,15 @@ function _begin() {
   // A card's shadow is the token's; a pill's goes with the pill's look
   const lift = _liftEl();
   if (p.pill) { from.appendChild(lift); token.append(from); } else token.append(from, lift);
+  const base = _o.items();
+  const existing = base.find(el => el.dataset.favKey === p.key) ?? null;
+  // On the pill's own corner: a folder takes its place over the Favourites,
+  // where the ghost says it instead
+  if (existing) (p.pill ? from : token).appendChild(_starEl());
   layer.appendChild(token);
   document.body.appendChild(layer);
   const origin = layer.getBoundingClientRect();
 
-  const base = _o.items();
   const s = _s = {
     source: card, pill: p.pill, key: p.key, phase: 'drag', target: null, native: false, snapped: false,
     layer, token, from, lift, liftTo: null, faceTo: null, ox: origin.left, oy: origin.top,
@@ -285,8 +312,8 @@ function _begin() {
     // The strip's cards as they are, and in the order the drag has them in. Only
     // their `order` changes meanwhile, and the DOM follows once the token has
     // landed.
-    base, list: [...base], existing: base.find(el => el.dataset.favKey === p.key) ?? null,
-    placeholder: null, isNew: false, index: -1, inZone: false, blocked: false,
+    base, list: [...base], existing, stay: false, hint: null,
+    placeholder: null, index: -1, inZone: false, blocked: false,
     grown: false, growAnims: [],
     section: _o.carousel.closest('.favourites-section') ?? _o.carousel,
     scrollNow: window.scrollY, scrollLeft: _o.carousel.scrollLeft, scrollMaxX: 0, scrollMax: 0, scrollRest: 0,
@@ -321,7 +348,8 @@ function _begin() {
   window.addEventListener('keydown', _onKey, true);
   window.addEventListener('resize', _onResize);
   window.addEventListener('scroll', s.onScroll = () => { s.scrollNow = window.scrollY; s.band = measureBand(); }, { passive: true });
-  _o.carousel.addEventListener('scroll', s.onStripScroll = () => { s.scrollLeft = _o.carousel.scrollLeft; }, { passive: true });
+  _o.carousel.addEventListener('scroll', s.onStripScroll = () => { s.scrollLeft = _o.carousel.scrollLeft; _hint(s); }, { passive: true });
+  if (existing) _ownUp(s);
   // Something resized (a banner sliding in, data landing): where things are is
   // not where they were measured
   const first = { skip: true };
@@ -436,6 +464,8 @@ function _remeasure(s) {
   _measureSlots(s);
   _measureZone(s);
   _measureStrip(s);
+  _placePlate(s);
+  _hint(s);
 }
 
 // What the strip's cards are spaced by, for the index the token is held at
@@ -473,42 +503,50 @@ function _stripIndex(s, mid, n, current = -1) {
 // after, reading the grid row by row.
 function _firstIndex(s) {
   const mid = _held(s);
-  const n = s.base.length - (s.existing ? 1 : 0);
-  if (!_o.isGrid()) return _stripIndex(s, mid, n);
+  if (!_o.isGrid()) return _stripIndex(s, mid, s.base.length);
+  return _countBefore(s, mid);
+}
+
+// How many of the cards laid out (the place left out) come before `mid`,
+// reading the grid row by row.
+function _countBefore(s, mid) {
   const shift = window.scrollY - s.slotsAt;
   let count = 0;
   for (const sl of s.slots) {
-    if (sl.el === s.existing) continue;
+    if (sl.el === s.placeholder) continue;
     const y = sl.y - shift;
     if (mid.y > y + sl.h / 2 || (mid.y >= y - sl.h / 2 && mid.x > sl.x)) count++;
   }
   return count;
 }
 
-function _enter(s) {
-  let ph = s.existing;
-  const isNew = !ph;
-  if (isNew) {
-    ph = _o.build(s.key);
-    if (!ph) { s.blocked = true; return; }
-  }
-  // The wiggle (edit mode) is off on it until it lands. A new card's badge has
-  // already popped in by then: it never plays it again.
+// A card, made for the drop, that the token lands in place of. The wiggle (edit
+// mode) is off on it until it lands, and its badge, which has already popped in
+// by then, never plays its entrance again.
+function _newPlace(s) {
+  const ph = _o.build(s.key);
+  if (!ph) return null;
   ph.style.animation = 'none';
-  if (isNew) ph.querySelector(':scope > .fav-remove')?.style.setProperty('animation', 'none');
+  ph.querySelector(':scope > .fav-remove')?.style.setProperty('animation', 'none');
+  ph.classList.add('fav-placeholder');
+  return ph;
+}
+
+function _enter(s) {
+  if (s.existing) { _enterGhost(s); return; }
+  const ph = _newPlace(s);
+  if (!ph) { s.blocked = true; return; }
   s.placeholder = s.el = ph;
-  s.isNew = isNew;
   s.inZone = true;
   if (!_o.isGrid()) _measureStrip(s);
   const index = _firstIndex(s);
-  const grow = isNew && _o.isEmpty();
+  const grow = _o.isEmpty();
   const sectionFrom = grow ? s.section.getBoundingClientRect() : null;
 
   _reflow(s, () => {
     if (grow) _o.setEmpty(false);
-    ph.classList.add('fav-placeholder');
-    if (isNew) _o.carousel.appendChild(ph);
-    const list = s.base.filter(el => el !== ph);
+    _o.carousel.appendChild(ph);
+    const list = [...s.base];
     list.splice(index, 0, ph);
     s.list = list;
     _setOrder(s);
@@ -527,10 +565,15 @@ function _enter(s) {
   // would otherwise decode it in the very frame it appears)
   ph.querySelector('.classroom-card-photo')?.decode?.().catch(() => {});
   s.sm.to(1, MORPH);
-  if (_o.isGrid()) { s.armedTop = s.py >= s.band.top + EDGE; s.armedBottom = s.py <= s.band.bottom - EDGE; }
-  else { s.armedL = s.px >= s.strip.left + STRIP_EDGE; s.armedR = s.px <= s.strip.right - STRIP_EDGE; }
+  _armEdges(s);
   // A frame later, when the card has been fitted
   if (!s.faceTo) requestAnimationFrame(() => { if (_s === s && s.placeholder === ph) _addFavouriteFace(s); });
+}
+
+// Edge scrolling waits for the pointer to have been inside the edge first.
+function _armEdges(s) {
+  if (_o.isGrid()) { s.armedTop = s.py >= s.band.top + EDGE; s.armedBottom = s.py <= s.band.bottom - EDGE; }
+  else { s.armedL = s.px >= s.strip.left + STRIP_EDGE; s.armedR = s.px <= s.strip.right - STRIP_EDGE; }
 }
 
 // The token leaves the Favourites: the place made for it closes again.
@@ -538,7 +581,14 @@ function _leave(s) {
   const ph = s.placeholder;
   s.inZone = false;
   s.sm.to(0, MORPH);
-  if (s.isNew) {
+  if (s.existing) {
+    _reflow(s, () => {
+      ph.remove();
+      s.list = [...s.base];
+      _setOrder(s);
+    });
+    _unghost(s);
+  } else {
     const grown = s.grown;
     const sectionFrom = grown ? s.section.getBoundingClientRect() : null;
     s.growAnims.forEach(a => a.cancel());
@@ -553,15 +603,6 @@ function _leave(s) {
       s.grown = false;
       s.growAnims = _o.resizeSection(s.section, sectionFrom, 'out');
     }
-  } else {
-    // A favourite card goes back to where it was, and shows again
-    _reflow(s, () => {
-      s.list = [...s.base];
-      _setOrder(s);
-      ph.classList.remove('fav-placeholder');
-    });
-    ph.style.removeProperty('animation');
-    if (!_reduceMotion.matches) ph.animate({ opacity: [0, 1] }, { duration: 180, easing: 'ease-out' });
   }
   s.placeholder = s.el = null;
   s.index = -1;
@@ -569,13 +610,163 @@ function _leave(s) {
 
 // Moves the place to the slot the token is held over.
 function _place(s) {
+  if (s.existing) { _placeGhost(s); return; }
   const mid = _held(s);
   let to;
-  if (!_o.isGrid()) to = _stripIndex(s, mid, s.base.length - (s.existing ? 1 : 0), s.index);
+  if (!_o.isGrid()) to = _stripIndex(s, mid, s.base.length, s.index);
   else to = hitSlot(s, mid);
   if (to === s.index || to < 0) return;
   _moveTo(s, to);
 }
+
+// ── A favourite already ───────────────────────────────────────────────────
+
+// Its card in the strip owns up to it, as the drag starts: it lifts for a
+// moment, on a plate of clear, tinted glass that shows around it (the app's
+// selected look), hollow under the card (favourites.css). The plate is the
+// strip's, not the card's (the card's own layers would paint over anything of
+// its own behind it): laid on the card's box, and gliding with it.
+function _ownUp(s) {
+  const el = s.existing;
+  el.classList.add('fav-known', 'fav-ghost-host');
+  const plate = s.plate = document.createElement('span');
+  plate.className = 'fav-known-plate lg-glass lg-glass--clear lg-glass--tinted';
+  plate.setAttribute('aria-hidden', 'true');
+  const shape = el.querySelector(':scope > .bo-card-front') ?? el;
+  plate.style.borderRadius = `${(parseFloat(getComputedStyle(shape).borderTopLeftRadius) || 0) + PLATE_PAD}px`;
+  plate.style.padding = `${PLATE_PAD}px`;
+  // First, so the cards are drawn over it
+  _o.carousel.prepend(plate);
+  _placePlate(s);
+  if (!_reduceMotion.matches) el.animate({ scale: [1, 1 + LIFT, 1] }, { duration: 420, easing: 'cubic-bezier(0.3, 0.7, 0.4, 1)' });
+  _hint(s);
+}
+
+// The plate on the card's layout box (it scrolls with the strip's content).
+function _placePlate(s) {
+  const el = s.existing;
+  if (!s.plate || el.style.display === 'none') return;
+  Object.assign(s.plate.style, {
+    left: `${el.offsetLeft - PLATE_PAD}px`, top: `${el.offsetTop - PLATE_PAD}px`,
+    width: `${el.offsetWidth + PLATE_PAD * 2}px`, height: `${el.offsetHeight + PLATE_PAD * 2}px`,
+  });
+}
+
+// The card is let go of: the plate fades away.
+function _disown(s) {
+  s.existing?.classList.remove('fav-known');
+  const plate = s.plate;
+  if (!plate) return;
+  s.plate = null;
+  if (_reduceMotion.matches) { plate.remove(); return; }
+  plate.animate({ opacity: [getComputedStyle(plate).opacity, 0] }, { duration: 160, easing: 'ease-out', fill: 'forwards' })
+    .finished.then(() => plate.remove(), () => plate.remove());
+}
+
+// The strip's edge glows on the side its card is on, while it is scrolled out
+// of sight (the strip isn't scrolled to it: it is where the token is aimed).
+function _hint(s) {
+  if (!s.existing) return;
+  let side = null;
+  if (s.phase === 'drag' && !_o.isGrid()) {
+    const r = s.existing.getBoundingClientRect();
+    if (r.right < s.strip.left + OUT_OF_SIGHT) side = 'start';
+    else if (r.left > s.strip.right - OUT_OF_SIGHT) side = 'end';
+  }
+  if (!side && !s.hint) return;
+  if (!s.hint) {
+    s.hint = document.createElement('span');
+    s.hint.className = 'fav-edge-hint';
+    s.hint.setAttribute('aria-hidden', 'true');
+    _o.carousel.parentElement.appendChild(s.hint);
+  }
+  if (side) s.hint.dataset.side = side;
+  s.hint.classList.toggle('is-on', !!side);
+}
+
+function _enterGhost(s) {
+  const ph = s.placeholder ?? _newPlace(s);
+  if (!ph) { s.blocked = true; return; }
+  s.placeholder = s.el = ph;
+  s.inZone = true;
+  s.stay = false;
+  s.index = -1;
+  s.existing.classList.add('fav-ghost');
+  if (!_o.isGrid()) _measureStrip(s);
+  // The place is the ghost's size: it is the same card
+  const size = _sizeOf(s.existing);
+  s.fw = size.w / s.W;
+  s.fh = size.h / s.H;
+  _placeGhost(s);
+  s.sm.to(1, MORPH);
+  _armEdges(s);
+  _addFavouriteFace(s);
+}
+
+// Where the token is held, as the number of cards before it, the ghost counted:
+// a place opens there, unless that is right before or after the ghost, which
+// is the ghost's own place (it stays where it is).
+function _placeGhost(s) {
+  const mid = _held(s);
+  let at;
+  if (_o.isGrid()) at = _countBefore(s, mid);
+  else if (!s.pitch) at = 0;
+  else {
+    const f = (mid.x - s.stripLeft + s.scrollLeft - s.x0) / s.pitch;
+    at = Math.max(0, Math.min(s.list.length, Math.floor(f) + 1));
+    const own = s.list.indexOf(s.placeholder);
+    if (own >= 0 && own < at) at--;
+  }
+  const g = s.base.indexOf(s.existing);
+  const stay = at === g || at === g + 1;
+  if (stay ? s.stay : s.index === at) return;
+
+  const ph = s.placeholder;
+  _reflow(s, () => {
+    const list = [...s.base];
+    if (stay) ph.remove();
+    else {
+      if (!ph.isConnected) _o.carousel.appendChild(ph);
+      list.splice(at, 0, ph);
+    }
+    s.list = list;
+    _setOrder(s);
+  });
+  s.stay = stay;
+  s.index = stay ? -1 : at;
+  s.existing.classList.toggle('fav-ghost-stay', stay);
+  s.plate?.classList.toggle('is-stay', stay);
+}
+
+// The ghost is the card again (the token has left, or the drag is over).
+function _unghost(s) {
+  const el = s.existing;
+  if (!el?.classList.contains('fav-ghost')) return;
+  el.classList.remove('fav-ghost', 'fav-ghost-stay');
+  s.stay = false;
+}
+
+// The ghost's place closes, as the token goes to land in the new one: a copy
+// of it fades where it was, and the cards after it glide over.
+function _collapseGhost(s) {
+  const el = s.existing;
+  _disown(s);
+  if (!_reduceMotion.matches) {
+    const r = el.getBoundingClientRect();
+    const copy = _copyOf(el);
+    Object.assign(copy.style, { left: `${r.left - s.ox}px`, top: `${r.top - s.oy}px`, width: `${r.width}px`, height: `${r.height}px` });
+    s.layer.insertBefore(copy, s.token);
+    copy.animate({ opacity: [getComputedStyle(el).opacity, 0], scale: [1, 0.9] }, { duration: GHOST_FADE, easing: 'ease-out', fill: 'forwards' });
+  }
+  _reflow(s, () => {
+    el.style.display = 'none';
+    s.list = s.list.filter(c => c !== el);
+    _setOrder(s);
+  });
+}
+
+// What the token lands on: the place made for it, or the ghost it stays as.
+const _landOn = (s) => (s.stay ? s.existing : s.placeholder);
 
 function _moveTo(s, to) {
   s.index = to;
@@ -608,12 +799,15 @@ function _reflow(s, change) {
   _measureSlots(s, centres);
   _measureZone(s);
   if (!_o.isGrid()) _measureStrip(s);
+  _placePlate(s);
 
   if (!_reduceMotion.matches) {
     others.forEach((el, i) => {
       const dx = from[i].x - to[i].x, dy = from[i].y - to[i].y;
       if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
-      el.animate({ translate: [`${dx}px ${dy}px`, '0 0'] }, MOVE);
+      const glide = { translate: [`${dx}px ${dy}px`, '0 0'] };
+      el.animate(glide, MOVE);
+      if (el === s.existing) s.plate?.animate(glide, MOVE);
     });
   }
 }
@@ -672,8 +866,9 @@ function _release(s) {
   swallowClicksFor(150);
   const v = pointerVelocity(s.samples);
   if (s.inZone && s.placeholder) {
-    if (_o.isGrid()) _toNearest(s);
-    _settle(s, 'landing', centreOf(s.placeholder), v);
+    if (s.existing) { if (!s.stay) _collapseGhost(s); }
+    else if (_o.isGrid()) _toNearest(s);
+    _settle(s, 'landing', centreOf(_landOn(s)), v);
   } else {
     _return(s, v);
   }
@@ -722,10 +917,17 @@ function _return(s, v) {
 function _settle(s, phase, target, v) {
   s.phase = phase;
   s.token.classList.remove('fav-dragging');
-  if (phase === 'landing' && s.faceTo) _syncLabel(s.placeholder, s.faceTo);
+  if (phase === 'landing' && s.faceTo) _syncLabel(_landOn(s), s.faceTo);
+  // A favourite already: its card has said so, and is let go of with the token
+  // (a ghost it lands on is the card again, at rest, by the time it is there)
+  if (s.existing) {
+    _disown(s);
+    if (s.stay) s.existing.classList.remove('fav-ghost', 'fav-ghost-stay');
+    _hint(s);
+  }
   window.addEventListener('scroll', s.onLandScroll = () => {
     // The page moved under it: the place it is going to has moved too
-    const el = phase === 'landing' ? s.placeholder : (s.target ?? s.source);
+    const el = phase === 'landing' ? _landOn(s) : (s.target ?? s.source);
     if (!el?.isConnected) return;
     const c = centreOf(el);
     s.sx.to(c.x, DROP);
@@ -750,7 +952,7 @@ function _settle(s, phase, target, v) {
 // and the swap that follows changes not one pixel.
 function _arrived(s) {
   s.native = true;
-  const el = s.phase === 'landing' ? s.placeholder : (s.target ?? s.source);
+  const el = s.phase === 'landing' ? _landOn(s) : (s.target ?? s.source);
   const r = el.getBoundingClientRect();
   Object.assign(s.token.style, {
     translate: 'none', scale: 'none', rotate: 'none',
@@ -768,13 +970,23 @@ function _arrived(s) {
 // It has landed: the card takes the token's place in this very frame.
 function _land(s) {
   if (_s !== s || s.phase !== 'landing') return;
+  // Back on its own card: nothing has moved
+  if (s.stay) {
+    s.layer.remove();
+    s.source.classList.remove('fav-drop-source');
+    _end(s);
+    _o.onEnd();
+    return;
+  }
   const ph = s.placeholder;
   const keys = s.list.map(el => el.dataset.favKey);
   const index = s.list.indexOf(ph);
   const next = s.list[index + 1] ?? null;
   s.list.forEach(el => el.style.removeProperty('order'));
-  // In the DOM where it is shown, so nothing moves when the orders go
+  // In the DOM where it is shown, so nothing moves when the orders go. The
+  // card it was a ghost of has already left the layout.
   if (ph.nextElementSibling !== next) _o.carousel.insertBefore(ph, next);
+  s.existing?.remove();
   ph.classList.remove('fav-placeholder');
   ph.style.removeProperty('animation');
   // The wiggle takes over from a card at rest, so it starts where the angle is 0
@@ -838,6 +1050,11 @@ function _end(s) {
   _removeWindowListeners();
   _press = null;
   s.base.forEach(el => el.style.removeProperty('order'));
+  if (s.existing) {
+    _disown(s);
+    s.existing.classList.remove('fav-ghost', 'fav-ghost-stay', 'fav-ghost-host');
+  }
+  s.hint?.remove();
   s.growAnims = [];
   _deferSnap(s);
   _o.results.closest('#available-classrooms-container')?.classList.remove('fav-dropping');

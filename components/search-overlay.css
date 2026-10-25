@@ -1105,7 +1105,7 @@ html.search-vt .lg-tabbar__prominent {
   flex-shrink: 0;
   padding: 0.05rem 0.4rem;
   border-radius: var(--radius-pill);
-  background: var(--text-color-accent);
+  background: var(--tag-tint);
   color: #fff;
   font-size: var(--text-60);
   font-weight: 800;

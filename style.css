@@ -179,7 +179,7 @@ select,
      scale, just naming duplication that already existed. */
   --bevel: inset 1px 1px 0 rgba(255, 255, 255, 0.3), inset -1px -1px rgba(255, 255, 255, 0.1);
   --glow-accent: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
-  --glow-info: 0 2px 8px rgba(33, 150, 243, 0.4);
+  --glow-info: 0 2px 8px color-mix(in srgb, var(--color-now) 40%, transparent);
   --shadow-groove: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-dim: 0 1px 2px rgba(0, 0, 0, 0.5);
 
@@ -198,6 +198,55 @@ select,
      --text-color-accent's dark value gives (per the original comments). */
   --color-accent-dark: #28a745;
   --color-accent-dark-hover: #218838;
+
+  /* What the today / now / from-to tags are tinted with: the accent on light,
+     its deeper dark-mode shade (white text reads on it) on dark. The tags are
+     Vitrium tinted glass, so their glow comes from this and follows seasons. */
+  --tag-tint: var(--text-color-accent);
+}
+
+.detail-today-indicator,
+.detail-desktop-today-indicator,
+#today-indicator,
+.dcp-today-badge,
+.detail-schedule-query-indicator {
+  --lg-glass-tint: var(--tag-tint);
+}
+
+.timeline-time-indicator--now {
+  --lg-glass-tint: var(--color-now);
+}
+
+/* The pointer of a tag, as in Vitrium's popover: a rotated square straddling
+   the tag's edge that shares its glass, clipped to the half poking out. Points
+   down by default; the tags beside a vertical bar or a picker turn it. */
+.tag-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background: inherit;
+  -webkit-backdrop-filter: inherit;
+  backdrop-filter: inherit;
+  transform: rotate(45deg);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  pointer-events: none;
+}
+
+.detail-schedule-bar-wrapper .tag-arrow {
+  top: 50%;
+  left: 0;
+  margin: -4px 0 0 -4px;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+
+.detail-desktop-today-indicator .tag-arrow {
+  top: 50%;
+  left: 100%;
+  margin: -4px 0 0 -4px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -224,6 +273,8 @@ select,
     --shadow:
       0 1px 2px rgba(0, 0, 0, 0.3),
       0 4px 12px rgba(0, 0, 0, 0.6);
+
+    --tag-tint: var(--color-accent-dark);
   }
 }
 

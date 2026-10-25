@@ -1885,15 +1885,15 @@ class ClassroomDetail {
         });
 
         const querySideIndicatorsHtml = isQueryDay && queryFromPct !== null ? `
-          <div class="detail-schedule-query-indicator" style="--qpos:${queryFromPct}%">${queryFromDisplay}</div>
-          <div class="detail-schedule-query-indicator" style="--qpos:${queryToPct}%">${queryToDisplay}</div>
+          <div class="detail-schedule-query-indicator lg-glass lg-glass--tinted" style="--qpos:${queryFromPct}%">${queryFromDisplay}<i class="tag-arrow" aria-hidden="true"></i></div>
+          <div class="detail-schedule-query-indicator lg-glass lg-glass--tinted" style="--qpos:${queryToPct}%">${queryToDisplay}<i class="tag-arrow" aria-hidden="true"></i></div>
         ` : '';
 
         return { labelHtml, rowHtml: `
           <div class="detail-schedule-row${isToday ? ' detail-schedule-row--today' : ''}${isQueryDay ? ' detail-schedule-row--query' : ''}">
             <div class="detail-schedule-bar-wrapper">
               <div class="timeline-hover-cursor" hidden></div>
-              ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>` : ''}
+              ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now lg-glass lg-glass--tinted" style="--pos:${nowPct}%">${t('timepicker.now')}<i class="tag-arrow" aria-hidden="true"></i></div>` : ''}
               ${querySideIndicatorsHtml}
               <div class="detail-schedule-bar"${openAttrs}>
                 ${barHtml}
@@ -1914,12 +1914,12 @@ class ClassroomDetail {
       }
 
       const nowTickHtml = nowPct !== null
-        ? `<div class="timeline-time-indicator timeline-time-indicator--now" style="--pos:${nowPct}%">${t('timepicker.now')}</div>`
+        ? `<div class="timeline-time-indicator timeline-time-indicator--now lg-glass lg-glass--tinted" style="--pos:${nowPct}%">${t('timepicker.now')}<i class="tag-arrow" aria-hidden="true"></i></div>`
         : '';
 
       const queryTicksHtml = queryFromPct !== null ? `
-        <div class="detail-schedule-query-indicator" style="--qpos:${queryFromPct}%">${queryFromDisplay}</div>
-        <div class="detail-schedule-query-indicator" style="--qpos:${queryToPct}%">${queryToDisplay}</div>
+        <div class="detail-schedule-query-indicator lg-glass lg-glass--tinted" style="--qpos:${queryFromPct}%">${queryFromDisplay}<i class="tag-arrow" aria-hidden="true"></i></div>
+        <div class="detail-schedule-query-indicator lg-glass lg-glass--tinted" style="--qpos:${queryToPct}%">${queryToDisplay}<i class="tag-arrow" aria-hidden="true"></i></div>
       ` : '';
 
       const ticksHtml = (() => {
@@ -1958,7 +1958,7 @@ class ClassroomDetail {
 
       container.innerHTML = `
         <div class="detail-schedule-day-selector">
-          <div class="detail-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
+          <div class="detail-today-indicator lg-glass lg-glass--tinted hidden" aria-hidden="true">${t('datepicker.today')}<i class="tag-arrow" aria-hidden="true"></i></div>
           <div class="date-picker-container detail-schedule-picker lg-ring">
             ${selectorItemsHtml}
           </div>
@@ -1967,7 +1967,7 @@ class ClassroomDetail {
         <div class="detail-schedule-inner">
           <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}${queryTicksHtml}</div>
           <div class="detail-schedule-grid">
-            <div class="detail-desktop-today-indicator hidden" aria-hidden="true">${t('datepicker.today')}</div>
+            <div class="detail-desktop-today-indicator lg-glass lg-glass--tinted hidden" aria-hidden="true">${t('datepicker.today')}<i class="tag-arrow" aria-hidden="true"></i></div>
           <div class="detail-schedule-labels-pill lg-ring liquid-glass">${labelsHtml}</div>
             <div class="detail-schedule-bars">
               <div class="detail-schedule-grid-lines">${gridLinesHtml}</div>

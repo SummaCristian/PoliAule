@@ -53,8 +53,8 @@ import { escapeHtml } from './html.js';
 import { graduationOn, graduationCampus, milanDay, initGraduations } from './graduation.js';
 
 export const SEASONAL_KEY = 'poliAule_seasonal';
-// A season picked from the search, outside its dates. Ignored once another
-// season's dates come round, so it can't hide that one.
+// A season picked from the search. It wins over today's; turning it off
+// falls back to today's season, if any.
 const OVERRIDE_KEY = 'poliAule_seasonOverride';
 
 export const SEASONS = {
@@ -128,7 +128,7 @@ function currentSeason() {
   if (!seasonalEnabled()) return null;
   const byDate = window.__seasonByDate ?? null;
   const picked = read(OVERRIDE_KEY);
-  if (picked && SEASONS[picked] && (!byDate || byDate === picked)) return picked;
+  if (picked && SEASONS[picked]) return picked;
   return byDate;
 }
 

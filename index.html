@@ -391,12 +391,12 @@
     }
     try {
       window.__seasonByDate = seasonFor(new Date());
-      // A season picked from the search wins, unless another one's dates
-      // have come round (same rule as currentSeason() in season.js)
+      // A season picked from the search wins (same rule as currentSeason()
+      // in season.js)
       var picked = localStorage.getItem('poliAule_seasonOverride');
       var known = false;
       for (var k = 0; k < SEASONS.length; k++) if (SEASONS[k][0] === picked) known = true;
-      var season = known && (!window.__seasonByDate || window.__seasonByDate === picked) ? picked : window.__seasonByDate;
+      var season = known ? picked : window.__seasonByDate;
       if (season && localStorage.getItem('poliAule_seasonal') !== 'false') {
         document.documentElement.dataset.season = season;
       }

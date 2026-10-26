@@ -103,9 +103,11 @@ export const SEASONS = {
     hero: '/favicons/christmas/hero-512.webp',
     tint: '#d6303a',
     keywords: ['christmas', 'xmas', 'natale', 'merry christmas', 'buon natale', 'babbo natale', 'santa', 'santa claus'],
-    // Christmas Day, New Year and the Befana (Epiphany) get their own message
+    // Sant'Ambrogio (Milan's patron saint, Dec 7), Christmas Day, New Year and
+    // the Befana (Epiphany) get their own message
     banner() {
       const [, m, d] = milanDay().split('-').map(Number);
+      if (m === 12 && d === 7) return { key: 'season.christmas.ambrogio', icon: 'hgi-church' };
       if (m === 12 && d >= 24 && d <= 26) return { key: 'season.christmas.day', icon: 'hgi-gift' };
       if ((m === 12 && d === 31) || (m === 1 && d === 1)) return { key: 'season.christmas.newYear', icon: 'hgi-fireworks' };
       if (m === 1 && d === 6) return { key: 'season.christmas.befana', icon: 'hgi-sparkles' };

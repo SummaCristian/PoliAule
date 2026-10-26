@@ -1127,6 +1127,12 @@ body.detail-open .tab-content {
 /* Without scroll-driven animations: the title snaps into its pill once the
    row sticks (.title-stuck, from classroom-detail.js), as before. */
 @supports not (animation-timeline: scroll()) {
+  /* The ring layer only follows the scroll-driven pill. Here nothing sizes or
+     hides it, so Vitrium's inset would ring the whole full-width row. */
+  .detail-title-row > .detail-title-ring {
+    display: none;
+  }
+
   /* Stuck, the title is narrower (it slides past the back button) and can wrap
      onto more lines; the row keeps its unstuck height (--title-row-h, measured
      in syncTitleStuck) and lets the pill overflow it, so the content below

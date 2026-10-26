@@ -1,8 +1,9 @@
 // Blossom petals for the Easter season (components/easter.js): a few dozen
 // drifting down over the whole app, tumbling as they go.
 //
-// Like the snow (components/snowfall.js) it is one canvas over everything
-// (in front of the glass, so no blur ever has to sample it) and one
+// Like the snow (components/snowfall.js) it is one canvas over the page (in
+// front of its glass, so no blur there ever has to sample it), under the
+// header (--fx-z-fall in style.css) and one
 // requestAnimationFrame loop. A petal is a small teardrop drawn through a
 // transform: it turns, and it flips about its own long axis (its width goes
 // through zero and back), which is what makes it read as a petal and not a

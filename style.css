@@ -114,6 +114,21 @@ select,
   -webkit-user-select: none;
 }
 
+/* The seasonal effects (snow, petals, confetti, sleighs, bats, doves, digits,
+   streamers...) all sit in this one band, UNDER the header (z-index 1000), the
+   detail page's title row and back button (1001, 1002) and every popup and
+   picker (1100+). On iOS Safari a full-screen layer above the header makes its
+   progressive blur go missing on the classroom page, however the layer is built
+   (see utils/header-blur.js), so a new effect layer takes one of these and
+   never a number of its own, and never one above 999. Within the band: what
+   falls, then what flies, then the bursts on top. Still over the page's
+   content and the tab bar. The app's own star burst (999) stays above them. */
+:root {
+  --fx-z-fall: 990;
+  --fx-z-fly: 992;
+  --fx-z-burst: 994;
+}
+
 :root {
   --background-color: #F2F2F2;
   --background-color-secondary: #FFFFFF;
@@ -2090,7 +2105,7 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
 .hw-sky {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1001;
+  z-index: var(--fx-z-fly);
   overflow: hidden;
   pointer-events: none;
 }
@@ -2121,7 +2136,7 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
 .hw-candy {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1002;
+  z-index: var(--fx-z-burst);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;
@@ -2184,13 +2199,13 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
   }
 }
 
-/* The falling snow: one canvas over everything. It stops short of the
-   bottom safe area (iOS Safari turns its bottom bar solid when a fixed
+/* The falling snow: one canvas over the page, under the header (see
+   --fx-z-fall at the top). It stops short of the bottom safe area (iOS Safari turns its bottom bar solid when a fixed
    element reaches down there); the flakes fade out above that. */
 .xm-snow {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1400;
+  z-index: var(--fx-z-fall);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;
@@ -2522,12 +2537,12 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
 
 body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 
-/* Santa's sleigh (or the Befana) flies in a layer over the app, above the
-   snow, leaving a trail of sparkles */
+/* Santa's sleigh (or the Befana) flies in a layer over the page, above the
+   snow and under the header, leaving a trail of sparkles */
 .xm-sky {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1401;
+  z-index: var(--fx-z-fly);
   overflow: hidden;
   pointer-events: none;
 }
@@ -2595,7 +2610,7 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 .xm-fx {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1402;
+  z-index: var(--fx-z-burst);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;
@@ -2646,13 +2661,13 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 /* Easter decorations. None of it takes taps except the eggs and the olive
    branch. */
 
-/* The drifting petals: one canvas over everything, below the snow's layer
-   height and stopping short of the bottom safe area for the same reason (see
-   .xm-snow). Held, it fades out while the Campus map shows. */
+/* The drifting petals: one canvas over the page, under the header (the same
+   band as the snow's) and stopping short of the bottom safe area for the same
+   reason (see .xm-snow). Held, it fades out while the Campus map shows. */
 .ea-petals {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1400;
+  z-index: var(--fx-z-fall);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;
@@ -2912,11 +2927,12 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 
 body:is(.detail-open, .settings-open) .ea-olive { display: none; }
 
-/* The doves fly in a layer over the app, above the petals */
+/* The doves fly in a layer over the page, above the petals and under the
+   header */
 .ea-sky {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1401;
+  z-index: var(--fx-z-fly);
   overflow: hidden;
   pointer-events: none;
 }
@@ -2956,7 +2972,7 @@ body:is(.detail-open, .settings-open) .ea-olive { display: none; }
 .ea-fx {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1002;
+  z-index: var(--fx-z-burst);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;
@@ -3081,7 +3097,7 @@ body:is(.detail-open, .settings-open) .ea-olive { display: none; }
 .pi-sky {
   position: fixed;
   inset: 0 env(safe-area-inset-right, 0px) calc(env(safe-area-inset-bottom, 0px) + 16px) env(safe-area-inset-left, 0px);
-  z-index: 1001;
+  z-index: var(--fx-z-fly);
   overflow: hidden;
   pointer-events: none;
 }
@@ -3100,7 +3116,7 @@ body:is(.detail-open, .settings-open) .ea-olive { display: none; }
 .pi-fx {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1002;
+  z-index: var(--fx-z-burst);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;
@@ -3146,12 +3162,13 @@ body:is(.detail-open, .settings-open) .ea-olive { display: none; }
 .gr-ribbon { fill: #c8202e; stroke: rgba(80, 10, 15, 0.35); stroke-width: 0.4px; }
 .gr-ribbon-knot { fill: #a3141f; }
 
-/* The confetti: one canvas over everything, just under the snow's, stopping
-   short of the bottom safe area for the same reason (see .xm-snow) */
+/* The confetti: one canvas over the page, in the bursts' place of the band
+   under the header, stopping short of the bottom safe area for the same
+   reason (see .xm-snow) */
 .gr-fx {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1399;
+  z-index: var(--fx-z-burst);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;

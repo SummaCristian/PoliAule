@@ -470,7 +470,7 @@ async function boot() {
 
   const navControl = new mapboxgl.NavigationControl({ showZoom: false, showCompass: true });
   map.addControl(navControl, 'top-right');
-  navControl._container.querySelectorAll('button').forEach(button => button.classList.add('lg-ring'));
+  navControl._container.querySelectorAll('button').forEach(button => button.classList.add(...'lg-button lg-glass lg-glass--circle'.split(' ')));
   const geolocateControl = new mapboxgl.GeolocateControl({
     positionOptions: { enableHighAccuracy: true },
     trackUserLocation: true,
@@ -531,7 +531,7 @@ async function boot() {
   new MutationObserver((_records, observer) => {
     const button = geolocateControl._container.querySelector('button');
     if (!button) return;
-    button.classList.add('lg-ring', 'liquid-glass');
+    button.classList.add(...'lg-button lg-glass lg-glass--circle'.split(' '), 'liquid-glass');
     button.querySelector('.mapboxgl-ctrl-icon')
       .innerHTML = '<i class="hgi-stroke hgi-gps-01" aria-hidden="true"></i>';
     observer.disconnect();
@@ -545,7 +545,7 @@ async function boot() {
   new MutationObserver((_records, observer) => {
     const button = map.getContainer().querySelector('.mapboxgl-ctrl-attrib-button');
     if (!button) return;
-    button.classList.add('lg-ring', 'liquid-glass');
+    button.classList.add(...'lg-button lg-glass lg-glass--circle'.split(' '), 'liquid-glass');
     button.closest('.mapboxgl-ctrl-attrib')?.classList.add('lg-ring');
     button.querySelector('.mapboxgl-ctrl-icon')
       .innerHTML = '<i class="hgi-stroke hgi-information-circle" aria-hidden="true"></i>';

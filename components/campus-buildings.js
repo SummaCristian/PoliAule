@@ -95,7 +95,7 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
 
   backBtn = document.createElement('button');
   backBtn.type = 'button';
-  backBtn.className = 'campus-sheet-backbtn lg-ring liquid-glass';
+  backBtn.className = 'campus-sheet-backbtn lg-button lg-glass lg-glass--circle liquid-glass';
   backBtn.hidden = true;
   backBtn.setAttribute('aria-label', t('campus.back'));
   backBtn.innerHTML = '<i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>';
@@ -128,7 +128,7 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
   // rest of the time.
   recenterBtn = document.createElement('button');
   recenterBtn.type = 'button';
-  recenterBtn.className = 'campus-sheet-recenter lg-ring liquid-glass';
+  recenterBtn.className = 'campus-sheet-recenter lg-button lg-glass lg-glass--circle liquid-glass';
   recenterBtn.hidden = true;
   recenterBtn.setAttribute('aria-label', t('campus.recenter'));
   recenterBtn.innerHTML = '<i class="hgi-stroke hgi-gps-01" aria-hidden="true"></i>';
@@ -139,7 +139,7 @@ export function initCampusBuildingsPage(headerContainer, gridContainer) {
 
   // Stars the whole building (utils/favourites.js). Kept to the right of the
   // recenter button so that one popping in doesn't shift it.
-  starBtn = createBuildingStarButton('', '', 'campus-sheet-star');
+  starBtn = createBuildingStarButton('', '', 'campus-sheet-star lg-button lg-glass lg-glass--circle');
   starBtn.hidden = true;
   actions.appendChild(starBtn);
 

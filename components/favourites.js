@@ -738,7 +738,7 @@ function _addEditChrome(el) {
   // small to hit reliably.
   badge.className = 'fav-remove';
   badge.setAttribute('aria-label', t('favourites.removeItem').replace('{name}', _nameOf(el.dataset.favKey)));
-  badge.innerHTML = '<span class="fav-remove-glass header-button lg-ring liquid-glass" aria-hidden="true"><i class="hgi-stroke hgi-minus-sign"></i></span>';
+  badge.innerHTML = '<span class="fav-remove-glass header-button lg-button lg-glass lg-glass--circle liquid-glass" aria-hidden="true"><i class="hgi-stroke hgi-minus-sign"></i></span>';
   badge.addEventListener('click', (e) => {
     // Not the card's own click: it would open it.
     e.stopPropagation();

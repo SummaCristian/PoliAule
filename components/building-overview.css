@@ -221,45 +221,10 @@
     0 4px 40px 0 var(--lg-shadow-color);
 }
 
-/* Same glass pill as .header-button (press / hover come from `.liquid-glass`). */
+/* Vitrium's glass button, a size down. */
 .bo-close {
-  position: relative;
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  border: none;
-  border-color: transparent;
-  border-radius: var(--radius-pill);
-  color: var(--text-color-secondary);
-
-  background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
-  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
-}
-
-/* Outside 0.5px gradient stroke — radial-gradient mask, same as
-   .header-button::after in style.css (a true circle has a seam with the
-   box-corner mask trick). */
-.bo-close::after {
-  content: "";
-  position: absolute;
-  inset: -0.5px;
-  border-radius: inherit;
-
-  background: var(--lg-stroke-gradient);
-  opacity: var(--lg-stroke-opacity);
-
-  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
-  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
-
-  pointer-events: none;
 }
 
 .bo-close .hgi-stroke {

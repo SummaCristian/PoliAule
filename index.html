@@ -622,14 +622,14 @@
         <!-- Favourite toggle (only shown on the classroom detail page).
              Content is swapped between the hgi-star outline and a filled star
              by classroomDetail._syncFavBtn(). -->
-        <button id="favourite-btn" class="header-button lg-ring liquid-glass" hidden data-i18n-attr="aria-label:favourite.add" aria-label="Add to favourites">
+        <button id="favourite-btn" class="header-button lg-button lg-glass lg-glass--circle liquid-glass" hidden data-i18n-attr="aria-label:favourite.add" aria-label="Add to favourites">
           <i class="hgi-stroke hgi-star" aria-hidden="true"></i>
         </button>
 
         <!-- Data Fetch Indicator — a freshness dot, a spinner while fetching, or an
              offline mark (data-glyph); the button morphs into a glass card with the
              status + reload button (see components/data-fetch-card.js). -->
-        <button id="data-fetch-btn" class="header-button lg-ring liquid-glass" aria-label="Data status">
+        <button id="data-fetch-btn" class="header-button lg-button lg-glass lg-glass--circle liquid-glass" aria-label="Data status">
           <span id="data-fetch-indicator" class="data-status-glyph" data-glyph="spinner" aria-hidden="true">
             <span class="pulse-indicator"></span>
             <span class="ds-spinner"></span>
@@ -639,7 +639,7 @@
         </button>
 
         <!-- Settings button -->
-        <button id="settings-btn" class="header-button lg-ring liquid-glass" data-i18n-attr="aria-label:settings.title" aria-label="Settings">
+        <button id="settings-btn" class="header-button lg-button lg-glass lg-glass--circle liquid-glass" data-i18n-attr="aria-label:settings.title" aria-label="Settings">
           <i class="hgi-stroke hgi-settings-01" aria-hidden="true"></i>
         </button>
 
@@ -658,7 +658,7 @@
 
   </header>
 
-  <button id="detail-back-btn" class="detail-back-btn lg-ring lg-elevation-high liquid-glass" hidden data-i18n-attr="aria-label:campus.back" aria-label="Back">
+  <button id="detail-back-btn" class="detail-back-btn lg-button lg-glass lg-glass--circle lg-elevation-high liquid-glass" hidden data-i18n-attr="aria-label:campus.back" aria-label="Back">
     <i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>
   </button>
 
@@ -678,14 +678,14 @@
             <div id="favourites-actions-main" class="favourites-actions-group">
               <!-- Edit mode (components/favourites.js): reorder, remove, undo.
                    Shown at every width, while there is a favourite. -->
-              <button id="favourites-edit-btn" class="header-button favourites-action-btn lg-ring liquid-glass" type="button"
+              <button id="favourites-edit-btn" class="header-button favourites-action-btn lg-button lg-glass lg-glass--circle liquid-glass" type="button"
                 data-i18n-attr="aria-label:favourites.edit" aria-label="Edit favourites" hidden>
                 <i class="hgi-stroke hgi-pencil-edit-02" aria-hidden="true"></i>
               </button>
               <!-- Desktop only (>= 1100px), and only while the carousel overflows:
                    lets the favourites fill the whole left column as a grid, with
                    the pickers moving over the results (see components/favourites.js). -->
-              <button id="favourites-expand-btn" class="header-button favourites-action-btn favourites-expand-btn lg-ring liquid-glass" type="button"
+              <button id="favourites-expand-btn" class="header-button favourites-action-btn favourites-expand-btn lg-button lg-glass lg-glass--circle liquid-glass" type="button"
                 aria-controls="favourites-carousel" aria-expanded="false"
                 data-i18n-attr="aria-label:favourites.showAll" aria-label="Show all favourites" hidden>
                 <i class="hgi-stroke hgi-arrow-expand-01" aria-hidden="true"></i>
@@ -693,19 +693,19 @@
             </div>
             <!-- Takes the place of the group above while editing. -->
             <div id="favourites-actions-edit" class="favourites-actions-group favourites-actions-edit" hidden>
-              <button id="favourites-undo-btn" class="header-button favourites-action-btn lg-ring liquid-glass" type="button"
+              <button id="favourites-undo-btn" class="header-button favourites-action-btn lg-button lg-glass lg-glass--circle liquid-glass" type="button"
                 data-i18n-attr="aria-label:favourites.undo" aria-label="Undo" aria-disabled="true">
                 <i class="hgi-stroke hgi-undo-02" aria-hidden="true"></i>
               </button>
-              <button id="favourites-redo-btn" class="header-button favourites-action-btn lg-ring liquid-glass" type="button"
+              <button id="favourites-redo-btn" class="header-button favourites-action-btn lg-button lg-glass lg-glass--circle liquid-glass" type="button"
                 data-i18n-attr="aria-label:favourites.redo" aria-label="Redo" aria-disabled="true">
                 <i class="hgi-stroke hgi-redo-02" aria-hidden="true"></i>
               </button>
-              <button id="favourites-cancel-btn" class="header-button favourites-action-btn lg-ring liquid-glass" type="button"
+              <button id="favourites-cancel-btn" class="header-button favourites-action-btn lg-button lg-glass lg-glass--circle liquid-glass" type="button"
                 data-i18n-attr="aria-label:favourites.cancel" aria-label="Discard changes">
                 <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
               </button>
-              <button id="favourites-done-btn" class="header-button favourites-action-btn favourites-done-btn lg-ring liquid-glass lg-glass--tinted" type="button"
+              <button id="favourites-done-btn" class="header-button favourites-action-btn favourites-done-btn lg-button lg-glass lg-glass--circle liquid-glass lg-glass--tinted" type="button"
                 data-i18n-attr="aria-label:favourites.done" aria-label="Done">
                 <i class="hgi-stroke hgi-tick-02" aria-hidden="true"></i>
               </button>

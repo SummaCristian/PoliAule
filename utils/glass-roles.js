@@ -18,7 +18,7 @@ defineGlassRole('panel', {
     curated: 'frost',
   },
   selector: [
-    '.header-button', '.detail-back-btn', '.detail-status-wrapper', '.detail-stat', '.detail-title',
+    '.detail-back-btn', '.detail-status-wrapper', '.detail-stat', '.detail-title',
     '.detail-section', '.detail-feature-chip', '.detail-events-only', '.detail-schedule-labels-pill',
     '.bo-title', '.bo-close', '.bo-card-frost', '.building-section-titles', '.campus-sheet-star',
     '.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show', '.campus-map .mapboxgl-ctrl-attrib-button',

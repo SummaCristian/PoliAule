@@ -243,15 +243,11 @@
   }
 }
 
-/* Accent-tinted glass (Vitrium's .lg-glass--tinted, whose rules .header-button
-   outranks by coming later): the accent follows the season and the
-   graduation theme like the toggles do. */
+/* Accent-tinted glass (Vitrium's .lg-glass--tinted): the accent follows the
+   season and the graduation theme like the toggles do. */
 .favourites-done-btn {
   --lg-glass-tint: var(--lg-accent);
   --lg-glass-tint-text: #fff;
-  background:
-    linear-gradient(color-mix(in srgb, var(--lg-glass-tint) var(--lg-tint-strength), transparent) 0 0),
-    var(--lg-tint-clear);
   color: var(--lg-glass-tint-text);
 }
 

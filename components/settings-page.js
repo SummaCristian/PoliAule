@@ -14,6 +14,7 @@
 //
 // The controls themselves are built once by components/settings.js and live
 // in the page for good: opening and closing only shows and hides it.
+import { decorateLive } from '../utils/season.js';
 import { t, onLanguageSwitch, animateI18nElement } from '../i18n.js';
 import { IS_PROD } from '../utils/env.js';
 import { infoPage } from './info-page.js';
@@ -68,6 +69,8 @@ class SettingsPage {
         </header>
       </div>`;
     this._overlay.querySelector('.st-page').appendChild(content);
+    // Seasonal decorations (utils/season.js): built once, so handed over live
+    decorateLive('settings', this._overlay.querySelector('.st-page'));
 
     this._gearBtn?.addEventListener('click', () => this.open());
 

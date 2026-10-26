@@ -25,6 +25,10 @@
 //   'map'        the Campus map, once its style has loaded (components/campus-map.js);
 //                kept, so a season started later still gets it
 //   'info'       the Info page, each time it renders (components/info-page.js)
+//   'settings'   the Settings page's content, once (components/settings-page.js);
+//                kept, as it is built before a season may start
+//   'changelog'  the changelog's content, each time it renders, the list or a
+//                version's page (components/changelog-page.js)
 //   'notFound'   the in-app not-found page, each time it renders, generic or
 //                classroom (components/not-found-page.js; not the static 404.html);
 //                kept, as it can draw before the season's module has loaded

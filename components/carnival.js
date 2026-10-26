@@ -10,6 +10,9 @@
 //     its page's photo, over its building on the map, in its building's
 //     folder and next to its name in the search
 //   - a mask hanging from the data status button
+//   - streamers from about two in three of every other glass box too: the
+//     classroom page's sections, Settings, Info, the changelog, the not-found
+//     page, the search's results box, the Campus sheet and the building headers
 // With reduced motion nothing falls or sways: the streamers hang still.
 
 import { setDecorator, graduationShown } from '../utils/season.js';
@@ -151,6 +154,7 @@ function decor(className, html) {
 // A streamer hanging from the top edge of `host` (or from its bottom edge, for
 // what has text near its top), `left` px or % along it
 function hang(host, seed, { left, len = 30 + (seed >>> 9) % 26, className = '', below = false } = {}) {
+  if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
   const el = decor(`cv-streamer ${className}`, streamerSvg(len, seed));
   el.style.left = left ?? `${12 + (seed >>> 4) % 66}%`;
   if (below) el.style.top = '100%';
@@ -158,6 +162,27 @@ function hang(host, seed, { left, len = 30 + (seed >>> 9) % 26, className = '', 
   host.appendChild(el);
   return el;
 }
+
+// Streamers on the glass boxes of a secondary page: about two in three (a
+// different two in three each day), the first always, hung from the right
+// half of the top edge and short, so they clear the headings on the left. A
+// box that has one already isn't given another when it's shown again.
+function decorateBoxes(root, selector, salt, { max = 36 } = {}) {
+  const h = hash(`${salt}:${dayKey()}`);
+  root.querySelectorAll(selector).forEach((box, i) => {
+    if (i && (h >>> (i % 16)) % 3 === 0) return;
+    if (box.querySelector(':scope > .cv-decor')) return;
+    const short = box.offsetHeight && box.offsetHeight < 90;
+    hang(box, h + i * 7, { left: `${62 + ((h >>> (i % 12)) % 30)}%`, len: Math.min(max, short ? 18 : 24 + ((h >>> (i % 9)) % 12)) });
+  });
+}
+
+// Settings' rows reach the box's right edge (their switches and pickers), so
+// its streamers are short, no longer than the padding above the first row
+const decorateSettings = (page) => decorateBoxes(page, '.settings-group', 'settings', { max: 15 });
+const decorateChangelog = (content) => decorateBoxes(content, '.cl-entry--stable, .cl-toggle-row, .cl-card', 'changelog', { max: 18 });
+const decorateInfo = (page) => decorateBoxes(page, '.info-section', 'info');
+const decorateNotFound = (page) => decorateBoxes(page, '.nf-room-card, .nfc-did, .nfc-front', 'notfound');
 
 // ── Classroom cards ───────────────────────────────────────────────────────
 // The masked room's card wears its mask; a third of the others have a
@@ -192,8 +217,11 @@ function decorateDetail(page, { classroom }) {
   const h = hash(`detail:${classroom.id}`);
   const sections = [...page.querySelectorAll('.detail-section:not(.detail-map-section)')]
     .filter((section) => !section.querySelector('.detail-section-header'));
-  const target = sections[h % Math.max(1, sections.length)];
-  if (target && !target.querySelector(':scope > .cv-decor')) hang(target, h, { left: `${70 + h % 22}%` });
+  // The first section always, each of the others about half the time
+  sections.forEach((section, i) => {
+    if (i && !((h >>> i) & 1)) return;
+    if (!section.querySelector(':scope > .cv-decor')) hang(section, h + i, { left: `${70 + (h >>> i) % 22}%`, len: 22 + (h >>> (i + 3)) % 10 });
+  });
   const photo = page.querySelector('.detail-photo-container');
   if (photo && masked().ids.has(classroom.id) && !photo.querySelector('.cv-mask')) {
     photo.appendChild(decor('cv-mask cv-mask--photo', maskSvg(hash(`mask:${dayKey()}:${classroom.id}`))));
@@ -205,6 +233,53 @@ function decorateDetail(page, { classroom }) {
 function decorateBanner(banner) {
   if (banner.querySelector(':scope > .cv-decor')) return;
   [[7, 11], [31, 5], [58, 8], [88, 2]].forEach(([left, k], i) => hang(banner, hash(`banner:${dayKey()}:${i}`) + k, { left: `${left}%`, len: 24 + (i * 7) % 16, below: true }));
+}
+
+// ── Building headers (Available results) ─────────────────────────────────
+// A short streamer from the jump button of a third of them
+
+function decorateBuildingHeader(header, { building }) {
+  const h = hash(`header:${building.name}`);
+  const jump = header.querySelector('.building-section-jump');
+  if (h % 3 || !jump || jump.querySelector(':scope > .cv-decor')) return;
+  hang(jump, h, { left: '50%', len: 16 + (h >>> 7) % 8, className: 'cv-streamer--chip', below: true });
+}
+
+// ── The search's results box ──────────────────────────────────────────────
+
+function decorateSearchPanel() {
+  const frame = document.querySelector('.search-results-frame');
+  if (!frame || frame.querySelector(':scope > .cv-decor')) return;
+  const h = hash(`searchpanel:${dayKey()}`);
+  hang(frame, h, { left: `${60 + h % 30}%`, len: 26 + (h >>> 5) % 12 });
+}
+
+// ── The Campus sheet ──────────────────────────────────────────────────────
+// A streamer from its top edge, put on once the Campus tab has finished
+// fading in (decorations in the sheet while it fades turned iOS Safari's
+// bottom safe area solid), and back whenever the sheet is rebuilt, as it is
+// when the layout flips between phone and desktop.
+
+const MAP_TAB = 'search-classrooms-container';
+const mapShowing = () => !!document.getElementById(MAP_TAB)?.classList.contains('visible') && !document.hidden;
+let sheetReady = false;
+let sheetOn = false;
+
+function decorateSheet() {
+  const glass = document.querySelector('.campus-sheet .lg-sheet__glass');
+  if (!sheetOn || !sheetReady || !glass || !mapShowing() || glass.querySelector(':scope > .cv-decor')) return;
+  const h = hash(`sheet:${dayKey()}`);
+  hang(glass, h, { left: `${64 + h % 24}%`, len: 26 });
+}
+
+function sheetAfterFadeIn() {
+  const tab = document.getElementById(MAP_TAB);
+  if (!tab || !mapShowing()) return;
+  Promise.all(tab.getAnimations().map((a) => a.finished)).then(() => {
+    if (!sheetOn || !mapShowing()) return;
+    sheetReady = true;
+    decorateSheet();
+  }, () => { /* left mid-fade: the next tabvisible tries again */ });
 }
 
 // ── Search ────────────────────────────────────────────────────────────────
@@ -334,7 +409,24 @@ export function start() {
   setDecorator('detail', decorateDetail);
   setDecorator('searchRow', decorateSearchRow);
   setDecorator('banner', decorateBanner);
+  setDecorator('buildingHeader', decorateBuildingHeader);
+  setDecorator('info', decorateInfo);
+  setDecorator('notFound', decorateNotFound);
+  setDecorator('settings', decorateSettings);
+  setDecorator('changelog', decorateChangelog);
   decorateBuilt();
+  document.querySelectorAll('.building-section-header').forEach((header) => {
+    const section = header.closest('.building-section');
+    if (section) decorateBuildingHeader(header, { building: { name: section.dataset.buildingName } });
+  });
+  // The changelog is built when it's opened, so it may be there already
+  const changelog = document.querySelector('#changelog-overlay .cl-content');
+  if (changelog) decorateChangelog(changelog);
+  decorateSearchPanel();
+  sheetOn = true;
+  sheetAfterFadeIn();
+  document.addEventListener('tabvisible', sheetAfterFadeIn, { signal });
+  document.addEventListener('campussheetresize', decorateSheet, { signal });
   startDangler();
   // The chips may still be upgrading
   Promise.all(CHIP_HOSTS.map((tag) => customElements.whenDefined(tag))).then(() => {
@@ -350,6 +442,8 @@ export function start() {
 
 export function stop() {
   listeners.abort();
+  sheetOn = false;
+  sheetReady = false;
   stopCoriandoli();
   clearTimeout(chipsTimer);
   danglerResize?.disconnect();

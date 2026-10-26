@@ -386,6 +386,29 @@ function decorateInfo(page) {
   });
 }
 
+// ── Settings and the changelog ────────────────────────────────────────────
+// The same webs on their glass boxes: the settings' groups, the changelog's
+// stable releases, its beta toggle and a version's highlights. About two in
+// three get one (a different two in three each day), a small one where the
+// box is short, and the first box of a page always does. Their rows and
+// buttons keep working: nothing here takes taps.
+
+function decorateBoxes(root, selector, salt) {
+  const h = hash(`${salt}:${dayKey()}`);
+  root.querySelectorAll(selector).forEach((box, i) => {
+    if (i && (h >>> (i % 16)) % 3 === 0) return;
+    whenSized(box, () => {
+      if (box.querySelector(':scope > .hw-decor')) return;
+      const small = box.offsetHeight < 90;
+      // The right corner on the changelog, whose headings sit on the left
+      addWeb(box, { size: small ? 26 : 40 + ((h >>> (i % 12)) % 12), radius: radiusOf(box), seed: h + i, right: salt === 'changelog', boxHeight: box.offsetHeight });
+    });
+  });
+}
+
+const decorateSettings = (page) => decorateBoxes(page, '.settings-group', 'settings');
+const decorateChangelog = (content) => decorateBoxes(content, '.cl-entry--stable, .cl-toggle-row, .cl-card', 'changelog');
+
 // ── Not found ─────────────────────────────────────────────────────────────
 // Aula 404's door frame has a web in its corner with a spider coming down
 // from it in front of the door, the ghost card a web in its free corner, and
@@ -960,6 +983,8 @@ export function start() {
   setDecorator('banner', decorateBanner);
   setDecorator('buildingHeader', decorateBuildingHeader);
   setDecorator('info', decorateInfo);
+  setDecorator('settings', decorateSettings);
+  setDecorator('changelog', decorateChangelog);
   setDecorator('notFound', decorateNotFound);
   mapActive = true;
   setDecorator('map', decorateMap);
@@ -975,6 +1000,9 @@ export function start() {
   document.querySelectorAll('.bo-card[data-building-name]').forEach((folder) => {
     decorateFolder(folder, { campusId: folder.dataset.campusId, building: { name: folder.dataset.buildingName } });
   });
+  // The changelog is built when it's opened, so it may be there already
+  const changelog = document.querySelector('#changelog-overlay .cl-content');
+  if (changelog) decorateChangelog(changelog);
   decorateSearchButton();
   decorateSearchPanel();
   decorateSheet();

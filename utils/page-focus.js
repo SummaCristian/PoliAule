@@ -32,7 +32,14 @@ function restoreFrom(overlay) {
 
 // The tab's title names the page on top (and so what a screen reader says
 // when the page changes); the innermost open page wins
-const BASE_TITLE = document.title;
+let BASE_TITLE = document.title;
+
+// A season can rename the app in the tab (Pi Day's πoliAule)
+export function setBaseTitle(title) {
+  BASE_TITLE = title;
+  updateTitle();
+}
+
 function updateTitle() {
   const open = id => { const el = document.getElementById(id); return el && !el.hidden ? el : null; };
   let name = null;

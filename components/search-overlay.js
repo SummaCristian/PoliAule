@@ -597,6 +597,31 @@ function buildSeasonRow(item, ctx) {
   return row;
 }
 
+// Pi Day (utils/pi.js): the query is a run of π's digits, and this says how
+// far it got. Nothing to open, so not an actionable row.
+function buildPiRow(item, ctx) {
+  const { right, wrong, beyond } = item.pi;
+  const row = document.createElement('div');
+  row.className = 'search-row search-row--pi' + (ctx.large ? ' search-row--tophit' : '');
+  row.setAttribute('role', 'status');
+  row.appendChild(buildIconTile('hgi-pi', ctx.large, false));
+  // Past the digits we know, every one of them right: that's all we can check
+  const title = t('season.piday.digitsRight').replace('{n}', beyond ? `${right}+` : right);
+  const subtitle = beyond
+    ? t('season.piday.digitsBeyond')
+    : wrong
+      ? t('season.piday.digitsWrong').replace('{got}', wrong.got).replace('{expected}', wrong.expected)
+      : t('season.piday.digitsPerfect');
+  const body = document.createElement('div');
+  body.className = 'search-row-body';
+  body.innerHTML = `
+    <div class="search-row-title"><span class="search-row-title-text">${escapeHtml(title)}</span></div>
+    <div class="search-row-subtitle">${escapeHtml(subtitle)}</div>
+  `;
+  row.appendChild(body);
+  return row;
+}
+
 const TOP_HIT_BUILD = {
   classroom: buildClassroomRow,
   building: buildBuildingRow,
@@ -604,6 +629,7 @@ const TOP_HIT_BUILD = {
   exam: buildExamRow,
   lesson: buildLessonRow,
   season: buildSeasonRow,
+  pi: buildPiRow,
 };
 
 /* ── Professor view ──────────────────────────────────────────────────────
@@ -945,6 +971,7 @@ function animKeyFor(type, item) {
     case 'building': return `b:${item.campusId}:${item.name}`;
     case 'professor': return `p:${item.key}`;
     case 'season': return `s:${item.season}`;
+    case 'pi': return 'pi';
     default: return `${type}:${itemKey(item)}`;
   }
 }

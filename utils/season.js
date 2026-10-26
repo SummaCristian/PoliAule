@@ -105,6 +105,13 @@ export const SEASONS = {
       return null;
     },
   },
+  // A day of its own (Mar 14), with a module for the little things it does
+  piday: {
+    load: () => import('../components/pi-day.js'),
+    icon: 'hgi-pi',
+    tint: '#4f6df5',
+    keywords: ['pi', 'π', 'pi greco', 'pigreco', 'pi day', 'pi greco day'],
+  },
 };
 
 export const GRADUATION = {

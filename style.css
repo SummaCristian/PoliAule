@@ -2672,6 +2672,143 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
   .xm-ribbon-bow { transition: none; }
 }
 
+/* Pi Day (March 14, components/pi-day.js): the normal accent, a π here and
+   there. One drawing of it, used as a mask so it takes the colour of whatever
+   it sits in and never falls back to a system font; the same path is in
+   pi-day.js for the confetti. */
+:root[data-season="piday"] {
+  --pi-tint: #4f6df5;
+  --pi-ink: #3346c8;
+  --pi-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 62'%3E%3Cpath d='M8.75 1.5H55.25a5.75 5.75 0 0 1 0 11.5H8.75a5.75 5.75 0 0 1 0-11.5zM14 7H25.5V55.25a5.75 5.75 0 0 1-11.5 0zM37.5 7H49V44c0 4.6 1.8 6.7 4.7 6.7 1.5 0 2.7-.5 3.9-1.8l3.9 5.3C58.9 59.6 55.8 61 52 61c-9.4 0-14.5-5.3-14.5-15z'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="piday"] { --pi-ink: #aab6ff; }
+}
+
+/* πoliAule: the header's P (index.html wraps it in .header-title-p) is hidden
+   and a π, as wide as the P, sits where it was. The title's fill is its own
+   background clipped to the text, which a child's opacity or transform can't
+   touch (the clip ignores them), so the P can only be hidden outright, and
+   hidden it still keeps its width. The first launch of the day holds the P a
+   moment once the splash is gone, then swaps it for a π that pops in
+   (index.html's inline script sets data-pi-morph). */
+:root[data-season="piday"] .header-title-p { visibility: hidden; }
+
+:root[data-season="piday"] .header-title::before {
+  content: "";
+  display: inline-block;
+  width: 0.64em;
+  height: 0.64em;
+  margin-right: -0.64em;
+  background: var(--text-color-primary);
+  -webkit-mask: var(--pi-glyph) center / contain no-repeat;
+  mask: var(--pi-glyph) center / contain no-repeat;
+}
+
+:root.samsung[data-season="piday"] .header-title::before { background: var(--text-color-accent); }
+
+:root[data-pi-morph]:not(:has(.splash-overlay)) .header-title-p {
+  animation: pi-p-out 0.01s linear 0.9s backwards;
+}
+
+:root[data-pi-morph]:not(:has(.splash-overlay)) .header-title::before {
+  animation: pi-in 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) 0.9s backwards;
+}
+
+@keyframes pi-p-out { from { visibility: visible; } }
+@keyframes pi-in { from { opacity: 0; scale: 0.4; } }
+
+/* Aula π (3.1.4): a small tinted square with the π in it, after its name */
+.pi-tag {
+  position: relative;
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  margin-inline-start: 0.35em;
+  vertical-align: -0.14em;
+  border-radius: 0.32em;
+  background: color-mix(in srgb, var(--pi-tint) 20%, transparent);
+}
+
+.pi-tag::before {
+  content: "";
+  position: absolute;
+  inset: 0.17em;
+  background: var(--pi-ink);
+  -webkit-mask: var(--pi-glyph) center / contain no-repeat;
+  mask: var(--pi-glyph) center / contain no-repeat;
+}
+
+/* In the page's chip: no square, the chip is the frame */
+.pi-tag--bare {
+  width: 1.1em;
+  height: 1.1em;
+  margin: 0;
+  background: none;
+  vertical-align: baseline;
+}
+
+.pi-tag--bare::before { inset: 0.05em 0; }
+
+/* …and over its building on the map */
+.pi-map-tag {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--pi-tint);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.pi-map-tag::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  background: #fff;
+  -webkit-mask: var(--pi-glyph) center / contain no-repeat;
+  mask: var(--pi-glyph) center / contain no-repeat;
+}
+
+/* 15:14: the digits running across the screen. The layer stops short of the
+   safe areas, so a row's ends clear the notch and the rounded corners. */
+.pi-sky {
+  position: fixed;
+  inset: 0 env(safe-area-inset-right, 0px) calc(env(safe-area-inset-bottom, 0px) + 16px) env(safe-area-inset-left, 0px);
+  z-index: 1001;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pi-digit {
+  position: absolute;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--pi-ink);
+  text-shadow: 0 0 6px var(--background-color), 0 0 2px var(--background-color);
+}
+
+/* The burst when something is starred */
+.pi-fx {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1002;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-pi-morph] .header-title-p,
+  :root[data-pi-morph] .header-title::before { animation: none !important; }
+}
+
 /* Graduation day (components/graduation.js): navy, like the suits on the
    day. A layer over the season, so it comes after the seasons' accents and
    wins over them at the same specificity. */

@@ -375,7 +375,7 @@
     // window.__seasonByDate and turns seasons on or off from there. A range
     // is inclusive and its ends are either a [month, day] pair or a number of
     // days from Easter Sunday (negative: before); it may wrap the new year.
-    var SEASONS = [['halloween', [10, 24], [11, 1]], ['christmas', [12, 1], [1, 10]]];
+    var SEASONS = [['halloween', [10, 24], [11, 1]], ['christmas', [12, 1], [1, 10]], ['piday', [3, 14], [3, 14]]];
     // Easter Sunday of a year (anonymous Gregorian computus), as a UTC
     // timestamp; utils/season.js has the same one, keep them in step
     function easter(y) {
@@ -417,6 +417,16 @@
       var season = known ? picked : window.__seasonByDate;
       if (season && localStorage.getItem('poliAule_seasonal') !== 'false') {
         document.documentElement.dataset.season = season;
+        // Pi Day: the tab says πoliAule too (the header's is CSS), and the
+        // first open of each day morphs the P into the π
+        if (season === 'piday') {
+          document.title = '\u03c0oliAule';
+          var piToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+          if (localStorage.getItem('poliAule_piMorphed') !== piToday) {
+            document.documentElement.dataset.piMorph = '';
+            localStorage.setItem('poliAule_piMorphed', piToday);
+          }
+        }
       }
     } catch (e) {}
     // Graduation day (utils/graduation.js): today is one at the campus the
@@ -601,7 +611,7 @@
           <script>window.__seasonLogo(document.currentScript.previousElementSibling);</script>
 
           <div class="header-title-beta-container splash-header-item">
-            <h2 class="header-title">PoliAule</h2>
+            <h2 class="header-title" aria-label="PoliAule"><span class="header-title-p">P</span>oliAule</h2>
             <span class="secondary" id="env-badge" hidden>Beta</span>
           </div>
         </button>

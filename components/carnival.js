@@ -151,8 +151,8 @@ function decor(className, html) {
   return el;
 }
 
-// A streamer hanging from the top edge of `host` (or from its bottom edge, for
-// what has text near its top), `left` px or % along it
+// A streamer hanging from the top edge of `host` (or from its bottom edge, out
+// into the gap under it, for what has text or controls near its top), `left` px or % along it
 function hang(host, seed, { left, len = 30 + (seed >>> 9) % 26, className = '', below = false } = {}) {
   if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
   const el = decor(`cv-streamer ${className}`, streamerSvg(len, seed));
@@ -164,25 +164,31 @@ function hang(host, seed, { left, len = 30 + (seed >>> 9) % 26, className = '', 
 }
 
 // Streamers on the glass boxes of a secondary page: about two in three (a
-// different two in three each day), the first always, hung from the right
-// half of the top edge and short, so they clear the headings on the left. A
-// box that has one already isn't given another when it's shown again.
-function decorateBoxes(root, selector, salt, { max = 36 } = {}) {
+// different two in three each day), the first always. They hang from the
+// bottom edge, out into the gap under the box, like the banner's and the
+// chips', so they never cover the box's own text or controls; `span` is the
+// stretch of the edge they hang from, as percentages from the left, kept to
+// where the box below has no heading or legend. A box that has one already
+// isn't given another when it's shown again.
+function decorateBoxes(root, selector, salt, { span = [60, 92] } = {}) {
   const h = hash(`${salt}:${dayKey()}`);
   root.querySelectorAll(selector).forEach((box, i) => {
     if (i && (h >>> (i % 16)) % 3 === 0) return;
     if (box.querySelector(':scope > .cv-decor')) return;
-    const short = box.offsetHeight && box.offsetHeight < 90;
-    hang(box, h + i * 7, { left: `${62 + ((h >>> (i % 12)) % 30)}%`, len: Math.min(max, short ? 18 : 24 + ((h >>> (i % 9)) % 12)) });
+    const left = span[0] + ((h >>> (i % 12)) % (span[1] - span[0]));
+    hang(box, h + i * 7, { left: `${left}%`, len: 24 + ((h >>> (i % 9)) % 11), below: true });
   });
 }
 
-// Settings' rows reach the box's right edge (their switches and pickers), so
-// its streamers are short, no longer than the padding above the first row
-const decorateSettings = (page) => decorateBoxes(page, '.settings-group', 'settings', { max: 15 });
-const decorateChangelog = (content) => decorateBoxes(content, '.cl-entry--stable, .cl-toggle-row, .cl-card', 'changelog', { max: 18 });
+const decorateSettings = (page) => decorateBoxes(page, '.settings-group', 'settings');
+// The changelog's entries have their chevron on the right edge, and the next
+// one's tags and title run from the left to about two thirds: the streamers
+// keep to the stretch between them and the chevron
+const decorateChangelog = (content) => decorateBoxes(content, '.cl-entry--stable, .cl-toggle-row, .cl-card', 'changelog', { span: [70, 84] });
 const decorateInfo = (page) => decorateBoxes(page, '.info-section', 'info');
-const decorateNotFound = (page) => decorateBoxes(page, '.nf-room-card, .nfc-did, .nfc-front', 'notfound');
+// Not the ghost card (it clips what hangs out of it, and its caption sits under
+// it): the cards of the page's suggestions
+const decorateNotFound = (page) => decorateBoxes(page, '.nf-room-card, .nfc-did', 'notfound');
 
 // ── Classroom cards ───────────────────────────────────────────────────────
 // The masked room's card wears its mask; a third of the others have a
@@ -217,10 +223,12 @@ function decorateDetail(page, { classroom }) {
   const h = hash(`detail:${classroom.id}`);
   const sections = [...page.querySelectorAll('.detail-section:not(.detail-map-section)')]
     .filter((section) => !section.querySelector('.detail-section-header'));
-  // The first section always, each of the others about half the time
+  // The first section always, each of the others about half the time, from
+  // the middle of the bottom edge: the schedule below has its title on the
+  // left and its legend on the right
   sections.forEach((section, i) => {
     if (i && !((h >>> i) & 1)) return;
-    if (!section.querySelector(':scope > .cv-decor')) hang(section, h + i, { left: `${70 + (h >>> i) % 22}%`, len: 22 + (h >>> (i + 3)) % 10 });
+    if (!section.querySelector(':scope > .cv-decor')) hang(section, h + i, { left: `${46 + (h >>> i) % 18}%`, len: 24 + (h >>> (i + 3)) % 10, below: true });
   });
   const photo = page.querySelector('.detail-photo-container');
   if (photo && masked().ids.has(classroom.id) && !photo.querySelector('.cv-mask')) {

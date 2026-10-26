@@ -577,6 +577,33 @@ function decorateInfo(page) {
   });
 }
 
+// ── Settings and the changelog ────────────────────────────────────────────
+// The Info page's look on their glass boxes: snow on all of them, a garland or
+// a string of lights across the top of about half (a different half each
+// day; the first box of a page always has one), laid along the rim, which
+// leaves their headings clear. The changelog's boxes are short rows and cards
+// that open and close, so there the snow is thinner and the garland hangs
+// along the rim only.
+
+function decorateBoxes(root, selector, salt, { maxHeight } = {}) {
+  const h = hash(`${salt}:${dayKey()}`);
+  root.querySelectorAll(selector).forEach((box, i) => {
+    pile(box, { key: `${salt}:${i}`, maxHeight });
+    if (i && (h >>> (i % 16)) % 2) return;
+    whenSized(box, (width) => {
+      if (box.querySelector(':scope > .xm-garland')) return;
+      const radius = radiusOf(box);
+      const loops = Math.max(2, Math.round(width / 130));
+      box.appendChild(decor('xm-garland', i % 2
+        ? lightsSvg(width, radius, h + i, { loops, mode: 'rim', inset: 1 })
+        : garlandSvg(width, radius, h + i, { loops, mode: 'rim', inset: 1 })));
+    });
+  });
+}
+
+const decorateSettings = (page) => decorateBoxes(page, '.settings-group', 'settings');
+const decorateChangelog = (content) => decorateBoxes(content, '.cl-entry--stable, .cl-toggle-row, .cl-card', 'changelog', { maxHeight: 6 });
+
 // ── Not found ─────────────────────────────────────────────────────────────
 // Snow on Aula 404's door frame (knocking shakes it off), a sprig of holly on
 // the ghost card, and a garland and snow on the glass cards, like Info's.
@@ -1256,6 +1283,8 @@ export function start() {
   setDecorator('banner', decorateBanner);
   setDecorator('buildingHeader', decorateBuildingHeader);
   setDecorator('info', decorateInfo);
+  setDecorator('settings', decorateSettings);
+  setDecorator('changelog', decorateChangelog);
   setDecorator('notFound', decorateNotFound);
   mapActive = true;
   setDecorator('map', decorateMap);
@@ -1266,6 +1295,9 @@ export function start() {
   updateMapSnow();
 
   decorateBuilt();
+  // The changelog is built when it's opened, so it may be there already
+  const changelog = document.querySelector('#changelog-overlay .cl-content');
+  if (changelog) decorateChangelog(changelog);
   decorateTabBar();
   decorateSearchPanel();
   sheetLightsAfterFadeIn();

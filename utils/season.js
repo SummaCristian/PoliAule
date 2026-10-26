@@ -50,7 +50,8 @@
 // variants of existing strings, see t() in i18n.js) and its CSS under
 // :root[data-season="<id>"]. An entry's `banner()` may pick another message
 // for some days: it returns the strings' prefix (in place of season.<id>)
-// and the icon.
+// and the icon, and `vars` to fill into them ("{years}") when the message
+// has numbers in it.
 
 import { t, applyTranslations, onLanguageSwitch } from '../i18n.js';
 import { escapeHtml } from './html.js';
@@ -79,6 +80,12 @@ export function daysFromEaster(day = milanDay()) {
   const [y, m, d] = day.split('-').map(Number);
   return Math.round((Date.UTC(y, m - 1, d) - easterSunday(y).getTime()) / 864e5);
 }
+
+// The navy of the suits on graduation day, which PoliMi's birthday wears too
+// (the accent itself is the CSS tokens of :root[data-graduation], shared)
+const NAVY = '#2b4a8c';
+// The year the Politecnico was founded (on November 29)
+const FOUNDED = 1863;
 
 export const SEASONS = {
   halloween: {
@@ -112,6 +119,17 @@ export const SEASONS = {
     tint: '#4f6df5',
     keywords: ['pi', 'π', 'pi greco', 'pigreco', 'pi day', 'pi greco day'],
   },
+  // November 29, 1863: the Politecnico's founding. A light season: the navy
+  // accent, the banner (with its age) and the search row, nothing else. The
+  // usual logo stays until there is one with candles.
+  birthday: {
+    icon: 'hgi-birthday-cake',
+    tint: NAVY,
+    keywords: ['compleanno polimi', 'polimi birthday', 'buon compleanno', 'compleanno del poli', 'compleanno politecnico', 'politecnico birthday', 'happy birthday'],
+    banner() {
+      return { key: 'season.birthday', vars: { years: Number(milanDay().slice(0, 4)) - FOUNDED } };
+    },
+  },
 };
 
 export const GRADUATION = {
@@ -119,7 +137,7 @@ export const GRADUATION = {
   icon: 'hgi-laurel-wreath-01',
   logo: '/favicons/graduation/icon-192.png',
   hero: '/favicons/graduation/hero-512.webp',
-  tint: '#2b4a8c',
+  tint: NAVY,
   keywords: ['laurea', 'lauree', 'graduation', 'graduation day', 'alloro', "corona d'alloro", 'proclamazione', 'dottore', 'dottoressa', 'congratulazioni'],
 };
 // The graduation preview picked from the search, kept until turned off
@@ -301,8 +319,12 @@ function showBanner() {
     const key = variant?.key ?? `season.${id}`;
     tint = season.tint;
     icon = variant?.icon ?? season.icon;
-    title = { key: `${key}.bannerTitle` };
-    body = { key: `${key}.bannerText` };
+    // A message with numbers in it ({years}) is filled in here, as plain text
+    // (rebuilt on a language switch, see initSeason), not by data-i18n
+    const vars = variant?.vars;
+    const fill = (k) => Object.entries(vars).reduce((str, [name, value]) => str.replaceAll(`{${name}}`, value), t(k));
+    title = vars ? { text: fill(`${key}.bannerTitle`) } : { key: `${key}.bannerTitle` };
+    body = vars ? { text: fill(`${key}.bannerText`) } : { key: `${key}.bannerText` };
   } else {
     return;
   }
@@ -410,7 +432,7 @@ export function initSeason() {
   applyGraduation();
   document.addEventListener('graduationschange', applyGraduation);
   document.addEventListener('visibilitychange', onVisible);
-  onLanguageSwitch(() => { if (graduation) refreshBanner(); });
+  onLanguageSwitch(() => { if (graduation || (running && SEASONS[running.id].banner?.().vars)) refreshBanner(); });
   window.addEventListener('seasonalchange', () => {
     apply();
     applyGraduation();

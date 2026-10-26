@@ -2811,8 +2811,10 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 
 /* Graduation day (components/graduation.js): navy, like the suits on the
    day. A layer over the season, so it comes after the seasons' accents and
-   wins over them at the same specificity. */
-:root[data-graduation] {
+   wins over them at the same specificity. PoliMi's birthday (a light season,
+   utils/season.js) wears the same navy, so it shares these tokens. */
+:root[data-graduation],
+:root[data-season="birthday"] {
   --text-color-accent: #24427f;
   --accent-gradient: linear-gradient(135deg, #14264f, #3d63b3);
   --color-accent-dark: #1d3768;
@@ -2820,7 +2822,8 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[data-graduation] {
+  :root[data-graduation],
+  :root[data-season="birthday"] {
     --text-color-accent: #8eabff;
     --accent-gradient: linear-gradient(135deg, #3558b0, #a9bfff);
   }

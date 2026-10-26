@@ -128,6 +128,25 @@ export const SEASONS = {
       return null;
     },
   },
+  // The Ambrosian carnival: from Giovedì grasso (the Thursday before Ash
+  // Wednesday) to Sabato grasso, the Saturday after it, when Milan's carnival
+  // ends (the rest of Italy's ended on Tuesday). Moves with Easter (see
+  // index.html: 52 to 43 days before it).
+  carnival: {
+    load: () => import('../components/carnival.js'),
+    icon: 'hgi-mask-theater-01',
+    tint: '#d6338a',
+    keywords: ['carnevale', 'carnival', 'carnevale ambrosiano', 'coriandoli', 'maschere', 'maschera', 'giovedi grasso', 'martedi grasso', 'sabato grasso'],
+    banner() {
+      const n = daysFromEaster();
+      if (n === -52) return { key: 'season.carnival.giovedi', icon: 'hgi-party' };
+      if (n === -47) return { key: 'season.carnival.martedi', icon: 'hgi-party-popper' };
+      // Ash Wednesday to Friday: Lent elsewhere, still carnival in Milan
+      if (n >= -46 && n <= -44) return { key: 'season.carnival.ambrosiano', icon: 'hgi-mask-theater-02' };
+      if (n === -43) return { key: 'season.carnival.sabato', icon: 'hgi-party-popper' };
+      return null;
+    },
+  },
   // A day of its own (Mar 14), with a module for the little things it does
   piday: {
     load: () => import('../components/pi-day.js'),

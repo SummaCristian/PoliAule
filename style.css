@@ -2990,6 +2990,157 @@ body:is(.detail-open, .settings-open) .ea-olive { display: none; }
   .ea-egg-bubble { transition: none; }
 }
 
+/* Carnevale Ambrosiano (Giovedì grasso to Sabato grasso, components/carnival.js,
+   components/coriandoli.js): a magenta accent, 5.6:1 on the page in light mode
+   and 8:1 in dark. */
+:root[data-season="carnival"] {
+  --text-color-accent: #b3206c;
+  --accent-gradient: linear-gradient(135deg, #8f1556, #cf3c93);
+  --color-accent-dark: #b3206c;
+  --color-accent-dark-hover: #8f1556;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="carnival"] {
+    --text-color-accent: #ff8fcf;
+    --accent-gradient: linear-gradient(135deg, #c62a85, #ffc2e6);
+  }
+}
+
+:root[data-season="carnival"] :is(.info-page, .not-found) {
+  --info-glow-1: #ff5fa2;
+  --info-glow-2: #ffb703;
+  --info-glow-3: #3a86ff;
+}
+
+/* Carnival decorations. None of it takes taps except the hanging mask. */
+
+/* The coriandoli: one canvas over the page, in the snow's band under the
+   header, stopping short of the bottom safe area for the same reason (see
+   .xm-snow) */
+.cv-coriandoli {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: var(--fx-z-fall);
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+.cv-decor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.cv-decor svg { display: block; overflow: visible; }
+
+/* A paper streamer hung from a pin, swaying a little from its top */
+.cv-streamer {
+  z-index: 3;
+  translate: -50% 0;
+  transform-origin: 50% 0;
+  animation: cv-sway 3.8s ease-in-out var(--cv-sway-delay, 0s) infinite alternate;
+}
+
+.cv-streamer--chip { z-index: 5; }
+
+@keyframes cv-sway {
+  from { rotate: -4deg; }
+  to { rotate: 4deg; }
+}
+
+/* The masked room's mask: on its card, big over its page's photo, over its
+   building on the map, in its folder and by its name in the search */
+.cv-mask {
+  z-index: 3;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+  animation: xm-bob 2.4s ease-in-out infinite alternate;
+}
+
+.cv-mask--card { left: 8px; top: 9px; width: 48px; rotate: -9deg; }
+.cv-mask--photo { left: 66%; top: 36%; width: 150px; margin-left: -75px; rotate: 7deg; z-index: 2; }
+
+.cv-search-mask {
+  display: inline-block;
+  width: 26px;
+  margin-inline-start: 0.35rem;
+  vertical-align: -0.28em;
+}
+
+.cv-search-mask svg { display: block; }
+
+.cv-map-mask {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -17px;
+  width: 34px;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+  animation: xm-bob 1.8s ease-in-out infinite alternate;
+}
+
+.cv-map-mask svg { display: block; }
+.cv-folder-mask { top: 16px; left: 54%; width: 50px; rotate: -10deg; }
+
+/* The mask under the data status button: hangs on a ribbon from behind it,
+   swaying; a tap swings it */
+:root[data-season="carnival"] #data-fetch-btn { z-index: 1; }
+
+.cv-dangler {
+  position: absolute;
+  z-index: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.cv-dangler-sway {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  animation: xm-swing 4.2s ease-in-out infinite alternate;
+}
+
+.cv-dangler-sway--swing { animation: xm-swing-hard 1.6s ease-out, xm-swing 4.2s ease-in-out 1.6s infinite alternate; }
+
+.cv-dangler-line {
+  position: absolute;
+  left: -0.75px;
+  top: 0;
+  width: 1.5px;
+  height: 34px;
+  background: var(--text-color-accent);
+}
+
+.cv-dangler-mask {
+  position: absolute;
+  left: 0;
+  top: 34px;
+  width: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  transform: translate(-42%, -6px) rotate(-6deg);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cv-dangler-mask svg { display: block; }
+
+body:is(.detail-open, .settings-open) .cv-dangler { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-streamer,
+  .cv-mask,
+  .cv-map-mask,
+  .cv-dangler-sway { animation: none; }
+}
+
 /* Pi Day (March 14, components/pi-day.js): the normal accent, a π here and
    there. One drawing of it, used as a mask so it takes the colour of whatever
    it sits in and never falls back to a system font; the same path is in
@@ -3179,6 +3330,7 @@ body:is(.detail-open, .settings-open) .ea-olive { display: none; }
 :root[data-graduation] #data-fetch-btn { z-index: 1; }
 :root[data-graduation] .xm-mistletoe,
 :root[data-graduation] .ea-olive,
+:root[data-graduation] .cv-dangler,
 :root[data-graduation] .hw-dangler { display: none; }
 
 .gr-wreath {

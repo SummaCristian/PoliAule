@@ -372,19 +372,37 @@
     // Seasonal decorations (utils/season.js): today's season, by the Milan
     // calendar day, or null. Decided here, before first paint, so a seasonal
     // accent never flashes in over the normal one; season.js reads
-    // window.__seasonByDate and turns seasons on or off from there. Ranges
-    // are inclusive [month, day] pairs and may wrap the new year.
+    // window.__seasonByDate and turns seasons on or off from there. A range
+    // is inclusive and its ends are either a [month, day] pair or a number of
+    // days from Easter Sunday (negative: before); it may wrap the new year.
     var SEASONS = [['halloween', [10, 24], [11, 1]], ['christmas', [12, 1], [1, 10]]];
+    // Easter Sunday of a year (anonymous Gregorian computus), as a UTC
+    // timestamp; utils/season.js has the same one, keep them in step
+    function easter(y) {
+      var a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4,
+          f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3),
+          h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,
+          l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+          n = h + l - 7 * m + 114;
+      return Date.UTC(y, Math.floor(n / 31) - 1, n % 31 + 1);
+    }
+    // A range end as month * 100 + day, in year y
+    function endMd(end, y) {
+      if (typeof end !== 'number') return end[0] * 100 + end[1];
+      var d = new Date(easter(y) + end * 864e5);
+      return (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+    }
     function seasonFor(date) {
-      var p = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', month: 'numeric', day: 'numeric' }).formatToParts(date);
-      var md = 0;
+      var p = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(date);
+      var md = 0, year = 0;
       for (var i = 0; i < p.length; i++) {
+        if (p[i].type === 'year') year = Number(p[i].value);
         if (p[i].type === 'month') md += Number(p[i].value) * 100;
         if (p[i].type === 'day') md += Number(p[i].value);
       }
       for (var j = 0; j < SEASONS.length; j++) {
-        var from = SEASONS[j][1][0] * 100 + SEASONS[j][1][1];
-        var to = SEASONS[j][2][0] * 100 + SEASONS[j][2][1];
+        var from = endMd(SEASONS[j][1], year);
+        var to = endMd(SEASONS[j][2], year);
         if (from <= to ? md >= from && md <= to : md >= from || md <= to) return SEASONS[j][0];
       }
       return null;

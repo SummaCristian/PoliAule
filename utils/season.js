@@ -1,6 +1,7 @@
 // Seasonal decorations: a holiday's accent, small decorations on the UI and a
-// few rare animations, on for a fixed window each year (Halloween: Oct 24 to
-// Nov 1; Christmas: Dec 1 to Jan 10).
+// few rare animations, on for a window each year (Halloween: Oct 24 to Nov 1;
+// Christmas: Dec 1 to Jan 10). A window is fixed dates, or counted from
+// Easter for the moveable feasts.
 //
 // Which season today falls in is decided by the inline script in index.html,
 // before first paint (the date ranges live there), and left in
@@ -9,7 +10,8 @@
 // toggle, and a season picked from the search (typing one of its keywords
 // offers it as the Top Hit, any time of year). It lazy-loads the season's own
 // module, so none of it lands in the main bundle, and shows the season's
-// banner above the Favourites.
+// banner above the Favourites. A light season has no module: just the
+// banner, the search row and whatever its CSS (and locale variants) do.
 //
 // A season module exports start() and stop(), and may register decorators
 // for elements other modules build, each called right after building it:
@@ -41,12 +43,14 @@
 // campus: the cosmetics only, without the banner (the notes about the
 // ceremonies aren't part of the layer, they follow the real days).
 //
-// Adding a season: its date range in index.html, an entry in SEASONS below,
-// its strings in the locales (season.<id>.name / bannerTitle / bannerText,
-// plus any "<key>@<id>" variants of existing strings, see t() in i18n.js)
-// and its CSS under :root[data-season="<id>"]. An entry's `banner()` may
-// pick another message for some days: it returns the strings' prefix (in
-// place of season.<id>) and the icon.
+// Adding a season: its date range in index.html (a range end is a
+// [month, day] or a number of days from Easter Sunday), an entry in SEASONS
+// below (without `load` for a light season), its strings in the locales
+// (season.<id>.name / bannerTitle / bannerText, plus any "<key>@<id>"
+// variants of existing strings, see t() in i18n.js) and its CSS under
+// :root[data-season="<id>"]. An entry's `banner()` may pick another message
+// for some days: it returns the strings' prefix (in place of season.<id>)
+// and the icon.
 
 import { t, applyTranslations, onLanguageSwitch } from '../i18n.js';
 import { escapeHtml } from './html.js';
@@ -56,6 +60,25 @@ export const SEASONAL_KEY = 'poliAule_seasonal';
 // A season picked from the search. It wins over today's; turning it off
 // falls back to today's season, if any.
 const OVERRIDE_KEY = 'poliAule_seasonOverride';
+
+// Easter Sunday of a year (anonymous Gregorian computus) at UTC midnight. The
+// inline script in index.html has the same one, which decides the ranges;
+// this is for what depends on the day itself (a banner for Easter Sunday).
+export function easterSunday(year) {
+  const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451), n = h + l - 7 * m + 114;
+  return new Date(Date.UTC(year, Math.floor(n / 31) - 1, n % 31 + 1));
+}
+
+// How many days Milan's today (or `day`, YYYY-MM-DD) is after that year's
+// Easter Sunday: 0 on Easter, 1 on Pasquetta, -7 on Palm Sunday.
+export function daysFromEaster(day = milanDay()) {
+  const [y, m, d] = day.split('-').map(Number);
+  return Math.round((Date.UTC(y, m - 1, d) - easterSunday(y).getTime()) / 864e5);
+}
 
 export const SEASONS = {
   halloween: {
@@ -326,17 +349,18 @@ async function apply() {
   else delete document.documentElement.dataset.season;
 
   if (running && running.id !== season) {
-    running.mod.stop();
+    running.mod?.stop();
     dropDecorators('season');
     running = null;
     refreshBanner();
   }
   if (!season || running || !SEASONS[season]) return;
-  const mod = await SEASONS[season].load();
+  // A light season has no module
+  const mod = SEASONS[season].load ? await SEASONS[season].load() : null;
   // Turned off again while the module was loading
   if (activeSeason() !== season || running) return;
   running = { id: season, mod };
-  mod.start();
+  mod?.start();
   if (!graduation) refreshBanner();
 }
 
@@ -357,7 +381,7 @@ async function applyGraduation() {
     graduation = null;
     refreshBanner();
     // The season's logo, which made way for graduation's
-    running?.mod.resumeLogo?.();
+    running?.mod?.resumeLogo?.();
   }
   if (!next || graduation) return;
   graduationLoading ??= GRADUATION.load();

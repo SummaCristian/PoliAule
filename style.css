@@ -2689,6 +2689,10 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 /* A sprig of blossom */
 .ea-sprig { top: -3px; left: -3px; z-index: 3; }
 .ea-sprig--banner { top: auto; bottom: -6px; left: auto; right: 56px; }
+/* In the right corner of a glass box (mirrored), on a pill, on a chip */
+.ea-sprig--right { left: auto; right: -3px; scale: -1 1; }
+.ea-sprig--pill { top: -9px; left: auto; right: -6px; scale: -1 1; }
+.ea-sprig--chip { top: -8px; left: auto; right: 10px; scale: -1 1; z-index: 5; }
 .ea-twig { fill: none; stroke: #7a5236; stroke-width: 1.3px; stroke-linecap: round; }
 .ea-leaf { fill: #6fae4d; }
 .ea-flower { fill: #f27fac; }

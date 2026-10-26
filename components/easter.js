@@ -8,7 +8,10 @@
 //     card and over its photo on its page, over its building on the map, in
 //     its building's folder and next to its name in the search. Tapping it
 //     cracks it open and a chick pops out: the surprise
-//   - a sprig of blossom on a quarter of the cards and on the banner
+//   - a sprig of blossom on a quarter of the cards and on the banner, and in
+//     the corner of about two in three of every other glass box: the classroom
+//     page's sections, Settings, Info, the changelog, the not-found page, the
+//     search's results box, the Campus sheet and the picker chips
 //   - an olive branch hanging from the data status button
 //   - now and then a pair of doves, olive twig in their beaks, across the top
 //     of the screen
@@ -263,6 +266,32 @@ function decor(className, html) {
   return el;
 }
 
+const radiusOf = (el) => parseFloat(getComputedStyle(el).borderTopRightRadius) || 0;
+
+// A sprig of blossom in a corner of a glass box (the right one by default: the
+// boxes' headings sit on the left). The box has to be positioned for it.
+function sprigOn(host, seed, { size = 36, right = true, className = '' } = {}) {
+  if (host.querySelector(':scope > .ea-decor')) return;
+  if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+  host.appendChild(decor(`ea-sprig ${right ? 'ea-sprig--right' : ''} ${className}`, sprigSvg(size, seed)));
+}
+
+// Sprigs on the glass boxes of a secondary page: about two in three (a
+// different two in three each day), the first always, a small one where the
+// box is short. Nothing here takes taps.
+function decorateBoxes(root, selector, salt) {
+  const h = hash(`${salt}:${dayKey()}`);
+  root.querySelectorAll(selector).forEach((box, i) => {
+    if (i && (h >>> (i % 16)) % 3 === 0) return;
+    sprigOn(box, h + i, { size: box.offsetHeight && box.offsetHeight < 90 ? 26 : 34 + ((h >>> (i % 12)) % 8) });
+  });
+}
+
+const decorateSettings = (page) => decorateBoxes(page, '.settings-group', 'settings');
+const decorateChangelog = (content) => decorateBoxes(content, '.cl-entry--stable, .cl-toggle-row, .cl-card', 'changelog');
+const decorateInfo = (page) => decorateBoxes(page, '.info-section', 'info');
+const decorateNotFound = (page) => decorateBoxes(page, '.nf-room-card, .nfc-did, .nfc-front', 'notfound');
+
 // ── Classroom cards ───────────────────────────────────────────────────────
 // The egg room's card gets its egg; about a quarter of the others a sprig of
 // blossom, top-left (the right corner is the favourite star's).
@@ -294,9 +323,15 @@ function miniEgg(seed) {
 }
 
 // ── Classroom page ────────────────────────────────────────────────────────
-// The egg room's photo has its egg over it: tapping it cracks it open.
+// A sprig on the sections, and the egg room's photo has its egg over it:
+// tapping it cracks it open.
 
 function decorateDetail(page, { classroom }) {
+  // The sections without a header row (the schedule's holds the day picker
+  // in its corner, the map isn't one to dress)
+  const plain = [...page.querySelectorAll('.detail-section:not(.detail-map-section)')].filter((section) => !section.querySelector('.detail-section-header'));
+  const h = hash(`detail:${classroom.id}`);
+  plain.forEach((section, i) => { if (!i || (h >>> i) & 1) sprigOn(section, h + i, { size: 34 }); });
   if (!eggs().ids.has(classroom.id)) return;
   const photo = page.querySelector('.detail-photo-container');
   if (!photo || photo.querySelector('.ea-egg') || opened().has(classroom.id)) return;
@@ -307,6 +342,60 @@ function decorateDetail(page, { classroom }) {
 function decorateBanner(banner) {
   if (banner.querySelector(':scope > .ea-decor')) return;
   banner.appendChild(decor('ea-sprig ea-sprig--banner', sprigSvg(44, 3)));
+}
+
+// ── Building headers (Available results) ─────────────────────────────────
+// A sprig on the name pill of a third of them
+
+function decorateBuildingHeader(header, { building }) {
+  const h = hash(`header:${building.name}`);
+  const pill = header.querySelector('.building-section-titles');
+  if (h % 3 || !pill) return;
+  sprigOn(pill, h, { size: 22, className: 'ea-sprig--pill' });
+}
+
+// ── Picker chips ──────────────────────────────────────────────────────────
+// A sprig on one of the three a day
+
+const CHIP_HOSTS = ['campus-chip-picker', 'date-chip-picker', 'time-range-chip-picker'];
+let chipsTimer = 0;
+
+function decorateChips() {
+  const day = dayKey();
+  const tag = CHIP_HOSTS[hash(`chips:${day}`) % CHIP_HOSTS.length];
+  const chip = document.querySelector(`${tag} .lg-chip`);
+  if (chip) sprigOn(chip, hash(`${tag}:${day}`), { size: 22, className: 'ea-sprig--chip' });
+}
+
+// ── The search's results box ──────────────────────────────────────────────
+
+function decorateSearchPanel() {
+  const frame = document.querySelector('.search-results-frame');
+  if (frame) sprigOn(frame, hash(`searchpanel:${dayKey()}`), { size: 44 });
+}
+
+// ── The Campus sheet ──────────────────────────────────────────────────────
+// A sprig in its top-right corner, put on once the Campus tab has finished
+// fading in (decorations in the sheet while it fades turned iOS Safari's
+// bottom safe area solid), and back whenever the sheet is rebuilt, as it is
+// when the layout flips between phone and desktop.
+
+let sheetReady = false;
+
+function decorateSheet() {
+  const glass = document.querySelector('.campus-sheet .lg-sheet__glass');
+  if (!sheetReady || !glass || !mapShowing()) return;
+  sprigOn(glass, hash(`sheet:${dayKey()}`), { size: 44 });
+}
+
+function sheetAfterFadeIn() {
+  const tab = document.getElementById(MAP_TAB);
+  if (!tab || !mapShowing()) return;
+  Promise.all(tab.getAnimations().map((a) => a.finished)).then(() => {
+    if (!mapActive || !mapShowing()) return;
+    sheetReady = true;
+    decorateSheet();
+  }, () => { /* left mid-fade: the next tabvisible tries again */ });
 }
 
 // ── Search ────────────────────────────────────────────────────────────────
@@ -622,6 +711,11 @@ export function start() {
   setDecorator('detail', decorateDetail);
   setDecorator('searchRow', decorateSearchRow);
   setDecorator('banner', decorateBanner);
+  setDecorator('buildingHeader', decorateBuildingHeader);
+  setDecorator('info', decorateInfo);
+  setDecorator('notFound', decorateNotFound);
+  setDecorator('settings', decorateSettings);
+  setDecorator('changelog', decorateChangelog);
   mapActive = true;
   setDecorator('map', decorateMap);
   darkScheme.addEventListener('change', updateGlow, { signal });
@@ -630,6 +724,21 @@ export function start() {
   updatePetals();
 
   decorateBuilt();
+  document.querySelectorAll('.building-section-header').forEach((header) => {
+    const section = header.closest('.building-section');
+    if (section) decorateBuildingHeader(header, { building: { name: section.dataset.buildingName } });
+  });
+  // The changelog is built when it's opened, so it may be there already
+  const changelog = document.querySelector('#changelog-overlay .cl-content');
+  if (changelog) decorateChangelog(changelog);
+  decorateSearchPanel();
+  sheetAfterFadeIn();
+  document.addEventListener('tabvisible', sheetAfterFadeIn, { signal });
+  document.addEventListener('campussheetresize', decorateSheet, { signal });
+  // The chips may still be upgrading
+  Promise.all(CHIP_HOSTS.map((tag) => customElements.whenDefined(tag))).then(() => {
+    chipsTimer = setTimeout(decorateChips, 300);
+  });
   startOlive();
   if (!directory) {
     ensureClassroomDirectory().then(() => {
@@ -656,6 +765,8 @@ export function stop() {
   holdPetals('map', false);
   stopPetals();
   clearTimeout(flyTimer);
+  clearTimeout(chipsTimer);
+  sheetReady = false;
   oliveResize?.disconnect();
   olive?.remove();
   olive = null;

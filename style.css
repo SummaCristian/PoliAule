@@ -2672,6 +2672,368 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
   .xm-ribbon-bow { transition: none; }
 }
 
+/* Easter (Palm Sunday to Pasquetta, components/easter.js, components/petals.js):
+   a lilac accent, against the blossom's pink and the new leaves' green. Light:
+   5.7:1 on the page and on white; dark: 8:1 on the page. */
+:root[data-season="easter"] {
+  --text-color-accent: #7243c0;
+  --accent-gradient: linear-gradient(135deg, #5b2fa8, #8d62d9);
+  --color-accent-dark: #7a4cc4;
+  --color-accent-dark-hover: #6a3fb8;
+  --ea-petal-1: #f2a0bf;
+  --ea-petal-2: #f7bcd1;
+  --ea-petal-3: #e883ab;
+  --ea-thread: rgba(114, 67, 192, 0.55);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="easter"] {
+    --text-color-accent: #c4a6ff;
+    --accent-gradient: linear-gradient(135deg, #7d56d6, #d6c2ff);
+    --ea-petal-1: #ffd1e1;
+    --ea-petal-2: #ffb8d0;
+    --ea-petal-3: #fff0f6;
+    --ea-thread: rgba(196, 166, 255, 0.6);
+  }
+}
+
+:root[data-season="easter"] :is(.info-page, .not-found) {
+  --info-glow-1: #b08cf0;
+  --info-glow-2: #f59bbd;
+  --info-glow-3: #8fd694;
+}
+
+/* Easter decorations. None of it takes taps except the eggs and the olive
+   branch. */
+
+/* The drifting petals: one canvas over everything, below the snow's layer
+   height and stopping short of the bottom safe area for the same reason (see
+   .xm-snow). Held, it fades out while the Campus map shows. */
+.ea-petals {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1400;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.ea-petals--held { opacity: 0; }
+
+.ea-decor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ea-decor svg { display: block; overflow: visible; }
+
+/* A sprig of blossom */
+.ea-sprig { top: -3px; left: -3px; z-index: 3; }
+.ea-sprig--banner { top: auto; bottom: -6px; left: auto; right: 56px; }
+.ea-twig { fill: none; stroke: #7a5236; stroke-width: 1.3px; stroke-linecap: round; }
+.ea-leaf { fill: #6fae4d; }
+.ea-flower { fill: #f27fac; }
+.ea-flower-light { fill: #fbc4d8; }
+.ea-flower-eye { fill: #ffd25a; }
+.ea-flower, .ea-flower-light { stroke: rgba(150, 40, 90, 0.25); stroke-width: 0.4px; }
+
+/* The egg room's egg: a foil-wrapped chocolate egg (colours from --ea-a and
+   --ea-b, set on it), two halves cut along a zigzag, and a chick waiting
+   inside. Small on the card, big over the page's photo. */
+.ea-egg {
+  position: absolute;
+  z-index: 3;
+  display: block;
+  transform-origin: 50% 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ea-egg--card {
+  left: 10px;
+  top: 9px;
+  width: 30px;
+  height: 38px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  animation: ea-wobble 6s ease-in-out infinite;
+}
+
+.ea-egg--photo {
+  left: 70%;
+  top: 38%;
+  width: 78px;
+  height: 98px;
+  margin: -62px 0 0 -39px;
+  z-index: 2;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.35));
+  animation: ea-wobble 2.6s ease-in-out infinite;
+  transition: opacity 0.6s ease;
+}
+
+.ea-egg--gone { opacity: 0; }
+
+.ea-egg-half {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transition: transform 0.55s cubic-bezier(.2, .9, .3, 1.15), opacity 0.45s ease 0.15s;
+}
+
+.ea-egg-half svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+.ea-egg-half--top {
+  clip-path: polygon(0 0, 100% 0, 100% 57%, 92% 64%, 80% 54%, 66% 65%, 52% 55%, 38% 66%, 24% 54%, 12% 64%, 0 56%);
+}
+
+.ea-egg-half--bottom {
+  clip-path: polygon(0 56%, 12% 64%, 24% 54%, 38% 66%, 52% 55%, 66% 65%, 80% 54%, 92% 64%, 100% 57%, 100% 100%, 0 100%);
+}
+
+.ea-egg-shell { fill: var(--ea-a); stroke: rgba(0, 0, 0, 0.2); stroke-width: 0.6px; }
+.ea-egg-shade { fill: var(--ea-b); opacity: 0.6; }
+.ea-egg-wave { fill: none; stroke: #fff; stroke-width: 2.4px; opacity: 0.92; }
+.ea-egg-wave--thin { stroke-width: 1.2px; opacity: 0.7; }
+.ea-egg-dot { fill: #fff; opacity: 0.85; }
+.ea-egg-shine { fill: #fff; opacity: 0.4; }
+.ea-egg-ribbon { fill: none; stroke: #fff; stroke-width: 1.8px; opacity: 0.95; }
+.ea-egg-bow { fill: #fff; stroke: var(--ea-b); stroke-width: 0.5px; }
+
+/* The chick sits low behind the halves until the egg is open, then pops up */
+.ea-egg-chick {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  width: 78%;
+  aspect-ratio: 1;
+  transform: translate(-50%, 70%) scale(0.2);
+  transform-origin: 50% 100%;
+  opacity: 0;
+  transition: transform 0.55s cubic-bezier(.3, 1.6, .5, 1) 0.1s, opacity 0.2s ease 0.1s;
+}
+
+.ea-egg-chick svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ea-chick-body { fill: #ffd84a; stroke: rgba(150, 100, 0, 0.4); stroke-width: 0.5px; }
+.ea-chick-wing { fill: #f2b720; }
+.ea-chick-beak { fill: #f58a1f; }
+.ea-chick-eye { fill: #2b2118; }
+.ea-chick-foot { fill: none; stroke: #f58a1f; stroke-width: 1.2px; stroke-linecap: round; }
+
+.ea-egg-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: #fff;
+  color: #5b2fa8;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transform: translate(-50%, 6px) scale(0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(.3, 1.6, .5, 1) 0.25s, opacity 0.3s ease 0.25s;
+}
+
+.ea-egg--card .ea-egg-bubble {
+  bottom: auto;
+  top: 50%;
+  left: 100%;
+  margin-left: 6px;
+  transform: translate(-6px, -50%) scale(0.6);
+  transform-origin: 0 50%;
+}
+
+.ea-egg--cracking { animation: ea-shake 0.42s linear; }
+
+.ea-egg--open { animation: none; }
+.ea-egg--open .ea-egg-half--top { transform: translate(-70%, -90%) rotate(-42deg); opacity: 0; }
+.ea-egg--open .ea-egg-half--bottom { transform: rotate(3deg); }
+.ea-egg--open .ea-egg-chick { transform: translate(-50%, -8%) scale(1); opacity: 1; }
+.ea-egg--open:not(.ea-egg--settled) .ea-egg-bubble { transform: translate(-50%, -2px) scale(1); opacity: 1; }
+.ea-egg--card.ea-egg--open:not(.ea-egg--settled) .ea-egg-bubble { transform: translate(0, -50%) scale(1); }
+.ea-egg--open .ea-egg-chick svg { animation: ea-hop 2.4s ease-in-out 0.8s infinite; }
+
+/* Opened earlier, or a while ago: no more motion, nothing to say */
+.ea-egg--settled .ea-egg-half,
+.ea-egg--settled .ea-egg-chick,
+.ea-egg--settled .ea-egg-bubble { transition: none; }
+.ea-egg--settled .ea-egg-bubble { opacity: 0; }
+
+@keyframes ea-wobble {
+  0%, 82%, 100% { rotate: 0deg; }
+  86% { rotate: -9deg; }
+  90% { rotate: 8deg; }
+  94% { rotate: -4deg; }
+  97% { rotate: 2deg; }
+}
+
+@keyframes ea-shake {
+  0%, 100% { rotate: 0deg; }
+  15% { rotate: -12deg; }
+  35% { rotate: 11deg; }
+  55% { rotate: -9deg; }
+  75% { rotate: 6deg; }
+}
+
+@keyframes ea-hop {
+  0%, 60%, 100% { transform: translateY(0); }
+  70% { transform: translateY(-14%) scaleY(1.06); }
+  80% { transform: translateY(0) scaleY(0.94); }
+}
+
+/* A small egg by the egg room's name, over its building on the map and in its
+   building's folder */
+.ea-mini { display: block; width: 100%; height: 100%; }
+.ea-mini svg { display: block; width: 100%; height: 100%; }
+.ea-mini .ea-egg-shell { fill: var(--ea-a); }
+.ea-mini .ea-egg-shade { fill: var(--ea-b); }
+
+.ea-search-egg {
+  display: inline-block;
+  width: 12px;
+  height: 15px;
+  margin-inline-start: 0.35rem;
+  vertical-align: -0.15em;
+}
+
+.ea-map-egg {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -9px;
+  width: 18px;
+  height: 22px;
+  pointer-events: none;
+  animation: xm-bob 1.8s ease-in-out infinite alternate;
+}
+
+.ea-folder-egg {
+  top: 20px;
+  left: 58%;
+  width: 26px;
+  height: 32px;
+  rotate: -9deg;
+}
+
+/* The olive branch under the data status button: hangs on a thread from behind
+   it, swaying; a tap swings it */
+:root[data-season="easter"] #data-fetch-btn { z-index: 1; }
+
+.ea-olive {
+  position: absolute;
+  z-index: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.ea-olive-sway {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  animation: xm-swing 4s ease-in-out infinite alternate;
+}
+
+.ea-olive-sway--swing { animation: xm-swing-hard 1.6s ease-out, xm-swing 4s ease-in-out 1.6s infinite alternate; }
+
+.ea-olive-line {
+  position: absolute;
+  left: -0.75px;
+  top: 0;
+  width: 1.5px;
+  height: 38px;
+  background: var(--ea-thread);
+}
+
+.ea-olive-branch {
+  position: absolute;
+  left: 0;
+  top: 38px;
+  padding: 4px;
+  border: 0;
+  background: none;
+  transform: translate(-50%, -4px);
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ea-olive-branch svg { display: block; }
+.ea-olive-stem { fill: none; stroke: #6b6a3a; stroke-width: 1.2px; stroke-linecap: round; }
+.ea-olive-leaf { stroke: rgba(40, 60, 30, 0.35); stroke-width: 0.5px; }
+.ea-olive-leaf--0 { fill: #8fae7a; }
+.ea-olive-leaf--1 { fill: #a9c493; }
+.ea-olive-fruit { fill: #4d5a2b; stroke: rgba(0, 0, 0, 0.3); stroke-width: 0.4px; }
+
+body:is(.detail-open, .settings-open) .ea-olive { display: none; }
+
+/* The doves fly in a layer over the app, above the petals */
+.ea-sky {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1401;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ea-flyer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.ea-flyer svg { display: block; overflow: visible; filter: drop-shadow(0 1px 2px rgba(60, 40, 120, 0.4)); }
+.ea-dove-white { fill: #ffffff; }
+.ea-dove-shade { fill: #d8d3ee; }
+.ea-dove-far { fill: #bfb8dd; }
+.ea-dove-beak { fill: #f0a05e; }
+.ea-dove-eye { fill: #2b2540; }
+.ea-dove-stem { fill: none; stroke: #7a8f4a; stroke-width: 1px; stroke-linecap: round; }
+.ea-dove-leaf { fill: #78b055; }
+
+/* The wings beat about the shoulder, staying on the body: up, flat, then
+   through to below the body line and back. The far one is a beat behind. */
+.ea-wing {
+  transform-box: view-box;
+  transform-origin: 38px 23px;
+  animation: ea-flap var(--ea-flap, 0.4s) ease-in-out infinite alternate;
+}
+
+.ea-wing--far { animation-delay: calc(var(--ea-flap, 0.4s) * -0.18); }
+
+@keyframes ea-flap {
+  from { transform: scaleY(1) rotate(-4deg); }
+  to { transform: scaleY(-0.85) rotate(6deg); }
+}
+
+/* The burst when something is starred, and the egg's */
+.ea-fx {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 1002;
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ea-egg--card,
+  .ea-egg--photo,
+  .ea-map-egg,
+  .ea-olive-sway,
+  .ea-wing,
+  .ea-egg--open .ea-egg-chick svg { animation: none; }
+  .ea-egg-half,
+  .ea-egg-chick,
+  .ea-egg-bubble { transition: none; }
+}
+
 /* Pi Day (March 14, components/pi-day.js): the normal accent, a π here and
    there. One drawing of it, used as a mask so it takes the colour of whatever
    it sits in and never falls back to a system font; the same path is in
@@ -2859,6 +3221,7 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
    way for it */
 :root[data-graduation] #data-fetch-btn { z-index: 1; }
 :root[data-graduation] .xm-mistletoe,
+:root[data-graduation] .ea-olive,
 :root[data-graduation] .hw-dangler { display: none; }
 
 .gr-wreath {

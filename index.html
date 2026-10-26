@@ -375,7 +375,7 @@
     // window.__seasonByDate and turns seasons on or off from there. A range
     // is inclusive and its ends are either a [month, day] pair or a number of
     // days from Easter Sunday (negative: before); it may wrap the new year.
-    var SEASONS = [['halloween', [10, 24], [11, 1]], ['christmas', [12, 1], [1, 10]], ['piday', [3, 14], [3, 14]], ['birthday', [11, 29], [11, 29]]];
+    var SEASONS = [['halloween', [10, 24], [11, 1]], ['christmas', [12, 1], [1, 10]], ['piday', [3, 14], [3, 14]], ['birthday', [11, 29], [11, 29]], ['easter', -7, 1]];
     // Easter Sunday of a year (anonymous Gregorian computus), as a UTC
     // timestamp; utils/season.js has the same one, keep them in step
     function easter(y) {

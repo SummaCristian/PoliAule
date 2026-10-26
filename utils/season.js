@@ -1,7 +1,7 @@
 // Seasonal decorations: a holiday's accent, small decorations on the UI and a
 // few rare animations, on for a window each year (Halloween: Oct 24 to Nov 1;
 // Christmas: Dec 1 to Jan 10). A window is fixed dates, or counted from
-// Easter for the moveable feasts.
+// Easter for the moveable feasts (Easter itself: Palm Sunday to Pasquetta).
 //
 // Which season today falls in is decided by the inline script in index.html,
 // before first paint (the date ranges live there), and left in
@@ -111,6 +111,20 @@ export const SEASONS = {
       if (m === 12 && d >= 24 && d <= 26) return { key: 'season.christmas.day', icon: 'hgi-gift' };
       if ((m === 12 && d === 31) || (m === 1 && d === 1)) return { key: 'season.christmas.newYear', icon: 'hgi-fireworks' };
       if (m === 1 && d === 6) return { key: 'season.christmas.befana', icon: 'hgi-sparkles' };
+      return null;
+    },
+  },
+  // Palm Sunday to Pasquetta, so it moves with Easter (see index.html); Easter
+  // Sunday and Pasquetta get their own banner
+  easter: {
+    load: () => import('../components/easter.js'),
+    icon: 'hgi-egg',
+    tint: '#8a5bd6',
+    keywords: ['pasqua', 'easter', 'buona pasqua', 'happy easter', 'pasquetta', 'uovo di pasqua', 'colomba'],
+    banner() {
+      const n = daysFromEaster();
+      if (n === 0) return { key: 'season.easter.day', icon: 'hgi-flower' };
+      if (n === 1) return { key: 'season.easter.monday', icon: 'hgi-tent-tree' };
       return null;
     },
   },

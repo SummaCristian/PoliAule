@@ -405,6 +405,59 @@ function decorateBuilt() {
 let chipsTimer = 0;
 let listeners = new AbortController();
 
+// ── Logo and tab icon ─────────────────────────────────────────────────────
+// The header logo's own <img> takes the Carnevale drawing (the usual logo with
+// a mask on the chair's back, in the same box, so it needs no sizing class),
+// as Easter's does (components/easter.js). index.html already swaps it as it's
+// parsed; this covers the season being turned on later, and puts the usual
+// logo back when it's turned off. The tab icon changes too.
+
+const LOGO_SRC = '/favicons/carnival/logo.webp';
+const USUAL_LOGO_SRC = '/favicons/main/logo.webp';
+const ICON_SRC = '/favicons/carnival/favicon-96x96.png';
+let logoSwap = null;   // { el, src }
+let iconSwap = null;   // [{ link, href, type }]
+
+function startLogo() {
+  // Graduation's logo wins on its days; resumeLogo() brings this one back
+  if (graduationShown()) return;
+  const el = document.querySelector('.header-logo');
+  if (el?.getAttribute('src') === LOGO_SRC) {
+    logoSwap = { el, src: USUAL_LOGO_SRC };
+  } else if (el) {
+    const img = new Image();
+    img.src = LOGO_SRC;
+    // Swapped only once it's decoded, so the header never shows a blank logo
+    img.decode().then(() => {
+      if (logoSwap || listeners.signal.aborted || graduationShown()) return;
+      logoSwap = { el, src: el.getAttribute('src') };
+      el.src = LOGO_SRC;
+    }).catch(() => { /* keep the usual logo */ });
+  }
+  iconSwap = [...document.querySelectorAll('link[rel~="icon"]')].map((link) => ({ link, href: link.getAttribute('href'), type: link.type }));
+  for (const { link } of iconSwap) {
+    link.type = 'image/png';
+    link.href = ICON_SRC;
+  }
+}
+
+// Called by utils/season.js when graduation's layer ends, its logo gone
+export function resumeLogo() {
+  if (!logoSwap && !iconSwap) startLogo();
+}
+
+function stopLogo() {
+  if (logoSwap) {
+    logoSwap.el.src = logoSwap.src;
+    logoSwap = null;
+  }
+  for (const { link, href, type } of iconSwap ?? []) {
+    link.type = type;
+    link.href = href;
+  }
+  iconSwap = null;
+}
+
 export function start() {
   listeners = new AbortController();
   const { signal } = listeners;
@@ -436,6 +489,7 @@ export function start() {
   document.addEventListener('tabvisible', sheetAfterFadeIn, { signal });
   document.addEventListener('campussheetresize', decorateSheet, { signal });
   startDangler();
+  startLogo();
   // The chips may still be upgrading
   Promise.all(CHIP_HOSTS.map((tag) => customElements.whenDefined(tag))).then(() => {
     chipsTimer = setTimeout(decorateChips, 300);
@@ -450,6 +504,7 @@ export function start() {
 
 export function stop() {
   listeners.abort();
+  stopLogo();
   sheetOn = false;
   sheetReady = false;
   stopCoriandoli();

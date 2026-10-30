@@ -459,6 +459,11 @@
     var SEASON_LOGOS = {
       halloween: ['/favicons/halloween/logo.webp', 'hw-logo'],
       christmas: ['/favicons/christmas/logo.webp', 'xm-logo'],
+      // Easter's is the usual logo's proportions (the eggs sit inside its
+      // box), so it needs no sizing class
+      easter: ['/favicons/easter/logo.webp'],
+      // …and so is Carnevale's, with its mask on the chair's back
+      carnival: ['/favicons/carnival/logo.webp'],
       // Graduation's (crowned with laurel, holding its diploma) wins over a
       // season's on its days
       graduation: ['/favicons/graduation/logo.webp', 'gr-logo'],
@@ -467,7 +472,7 @@
     window.__seasonLogo = function (img) {
       if (!seasonLogo) return;
       img.src = seasonLogo[0];
-      img.classList.add(seasonLogo[1]);
+      if (seasonLogo[1]) img.classList.add(seasonLogo[1]);
     };
     if (seasonLogo) {
       var logoPreload = document.createElement('link');

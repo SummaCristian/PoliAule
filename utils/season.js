@@ -123,6 +123,8 @@ export const SEASONS = {
   easter: {
     load: () => import('../components/easter.js'),
     icon: 'hgi-egg',
+    logo: '/favicons/easter/icon-192.png',
+    hero: '/favicons/easter/hero-512.webp',
     tint: '#8a5bd6',
     keywords: ['pasqua', 'easter', 'buona pasqua', 'happy easter', 'pasquetta', 'uovo di pasqua', 'colomba'],
     banner() {
@@ -139,6 +141,8 @@ export const SEASONS = {
   carnival: {
     load: () => import('../components/carnival.js'),
     icon: 'hgi-mask-theater-01',
+    logo: '/favicons/carnival/icon-192.png',
+    hero: '/favicons/carnival/hero-512.webp',
     tint: '#d6338a',
     keywords: ['carnevale', 'carnival', 'carnevale ambrosiano', 'coriandoli', 'maschere', 'maschera', 'giovedi grasso', 'martedi grasso', 'sabato grasso'],
     banner() {
@@ -159,8 +163,8 @@ export const SEASONS = {
     keywords: ['pi', 'π', 'pi greco', 'pigreco', 'pi day', 'pi greco day'],
   },
   // November 29, 1863: the Politecnico's founding. A light season: the navy
-  // accent, the banner (with its age) and the search row, nothing else. The
-  // usual logo stays until there is one with candles.
+  // accent, the banner (with its age) and the search row, nothing else: it
+  // keeps the usual logo.
   birthday: {
     icon: 'hgi-birthday-cake',
     tint: NAVY,

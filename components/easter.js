@@ -698,6 +698,59 @@ function decorateBuilt() {
 
 let listeners = new AbortController();
 
+// ── Logo and tab icon ─────────────────────────────────────────────────────
+// The header logo's own <img> takes the Easter drawing (the usual logo with
+// eggs over it, in the same box, so it needs no sizing class), as Christmas's
+// does (components/christmas.js). index.html already swaps it as it's parsed;
+// this covers the season being turned on later, and puts the usual logo back
+// when it's turned off. The tab icon changes too.
+
+const LOGO_SRC = '/favicons/easter/logo.webp';
+const USUAL_LOGO_SRC = '/favicons/main/logo.webp';
+const ICON_SRC = '/favicons/easter/favicon-96x96.png';
+let logoSwap = null;   // { el, src }
+let iconSwap = null;   // [{ link, href, type }]
+
+function startLogo() {
+  // Graduation's logo wins on its days; resumeLogo() brings this one back
+  if (graduationShown()) return;
+  const el = document.querySelector('.header-logo');
+  if (el?.getAttribute('src') === LOGO_SRC) {
+    logoSwap = { el, src: USUAL_LOGO_SRC };
+  } else if (el) {
+    const img = new Image();
+    img.src = LOGO_SRC;
+    // Swapped only once it's decoded, so the header never shows a blank logo
+    img.decode().then(() => {
+      if (logoSwap || !sky || graduationShown()) return;
+      logoSwap = { el, src: el.getAttribute('src') };
+      el.src = LOGO_SRC;
+    }).catch(() => { /* keep the usual logo */ });
+  }
+  iconSwap = [...document.querySelectorAll('link[rel~="icon"]')].map((link) => ({ link, href: link.getAttribute('href'), type: link.type }));
+  for (const { link } of iconSwap) {
+    link.type = 'image/png';
+    link.href = ICON_SRC;
+  }
+}
+
+// Called by utils/season.js when graduation's layer ends, its logo gone
+export function resumeLogo() {
+  if (!logoSwap && !iconSwap) startLogo();
+}
+
+function stopLogo() {
+  if (logoSwap) {
+    logoSwap.el.src = logoSwap.src;
+    logoSwap = null;
+  }
+  for (const { link, href, type } of iconSwap ?? []) {
+    link.type = type;
+    link.href = href;
+  }
+  iconSwap = null;
+}
+
 export function start() {
   listeners = new AbortController();
   const { signal } = listeners;
@@ -752,6 +805,7 @@ export function start() {
   sky.className = 'ea-sky';
   sky.setAttribute('aria-hidden', 'true');
   document.body.appendChild(sky);
+  startLogo();
   scheduleDoves(true);
 
   window.addEventListener('pointerdown', rememberTap, { capture: true, passive: true, signal });
@@ -759,6 +813,7 @@ export function start() {
 }
 
 export function stop() {
+  stopLogo();
   mapActive = false;
   clearMap();
   listeners.abort();

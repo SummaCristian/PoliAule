@@ -170,7 +170,7 @@ The glass design system and most interactive components come from the `vitrium` 
 
 | Area | Built on |
 |---|---|
-| Tokens, glass, blur, springs, press/drag deform | `vitrium/styles`, `initLiquidGlass`, the blur-capability helpers and `initRefraction`, set up in `script.js` (the glass style is set before first paint in `index.html`; both are switched from Settings) |
+| Tokens, glass, blur, springs, press/drag deform | `vitrium/styles`, `initLiquidGlass`, the blur-capability helpers and `initRefraction`, set up in `script.js` (the glass style, `curated` by default and remembered by Vitrium under `lg:glass-style`, is set before first paint in `index.html` and restored in `script.js`; both are switched from Settings) |
 | Settings toggles and segmented controls | `createToggle`, `createSegmentedControl` |
 | Footer version popover, classroom timeline popover | `createPopover` |
 | Date and time-range chips | `createChipPicker` via `components/chip-shell.js` |
@@ -185,7 +185,7 @@ Things to know:
 - **Tab bar rebuilds.** Vitrium rebuilds tab buttons when the layout changes, and the Search circle is a new element each time, so the search overlay finds it by class (`.lg-tabbar__prominent`), never by id or a held reference. Labels are only known after startup, so `bottom-nav.js` sets them with `setLabel` (via `retranslateNav`, which `script.js` calls once i18n is ready).
 - **Page padding follows the bar.** `.tab-content`, `.body-container`, `.footer` and the favourites carousel's `--fade-left` transition their padding (`--nav-shift` in `style.css`) when the bar moves between row and rail. `--side-nav-width` and `--bottom-nav-height` are only updated while the bar is in the matching layout, so the padding never chases a mid-move measurement.
 - **Campus sheet corners.** On mobile the collapsed sheet is concentric with the tab bar, using the bar's settled height and inset; the sheet is rebuilt (same detent, scroll and content) when the breakpoint or those metrics change. Its squash/stretch is limited to drags that start on the grabber or header (`deform: 'handle'`), so dragging over the building cards doesn't stretch it.
-- **Fonts and icons.** The tab and chip icons are HugeIcons glyphs passed as HTML where Vitrium expects SVG, so `bottom-nav.css` and `chip-pickers.css` size them.
+- **Fonts and icons.** The tab bar uses HugeIcons Stroke Rounded SVG paths, sized by Vitrium. Chip icons use the self-hosted HugeIcons font and are sized in `chip-pickers.css`.
 
 ---
 

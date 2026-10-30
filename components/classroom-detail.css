@@ -574,8 +574,8 @@ body.detail-open .tab-content {
      dense enough that the text only has to stand out against the glass, in
      the theme's own colours, whatever photo is behind it. */
   background: var(--lg-tint);
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
-  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
+  backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -766,8 +766,8 @@ body.detail-open .tab-content {
 
   /* Small clear-glass capsule (Vitrium's .lg-glass--clear material). */
   background: var(--lg-tint-clear);
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -797,84 +797,10 @@ body.detail-open .tab-content {
   color: var(--text-color-primary);
 }
 
-.detail-back-btn {
-  position: relative;
-
-  width: 3rem;
-  height: 3rem;
-  flex-shrink: 0;
-  border-radius: var(--radius-pill);
-  border: none;
-
-  /* Same glass material as .header-button (style.css) — this is styled as
-     one of the header buttons, just relocated over the nav row. */
-  background: var(--lg-tint);
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-
-  color: var(--text-color-secondary);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  /* Restates Vitrium's `.liquid-glass` spring (translate / scale / filter): a
-     `transition` here, being later in the cascade, would otherwise replace it,
-     and a released press or stretch would snap back instead of springing. */
-  transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease,
-    translate var(--lg-press-out-dur) var(--lg-ease-spring),
-    scale var(--lg-press-out-dur) var(--lg-ease-spring),
-    filter 0.2s ease;
-
-  /* Ensure the button and its content adapt their internal rendering to the theme */
-  color-scheme: light dark;
-}
-
-/* Outside 0.5px gradient stroke — same recipe as .header-button::after in
-   style.css. A radial-gradient mask, not the pill's box-corner + mask-
-   composite trick, since this is a true circle (see that file's comment on
-   the seam it avoids). */
-.detail-back-btn::after {
-  content: "";
-  position: absolute;
-  inset: -0.5px;
-  border-radius: inherit;
-
-  background: var(--lg-stroke-gradient);
-  opacity: var(--lg-stroke-opacity);
-
-  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
-  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
-
-  pointer-events: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  .detail-back-btn {
-    box-shadow:
-      0 0 0 0.1px var(--lg-outline),
-      var(--lg-highlight),
-      0 4px 40px 0 var(--lg-shadow-color);
-  }
-}
-
-@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .detail-back-btn {
-    background: color-mix(in srgb, var(--background-color-secondary) 95%, black);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .detail-back-btn {
-      background: color-mix(in srgb, var(--background-color-secondary) 95%, white);
-    }
-  }
-}
+/* Vitrium's glass button (.lg-button .lg-glass .lg-glass--circle
+   .liquid-glass): size, material, ring, stroke and press physics come from
+   vitrium/styles. It's one of the header buttons, relocated over the nav
+   row (#detail-back-btn below). */
 
 /* Lit hover, press feedback and swipe-deform: shared .liquid-glass rules
    (components/liquid-glass.{css,js}). The base rule keeps its own
@@ -1054,8 +980,8 @@ body.detail-open .tab-content {
 
   .detail-title-row::before {
     background: var(--lg-tint);
-    -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-    backdrop-filter: blur(var(--lg-blur-sm));
+    -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+    backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
     box-shadow: var(--lg-shadow-rim);
   }
 
@@ -1127,6 +1053,12 @@ body.detail-open .tab-content {
 /* Without scroll-driven animations: the title snaps into its pill once the
    row sticks (.title-stuck, from classroom-detail.js), as before. */
 @supports not (animation-timeline: scroll()) {
+  /* The ring layer only follows the scroll-driven pill. Here nothing sizes or
+     hides it, so Vitrium's inset would ring the whole full-width row. */
+  .detail-title-row > .detail-title-ring {
+    display: none;
+  }
+
   /* Stuck, the title is narrower (it slides past the back button) and can wrap
      onto more lines; the row keeps its unstuck height (--title-row-h, measured
      in syncTitleStuck) and lets the pill overflow it, so the content below
@@ -1155,8 +1087,8 @@ body.detail-open .tab-content {
      sample what is behind it. */
   #classroom-detail-overlay.title-stuck .detail-title::before {
     background: var(--lg-tint);
-    -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-    backdrop-filter: blur(var(--lg-blur-sm));
+    -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+    backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
   }
 
   #classroom-detail-overlay.title-stuck .detail-title::after {
@@ -1273,8 +1205,8 @@ body.detail-open .tab-content {
      letting the colors through. Always frosted, whatever the glass style
      setting: each section carries data-glass-style="frost". */
   background: var(--lg-tint-clear);
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -1360,8 +1292,8 @@ body.detail-open .tab-content {
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
     0 4px 40px 0 var(--lg-shadow-color);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
 }
 
 /* Outside 0.5px gradient stroke — same recipe as .detail-back-btn::after
@@ -1495,8 +1427,8 @@ body.detail-open .tab-content {
   color: var(--text-color-primary);
 
   background: color-mix(in srgb, var(--color-status-partial) 22%, var(--lg-tint-clear));
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   /* style.css forces `.lg-ring` to the rim shadow alone (!important), so the
      yellow comes through the ring Vitrium draws, not a box-shadow here */
   --lg-ring-color: color-mix(in srgb, var(--color-status-partial) 22%, transparent);
@@ -1574,8 +1506,8 @@ body.detail-open .tab-content {
   gap: 0.75rem;
 
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-md));
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
+  backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
   border-radius: var(--radius-pill);
   padding: 0.75rem 0.5rem;
 
@@ -1641,15 +1573,11 @@ body.detail-open .tab-content {
     position: absolute;
     right: calc(100% + 8px); /* 8px gap between indicator and pill */
 
-    background: var(--text-color-accent);
-    color: white;
-    border-radius: var(--radius-pill);
     padding: 3px 10px;
     font-size: var(--text-75);
     font-weight: 800;
     white-space: nowrap;
     cursor: default;
-    box-shadow: var(--glow-accent);
 
     opacity: 0;
     animation: detail-today-indicator-appear 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards;
@@ -1658,28 +1586,8 @@ body.detail-open .tab-content {
     transition: scale 0.15s ease;
   }
 
-  .detail-desktop-today-indicator::after {
-    content: '';
-    position: absolute;
-    left: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 5px solid transparent;
-    border-left-color: var(--text-color-accent);
-  }
-
   .detail-desktop-today-indicator.hidden {
     display: none;
-  }
-}
-
-@media (min-width: 600px) and (prefers-color-scheme: dark) {
-  .detail-desktop-today-indicator {
-    background: var(--color-accent-dark);
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
-  }
-  .detail-desktop-today-indicator::after {
-    border-left-color: var(--color-accent-dark);
   }
 }
 
@@ -1925,24 +1833,9 @@ body.detail-open .tab-content {
   left: var(--pos);
   transform: translateX(-50%);
   z-index: 10;
-  background: var(--color-now);
-  color: white;
   padding: 2px 8px;
-  border-radius: var(--radius-pill);
   font-size: var(--text-70);
   font-weight: 800;
-  box-shadow: var(--glow-info);
-}
-
-/* Arrow for the now indicator at the top */
-.detail-schedule-ticks .timeline-time-indicator--now::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 4px solid transparent;
-  border-top-color: var(--color-now);
 }
 
 .detail-schedule-bar-wrapper .timeline-time-indicator--now {
@@ -1998,37 +1891,13 @@ body.detail-open .tab-content {
   top: 1px;
   left: var(--qpos);
   transform: translateX(-50%);
-  background: var(--text-color-accent);
-  color: white;
-  border-radius: var(--radius-pill);
   padding: 2px 8px;
   font-size: var(--text-70);
   font-weight: 800;
   white-space: nowrap;
-  box-shadow: var(--glow-accent);
   user-select: none;
   z-index: 10;
   pointer-events: none;
-}
-
-.detail-schedule-ticks .detail-schedule-query-indicator::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 4px solid transparent;
-  border-top-color: var(--text-color-accent);
-}
-
-@media (prefers-color-scheme: dark) {
-  .detail-schedule-ticks .detail-schedule-query-indicator {
-    background: var(--color-accent-dark);
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
-  }
-  .detail-schedule-ticks .detail-schedule-query-indicator::after {
-    border-top-color: var(--color-accent-dark);
-  }
 }
 
 /* Hidden on mobile (side indicators take over instead) */
@@ -2172,31 +2041,17 @@ body.detail-open .tab-content {
     position: absolute;
     transform: translateX(-50%);
 
-    background: var(--text-color-accent);
-    color: white;
-    border-radius: var(--radius-pill);
     padding: 2px 10px;
     font-size: var(--text-75);
     font-weight: 800;
     white-space: nowrap;
-    box-shadow: var(--glow-accent);
     transform-origin: bottom center;
 
     opacity: 0;
     animation: today-indicator-appear 0.65s linear 0.35s forwards;
 
     will-change: transform, scale;
-    transition: scale 0.15s ease, background-color 0.2s ease;
-  }
-
-  .detail-today-indicator::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: var(--text-color-accent);
+    transition: scale 0.15s ease;
   }
 
   .detail-today-indicator.hidden {
@@ -2205,7 +2060,6 @@ body.detail-open .tab-content {
 
   .detail-today-indicator:hover {
     scale: 1.05;
-    background: color-mix(in srgb, var(--text-color-accent) 85%, black);
   }
 
   /* Container: column — selector on top, then time axis + bar below */
@@ -2272,27 +2126,13 @@ body.detail-open .tab-content {
     top: var(--pos);
     transform: translateY(-50%);
     transform-origin: left center;
-    background: var(--color-now);
-    color: white;
     padding: 2px 8px;
-    border-radius: var(--radius-pill);
     font-size: var(--text-70);
     font-weight: 800;
     white-space: nowrap;
-    box-shadow: var(--glow-info);
     user-select: none;
     z-index: 10;
     animation: now-indicator-appear-mobile 0.65s linear 0.35s forwards;
-  }
-
-  /* Arrow points left toward the bar */
-  .detail-schedule-bar-wrapper .timeline-time-indicator--now::after {
-    top: 50%;
-    right: 95%;
-    left: auto;
-    border-top-color: transparent;
-    border-right-color: var(--color-now);
-    transform: translateY(-50%);
   }
 
   @keyframes now-indicator-appear-mobile {
@@ -2502,39 +2342,13 @@ body.detail-open .tab-content {
     left: calc(100% + 0.5rem);
     top: var(--qpos);
     transform: translateY(-50%);
-    background: var(--text-color-accent);
-    color: white;
-    border-radius: var(--radius-pill);
     padding: 2px 8px;
     font-size: var(--text-70);
     font-weight: 800;
     white-space: nowrap;
-    box-shadow: var(--glow-accent);
     user-select: none;
     z-index: 10;
     pointer-events: none;
-  }
-
-  /* Arrow pointing left toward the bar */
-  .detail-schedule-bar-wrapper .detail-schedule-query-indicator::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: 95%;
-    left: auto;
-    border: 4px solid transparent;
-    border-right-color: var(--text-color-accent);
-    transform: translateY(-50%);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .detail-schedule-bar-wrapper .detail-schedule-query-indicator {
-      background: var(--color-accent-dark);
-      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
-    }
-    .detail-schedule-bar-wrapper .detail-schedule-query-indicator::after {
-      border-right-color: var(--color-accent-dark);
-    }
   }
 }
 
@@ -3164,19 +2978,6 @@ body.detail-open .tab-content {
   ::view-transition-old(detail-back-btn):only-child,
   ::view-transition-old(favourite-btn):only-child {
     animation: none;
-  }
-}
-
-@media (max-width: 599px) and (prefers-color-scheme: dark) {
-  .detail-today-indicator {
-    background: var(--color-accent-dark);
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
-  }
-  .detail-today-indicator::after {
-    border-top-color: var(--color-accent-dark);
-  }
-  .detail-today-indicator:hover {
-    background: var(--color-accent-dark-hover);
   }
 }
 

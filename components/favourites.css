@@ -181,7 +181,467 @@
   }
 }
 
-/* ── Expand toggle + expanded grid (desktop, >= 1100px) ─────────────────
+/* The header's buttons: the pencil and the expand toggle, or while editing
+   undo / redo / cancel / done in their place (components/favourites.js). The
+   negative margin keeps the header the height it has without them. */
+.favourites-actions {
+  position: relative;
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  margin-block: -0.75rem;
+  /* The carousel's shadow room (padding pulled back with a negative margin)
+     reaches up over the header; stay above it so clicks land here, and
+     above its edge fade (.favourites-strip::after, z-index 1). */
+  z-index: 2;
+}
+
+.favourites-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.favourites-actions-group[hidden] {
+  display: none;
+}
+
+/* The group trading places with the arriving one leaves the flow, anchored
+   to the right, so the arriving one has the row to itself while it fades. */
+.favourites-actions-group.is-leaving {
+  position: absolute;
+  inset: 0 0 0 auto;
+  pointer-events: none;
+}
+
+.favourites-action-btn {
+  /* The toolbar's size (.header-button's own 3rem) */
+  flex: none;
+}
+
+.favourites-action-btn[hidden] {
+  display: none;
+}
+
+/* Undo and redo at the ends of their history. aria-disabled, not disabled, so
+   the key that was just used keeps its focus. */
+.favourites-action-btn[aria-disabled="true"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Four of them next to the title: they fit from a 360px phone up at the
+   toolbar's size, and go a size down on anything narrower */
+.favourites-actions-edit {
+  gap: 0.375rem;
+}
+
+@media (max-width: 359.98px) {
+  .favourites-actions-edit .favourites-action-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+/* Accent-tinted glass (Vitrium's .lg-glass--tinted): the accent follows the
+   season and the graduation theme like the toggles do. */
+.favourites-done-btn {
+  --lg-glass-tint: var(--lg-accent);
+  --lg-glass-tint-text: #fff;
+  color: var(--lg-glass-tint-text);
+}
+
+/* The arrows run corner to corner of their glyph, so at the size a round
+   icon takes (style.css's global .hgi-stroke 22px !important, hence this
+   one's) they reach the rim; smaller, they sit clear of it. The other icons
+   take the toolbar's size. */
+.favourites-expand-btn i.hgi-stroke {
+  font-size: var(--text-125) !important;
+  line-height: 1;
+}
+
+/* Only where the two-column layout has something to expand */
+@media (max-width: 1099.98px) {
+  .favourites-expand-btn {
+    display: none;
+  }
+}
+
+/* ── Edit mode ───────────────────────────────────────────────────────────
+   Below 1100px the strip becomes a wrapping grid in place; from there up the
+   expanded grid below is used (components/favourites.js forces it). */
+
+@media (max-width: 1099.98px) {
+  .favourites-editing .favourites-carousel {
+    display: grid;
+    /* Tracks as wide as the strip's cards, not stretched to fill the row:
+       the cards keep their size going in and out of the edit, and only move. */
+    grid-template-columns: repeat(auto-fill, min(100%, var(--fav-card-w)));
+    /* What the tracks leave of the row is shared out evenly, at the edges and
+       between them: roomier than the strip */
+    justify-content: space-evenly;
+    /* Rows as roomy, and clear of the badge on the card below */
+    gap: 1.5rem 0.75rem;
+
+    /* Nothing scrolls sideways any more: no bleed, shadow room or edge fade */
+    margin: 0.75rem 0 0;
+    padding: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+
+  .favourites-editing .favourites-strip::before,
+  .favourites-editing .favourites-strip::after {
+    display: none;
+  }
+
+  .favourites-editing .favourites-carousel > :is(.classroom-card, .bo-card) {
+    width: auto;
+  }
+}
+
+/* The wiggle. On `rotate`, not `transform`: the cards use that for their
+   hover and press. Each item has its own phase and speed (set inline, from
+   its key), so neighbours are out of step. */
+@keyframes fav-wiggle {
+  from { rotate: -1.2deg; }
+  to { rotate: 1.2deg; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .favourites-editing .favourites-carousel > :is(.classroom-card, .bo-card) {
+    animation: fav-wiggle var(--fav-wiggle-dur, 280ms) ease-in-out var(--fav-wiggle-delay, 0ms) infinite alternate;
+  }
+
+  /* Holds still while the layout morphs, which moves the cards about enough */
+  .favourites-morphing .favourites-carousel > :is(.classroom-card, .bo-card) {
+    animation-play-state: paused;
+  }
+}
+
+/* The remove badge, on the item's top-left corner: a 44px hit area, centred
+   where the small disc sits, holding the disc. */
+.fav-remove {
+  position: absolute;
+  top: -1rem;
+  left: -1rem;
+  z-index: 4;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: inherit;
+  animation: fav-badge-in 320ms cubic-bezier(0.34, 1.35, 0.64, 1) backwards;
+}
+
+.fav-remove-glass.header-button {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.fav-remove i.hgi-stroke {
+  font-size: 1rem !important;
+  line-height: 1;
+}
+
+@keyframes fav-badge-in {
+  from { opacity: 0; scale: 0.4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fav-remove {
+    animation: none;
+  }
+}
+
+/* A held finger on a card is no menu for its photo */
+.favourites-editing .favourites-carousel > * {
+  -webkit-touch-callout: none;
+}
+
+/* ── Dragging a card (components/favourites-drag.js) ──────────────────────
+   The card stays in the grid and is moved with translate / scale / rotate
+   from script. The wiggle is switched off on it from there too: a running
+   animation beats any inline style. */
+
+/* A folder's transition-property is `all`, and with reduced motion every
+   duration is 0.01ms (style.css): changing its `order` then starts a
+   transition, so for a frame the grid still lays it out at its old place. The
+   drag reads the new layout at once. Nothing on the folder itself transitions
+   while editing. */
+.favourites-editing .favourites-carousel > .bo-card {
+  transition-property: none;
+}
+
+/* Above its neighbours from the pick-up until it has landed */
+.fav-held {
+  z-index: 6;
+  will-change: translate, scale, rotate;
+}
+
+/* Taken out of the section to be removed: out of the flow, above the results
+   column it may cross (still under the app's header and tab bar). */
+.fav-out {
+  z-index: 12;
+}
+
+/* The lifted look is a layer of its own, so that its fade is just an opacity:
+   a deeper shadow (it only shows outside the card, the layer being the card's
+   size), and the remove look for the card taken out, a veil with a minus. */
+.fav-lift {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 22px 44px -8px rgba(0, 0, 0, 0.34), 0 6px 14px rgba(0, 0, 0, 0.14);
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+  pointer-events: none;
+}
+
+.fav-dragging > .fav-lift {
+  opacity: 1;
+}
+
+.bo-card > .fav-lift {
+  border-radius: 18px;
+}
+
+.fav-lift-veil {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--background-color) 62%, transparent);
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
+
+.fav-lift-veil i.hgi-stroke {
+  font-size: 2rem !important;
+  line-height: 1;
+  color: var(--text-color-primary);
+}
+
+.fav-out > .fav-lift {
+  box-shadow: none;
+}
+
+.fav-out > .fav-lift > .fav-lift-veil {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fav-lift,
+  .fav-lift-veil {
+    transition: none;
+  }
+}
+
+/* ── Dragging a result card in (components/favourites-drop.js) ───────────
+   The card it was picked up from stays in the results, dimmed. A copy of it
+   floats in a layer of its own that stops short of the safe areas (iOS Safari
+   turns its bars solid under a fixed element that reaches them), above the
+   page and under the header and the tab bar. */
+
+.fav-drop-layer {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: 0;
+  right: 0;
+  overflow: clip;
+  z-index: 900;
+  pointer-events: none;
+}
+
+/* Sized and moved from script, about its middle; the two looks it shows are
+   boxes of their own inside it (and the lift, which is the same shadow as a
+   card dragged inside the strip). */
+.fav-token {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.fav-drop-source {
+  opacity: 0.5;
+  transition: transform 0.15s ease, opacity 160ms ease-out;
+}
+
+/* A name pill springs back from the stretch it was torn off with: its liquid
+   glass's own spring (Vitrium's liquid-glass.css), which the rule above would
+   replace. */
+.building-section-titles.fav-drop-source {
+  transition:
+    translate var(--lg-press-out-dur) var(--lg-ease-spring),
+    scale var(--lg-press-out-dur) var(--lg-ease-spring),
+    opacity 160ms ease-out;
+}
+
+/* A pill's token is the pill's size, while the look it turns into is the
+   folder's: each look carries its own shadow. */
+.fav-token.fav-dragging .fav-lift {
+  opacity: 1;
+}
+
+.building-section-titles > .fav-lift {
+  border-radius: inherit;
+}
+
+/* Something that is a favourite already. Its card in the strip owns up to it
+   for as long as it is held, on a plate of clear tinted glass laid behind it
+   (components/favourites-drop.js sizes and moves it), and over the
+   Favourites it is the ghost: dimmed where it is while a place opens
+   elsewhere, lit (and lifted a little, plate and all) while the token is held
+   at its own place. `fav-ghost-host` carries the transitions until the drag
+   is over: the folders' are off meanwhile (below), and with the classes gone
+   the card would snap back. */
+/* Hollow under the card (its padding is the band left showing, set from
+   script): a dimmed ghost, or a folder's own glass, shows the page through
+   it, not the plate. The corners the card's own rounding leaves are the
+   plate's, so its inner edge follows the card's. Same cut as the glass's
+   stroke (Vitrium's .lg-glass::after). */
+.fav-known-plate {
+  /* A hint of the accent, not a fill */
+  --lg-tint-strength-clear: 18%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  position: absolute;
+  pointer-events: none;
+  transition: scale 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+  animation: fav-plate-in 260ms cubic-bezier(0.3, 0.7, 0.4, 1) backwards;
+}
+
+.fav-known-plate.is-stay {
+  scale: 1.03;
+}
+
+@keyframes fav-plate-in {
+  from { opacity: 0; scale: 0.94; }
+}
+
+.fav-dropping .favourites-carousel > :is(.classroom-card, .bo-card).fav-ghost-host {
+  transition:
+    opacity 160ms ease-out,
+    scale 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.favourites-carousel > .fav-ghost {
+  opacity: 0.5;
+}
+
+.favourites-carousel > .fav-ghost.fav-ghost-stay {
+  opacity: 1;
+  scale: 1.03;
+}
+
+/* The token's star, a bubble of tinted glass: on a corner of what it is a
+   copy of, faded in and out with its lift. */
+.fav-token-star {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+  pointer-events: none;
+}
+
+.fav-token-star > .star-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.fav-token.fav-dragging .fav-token-star {
+  opacity: 1;
+}
+
+/* It says what the card's own star says: that one is away meanwhile, and back
+   by the time the token is on its card again. */
+.fav-token-from .classroom-card-fav-star {
+  transition: opacity 180ms ease-out;
+}
+
+.fav-token.fav-dragging:has(> .fav-token-star) .fav-token-from .classroom-card-fav-star {
+  opacity: 0;
+}
+
+/* The strip's edge on the side the card is on, while it is scrolled out of
+   sight. Above the strip's own edge fades. */
+.fav-edge-hint {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 3rem;
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+  pointer-events: none;
+}
+
+.fav-edge-hint[data-side="start"] {
+  left: 0;
+  background: radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--text-color-accent) 45%, transparent), transparent);
+}
+
+.fav-edge-hint[data-side="end"] {
+  right: 0;
+  background: radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--text-color-accent) 45%, transparent), transparent);
+}
+
+.fav-edge-hint.is-on {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fav-dropping .favourites-carousel > :is(.classroom-card, .bo-card).fav-ghost-host,
+  .fav-token-star,
+  .fav-edge-hint,
+  .fav-known-plate {
+    transition: none;
+  }
+
+  .fav-known-plate {
+    animation: none;
+  }
+}
+
+/* The strip's place for the card being dragged in: laid out like a card, but
+   not seen, until the token is swapped for it. */
+.fav-placeholder {
+  visibility: hidden;
+}
+
+/* Nothing in the cards answers to the pointer meanwhile: no hover, no preview,
+   no text selection under it. Folders' transition-property is `all`, and with
+   reduced motion every duration is 0.01ms (style.css): changing their `order`
+   would start a transition. */
+.fav-dropping {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fav-dropping :is(.classroom-card, .bo-card, .building-section-titles) {
+  pointer-events: none;
+}
+
+.fav-dropping .favourites-carousel > .bo-card {
+  transition-property: none;
+}
+
+/* ── Expanded grid ───────────────────────────────────────────────────────
    The toggle only shows in the two-column layout while the carousel
    overflows (components/favourites.js). Expanded, the section fills the whole
    left column and the carousel becomes a wrapping card grid; the pickers move
@@ -194,34 +654,20 @@
   gap: 0.75rem;
 }
 
-.favourites-expand-btn {
-  flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
-  /* Keep the header the height it has without the button. */
-  margin-block: -0.5rem;
-  /* The carousel's shadow room (padding pulled back with a negative margin)
-     reaches up over the header; stay above it so clicks land here, and
-     above its edge fade (.favourites-strip::after, z-index 1). */
-  z-index: 2;
-}
-
-.favourites-expand-btn[hidden] {
+/* While the layout morphs (components/favourites.js), the strip doesn't clip
+   above or below, so cards can travel between it and the grid in plain
+   sight. Its sides still clip: cards off the end of the strip would
+   otherwise sit over the results column until the morph lands. Not clip-path
+   (Safari lets composited, i.e. animating, children escape it). The edge fade
+   is off meanwhile. */
+.favourites-morphing .favourites-strip::before,
+.favourites-morphing .favourites-strip::after {
   display: none;
 }
 
-/* The arrows run corner to corner of their glyph, so at the size a round
-   icon takes (style.css's global .hgi-stroke 22px !important, hence this
-   one's) they reach the rim; smaller, they sit clear of it. */
-.favourites-expand-btn i.hgi-stroke {
-  font-size: var(--text-125) !important;
-  line-height: 1;
-}
-
-@media (max-width: 1099.98px) {
-  .favourites-expand-btn {
-    display: none;
-  }
+.favourites-morphing .favourites-carousel {
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 @media (min-width: 1100px) {
@@ -241,25 +687,12 @@
   }
 
   .favourites-expanded .favourites-strip::before,
-  .favourites-expanded .favourites-strip::after,
-  .favourites-morphing .favourites-strip::before,
-  .favourites-morphing .favourites-strip::after {
+  .favourites-expanded .favourites-strip::after {
     display: none;
   }
 
   .favourites-expanded .favourites-carousel > :is(.classroom-card, .bo-card) {
     width: auto;
-  }
-
-  /* While the expand/collapse morph runs (components/favourites.js), the
-     strip doesn't clip above or below, so cards can travel between it and
-     the grid in plain sight. Its sides still clip: cards off the end of the
-     strip would otherwise sit over the results column until the morph lands.
-     Not clip-path (Safari lets composited, i.e. animating, children escape
-     it). The edge fade is off meanwhile (above). */
-  .favourites-morphing .favourites-carousel {
-    overflow-x: clip;
-    overflow-y: visible;
   }
 
   /* The header and pickers settle in from their leading corner, not the

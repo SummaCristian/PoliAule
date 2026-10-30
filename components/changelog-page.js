@@ -10,6 +10,7 @@
 // (scripts/vite-changelog.js) and fetched from /changelog/. Opened over the
 // Info page, it covers it and hands it back on close, scroll and all; the
 // settings page does the same to it (cover / uncover).
+import { decorate } from '../utils/season.js';
 import { getLocale, onLanguageSwitch, t } from '../i18n.js';
 import { escapeHtml, safeUrl } from '../utils/html.js';
 import { springEasing } from '../utils/spring-easing.js';
@@ -552,6 +553,7 @@ class ChangelogPage {
       e.preventDefault();
       this._toggle.el.click();
     });
+    decorate('changelog', content);
   }
 
   _setBetasInert(list, showBetas) {
@@ -590,6 +592,7 @@ class ChangelogPage {
         ${GITHUB_SVG}<span>${escapeHtml(t('changelog.viewOnGitHub'))}</span>
       </a>` : ''}`;
 
+    decorate('changelog', content);
     if (!e.hasMore) return;
     const article = content.querySelector('.cl-longform');
     this._loadBody(version, locale).then(html => {

@@ -1,4 +1,4 @@
-import { snapGeometry, morphGeometry, hideInnerBoxInstantly, unhideInnerBox, sheetPhysics } from 'vitrium';
+import { snapGeometry, morphGeometry, morphRefraction, hideInnerBoxInstantly, unhideInnerBox, sheetPhysics } from 'vitrium';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils/html.js';
 import { createBuildingStarButton } from '../utils/favourites.js';
@@ -29,7 +29,6 @@ import { ownBack } from '../utils/back-stack.js';
 // Back closes it (utils/back-stack.js). From a classroom opened out of it,
 // Back closes the classroom page and leaves the panel up.
 
-const MORPH_MS = 420;   // --lg-morph-panel-dur (vitrium/styles/morph-popup.css)
 const EDGE = 12;        // px kept clear of the safe area, around the panel
 const MAX_W = 560;      // the panel's width on a wide screen
 const FOLDER_RADIUS = '18px';   // .bo-card-front
@@ -163,6 +162,11 @@ function triggerRect(folder) {
   return { left: r.left, top: r.top, width: r.width, height: r.height };
 }
 
+// How long the panel's trip takes: Vitrium's --lg-morph-panel-dur (morph-popup.css)
+function morphMs() {
+  return parseFloat(getComputedStyle(panel).getPropertyValue('--lg-morph-panel-dur')) * 1000 || 440;
+}
+
 const visibleTrigger = () => {
   const el = current?.findTrigger();
   return el && el.getClientRects().length ? el : null;
@@ -171,7 +175,7 @@ const visibleTrigger = () => {
 function onMorphEnd(mySeq, cb) {
   morphCleanup?.();
   const done = () => { morphCleanup?.(); if (mySeq === seq) cb(); };
-  const fallback = setTimeout(done, MORPH_MS + 60);
+  const fallback = setTimeout(done, morphMs() + 60);
   const handler = (e) => {
     if (e.target === panel && e.propertyName === 'transform') done();
   };
@@ -203,7 +207,7 @@ function render(campusId, building) {
         <span class="bpop-total secondary">${escapeHtml(t('overview.subtitle').replace('{n}', n))}</span>
       </div>
       <div class="bpop-actions">
-        <button class="header-button lg-ring bpop-btn bpop-close liquid-glass" type="button" aria-label="${escapeHtml(t('favourites.closeBuilding'))}">
+        <button class="header-button lg-button lg-glass lg-glass--circle bpop-btn bpop-close liquid-glass" type="button" aria-label="${escapeHtml(t('favourites.closeBuilding'))}">
           <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
         </button>
       </div>
@@ -213,7 +217,7 @@ function render(campusId, building) {
     </div>
   `;
   inner.querySelector('.bpop-actions')
-    .prepend(createBuildingStarButton(campusId, building.name, 'header-button lg-ring bpop-btn'));
+    .prepend(createBuildingStarButton(campusId, building.name, 'header-button lg-button lg-glass lg-glass--circle bpop-btn'));
   inner.querySelector('.bpop-close').addEventListener('click', () => close());
   inner.querySelector('.bpop-header').addEventListener('pointerdown', onDragPointerDown);
   appendClassroomsByFloor(inner.querySelector('.bpop-grid'), building);
@@ -336,6 +340,9 @@ export function openBuildingPopup({ campusId, building, folder, findTrigger }) {
         onMorphEnd(mySeq, done);
       },
     });
+    // Its glass, and the glass on it, stay unbent through the trip and take
+    // their bend as it lands, pinned at the panel's box (vitrium's refraction.js)
+    morphRefraction(panel, { radius: parseFloat(PANEL_RADIUS), duration: morphMs() });
   });
 }
 
@@ -403,5 +410,6 @@ function close() {
         });
       },
     });
+    morphRefraction(panel, { radius: parseFloat(FOLDER_RADIUS), duration: morphMs() });
   });
 }

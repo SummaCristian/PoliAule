@@ -10,7 +10,20 @@ try {
     localStorage.removeItem('poliAule_blurMode');
   }
   localStorage.removeItem('poliAule_blurBenchmark');
+
+  // Same for the glass style: Vitrium remembers it under lg:glass-style now.
+  const oldStyle = localStorage.getItem('poliAule_glassStyle');
+  if (oldStyle !== null) {
+    if (localStorage.getItem('lg:glass-style') === null && ['frost', 'transparent'].includes(oldStyle)) {
+      localStorage.setItem('lg:glass-style', oldStyle);
+    }
+    localStorage.removeItem('poliAule_glassStyle');
+  }
 } catch { /* storage unavailable */ }
+
+// The page's glass style: the visitor's pick, or curated. index.html already set
+// it before first paint; this makes Vitrium's own state agree with it.
+restoreGlassStyle('curated');
 
 if (ENV_LABEL) {
   const badge = document.getElementById('env-badge');
@@ -25,9 +38,9 @@ import {
   loadCachedClassroomsData,
   isCampusClosedAllDay,
   getOpenCommonAreas,
-  lastFetchedAt,
   isDayPending,
   whenClassroomsDataSettled,
+  fetchStatus,
   SKIP_DAYS
 } from './available-rooms-script.js';
 
@@ -38,6 +51,7 @@ import { classroomDetail } from './components/classroom-detail.js';
 import { infoPage } from './components/info-page.js';
 import { changelogPage } from './components/changelog-page.js';
 import { settingsPage } from './components/settings-page.js';
+import { notFoundPage } from './components/not-found-page.js';
 import { initUpdateBanner } from './components/update-banner.js';
 import { ENV_LABEL } from './utils/env.js';
 import { initInfoHint } from './components/info-hint.js';
@@ -54,17 +68,19 @@ import './components/date-chip-picker.js';
 import './components/time-range-chip-picker.js';
 import { initPickerDock } from './components/picker-dock.js';
 import { initPickerRowFlip } from './components/picker-row-flip.js';
-import './components/data-fetch-card.js';
+import { renderDataStatus, setDataReload } from './components/data-fetch-card.js';
 
 import { buildCardForClassroom } from './components/classroom-list.js';
 import { buildingOverview } from './components/building-overview.js';
 import { attachBuildingScrubber, cancelBuildingScrubber } from './components/building-scrubber.js';
-import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark, initRefraction } from 'vitrium';
+import { lazySticky } from './utils/lazy-sticky.js';
+import './utils/glass-roles.js';
+import { initLiquidGlass, createButton, resolveBlurCapability, applyBlurState, scheduleIdleBenchmark, initRefraction, restoreGlassStyle } from 'vitrium';
 import { initFavourites, renderFavourites } from './components/favourites.js';
 import { initCardDayPopover } from './components/card-day-popover.js';
-import { createBuildingStarButton } from './utils/favourites.js';
+import { createBuildingStarButton, buildingKey } from './utils/favourites.js';
 
-import { initI18n, t, getLocale, applyTranslations, onLanguageSwitch, animateI18nElement } from './i18n.js';
+import { initI18n, t, applyTranslations, onLanguageSwitch } from './i18n.js';
 import { escapeHtml } from './utils/html.js';
 import './components/tooltip.js';
 import { initSettings, applyPreferredCampusIfEnabled, applyRememberLastCampusIfEnabled, SHOW_PARTIAL_KEY, INTERVAL_HOURS_KEY, getRefractionPref } from './components/settings.js';
@@ -123,6 +139,7 @@ function dismissSplash() {
     revealHeader();
     changelogPage.checkHash();
     settingsPage.checkHash();
+    notFoundPage.checkHash();
     return;
   }
 
@@ -141,6 +158,7 @@ function dismissSplash() {
   const isInfo = location.hash === '#info';
   const isChangelog = changelogPage.matchesHash;
   const isSettings = settingsPage.matchesHash;
+  const isNotFound = notFoundPage.matchesHash;
 
   if (document.startViewTransition) {
     // --- View Transition path ---
@@ -195,6 +213,7 @@ function dismissSplash() {
         // A #settings link opens in this same transition, so the app under
         // it never shows first
         if (isSettings) settingsPage.openInSplash();
+        if (isNotFound) notFoundPage.openInSplash();
       });
 
       // The logo curves into the header on a spring per axis
@@ -216,6 +235,7 @@ function dismissSplash() {
     // Under the fading splash already, rather than after it
     if (isChangelog) changelogPage.checkHash();
     if (isSettings) settingsPage.checkHash();
+    if (isNotFound) notFoundPage.checkHash();
 
     splashLogo.classList.add('splash-logo-flying');
     void splashLogo.offsetWidth;
@@ -306,8 +326,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const header = document.querySelector('.header');
-  const setHeaderHeight = () =>
-    document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
+  // Live height of the sticky picker bar (mobile), so the results' sticky
+  // per-building headers can park directly beneath it instead of overlapping.
+  const pickerBar = document.getElementById('available-classrooms-form');
+  // Sticky only once it's up where it sticks (utils/lazy-sticky.js)
+  lazySticky(pickerBar);
+  // Both measured, then both published: setting one between the two reads
+  // would lay the page out again for the second.
+  const setHeaderHeight = () => {
+    const headerH = header.offsetHeight;
+    const pickerH = pickerBar?.offsetHeight;
+    const style = document.documentElement.style;
+    style.setProperty('--header-height', `${headerH}px`);
+    if (pickerBar) style.setProperty('--picker-bar-height', `${pickerH}px`);
+  };
   setHeaderHeight();
   // The header's top padding is env(safe-area-inset-top), which a home-screen
   // app often reports as 0 (or the other orientation's value) at first layout
@@ -322,16 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) setHeaderHeight();
   });
-
-  // Live height of the sticky picker bar (mobile), so the results' sticky
-  // per-building headers can park directly beneath it instead of overlapping.
-  const pickerBar = document.getElementById('available-classrooms-form');
-  if (pickerBar) {
-    const setPickerBarHeight = () =>
-      document.documentElement.style.setProperty('--picker-bar-height', `${pickerBar.offsetHeight}px`);
-    setPickerBarHeight();
-    new ResizeObserver(setPickerBarHeight).observe(pickerBar);
-  }
+  if (pickerBar) new ResizeObserver(setHeaderHeight).observe(pickerBar);
 })
 
 document.querySelectorAll('.button-primary').forEach(btn => {
@@ -364,25 +387,30 @@ function buildBuildingSection(building, rooms, from, to, cardIndex = 0, isToday 
   headerEl.className = 'building-section-header';
   headerEl.style.setProperty('--appear-delay', `${Math.min(cardIndex * 30, 300)}ms`);
   headerEl.innerHTML = `
-    <button class="building-section-titles lg-ring liquid-glass" type="button" aria-haspopup="dialog" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}">
+    <button class="building-section-titles lg-ring liquid-glass" type="button" aria-haspopup="dialog" aria-label="${escapeHtml(t('building.prefix'))} ${escapeHtml(buildingName)}${building.altName ? ` ${escapeHtml(building.altName)}` : ''}">
       <span class="building-name">${t('building.prefix')} ${escapeHtml(buildingName)}</span>
       ${building.altName ? `<span class="building-alt-name">${escapeHtml(building.altName)}</span>` : ''}
     </button>
     <div class="building-section-actions">
-      <button class="header-button lg-ring building-section-btn building-section-jump liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
+      <button class="header-button lg-button lg-glass lg-glass--circle building-section-btn building-section-jump liquid-glass" type="button" aria-label="${escapeHtml(t('building.viewInCampus').replace('{name}', buildingName))}">
         <i class="hgi-stroke hgi-arrow-right-01" aria-hidden="true"></i>
       </button>
     </div>
   `;
   // Stars the whole building (utils/favourites.js), next to the jump button.
   headerEl.querySelector('.building-section-actions')
-    .prepend(createBuildingStarButton(campusId, buildingName, 'header-button lg-ring building-section-btn'));
+    .prepend(createBuildingStarButton(campusId, buildingName, 'header-button lg-button lg-glass lg-glass--circle building-section-btn'));
   decorate('buildingHeader', headerEl, { campusId, building });
   cardIndex++;
   section.appendChild(headerEl);
+  // Sticky only once its section has come up the screen (utils/lazy-sticky.js)
+  lazySticky(headerEl);
 
   // Tapping the name pill "zooms out" into the building overview grid.
   const titlesBtn = headerEl.querySelector('.building-section-titles');
+  // Pulled off and dropped in the Favourites, it stars the building
+  // (components/favourites-drop.js, desktop only).
+  if (campusId != null) titlesBtn.dataset.favDrag = buildingKey(campusId, buildingName);
   const openOverview = () => buildingOverview.open({
     campusId,
     date,
@@ -470,6 +498,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // it resolves — so there's no reason to make it wait its turn behind the
   // rest of init.
   initOccupancyData();
+  initAutoRefresh();
 
   try {
     // The locale JSON and the static classroom directory are independent
@@ -482,6 +511,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     applyTranslations();
     retranslateNav();
+    // The data status button's name and card, before the data is in
+    setDataReload(reloadOccupancyData);
+    renderDataStatus();
     // <date-chip-picker> renders its date label via Intl at module-eval time,
     // before initI18n() resolves — re-render it now that the locale is known.
     document.querySelector('date-chip-picker')?.retranslate();
@@ -502,6 +534,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Init info page overlay immediately — no data dependency
     infoPage.init();
     changelogPage.init();
+    notFoundPage.init();
     initInfoHint();
 
     // Search overlay (bottom-nav FAB) — lazy-loads its data on first open
@@ -551,7 +584,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup the language switch handler immediately — doesn't depend on
     // fonts and shouldn't wait for the splash to dismiss
     onLanguageSwitch(() => {
-      setupDataFetchIndicatorText(true);
+      renderDataStatus({ animate: true });
       setupDatePicker(() => preferInitialDate);
       document.querySelector('campus-chip-picker')?.retranslate();
       retranslateCampusBuildingsPage();
@@ -637,8 +670,16 @@ async function initOccupancyData() {
   if (drawnEarly && (changed || !hasCache)) refreshOccupancyUi();
 }
 
-// Fills in everything that depends on the occupancy data, the first time it's there
+// Fills in everything that depends on the occupancy data, the first time it's there.
+// A first visit that got nothing (no saved copy, no answer) leaves the UI loading
+// until a later check brings some (refreshOccupancyUi).
+let occupancyPopulated = false;
 function populateOccupancyUi() {
+  if (!classroomsData.length) {
+    renderDataStatus();
+    return;
+  }
+  occupancyPopulated = true;
 
   // Use the fetched data to set the only valid dates into the date picker
   setupDatePicker(() => preferInitialDate);
@@ -647,7 +688,7 @@ function populateOccupancyUi() {
   document.getElementById('available-classrooms-form').removeAttribute('aria-busy');
   document.querySelector('date-chip-picker')?.removeAttribute('data-loading');
 
-  setupDataFetchIndicator();
+  renderDataStatus();
   setupLiveSearch();
 
   // If a classroom detail page was opened before occupancy data arrived
@@ -1009,124 +1050,43 @@ function restoreQuery({ date, from, to }) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(date)) preferInitialDate = date;
 }
 
-function setupDataFetchIndicator() {
-  const indicator = document.getElementById('data-fetch-indicator');
-
-  if (!classroomsData.length) {
-    indicator.classList.add('red');
-    setDataStatusLabel('red');
-    return;
-  }
-
-  const today = new Date();
-  const todayKey = [
-    today.getFullYear(),
-    String(today.getMonth() + 1).padStart(2, '0'),
-    String(today.getDate()).padStart(2, '0')
-  ].join('');
-
-  const generationDate = new Date((lastFetchedAt ?? classroomsData[0].generated_at) + 'Z');
-  const generationKey = [
-    generationDate.getFullYear(),
-    String(generationDate.getMonth() + 1).padStart(2, '0'),
-    String(generationDate.getDate()).padStart(2, '0')
-  ].join('');
-
-  const hasFutureData = classroomsData.some(entry => entry.date > todayKey);
-
-  if (generationKey === todayKey) {
-    // Generated today — fresh
-    indicator.classList.add('green');
-  } else if (hasFutureData) {
-    // Not generated today but still has upcoming days — tolerable
-    indicator.classList.add('yellow');
-  } else {
-    // No future data at all — outdated
-    indicator.classList.add('red');
-  }
-
-  setupDataFetchIndicatorText();
-}
-
-// The header button's name carries the state too: its dot is only a colour
-function setDataStatusLabel(status) {
-  const key = { green: 'data.greenTitle', yellow: 'data.yellowTitle', red: 'data.redTitle' }[status];
-  document.getElementById('data-fetch-btn')?.setAttribute('aria-label', `${t('a11y.dataStatus')}: ${t(key)}`);
-}
-
-// Setups the text inside the popover shown in the Data Fetch Indicator
-function setupDataFetchIndicatorText(animate = false) {
-  const container = document.getElementById('data-fetch-indicator-popover-container');
-
-  const states = {
-    green: {
-      title: t('data.greenTitle'),
-      description: t('data.greenDesc'),
-    },
-    yellow: {
-      title: t('data.yellowTitle'),
-      description: t('data.yellowDesc'),
-    },
-    red: {
-      title: t('data.redTitle'),
-      description: t('data.redDesc'),
-    },
-  };
-
-  // Derive current status from the indicator's classes
-  const indicator = document.getElementById('data-fetch-indicator');
-  const status = ['green', 'yellow', 'red'].find(s => indicator.classList.contains(s)) ?? 'red';
-  const { title, description } = states[status];
-  setDataStatusLabel(status);
-
-  // Last fetch time
-  const generationDate = classroomsData[0]
-    ? new Date((lastFetchedAt ?? classroomsData[0].generated_at) + 'Z')
-    : null;
-
-  const dateLocale = getLocale() === 'it' ? 'it-IT' : 'en-GB';
-  const formattedTime = generationDate
-    ? generationDate.toLocaleString(dateLocale, {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'Europe/Rome',
-    })
-    : '—';
-
-  container.innerHTML = `
-    <h1 class="popover-title ${status}">${title}</h1>
-    <p class="data-status-description secondary">${description}</p>
-    <label class="data-status-time secondary">${t('data.lastFetched')}: ${formattedTime}</label>
-    <button id="reload-data-btn" class="button-primary button-secondary data-reload-btn">
-      <i class="hgi-stroke hgi-refresh data-reload-icon" aria-hidden="true"></i>
-      <span class="data-reload-label">${t('data.reload')}</span>
-    </button>
-  `;
-  document.getElementById('reload-data-btn').addEventListener('click', reloadOccupancyData);
-  if (animate) animateI18nElement(container);
-}
-
+// The data status card's "Check for updates" (components/data-fetch-card.js)
 async function reloadOccupancyData() {
-  const btn = document.getElementById('reload-data-btn');
-  if (!btn || btn.disabled) return;
-
-  btn.disabled = true;
-  btn.querySelector('.data-reload-icon').classList.add('spinning');
-  btn.querySelector('.data-reload-label').textContent = t('data.reloading');
-
   await fetchClassroomsData();
   refreshOccupancyUi();
 }
 
+// A page left open (a tab overnight, the home-screen app in the background)
+// checks for new data on its own once its last check is an hour old: as soon as
+// it's back in view, since a background page's timers are held back or frozen,
+// and on a timer while it stays in view, since a tab left on screen never
+// changes visibility. Counted from the last attempt, so a server that's down
+// isn't asked every tick; going back online re-checks at once
+// (components/data-fetch-card.js).
+const AUTO_REFRESH_AFTER_MS = 60 * 60 * 1000;
+const AUTO_REFRESH_TICK_MS = 60 * 1000;
+
+function initAutoRefresh() {
+  const check = async () => {
+    if (document.visibilityState !== 'visible' || navigator.onLine === false || fetchStatus.fetching) return;
+    const last = fetchStatus.lastAttempt ?? fetchStatus.lastCheck;
+    if (last && Date.now() - last.getTime() < AUTO_REFRESH_AFTER_MS) return;
+    // Nothing new (304s): the results stay as they are
+    if (await fetchClassroomsData()) refreshOccupancyUi();
+  };
+  document.addEventListener('visibilitychange', check);
+  // Back from the back/forward cache, which fires no visibilitychange
+  window.addEventListener('pageshow', (e) => { if (e.persisted) check(); });
+  setInterval(check, AUTO_REFRESH_TICK_MS);
+}
+
 // Redraws what depends on the occupancy data after it was replaced
 function refreshOccupancyUi() {
-  const indicator = document.getElementById('data-fetch-indicator');
-  indicator.classList.remove('green', 'yellow', 'red');
-  setupDataFetchIndicator();
+  if (!occupancyPopulated) {
+    populateOccupancyUi();
+    return;
+  }
+  renderDataStatus();
   // Keep the day the user is on, if it's still published
   const selectedDate = document.getElementById('date-picker').value;
   setupDatePicker(() => selectedDate || preferInitialDate);

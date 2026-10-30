@@ -7,7 +7,7 @@
 
 import { t } from '../i18n.js';
 
-const PAGE_IDS = ['classroom-detail-overlay', 'info-page-overlay', 'changelog-overlay', 'settings-overlay'];
+const PAGE_IDS = ['classroom-detail-overlay', 'info-page-overlay', 'changelog-overlay', 'settings-overlay', 'not-found-overlay'];
 
 const origins = new Map(); // overlay -> the element that had focus before it opened
 
@@ -32,13 +32,24 @@ function restoreFrom(overlay) {
 
 // The tab's title names the page on top (and so what a screen reader says
 // when the page changes); the innermost open page wins
-const BASE_TITLE = document.title;
+let BASE_TITLE = document.title;
+
+// A season can rename the app in the tab (Pi Day's πoliAule)
+export function setBaseTitle(title) {
+  BASE_TITLE = title;
+  updateTitle();
+}
+
 function updateTitle() {
   const open = id => { const el = document.getElementById(id); return el && !el.hidden ? el : null; };
   let name = null;
   if (open('settings-overlay')) name = t('settings.title');
-  else if (open('changelog-overlay')) name = t('changelog.title');
+  else if (open('changelog-overlay')) {
+    const version = location.hash.match(/^#changelog\/([\w.-]+)$/)?.[1];
+    name = version ? `${t('changelog.title')} ${version}` : t('changelog.title');
+  }
   else if (open('info-page-overlay')) name = t('info.about.title');
+  else if (open('not-found-overlay')) name = t('notFound.title');
   else if (open('classroom-detail-overlay')) name = document.querySelector('#classroom-detail-overlay .detail-title')?.textContent?.trim();
   document.title = name ? `${name} · ${BASE_TITLE}` : BASE_TITLE;
 }
@@ -63,6 +74,8 @@ function watch(overlay) {
 }
 
 export function initPageFocus() {
+  // A changelog version opens inside the overlay that's already showing
+  window.addEventListener('hashchange', () => requestAnimationFrame(updateTitle));
   for (const id of PAGE_IDS) {
     const overlay = document.getElementById(id);
     if (overlay) watch(overlay);

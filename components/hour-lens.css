@@ -203,8 +203,8 @@
   pointer-events: none;
   transform-origin: center;
   will-change: transform;
-  -webkit-backdrop-filter: blur(1.5px) saturate(1.5);
-  backdrop-filter: blur(1.5px) saturate(1.5);
+  -webkit-backdrop-filter: blur(var(--lg-material-blur, 1.5px)) saturate(1.5);
+  backdrop-filter: blur(var(--lg-material-blur, 1.5px)) saturate(1.5);
 
   /* Shadows in the glass's own colour, darkened a touch so they read as depth
      rather than neon; --lift (0 resting … 1 held, set from JS) raises it. */

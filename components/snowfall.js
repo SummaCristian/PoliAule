@@ -2,8 +2,9 @@
 // over the whole app, and snow piling up live on the top edge of the elements
 // they land on.
 //
-// The flakes are one canvas over everything (in front of the glass, so no
-// blur ever has to sample it) and one requestAnimationFrame loop: soft dots on
+// The flakes are one canvas over the page (in front of its glass, so no
+// blur there ever has to sample it), under the header (--fx-z-fall in
+// style.css), and one requestAnimationFrame loop: soft dots on
 // a continuous range of depths, the near ones bigger, faster and brighter,
 // each swaying on its own sine. The amount of snow wanders between calm
 // spells, the usual snowfall and short, windy flurries well above it.

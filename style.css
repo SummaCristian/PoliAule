@@ -114,6 +114,21 @@ select,
   -webkit-user-select: none;
 }
 
+/* The seasonal effects (snow, petals, confetti, sleighs, bats, doves, digits,
+   streamers...) all sit in this one band, UNDER the header (z-index 1000), the
+   detail page's title row and back button (1001, 1002) and every popup and
+   picker (1100+). On iOS Safari a full-screen layer above the header makes its
+   progressive blur go missing on the classroom page, however the layer is built
+   (see utils/header-blur.js), so a new effect layer takes one of these and
+   never a number of its own, and never one above 999. Within the band: what
+   falls, then what flies, then the bursts on top. Still over the page's
+   content and the tab bar. The app's own star burst (999) stays above them. */
+:root {
+  --fx-z-fall: 990;
+  --fx-z-fly: 992;
+  --fx-z-burst: 994;
+}
+
 :root {
   --background-color: #F2F2F2;
   --background-color-secondary: #FFFFFF;
@@ -179,7 +194,7 @@ select,
      scale, just naming duplication that already existed. */
   --bevel: inset 1px 1px 0 rgba(255, 255, 255, 0.3), inset -1px -1px rgba(255, 255, 255, 0.1);
   --glow-accent: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 40%, transparent);
-  --glow-info: 0 2px 8px rgba(33, 150, 243, 0.4);
+  --glow-info: 0 2px 8px color-mix(in srgb, var(--color-now) 40%, transparent);
   --shadow-groove: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-dim: 0 1px 2px rgba(0, 0, 0, 0.5);
 
@@ -198,6 +213,55 @@ select,
      --text-color-accent's dark value gives (per the original comments). */
   --color-accent-dark: #28a745;
   --color-accent-dark-hover: #218838;
+
+  /* What the today / now / from-to tags are tinted with: the accent on light,
+     its deeper dark-mode shade (white text reads on it) on dark. The tags are
+     Vitrium tinted glass, so their glow comes from this and follows seasons. */
+  --tag-tint: var(--text-color-accent);
+}
+
+.detail-today-indicator,
+.detail-desktop-today-indicator,
+#today-indicator,
+.dcp-today-badge,
+.detail-schedule-query-indicator {
+  --lg-glass-tint: var(--tag-tint);
+}
+
+.timeline-time-indicator--now {
+  --lg-glass-tint: var(--color-now);
+}
+
+/* The pointer of a tag, as in Vitrium's popover: a rotated square straddling
+   the tag's edge that shares its glass, clipped to the half poking out. Points
+   down by default; the tags beside a vertical bar or a picker turn it. */
+.tag-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background: inherit;
+  -webkit-backdrop-filter: inherit;
+  backdrop-filter: inherit;
+  transform: rotate(45deg);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  pointer-events: none;
+}
+
+.detail-schedule-bar-wrapper .tag-arrow {
+  top: 50%;
+  left: 0;
+  margin: -4px 0 0 -4px;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+
+.detail-desktop-today-indicator .tag-arrow {
+  top: 50%;
+  left: 100%;
+  margin: -4px 0 0 -4px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -224,6 +288,8 @@ select,
     --shadow:
       0 1px 2px rgba(0, 0, 0, 0.3),
       0 4px 12px rgba(0, 0, 0, 0.6);
+
+    --tag-tint: var(--color-accent-dark);
   }
 }
 
@@ -380,8 +446,8 @@ body {
 
 /* Pages move focus to their title when they open (utils/page-focus.js): that
    is for assistive tech, so it shows no ring */
-:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay) [tabindex="-1"]:focus,
-:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay):focus {
+:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay, #not-found-overlay) [tabindex="-1"]:focus,
+:is(#classroom-detail-overlay, #info-page-overlay, #changelog-overlay, #settings-overlay, #not-found-overlay):focus {
   outline: none;
 }
 
@@ -692,10 +758,14 @@ label {
   font: inherit;
 }
 
-.header-title-beta-container>h4 {
+/* A badge, not a heading (a lone <h4> broke the heading order): the type it had
+   as one is set here */
+.header-title-beta-container>#env-badge {
   margin: 0;
   padding: 0;
 
+  font-size: 1em;
+  font-weight: bold;
   line-height: 0;
 }
 
@@ -794,73 +864,13 @@ body.detail-open .header-logo-filters {
   gap: 0.5rem;
 }
 
-.header-button {
-  position: relative;
-
-  width: 3rem;
-  height: 3rem;
-  border-radius: var(--radius-pill);
-
-  /* Same glass material as the tabbar/back button. */
-  background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-
-  color: var(--text-color-secondary);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-color: transparent;
-
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
-
-
-  /* Restates Vitrium's `.liquid-glass` spring (translate / scale / filter): a
-     `transition` here, being later in the cascade, would otherwise replace it,
-     and a released press or stretch would snap back instead of springing. */
-  transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease,
-    translate var(--lg-press-out-dur) var(--lg-ease-spring),
-    scale var(--lg-press-out-dur) var(--lg-ease-spring),
-    filter 0.2s ease;
-
-  /* Lit hover state, press feedback and the swipe-deform are all handled by
-     the shared .liquid-glass rules (Vitrium's liquid-glass, see vitrium/styles). */
-}
-
-/* Outside 0.5px gradient stroke (Figma's "outside stroke") without
-   affecting layout. header-button is a true circle (fixed equal
-   width/height), so the ring is masked with a radial-gradient rather than
-   the padding + mask-composite: exclude trick used on the pill-shaped
-   surfaces (the tab bar's ring, .detail-back-btn::after) — that box-corner
-   technique has a seam at the four cardinal points of a perfect circle
-   (border-radius: 999px on a square box), rendered as a bright spot/arc
-   instead of a clean ring. A radial-gradient mask is exact Euclidean
-   distance from the center, so it doesn't hit that seam. the tab bar's search circle is
-   also a true circle and uses the same fix (Vitrium's tab bar does the same). */
-.header-button::after {
-  content: "";
-  position: absolute;
-  inset: -0.5px;
-  border-radius: inherit;
-
-  background: var(--lg-stroke-gradient);
-  opacity: var(--lg-stroke-opacity);
-
-  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
-  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
-
-  pointer-events: none;
-}
+/* Toolbar buttons are Vitrium's glass buttons (.lg-button .lg-glass
+   .lg-glass--circle .liquid-glass: size, material, ring, stroke and press
+   physics all come from vitrium/styles). .header-button stays only as the
+   hook other components size and select by. */
 
 /* Favourite toggle: only ever visible on the classroom detail page.
-   .header-button sets `display: flex`, which outranks the `hidden` attribute's
+   .lg-button sets `display: flex`, which outranks the `hidden` attribute's
    UA `display: none`, so visibility is driven from `body.detail-open` here
    instead (the JS `hidden` toggle is kept as a harmless belt-and-braces). */
 #favourite-btn {
@@ -979,34 +989,6 @@ body.detail-open #favourite-btn {
   100% {
     transform: translate(-50%, -50%) scale(1);
   }
-}
-
-.data-fetch-popover-container {
-  display: flex;
-  flex-direction: column;
-
-  gap: 0;
-}
-
-.data-reload-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.75rem;
-  font-size: var(--text-85);
-}
-
-.data-reload-icon {
-  font-size: var(--text-100);
-  transition: transform 0.3s ease;
-}
-
-.data-reload-icon.spinning {
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 .header-nav-row {
@@ -1182,7 +1164,9 @@ body.info-open .header-nav-row {
      from blur/view-transitions), so the icon rendered at full opacity while
      the text was at 50%. opacity dims both identically. */
   color: #000;
-  opacity: 0.5;
+  /* 0.55, not 0.5: at 0.5 the title on the page background is 3.9:1, under
+     the 4.5:1 AA asks of text this size */
+  opacity: 0.55;
 }
 
 .section-header-title-icon {
@@ -1296,6 +1280,25 @@ body.info-open .header-nav-row {
   gap: 8px;
 }
 
+/* In the flow until it can stick (utils/lazy-sticky.js): iOS Safari paints
+   its bottom bar solid over a sticky element near the bottom edge. The
+   picker bar stays positioned, `top: auto`, so its z-index still lifts the
+   panels its chips open over the results; a building header is just static
+   (its `top` is still read, by utils/results-scroller.js). The picker bar is
+   in the flow while the favourites morph too: the morph slides it through
+   the bottom of the screen. */
+@media (max-width: 1099.98px) {
+  .building-section-header.lazy-sticky:not(.is-sticky) {
+    position: static;
+  }
+
+  #available-classrooms-form.lazy-sticky:not(.is-sticky),
+  #available-classrooms-container.favourites-morphing > #available-classrooms-form {
+    position: relative;
+    top: auto;
+  }
+}
+
 /* ── Skeleton loading states ──────────────────────────────────── */
 
 @keyframes skeleton-shimmer {
@@ -1342,47 +1345,6 @@ form[data-loading] .date-picker-skeleton>div {
 
 ul li::marker {
   color: var(--text-color-accent);
-}
-
-.popover-title {
-  font-size: var(--text-175);
-
-  margin: 0;
-  align-self: center;
-
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-
-  mix-blend-mode: multiply;
-}
-
-@media (prefers-color-scheme: dark) {
-  .popover-title {
-    mix-blend-mode: normal;
-  }
-}
-
-.popover-title.green {
-  background: linear-gradient(135deg, #0d7a30, #2ecc5a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.popover-title.yellow {
-  background: linear-gradient(135deg, #b07d00, #f0b429);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.popover-title.red {
-  background: linear-gradient(135deg, #a01010, #e53935);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .popover-subtitle {
@@ -1504,8 +1466,7 @@ are rendered as solid colors
   background: var(--background-color-secondary);
 }
 
-.samsung .header-title,
-.samsung .popover-title {
+.samsung .header-title {
   mix-blend-mode: normal;
   -webkit-text-fill-color: unset;
   /* fallback to plain color */
@@ -1847,7 +1808,7 @@ are rendered as solid colors
   }
 }
 
-:root[data-season="halloween"] .info-page {
+:root[data-season="halloween"] :is(.info-page, .not-found) {
   --info-glow-1: #ff8c2e;
   --info-glow-2: #b3400a;
   --info-glow-3: #7b3fc4;
@@ -2144,7 +2105,7 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
 .hw-sky {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1001;
+  z-index: var(--fx-z-fly);
   overflow: hidden;
   pointer-events: none;
 }
@@ -2175,7 +2136,7 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
 .hw-candy {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1002;
+  z-index: var(--fx-z-burst);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;
@@ -2207,7 +2168,7 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
   }
 }
 
-:root[data-season="christmas"] .info-page {
+:root[data-season="christmas"] :is(.info-page, .not-found) {
   --info-glow-1: #e8414b;
   --info-glow-2: #1f8a4c;
   --info-glow-3: #e8b23a;
@@ -2238,13 +2199,13 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
   }
 }
 
-/* The falling snow: one canvas over everything. It stops short of the
-   bottom safe area (iOS Safari turns its bottom bar solid when a fixed
+/* The falling snow: one canvas over the page, under the header (see
+   --fx-z-fall at the top). It stops short of the bottom safe area (iOS Safari turns its bottom bar solid when a fixed
    element reaches down there); the flakes fade out above that. */
 .xm-snow {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1400;
+  z-index: var(--fx-z-fall);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;
@@ -2347,6 +2308,8 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
 .xm-sprig--fab { z-index: 5; }
 .xm-sprig--chip { top: -8px; left: auto; right: 10px; z-index: 5; }
 .xm-sprig--badge { top: 2px; left: 2px; z-index: 3; }
+/* Inside the not-found ghost card's dashed edge */
+.xm-sprig--ghost { top: 8px; left: 8px; }
 
 /* Baubles hanging from a card's top edge, swinging */
 .xm-hang {
@@ -2574,12 +2537,12 @@ body:is(.detail-open, .settings-open) .hw-dangler { display: none; }
 
 body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 
-/* Santa's sleigh (or the Befana) flies in a layer over the app, above the
-   snow, leaving a trail of sparkles */
+/* Santa's sleigh (or the Befana) flies in a layer over the page, above the
+   snow and under the header, leaving a trail of sparkles */
 .xm-sky {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1401;
+  z-index: var(--fx-z-fly);
   overflow: hidden;
   pointer-events: none;
 }
@@ -2647,7 +2610,7 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 .xm-fx {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1402;
+  z-index: var(--fx-z-burst);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;
@@ -2664,10 +2627,667 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
   .xm-ribbon-bow { transition: none; }
 }
 
+/* Easter (Palm Sunday to Pasquetta, components/easter.js, components/petals.js):
+   a lilac accent, against the blossom's pink and the new leaves' green. Light:
+   5.7:1 on the page and on white; dark: 8:1 on the page. */
+:root[data-season="easter"] {
+  --text-color-accent: #7243c0;
+  --accent-gradient: linear-gradient(135deg, #5b2fa8, #8d62d9);
+  --color-accent-dark: #7a4cc4;
+  --color-accent-dark-hover: #6a3fb8;
+  --ea-petal-1: #f2a0bf;
+  --ea-petal-2: #f7bcd1;
+  --ea-petal-3: #e883ab;
+  --ea-thread: rgba(114, 67, 192, 0.55);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="easter"] {
+    --text-color-accent: #c4a6ff;
+    --accent-gradient: linear-gradient(135deg, #7d56d6, #d6c2ff);
+    --ea-petal-1: #ffd1e1;
+    --ea-petal-2: #ffb8d0;
+    --ea-petal-3: #fff0f6;
+    --ea-thread: rgba(196, 166, 255, 0.6);
+  }
+}
+
+:root[data-season="easter"] :is(.info-page, .not-found) {
+  --info-glow-1: #b08cf0;
+  --info-glow-2: #f59bbd;
+  --info-glow-3: #8fd694;
+}
+
+/* Easter decorations. None of it takes taps except the eggs and the olive
+   branch. */
+
+/* The drifting petals: one canvas over the page, under the header (the same
+   band as the snow's) and stopping short of the bottom safe area for the same
+   reason (see .xm-snow). Held, it fades out while the Campus map shows. */
+.ea-petals {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: var(--fx-z-fall);
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.ea-petals--held { opacity: 0; }
+
+.ea-decor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ea-decor svg { display: block; overflow: visible; }
+
+/* A sprig of blossom */
+.ea-sprig { top: -3px; left: -3px; z-index: 3; }
+.ea-sprig--banner { top: auto; bottom: -6px; left: auto; right: 56px; }
+/* In the right corner of a glass box (mirrored), on a pill, on a chip */
+.ea-sprig--right { left: auto; right: -3px; scale: -1 1; }
+.ea-sprig--pill { top: -9px; left: auto; right: -6px; scale: -1 1; }
+.ea-sprig--chip { top: -8px; left: auto; right: 10px; scale: -1 1; z-index: 5; }
+.ea-twig { fill: none; stroke: #7a5236; stroke-width: 1.3px; stroke-linecap: round; }
+.ea-leaf { fill: #6fae4d; }
+.ea-flower { fill: #f27fac; }
+.ea-flower-light { fill: #fbc4d8; }
+.ea-flower-eye { fill: #ffd25a; }
+.ea-flower, .ea-flower-light { stroke: rgba(150, 40, 90, 0.25); stroke-width: 0.4px; }
+
+/* The egg room's egg: a foil-wrapped chocolate egg (colours from --ea-a and
+   --ea-b, set on it), two halves cut along a zigzag, and a chick waiting
+   inside. Small on the card, big over the page's photo. */
+.ea-egg {
+  position: absolute;
+  z-index: 3;
+  display: block;
+  transform-origin: 50% 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ea-egg--card {
+  left: 10px;
+  top: 9px;
+  width: 30px;
+  height: 38px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  animation: ea-wobble 6s ease-in-out infinite;
+}
+
+.ea-egg--photo {
+  left: 70%;
+  top: 38%;
+  width: 78px;
+  height: 98px;
+  margin: -62px 0 0 -39px;
+  z-index: 2;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.35));
+  animation: ea-wobble 2.6s ease-in-out infinite;
+  transition: opacity 0.6s ease;
+}
+
+.ea-egg--gone { opacity: 0; }
+
+.ea-egg-half {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transition: transform 0.55s cubic-bezier(.2, .9, .3, 1.15), opacity 0.45s ease 0.15s;
+}
+
+.ea-egg-half svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+.ea-egg-half--top {
+  clip-path: polygon(0 0, 100% 0, 100% 57%, 92% 64%, 80% 54%, 66% 65%, 52% 55%, 38% 66%, 24% 54%, 12% 64%, 0 56%);
+}
+
+.ea-egg-half--bottom {
+  clip-path: polygon(0 56%, 12% 64%, 24% 54%, 38% 66%, 52% 55%, 66% 65%, 80% 54%, 92% 64%, 100% 57%, 100% 100%, 0 100%);
+}
+
+.ea-egg-shell { fill: var(--ea-a); stroke: rgba(0, 0, 0, 0.2); stroke-width: 0.6px; }
+.ea-egg-shade { fill: var(--ea-b); opacity: 0.6; }
+.ea-egg-wave { fill: none; stroke: #fff; stroke-width: 2.4px; opacity: 0.92; }
+.ea-egg-wave--thin { stroke-width: 1.2px; opacity: 0.7; }
+.ea-egg-dot { fill: #fff; opacity: 0.85; }
+.ea-egg-shine { fill: #fff; opacity: 0.4; }
+.ea-egg-ribbon { fill: none; stroke: #fff; stroke-width: 1.8px; opacity: 0.95; }
+.ea-egg-bow { fill: #fff; stroke: var(--ea-b); stroke-width: 0.5px; }
+
+/* The chick sits low behind the halves until the egg is open, then pops up */
+.ea-egg-chick {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  width: 78%;
+  aspect-ratio: 1;
+  transform: translate(-50%, 70%) scale(0.2);
+  transform-origin: 50% 100%;
+  opacity: 0;
+  transition: transform 0.55s cubic-bezier(.3, 1.6, .5, 1) 0.1s, opacity 0.2s ease 0.1s;
+}
+
+.ea-egg-chick svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ea-chick-body { fill: #ffd84a; stroke: rgba(150, 100, 0, 0.4); stroke-width: 0.5px; }
+.ea-chick-wing { fill: #f2b720; }
+.ea-chick-beak { fill: #f58a1f; }
+.ea-chick-eye { fill: #2b2118; }
+.ea-chick-foot { fill: none; stroke: #f58a1f; stroke-width: 1.2px; stroke-linecap: round; }
+
+.ea-egg-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: #fff;
+  color: #5b2fa8;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transform: translate(-50%, 6px) scale(0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(.3, 1.6, .5, 1) 0.25s, opacity 0.3s ease 0.25s;
+}
+
+.ea-egg--card .ea-egg-bubble {
+  bottom: auto;
+  top: 50%;
+  left: 100%;
+  margin-left: 6px;
+  transform: translate(-6px, -50%) scale(0.6);
+  transform-origin: 0 50%;
+}
+
+.ea-egg--cracking { animation: ea-shake 0.42s linear; }
+
+.ea-egg--open { animation: none; }
+.ea-egg--open .ea-egg-half--top { transform: translate(-70%, -90%) rotate(-42deg); opacity: 0; }
+.ea-egg--open .ea-egg-half--bottom { transform: rotate(3deg); }
+.ea-egg--open .ea-egg-chick { transform: translate(-50%, -8%) scale(1); opacity: 1; }
+.ea-egg--open:not(.ea-egg--settled) .ea-egg-bubble { transform: translate(-50%, -2px) scale(1); opacity: 1; }
+.ea-egg--card.ea-egg--open:not(.ea-egg--settled) .ea-egg-bubble { transform: translate(0, -50%) scale(1); }
+.ea-egg--open .ea-egg-chick svg { animation: ea-hop 2.4s ease-in-out 0.8s infinite; }
+
+/* Opened earlier, or a while ago: no more motion, nothing to say */
+.ea-egg--settled .ea-egg-half,
+.ea-egg--settled .ea-egg-chick,
+.ea-egg--settled .ea-egg-bubble { transition: none; }
+.ea-egg--settled .ea-egg-bubble { opacity: 0; }
+
+@keyframes ea-wobble {
+  0%, 82%, 100% { rotate: 0deg; }
+  86% { rotate: -9deg; }
+  90% { rotate: 8deg; }
+  94% { rotate: -4deg; }
+  97% { rotate: 2deg; }
+}
+
+@keyframes ea-shake {
+  0%, 100% { rotate: 0deg; }
+  15% { rotate: -12deg; }
+  35% { rotate: 11deg; }
+  55% { rotate: -9deg; }
+  75% { rotate: 6deg; }
+}
+
+@keyframes ea-hop {
+  0%, 60%, 100% { transform: translateY(0); }
+  70% { transform: translateY(-14%) scaleY(1.06); }
+  80% { transform: translateY(0) scaleY(0.94); }
+}
+
+/* A small egg by the egg room's name, over its building on the map and in its
+   building's folder */
+.ea-mini { display: block; width: 100%; height: 100%; }
+.ea-mini svg { display: block; width: 100%; height: 100%; }
+.ea-mini .ea-egg-shell { fill: var(--ea-a); }
+.ea-mini .ea-egg-shade { fill: var(--ea-b); }
+
+.ea-search-egg {
+  display: inline-block;
+  width: 12px;
+  height: 15px;
+  margin-inline-start: 0.35rem;
+  vertical-align: -0.15em;
+}
+
+.ea-map-egg {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -9px;
+  width: 18px;
+  height: 22px;
+  pointer-events: none;
+  animation: xm-bob 1.8s ease-in-out infinite alternate;
+}
+
+.ea-folder-egg {
+  top: 20px;
+  left: 58%;
+  width: 26px;
+  height: 32px;
+  rotate: -9deg;
+}
+
+/* The olive branch under the data status button: hangs on a thread from behind
+   it, swaying; a tap swings it */
+:root[data-season="easter"] #data-fetch-btn { z-index: 1; }
+
+.ea-olive {
+  position: absolute;
+  z-index: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.ea-olive-sway {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  animation: xm-swing 4s ease-in-out infinite alternate;
+}
+
+.ea-olive-sway--swing { animation: xm-swing-hard 1.6s ease-out, xm-swing 4s ease-in-out 1.6s infinite alternate; }
+
+.ea-olive-line {
+  position: absolute;
+  left: -0.75px;
+  top: 0;
+  width: 1.5px;
+  height: 38px;
+  background: var(--ea-thread);
+}
+
+.ea-olive-branch {
+  position: absolute;
+  left: 0;
+  top: 38px;
+  padding: 4px;
+  border: 0;
+  background: none;
+  transform: translate(-50%, -4px);
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ea-olive-branch svg { display: block; }
+.ea-olive-stem { fill: none; stroke: #6b6a3a; stroke-width: 1.2px; stroke-linecap: round; }
+.ea-olive-leaf { stroke: rgba(40, 60, 30, 0.35); stroke-width: 0.5px; }
+.ea-olive-leaf--0 { fill: #8fae7a; }
+.ea-olive-leaf--1 { fill: #a9c493; }
+.ea-olive-fruit { fill: #4d5a2b; stroke: rgba(0, 0, 0, 0.3); stroke-width: 0.4px; }
+
+body:is(.detail-open, .settings-open) .ea-olive { display: none; }
+
+/* The doves fly in a layer over the page, above the petals and under the
+   header */
+.ea-sky {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: var(--fx-z-fly);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ea-flyer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.ea-flyer svg { display: block; overflow: visible; filter: drop-shadow(0 1px 2px rgba(60, 40, 120, 0.4)); }
+.ea-dove-white { fill: #ffffff; }
+.ea-dove-shade { fill: #d8d3ee; }
+.ea-dove-far { fill: #bfb8dd; }
+.ea-dove-beak { fill: #f0a05e; }
+.ea-dove-eye { fill: #2b2540; }
+.ea-dove-stem { fill: none; stroke: #7a8f4a; stroke-width: 1px; stroke-linecap: round; }
+.ea-dove-leaf { fill: #78b055; }
+
+/* The wings beat about the shoulder, staying on the body: up, flat, then
+   through to below the body line and back. The far one is a beat behind. */
+.ea-wing {
+  transform-box: view-box;
+  transform-origin: 38px 23px;
+  animation: ea-flap var(--ea-flap, 0.4s) ease-in-out infinite alternate;
+}
+
+.ea-wing--far { animation-delay: calc(var(--ea-flap, 0.4s) * -0.18); }
+
+@keyframes ea-flap {
+  from { transform: scaleY(1) rotate(-4deg); }
+  to { transform: scaleY(-0.85) rotate(6deg); }
+}
+
+/* The burst when something is starred, and the egg's */
+.ea-fx {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: var(--fx-z-burst);
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ea-egg--card,
+  .ea-egg--photo,
+  .ea-map-egg,
+  .ea-olive-sway,
+  .ea-wing,
+  .ea-egg--open .ea-egg-chick svg { animation: none; }
+  .ea-egg-half,
+  .ea-egg-chick,
+  .ea-egg-bubble { transition: none; }
+}
+
+/* Carnevale Ambrosiano (Giovedì grasso to Sabato grasso, components/carnival.js,
+   components/coriandoli.js): a magenta accent, 5.6:1 on the page in light mode
+   and 8:1 in dark. */
+:root[data-season="carnival"] {
+  --text-color-accent: #b3206c;
+  --accent-gradient: linear-gradient(135deg, #8f1556, #cf3c93);
+  --color-accent-dark: #b3206c;
+  --color-accent-dark-hover: #8f1556;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="carnival"] {
+    --text-color-accent: #ff8fcf;
+    --accent-gradient: linear-gradient(135deg, #c62a85, #ffc2e6);
+  }
+}
+
+:root[data-season="carnival"] :is(.info-page, .not-found) {
+  --info-glow-1: #ff5fa2;
+  --info-glow-2: #ffb703;
+  --info-glow-3: #3a86ff;
+}
+
+/* Carnival decorations. None of it takes taps except the hanging mask. */
+
+/* The coriandoli: one canvas over the page, in the snow's band under the
+   header, stopping short of the bottom safe area for the same reason (see
+   .xm-snow) */
+.cv-coriandoli {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: var(--fx-z-fall);
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+.cv-decor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.cv-decor svg { display: block; overflow: visible; }
+
+/* A paper streamer hung from a pin, swaying a little from its top */
+.cv-streamer {
+  z-index: 3;
+  translate: -50% 0;
+  transform-origin: 50% 0;
+  animation: cv-sway 3.8s ease-in-out var(--cv-sway-delay, 0s) infinite alternate;
+}
+
+.cv-streamer--chip { z-index: 5; }
+
+@keyframes cv-sway {
+  from { rotate: -4deg; }
+  to { rotate: 4deg; }
+}
+
+/* The masked room's mask: on its card, big over its page's photo, over its
+   building on the map, in its folder and by its name in the search */
+.cv-mask {
+  z-index: 3;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+  animation: xm-bob 2.4s ease-in-out infinite alternate;
+}
+
+.cv-mask--card { left: 8px; top: 9px; width: 48px; rotate: -9deg; }
+.cv-mask--photo { left: 66%; top: 36%; width: 150px; margin-left: -75px; rotate: 7deg; z-index: 2; }
+
+.cv-search-mask {
+  display: inline-block;
+  width: 26px;
+  margin-inline-start: 0.35rem;
+  vertical-align: -0.28em;
+}
+
+.cv-search-mask svg { display: block; }
+
+.cv-map-mask {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -17px;
+  width: 34px;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+  animation: xm-bob 1.8s ease-in-out infinite alternate;
+}
+
+.cv-map-mask svg { display: block; }
+.cv-folder-mask { top: 16px; left: 54%; width: 50px; rotate: -10deg; }
+
+/* The mask under the data status button: hangs on a ribbon from behind it,
+   swaying; a tap swings it */
+:root[data-season="carnival"] #data-fetch-btn { z-index: 1; }
+
+.cv-dangler {
+  position: absolute;
+  z-index: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.cv-dangler-sway {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  animation: xm-swing 4.2s ease-in-out infinite alternate;
+}
+
+.cv-dangler-sway--swing { animation: xm-swing-hard 1.6s ease-out, xm-swing 4.2s ease-in-out 1.6s infinite alternate; }
+
+.cv-dangler-line {
+  position: absolute;
+  left: -0.75px;
+  top: 0;
+  width: 1.5px;
+  height: 34px;
+  background: var(--text-color-accent);
+}
+
+.cv-dangler-mask {
+  position: absolute;
+  left: 0;
+  top: 34px;
+  width: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  transform: translate(-42%, -6px) rotate(-6deg);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cv-dangler-mask svg { display: block; }
+
+body:is(.detail-open, .settings-open) .cv-dangler { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-streamer,
+  .cv-mask,
+  .cv-map-mask,
+  .cv-dangler-sway { animation: none; }
+}
+
+/* Pi Day (March 14, components/pi-day.js): the normal accent, a π here and
+   there. One drawing of it, used as a mask so it takes the colour of whatever
+   it sits in and never falls back to a system font; the same path is in
+   pi-day.js for the confetti. */
+:root[data-season="piday"] {
+  --pi-tint: #4f6df5;
+  --pi-ink: #3346c8;
+  --pi-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 62'%3E%3Cpath d='M8.75 1.5H55.25a5.75 5.75 0 0 1 0 11.5H8.75a5.75 5.75 0 0 1 0-11.5zM14 7H25.5V55.25a5.75 5.75 0 0 1-11.5 0zM37.5 7H49V44c0 4.6 1.8 6.7 4.7 6.7 1.5 0 2.7-.5 3.9-1.8l3.9 5.3C58.9 59.6 55.8 61 52 61c-9.4 0-14.5-5.3-14.5-15z'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="piday"] { --pi-ink: #aab6ff; }
+}
+
+/* πoliAule: the header's P (index.html wraps it in .header-title-p) is hidden
+   and a π, as wide as the P, sits where it was. The title's fill is its own
+   background clipped to the text, which a child's opacity or transform can't
+   touch (the clip ignores them), so the P can only be hidden outright, and
+   hidden it still keeps its width. The first launch of the day holds the P a
+   moment once the splash is gone, then swaps it for a π that pops in
+   (index.html's inline script sets data-pi-morph). */
+:root[data-season="piday"] .header-title-p { visibility: hidden; }
+
+:root[data-season="piday"] .header-title::before {
+  content: "";
+  display: inline-block;
+  width: 0.64em;
+  height: 0.64em;
+  margin-right: -0.64em;
+  background: var(--text-color-primary);
+  -webkit-mask: var(--pi-glyph) center / contain no-repeat;
+  mask: var(--pi-glyph) center / contain no-repeat;
+}
+
+:root.samsung[data-season="piday"] .header-title::before { background: var(--text-color-accent); }
+
+:root[data-pi-morph]:not(:has(.splash-overlay)) .header-title-p {
+  animation: pi-p-out 0.01s linear 0.9s backwards;
+}
+
+:root[data-pi-morph]:not(:has(.splash-overlay)) .header-title::before {
+  animation: pi-in 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) 0.9s backwards;
+}
+
+@keyframes pi-p-out { from { visibility: visible; } }
+@keyframes pi-in { from { opacity: 0; scale: 0.4; } }
+
+/* Aula π (3.1.4): a small tinted square with the π in it, after its name */
+.pi-tag {
+  position: relative;
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  margin-inline-start: 0.35em;
+  vertical-align: -0.14em;
+  border-radius: 0.32em;
+  background: color-mix(in srgb, var(--pi-tint) 20%, transparent);
+}
+
+.pi-tag::before {
+  content: "";
+  position: absolute;
+  inset: 0.17em;
+  background: var(--pi-ink);
+  -webkit-mask: var(--pi-glyph) center / contain no-repeat;
+  mask: var(--pi-glyph) center / contain no-repeat;
+}
+
+/* In the page's chip: no square, the chip is the frame */
+.pi-tag--bare {
+  width: 1.1em;
+  height: 1.1em;
+  margin: 0;
+  background: none;
+  vertical-align: baseline;
+}
+
+.pi-tag--bare::before { inset: 0.05em 0; }
+
+/* …and over its building on the map */
+.pi-map-tag {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--pi-tint);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.pi-map-tag::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  background: #fff;
+  -webkit-mask: var(--pi-glyph) center / contain no-repeat;
+  mask: var(--pi-glyph) center / contain no-repeat;
+}
+
+/* 15:14: the digits running across the screen. The layer stops short of the
+   safe areas, so a row's ends clear the notch and the rounded corners. */
+.pi-sky {
+  position: fixed;
+  inset: 0 env(safe-area-inset-right, 0px) calc(env(safe-area-inset-bottom, 0px) + 16px) env(safe-area-inset-left, 0px);
+  z-index: var(--fx-z-fly);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pi-digit {
+  position: absolute;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--pi-ink);
+  text-shadow: 0 0 6px var(--background-color), 0 0 2px var(--background-color);
+}
+
+/* The burst when something is starred */
+.pi-fx {
+  position: fixed;
+  inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: var(--fx-z-burst);
+  width: 100%;
+  height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-pi-morph] .header-title-p,
+  :root[data-pi-morph] .header-title::before { animation: none !important; }
+}
+
 /* Graduation day (components/graduation.js): navy, like the suits on the
    day. A layer over the season, so it comes after the seasons' accents and
-   wins over them at the same specificity. */
-:root[data-graduation] {
+   wins over them at the same specificity. PoliMi's birthday (a light season,
+   utils/season.js) wears the same navy, so it shares these tokens. */
+:root[data-graduation],
+:root[data-season="birthday"] {
   --text-color-accent: #24427f;
   --accent-gradient: linear-gradient(135deg, #14264f, #3d63b3);
   --color-accent-dark: #1d3768;
@@ -2675,13 +3295,14 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[data-graduation] {
+  :root[data-graduation],
+  :root[data-season="birthday"] {
     --text-color-accent: #8eabff;
     --accent-gradient: linear-gradient(135deg, #3558b0, #a9bfff);
   }
 }
 
-:root[data-graduation] .info-page {
+:root[data-graduation] :is(.info-page, .not-found) {
   --info-glow-1: #3d63b3;
   --info-glow-2: #ffd23f;
   --info-glow-3: #5f8f3e;
@@ -2696,12 +3317,13 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
 .gr-ribbon { fill: #c8202e; stroke: rgba(80, 10, 15, 0.35); stroke-width: 0.4px; }
 .gr-ribbon-knot { fill: #a3141f; }
 
-/* The confetti: one canvas over everything, just under the snow's, stopping
-   short of the bottom safe area for the same reason (see .xm-snow) */
+/* The confetti: one canvas over the page, in the bursts' place of the band
+   under the header, stopping short of the bottom safe area for the same
+   reason (see .xm-snow) */
 .gr-fx {
   position: fixed;
   inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px);
-  z-index: 1399;
+  z-index: var(--fx-z-burst);
   width: 100%;
   height: calc(100% - env(safe-area-inset-bottom, 0px) - 16px);
   pointer-events: none;
@@ -2711,6 +3333,8 @@ body:is(.detail-open, .settings-open) .xm-mistletoe { display: none; }
    way for it */
 :root[data-graduation] #data-fetch-btn { z-index: 1; }
 :root[data-graduation] .xm-mistletoe,
+:root[data-graduation] .ea-olive,
+:root[data-graduation] .cv-dangler,
 :root[data-graduation] .hw-dangler { display: none; }
 
 .gr-wreath {

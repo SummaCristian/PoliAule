@@ -5,7 +5,49 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>PoliAule</title>
-  <meta name="description" content="A website to find available classrooms around Politecnico di Milano" />
+  <meta name="description" content="Find free classrooms at Politecnico di Milano, by campus, building and time." />
+
+  <link rel="canonical" href="https://poliaule.com/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="PoliAule" />
+  <meta property="og:title" content="PoliAule – Free classrooms at Politecnico di Milano" />
+  <meta property="og:description" content="Find free classrooms at Politecnico di Milano, by campus, building and time." />
+  <meta property="og:url" content="https://poliaule.com/" />
+  <meta property="og:image" content="https://poliaule.com/assets/cover-light.jpg" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://poliaule.com/assets/cover-light.jpg" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://poliaule.com/#website",
+        "url": "https://poliaule.com/",
+        "name": "PoliAule",
+        "inLanguage": ["en", "it"]
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://poliaule.com/#app",
+        "url": "https://poliaule.com/",
+        "name": "PoliAule",
+        "description": "Find free classrooms at Politecnico di Milano, by campus, building and time.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires a modern browser",
+        "inLanguage": ["en", "it"],
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+      }
+    ]
+  }
+  </script>
 
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -318,42 +360,73 @@
       }
     } catch (e) {}
 
-    // Vitrium's glass style (Settings, poliAule_glassStyle): transparent unless
-    // frost was picked. Set here so the glass never flashes from one to the other.
+    // Vitrium's glass style (Settings, lg:glass-style, the key its
+    // rememberGlassStyle() writes): curated unless another was picked. Set here
+    // so the glass never flashes from one to the other. Falls back to the key
+    // older builds used, which script.js moves over.
     try {
-      document.documentElement.dataset.glassStyle = localStorage.getItem('poliAule_glassStyle') === 'frost' ? 'frost' : 'transparent';
-    } catch (e) { document.documentElement.dataset.glassStyle = 'transparent'; }
+      var gs = localStorage.getItem('lg:glass-style') || localStorage.getItem('poliAule_glassStyle');
+      document.documentElement.dataset.glassStyle = gs === 'frost' || gs === 'transparent' ? gs : 'curated';
+    } catch (e) { document.documentElement.dataset.glassStyle = 'curated'; }
 
     // Seasonal decorations (utils/season.js): today's season, by the Milan
     // calendar day, or null. Decided here, before first paint, so a seasonal
     // accent never flashes in over the normal one; season.js reads
-    // window.__seasonByDate and turns seasons on or off from there. Ranges
-    // are inclusive [month, day] pairs and may wrap the new year.
-    var SEASONS = [['halloween', [10, 24], [11, 1]], ['christmas', [12, 1], [1, 10]]];
+    // window.__seasonByDate and turns seasons on or off from there. A range
+    // is inclusive and its ends are either a [month, day] pair or a number of
+    // days from Easter Sunday (negative: before); it may wrap the new year.
+    var SEASONS = [['halloween', [10, 24], [11, 1]], ['christmas', [12, 1], [1, 10]], ['piday', [3, 14], [3, 14]], ['birthday', [11, 29], [11, 29]], ['easter', -7, 1], ['carnival', -52, -43]];
+    // Easter Sunday of a year (anonymous Gregorian computus), as a UTC
+    // timestamp; utils/season.js has the same one, keep them in step
+    function easter(y) {
+      var a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4,
+          f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3),
+          h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,
+          l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+          n = h + l - 7 * m + 114;
+      return Date.UTC(y, Math.floor(n / 31) - 1, n % 31 + 1);
+    }
+    // A range end as month * 100 + day, in year y
+    function endMd(end, y) {
+      if (typeof end !== 'number') return end[0] * 100 + end[1];
+      var d = new Date(easter(y) + end * 864e5);
+      return (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+    }
     function seasonFor(date) {
-      var p = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', month: 'numeric', day: 'numeric' }).formatToParts(date);
-      var md = 0;
+      var p = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(date);
+      var md = 0, year = 0;
       for (var i = 0; i < p.length; i++) {
+        if (p[i].type === 'year') year = Number(p[i].value);
         if (p[i].type === 'month') md += Number(p[i].value) * 100;
         if (p[i].type === 'day') md += Number(p[i].value);
       }
       for (var j = 0; j < SEASONS.length; j++) {
-        var from = SEASONS[j][1][0] * 100 + SEASONS[j][1][1];
-        var to = SEASONS[j][2][0] * 100 + SEASONS[j][2][1];
+        var from = endMd(SEASONS[j][1], year);
+        var to = endMd(SEASONS[j][2], year);
         if (from <= to ? md >= from && md <= to : md >= from || md <= to) return SEASONS[j][0];
       }
       return null;
     }
     try {
       window.__seasonByDate = seasonFor(new Date());
-      // A season picked from the search wins, unless another one's dates
-      // have come round (same rule as currentSeason() in season.js)
+      // A season picked from the search wins (same rule as currentSeason()
+      // in season.js)
       var picked = localStorage.getItem('poliAule_seasonOverride');
       var known = false;
       for (var k = 0; k < SEASONS.length; k++) if (SEASONS[k][0] === picked) known = true;
-      var season = known && (!window.__seasonByDate || window.__seasonByDate === picked) ? picked : window.__seasonByDate;
+      var season = known ? picked : window.__seasonByDate;
       if (season && localStorage.getItem('poliAule_seasonal') !== 'false') {
         document.documentElement.dataset.season = season;
+        // Pi Day: the tab says πoliAule too (the header's is CSS), and the
+        // first open of each day morphs the P into the π
+        if (season === 'piday') {
+          document.title = '\u03c0oliAule';
+          var piToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+          if (localStorage.getItem('poliAule_piMorphed') !== piToday) {
+            document.documentElement.dataset.piMorph = '';
+            localStorage.setItem('poliAule_piMorphed', piToday);
+          }
+        }
       }
     } catch (e) {}
     // Graduation day (utils/graduation.js): today is one at the campus the
@@ -386,6 +459,11 @@
     var SEASON_LOGOS = {
       halloween: ['/favicons/halloween/logo.webp', 'hw-logo'],
       christmas: ['/favicons/christmas/logo.webp', 'xm-logo'],
+      // Easter's is the usual logo's proportions (the eggs sit inside its
+      // box), so it needs no sizing class
+      easter: ['/favicons/easter/logo.webp'],
+      // …and so is Carnevale's, with its mask on the chair's back
+      carnival: ['/favicons/carnival/logo.webp'],
       // Graduation's (crowned with laurel, holding its diploma) wins over a
       // season's on its days
       graduation: ['/favicons/graduation/logo.webp', 'gr-logo'],
@@ -394,7 +472,7 @@
     window.__seasonLogo = function (img) {
       if (!seasonLogo) return;
       img.src = seasonLogo[0];
-      img.classList.add(seasonLogo[1]);
+      if (seasonLogo[1]) img.classList.add(seasonLogo[1]);
     };
     if (seasonLogo) {
       var logoPreload = document.createElement('link');
@@ -450,6 +528,8 @@
   <link rel="stylesheet" href="./components/card-day-popover.css" />
   <link rel="stylesheet" href="./components/info-page.css" />
   <link rel="stylesheet" href="./components/changelog-page.css" />
+  <link rel="stylesheet" href="./components/not-found.css" />
+  <link rel="stylesheet" href="./components/not-found-classroom.css" />
   <link rel="stylesheet" href="./components/info-hint.css" />
   <link rel="stylesheet" href="./components/bottom-nav.css" />
   <link rel="stylesheet" href="./components/campus-map.css" />
@@ -536,8 +616,8 @@
           <script>window.__seasonLogo(document.currentScript.previousElementSibling);</script>
 
           <div class="header-title-beta-container splash-header-item">
-            <h2 class="header-title">PoliAule</h2>
-            <h4 class="secondary" id="env-badge" hidden>Beta</h4>
+            <h2 class="header-title" aria-label="PoliAule"><span class="header-title-p">P</span>oliAule</h2>
+            <span class="secondary" id="env-badge" hidden>Beta</span>
           </div>
         </button>
       </div>
@@ -547,18 +627,24 @@
         <!-- Favourite toggle (only shown on the classroom detail page).
              Content is swapped between the hgi-star outline and a filled star
              by classroomDetail._syncFavBtn(). -->
-        <button id="favourite-btn" class="header-button lg-ring liquid-glass" hidden data-i18n-attr="aria-label:favourite.add" aria-label="Add to favourites">
+        <button id="favourite-btn" class="header-button lg-button lg-glass lg-glass--circle liquid-glass" hidden data-i18n-attr="aria-label:favourite.add" aria-label="Add to favourites">
           <i class="hgi-stroke hgi-star" aria-hidden="true"></i>
         </button>
 
-        <!-- Data Fetch Indicator — the button morphs into a glass card holding
-             the freshness status + reload button (see components/data-fetch-card.js). -->
-        <button id="data-fetch-btn" class="header-button lg-ring liquid-glass" aria-label="Data status">
-          <div id="data-fetch-indicator" class="pulse-indicator"></div>
+        <!-- Data Fetch Indicator — a freshness dot, a spinner while fetching, or an
+             offline mark (data-glyph); the button morphs into a glass card with the
+             status + reload button (see components/data-fetch-card.js). -->
+        <button id="data-fetch-btn" class="header-button lg-button lg-glass lg-glass--circle liquid-glass" aria-label="Data status">
+          <span id="data-fetch-indicator" class="data-status-glyph" data-glyph="spinner" aria-hidden="true">
+            <span class="pulse-indicator"></span>
+            <span class="ds-spinner"></span>
+            <i class="hgi-stroke hgi-wifi-off-01 data-status-offline"></i>
+            <span class="ds-issue-badge"></span>
+          </span>
         </button>
 
         <!-- Settings button -->
-        <button id="settings-btn" class="header-button lg-ring liquid-glass" data-i18n-attr="aria-label:settings.title" aria-label="Settings">
+        <button id="settings-btn" class="header-button lg-button lg-glass lg-glass--circle liquid-glass" data-i18n-attr="aria-label:settings.title" aria-label="Settings">
           <i class="hgi-stroke hgi-settings-01" aria-hidden="true"></i>
         </button>
 
@@ -577,7 +663,7 @@
 
   </header>
 
-  <button id="detail-back-btn" class="detail-back-btn lg-ring lg-elevation-high liquid-glass" hidden data-i18n-attr="aria-label:campus.back" aria-label="Back">
+  <button id="detail-back-btn" class="detail-back-btn lg-button lg-glass lg-glass--circle lg-elevation-high liquid-glass" hidden data-i18n-attr="aria-label:campus.back" aria-label="Back">
     <i class="hgi-stroke hgi-chevron-left" aria-hidden="true"></i>
   </button>
 
@@ -593,14 +679,43 @@
         <div class="section-header favourites-header">
           <h3 class="section-header-title"><i class="hgi-stroke hgi-star section-header-title-icon"
               aria-hidden="true"></i><span data-i18n="favourites.title">Favourites</span></h3>
-          <!-- Desktop only (>= 1100px), and only while the carousel overflows:
-               lets the favourites fill the whole left column as a grid, with
-               the pickers moving over the results (see components/favourites.js). -->
-          <button id="favourites-expand-btn" class="header-button favourites-expand-btn lg-ring liquid-glass" type="button"
-            aria-controls="favourites-carousel" aria-expanded="false"
-            data-i18n-attr="aria-label:favourites.showAll" aria-label="Show all favourites" hidden>
-            <i class="hgi-stroke hgi-arrow-expand-01" aria-hidden="true"></i>
-          </button>
+          <div class="favourites-actions">
+            <div id="favourites-actions-main" class="favourites-actions-group">
+              <!-- Edit mode (components/favourites.js): reorder, remove, undo.
+                   Shown at every width, while there is a favourite. -->
+              <button id="favourites-edit-btn" class="header-button favourites-action-btn lg-button lg-glass lg-glass--circle liquid-glass" type="button"
+                data-i18n-attr="aria-label:favourites.edit" aria-label="Edit favourites" hidden>
+                <i class="hgi-stroke hgi-pencil-edit-02" aria-hidden="true"></i>
+              </button>
+              <!-- Desktop only (>= 1100px), and only while the carousel overflows:
+                   lets the favourites fill the whole left column as a grid, with
+                   the pickers moving over the results (see components/favourites.js). -->
+              <button id="favourites-expand-btn" class="header-button favourites-action-btn favourites-expand-btn lg-button lg-glass lg-glass--circle liquid-glass" type="button"
+                aria-controls="favourites-carousel" aria-expanded="false"
+                data-i18n-attr="aria-label:favourites.showAll" aria-label="Show all favourites" hidden>
+                <i class="hgi-stroke hgi-arrow-expand-01" aria-hidden="true"></i>
+              </button>
+            </div>
+            <!-- Takes the place of the group above while editing. -->
+            <div id="favourites-actions-edit" class="favourites-actions-group favourites-actions-edit" hidden>
+              <button id="favourites-undo-btn" class="header-button favourites-action-btn lg-button lg-glass lg-glass--circle liquid-glass" type="button"
+                data-i18n-attr="aria-label:favourites.undo" aria-label="Undo" aria-disabled="true">
+                <i class="hgi-stroke hgi-undo-02" aria-hidden="true"></i>
+              </button>
+              <button id="favourites-redo-btn" class="header-button favourites-action-btn lg-button lg-glass lg-glass--circle liquid-glass" type="button"
+                data-i18n-attr="aria-label:favourites.redo" aria-label="Redo" aria-disabled="true">
+                <i class="hgi-stroke hgi-redo-02" aria-hidden="true"></i>
+              </button>
+              <button id="favourites-cancel-btn" class="header-button favourites-action-btn lg-button lg-glass lg-glass--circle liquid-glass" type="button"
+                data-i18n-attr="aria-label:favourites.cancel" aria-label="Discard changes">
+                <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
+              </button>
+              <button id="favourites-done-btn" class="header-button favourites-action-btn favourites-done-btn lg-button lg-glass lg-glass--circle liquid-glass lg-glass--tinted" type="button"
+                data-i18n-attr="aria-label:favourites.done" aria-label="Done">
+                <i class="hgi-stroke hgi-tick-02" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
         </div>
         <!-- Holds the strip's edge fade (favourites.css): a mask on the strip
              itself left Chrome showing stale glass blur in the folders. -->
@@ -637,7 +752,7 @@
               <div class="date-picker">
                 <select id="date-picker" name="date" hidden></select>
 
-                <div id="today-indicator" class="hidden" aria-hidden="true" data-i18n="datepicker.today">Today</div>
+                <div id="today-indicator" class="lg-glass lg-glass--tinted hidden" aria-hidden="true"><span data-i18n="datepicker.today">Today</span><i class="tag-arrow" aria-hidden="true"></i></div>
                 <div class="date-picker-container"></div>
                 <div class="date-indicator lg-ring"></div>
               </div>
@@ -687,6 +802,9 @@
 
     <!-- Settings Page Panel (components/settings-page.js), same footing as Info -->
     <div id="settings-overlay" hidden></div>
+
+    <!-- Not-found view for hashes nothing owns (components/not-found-page.js) -->
+    <div id="not-found-overlay" hidden></div>
 
   </main>
 

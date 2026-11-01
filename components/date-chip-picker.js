@@ -70,7 +70,7 @@ export class DateChipPicker extends HTMLElement {
     this.#valueMonthEl = value.querySelector('.dcp-value__month');
 
     const badge = document.createElement('span');
-    badge.className = 'dcp-today-badge';
+    badge.className = 'dcp-today-badge lg-glass lg-glass--tinted';
     badge.dataset.i18n = 'datepicker.today';
     badge.textContent = t('datepicker.today');
     badge.hidden = true;

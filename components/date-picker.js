@@ -58,6 +58,8 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
   // Every published day, loaded or not: on a first visit the others arrive
   // after the first one (available-rooms-script.js's fetchClassroomsData)
   const availableDates = publishedDates.length ? publishedDates : classroomsData.map(day => day.date);
+  // No data yet (a first visit the server didn't answer): it stays loading
+  if (!availableDates.length) return;
   const toInputFormat = d => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
   const formatLocal = d => [
     d.getFullYear(),

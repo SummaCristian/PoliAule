@@ -1,6 +1,7 @@
 // Builds the 3D models the seasonal decorations stand on the Campus map:
-// public/models/halloween/{pumpkin,tombstone,skull,ghost}.glb (components/halloween.js)
-// and public/models/christmas/{tree,gifts,snowman}.glb (components/christmas.js).
+// public/models/halloween/{pumpkin,tombstone,skull,ghost}.glb (components/halloween.js),
+// public/models/christmas/{tree,gifts,snowman}.glb (components/christmas.js)
+// and public/models/easter/{egg,eggs,blossom}.glb (components/easter.js).
 //
 // Each one is made from a few simple shapes (lathes, an extrusion) right here,
 // with plain coloured materials, so there are no third-party assets and the
@@ -152,6 +153,22 @@ const MATERIALS = {
   coal: { color: [0.1, 0.1, 0.11], roughness: 1 },
   carrot: { color: [0.96, 0.48, 0.1], roughness: 0.8 },
   scarf: { color: [0.8, 0.12, 0.16], roughness: 0.9 },
+  // Easter
+  eggBlue: { color: [0.45, 0.68, 0.95], roughness: 0.35 },
+  eggPink: { color: [0.97, 0.58, 0.74], roughness: 0.35 },
+  eggYellow: { color: [0.98, 0.84, 0.38], roughness: 0.35 },
+  eggMint: { color: [0.52, 0.86, 0.7], roughness: 0.35 },
+  eggLilac: { color: [0.72, 0.58, 0.93], roughness: 0.35 },
+  eggBand: { color: [0.99, 0.98, 0.95], roughness: 0.4 },
+  eggBandRed: { color: [0.9, 0.24, 0.36], roughness: 0.4 },
+  straw: { color: [0.86, 0.7, 0.34], roughness: 1 },
+  blossomPink: { color: [0.98, 0.7, 0.82], roughness: 0.9 },
+  blossomWhite: { color: [0.99, 0.92, 0.95], roughness: 0.9 },
+  blossomDeep: { color: [0.9, 0.4, 0.62], roughness: 0.9 },
+  blossomShade: { color: [0.74, 0.34, 0.52], roughness: 0.9 },
+  blossomLight: { color: [1.0, 0.82, 0.9], roughness: 0.9 },
+  barkDark: { color: [0.26, 0.17, 0.12], roughness: 1 },
+  leafSpring: { color: [0.5, 0.76, 0.3], roughness: 0.9 },
 };
 
 // What changes for the models' night versions (<name>-night.glb)
@@ -181,6 +198,23 @@ const NIGHT = {
   wrapWhite: { emissive: [0.75, 0.75, 0.74] },
   ribbon: { emissive: [0.85, 0.66, 0.22] },
   ribbonRed: { emissive: [0.65, 0.05, 0.08] },
+  // Easter: the eggs in their own colours, dimmed, and the blossom as if
+  // under a street lamp, the trunk only faintly
+  eggBlue: { emissive: [0.26, 0.4, 0.6] },
+  eggPink: { emissive: [0.6, 0.32, 0.44] },
+  eggYellow: { emissive: [0.62, 0.52, 0.2] },
+  eggMint: { emissive: [0.3, 0.52, 0.42] },
+  eggLilac: { emissive: [0.44, 0.34, 0.6] },
+  eggBand: { emissive: [0.6, 0.6, 0.58] },
+  eggBandRed: { emissive: [0.55, 0.14, 0.22] },
+  straw: { emissive: [0.4, 0.32, 0.14] },
+  blossomPink: { emissive: [0.6, 0.4, 0.5] },
+  blossomWhite: { emissive: [0.62, 0.56, 0.6] },
+  blossomDeep: { emissive: [0.6, 0.26, 0.4] },
+  blossomShade: { emissive: [0.46, 0.2, 0.32] },
+  blossomLight: { emissive: [0.66, 0.52, 0.58] },
+  barkDark: { emissive: [0.08, 0.05, 0.04] },
+  leafSpring: { emissive: [0.2, 0.32, 0.12] },
 };
 
 function pumpkin() {
@@ -369,6 +403,192 @@ function snowman() {
   return parts;
 }
 
+// ── Easter ────────────────────────────────────────────────────────────────
+
+// An egg's silhouette: its radius at a height, widest a little below the middle
+const EGG_T = (y, h) => Math.acos(1 - (2 * y) / h);
+const eggRadius = (y, h, r) => { const t = EGG_T(y, h); return r * Math.sin(t) * (1 + 0.14 * Math.cos(t)); };
+
+// An egg `h` tall and `r` across at its widest, standing on y = 0. Bands round
+// it are slightly proud of its shell: [y0, y1] as fractions of its height.
+function egg(h, r, shell, bands = []) {
+  const profile = [];
+  const n = 22;
+  for (let i = 0; i <= n; i++) {
+    const y = (i / n) * h;
+    profile.push([Math.max(0.0001, eggRadius(y, h, r)), y]);
+  }
+  const parts = [lathe(profile, 20, shell)];
+  for (const [f0, f1, material] of bands) {
+    const band = [];
+    const m = 5;
+    for (let i = 0; i <= m; i++) {
+      const y = (f0 + (f1 - f0) * (i / m)) * h;
+      band.push([eggRadius(y, h, r) * 1.015, y]);
+    }
+    parts.push(lathe(band, 20, material));
+  }
+  return parts;
+}
+
+// Grows parts about the origin, so a small egg reads from campus zoom
+function scaled(parts, k) {
+  for (const part of parts) for (let i = 0; i < part.positions.length; i++) part.positions[i] *= k;
+  return parts;
+}
+
+// A single big egg, tilted a little in a nest of straw
+function eggModel() {
+  const parts = [
+    lathe([[0.0001, 0], [0.14, 0.01], [0.25, 0.04], [0.27, 0.08], [0.22, 0.1], [0.14, 0.06], [0.0001, 0.04]], 24, 'straw', {
+      radiusAt: (theta, i) => 1 + 0.05 * Math.sin(theta * 7 + i),
+    }),
+  ];
+  const big = egg(0.56, 0.21, 'eggPink', [[0.3, 0.38, 'eggBand'], [0.5, 0.58, 'eggBandRed'], [0.7, 0.76, 'eggBand']]);
+  // A row of dots on the red band
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2;
+    const y = 0.32, rr = eggRadius(y, 0.56, 0.21) * 1.02;
+    big.push(place(sphere(0.014, 'eggBand', { segments: 6, rings: 4 }), { t: [Math.cos(a) * rr, y, Math.sin(a) * rr] }));
+  }
+  parts.push(...big.map((p) => place(p, { rz: 0.1, t: [0, 0.07, 0] })));
+  return scaled(parts, 1.7);
+}
+
+// A nest with three small eggs of different colours
+function eggsModel() {
+  const parts = [
+    lathe([[0.0001, 0], [0.16, 0.01], [0.28, 0.04], [0.31, 0.09], [0.25, 0.11], [0.17, 0.06], [0.0001, 0.04]], 24, 'straw', {
+      radiusAt: (theta, i) => 1 + 0.06 * Math.sin(theta * 6 + i * 1.3),
+    }),
+  ];
+  const set = [
+    ['eggBlue', [-0.11, 0.06, 0.05], 0.15, [[0.4, 0.5, 'eggBand']]],
+    ['eggYellow', [0.12, 0.06, 0.0], -0.2, [[0.55, 0.65, 'eggBandRed']]],
+    ['eggMint', [0.0, 0.06, -0.13], 0.3, [[0.3, 0.38, 'eggBand'], [0.62, 0.7, 'eggBand']]],
+  ];
+  for (const [shell, t, tilt, bands] of set) {
+    parts.push(...egg(0.36, 0.135, shell, bands).map((p) => place(p, { rz: tilt, ry: tilt * 3, t })));
+  }
+  return scaled(parts, 1.7);
+}
+
+// A low-poly blob, flat-shaded like Mapbox's own trees: an icosahedron (once
+// subdivided unless `detail` is 0) with every vertex pushed in or out a little, each face with its
+// own vertices (so each face gets its own normal), `squash` flattening it.
+function blob(r, material, rand, { jitter = 0.2, squash = [1, 0.8, 1], detail = 1 } = {}) {
+  const t = (1 + Math.sqrt(5)) / 2;
+  let verts = [[-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0], [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t], [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1]]
+    .map(([x, y, z]) => { const l = Math.hypot(x, y, z); return [x / l, y / l, z / l]; });
+  let faces = [[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+    [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]];
+  // Subdivide once, new points on the unit sphere
+  const mid = new Map();
+  const midpoint = (i, j) => {
+    const key = i < j ? `${i}_${j}` : `${j}_${i}`;
+    if (!mid.has(key)) {
+      const [x, y, z] = verts[i].map((v, k) => (v + verts[j][k]) / 2);
+      const l = Math.hypot(x, y, z);
+      verts.push([x / l, y / l, z / l]);
+      mid.set(key, verts.length - 1);
+    }
+    return mid.get(key);
+  };
+  if (detail > 0) {
+    faces = faces.flatMap(([a, b, c]) => {
+      const ab = midpoint(a, b), bc = midpoint(b, c), ca = midpoint(c, a);
+      return [[a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]];
+    });
+  }
+  verts = verts.map(([x, y, z]) => {
+    const k = 1 + (rand() - 0.5) * 2 * jitter;
+    return [x * k * squash[0] * r, y * k * squash[1] * r, z * k * squash[2] * r];
+  });
+  const positions = [], indices = [];
+  for (const [a, b, c] of faces) {
+    const [pa, pb, pc] = [verts[a], verts[b], verts[c]];
+    // Wound to face away from the blob's middle
+    const n = [(pb[1] - pa[1]) * (pc[2] - pa[2]) - (pb[2] - pa[2]) * (pc[1] - pa[1]), (pb[2] - pa[2]) * (pc[0] - pa[0]) - (pb[0] - pa[0]) * (pc[2] - pa[2]), (pb[0] - pa[0]) * (pc[1] - pa[1]) - (pb[1] - pa[1]) * (pc[0] - pa[0])];
+    const outward = n[0] * (pa[0] + pb[0] + pc[0]) + n[1] * (pa[1] + pb[1] + pc[1]) + n[2] * (pa[2] + pb[2] + pc[2]) > 0;
+    const base = positions.length / 3;
+    for (const p of outward ? [pa, pb, pc] : [pa, pc, pb]) positions.push(...p);
+    indices.push(base, base + 1, base + 2);
+  }
+  return { positions, indices, material };
+}
+
+// A small seeded random, so the tree is the same every time it's built
+function seeded(seed) {
+  let a = seed;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// A flat, irregular disc lying on the ground
+function scatter(r, y, material, rand, sides = 9) {
+  const positions = [0, y, 0], indices = [];
+  for (let i = 0; i < sides; i++) {
+    const a = (i / sides) * Math.PI * 2;
+    const rr = r * (0.75 + rand() * 0.3);
+    positions.push(Math.cos(a) * rr, y, Math.sin(a) * rr);
+  }
+  for (let i = 0; i < sides; i++) indices.push(0, 1 + ((i + 1) % sides), 1 + i);
+  return { positions, indices, material };
+}
+
+// A cherry tree in blossom, low and wide like the trees round it on the map:
+// a dark trunk leaning a little, forking into four branches that reach up and
+// out under a flat-topped crown of faceted clusters, pink above and a deeper
+// pink underneath, a few small white ones catching the light on top, and
+// petals scattered on the ground.
+function blossomModel() {
+  const rand = seeded(7);
+  const parts = [];
+  // The trunk, leaning
+  const lean = 0.09, forkAt = 0.42;
+  parts.push(place(lathe([[0.0001, 0], [0.085, 0], [0.07, 0.15], [0.052, forkAt], [0.0001, forkAt]], 7, 'barkDark'), { rz: lean }));
+  const fork = [-Math.sin(lean) * forkAt, Math.cos(lean) * forkAt, 0];
+  // Four thick branches, reaching up and out
+  [[0.2, 0.8, 0.5], [1.75, 0.65, 0.46], [3.3, 0.75, 0.5], [4.9, 0.6, 0.42]].forEach(([az, tilt, len]) => {
+    const limb = lathe([[0.0001, 0], [0.05, 0], [0.026, len], [0.0001, len]], 6, 'barkDark');
+    parts.push(place(place(limb, { rz: tilt }), { ry: az, t: fork }));
+    // A twig off each
+    const twig = lathe([[0.0001, 0], [0.022, 0], [0.012, len * 0.5], [0.0001, len * 0.5]], 5, 'barkDark');
+    const at = [fork[0] + Math.sin(tilt) * Math.cos(az) * len * 0.5, fork[1] + Math.cos(tilt) * len * 0.5, fork[2] - Math.sin(tilt) * Math.sin(az) * len * 0.5];
+    parts.push(place(place(twig, { rz: tilt + 0.7 }), { ry: az + 0.5, t: at }));
+  });
+  // The crown: faceted clusters over a shallow dome, wider than tall; the
+  // lower ones round the rim and the underside are the deeper pink
+  const N = 17, R = 0.6, baseY = 0.64, domeH = 0.22;
+  for (let i = 0; i < N; i++) {
+    const a = i * 2.39996;
+    const f = Math.sqrt((i + 0.6) / N);
+    const x = Math.cos(a) * f * R, z = Math.sin(a) * f * R;
+    const y = baseY + domeH * (1 - f * f) + (rand() - 0.5) * 0.05;
+    const r = 0.2 - f * 0.035 + (rand() - 0.5) * 0.04;
+    const underneath = f > 0.72 || y < baseY + domeH * 0.35;
+    const material = underneath ? (i % 2 ? 'blossomShade' : 'blossomDeep') : (i % 4 === 0 ? 'blossomDeep' : 'blossomPink');
+    parts.push(place(blob(r, material, rand, { squash: [1.08, 0.72, 1.08], detail: underneath ? 0 : 1 }), { ry: rand() * 6, t: [x, y, z] }));
+  }
+  // Highlights: small pale clusters on top of the dome
+  for (let i = 0; i < 4; i++) {
+    const a = i * 1.7 + 0.4, f = 0.18 + (i % 3) * 0.17;
+    parts.push(place(blob(0.085, 'blossomWhite', rand, { jitter: 0.15, detail: 0 }), { t: [Math.cos(a) * f * R, baseY + domeH * (1 - f * f) + 0.15, Math.sin(a) * f * R] }));
+  }
+  // Petals on the ground: a pink drift under the tree and a few strays
+  parts.push(scatter(0.52, 0.004, 'blossomLight', rand, 11));
+  parts.push(place(scatter(0.3, 0.006, 'blossomPink', rand, 8), { t: [0.1, 0, -0.08] }));
+  for (let k = 0; k < 14; k++) {
+    const a = k * 2.4 + 0.3, d = 0.35 + (k % 5) * 0.12;
+    parts.push(place(scatter(0.045, 0.008, k % 3 ? 'blossomLight' : 'blossomWhite', rand, 5), { t: [Math.cos(a) * d, 0, Math.sin(a) * d] }));
+  }
+  return parts;
+}
+
 // ── glTF (.glb) writer ────────────────────────────────────────────────────
 
 function normalsFor(positions, indices) {
@@ -462,6 +682,7 @@ const nightMaterials = Object.fromEntries(Object.entries(MATERIALS).map(([k, m])
 const SEASONS = {
   halloween: { models: { pumpkin, tombstone, skull, ghost }, night: ['pumpkin', 'ghost'] },
   christmas: { models: { tree, gifts, snowman }, night: ['tree', 'gifts', 'snowman'] },
+  easter: { models: { egg: eggModel, eggs: eggsModel, blossom: blossomModel }, night: ['egg', 'eggs', 'blossom'] },
 };
 for (const [season, { models, night }] of Object.entries(SEASONS)) {
   const dir = join(MODELS_DIR, season);

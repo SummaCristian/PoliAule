@@ -11,21 +11,37 @@
   --lg-tabbar-top-offset: calc(var(--header-height, 84px) + 2rem + 20px);
 }
 
-/* HugeIcons glyphs where Vitrium expects SVGs. */
-.lg-tabbar__icon > i {
-  font-size: var(--text-110);
-  line-height: 1;
-  -webkit-text-stroke: 0.4px currentColor;
+/* The app sets html's font size to 90%, while Vitrium's demo uses the browser
+   default 16px root. Keep the mobile bar's rem-based row metrics at Vitrium's
+   intended pixel sizes instead of shrinking its icons, labels and spacing. */
+.lg-tabbar:not(.lg-tabbar--vertical) {
+  --lg-tabbar-inset: 21px;
+  --lg-tab-min-width: 94px;
+  --lg-tab-padding-inline: 19px;
+  padding: 12px var(--lg-tabbar-inset) 0;
 }
 
-.lg-tabbar__prominent > i {
-  font-size: var(--text-110);
-  -webkit-text-stroke: 0.4px currentColor;
+.lg-tabbar:not(.lg-tabbar--compact) :is(.lg-tabbar__tab, .lg-pill-active-cell) {
+  gap: 2px;
+  padding-block: 6px;
+  font-size: 10px;
 }
 
-@media (min-width: 600px) {
-  .lg-tabbar__icon > i,
-  .lg-tabbar__prominent > i {
-    font-size: var(--text-125);
-  }
+.lg-tabbar:not(.lg-tabbar--compact) .lg-tabbar__label {
+  line-height: 12px;
 }
+
+.lg-tabbar:not(.lg-tabbar--compact) .lg-tabbar__icon > svg {
+  width: 28px;
+  height: 28px;
+}
+
+.lg-tabbar:not(.lg-tabbar--compact) .lg-tabbar__prominent > svg {
+  width: 28px;
+  height: 28px;
+}
+
+.lg-tabbar__prominent-label {
+  font-size: 10px;
+}
+

@@ -1,7 +1,8 @@
 import { getClassroomStatusNow, classroomsData as occupancyDays, openDataCache, readCachedJson, fetchJson } from './available-rooms-script.js';
 import { getApiBase } from './config.js';
 import { EASTER_EGGS } from './data/search-easter-eggs.js';
-import { seasonForQuery } from './utils/season.js';
+import { seasonForQuery, activeSeason } from './utils/season.js';
+import { checkPiDigits } from './utils/pi.js';
 import { decodeEntities } from './utils/html.js';
 
 // Static classroom directory (campus → buildings → classrooms) plus the
@@ -705,9 +706,13 @@ export function runSearch(query) {
   // A season's keyword (utils/season.js) offers that season as the Top Hit,
   // under the egg label; the ordinary matches stay below it
   const season = seasonForQuery(query);
+  // On Pi Day, a run of π's digits is answered with how many were right
+  const pi = activeSeason() === 'piday' ? checkPiDigits(query) : null;
   const topHit = season
     ? { type: 'season', season, score: Number.MAX_SAFE_INTEGER, egg: {} }
-    : pickTopHit([classrooms.items[0], buildings.items[0], professors.items[0], exams.items[0], lessons.items[0]]);
+    : pi
+      ? { type: 'pi', pi, score: Number.MAX_SAFE_INTEGER, egg: {} }
+      : pickTopHit([classrooms.items[0], buildings.items[0], professors.items[0], exams.items[0], lessons.items[0]]);
 
   return { topHit, classrooms, buildings, professors, exams, lessons, corrections: correctedTerms(tokens) };
 }

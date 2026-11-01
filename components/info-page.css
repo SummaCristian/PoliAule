@@ -365,8 +365,8 @@ body.info-open .header-title-btn {
   border-radius: var(--radius-xl);
 
   background: var(--lg-tint-clear);
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear));
-  backdrop-filter: blur(var(--lg-blur-clear));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -550,8 +550,8 @@ body.info-open .header-title-btn {
   background:
     linear-gradient(color-mix(in srgb, var(--badge-tint) 16%, transparent) 0 0),
     var(--lg-tint);
-  -webkit-backdrop-filter: blur(var(--lg-blur-md));
-  backdrop-filter: blur(var(--lg-blur-md));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
+  backdrop-filter: blur(var(--lg-material-blur-md, var(--lg-blur-md)));
   box-shadow:
     var(--lg-highlight),
     0 4px 40px 0 var(--lg-shadow-color);

@@ -470,7 +470,7 @@ async function boot() {
 
   const navControl = new mapboxgl.NavigationControl({ showZoom: false, showCompass: true });
   map.addControl(navControl, 'top-right');
-  navControl._container.querySelectorAll('button').forEach(button => button.classList.add('lg-ring'));
+  navControl._container.querySelectorAll('button').forEach(button => button.classList.add(...'lg-button lg-glass lg-glass--circle'.split(' ')));
   const geolocateControl = new mapboxgl.GeolocateControl({
     positionOptions: { enableHighAccuracy: true },
     trackUserLocation: true,
@@ -531,7 +531,7 @@ async function boot() {
   new MutationObserver((_records, observer) => {
     const button = geolocateControl._container.querySelector('button');
     if (!button) return;
-    button.classList.add('lg-ring', 'liquid-glass');
+    button.classList.add(...'lg-button lg-glass lg-glass--circle'.split(' '), 'liquid-glass');
     button.querySelector('.mapboxgl-ctrl-icon')
       .innerHTML = '<i class="hgi-stroke hgi-gps-01" aria-hidden="true"></i>';
     observer.disconnect();
@@ -545,23 +545,20 @@ async function boot() {
   new MutationObserver((_records, observer) => {
     const button = map.getContainer().querySelector('.mapboxgl-ctrl-attrib-button');
     if (!button) return;
-    button.classList.add('lg-ring', 'liquid-glass');
+    button.classList.add(...'lg-button lg-glass lg-glass--circle'.split(' '), 'liquid-glass');
     button.closest('.mapboxgl-ctrl-attrib')?.classList.add('lg-ring');
     button.querySelector('.mapboxgl-ctrl-icon')
       .innerHTML = '<i class="hgi-stroke hgi-information-circle" aria-hidden="true"></i>';
     observer.disconnect();
   }).observe(map.getContainer(), { childList: true, subtree: true });
 
-  // Match the map's daylight to the app theme (Standard style only), and
-  // reveal the map here rather than on 'load': 'load' means the first
-  // *visually complete* render — every tile, every glyph — which on a slow
-  // connection is seconds away. From 'style.load' the map paints its
-  // background and fills in tiles as they arrive, which is what it looked like
-  // before any of this was deferred, only now it fades in instead of popping.
+  // Match the map's daylight to the app theme (Standard style only). The map
+  // is revealed on 'load' below, not here: 'load' is the first *visually
+  // complete* render, so it fades in already drawn instead of showing its tiles
+  // arriving one by one (the 3 s timer below covers a slow tile server).
   map.on('style.load', () => {
     captureSkyLights();
     applyLightPreset();
-    el.classList.add('campus-map--ready');
     // Seasonal decorations painted into the map itself (utils/season.js)
     decorateLive('map', map, { campuses: classroomsData });
   });
@@ -582,7 +579,7 @@ async function boot() {
   });
 
   map.on('load', () => {
-    el.classList.add('campus-map--ready');  // belt: a style that loaded without firing style.load
+    el.classList.add('campus-map--ready');
     map.resize();
     if (markers.length) return;  // an embed/release already put its own up
     if (embed) showEmbedMarker(mapboxgl);
@@ -590,7 +587,7 @@ async function boot() {
     else showCampusMarkers(mapboxgl);
   });
 
-  // And braces: a style that never loads at all shouldn't leave the map (and
+  // A slow tile server or a style that never loads shouldn't leave the map (and
   // its own error UI) invisible behind the fade-in.
   setTimeout(() => el.classList.add('campus-map--ready'), 3000);
 

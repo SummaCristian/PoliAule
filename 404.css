@@ -1,0 +1,46 @@
+/* The static 404 page's own footing: the app's design system plus the few
+   tokens of style.css that the shared not-found view reads. */
+@import 'vitrium/styles';
+
+:root {
+  --background-color: #F2F2F2;
+  --text-color-primary: #1A1A1A;
+  --text-color-secondary: #333333;
+  --text-color-accent: #2a9e47;
+  --accent-gradient: linear-gradient(135deg, #0d7a30, #2ecc5a);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #1E1E1E;
+    --text-color-primary: #EAEAEA;
+    --text-color-secondary: #CCCCCC;
+    --text-color-accent: #3ce065;
+    --accent-gradient: linear-gradient(135deg, #1fa840, #90ffb8);
+  }
+}
+
+/* As in style.css: Vitrium's accent follows the app's (tripled :root outranks
+   Vitrium's dark-mode block regardless of load order) */
+:root:root:root { --lg-accent: var(--text-color-accent); }
+
+html, body { margin: 0; min-height: 100%; }
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  background: var(--background-color);
+  font-family: 'Nunito', system-ui, sans-serif;
+}
+
+#not-found-root { flex: 1; display: flex; min-width: 0; overflow-x: clip; }
+
+/* No header or tab bar here: some air on top, and clear of the home indicator */
+#not-found-root .not-found {
+  padding-top: max(2rem, env(safe-area-inset-top, 0px));
+  padding-bottom: calc(1.75rem + env(safe-area-inset-bottom, 0px));
+  justify-content: center;
+}
+
+#not-found-root .not-found-actions { margin-top: 0; }

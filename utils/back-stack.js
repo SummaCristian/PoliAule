@@ -115,6 +115,10 @@ export function ownBack(onBack) {
   const handle = {
     get active() { return open.includes(h) || h.queued; },
 
+    // Nothing has been opened over it since (an overlay's entry, a page's
+    // hash): its own keys, like Escape, are still its to handle.
+    get onTop() { return h.queued || (open.includes(h) && entryOf(history.state)?.id === h.id); },
+
     push() {
       if (handle.active) return;
       // A release still landing would otherwise take this new entry with it

@@ -9,3 +9,25 @@
 
 /fonts/hugeicons/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Hashed build output: the filename changes with the content
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The app shell and its service worker must be revalidated on every load,
+# or a deploy would wait out the cache before users see it
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+
+# Only production is meant to be found in search: beta, dev and the Pages
+# preview URLs stay out of the index
+https://beta.poliaule.com/*
+  X-Robots-Tag: noindex
+https://dev.poliaule.com/*
+  X-Robots-Tag: noindex
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex

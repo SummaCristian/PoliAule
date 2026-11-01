@@ -7,7 +7,7 @@
 // day-chip selector (classroom-detail.js), which share the same markup/CSS
 // but otherwise have independent selection logic (hidden <select> vs.
 // schedule row highlight).
-import { createPillDragCore } from 'vitrium';
+import { createPillDragCore, setGlassRole } from 'vitrium';
 
 // container: the `.date-picker-container` element (already position:relative,
 // already holding a `.date-indicator` sibling and some
@@ -38,6 +38,10 @@ export function createPillSelector(container, { isSkipped = el => el.classList.c
 
   const indicator = wrapper.querySelector(':scope > .date-indicator');
   wrapper.appendChild(indicator); // move after `container` in case of re-init (refresh() re-runs this)
+  // The row is the rail the lens slides along, as the tab bar's bar is.
+  setGlassRole(container, 'rail');
+  // A lens, as the tab bar's pill is: its lifted blur and fill follow the glass style (date-picker.css).
+  setGlassRole(indicator, 'lens');
 
   // Wrap the real cells in their own layer so a pill-shaped hole can be
   // clipped out of them while the indicator is lifted — same reason

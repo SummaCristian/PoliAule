@@ -211,11 +211,15 @@ export function morphRender(root, selector, key, render, { keptClass = 'lf-kept'
   // Measured before the last run is snapped, so a rebuild landing during the
   // previous one's fade starts from what's on screen
   const first = new Map();
-  for (const el of root.querySelectorAll(selector)) {
-    if (el.closest('.lf-ghosts')) continue;
-    // A card still rising in (its entrance offsets it by a few px) would
-    // read as moved: these are thrown away anyway, so end it first
+  const els = [...root.querySelectorAll(selector)].filter(el => !el.closest('.lf-ghosts'));
+  // A card still rising in (its entrance offsets it by a few px) would
+  // read as moved: these are thrown away anyway, so end it first. All of them
+  // before any is measured: a measure between two of these would lay the page
+  // out again for each card.
+  for (const el of els) {
     for (const a of el.getAnimations()) if (a.animationName === 'card-appear' || a.animationName === 'card-swap-in') a.finish();
+  }
+  for (const el of els) {
     const r = el.getBoundingClientRect();
     const k = key(el);
     if (k != null && r.width > 0) first.set(k, { el, r });

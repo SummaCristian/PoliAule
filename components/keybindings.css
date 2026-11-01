@@ -35,8 +35,8 @@
   /* Same glass material as the popovers / header buttons — see the recipe
      note at :root's --lg-tint definition. */
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-lg));
-  -webkit-backdrop-filter: blur(var(--lg-blur-lg));
+  backdrop-filter: blur(var(--lg-material-blur-lg, var(--lg-blur-lg)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-lg, var(--lg-blur-lg)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),

@@ -757,7 +757,7 @@ class BuildingOverview {
     bar.className = 'bo-topbar';
     bar.innerHTML = `
       <h3 class="bo-title lg-ring">${escapeHtml(t('overview.title'))}</h3>
-      <button class="bo-close lg-ring liquid-glass" type="button" aria-label="${escapeHtml(t('overview.close'))}">
+      <button class="bo-close lg-button lg-glass lg-glass--circle liquid-glass" type="button" aria-label="${escapeHtml(t('overview.close'))}">
         <i class="hgi-stroke hgi-cancel-01" aria-hidden="true"></i>
       </button>
     `;

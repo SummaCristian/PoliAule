@@ -24,7 +24,7 @@
 // The lens physics reuse Vitrium's springs with pill-drag-core's tunings; the
 // core itself assumes a one-cell pill, so the lens (which spans N cells) is
 // driven here.
-import { Spring, onSpringFrame, createStepper } from 'vitrium';
+import { Spring, onSpringFrame, createStepper, setGlassRole } from 'vitrium';
 import { t } from '../i18n.js';
 import { createTimeFormatter } from '../utils/time-format.js';
 import { getFreeShareBySlot } from '../available-rooms-script.js';
@@ -131,6 +131,8 @@ function buildHourLens(fromInput, toInput, { datePicker, campusInput }) {
   const rail = wrapper.querySelector('.hl-rail');
   const track = wrapper.querySelector('.hl-track');
   const lens = wrapper.querySelector('.hl-lens');
+  // A lens: its blur follows the glass style. Its fill stays the accent tint.
+  setGlassRole(lens, 'lens');
   const hit = wrapper.querySelector('.hl-hit');
   const hours = wrapper.querySelector('.hl-hours');
   const timeEl = wrapper.querySelector('.hl-time');

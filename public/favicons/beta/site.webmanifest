@@ -1,7 +1,24 @@
 {
+  "id": "/",
   "name": "PoliAule beta",
   "short_name": "PoliAule",
+  "description": "Find free classrooms at Politecnico di Milano, by campus, building and time.",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
+    {
+      "src": "/favicons/main/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicons/main/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/favicons/main/web-app-manifest-192x192.png",
       "sizes": "192x192",
@@ -17,5 +34,56 @@
   ],
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
-  "display": "standalone"
+  "display": "standalone",
+  "screenshots": [
+    {
+      "src": "/screenshots/phone-available.webp",
+      "sizes": "1080x2209",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Free classrooms by campus, date and time"
+    },
+    {
+      "src": "/screenshots/phone-campus.webp",
+      "sizes": "1080x2209",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Campus map with every building"
+    },
+    {
+      "src": "/screenshots/phone-classroom.webp",
+      "sizes": "1080x2209",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Classroom page with equipment and weekly schedule"
+    },
+    {
+      "src": "/screenshots/phone-search.webp",
+      "sizes": "1080x2209",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Search for classrooms and buildings"
+    },
+    {
+      "src": "/screenshots/desktop-available.webp",
+      "sizes": "1170x811",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Free classrooms by campus, date and time"
+    },
+    {
+      "src": "/screenshots/desktop-campus.webp",
+      "sizes": "1170x811",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Campus map with every building"
+    },
+    {
+      "src": "/screenshots/desktop-classroom.webp",
+      "sizes": "1170x811",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Classroom page with equipment and weekly schedule"
+    }
+  ]
 }

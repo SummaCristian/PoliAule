@@ -281,8 +281,8 @@ body.info-open #search-classrooms-container.visible {
 .campus-map .mapboxgl-ctrl-attrib:not(.mapboxgl-compact),
 .campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show {
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
+  backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-sm, var(--lg-blur-sm)));
   box-shadow:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -325,8 +325,8 @@ body.info-open #search-classrooms-container.visible {
      out of the normal text flow. Overriding it to `relative` here once
      already put it back into normal flow, rendering as its own block above
      the link text instead of overlapping the corner. `absolute` still gives
-     the ::after ring below a positioning context to anchor to, same as
-     `relative` would. */
+     the glass's ring and stroke a positioning context, same as `relative`
+     would. */
   position: absolute;
   overflow: visible !important;
   align-items: center;
@@ -334,12 +334,6 @@ body.info-open #search-classrooms-container.visible {
   border-radius: var(--radius-pill) !important;
   background: var(--lg-tint) !important;
   background-image: none !important;
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
 }
 
 /* `display` deliberately kept out of the rule above and scoped to only the
@@ -365,81 +359,6 @@ body.info-open #search-classrooms-container.visible {
 .campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show .mapboxgl-ctrl-attrib-button {
   top: 50%;
   transform: translateY(-50%);
-}
-
-/* Outside 0.5px gradient stroke, same radial-gradient-masked trick as
-   .header-button::after (style.css) — a true circle's seam-free ring. */
-.campus-map .mapboxgl-ctrl-attrib-button::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-
-  background: var(--lg-stroke-gradient);
-  opacity: var(--lg-stroke-opacity);
-
-  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
-  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
-
-  pointer-events: none;
-}
-
-/* Extra `.mapboxgl-ctrl-icon` qualifier: needed to outrank the generic
-   `.campus-map .mapboxgl-ctrl-icon .hgi-stroke` sizing rule further down
-   (compass/geolocate) — same class-count otherwise, and that one comes
-   later in the file, which would otherwise win the tie and blow this tiny
-   24px badge's icon up to the big controls' 1.375rem size. */
-.campus-map .mapboxgl-ctrl-attrib-button .mapboxgl-ctrl-icon .hgi-stroke {
-  font-size: var(--text-85);
-  line-height: 1;
-  color: var(--text-color-secondary);
-}
-
-/* Mapbox's own `:focus` (not `:focus-visible`) rule shows a hardcoded blue
-   ring on *any* focus, mouse click included — reset it back to the plain
-   glass shadow, and only show a real ring for keyboard focus. */
-.campus-map .mapboxgl-ctrl-attrib-button:focus {
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
-}
-
-.campus-map .mapboxgl-ctrl-attrib-button:focus-visible {
-  outline: 2px solid var(--text-color-accent);
-  outline-offset: 2px;
-}
-
-/* Slide the revealed text in from behind the always-visible `i` badge
-   (mobile default position: bottom-right, so the text sits to the badge's
-   left) instead of Mapbox's hard `display` cut. Mapbox itself only toggles
-   `.mapboxgl-ctrl-attrib-inner` between `display: none`/`block` via
-   `.mapboxgl-compact`/`.mapboxgl-compact-show` (mapbox-gl.css) — a property
-   that can't transition on its own, hence `allow-discrete` + `@starting-style`
-   below, which defers the `none` switch on close until the slide/fade
-   finishes instead of cutting it instantly, and seeds the `from` state on
-   open the same way a keyframe `from` would. Scoped to `.mapboxgl-compact`
-   so the always-expanded desktop pill (no toggle button, text already
-   visible on load) never plays this. */
-.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact .mapboxgl-ctrl-attrib-inner {
-  transition: opacity 0.2s ease, transform 0.2s ease, display 0.2s allow-discrete;
-}
-
-.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact:not(.mapboxgl-compact-show) .mapboxgl-ctrl-attrib-inner {
-  opacity: 0;
-  transform: translateX(6px);
-}
-
-.campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show .mapboxgl-ctrl-attrib-inner {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-@starting-style {
-  .campus-map .mapboxgl-ctrl-attrib.mapboxgl-compact-show .mapboxgl-ctrl-attrib-inner {
-    opacity: 0;
-    transform: translateX(6px);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -499,37 +418,13 @@ body.info-open #search-classrooms-container.visible {
      card" rather than two separate shapes. */
   border-radius: var(--radius-pill) !important;
 
+  /* Vitrium's glass (.lg-button .lg-glass .lg-glass--circle, added in
+     campus-map.js) supplies the blur, ring, rim and stroke; the background is
+     restated only because Mapbox's own `background-color: transparent` on
+     these buttons out-specifies .lg-glass. */
   background: var(--lg-tint);
-  backdrop-filter: blur(var(--lg-blur-sm));
-  -webkit-backdrop-filter: blur(var(--lg-blur-sm));
-  box-shadow:
-    0 0 0 0.1px var(--lg-outline),
-    var(--lg-highlight),
-    0 4px 40px 0 var(--lg-shadow-color);
 
   transition: filter 0.2s ease, scale var(--lg-press-out-dur) var(--lg-ease-spring);
-}
-
-/* Inside 0.5px gradient stroke, same radial-gradient-masked trick as
-   .header-button::after (style.css) — a true circle's seam-free ring. Drawn
-   at `inset: 0` rather than header-button's `-0.5px`: the button keeps
-   Mapbox's own default `overflow: hidden` (needed for `backdrop-filter` to
-   actually clip to the circle instead of bleeding into a square — that
-   square was the real bug), which would otherwise clip the outermost sliver
-   of an outside-drawn ring. */
-.campus-map .mapboxgl-ctrl-group button::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-
-  background: var(--lg-stroke-gradient);
-  opacity: var(--lg-stroke-opacity);
-
-  -webkit-mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
-  mask-image: radial-gradient(circle closest-side, transparent calc(100% - 0.5px), #fff calc(100% - 0.5px));
-
-  pointer-events: none;
 }
 
 /* Plain CSS lit hover/press for the compass only (see the comment above) —
@@ -672,8 +567,8 @@ body.info-open #search-classrooms-container.visible {
 
   color: inherit;
   /* A touch of saturation keeps the map's colours alive through the frost. */
-  -webkit-backdrop-filter: blur(var(--lg-blur-clear)) saturate(1.6);
-  backdrop-filter: blur(var(--lg-blur-clear)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear))) saturate(1.6);
+  backdrop-filter: blur(var(--lg-material-blur-clear, var(--lg-blur-clear))) saturate(1.6);
   /* Tighter than the glass default's 40px glow, which on a map smears over
      the neighbouring buildings. */
   box-shadow:

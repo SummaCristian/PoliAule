@@ -96,17 +96,12 @@ time-range-chip-picker[data-loading] .trc-value > :not(.chip-skeleton) {
   z-index: 1;
 
   padding: 2px 9px;
-  border-radius: var(--radius-pill);
 
   font-size: var(--text-60);
   line-height: 1.4;
   font-weight: 800;
   letter-spacing: 0.01em;
-  color: #fff;
   white-space: nowrap;
-
-  background: var(--text-color-accent);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color-accent) 35%, transparent);
 }
 
 .dcp-today-badge[hidden] {
@@ -121,12 +116,6 @@ time-range-chip-picker[data-loading] .trc-value > :not(.chip-skeleton) {
     var(--lg-highlight),
     inset -1px 1px 4px 0 color-mix(in srgb, var(--text-color-accent) 15%, transparent),
     0 4px 40px 0 var(--lg-shadow-color);
-}
-
-@media (prefers-color-scheme: dark) {
-  .dcp-today-badge {
-    background: var(--color-accent-dark);
-  }
 }
 
 /* ── The pickers, relocated into the panel ─────────────────────────────── */

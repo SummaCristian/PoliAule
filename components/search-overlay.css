@@ -50,7 +50,6 @@ body.info-open .search-overlay-backdrop {
    deep, layered shadow, as command bars do. --search-elevation is shared by
    the field, the close button and the results box. */
 .search-overlay-panel {
-  --search-glass: blur(var(--lg-blur-lg)) saturate(1.6);
   --search-elevation:
     0 0 0 0.1px var(--lg-outline),
     var(--lg-highlight),
@@ -172,8 +171,8 @@ html.search-vt .lg-tabbar__prominent {
 
   border-radius: var(--radius-pill);
   background: var(--lg-tint);
-  backdrop-filter: var(--search-glass);
-  -webkit-backdrop-filter: var(--search-glass);
+  backdrop-filter: blur(var(--lg-material-blur-lg, var(--lg-blur-lg))) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-lg, var(--lg-blur-lg))) saturate(1.6);
   box-shadow: var(--search-elevation);
 
   /* Restates Vitrium's `.liquid-glass` spring (translate / scale / filter): a
@@ -357,8 +356,8 @@ html.search-vt .lg-tabbar__prominent {
   color: var(--text-color-secondary);
 
   background: var(--lg-tint);
-  backdrop-filter: var(--search-glass);
-  -webkit-backdrop-filter: var(--search-glass);
+  backdrop-filter: blur(var(--lg-material-blur-lg, var(--lg-blur-lg))) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-lg, var(--lg-blur-lg))) saturate(1.6);
   box-shadow: var(--search-elevation);
 }
 
@@ -434,10 +433,10 @@ html.search-vt .lg-tabbar__prominent {
      it follows the theme and the no-blur fallback. */
   background: color-mix(in srgb, var(--lg-tint) 55%, var(--background-color-secondary));
   /* Always frosted, whatever the glass style setting (data-glass-style="frost"
-     on the frame): --search-glass is resolved on the panel, above the
-     attribute, so the blur is spelled out here to follow it. */
-  backdrop-filter: blur(var(--lg-blur-lg)) saturate(1.6);
-  -webkit-backdrop-filter: blur(var(--lg-blur-lg)) saturate(1.6);
+     on the frame): the panel role (utils/glass-roles.js) resolves the blur on
+     the frame itself, below that attribute. */
+  backdrop-filter: blur(var(--lg-material-blur-lg, var(--lg-blur-lg))) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--lg-material-blur-lg, var(--lg-blur-lg))) saturate(1.6);
   box-shadow: var(--search-elevation);
 }
 
@@ -1106,7 +1105,7 @@ html.search-vt .lg-tabbar__prominent {
   flex-shrink: 0;
   padding: 0.05rem 0.4rem;
   border-radius: var(--radius-pill);
-  background: var(--text-color-accent);
+  background: var(--tag-tint);
   color: #fff;
   font-size: var(--text-60);
   font-weight: 800;

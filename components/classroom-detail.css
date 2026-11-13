@@ -22,6 +22,29 @@
      and the page content above it at z-index: 1 (rule below), which paints in
      the same order without isolating the overlay. */
   position: relative;
+  /* No still reflection on this page: its glass sits over the photo, the tinted
+     gradient and the Mapbox canvas, none of which a still reflection (drawn once
+     from the layout's flat backgrounds, no images) can see, so its rim would take
+     the page's colour instead. Floating glass (the back and star buttons) keeps
+     the live one, which samples what is really behind it. */
+  --lg-reflection-static: 0;
+
+  /* No HDR specular here. On displays with headroom Vitrium takes the rim's top
+     and bottom edges past white (--lg-specular: display-p3 200%), which over the
+     photo reads as hard white lines around every section. SDR white keeps the
+     glass edge. --lg-highlight is resolved where Vitrium defines it (:root), so
+     it is restated here from the SDR value; same shadows as tokens.css. */
+  --lg-specular: rgb(255 255 255);
+  --lg-rim-top: var(--lg-specular);
+  --lg-highlight:
+    inset calc(var(--lg-rim-side-x) * -1px) 0 0 0 color-mix(in display-p3, var(--lg-rim-side) 50%, transparent),
+    inset calc(var(--lg-rim-side-x) * -1px) 0 0 calc(var(--lg-rim-side-blur) * 0.5px) color-mix(in display-p3, var(--lg-rim-side) 30%, transparent),
+    inset calc(var(--lg-rim-side-x) * 1px) 0 0 0 color-mix(in display-p3, var(--lg-rim-side) 50%, transparent),
+    inset calc(var(--lg-rim-side-x) * 1px) 0 0 calc(var(--lg-rim-side-blur) * 0.5px) color-mix(in display-p3, var(--lg-rim-side) 30%, transparent),
+    inset 0 -1px 0 0 color-mix(in display-p3, var(--lg-rim-top) 50%, transparent),
+    inset 0 -1px 0 1px color-mix(in display-p3, var(--lg-rim-top) 30%, transparent),
+    inset 0 1px 0 0 color-mix(in display-p3, var(--lg-rim-top) 50%, transparent),
+    inset 0 1px 0 1px color-mix(in display-p3, var(--lg-rim-top) 30%, transparent);
 }
 
 #classroom-detail-overlay > :not(.detail-photo-backdrop) {

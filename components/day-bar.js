@@ -74,7 +74,10 @@ export function dayBarHtml({ occupancy, opening, query = null, blockAttrs = () =
     if (e <= s) return '';
     const left  = dayPct(s);
     const width = ((e - s) / TOTAL * 100).toFixed(2);
-    const blockClass = 'detail-schedule-block lg-glass lg-glass--tinted' + (isHighlighted(slot) ? ' detail-schedule-block--highlight' : '');
+    // Small and many: each would carry its own refraction filter and a still
+    // reflection (whose lit rim reads as a white outline on the red), for a rim
+    // too thin to see bend. Plain glass is enough.
+    const blockClass = 'detail-schedule-block lg-glass lg-glass--tinted lg-no-refract' + (isHighlighted(slot) ? ' detail-schedule-block--highlight' : '');
     return `<div class="${blockClass}"${blockAttrs(slot, idx)} style="--block-start:${left}%;--block-size:${width}%;--idx:${idx}"></div>`;
   }).join('');
 

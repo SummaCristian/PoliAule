@@ -20,12 +20,13 @@ import { ownBack } from '../utils/back-stack.js';
 //             true; the time slider brings its own)
 //   deformFrom  selector of the press/drag handle inside a title-less panel
 //   onBuild(chip)   the chip was (re)built: fill in its value, add extras
+//   onToggle(open)  the panel opened or closed (not when docking destroys it)
 //   onShow()        the body just became visible (opened or docked): re-measure
 //
 // Back closes the open panel (utils/back-stack.js).
 export class ChipShell {
-  constructor(host, { icon, labelKey, width, body, title = true, exclude, deformFrom, onBuild, onShow }) {
-    Object.assign(this, { host, icon, labelKey, width, body, title, exclude, deformFrom, onBuild, onShow });
+  constructor(host, { icon, labelKey, width, body, title = true, exclude, deformFrom, onBuild, onToggle, onShow }) {
+    Object.assign(this, { host, icon, labelKey, width, body, title, exclude, deformFrom, onBuild, onToggle, onShow });
     this.chip = null;
     this.dock = null;
     this.docked = false;
@@ -47,9 +48,9 @@ export class ChipShell {
       title: this.title ? undefined : false,
       width: this.width,
       content: this.body,
-      onOpen: () => { this.back.push(); this.onShow?.(); },
+      onOpen: () => { this.back.push(); this.onToggle?.(true); this.onShow?.(); },
       onAfterOpen: () => this.onShow?.(),
-      onClose: () => this.back.release(),
+      onClose: () => { this.back.release(); this.onToggle?.(false); },
     });
     const { trigger, popup } = this.chip;
     trigger.querySelector('.lg-chip__label').dataset.i18n = this.labelKey;

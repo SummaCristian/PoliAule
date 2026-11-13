@@ -19,6 +19,10 @@ export class DateChipPicker extends HTMLElement {
   #valueMonthEl = null;
   #todayBadge = null;      // Vitrium badge on the chip's top-right corner
   #trigger = null;
+  #isToday = false;
+  #panel = null;           // the chip's morph panel, to tell when the close has settled
+  #settleRaf = 0;
+  #open = false;           // the panel is open: the chip is its panel, so the Today badge steps aside
 
   connectedCallback() {
     if (this.#shell) return; // already initialized (re-parenting, etc.)
@@ -43,6 +47,7 @@ export class DateChipPicker extends HTMLElement {
       body,
       exclude: '.date-picker',
       onBuild: (chip) => this.#onBuild(chip),
+      onToggle: (open) => this.#onToggle(open),
     });
 
     this.#hiddenSelect?.addEventListener('change', () => this.#renderValue());
@@ -63,6 +68,7 @@ export class DateChipPicker extends HTMLElement {
   // The chip was (re)built: fill its value slot and add the Today badge.
   #onBuild(chip) {
     this.#trigger = chip.trigger;
+    this.#panel = chip.popup.panel;
     const value = chip.trigger.querySelector('.lg-chip__value');
     value.classList.add('dcp-value');
     value.innerHTML = `
@@ -75,10 +81,34 @@ export class DateChipPicker extends HTMLElement {
     // Vitrium's badge: a tinted glass tag on the chip's corner (beside it, as
     // the chip is glass). `dcp-today-badge` stays as the seasons' hook.
     this.#dropBadge();
+    this.#open = false;
     this.#todayBadge = createBadge({ target: chip.trigger, content: t('datepicker.today'), shown: false, tint: 'var(--tag-tint)' });
     this.#todayBadge.el.classList.add('dcp-today-badge');
 
     this.#renderValue();
+  }
+
+  // Open: the badge goes at once. Closed: it waits for the panel to finish
+  // folding back into the chip (Vitrium reports when closing starts, not when
+  // it lands; the panel is display:none once it has), so it never shows up
+  // over the morph.
+  #onToggle(open) {
+    this.#open = open;
+    cancelAnimationFrame(this.#settleRaf);
+    this.#settleRaf = 0;
+    if (open) { this.#syncBadge(); return; }
+    const t0 = performance.now();
+    const wait = () => {
+      const landed = !this.#panel?.isConnected || this.#panel.style.display === 'none';
+      if (landed || performance.now() - t0 > 1500) { this.#settleRaf = 0; this.#syncBadge(); return; }
+      this.#settleRaf = requestAnimationFrame(wait);
+    };
+    this.#settleRaf = requestAnimationFrame(wait);
+  }
+
+  #syncBadge() {
+    if (!this.#todayBadge) return;
+    if (this.#isToday && !this.#open && !this.#settleRaf) this.#todayBadge.show(); else this.#todayBadge.hide();
   }
 
   #dropBadge() {
@@ -110,10 +140,9 @@ export class DateChipPicker extends HTMLElement {
     const isToday = date.getFullYear() === now.getFullYear()
       && date.getMonth() === now.getMonth()
       && date.getDate() === now.getDate();
-    if (this.#todayBadge) {
-      this.#todayBadge.set(t('datepicker.today'));
-      if (isToday) this.#todayBadge.show(); else this.#todayBadge.hide();
-    }
+    this.#isToday = isToday;
+    this.#todayBadge?.set(t('datepicker.today'));
+    this.#syncBadge();
     this.#trigger?.classList.toggle('dcp-trigger--today', isToday);
   }
 

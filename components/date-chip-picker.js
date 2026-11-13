@@ -1,9 +1,10 @@
+import { createBadge } from 'vitrium';
 import { t, getLocale, onLanguageSwitch } from '../i18n.js';
 import { ChipShell } from './chip-shell.js';
 
 // <date-chip-picker> is a thin wrapper around the sliding date picker
 // (components/date-picker.js), which stays completely untouched: its markup, its
-// global stylesheet and its global selectors (#date-picker, #today-indicator,
+// global stylesheet and its global selectors (#date-picker,
 // .date-picker-container) keep working because this component uses NO shadow
 // DOM; it just relocates the existing `.date-picker` subtree into a panel.
 //
@@ -16,7 +17,7 @@ export class DateChipPicker extends HTMLElement {
   #shell = null;
   #valueMainEl = null;
   #valueMonthEl = null;
-  #todayBadgeEl = null;
+  #todayBadge = null;      // Vitrium badge on the chip's top-right corner
   #trigger = null;
 
   connectedCallback() {
@@ -51,6 +52,8 @@ export class DateChipPicker extends HTMLElement {
 
   // Desktop docking, toggled by picker-dock.js.
   setDocked(on) {
+    // The badge sits beside the chip, which is destroyed when docking.
+    if (on) this.#dropBadge();
     this.#shell?.setDocked(on);
     // The sliding picker had no layout while it was hidden; date-picker.js's own
     // ResizeObserver on .date-picker fires on the reveal, nudge it too.
@@ -69,15 +72,18 @@ export class DateChipPicker extends HTMLElement {
     this.#valueMainEl = value.querySelector('.dcp-value__main');
     this.#valueMonthEl = value.querySelector('.dcp-value__month');
 
-    const badge = document.createElement('span');
-    badge.className = 'dcp-today-badge lg-glass lg-glass--tinted';
-    badge.dataset.i18n = 'datepicker.today';
-    badge.textContent = t('datepicker.today');
-    badge.hidden = true;
-    chip.trigger.appendChild(badge);
-    this.#todayBadgeEl = badge;
+    // Vitrium's badge: a tinted glass tag on the chip's corner (beside it, as
+    // the chip is glass). `dcp-today-badge` stays as the seasons' hook.
+    this.#dropBadge();
+    this.#todayBadge = createBadge({ target: chip.trigger, content: t('datepicker.today'), shown: false, tint: 'var(--tag-tint)' });
+    this.#todayBadge.el.classList.add('dcp-today-badge');
 
     this.#renderValue();
+  }
+
+  #dropBadge() {
+    this.#todayBadge?.destroy();
+    this.#todayBadge = null;
   }
 
   // ── Collapsed value: "Tue 15" (bold) + "Sep" (regular), locale-aware ──
@@ -104,8 +110,11 @@ export class DateChipPicker extends HTMLElement {
     const isToday = date.getFullYear() === now.getFullYear()
       && date.getMonth() === now.getMonth()
       && date.getDate() === now.getDate();
-    this.#todayBadgeEl.hidden = !isToday;
-    this.#trigger.classList.toggle('dcp-trigger--today', isToday);
+    if (this.#todayBadge) {
+      this.#todayBadge.set(t('datepicker.today'));
+      if (isToday) this.#todayBadge.show(); else this.#todayBadge.hide();
+    }
+    this.#trigger?.classList.toggle('dcp-trigger--today', isToday);
   }
 
   // Re-apply locale-dependent, JS-built text: the panel's aria-label and the

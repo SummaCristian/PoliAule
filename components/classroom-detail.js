@@ -6,7 +6,7 @@ import { infoPage } from './info-page.js';
 import { fetchPhotoUrl, fetchThumbUrl, thumbUrl, photoUrlCache, thumbUrlCache, extractPhotoColor, blurredBackdrop, markPhotoBroken, isPhotoBroken, getCachedPhotoColor, getCachedPhotoLuminance, getCachedPhotoAverageLuminance, getPhotoSmall } from '../utils/photo.js';
 import { planHeaderText } from '../utils/text-contrast.js';
 import { isFavourite, toggleFavourite, syncStarButton } from '../utils/favourites.js';
-import { createPopover, createButton, createSegmentedControl } from 'vitrium';
+import { createPopover, createButton, createSegmentedControl, createBadge } from 'vitrium';
 import { setZoomOrigin, clearZoomOrigin, cardRadius } from '../utils/vt-motion.js';
 import { startTrackedTransition, vtFlag } from '../utils/vt-debug.js';
 
@@ -138,6 +138,7 @@ class ClassroomDetail {
     this._highlight = null;     // { date, from, to } when opened from a search result, else null
     this._highlightConsumed = false; // true once the highlight's scroll/popover has fired for this open
     this._nowTimer = null;
+    this._tagBadges = [];       // the schedule's Vitrium tags (Today, Now, the queried range)
     this._timelinePopoverCleanup = null; // removes the previous _loadSchedule's document-level listener
     this._vtSettled = null;     // pending open/close transition, see _beginTransition
     this._vtResolve = null;
@@ -411,6 +412,11 @@ class ClassroomDetail {
     }
   }
 
+  _clearTags() {
+    this._tagBadges.forEach(b => b.destroy());
+    this._tagBadges = [];
+  }
+
   _silentClose() {
     if (!this._overlay || this._overlay.hidden) return;
     this._currentId = null;
@@ -418,6 +424,7 @@ class ClassroomDetail {
     releaseMap();
     this._cancelMapEmbed();
     clearInterval(this._nowTimer);
+    this._clearTags();
     document.body.classList.remove('detail-open');
     // Leave tabbar.detail-open and backBtn visibility intact — info page takes over both
     this._overlay.setAttribute('hidden', '');
@@ -1755,6 +1762,7 @@ class ClassroomDetail {
 
   _loadSchedule(classroomId) {
     clearInterval(this._nowTimer);
+    this._clearTags();
     this._timelinePopoverCleanup?.();
     this._timelinePopoverCleanup = null;
     const data = occupancyData;
@@ -1884,17 +1892,10 @@ class ClassroomDetail {
             && slot.fine === this._highlight?.to,
         });
 
-        const querySideIndicatorsHtml = isQueryDay && queryFromPct !== null ? `
-          <div class="detail-schedule-query-indicator lg-glass lg-glass--tinted" style="--qpos:${queryFromPct}%">${queryFromDisplay}<i class="tag-arrow" aria-hidden="true"></i></div>
-          <div class="detail-schedule-query-indicator lg-glass lg-glass--tinted" style="--qpos:${queryToPct}%">${queryToDisplay}<i class="tag-arrow" aria-hidden="true"></i></div>
-        ` : '';
-
         return { labelHtml, rowHtml: `
           <div class="detail-schedule-row${isToday ? ' detail-schedule-row--today' : ''}${isQueryDay ? ' detail-schedule-row--query' : ''}">
             <div class="detail-schedule-bar-wrapper">
               <div class="timeline-hover-cursor" hidden></div>
-              ${isToday && nowPct !== null ? `<div class="timeline-time-indicator timeline-time-indicator--now lg-glass lg-glass--tinted" style="--pos:${nowPct}%">${t('timepicker.now')}<i class="tag-arrow" aria-hidden="true"></i></div>` : ''}
-              ${querySideIndicatorsHtml}
               <div class="detail-schedule-bar"${openAttrs}>
                 ${barHtml}
                 ${isToday && nowPct !== null ? `<div class="timeline-now-bar-line" style="--pos:${nowPct}%"></div>` : ''}
@@ -1912,15 +1913,6 @@ class ClassroomDetail {
         container.innerHTML = `<p class="secondary">${t('detail.noData')}</p>`;
         return;
       }
-
-      const nowTickHtml = nowPct !== null
-        ? `<div class="timeline-time-indicator timeline-time-indicator--now lg-glass lg-glass--tinted" style="--pos:${nowPct}%">${t('timepicker.now')}<i class="tag-arrow" aria-hidden="true"></i></div>`
-        : '';
-
-      const queryTicksHtml = queryFromPct !== null ? `
-        <div class="detail-schedule-query-indicator lg-glass lg-glass--tinted" style="--qpos:${queryFromPct}%">${queryFromDisplay}<i class="tag-arrow" aria-hidden="true"></i></div>
-        <div class="detail-schedule-query-indicator lg-glass lg-glass--tinted" style="--qpos:${queryToPct}%">${queryToDisplay}<i class="tag-arrow" aria-hidden="true"></i></div>
-      ` : '';
 
       const ticksHtml = (() => {
         const ticks = [];
@@ -1958,16 +1950,14 @@ class ClassroomDetail {
 
       container.innerHTML = `
         <div class="detail-schedule-day-selector">
-          <div class="detail-today-indicator lg-glass lg-glass--tinted hidden" aria-hidden="true">${t('datepicker.today')}<i class="tag-arrow" aria-hidden="true"></i></div>
           <div class="date-picker-container detail-schedule-picker lg-ring">
             ${selectorItemsHtml}
           </div>
           <div class="date-indicator lg-ring"></div>
         </div>
         <div class="detail-schedule-inner">
-          <div class="detail-schedule-ticks">${ticksHtml}${nowTickHtml}${queryTicksHtml}</div>
+          <div class="detail-schedule-ticks">${ticksHtml}<div class="detail-tag-anchor"></div></div>
           <div class="detail-schedule-grid">
-            <div class="detail-desktop-today-indicator lg-glass lg-glass--tinted hidden" aria-hidden="true">${t('datepicker.today')}<i class="tag-arrow" aria-hidden="true"></i></div>
           <div class="detail-schedule-labels-pill lg-ring liquid-glass">${labelsHtml}</div>
             <div class="detail-schedule-bars">
               <div class="detail-schedule-grid-lines">${gridLinesHtml}</div>
@@ -1981,21 +1971,24 @@ class ClassroomDetail {
         container.classList.add('detail-schedule--hide-sundays');
       }
 
+      let nowFrac = nowPct !== null ? parseFloat(nowPct) / 100 : null;
+      let positionTags = () => {};   // set below, once the tags exist
       this._nowTimer = setInterval(() => {
         const n = new Date().getHours() * 60 + new Date().getMinutes();
         const pctVal = n >= DAY_START && n <= DAY_END
           ? `${((n - DAY_START) / total * 100).toFixed(2)}%`
           : null;
-        container.querySelectorAll('.timeline-time-indicator--now, .timeline-now-bar-line, .detail-schedule-now-line').forEach(el => {
+        container.querySelectorAll('.timeline-now-bar-line, .detail-schedule-now-line').forEach(el => {
           if (pctVal) { el.style.setProperty('--pos', pctVal); el.hidden = false; }
           else { el.hidden = true; }
         });
+        nowFrac = pctVal ? parseFloat(pctVal) / 100 : null;
+        positionTags();
       }, 60_000);
 
       // --- Mobile day selector interaction (drag/spring physics ported
       // from bottom-nav.js's tab pill — see pill-selector.js) ---
       const pickerContainer = container.querySelector('.detail-schedule-picker');
-      const todayIndicatorEl = container.querySelector('.detail-today-indicator');
       const gridEl = container.querySelector('.detail-schedule-bars');
       const rowEls = gridEl.querySelectorAll('.detail-schedule-row');
 
@@ -2019,6 +2012,7 @@ class ClassroomDetail {
           const index = parseInt(chip.dataset.dayIndex);
           selectedDayIndex = index;
           rowEls.forEach((row, i) => row.classList.toggle('selected', i === index));
+          positionTags();   // only the selected day's bar has a layout on mobile
           if (!silent) {
             hideOccupationPopover();
           }
@@ -2051,57 +2045,71 @@ class ClassroomDetail {
       }
       selectScheduleDay(Math.max(0, initialDayIndex), { silent: true, animate: false });
 
-      // Today indicator: position the pill above the today chip (mobile only)
-      function positionDetailTodayIndicator() {
-        if (!todayIndicatorEl || !window.matchMedia('(max-width: 599px)').matches) return;
-        const todayChip = pickerContainer.querySelector(`[data-day-index="${todayDayIndex}"]`);
-        if (!todayChip || todayDayIndex < 0) {
-          todayIndicatorEl.classList.add('hidden');
-          return;
-        }
-        todayIndicatorEl.classList.remove('hidden');
-        const left = pickerContainer.offsetLeft + todayChip.offsetLeft + todayChip.offsetWidth / 2;
-        const top  = pickerContainer.offsetTop - todayIndicatorEl.offsetHeight - 8;
-        todayIndicatorEl.style.left = `${left}px`;
-        todayIndicatorEl.style.top  = `${top}px`;
-      }
-      todayIndicatorEl?.addEventListener('click', () => {
-        if (todayDayIndex >= 0) selectScheduleDay(todayDayIndex);
-      });
-      positionDetailTodayIndicator();
-
-      // Desktop Today indicator — position it vertically aligned with the today cell
-      const desktopTodayIndicatorEl = container.querySelector('.detail-desktop-today-indicator');
-      const pillEl = container.querySelector('.detail-schedule-labels-pill');
-
-      function positionDesktopTodayIndicator() {
-        if (!desktopTodayIndicatorEl || !pillEl || window.matchMedia('(max-width: 599px)').matches) return;
-        const todayCell = pillEl.querySelector('.detail-schedule-label-cell--today');
-        if (!todayCell) {
-          desktopTodayIndicatorEl.classList.add('hidden');
-          return;
-        }
-        desktopTodayIndicatorEl.classList.remove('hidden');
-        const top = pillEl.offsetTop
-          + todayCell.offsetTop
-          + todayCell.offsetHeight / 2
-          - desktopTodayIndicatorEl.offsetHeight / 2;
-        desktopTodayIndicatorEl.style.top = `${top}px`;
-      }
-      positionDesktopTodayIndicator();
-      window.addEventListener('resize', positionDesktopTodayIndicator);
-
-      // Re-position the indicator when resizing from desktop → mobile, because
-      // offsetLeft/offsetWidth read as 0 while the selector is display:none.
+      // The tags are Vitrium badges, each beside what it points at: a Today tag
+      // above the day chips (mobile) or left of the day labels (desktop), and the
+      // Now and queried-range tags on the time axis (desktop: above the timeline,
+      // from an anchor in the ticks) or beside the day's bar (mobile). Both
+      // layouts are built; the one that matches the viewport is shown.
       const mobileQuery = window.matchMedia('(max-width: 599px)');
+      const pillEl = container.querySelector('.detail-schedule-labels-pill');
+      const tags = this._tagBadges;
+      const addTag = (target, content, opts = {}) => {
+        const badge = createBadge({ target, content, shown: false, mount: 'beside', overlap: false, gap: 8, tint: 'var(--tag-tint)', ...opts });
+        badge.el.classList.add('detail-tag');
+        tags.push(badge);
+        return badge;
+      };
+      const anchor = container.querySelector('.detail-tag-anchor');
+      const nowBar = container.querySelector('.detail-schedule-row--today .detail-schedule-bar');
+      const queryBar = container.querySelector('.detail-schedule-row--query .detail-schedule-bar');
+      const todayChip = todayDayIndex >= 0 ? pickerContainer.querySelector(`[data-day-index="${todayDayIndex}"]`) : null;
+      const todayCell = pillEl?.querySelector('.detail-schedule-label-cell--today');
+      const NOW = { tint: 'var(--color-now)' };
+      const axis = { side: 'top', gap: 2 };   // above the timeline, pointing down at it
+      const todayText = t('datepicker.today');
+      const mTodayTag = todayChip && addTag(pickerContainer, todayText, { side: 'top', onPress: () => selectScheduleDay(todayDayIndex) });
+      const dTodayTag = todayCell && addTag(pillEl, todayText, { side: 'left' });
+      const dNowTag = nowFrac !== null && anchor ? addTag(anchor, t('timepicker.now'), { ...axis, ...NOW }) : null;
+      const mNowTag = nowFrac !== null && nowBar ? addTag(nowBar, t('timepicker.now'), { side: 'right', ...NOW }) : null;
+      const queryFrom = queryFromPct !== null ? parseFloat(queryFromPct) / 100 : null;
+      const queryTo = queryToPct !== null ? parseFloat(queryToPct) / 100 : null;
+      const dQueryTags = queryFrom !== null && anchor
+        ? [[queryFrom, queryFromDisplay], [queryTo, queryToDisplay]].map(([f, text]) => addTag(anchor, text, { ...axis, align: f })) : [];
+      const mQueryTags = queryFrom !== null && queryBar
+        ? [[queryFrom, queryFromDisplay], [queryTo, queryToDisplay]].map(([f, text]) => addTag(queryBar, text, { side: 'right', align: f })) : [];
+
+      // Shown where its target has a layout (a hidden layout reads as 0, and
+      // would pin the tag to the corner); `align` is where along the target.
+      const place = (tag, on, target, align) => {
+        if (!tag) return;
+        if (!on || !target.offsetWidth || align == null) { tag.hide(); return; }
+        tag.setPosition({ align });
+        tag.show();
+        tag.update();
+      };
+      positionTags = () => {
+        const mobile = mobileQuery.matches;
+        place(mTodayTag, mobile, pickerContainer, todayChip && (todayChip.offsetLeft + todayChip.offsetWidth / 2) / (pickerContainer.offsetWidth || 1));
+        place(dTodayTag, !mobile, pillEl, todayCell && (todayCell.offsetTop + todayCell.offsetHeight / 2) / (pillEl.offsetHeight || 1));
+        place(dNowTag, !mobile, anchor, nowFrac);
+        place(mNowTag, mobile, nowBar, nowFrac);
+        dQueryTags.forEach((tag, i) => place(tag, !mobile, anchor, i ? queryTo : queryFrom));
+        mQueryTags.forEach((tag, i) => place(tag, mobile, queryBar, i ? queryTo : queryFrom));
+      };
+      positionTags();
+      this._afterTransition(positionTags);
+      window.addEventListener('resize', positionTags);
+
+      // Re-lay the day chips out when resizing from desktop → mobile, because
+      // offsetLeft/offsetWidth read as 0 while the selector is display:none.
       const relayoutMobile = () => {
         daySelector.refresh();
         selectScheduleDay(selectedDayIndex, { silent: true, animate: false });
-        positionDetailTodayIndicator();
+        positionTags();
       };
       mobileQuery.addEventListener('change', e => {
         if (e.matches) relayoutMobile();
-        else positionDesktopTodayIndicator();
+        else positionTags();
       });
       // The picker is centered in its wrapper, so resizing the window moves it
       // without necessarily changing its own size; the pill and Today badge are

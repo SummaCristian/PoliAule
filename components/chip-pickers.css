@@ -85,29 +85,6 @@ time-range-chip-picker[data-loading] .trc-value > :not(.chip-skeleton) {
   color: color-mix(in srgb, var(--lg-text) 45%, transparent);
 }
 
-/* ── "Today" badge ────────────────────────────────────────────────────────
-   A small accent pill pinned to the pill's top-right corner, overhanging the
-   top edge. Shown by JS only when the selected date is today. */
-.dcp-today-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  transform: translate(28%, -42%);
-  z-index: 1;
-
-  padding: 2px 9px;
-
-  font-size: var(--text-60);
-  line-height: 1.4;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
-.dcp-today-badge[hidden] {
-  display: none;
-}
-
 /* Reflection on the glass while "today" is selected: a very subtle green inner
    shadow catching light from the top-right. */
 .lg-chip.dcp-trigger--today {

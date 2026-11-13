@@ -1,3 +1,4 @@
+import { createBadge } from 'vitrium';
 import { getLocale, t } from '../i18n.js';
 import { classroomsData, publishedDates } from '../available-rooms-script.js';
 import { createPillSelector } from './pill-selector.js';
@@ -163,34 +164,29 @@ export function setupDatePicker(getPreferInitialDate = () => null) {
     if (el) pillSelector.selectElement(el, { silent: true, animate: false });
   }
 
-  document.getElementById('today-indicator').addEventListener('click', () => {
+  function selectToday() {
     const todayStr = new Date().toISOString().slice(0, 10);
     const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
     if (todayEl) pillSelector.selectElement(todayEl);
+  }
+
+  // The "Today" tag above the today cell: Vitrium's badge on the picker's top
+  // edge (beside it, in .date-picker), pointing at the cell and gliding along as
+  // the picker is measured again. Pressing it selects today.
+  const todayBadge = createBadge({
+    target: container, content: t('datepicker.today'), side: 'top', align: 0.5, overlap: false, gap: 8,
+    shown: false, tint: 'var(--tag-tint)', onPress: selectToday,
   });
 
-  // Position the "Today" popover above the today cell
   function positionTodayIndicator() {
-    const today = new Date();
-    const todayStr = formatLocal(today);
-    const todayEl = container.querySelector(`.date-element-container[data-date="${todayStr}"]`);
-    const todayIndicator = document.getElementById('today-indicator');
-
-    if (!todayEl) {
-      todayIndicator.classList.add('hidden');
-      return;
-    }
-
-    todayIndicator.classList.remove('hidden');
-
-    // Use offsetTop/offsetLeft (layout values) instead of getBoundingClientRect()
-    // so that CSS transform animations on ancestor elements (e.g. the tab appear
-    // animation's scale(0.95)) don't skew the measurements.
-    const cellCenterX = container.offsetLeft + todayEl.offsetLeft + todayEl.offsetWidth / 2;
-    const topOffset = container.offsetTop - todayIndicator.offsetHeight - 8;
-
-    todayIndicator.style.left = `${cellCenterX}px`;
-    todayIndicator.style.top = `${topOffset}px`;
+    const todayEl = container.querySelector(`.date-element-container[data-date="${formatLocal(new Date())}"]`);
+    // No layout (a closed popup, a hidden tab): offsets read 0, so wait for one.
+    if (!todayEl) { todayBadge.hide(); return; }
+    if (!container.offsetWidth) return;
+    todayBadge.set(t('datepicker.today'));
+    todayBadge.setPosition({ align: (todayEl.offsetLeft + todayEl.offsetWidth / 2) / container.offsetWidth });
+    todayBadge.show();
+    todayBadge.update();
   }
 
   function repositionAll() {

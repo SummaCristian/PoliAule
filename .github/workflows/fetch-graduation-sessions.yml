@@ -31,8 +31,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           mkdir -p data
-          if npx --yes wrangler@4 r2 object get "poliaule-data/graduation-sessions.json" \
-              --file data/graduation-sessions.json --remote; then
+          if bash "$GITHUB_WORKSPACE/scripts/r2-get.sh" "poliaule-data/graduation-sessions.json" --file data/graduation-sessions.json; then
             echo "Restored $(jq '.sessions | length' data/graduation-sessions.json) sessions."
           else
             echo "No graduation-sessions.json in R2 yet (first run?)."

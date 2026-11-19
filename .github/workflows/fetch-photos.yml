@@ -100,8 +100,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           for f in photos/*.jpg; do
-            npx --yes wrangler@4 r2 object put "poliaule-data/$f" --file "$f" --content-type image/jpeg --remote
-            npx --yes wrangler@4 r2 object put "poliaule-data-beta/$f" --file "$f" --content-type image/jpeg --remote
+            bash "$GITHUB_WORKSPACE/scripts/r2-put.sh" "poliaule-data/$f" --file "$f" --content-type image/jpeg
+            bash "$GITHUB_WORKSPACE/scripts/r2-put.sh" "poliaule-data-beta/$f" --file "$f" --content-type image/jpeg
           done
 
       - name: Purge API cache for changed photos
@@ -137,6 +137,5 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           for bucket in poliaule-data poliaule-data-beta; do
-            npx --yes wrangler@4 r2 object put "$bucket/photos/manifest.json" \
-              --file photos/manifest.json --content-type application/json --remote
+            bash "$GITHUB_WORKSPACE/scripts/r2-put.sh" "$bucket/photos/manifest.json" --file photos/manifest.json --content-type application/json
           done

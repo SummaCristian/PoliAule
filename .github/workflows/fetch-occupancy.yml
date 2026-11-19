@@ -126,8 +126,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           KEY=$(jq -r .log_key logs/run.json)
-          npx --yes wrangler@4 r2 object put "poliaule-data/$KEY" --file logs/run.json --content-type application/json --remote
-          npx --yes wrangler@4 r2 object put "poliaule-data/logs/occupancy/latest.json" --file logs/run.json --content-type application/json --remote
+          bash "$GITHUB_WORKSPACE/scripts/r2-put.sh" "poliaule-data/$KEY" --file logs/run.json --content-type application/json
+          bash "$GITHUB_WORKSPACE/scripts/r2-put.sh" "poliaule-data/logs/occupancy/latest.json" --file logs/run.json --content-type application/json
 
       - name: Upload occupancy data to R2 (main)
         if: hashFiles('occupancy/*.json') != ''
@@ -136,7 +136,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           for f in occupancy/*.json; do
-            npx --yes wrangler@4 r2 object put "poliaule-data/$f" --file "$f" --content-type application/json --remote
+            bash "$GITHUB_WORKSPACE/scripts/r2-put.sh" "poliaule-data/$f" --file "$f" --content-type application/json
           done
 
       - name: Purge API cache (main)
@@ -176,7 +176,7 @@ jobs:
         run: |
           echo "Beta backend disabled, reusing main's fetch (no extra PoliMi calls)."
           for f in occupancy/*.json; do
-            npx --yes wrangler@4 r2 object put "poliaule-data-beta/$f" --file "$f" --content-type application/json --remote
+            bash "$GITHUB_WORKSPACE/scripts/r2-put.sh" "poliaule-data-beta/$f" --file "$f" --content-type application/json
           done
 
       - name: Purge API cache (beta, flag off)
@@ -295,8 +295,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           KEY=$(jq -r .log_key logs/run.json)
-          npx --yes wrangler@4 r2 object put "poliaule-data-beta/$KEY" --file logs/run.json --content-type application/json --remote
-          npx --yes wrangler@4 r2 object put "poliaule-data-beta/logs/occupancy/latest.json" --file logs/run.json --content-type application/json --remote
+          bash "$GITHUB_WORKSPACE/scripts/r2-put.sh" "poliaule-data-beta/$KEY" --file logs/run.json --content-type application/json
+          bash "$GITHUB_WORKSPACE/scripts/r2-put.sh" "poliaule-data-beta/logs/occupancy/latest.json" --file logs/run.json --content-type application/json
 
       - name: Upload occupancy data to R2 (beta)
         if: steps.beta_flag.outputs.enabled == 'true'
@@ -306,7 +306,7 @@ jobs:
         working-directory: beta-checkout
         run: |
           for f in occupancy/*.json; do
-            npx --yes wrangler@4 r2 object put "poliaule-data-beta/$f" --file "$f" --content-type application/json --remote
+            bash "$GITHUB_WORKSPACE/scripts/r2-put.sh" "poliaule-data-beta/$f" --file "$f" --content-type application/json
           done
 
       - name: Purge API cache (beta, flag on)

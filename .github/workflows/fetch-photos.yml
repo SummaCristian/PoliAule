@@ -45,8 +45,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           mkdir -p photos
-          if npx --yes wrangler@4 r2 object get "poliaule-data/photos/manifest.json" \
-              --file photos/manifest.json --remote; then
+          if bash "$GITHUB_WORKSPACE/scripts/r2-get.sh" "poliaule-data/photos/manifest.json" --file photos/manifest.json; then
             echo "Restored manifest with $(jq 'length' photos/manifest.json) entries."
           else
             echo "No manifest in R2 yet (first run?) - treating every photo as new."

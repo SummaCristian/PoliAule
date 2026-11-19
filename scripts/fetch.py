@@ -108,9 +108,14 @@ _BUILDING_ID_RE = re.compile(r"([a-z]*\d+[a-z]?)", re.IGNORECASE)
 def load_opening_hours() -> dict:
     """Load data/opening-hours.json, or an emergency fallback if it doesn't exist yet."""
     if OPENING_HOURS_FILE.exists():
-        with open(OPENING_HOURS_FILE, encoding="utf-8") as f:
-            return json.load(f)
-    print(f"  Warning: {OPENING_HOURS_FILE} not found, using hardcoded fallback hours.")
+        try:
+            with open(OPENING_HOURS_FILE, encoding="utf-8") as f:
+                return json.load(f)
+        except ValueError as e:
+            # e.g. an empty file left by a failed R2 download
+            print(f"  Warning: {OPENING_HOURS_FILE} is not valid JSON ({e}), using hardcoded fallback hours.")
+    else:
+        print(f"  Warning: {OPENING_HOURS_FILE} not found, using hardcoded fallback hours.")
     return {
         "holiday_periods": [
             {"start": start.isoformat(), "end": end.isoformat()}

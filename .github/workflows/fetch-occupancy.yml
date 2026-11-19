@@ -49,7 +49,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           mkdir -p logs
-          npx --yes wrangler@4 r2 object get "poliaule-data/logs/occupancy/latest.json" --file logs/previous.json --remote \
+          bash "$GITHUB_WORKSPACE/scripts/r2-get.sh" "poliaule-data/logs/occupancy/latest.json" --file logs/previous.json \
             || echo "No previous run log found."
 
       # data/opening-hours.json isn't committed to git — it's written by the weekly
@@ -61,7 +61,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           mkdir -p data
-          npx --yes wrangler@4 r2 object get "poliaule-data/opening-hours.json" --file data/opening-hours.json --remote \
+          bash "$GITHUB_WORKSPACE/scripts/r2-get.sh" "poliaule-data/opening-hours.json" --file data/opening-hours.json \
             || echo "No opening hours found in R2, will fall back to hardcoded hours."
 
       # The previous run's day files, so scripts/fetch.py can keep a day's
@@ -73,9 +73,9 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           mkdir -p occupancy
-          if npx --yes wrangler@4 r2 object get "poliaule-data/occupancy/list.json" --file occupancy/list.json --remote; then
+          if bash "$GITHUB_WORKSPACE/scripts/r2-get.sh" "poliaule-data/occupancy/list.json" --file occupancy/list.json; then
             for d in $(jq -r '.dates[]' occupancy/list.json); do
-              npx --yes wrangler@4 r2 object get "poliaule-data/occupancy/occupation_$d.json" --file "occupancy/occupation_$d.json" --remote \
+              bash "$GITHUB_WORKSPACE/scripts/r2-get.sh" "poliaule-data/occupancy/occupation_$d.json" --file "occupancy/occupation_$d.json" \
                 || echo "No previous file for $d."
             done
           else
@@ -218,7 +218,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           mkdir -p logs
-          npx --yes wrangler@4 r2 object get "poliaule-data-beta/logs/occupancy/latest.json" --file logs/previous.json --remote \
+          bash "$GITHUB_WORKSPACE/scripts/r2-get.sh" "poliaule-data-beta/logs/occupancy/latest.json" --file logs/previous.json \
             || echo "No previous run log found."
 
       - name: Download opening hours (beta)
@@ -229,7 +229,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           mkdir -p data
-          npx --yes wrangler@4 r2 object get "poliaule-data-beta/opening-hours.json" --file data/opening-hours.json --remote \
+          bash "$GITHUB_WORKSPACE/scripts/r2-get.sh" "poliaule-data-beta/opening-hours.json" --file data/opening-hours.json \
             || echo "No opening hours found in R2, will fall back to hardcoded hours."
 
       # The previous run's day files, so scripts/fetch.py can keep a day's
@@ -243,9 +243,9 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           mkdir -p occupancy
-          if npx --yes wrangler@4 r2 object get "poliaule-data-beta/occupancy/list.json" --file occupancy/list.json --remote; then
+          if bash "$GITHUB_WORKSPACE/scripts/r2-get.sh" "poliaule-data-beta/occupancy/list.json" --file occupancy/list.json; then
             for d in $(jq -r '.dates[]' occupancy/list.json); do
-              npx --yes wrangler@4 r2 object get "poliaule-data-beta/occupancy/occupation_$d.json" --file "occupancy/occupation_$d.json" --remote \
+              bash "$GITHUB_WORKSPACE/scripts/r2-get.sh" "poliaule-data-beta/occupancy/occupation_$d.json" --file "occupancy/occupation_$d.json" \
                 || echo "No previous file for $d."
             done
           else
